@@ -110,6 +110,7 @@ Docscriptor tries to keep the source readable:
 
 - create objects with classes such as `Document`, `Part`, `Chapter`, `Section`, `Paragraph`, `Table`, and `Figure`
 - apply inline actions with helpers such as `bold(...)`, `italic(...)`, `code(...)`, `tag(...)`, `badge(...)`, `status(...)`, `keyboard(...)`, `Text.from_markup(...)`, `Comment.annotated(...)`, `Footnote.annotated(...)`, and `CitationSource.cite()`
+- import existing Markdown with `parse_markdown(...)`, `from_markdown(...)`, or `Document.from_markdown(...)` when release notes, README fragments, or generated Markdown should become editable docscriptor objects
 - keep the document tree explicit so the Python structure matches the final output structure
 - move document-wide metadata and theme options into `DocumentSettings(...)` when you want a single place to adjust title matter, cover pages, and renderer defaults
 
@@ -145,11 +146,13 @@ The default behavior is intentionally conventional:
 - Use `Box(...)` for callouts, evidence panels, and tcolorbox-like report sections that should stay editable in Word.
 - Use `Shape(...)`, `TextBox(...)`, and `ImageBox(...)` with `Document(..., page_items=[...])` for page-positioned overlays that do not move the body text. Use `placement="inline"` when the same objects should sit in the text flow like Word's inline drawing mode.
 - Use `DocumentSettings(...)` for document-wide choices: authors, subtitle, page size, margins, units, and theme defaults.
+- Use `Document.from_markdown(...)` when a Markdown file should become a full document. Use `parse_markdown(...)` when you want a list of blocks that can be inserted, reordered, wrapped in sections, or combined with tables and figures.
 - Use `document.save_all("artifacts")` when a workflow normally needs DOCX, PDF, and HTML together.
 
 ## Features
 
 - DOCX, PDF, and HTML rendering from the same document tree
+- Markdown and GitHub Flavored Markdown import for headings, paragraphs, lists, task-list markers, block quotes, fenced code, thematic breaks, tables, local images, links, autolinks, emphasis, inline code, and strikethrough
 - block objects for paragraphs, lists, code blocks, equations, boxes, tables, figures, and generated pages
 - Pygments-backed syntax highlighting for code blocks across Python, JavaScript, SQL, YAML, shell, and other supported languages
 - editable report panels with `Box(...)` kwargs for width, alignment, title color, and per-side padding
@@ -186,6 +189,7 @@ Run them directly from the repository checkout:
 What they show:
 
 - `usage_guide_example` is a detailed guide that keeps almost all assembly in one `main.py` so the source stays easy to read
+- the usage guide includes a Markdown release-note digest pattern that imports several Markdown bodies, manipulates the resulting document objects, and publishes them as a normal docscriptor document
 - `journal_paper_example` shows a longer manuscript-style workflow with article-style sections, unnumbered abstract/highlights/acknowledgements, CSV-backed tables, and matplotlib figures inserted directly from Python objects
 
 By default they write outputs under:
@@ -205,6 +209,7 @@ The package is organized by responsibility:
 - `src/docscriptor/document.py` for the root `Document`
 - `src/docscriptor/settings.py` for `DocumentSettings` plus grouped configuration exports
 - `src/docscriptor/components/` for the concrete authoring model (`base.py`, `blocks.py`, `equations.py`, `generated.py`, `inline.py`, `markup.py`, `media.py`, `people.py`, `positioning.py`, and `references.py`)
+- `src/docscriptor/importers/` for adapters that convert external formats such as Markdown into docscriptor objects
 - `src/docscriptor/layout/` for low-level theme and indexing support
 - `src/docscriptor/renderers/docx.py`, `src/docscriptor/renderers/pdf.py`, and `src/docscriptor/renderers/html.py` for format-specific layout
 

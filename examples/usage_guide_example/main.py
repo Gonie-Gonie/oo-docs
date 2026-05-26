@@ -344,6 +344,39 @@ PROJECT_LAYOUT_SNIPPET = """my-report/
     report.html
 """
 
+MARKDOWN_RELEASE_NOTES_SNIPPET = """from docscriptor import Document, Section, Table, parse_markdown
+
+release_notes = {
+    "v0.8.0": "# v0.8.0\\n\\n## Added\\n- [x] Markdown import\\n- [x] Release digest",
+    "v0.7.0": "# v0.7.0\\n\\n## Changed\\n- ~~Old notes~~ are archived",
+}
+
+parsed_notes = [
+    Document.from_markdown(markdown_text)
+    for markdown_text in release_notes.values()
+]
+
+summary = Table(
+    headers=["Release", "Imported blocks"],
+    rows=[
+        [note.title, str(len(note.body.children))]
+        for note in parsed_notes
+    ],
+)
+
+digest = Document(
+    "Release note digest",
+    summary,
+    *[
+        Section(note.title, note.body.children, numbered=False)
+        for note in parsed_notes
+    ],
+)
+
+ad_hoc_blocks = parse_markdown("## Follow-up\\n\\n- Publish DOCX\\n- Publish PDF")
+digest.body.children.extend(ad_hoc_blocks)
+"""
+
 LATEX_COMPARISON_SNIPPET = """from docscriptor import Box, Divider, Figure, Paragraph, Table, VerticalSpace, bold, code
 
 summary = Box(
@@ -1589,6 +1622,24 @@ def build_usage_guide_document() -> Document:
                     code("examples/journal_paper_example/main.py"),
                     " follows the same pattern with CSV-backed tables, generated figures, and a manuscript body authored from one readable script."
                 ),
+            ),
+            Section(
+                "Import Markdown when it is already the source of record",
+                Paragraph(
+                    "Markdown import is meant for handoff points: release notes, README fragments, generated changelog sections, and issue summaries that already exist as Markdown. Use ",
+                    code("Document.from_markdown(...)"),
+                    " when the Markdown should become a document, and ",
+                    code("parse_markdown(...)"),
+                    " when the imported blocks should be rearranged inside a larger Python-authored report."
+                ),
+                Paragraph(
+                    "Because parsed Markdown becomes normal docscriptor objects, several release-note bodies can be collected, counted, wrapped in ",
+                    code("Section"),
+                    " objects, combined with a summary ",
+                    code("Table"),
+                    ", and exported with the same DOCX, PDF, and HTML renderers as hand-authored content."
+                ),
+                CodeBlock(MARKDOWN_RELEASE_NOTES_SNIPPET, language="python"),
             ),
         ),
         ),

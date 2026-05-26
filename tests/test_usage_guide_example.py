@@ -143,6 +143,9 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert any("portable footnotes exactly where the text appears." in text for text in paragraph_texts)
     assert any("github.com/Gonie-Gonie/docscriptor" in text for text in paragraph_texts)
     assert any("The journal example at examples/journal_paper_example/main.py" in text for text in paragraph_texts)
+    assert any("Document.from_markdown(...)" in text for text in paragraph_texts)
+    assert any("parse_markdown(...)" in text for text in paragraph_texts)
+    assert any("Release note digest" in text for text in paragraph_texts)
     assert "Docscriptor Contributor Certificate" in table_text
     assert "Footnotes" not in [text for text in paragraph_texts if text == "Footnotes"]
     assert len(word_document.tables) == 22
@@ -209,6 +212,9 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "Renderer-specific behavior for notes, review workflows, and cross-reference stability." in pdf_text
     assert "Portable footnotes are authored inline" in pdf_text
     assert "github.com/Gonie-Gonie/docscriptor" in pdf_text
+    assert "Document.from_markdown(...)" in pdf_text
+    assert "parse_markdown(...)" in pdf_text
+    assert "Release note digest" in pdf_text
     assert "Footnotes" in pdf_text
     assert len(pdf_reader.pages) >= 14
     assert _pdf_image_draw_count(pdf_path) == 6
@@ -263,6 +269,9 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "Docscriptor Contributor Certificate" in normalized_html_text
     assert "Portable footnotes are authored inline" in normalized_html_text
     assert "github.com/Gonie-Gonie/docscriptor" in normalized_html_text
+    assert "Document.from_markdown(...)" in normalized_html_text
+    assert "parse_markdown(...)" in normalized_html_text
+    assert "Release note digest" in normalized_html_text
     assert "Footnotes" in normalized_html_text
     assert html_text.count("data:image/png;base64,") == 6
     assert 'href="#table_1"' in html_text

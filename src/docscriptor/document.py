@@ -55,6 +55,26 @@ class Document:
             self.settings.page_items = coerce_positioned_items(page_items)
         self.citations = coerce_citation_library(citations)
 
+    @classmethod
+    def from_markdown(
+        cls,
+        source: str,
+        *,
+        title: str | None = None,
+        settings: DocumentSettings | None = None,
+        citations: CitationLibrary | Sequence[CitationSource] | str | None = None,
+    ) -> Document:
+        """Create a document from Markdown text."""
+
+        from docscriptor.importers.markdown import from_markdown
+
+        return from_markdown(
+            source,
+            title=title,
+            settings=settings,
+            citations=citations,
+        )
+
     @property
     def author(self) -> str | None:
         return self.settings.resolved_author()

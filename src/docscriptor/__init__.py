@@ -28,6 +28,7 @@ from docscriptor.components.people import Affiliation, Author, AuthorLayout
 from docscriptor.components.references import CitationLibrary, CitationSource
 from docscriptor.components.positioning import ImageBox, Shape, TextBox
 from docscriptor.document import Document
+from docscriptor.importers.markdown import from_markdown, parse_markdown
 from docscriptor.components.inline import (
     Comment,
     Footnote,
@@ -169,6 +170,7 @@ __all__ = [
     "cite",
     "comment",
     "footnote",
+    "from_markdown",
     "highlight",
     "italic",
     "keyboard",
@@ -182,6 +184,7 @@ __all__ = [
     "strikethrough",
     "markup",
     "styled",
+    "parse_markdown",
     "subscript",
     "superscript",
     "tag",
