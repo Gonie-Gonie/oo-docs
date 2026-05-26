@@ -29,6 +29,12 @@ from docscriptor.components.references import CitationLibrary, CitationSource
 from docscriptor.components.positioning import ImageBox, Shape, TextBox
 from docscriptor.document import Document
 from docscriptor.importers.markdown import from_markdown, parse_markdown
+from docscriptor.importers.notebook import (
+    from_ipynb,
+    from_notebook,
+    parse_ipynb,
+    parse_notebook,
+)
 from docscriptor.components.inline import (
     Comment,
     Footnote,
@@ -170,7 +176,9 @@ __all__ = [
     "cite",
     "comment",
     "footnote",
+    "from_ipynb",
     "from_markdown",
+    "from_notebook",
     "highlight",
     "italic",
     "keyboard",
@@ -184,7 +192,9 @@ __all__ = [
     "strikethrough",
     "markup",
     "styled",
+    "parse_ipynb",
     "parse_markdown",
+    "parse_notebook",
     "subscript",
     "superscript",
     "tag",

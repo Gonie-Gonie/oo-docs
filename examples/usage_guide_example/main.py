@@ -377,6 +377,27 @@ ad_hoc_blocks = parse_markdown("## Follow-up\\n\\n- Publish DOCX\\n- Publish PDF
 digest.body.children.extend(ad_hoc_blocks)
 """
 
+NOTEBOOK_IMPORT_SNIPPET = """from docscriptor import Document, Section, parse_ipynb
+
+analysis = Document.from_ipynb(
+    "analysis.ipynb",
+    include_outputs=True,
+)
+
+appendix_blocks = parse_ipynb(
+    "exploration.ipynb",
+    include_outputs=False,
+)
+
+report = Document(
+    "Notebook-backed report",
+    Section("Curated analysis", analysis.body.children, numbered=False),
+    Section("Exploration appendix", appendix_blocks, numbered=False),
+)
+
+report.save_all("artifacts/notebook-report", stem="analysis")
+"""
+
 LATEX_COMPARISON_SNIPPET = """from docscriptor import Box, Divider, Figure, Paragraph, Table, VerticalSpace, bold, code
 
 summary = Box(
@@ -1640,6 +1661,22 @@ def build_usage_guide_document() -> Document:
                     ", and exported with the same DOCX, PDF, and HTML renderers as hand-authored content."
                 ),
                 CodeBlock(MARKDOWN_RELEASE_NOTES_SNIPPET, language="python"),
+            ),
+            Section(
+                "Import notebooks without turning them into screenshots",
+                Paragraph(
+                    "Jupyter notebooks can enter the same workflow through ",
+                    code("Document.from_ipynb(...)"),
+                    " or ",
+                    code("parse_ipynb(...)"),
+                    ". Markdown cells become normal document structure, code cells become ",
+                    code("CodeBlock"),
+                    " objects, and textual outputs can be included for audit trails or omitted when the report should only carry the authored code."
+                ),
+                Paragraph(
+                    "The useful pattern is to keep exploratory notebooks as inputs, then wrap selected imported notebook sections in a report that also contains narrative, tables, figures, references, and generated pages."
+                ),
+                CodeBlock(NOTEBOOK_IMPORT_SNIPPET, language="python"),
             ),
         ),
         ),

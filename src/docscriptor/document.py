@@ -75,6 +75,36 @@ class Document:
             citations=citations,
         )
 
+    @classmethod
+    def from_ipynb(
+        cls,
+        source: object,
+        *,
+        title: str | None = None,
+        settings: DocumentSettings | None = None,
+        citations: CitationLibrary | Sequence[CitationSource] | str | None = None,
+        include_outputs: bool = True,
+        include_code: bool = True,
+        include_markdown: bool = True,
+        include_raw: bool = True,
+        code_language: str | None = None,
+    ) -> Document:
+        """Create a document from a Jupyter notebook."""
+
+        from docscriptor.importers.notebook import from_ipynb
+
+        return from_ipynb(
+            source,
+            title=title,
+            settings=settings,
+            citations=citations,
+            include_outputs=include_outputs,
+            include_code=include_code,
+            include_markdown=include_markdown,
+            include_raw=include_raw,
+            code_language=code_language,
+        )
+
     @property
     def author(self) -> str | None:
         return self.settings.resolved_author()

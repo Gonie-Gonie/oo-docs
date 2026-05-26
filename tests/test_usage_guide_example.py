@@ -145,6 +145,9 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert any("The journal example at examples/journal_paper_example/main.py" in text for text in paragraph_texts)
     assert any("Document.from_markdown(...)" in text for text in paragraph_texts)
     assert any("parse_markdown(...)" in text for text in paragraph_texts)
+    assert any("Document.from_ipynb(...)" in text for text in paragraph_texts)
+    assert any("parse_ipynb(...)" in text for text in paragraph_texts)
+    assert any("Notebook-backed report" in text for text in paragraph_texts)
     assert any("Release note digest" in text for text in paragraph_texts)
     assert "Docscriptor Contributor Certificate" in table_text
     assert "Footnotes" not in [text for text in paragraph_texts if text == "Footnotes"]
@@ -214,6 +217,9 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "github.com/Gonie-Gonie/docscriptor" in pdf_text
     assert "Document.from_markdown(...)" in pdf_text
     assert "parse_markdown(...)" in pdf_text
+    assert "Document.from_ipynb(...)" in pdf_text
+    assert "parse_ipynb(...)" in pdf_text
+    assert "Notebook-backed report" in pdf_text
     assert "Release note digest" in pdf_text
     assert "Footnotes" in pdf_text
     assert len(pdf_reader.pages) >= 14
@@ -271,6 +277,9 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "github.com/Gonie-Gonie/docscriptor" in normalized_html_text
     assert "Document.from_markdown(...)" in normalized_html_text
     assert "parse_markdown(...)" in normalized_html_text
+    assert "Document.from_ipynb(...)" in normalized_html_text
+    assert "parse_ipynb(...)" in normalized_html_text
+    assert "Notebook-backed report" in normalized_html_text
     assert "Release note digest" in normalized_html_text
     assert "Footnotes" in normalized_html_text
     assert html_text.count("data:image/png;base64,") == 6
