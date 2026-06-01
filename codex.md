@@ -30,6 +30,7 @@ This file is the shared memory for ongoing work on this repository. Keep it read
 - The old `Sheet` model is removed. Use `Document(..., page_items=[Shape..., TextBox..., ImageBox...])` for absolute page overlays that do not move body text. Anchors are `page`, `margin`/`content`, or an earlier named `Shape`.
 - `Shape`, `TextBox`, and `ImageBox` also support `placement="inline"` so users can insert drawing objects into the body flow in a Word-like "in line with text" mode, similar to direct LaTeX `includegraphics` usage.
 - Table authors should choose whether a table may split, not whether it is a normal table or longtable. `Table(split=True)` means here/in-source-order and splittable; `split=False` keeps short tables together but still auto-splits very long tables with repeated headers where possible. `placement=...` on tables and figures is an advanced hint for here/float/top/bottom/page-like behavior.
+- Documents now have `validate()` as a preflight API. Validation returns a structured `ValidationResult` that prints as a table, records format scope (`docx`, `pdf`, `html`), and is run automatically before `save*` rendering. Keep future renderer-specific caveats connected to `docscriptor.compatibility` and validation issues rather than scattering ad hoc checks in renderers.
 - Release versioning rule: bump the minor version when backward compatibility is not guaranteed; bump only the patch version when backward compatibility is preserved.
 
 ## Local Environment Notes

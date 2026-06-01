@@ -39,6 +39,7 @@ from docscriptor import (
     ColumnSpan,
     Document,
     DocumentSettings,
+    DocumentValidationError,
     Divider,
     Equation,
     Figure,
@@ -79,6 +80,7 @@ from docscriptor import (
     TitleMatterOptions,
     TocLevelStyle,
     TypographyOptions,
+    ValidationResult,
     VerticalSpace,
     badge,
     bold,
@@ -686,6 +688,82 @@ def test_document_save_all_renders_multiple_formats(tmp_path: Path) -> None:
         assert "html" in str(exc)
     else:
         raise AssertionError("Expected unsupported save_all format to fail")
+
+
+def test_document_validate_returns_printable_result_with_format_scopes() -> None:
+    document = Document(
+        "Validation Report",
+        TableOfContents(),
+        Chapter("Findings", Paragraph("Body.")),
+    )
+
+    result = document.validate()
+
+    assert isinstance(result, ValidationResult)
+    assert result.ok
+    assert [issue.code for issue in result.warnings] == ["html-toc-page-numbers"]
+    assert result.warnings[0].formats == ("html",)
+    assert result.warnings_for(("html",))
+    assert result.warnings_for(("docx",)) == ()
+
+    printable = str(result)
+    assert "Docscriptor validation ok for All" in printable
+    assert "Severity" in printable
+    assert "Formats" in printable
+    assert "HTML" in printable
+    assert "html-toc-page-numbers" in printable
+
+
+def test_document_validate_reports_authoring_errors_and_blocks_render(
+    tmp_path: Path,
+) -> None:
+    missing_image = tmp_path / "missing.png"
+    document = Document(
+        "Broken Document",
+        Figure(missing_image, caption="Missing figure."),
+    )
+
+    result = document.validate()
+    assert not result.ok
+    assert [issue.code for issue in result.errors] == ["missing-image-file"]
+    assert result.errors[0].formats == ("docx", "pdf", "html")
+    assert "All" in str(result)
+
+    pdf_path = tmp_path / "broken.pdf"
+    try:
+        document.save_pdf(pdf_path)
+    except DocumentValidationError as exc:
+        message = str(exc)
+        assert "Docscriptor validation failed for PDF" in message
+        assert "missing-image-file" in message
+        assert "PDF" in message
+    else:
+        raise AssertionError("Expected invalid document rendering to stop before PDF build")
+    assert not pdf_path.exists()
+
+
+def test_document_validate_catches_reference_mistakes() -> None:
+    orphan = Paragraph("Outside the document.")
+    uncaptioned_table = Table(headers=["Area"], rows=[["Validation"]])
+    document = Document(
+        "Reference Mistakes",
+        Paragraph("See ", orphan.reference(), " and ", uncaptioned_table.reference(), "."),
+        uncaptioned_table,
+    )
+
+    result = document.validate()
+    assert [issue.code for issue in result.errors] == [
+        "missing-reference-target",
+        "uncaptioned-reference-target",
+    ]
+
+    try:
+        document.validate(raise_on_error=True)
+    except DocumentValidationError as exc:
+        assert exc.errors == result.errors
+        assert "missing-reference-target" in str(exc)
+    else:
+        raise AssertionError("Expected validate(raise_on_error=True) to fail")
 
 
 def test_numbering_and_list_styles_are_customizable() -> None:

@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Sequence
+from typing import Iterable, Sequence, TYPE_CHECKING
 
+from docscriptor.compatibility import normalize_output_format, normalize_output_formats
 from docscriptor.components.base import BlockInput, Body
 from docscriptor.components.inline import Text
 from docscriptor.components.people import Author, AuthorInput, coerce_authors
@@ -14,6 +15,9 @@ from docscriptor.components.references import CitationLibrary, CitationSource, c
 from docscriptor.core import PathLike
 from docscriptor.layout.theme import Theme
 from docscriptor.settings import DocumentSettings
+
+if TYPE_CHECKING:
+    from docscriptor.validation import ValidationResult
 
 
 @dataclass(slots=True, init=False)
@@ -195,28 +199,60 @@ class Document:
                 return self.body.children[:index], self.body.children[index:]
         return list(self.body.children), []
 
-    def save_docx(self, path: PathLike) -> Path:
+    def validate(
+        self,
+        *,
+        raise_on_error: bool = False,
+        formats: Iterable[str] | None = None,
+    ) -> ValidationResult:
+        """Validate the document tree and return a structured result."""
+
+        from docscriptor.validation import validate_document
+
+        return validate_document(
+            self,
+            raise_on_error=raise_on_error,
+            formats=formats,
+        )
+
+    def _ensure_valid(self, formats: Iterable[str]) -> None:
+        from docscriptor.validation import DocumentValidationError
+
+        result = self.validate(formats=formats)
+        if not result.ok_for(formats):
+            raise DocumentValidationError(result, formats=formats)
+
+    def save_docx(self, path: PathLike, *, validate: bool = True) -> Path:
         """Render the document to DOCX and return the output path."""
+
+        if validate:
+            self._ensure_valid(("docx",))
 
         from docscriptor.renderers.docx import DocxRenderer
 
         return DocxRenderer().render(self, path)
 
-    def save_pdf(self, path: PathLike) -> Path:
+    def save_pdf(self, path: PathLike, *, validate: bool = True) -> Path:
         """Render the document to PDF and return the output path."""
+
+        if validate:
+            self._ensure_valid(("pdf",))
 
         from docscriptor.renderers.pdf import PdfRenderer
 
         return PdfRenderer().render(self, path)
 
-    def save_html(self, path: PathLike) -> Path:
+    def save_html(self, path: PathLike, *, validate: bool = True) -> Path:
         """Render the document to HTML and return the output path."""
+
+        if validate:
+            self._ensure_valid(("html",))
 
         from docscriptor.renderers.html import HtmlRenderer
 
         return HtmlRenderer().render(self, path)
 
-    def save(self, path: PathLike) -> Path:
+    def save(self, path: PathLike, *, validate: bool = True) -> Path:
         """Render the document using the output path extension.
 
         Supported extensions are ``.docx``, ``.pdf``, and ``.html``. The
@@ -224,16 +260,12 @@ class Document:
         but this helper keeps first scripts small and readable.
         """
 
-        suffix = Path(path).suffix.lower()
-        if suffix == ".docx":
-            return self.save_docx(path)
-        if suffix == ".pdf":
-            return self.save_pdf(path)
-        if suffix in {".html", ".htm"}:
-            return self.save_html(path)
-        raise ValueError(
-            "Unsupported document output extension. Use one of: .docx, .pdf, .html"
-        )
+        output_format = normalize_output_format(Path(path).suffix)
+        if output_format == "docx":
+            return self.save_docx(path, validate=validate)
+        if output_format == "pdf":
+            return self.save_pdf(path, validate=validate)
+        return self.save_html(path, validate=validate)
 
     def save_all(
         self,
@@ -241,6 +273,7 @@ class Document:
         *,
         stem: str | None = None,
         formats: Sequence[str] = ("docx", "pdf", "html"),
+        validate: bool = True,
     ) -> dict[str, Path]:
         """Render the document to multiple output formats.
 
@@ -258,16 +291,16 @@ class Document:
 
         directory = Path(output_dir)
         output_stem = stem or self._default_output_stem()
+        normalized_formats = normalize_output_formats(formats)
+        if validate:
+            self._ensure_valid(normalized_formats)
+
         outputs: dict[str, Path] = {}
-        for raw_format in formats:
-            output_format = raw_format.lower().strip().removeprefix(".")
-            if output_format == "htm":
-                output_format = "html"
-            if output_format not in {"docx", "pdf", "html"}:
-                raise ValueError(
-                    "Unsupported document output format. Use one of: docx, pdf, html"
-                )
-            outputs[output_format] = self.save(directory / f"{output_stem}.{output_format}")
+        for output_format in normalized_formats:
+            outputs[output_format] = self.save(
+                directory / f"{output_stem}.{output_format}",
+                validate=False,
+            )
         return outputs
 
     def _default_output_stem(self) -> str:

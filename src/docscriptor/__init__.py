@@ -3,6 +3,7 @@
 from importlib.metadata import PackageNotFoundError, version as package_version
 
 from docscriptor.core import DocscriptorError
+from docscriptor.compatibility import OUTPUT_FORMATS, OutputFormat
 from docscriptor.components.blocks import (
     Box,
     BulletList,
@@ -90,6 +91,7 @@ from docscriptor.settings import (
     TypographyOptions,
     Theme,
 )
+from docscriptor.validation import DocumentValidationError, ValidationIssue, ValidationResult
 
 
 def _resolve_version() -> str:
@@ -147,6 +149,8 @@ __all__ = [
     "MIN_SECTION_LEVEL",
     "MultiColumn",
     "NumberedList",
+    "OUTPUT_FORMATS",
+    "OutputFormat",
     "PageNumberOptions",
     "PageMargins",
     "PageSize",
@@ -174,6 +178,9 @@ __all__ = [
     "Theme",
     "TocLevelStyle",
     "TypographyOptions",
+    "DocumentValidationError",
+    "ValidationIssue",
+    "ValidationResult",
     "VerticalSpace",
     "__version__",
     "badge",
