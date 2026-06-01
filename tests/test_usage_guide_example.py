@@ -140,6 +140,14 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert any("Coordinate-based drawings can be page overlays or inline flow objects." in text for text in paragraph_texts)
     assert any("Advanced table and figure placement controls." in text for text in paragraph_texts)
     assert any("Renderer-specific behavior for notes, review workflows, and cross-reference stability." in text for text in paragraph_texts)
+    assert any("Numbered statements, proofs, and custom counters" in text for text in paragraph_texts)
+    assert any("CountableBlock" in text for text in paragraph_texts)
+    assert any("Theorem 3. Stable references" in text for text in paragraph_texts)
+    assert any("Exercise 1." in text for text in paragraph_texts)
+    assert any("Build, convert, and validate from the CLI" in text for text in paragraph_texts)
+    assert any("docscriptor build report.py --out artifacts" in text for text in paragraph_texts)
+    assert any("Validation results are structured objects" in text for text in paragraph_texts)
+    assert any("Command-line builds, conversions, and validation all call the same high-level workflow API." in text for text in paragraph_texts)
     assert any("portable footnotes exactly where the text appears." in text for text in paragraph_texts)
     assert any("github.com/Gonie-Gonie/docscriptor" in text for text in paragraph_texts)
     assert any("The journal example at examples/journal_paper_example/main.py" in text for text in paragraph_texts)
@@ -151,8 +159,8 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert any("Release note digest" in text for text in paragraph_texts)
     assert "Docscriptor Contributor Certificate" in table_text
     assert "Footnotes" not in [text for text in paragraph_texts if text == "Footnotes"]
-    assert len(word_document.tables) == 22
-    assert len(word_document.inline_shapes) == 10
+    assert len(word_document.tables) == 24
+    assert len(word_document.inline_shapes) == 11
     assert len(word_document.comments) == 2
     assert next(paragraph.style.name for paragraph in word_document.paragraphs if paragraph.text == "Comments") == "Heading 2"
     assert next(paragraph.style.name for paragraph in word_document.paragraphs if paragraph.text == "References") == "Heading 2"
@@ -213,6 +221,14 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "Advanced table and figure placement controls." in pdf_text
     assert "Docscriptor Contributor Certificate" in pdf_text
     assert "Renderer-specific behavior for notes, review workflows, and cross-reference stability." in pdf_text
+    assert "Numbered statements, proofs, and custom counters" in pdf_text
+    assert "CountableBlock" in pdf_text
+    assert "Theorem 3. Stable references" in pdf_text
+    assert "Exercise 1." in pdf_text
+    assert "Build, convert, and validate from the CLI" in pdf_text
+    assert "docscriptor build report.py --out artifacts" in pdf_text
+    assert "Validation results are structured objects" in pdf_text
+    assert "Command-line builds, conversions, and validation all call the same high-level workflow API." in pdf_text
     assert "Portable footnotes are authored inline" in pdf_text
     assert "github.com/Gonie-Gonie/docscriptor" in pdf_text
     assert "Document.from_markdown(...)" in pdf_text
@@ -223,7 +239,7 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "Release note digest" in pdf_text
     assert "Footnotes" in pdf_text
     assert len(pdf_reader.pages) >= 14
-    assert _pdf_image_draw_count(pdf_path) == 6
+    assert _pdf_image_draw_count(pdf_path) == 7
 
     assert "Docscriptor User Guide" in normalized_html_text
     assert "Guide Cover" in normalized_html_text
@@ -273,6 +289,14 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "Coordinate-based drawings can be page overlays or inline flow objects." in normalized_html_text
     assert "Advanced table and figure placement controls." in normalized_html_text
     assert "Docscriptor Contributor Certificate" in normalized_html_text
+    assert "Numbered statements, proofs, and custom counters" in normalized_html_text
+    assert "CountableBlock" in normalized_html_text
+    assert "Theorem 3. Stable references" in normalized_html_text
+    assert "Exercise 1." in normalized_html_text
+    assert "Build, convert, and validate from the CLI" in normalized_html_text
+    assert "docscriptor build report.py --out artifacts" in normalized_html_text
+    assert "Validation results are structured objects" in normalized_html_text
+    assert "Command-line builds, conversions, and validation all call the same high-level workflow API." in normalized_html_text
     assert "Portable footnotes are authored inline" in normalized_html_text
     assert "github.com/Gonie-Gonie/docscriptor" in normalized_html_text
     assert "Document.from_markdown(...)" in normalized_html_text
@@ -282,7 +306,7 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "Notebook-backed report" in normalized_html_text
     assert "Release note digest" in normalized_html_text
     assert "Footnotes" in normalized_html_text
-    assert html_text.count("data:image/png;base64,") == 6
+    assert html_text.count("data:image/png;base64,") == 7
     assert 'href="#table_1"' in html_text
     assert 'href="#figure_1"' in html_text
     assert 'class="docscriptor-toc-entry docscriptor-toc-entry-no-page docscriptor-toc-entry-level-1"' in html_text

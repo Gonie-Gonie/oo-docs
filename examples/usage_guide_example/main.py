@@ -20,6 +20,7 @@ from matplotlib.patches import FancyBboxPatch
 
 from docscriptor import (
     Affiliation,
+    Assumption,
     Author,
     AuthorLayout,
     BlockOptions,
@@ -32,21 +33,26 @@ from docscriptor import (
     Comment,
     CommentsPage,
     CodeBlock,
+    Definition,
     Divider,
     Document,
     DocumentSettings,
+    Example,
     Figure,
     FigureList,
     Footnote,
     GeneratedPageOptions,
     ImageBox,
+    Lemma,
     NumberedList,
     PageNumberOptions,
     PageMargins,
     PageSize,
     Paragraph,
     Part,
+    Proof,
     ReferencesPage,
+    Remark,
     Section,
     Shape,
     SubFigure,
@@ -59,6 +65,7 @@ from docscriptor import (
     Text,
     TextBox,
     Theme,
+    Theorem,
     TitleMatterOptions,
     TocLevelStyle,
     TypographyOptions,
@@ -67,6 +74,7 @@ from docscriptor import (
     bold,
     code,
     color,
+    countable_kind,
     highlight,
     link,
     line_break,
@@ -330,6 +338,19 @@ table = Table(
 )
 """
 
+COUNTABLE_BLOCK_SNIPPET = """from docscriptor import Definition, Lemma, Paragraph, Proof, Theorem, countable_kind
+
+Exercise = countable_kind("Exercise", counter="exercise")
+
+bounded = Definition("A block with an explicit label and document-wide number.")
+setup = Lemma("Shared theorem-like blocks advance the same counter.")
+main = Theorem("The numbered statement can be referenced later.", title="Main result")
+exercise = Exercise("Custom countable kinds can keep a separate sequence.")
+
+paragraph = Paragraph("Use ", main.reference(), " before the proof.")
+proof = Proof("Proofs are unnumbered by default, so reference them with a custom label.")
+"""
+
 PROJECT_LAYOUT_SNIPPET = """my-report/
   main.py
   assets/
@@ -342,6 +363,40 @@ PROJECT_LAYOUT_SNIPPET = """my-report/
     report.docx
     report.pdf
     report.html
+"""
+
+CLI_WORKFLOW_SNIPPET = """# Build a Python-authored document that exposes build_document(), document, doc, or report.
+docscriptor build report.py --out artifacts --to docx,pdf,html
+
+# Convert existing authored sources through the same import APIs used in Python.
+docscriptor convert README.md --to docx,pdf,html
+docscriptor convert notebook.ipynb --to pdf
+
+# Validate without writing outputs; use --strict when warnings should fail CI.
+docscriptor validate report.py
+docscriptor validate report.py --to pdf --strict
+"""
+
+PYTHON_BUILD_SOURCE_SNIPPET = """from docscriptor import Chapter, Document, Paragraph, Section
+
+def build_document() -> Document:
+    return Document(
+        "Operational Report",
+        Chapter(
+            "Status",
+            Section("Summary", Paragraph("Everything needed for the report is here.")),
+        ),
+    )
+"""
+
+VALIDATION_SNIPPET = """document = build_document()
+result = document.validate(formats=("docx", "pdf", "html"))
+
+if not result.ok:
+    print(result)
+    raise SystemExit(1)
+
+document.save_all("artifacts", stem="operational-report")
 """
 
 MARKDOWN_RELEASE_NOTES_SNIPPET = """from docscriptor import Document, Section, Table, parse_markdown
@@ -830,6 +885,76 @@ def build_renderer_behavior_figure():
     return figure
 
 
+def build_cli_workflow_figure():
+    """Create a compact diagram for CLI validation and rendering."""
+
+    figure, axis = plt.subplots(figsize=(8.2, 3.8))
+    axis.set_xlim(0, 1)
+    axis.set_ylim(0, 1)
+    axis.axis("off")
+
+    steps = [
+        (
+            "Author Source",
+            "# report.py\nbuild_document()",
+            "# README.md\n# notebook.ipynb",
+            "# release-notes/*.md",
+            "#EAF3FB",
+        ),
+        (
+            "Workflow API",
+            "load_document(...)",
+            "validate_source(...)",
+            "render_document(...)",
+            "#F8F2E8",
+        ),
+        (
+            "CLI Commands",
+            "docscriptor build",
+            "docscriptor convert",
+            "docscriptor validate",
+            "#EDF7EC",
+        ),
+        (
+            "Artifacts",
+            "report.docx",
+            "report.pdf",
+            "report.html",
+            "#FCEEE8",
+        ),
+    ]
+    for index, (title, first, second, third, color_value) in enumerate(steps):
+        x = 0.035 + index * 0.24
+        _add_card(
+            axis,
+            x,
+            0.19,
+            0.19,
+            0.64,
+            color_value,
+            title,
+            [first, second, third],
+            wrap_width=18,
+        )
+        if index < len(steps) - 1:
+            axis.annotate(
+                "",
+                xy=(x + 0.225, 0.51),
+                xytext=(x + 0.19, 0.51),
+                arrowprops={"arrowstyle": "->", "lw": 1.8, "color": "#48627A"},
+            )
+    axis.text(
+        0.5,
+        0.90,
+        "The CLI stays thin over the same workflow API used by Python callers.",
+        ha="center",
+        fontsize=10.5,
+        color="#1A3345",
+    )
+    figure.tight_layout()
+    return figure
+
+
 def build_usage_guide_document() -> Document:
     """Build a detailed reference-style usage guide."""
 
@@ -852,6 +977,13 @@ def build_usage_guide_document() -> Document:
         build_renderer_behavior_figure(),
         caption=Paragraph(
             "Renderer-specific behavior for notes, review workflows, and cross-reference stability."
+        ),
+        width=6.5,
+    )
+    cli_workflow_figure = Figure(
+        build_cli_workflow_figure(),
+        caption=Paragraph(
+            "Command-line builds, conversions, and validation all call the same high-level workflow API."
         ),
         width=6.5,
     )
@@ -1060,6 +1192,43 @@ def build_usage_guide_document() -> Document:
         ],
         caption="How the source layout can grow without losing readability.",
         column_widths=[1.4, 2.3, 2.9],
+    )
+    cli_command_table = Table(
+        headers=["Command", "Input expectation", "Use it when"],
+        rows=[
+            ["docscriptor build report.py --out artifacts", "A Python file exposing document, doc, report, or build_document().", "The source of record is a Python-authored Document."],
+            ["docscriptor convert README.md --to docx,pdf,html", "Markdown source imported with the same parser used by Document.from_markdown(...).", "A README, changelog, release note, or generated Markdown file should become a rendered bundle."],
+            ["docscriptor convert notebook.ipynb --to pdf", "A notebook imported with the same parser used by Document.from_ipynb(...).", "A notebook-backed analysis needs a quick PDF export or an appendix source."],
+            ["docscriptor validate report.py", "Any Python, Markdown, or notebook source that can be loaded as a Document.", "CI should fail before rendering when authoring mistakes are present."],
+        ],
+        caption="CLI commands and the source shapes they expect.",
+        column_widths=[2.5, 2.4, 2.5],
+    )
+    validation_table = Table(
+        headers=["Validation issue", "Why it matters", "Typical fix"],
+        rows=[
+            ["Missing image file", "DOCX, PDF, and HTML cannot render media that is not present.", "Keep assets under version control or pass an existing Path."],
+            ["Uncaptioned table or figure reference", "Automatic references need a numbered target.", "Add a caption or provide an explicit custom reference label."],
+            ["Unnumbered heading or countable reference", "The default label cannot be resolved without a number.", "Set numbered=True, set toc=True for heading anchors, or write reference(obj, 'custom label')."],
+            ["Top-level heading below chapter", "A report can look like it skipped its first chapter.", "Wrap imported blocks in Chapter(...) or import with heading_level_shift."],
+            ["HTML TOC page numbers", "Browsers do not have stable rendered page numbers.", "Accept the warning for HTML or render a link-only contents page."],
+        ],
+        caption="Validation results are structured objects, but they print as a compact table for terminal and CI logs.",
+        column_widths=[2.0, 2.7, 2.7],
+    )
+    Exercise = countable_kind("Exercise", counter="exercise")
+    counted_definition = Definition(
+        "A countable block is a document block with a visible kind label and an index-assigned number."
+    )
+    counted_theorem = Theorem(
+        "The same source object can be referenced from prose after the render index assigns its number.",
+        title="Stable references",
+    )
+    counted_assumption = Assumption(
+        "Assumptions, lemmas, theorems, examples, and remarks share the same theorem-like counter by default."
+    )
+    counted_exercise = Exercise(
+        "Custom countable kinds can use their own counter, or join the theorem counter by passing counter='theorem'."
     )
     preset_callout = CalloutBox(
         Paragraph(
@@ -1286,6 +1455,39 @@ def build_usage_guide_document() -> Document:
                 ),
                 CodeBlock(PART_STRUCTURE_SNIPPET, language="python"),
                 generated_pages_table,
+            ),
+            Section(
+                "Numbered statements, proofs, and custom counters",
+                Paragraph(
+                    "Research notes, specifications, and technical manuals often need blocks such as definitions, lemmas, theorems, examples, remarks, and assumptions. These are not headings because they should usually stay inside the current section, but they still need document-wide numbering and cross-references."
+                ),
+                Paragraph(
+                    "Docscriptor handles those cases with ",
+                    code("CountableBlock"),
+                    " and the factory ",
+                    code("countable_kind(...)"),
+                    ". The built-in theorem-like classes share the ",
+                    code("theorem"),
+                    " counter, while ",
+                    code("Proof(...)"),
+                    " is unnumbered by default. If an unnumbered block needs a reference, give the reference an explicit label."
+                ),
+                counted_definition,
+                Lemma("A theorem-like block can appear between ordinary paragraphs without becoming a section heading."),
+                counted_theorem,
+                Proof(
+                    "Proofs are intentionally unnumbered by default, but they remain normal blocks and can contain paragraphs, lists, equations, tables, or figures when needed."
+                ),
+                Example("Examples continue the theorem-like counter, so they can be cited consistently in prose."),
+                Remark("Remarks use the same numbering surface when a document wants one shared mathematical sequence."),
+                counted_assumption,
+                counted_exercise,
+                Paragraph(
+                    "For example, ",
+                    counted_theorem.reference(),
+                    " can be cited after the block is inserted, while the exercise above uses a separate custom sequence."
+                ),
+                CodeBlock(COUNTABLE_BLOCK_SNIPPET, language="python"),
             ),
             Section(
                 "Inline annotations stay local to the prose",
@@ -1643,6 +1845,51 @@ def build_usage_guide_document() -> Document:
                     code("examples/journal_paper_example/main.py"),
                     " follows the same pattern with CSV-backed tables, generated figures, and a manuscript body authored from one readable script."
                 ),
+            ),
+            Section(
+                "Build, convert, and validate from the CLI",
+                Paragraph(
+                    "The command-line interface is for the point where a document becomes part of a release process, CI job, or repeatable local workflow. It deliberately stays thin over the same workflow API that Python callers can import, so command behavior and library behavior do not drift apart."
+                ),
+                cli_workflow_figure,
+                Paragraph(
+                    "Use ",
+                    code("docscriptor build"),
+                    " when the source file is Python and exposes a ",
+                    code("Document"),
+                    " as ",
+                    code("document"),
+                    ", ",
+                    code("doc"),
+                    ", ",
+                    code("report"),
+                    ", or a zero-argument factory such as ",
+                    code("build_document()"),
+                    ". Use ",
+                    code("docscriptor convert"),
+                    " when the source is Markdown or a notebook. Use ",
+                    code("docscriptor validate"),
+                    " when CI should stop before any renderer writes files."
+                ),
+                cli_command_table,
+                CodeBlock(CLI_WORKFLOW_SNIPPET, language="powershell"),
+                Paragraph(
+                    "A Python source file for ",
+                    code("docscriptor build"),
+                    " should keep construction and rendering separate. That makes the same source easy to import from tests, validate in CI, or render locally."
+                ),
+                CodeBlock(PYTHON_BUILD_SOURCE_SNIPPET, language="python"),
+                validation_table,
+                Paragraph(
+                    "Validation returns a structured result object. Printing it produces a table for humans, while code can still branch on ",
+                    code("result.ok"),
+                    ", ",
+                    code("result.errors_for(('pdf',))"),
+                    ", or ",
+                    code("result.warnings_for(('html',))"),
+                    ". Rendering methods call validation by default and stop before writing outputs when errors apply to the requested formats."
+                ),
+                CodeBlock(VALIDATION_SNIPPET, language="python"),
             ),
             Section(
                 "Import Markdown when it is already the source of record",

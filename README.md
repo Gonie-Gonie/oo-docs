@@ -214,7 +214,7 @@ Run them directly from the repository checkout:
 
 What they show:
 
-- `usage_guide_example` is a detailed guide that keeps almost all assembly in one `main.py` so the source stays easy to read
+- `usage_guide_example` is a detailed guide that keeps almost all assembly in one `main.py` so the source stays easy to read; it now covers the core authoring model, validation, CLI workflows, theorem-like countable blocks, layout controls, imports, presets, and renderer differences
 - the usage guide includes Markdown and notebook import patterns that bring existing authored files into normal docscriptor document objects
 - `journal_paper_example` shows a longer manuscript-style workflow with article-style sections, unnumbered abstract/highlights/acknowledgements, CSV-backed tables, and matplotlib figures inserted directly from Python objects
 - `release_notes_digest` collects `release-notes/*.md`, sorts semantic versions from filenames, imports the Markdown bodies, and builds a release-note document with a version-management table and runbook

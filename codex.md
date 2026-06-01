@@ -33,6 +33,7 @@ This file is the shared memory for ongoing work on this repository. Keep it read
 - Documents now have `validate()` as a preflight API. Validation returns a structured `ValidationResult` that prints as a table, records format scope (`docx`, `pdf`, `html`), and is run automatically before `save*` rendering. Keep future renderer-specific caveats connected to `docscriptor.compatibility` and validation issues rather than scattering ad hoc checks in renderers.
 - The CLI entry point is `docscriptor.cli:main`, with `build`, `convert`, and `validate` subcommands. Keep CLI behavior thin over `docscriptor.workflows` so Python API and command-line behavior stay aligned.
 - Theorem-like blocks use `CountableBlock` plus `countable_kind(...)`. Built-ins such as `Definition`, `Lemma`, `Proposition`, `Theorem`, `Corollary`, `Example`, `Remark`, `Assumption`, `Axiom`, `Claim`, and `Conjecture` share the document-wide `theorem` counter; `Proof` is unnumbered by default. Custom countable classes should be made with the factory instead of asking users to subclass.
+- The usage guide example is the broad user-facing reference. Keep it current when major APIs change; it should show rendered examples, search-friendly section titles, and tests that confirm key concepts appear in DOCX, PDF, and HTML output.
 - Release versioning rule: bump the minor version when backward compatibility is not guaranteed; bump only the patch version when backward compatibility is preserved.
 
 ## Local Environment Notes
