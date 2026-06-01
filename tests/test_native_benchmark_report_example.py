@@ -9,6 +9,13 @@ import re
 from docx import Document as WordDocument
 from pypdf import PdfReader
 
+from example_regression import (
+    assert_docx_structure,
+    assert_html_internal_links_resolve,
+    assert_pdf_text_and_pages,
+    assert_rendered_bundle,
+)
+
 
 def _load_example_module(example_dir: str):
     module_path = Path(__file__).resolve().parents[1] / "examples" / example_dir / "main.py"
@@ -41,9 +48,7 @@ def test_native_benchmark_report_example_builds_outputs(tmp_path: Path) -> None:
     docx_path, pdf_path = benchmark_example.build_native_benchmark_report(tmp_path)
     html_path = tmp_path / "native-python-benchmark.html"
 
-    assert docx_path.exists()
-    assert pdf_path.exists()
-    assert html_path.exists()
+    assert_rendered_bundle(docx_path, pdf_path, html_path)
 
     word_document = WordDocument(docx_path)
     paragraph_texts = [paragraph.text for paragraph in word_document.paragraphs]
@@ -77,6 +82,16 @@ def test_native_benchmark_report_example_builds_outputs(tmp_path: Path) -> None:
     assert "replace + split" in table_text
     assert "translate + split" in table_text
     assert len(word_document.tables) == 3
+    assert_docx_structure(
+        docx_path,
+        required_paragraphs=(
+            "Native Python Benchmark Report",
+            "Contents",
+            "List of Tables",
+            "1 Benchmark as a Document Workflow",
+        ),
+        table_count=3,
+    )
 
     assert "Native Python Benchmark Report" in pdf_text
     assert "Benchmark as a Document Workflow" in pdf_text
@@ -84,9 +99,23 @@ def test_native_benchmark_report_example_builds_outputs(tmp_path: Path) -> None:
     assert "NORMALIZERS" in pdf_text
     assert "document.save_all" in pdf_text
     assert len(pdf_reader.pages) >= 3
+    assert_pdf_text_and_pages(
+        pdf_path,
+        required_text=(
+            "Native Python Benchmark Report",
+            "Benchmark as a Document Workflow",
+            "NORMALIZERS",
+        ),
+        min_pages=3,
+    )
 
     assert "Native Python Benchmark Report" in normalized_html_text
     assert "Documenting measured Python work without leaving Python" in normalized_html_text
     assert "results: list[dict]" in normalized_html_text
     assert "Native Python benchmark results converted directly from measured data." in normalized_html_text
     assert "save_all" in normalized_html_text
+    assert_html_internal_links_resolve(
+        html_path,
+        required_hrefs=("#heading_1", "#table_1", "#table_3"),
+        required_text=("Native Python Benchmark Report", "results: list[dict]"),
+    )

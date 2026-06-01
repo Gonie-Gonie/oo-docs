@@ -10,6 +10,13 @@ import re
 from docx import Document as WordDocument
 from pypdf import PdfReader
 
+from example_regression import (
+    assert_docx_structure,
+    assert_html_internal_links_resolve,
+    assert_pdf_text_and_pages,
+    assert_rendered_bundle,
+)
+
 
 def _load_template_module(name: str):
     example_dir = Path(__file__).resolve().parents[1] / "examples" / "template_presets"
@@ -49,9 +56,7 @@ def test_template_preset_examples_build_all_outputs(tmp_path: Path) -> None:
         pdf_path = tmp_path / f"{stem}.pdf"
         html_path = tmp_path / f"{stem}.html"
 
-        assert docx_path.exists()
-        assert pdf_path.exists()
-        assert html_path.exists()
+        assert_rendered_bundle(docx_path, pdf_path, html_path)
 
         word_text = "\n".join(paragraph.text for paragraph in WordDocument(docx_path).paragraphs)
         word_document = WordDocument(docx_path)
@@ -73,9 +78,23 @@ def test_template_preset_examples_build_all_outputs(tmp_path: Path) -> None:
         assert "Acknowledgements" in word_text
         assert "Template responsibility" in table_text
         assert "References" in word_text
+        assert_docx_structure(
+            docx_path,
+            required_paragraphs=(title, "1 Introduction", "References"),
+            min_tables=1,
+        )
         assert title in normalized_pdf_text
         assert "Methods" in normalized_pdf_text
         assert "Data Availability" in normalized_pdf_text
         assert "References" in normalized_pdf_text
+        assert_pdf_text_and_pages(
+            pdf_path,
+            required_text=(title, "Methods", "References"),
+            min_pages=2,
+        )
         assert title in html_text
         assert "content-first template" in html_text
+        assert_html_internal_links_resolve(
+            html_path,
+            required_text=(title, "content-first template"),
+        )

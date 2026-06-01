@@ -9,6 +9,13 @@ import re
 from docx import Document as WordDocument
 from pypdf import PdfReader
 
+from example_regression import (
+    assert_docx_structure,
+    assert_html_internal_links_resolve,
+    assert_pdf_text_and_pages,
+    assert_rendered_bundle,
+)
+
 
 def _load_example_module(example_dir: str):
     module_path = Path(__file__).resolve().parents[1] / "examples" / example_dir / "main.py"
@@ -46,9 +53,7 @@ def test_release_notes_digest_example_builds_outputs(tmp_path: Path) -> None:
     docx_path, pdf_path = release_notes_example.build_release_notes(tmp_path)
     html_path = tmp_path / "docscriptor-release-notes.html"
 
-    assert docx_path.exists()
-    assert pdf_path.exists()
-    assert html_path.exists()
+    assert_rendered_bundle(docx_path, pdf_path, html_path)
 
     word_document = WordDocument(docx_path)
     paragraph_texts = [paragraph.text for paragraph in word_document.paragraphs]
@@ -92,6 +97,16 @@ def test_release_notes_digest_example_builds_outputs(tmp_path: Path) -> None:
         for text in paragraph_texts
     )
     assert len(word_document.tables) == 2
+    assert_docx_structure(
+        docx_path,
+        required_paragraphs=(
+            "Docscriptor Release Notes",
+            "Contents",
+            "3 Version History",
+            "v0.10.0",
+        ),
+        table_count=2,
+    )
 
     assert "Docscriptor Release Notes" in pdf_text
     assert "Contents" in pdf_text
@@ -102,6 +117,15 @@ def test_release_notes_digest_example_builds_outputs(tmp_path: Path) -> None:
     assert "release-notes/v0.10.0.md" in pdf_text
     assert "setuptools-scm" in pdf_text
     assert len(pdf_reader.pages) >= 3
+    assert_pdf_text_and_pages(
+        pdf_path,
+        required_text=(
+            "Docscriptor Release Notes",
+            "Version Management",
+            "Version History",
+        ),
+        min_pages=3,
+    )
 
     assert "Docscriptor Release Notes" in normalized_html_text
     assert "Contents" in normalized_html_text
@@ -120,3 +144,7 @@ def test_release_notes_digest_example_builds_outputs(tmp_path: Path) -> None:
     assert ">3 Version History</a>" in toc_html
     assert ">v0.10.0</a>" in toc_html
     assert ">Highlights</a>" not in toc_html
+    assert_html_internal_links_resolve(
+        html_path,
+        required_text=("Docscriptor Release Notes", "Version History"),
+    )

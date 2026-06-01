@@ -10,6 +10,13 @@ import zipfile
 from docx import Document as WordDocument
 from pypdf import PdfReader
 
+from example_regression import (
+    assert_docx_structure,
+    assert_html_internal_links_resolve,
+    assert_pdf_text_and_pages,
+    assert_rendered_bundle,
+)
+
 
 def _load_example_module(example_dir: str):
     module_path = Path(__file__).resolve().parents[1] / "examples" / example_dir / "main.py"
@@ -57,9 +64,7 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     docx_path, pdf_path = usage_guide.build_usage_guide(tmp_path)
     html_path = tmp_path / "docscriptor-user-guide.html"
 
-    assert docx_path.exists()
-    assert pdf_path.exists()
-    assert html_path.exists()
+    assert_rendered_bundle(docx_path, pdf_path, html_path)
     assert (Path(usage_guide.__file__).resolve().parent / "assets" / "docscriptor-logo.png").exists()
 
     word_document = WordDocument(docx_path)
@@ -162,6 +167,20 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert len(word_document.tables) == 24
     assert len(word_document.inline_shapes) == 11
     assert len(word_document.comments) == 2
+    assert_docx_structure(
+        docx_path,
+        required_paragraphs=(
+            "Docscriptor User Guide",
+            "Contents",
+            "List of Tables",
+            "List of Figures",
+            "Comments",
+            "References",
+        ),
+        table_count=24,
+        inline_shape_count=11,
+        comment_count=2,
+    )
     assert next(paragraph.style.name for paragraph in word_document.paragraphs if paragraph.text == "Comments") == "Heading 2"
     assert next(paragraph.style.name for paragraph in word_document.paragraphs if paragraph.text == "References") == "Heading 2"
 
@@ -240,6 +259,17 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "Footnotes" in pdf_text
     assert len(pdf_reader.pages) >= 14
     assert _pdf_image_draw_count(pdf_path) == 7
+    assert_pdf_text_and_pages(
+        pdf_path,
+        required_text=(
+            "Docscriptor User Guide",
+            "Contents",
+            "List of Tables",
+            "List of Figures",
+            "References",
+        ),
+        min_pages=14,
+    )
 
     assert "Docscriptor User Guide" in normalized_html_text
     assert "Guide Cover" in normalized_html_text
@@ -309,6 +339,11 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert html_text.count("data:image/png;base64,") == 7
     assert 'href="#table_1"' in html_text
     assert 'href="#figure_1"' in html_text
+    assert_html_internal_links_resolve(
+        html_path,
+        required_hrefs=("#table_1", "#figure_1"),
+        required_text=("Docscriptor User Guide", "Build, convert, and validate from the CLI"),
+    )
     assert 'class="docscriptor-toc-entry docscriptor-toc-entry-no-page docscriptor-toc-entry-level-1"' in html_text
     assert 'class="docscriptor-toc-entry docscriptor-toc-entry-no-page docscriptor-toc-entry-level-2"' in html_text
     assert 'class="docscriptor-toc-entry docscriptor-toc-entry-no-page docscriptor-toc-entry-level-3"' in html_text

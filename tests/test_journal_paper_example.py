@@ -10,6 +10,13 @@ import zipfile
 from docx import Document as WordDocument
 from pypdf import PdfReader
 
+from example_regression import (
+    assert_docx_structure,
+    assert_html_internal_links_resolve,
+    assert_pdf_text_and_pages,
+    assert_rendered_bundle,
+)
+
 
 def _load_example_module(example_dir: str):
     module_path = Path(__file__).resolve().parents[1] / "examples" / example_dir / "main.py"
@@ -62,9 +69,7 @@ def test_journal_paper_example_builds_outputs(tmp_path: Path) -> None:
     docx_path, pdf_path = paper_example.build_journal_paper(tmp_path)
     html_path = tmp_path / "docscriptor-development-philosophy.html"
 
-    assert docx_path.exists()
-    assert pdf_path.exists()
-    assert html_path.exists()
+    assert_rendered_bundle(docx_path, pdf_path, html_path)
     assert (Path(paper_example.__file__).resolve().parent / "assets" / "benchmark_results.csv").exists()
     assert (Path(paper_example.__file__).resolve().parent / "assets" / "ablation_results.csv").exists()
 
@@ -104,6 +109,17 @@ def test_journal_paper_example_builds_outputs(tmp_path: Path) -> None:
     assert len(word_document.tables) == 3
     assert len(word_document.inline_shapes) == 3
     assert 'w:num="2"' in _docx_document_xml(docx_path)
+    assert_docx_structure(
+        docx_path,
+        required_paragraphs=(
+            "Docscriptor Development Philosophy",
+            "Abstract",
+            "Highlights",
+            "References",
+        ),
+        table_count=3,
+        inline_shape_count=3,
+    )
 
     assert "Docscriptor Development Philosophy" in pdf_text
     assert "Hyeong-Gon Jo [1]*, Codex [2]" in pdf_text
@@ -133,6 +149,17 @@ def test_journal_paper_example_builds_outputs(tmp_path: Path) -> None:
     assert "https://yihui.org/knitr/" in pdf_text
     assert 6 <= len(pdf_reader.pages) <= 8
     assert _pdf_image_draw_count(pdf_path) == 3
+    assert_pdf_text_and_pages(
+        pdf_path,
+        required_text=(
+            "Docscriptor Development Philosophy",
+            "Abstract",
+            "Results",
+            "References",
+        ),
+        min_pages=6,
+        max_pages=8,
+    )
 
     assert "Docscriptor Development Philosophy" in normalized_html_text
     assert "Hyeong-Gon Jo [1]*, Codex [2]" in normalized_html_text
@@ -150,3 +177,8 @@ def test_journal_paper_example_builds_outputs(tmp_path: Path) -> None:
     assert "column-count: 2" in html_text
     assert 'href="#table_2"' in html_text
     assert 'href="#figure_2"' in html_text
+    assert_html_internal_links_resolve(
+        html_path,
+        required_hrefs=("#table_2", "#figure_2"),
+        required_text=("Docscriptor Development Philosophy", "Benchmark Frontier"),
+    )
