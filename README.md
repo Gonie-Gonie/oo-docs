@@ -289,12 +289,12 @@ Docscriptor versions are derived from git tags through `setuptools-scm`.
 Create and push a release tag like this:
 
 ```powershell
-.\scripts\release.ps1 0.3.0
+.\scripts\release.ps1 1.0.0
 ```
 
-That pushes `v0.3.0`, and the GitHub release workflow runs the test suite, builds the wheel/sdist artifacts, renders the example PDFs, attaches them to the matching GitHub Release, and uploads the Python distributions to PyPI.
+That pushes `v1.0.0`, and the GitHub release workflow runs the test suite, builds the wheel/sdist artifacts, renders the example PDFs, attaches them to the matching GitHub Release, and uploads the Python distributions to PyPI.
 
-If you want a curated release body instead of GitHub's generated notes, add a file such as `release-notes/v0.3.0.md` before pushing the tag.
+If you want a curated release body instead of GitHub's generated notes, add a file such as `release-notes/v1.0.0.md` before pushing the tag.
 
 The `examples/release_notes_digest/` script demonstrates the same convention as a document workflow: it scans the semantic-versioned Markdown files under `release-notes/`, builds an index, includes the version-management rules, and imports each release body into one DOCX/PDF/HTML bundle.
 

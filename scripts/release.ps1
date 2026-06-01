@@ -6,7 +6,7 @@ param(
 $ErrorActionPreference = "Stop"
 
 if ($Version -notmatch '^\d+\.\d+\.\d+$') {
-    throw "Version must match semantic versioning like 0.3.0"
+    throw "Version must match semantic versioning like 1.0.0"
 }
 
 $tag = "v$Version"

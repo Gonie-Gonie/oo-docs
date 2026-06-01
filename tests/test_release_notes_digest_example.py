@@ -37,15 +37,22 @@ def _normalized_html_text(html_path: Path) -> str:
 def test_release_notes_digest_example_builds_outputs(tmp_path: Path) -> None:
     release_notes_example = _load_example_module("release_notes_digest")
     files = release_notes_example.release_note_files()
+    latest_release = files[0]
+    latest_version = latest_release.stem
+    latest_release_path = f"release-notes/{latest_release.name}"
 
     expected_count = len(list(Path(release_notes_example.RELEASE_NOTES_DIR).glob("*.md")))
     assert len(files) == expected_count
-    assert [path.name for path in files[:2]] == ["v0.10.0.md", "v0.9.1.md"]
     assert files == sorted(
         files,
         key=release_notes_example.version_parts_from_filename,
         reverse=True,
     )
+    assert latest_release.name == max(
+        files,
+        key=release_notes_example.version_parts_from_filename,
+    ).name
+    assert release_notes_example.release_type_from_version((1, 0, 0)) == "Major"
     assert release_notes_example.release_type_from_version((0, 10, 0)) == "Minor"
     assert release_notes_example.release_type_from_version((0, 9, 1)) == "Patch"
     assert release_notes_example.release_type_from_version((0, 9, 0)) == "Minor"
@@ -76,14 +83,14 @@ def test_release_notes_digest_example_builds_outputs(tmp_path: Path) -> None:
     assert "3 Version History" in paragraph_texts
     assert any("Release runbook" in text for text in paragraph_texts)
     assert any("setuptools-scm" in text for text in paragraph_texts + [table_text])
-    assert "v0.10.0.md" in table_text
+    assert latest_release.name in table_text
     assert "latest" in table_text
-    assert any("release-notes/v0.10.0.md" in text for text in paragraph_texts)
-    assert "v0.10.0" in paragraph_texts
+    assert any(latest_release_path in text for text in paragraph_texts)
+    assert latest_version in paragraph_texts
     assert "Highlights" in paragraph_texts
-    assert "3 v0.10.0" not in paragraph_texts
-    assert "3.1 v0.10.0" not in paragraph_texts
-    assert "4 v0.10.0" not in paragraph_texts
+    assert f"3 {latest_version}" not in paragraph_texts
+    assert f"3.1 {latest_version}" not in paragraph_texts
+    assert f"4 {latest_version}" not in paragraph_texts
     assert not any(
         re.fullmatch(r"\d+(?:\.\d+)* Highlights", text)
         for text in paragraph_texts
@@ -103,7 +110,7 @@ def test_release_notes_digest_example_builds_outputs(tmp_path: Path) -> None:
             "Docscriptor Release Notes",
             "Contents",
             "3 Version History",
-            "v0.10.0",
+            latest_version,
         ),
         table_count=2,
     )
@@ -114,7 +121,7 @@ def test_release_notes_digest_example_builds_outputs(tmp_path: Path) -> None:
     assert "Release-note digest workflow" in pdf_text
     assert "Version Management" in pdf_text
     assert "Version History" in pdf_text
-    assert "release-notes/v0.10.0.md" in pdf_text
+    assert latest_release_path in pdf_text
     assert "setuptools-scm" in pdf_text
     assert len(pdf_reader.pages) >= 3
     assert_pdf_text_and_pages(
@@ -134,7 +141,7 @@ def test_release_notes_digest_example_builds_outputs(tmp_path: Path) -> None:
     assert "Version Management" in normalized_html_text
     assert "Version History" in normalized_html_text
     assert "Release runbook" in normalized_html_text
-    assert "release-notes/v0.10.0.md" in normalized_html_text
+    assert latest_release_path in normalized_html_text
     assert "vMAJOR.MINOR.PATCH" in normalized_html_text
     assert (
         'class="docscriptor-toc-entry docscriptor-toc-entry-no-page '
@@ -142,7 +149,7 @@ def test_release_notes_digest_example_builds_outputs(tmp_path: Path) -> None:
     ) in html_text
     toc_html = html_text.split("</nav>", 1)[0]
     assert ">3 Version History</a>" in toc_html
-    assert ">v0.10.0</a>" in toc_html
+    assert f">{latest_version}</a>" in toc_html
     assert ">Highlights</a>" not in toc_html
     assert_html_internal_links_resolve(
         html_path,

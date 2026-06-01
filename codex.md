@@ -23,8 +23,11 @@ This file is the shared memory for ongoing work on this repository. Keep it read
 
 ## API Evolution Notes
 
-- Backward compatibility does not need to be preserved unless the user gives a specific compatibility guide or constraint.
-- This project is still in an API-shaping stage. Prefer clear, explicit, maintainable APIs over carrying old names by default.
+- From 1.0.0 onward, treat public API changes as semver-governed changes.
+  Breaking changes should be deliberate, documented in release notes, and covered by
+  tests or examples that show the replacement path.
+- Prefer clear, explicit, maintainable APIs over carrying old names by default, but
+  avoid casual public API churn after the 1.0.0 line.
 - Prefer document-level defaults through `DocumentSettings` when a setting should apply consistently across renderers. `Document` owns content identity and rendering entry points; metadata, page geometry, overlays, units, and theme access should stay under `document.settings`. Use `metadata_author` for file properties and `authors` for visible structured title matter.
 - Prefer editable flow primitives for report-like layouts: `Box` + `BoxStyle`, `Table`, `Figure`, and normal paragraphs should cover tcolorbox-style panels, callouts, and form sections before reaching for page-positioned drawing objects.
 - The old `Sheet` model is removed. Use `DocumentSettings(page_items=[Shape..., TextBox..., ImageBox...])` for absolute page overlays that do not move body text. Anchors are `page`, `margin`/`content`, or an earlier named `Shape`.
@@ -38,7 +41,8 @@ This file is the shared memory for ongoing work on this repository. Keep it read
 - The usage guide example is the broad user-facing reference. Keep it current when major APIs change; it should show rendered examples, search-friendly section titles, and tests that confirm key concepts appear in DOCX, PDF, and HTML output.
 - Example output regression tests should use `tests/example_regression.py` to check rendered bundles, DOCX structure, PDF text/page counts, and HTML internal anchors so examples act as output contracts.
 - Example scripts should read like examples, not defensive libraries. Prefer a direct, serialized workflow that shows ordinary Python values becoming document objects; avoid extra wrappers, optional branches, and defensive checks unless they teach something important or the example genuinely needs them.
-- Release versioning rule: bump the minor version when backward compatibility is not guaranteed; bump only the patch version when backward compatibility is preserved.
+- Release versioning rule from 1.0.0 onward: bump the major version for public
+  breaking changes, minor for backward-compatible features, and patch for fixes.
 
 ## Local Environment Notes
 

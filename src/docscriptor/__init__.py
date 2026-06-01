@@ -137,6 +137,9 @@ from docscriptor.workflows import (
 )
 
 
+_FALLBACK_VERSION = "1.0.0"
+
+
 def _resolve_version() -> str:
     try:
         return package_version("docscriptor")
@@ -144,11 +147,11 @@ def _resolve_version() -> str:
         try:
             from setuptools_scm import get_version
         except ImportError:
-            return "0.10.0"
+            return _FALLBACK_VERSION
         return get_version(
             root="../..",
             relative_to=__file__,
-            fallback_version="0.10.0",
+            fallback_version=_FALLBACK_VERSION,
             tag_regex=r"^v(?P<version>\d+\.\d+\.\d+)$",
         )
 

@@ -15,7 +15,7 @@ authors = [
 ]
 keywords = ["document generation", "pdf", "docx", "python"]
 classifiers = [
-  "Development Status :: 3 - Alpha",
+  "Development Status :: 5 - Production/Stable",
   "Intended Audience :: Developers",
   "Intended Audience :: Science/Research",
   "Operating System :: OS Independent",
@@ -66,7 +66,7 @@ where = ["src"]
 include = ["docscriptor*"]
 
 [tool.setuptools_scm]
-fallback_version = "0.10.0"
+fallback_version = "1.0.0"
 tag_regex = "^v(?P<version>\\d+\\.\\d+\\.\\d+)$"
 
 [tool.pytest.ini_options]
