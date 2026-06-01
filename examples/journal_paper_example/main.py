@@ -44,7 +44,15 @@ ABLATION_CSV_PATH = ASSET_DIR / "ablation_results.csv"
 def _wrapped_lines(lines: list[str], *, width: int) -> list[str]:
     wrapped: list[str] = []
     for line in lines:
-        wrapped.extend(fill(line, width=width).splitlines())
+        for segment in line.splitlines():
+            wrapped.extend(
+                fill(
+                    segment,
+                    width=width,
+                    break_long_words=False,
+                    break_on_hyphens=False,
+                ).splitlines()
+            )
     return wrapped
 
 
@@ -72,27 +80,30 @@ def _add_box(
     axis.add_patch(patch)
     axis.text(
         x + width / 2,
-        y + height - 0.07,
+        y + height - 0.065,
         title,
         ha="center",
         va="top",
-        fontsize=10.5,
+        fontsize=9.8,
         weight="bold",
         color="#183244",
         clip_on=True,
     )
     wrapped = _wrapped_lines(lines, width=wrap_width)
-    top = y + height - 0.16
-    bottom = y + 0.07
-    step = min(0.065, max((top - bottom) / max(len(wrapped), 1), 0.04))
+    top = y + height - 0.18
+    bottom = y + 0.10
+    available = max(top - bottom, 0.01)
+    step = min(0.07, max(available / max(len(wrapped) - 1, 1), 0.045))
+    used = step * max(len(wrapped) - 1, 0)
+    start = bottom + (available + used) / 2 if used <= available else top
     for index, line in enumerate(wrapped):
         axis.text(
             x + 0.03,
-            top - (index * step),
+            start - (index * step),
             line,
             ha="left",
             va="top",
-            fontsize=8.6,
+            fontsize=8.0,
             color="#23394A",
             clip_on=True,
         )
@@ -101,7 +112,7 @@ def _add_box(
 def build_traceability_figure():
     """Create a diagram showing the manuscript workflow being studied."""
 
-    figure, axis = plt.subplots(figsize=(8.0, 3.8))
+    figure, axis = plt.subplots(figsize=(8.8, 3.5))
     axis.set_xlim(0, 1)
     axis.set_ylim(0, 1)
     axis.axis("off")
@@ -109,67 +120,77 @@ def build_traceability_figure():
     _add_box(
         axis,
         0.05,
-        0.22,
-        0.205,
-        0.6,
+        0.24,
+        0.19,
+        0.52,
         "#EAF3FB",
-        "Evidence Sources",
+        "Evidence",
         [
-            "Benchmark CSV files",
-            "Static diagrams and logos",
-            "Citation metadata",
+            "CSV metrics",
+            "Static assets",
+            "Citations",
         ],
+        wrap_width=16,
     )
     _add_box(
         axis,
-        0.31,
-        0.16,
-        0.225,
-        0.72,
+        0.29,
+        0.19,
+        0.21,
+        0.60,
         "#F8F2E8",
-        "Python Authoring Layer",
+        "Authoring",
         [
-            "Table.from_dataframe(...)",
-            "Figure(matplotlib_object)",
-            "Structured sections and notes",
-        ],
-        wrap_width=22,
-    )
-    _add_box(
-        axis,
-        0.59,
-        0.22,
-        0.17,
-        0.6,
-        "#EDF7EC",
-        "Traceability Checks",
-        [
-            "Caption numbering",
-            "Cross-reference targets",
-            "Generated bibliography",
-        ],
-    )
-    _add_box(
-        axis,
-        0.80,
-        0.22,
-        0.15,
-        0.6,
-        "#FCEDE7",
-        "Submission Outputs",
-        [
-            "DOCX review copy",
-            "PDF submission",
-            "HTML sharing draft",
+            "DataFrame tables",
+            "Matplotlib figures",
+            "Structured sections",
+            "Notes",
         ],
         wrap_width=18,
     )
+    _add_box(
+        axis,
+        0.55,
+        0.24,
+        0.18,
+        0.52,
+        "#EDF7EC",
+        "Checks",
+        [
+            "Numbering",
+            "References",
+            "Bibliography",
+        ],
+        wrap_width=15,
+    )
+    _add_box(
+        axis,
+        0.78,
+        0.24,
+        0.17,
+        0.52,
+        "#FCEDE7",
+        "Outputs",
+        [
+            "Review DOCX",
+            "Submission PDF",
+            "Share HTML",
+        ],
+        wrap_width=15,
+    )
 
     arrow_kwargs = {"arrowstyle": "->", "lw": 2.0, "color": "#48627A"}
-    axis.annotate("", xy=(0.31, 0.5), xytext=(0.25, 0.5), arrowprops=arrow_kwargs)
-    axis.annotate("", xy=(0.59, 0.5), xytext=(0.53, 0.5), arrowprops=arrow_kwargs)
-    axis.annotate("", xy=(0.80, 0.5), xytext=(0.75, 0.5), arrowprops=arrow_kwargs)
-    axis.text(0.5, 0.93, "The workflow keeps manuscript claims downstream of the evidence that supports them.", ha="center", fontsize=11, color="#183244")
+    axis.annotate("", xy=(0.29, 0.51), xytext=(0.24, 0.51), arrowprops=arrow_kwargs)
+    axis.annotate("", xy=(0.55, 0.51), xytext=(0.50, 0.51), arrowprops=arrow_kwargs)
+    axis.annotate("", xy=(0.78, 0.51), xytext=(0.73, 0.51), arrowprops=arrow_kwargs)
+    axis.text(
+        0.5,
+        0.94,
+        "Claims remain downstream of the evidence that supports them.",
+        ha="center",
+        fontsize=10.5,
+        color="#183244",
+    )
     figure.tight_layout()
     return figure
 
@@ -177,24 +198,38 @@ def build_traceability_figure():
 def build_quality_latency_figure(results_df: pd.DataFrame):
     """Plot the quality-latency frontier from the benchmark CSV."""
 
-    figure, axis = plt.subplots(figsize=(3.4, 2.8))
+    figure, axis = plt.subplots(figsize=(3.6, 2.8))
     palette = ["#6C8DB0", "#4F8DA1", "#3F9D79", "#D07B42"]
     axis.scatter(results_df["Latency_ms"], results_df["Accuracy"], s=80, c=palette, edgecolors="#173042", linewidths=0.8)
     axis.plot(results_df["Latency_ms"], results_df["Accuracy"], color="#7B8E9E", linestyle="--", linewidth=1.1)
+    labels = {
+        "Baseline": "Base",
+        "StructuredDoc": "Doc",
+        "StructuredDoc+Review": "Review",
+        "StructuredDoc+Review+Checks": "Checks",
+    }
+    offsets = {
+        "Baseline": (8, 8),
+        "StructuredDoc": (0, 9),
+        "StructuredDoc+Review": (0, 9),
+        "StructuredDoc+Review+Checks": (-8, 9),
+    }
     for _, row in results_df.iterrows():
+        offset = offsets[row["Model"]]
         axis.annotate(
-            row["Model"],
+            labels[row["Model"]],
             (row["Latency_ms"], row["Accuracy"]),
             textcoords="offset points",
-            xytext=(0, 6),
-            ha="center",
-            fontsize=6.8,
+            xytext=offset,
+            ha="right" if offset[0] < 0 else "center",
+            fontsize=7.0,
             color="#173042",
         )
     axis.set_xlabel("Latency (ms)", fontsize=7.5)
     axis.set_ylabel("Accuracy", fontsize=7.5)
+    axis.set_xlim(40, 66)
     axis.set_ylim(0.865, 0.95)
-    axis.set_title("Quality-Latency Frontier", fontsize=8.5)
+    axis.set_title("Quality vs Latency", fontsize=8.5)
     axis.tick_params(labelsize=6.8)
     axis.grid(alpha=0.25, linestyle=":")
     figure.tight_layout()

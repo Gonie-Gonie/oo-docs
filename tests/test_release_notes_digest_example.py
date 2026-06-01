@@ -66,6 +66,7 @@ def test_release_notes_digest_example_builds_outputs(tmp_path: Path) -> None:
     assert "Docscriptor Release Notes" in paragraph_texts
     assert "Contents" in paragraph_texts
     assert any("Release Note Index" in text for text in paragraph_texts)
+    assert any("Release-note digest workflow" in text for text in paragraph_texts)
     assert any("Version Management" in text for text in paragraph_texts)
     assert "3 Version History" in paragraph_texts
     assert any("Release runbook" in text for text in paragraph_texts)
@@ -95,6 +96,7 @@ def test_release_notes_digest_example_builds_outputs(tmp_path: Path) -> None:
     assert "Docscriptor Release Notes" in pdf_text
     assert "Contents" in pdf_text
     assert "Release Note Index" in pdf_text
+    assert "Release-note digest workflow" in pdf_text
     assert "Version Management" in pdf_text
     assert "Version History" in pdf_text
     assert "release-notes/v0.10.0.md" in pdf_text
@@ -104,6 +106,7 @@ def test_release_notes_digest_example_builds_outputs(tmp_path: Path) -> None:
     assert "Docscriptor Release Notes" in normalized_html_text
     assert "Contents" in normalized_html_text
     assert "Release Note Index" in normalized_html_text
+    assert "Release-note digest workflow" in normalized_html_text
     assert "Version Management" in normalized_html_text
     assert "Version History" in normalized_html_text
     assert "Release runbook" in normalized_html_text

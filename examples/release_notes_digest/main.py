@@ -4,11 +4,20 @@ from __future__ import annotations
 
 from pathlib import Path
 import re
+from textwrap import fill
+
+import matplotlib
+
+matplotlib.use("Agg")
+
+import matplotlib.pyplot as plt
+from matplotlib.patches import FancyBboxPatch
 
 from docscriptor import (
     Chapter,
     Document,
     DocumentSettings,
+    Figure,
     NumberedList,
     Paragraph,
     Section,
@@ -86,6 +95,106 @@ def section_titles(markdown_text: str) -> str:
     return ", ".join(titles) or "Release notes"
 
 
+def _wrapped_lines(lines: list[str], *, width: int) -> list[str]:
+    wrapped: list[str] = []
+    for line in lines:
+        for segment in line.splitlines():
+            wrapped.extend(
+                fill(
+                    segment,
+                    width=width,
+                    break_long_words=False,
+                    break_on_hyphens=False,
+                ).splitlines()
+            )
+    return wrapped
+
+
+def _add_digest_card(
+    axis: object,
+    x: float,
+    color_value: str,
+    title: str,
+    lines: list[str],
+) -> None:
+    y = 0.25
+    width = 0.18
+    height = 0.50
+    patch = FancyBboxPatch(
+        (x, y),
+        width,
+        height,
+        boxstyle="round,pad=0.018,rounding_size=0.03",
+        linewidth=1.2,
+        edgecolor="#4F6274",
+        facecolor=color_value,
+    )
+    axis.add_patch(patch)
+    axis.text(
+        x + width / 2,
+        y + height - 0.065,
+        title,
+        ha="center",
+        va="top",
+        fontsize=9.6,
+        weight="bold",
+        color="#173042",
+    )
+    wrapped = _wrapped_lines(lines, width=17)
+    top = y + height - 0.18
+    bottom = y + 0.10
+    available = top - bottom
+    step = min(0.07, max(available / max(len(wrapped) - 1, 1), 0.045))
+    used = step * max(len(wrapped) - 1, 0)
+    start = bottom + (available + used) / 2 if used <= available else top
+    for index, line in enumerate(wrapped):
+        axis.text(
+            x + 0.03,
+            start - index * step,
+            line,
+            ha="left",
+            va="top",
+            fontsize=7.9,
+            color="#223847",
+        )
+
+
+def build_release_digest_figure(latest_version: str):
+    """Create a compact diagram for the release-note digest workflow."""
+
+    figure, axis = plt.subplots(figsize=(8.8, 3.4))
+    axis.set_xlim(0, 1)
+    axis.set_ylim(0, 1)
+    axis.axis("off")
+
+    cards = [
+        ("Markdown", "#EAF3FB", ["release-notes/", "vX.Y.Z.md files"]),
+        ("Sort", "#F8F2E8", ["Parse semantic", "version numbers", f"Latest: {latest_version}"]),
+        ("Import", "#EDF7EC", ["Markdown headings", "become document", "sections"]),
+        ("Bundle", "#FCEEE8", ["DOCX", "PDF", "HTML"]),
+    ]
+    for index, (title, color_value, lines) in enumerate(cards):
+        x = 0.05 + index * 0.24
+        _add_digest_card(axis, x, color_value, title, lines)
+        if index < len(cards) - 1:
+            axis.annotate(
+                "",
+                xy=(x + 0.225, 0.51),
+                xytext=(x + 0.18, 0.51),
+                arrowprops={"arrowstyle": "->", "lw": 1.8, "color": "#48627A"},
+            )
+    axis.text(
+        0.5,
+        0.93,
+        "Release documentation is generated from the same versioned Markdown files.",
+        ha="center",
+        fontsize=10.4,
+        color="#183244",
+    )
+    figure.tight_layout()
+    return figure
+
+
 def build_release_notes_document(
     release_notes_dir: str | Path = RELEASE_NOTES_DIR,
 ) -> Document:
@@ -133,6 +242,13 @@ def build_release_notes_document(
 
     latest_release = files[0]
     latest_version = latest_release.stem
+    digest_workflow_figure = Figure(
+        build_release_digest_figure(latest_version),
+        caption=Paragraph(
+            "Release-note digest workflow from versioned Markdown files to the rendered output bundle."
+        ),
+        width=6.5,
+    )
     release_index_table = Table(
         headers=["Version", "Type", "File", "Sections"],
         rows=release_index_rows,
@@ -185,6 +301,7 @@ def build_release_notes_document(
                 code("v0.9.1.md"),
                 ", and sorts the imported notes from newest to oldest.",
             ),
+            digest_workflow_figure,
             release_index_table,
         ),
         Chapter(
