@@ -1118,11 +1118,9 @@ class HtmlRenderer:
             f"padding: {top_padding:.1f}pt {right_padding:.1f}pt {bottom_padding:.1f}pt {left_padding:.1f}pt"
         )
         effective_style = block.effective_cell_style(placement)
-        horizontal_alignment = self._table_cell_horizontal_alignment(placement, block)
+        horizontal_alignment = self._table_cell_horizontal_alignment(placement, block) or "left"
         vertical_alignment = self._table_cell_vertical_alignment(placement, block)
-        style_parts.append(
-            f"text-align: {horizontal_alignment}" if horizontal_alignment is not None else "text-align: inherit"
-        )
+        style_parts.append(f"text-align: {horizontal_alignment}")
         style_parts.append(
             f"vertical-align: {vertical_alignment}" if vertical_alignment is not None else "vertical-align: top"
         )

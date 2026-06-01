@@ -2340,9 +2340,8 @@ class DocxRenderer:
             cell_horizontal_alignment = self._table_cell_horizontal_alignment(
                 cell_placement,
                 table_block,
-            )
-            if cell_horizontal_alignment is not None:
-                paragraph.alignment = ALIGNMENTS[cell_horizontal_alignment]
+            ) or "left"
+            paragraph.alignment = ALIGNMENTS[cell_horizontal_alignment]
             cell_vertical_alignment = self._table_cell_vertical_alignment(
                 cell_placement,
                 table_block,

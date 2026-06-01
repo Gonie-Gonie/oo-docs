@@ -1534,13 +1534,12 @@ class PdfRenderer:
             cell_horizontal_alignment = self._table_cell_horizontal_alignment(
                 placement,
                 block,
+            ) or "left"
+            paragraph_style = RLParagraphStyle(
+                f"{paragraph_style.name}Cell{cell_horizontal_alignment}",
+                parent=paragraph_style,
+                alignment=ALIGNMENTS[cell_horizontal_alignment],
             )
-            if cell_horizontal_alignment is not None:
-                paragraph_style = RLParagraphStyle(
-                    f"{paragraph_style.name}Cell{cell_horizontal_alignment}",
-                    parent=paragraph_style,
-                    alignment=ALIGNMENTS[cell_horizontal_alignment],
-                )
             table_rows[placement.row][placement.column] = RLParagraph(
                 self._inline_markup(
                     placement.cell.content.content,
@@ -1577,18 +1576,17 @@ class PdfRenderer:
                         TABLE_CELL_VERTICAL_ALIGNMENTS[cell_vertical_alignment],
                     )
                 )
-            if cell_horizontal_alignment is not None:
-                style_commands.append(
+            style_commands.append(
+                (
+                    "ALIGN",
+                    (placement.column, placement.row),
                     (
-                        "ALIGN",
-                        (placement.column, placement.row),
-                        (
-                            placement.column + placement.cell.colspan - 1,
-                            placement.row + placement.cell.rowspan - 1,
-                        ),
-                        TABLE_CELL_ALIGNMENTS[cell_horizontal_alignment],
-                    )
+                        placement.column + placement.cell.colspan - 1,
+                        placement.row + placement.cell.rowspan - 1,
+                    ),
+                    TABLE_CELL_ALIGNMENTS[cell_horizontal_alignment],
                 )
+            )
             if effective_style.background_color is not None:
                 style_commands.append(
                     (

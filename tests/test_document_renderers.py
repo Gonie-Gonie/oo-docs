@@ -1788,6 +1788,32 @@ def test_table_cell_alignment_renders_to_all_outputs(tmp_path: Path) -> None:
     assert "text-align: right" in html_text
 
 
+def test_default_table_cell_alignment_is_left_in_all_outputs(tmp_path: Path) -> None:
+    document = Document(
+        "Default Table Alignment Test",
+        Table(
+            headers=["Area", "Status"],
+            rows=[["Release notes", "Compatibility notes wrap cleanly in narrow cells."]],
+        ),
+        settings=DocumentSettings(theme=Theme(paragraph_alignment="justify")),
+    )
+
+    docx_path = tmp_path / "default-table-alignment.docx"
+    pdf_path = tmp_path / "default-table-alignment.pdf"
+    html_path = tmp_path / "default-table-alignment.html"
+    document.save_docx(docx_path)
+    document.save_pdf(pdf_path)
+    document.save_html(html_path)
+
+    docx_xml = _docx_document_xml(docx_path)
+    pdf_text = "\n".join(page.extract_text() or "" for page in PdfReader(BytesIO(pdf_path.read_bytes())).pages)
+    html_text = html_path.read_text(encoding="utf-8")
+
+    assert '<w:jc w:val="left"' in docx_xml
+    assert "Compatibility notes wrap cleanly" in pdf_text
+    assert "text-align: left" in html_text
+
+
 def test_table_cell_row_and_column_styles_render_to_all_outputs(tmp_path: Path) -> None:
     table = Table(
         headers=["Metric", "Value"],
