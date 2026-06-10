@@ -139,7 +139,7 @@ from oodocs.workflows import (
 )
 
 
-_FALLBACK_VERSION = "1.0.3"
+_FALLBACK_VERSION = "1.0.4"
 
 
 def _resolve_version() -> str:

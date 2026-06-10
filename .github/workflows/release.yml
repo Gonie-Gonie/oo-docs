@@ -98,7 +98,7 @@ jobs:
             artifacts/usage-guide/oodocs-user-guide.pdf
             artifacts/journal-paper/oodocs-development-philosophy.pdf
             artifacts/release-notes/oodocs-release-notes.pdf
-            artifacts/evidence/*
+            artifacts/evidence/oodocs-evidence-report.pdf
           body_path: ${{ steps.release_notes.outputs.path }}
 
       - name: Publish GitHub Release
@@ -110,7 +110,7 @@ jobs:
             artifacts/usage-guide/oodocs-user-guide.pdf
             artifacts/journal-paper/oodocs-development-philosophy.pdf
             artifacts/release-notes/oodocs-release-notes.pdf
-            artifacts/evidence/*
+            artifacts/evidence/oodocs-evidence-report.pdf
           generate_release_notes: true
 
   publish-pypi:
