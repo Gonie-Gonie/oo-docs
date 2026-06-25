@@ -41,6 +41,23 @@ suitable for narrow DOCX/PDF pages before any renderer-specific output is
 created. The `parameter_columns` option controls table width in the same
 renderer-neutral way.
 
+Supported parameter columns are `name`, `type`, `default`, `required`,
+`description`, and `source`. Profiles normalize column names when they are
+created and raise `ValueError` for unsupported names, so invalid table policies
+fail before rendering starts.
+
+```python
+from dataclasses import replace
+from oodocs.apidoc import ApiDocProfile
+
+pdf_friendly = replace(
+    ApiDocProfile.reference(),
+    parameter_columns=("name", "type", "description"),
+    max_description_chars=160,
+    max_signature_width=80,
+)
+```
+
 Profiles also control parsed `Notes:` and `Warnings:` sections. `compact` and
 `evidence` suppress general notes to keep reference bundles short, but warnings
 remain visible because they often affect API usage. The same policy is applied

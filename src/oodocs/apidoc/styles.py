@@ -8,6 +8,16 @@ from typing import Sequence
 from oodocs.apidoc.model import ApiPresentationProfileName
 
 
+_ALLOWED_PARAMETER_COLUMNS = {
+    "name",
+    "type",
+    "default",
+    "required",
+    "description",
+    "source",
+}
+
+
 @dataclass(frozen=True, slots=True)
 class ApiDocProfile:
     """Block-composition policy for API object rendering.
@@ -91,6 +101,23 @@ class ApiDocProfile:
     max_signature_width: int | None = None
     max_signature_lines: int | None = None
     signature_wrap_indent: str = "    "
+
+    def __post_init__(self) -> None:
+        """Normalize and validate profile options."""
+
+        normalized_columns = tuple(
+            str(column).strip().lower() for column in self.parameter_columns
+        )
+        invalid = [
+            column
+            for column in normalized_columns
+            if column not in _ALLOWED_PARAMETER_COLUMNS
+        ]
+        if invalid:
+            raise ValueError(
+                f"Unsupported API parameter columns: {', '.join(invalid)}"
+            )
+        object.__setattr__(self, "parameter_columns", normalized_columns)
 
     @classmethod
     def reference(cls) -> ApiDocProfile:
@@ -475,9 +502,10 @@ def normalize_parameter_columns(columns: Sequence[str]) -> tuple[str, ...]:
         ```
     """
 
-    allowed = {"name", "type", "default", "required", "description", "source"}
     normalized = tuple(column.strip().lower() for column in columns)
-    invalid = [column for column in normalized if column not in allowed]
+    invalid = [
+        column for column in normalized if column not in _ALLOWED_PARAMETER_COLUMNS
+    ]
     if invalid:
         raise ValueError(f"Unsupported API parameter columns: {', '.join(invalid)}")
     return normalized
