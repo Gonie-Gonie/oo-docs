@@ -8,6 +8,7 @@ from oodocs.apidoc import (
     ApiPackage,
     ApiSnapshot,
     check_api_docs,
+    collect_object_api,
     collect_api,
     detect_docstring_style,
     diff_api,
@@ -206,6 +207,86 @@ def test_collect_api_builds_queryable_object_tree_and_blocks(tmp_path: Path) -> 
     sidecar = tmp_path / "api.json"
     api.write_json(sidecar)
     assert ApiPackage.read_json(sidecar).find("samplepkg.Widget") is not None
+
+
+def test_collect_api_supports_src_layout_repo_reexports_and_deep_object_lookup(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    repo = tmp_path / "repo"
+    package_dir = repo / "src" / "widgetlib"
+    package_dir.mkdir(parents=True)
+    (repo / "pyproject.toml").write_text(
+        "[project]\nname = \"widget-lib\"\n",
+        encoding="utf-8",
+    )
+    (package_dir / "__init__.py").write_text(
+        "\n".join(
+            [
+                '"""Widget library."""',
+                "from .core import Widget, make_widget",
+                "",
+                "__all__ = ['Widget', 'make_widget']",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (package_dir / "core.py").write_text(
+        "\n".join(
+            [
+                '"""Core widget APIs."""',
+                "",
+                "class Widget:",
+                '    """A widget.',
+                "",
+                "    Args:",
+                "        name: Widget name.",
+                '    """',
+                "    def __init__(self, name: str) -> None:",
+                "        self.name = name",
+                "",
+                "    def render(self, path: str) -> str:",
+                '        """Render the widget.',
+                "",
+                "        Args:",
+                "            path: Output path.",
+                "        Returns:",
+                "            str: Rendered path.",
+                '        """',
+                "        return path",
+                "",
+                "def make_widget(name: str) -> Widget:",
+                '    """Create a widget.',
+                "",
+                "    Args:",
+                "        name: Widget name.",
+                "    Returns:",
+                "        Widget: Created widget.",
+                '    """',
+                "    return Widget(name)",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.syspath_prepend(str(repo / "src"))
+
+    api = collect_api(repo, public_policy="__all__", collector="inspect")
+
+    assert api.name == "widgetlib"
+    assert {module.name for module in api.modules} == {"widgetlib", "widgetlib.core"}
+    assert api.find("widgetlib.Widget") is not None
+    assert api.find("widgetlib.core.Widget.render") is not None
+    assert [obj.qualname for obj in api.select(kind="class", module="widgetlib")] == [
+        "widgetlib.Widget"
+    ]
+
+    looked_up = collect_object_api(
+        "widgetlib.core.Widget.render",
+        public_policy="underscore",
+        collector="inspect",
+    )
+    assert looked_up.kind == "method"
+    assert looked_up.parameters[0].name == "path"
 
 
 def test_api_coverage_and_diff_detect_doc_changes(tmp_path: Path) -> None:

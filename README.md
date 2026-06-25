@@ -42,8 +42,8 @@ summaries:
 pip install "oodocs[adapters]"
 ```
 
-If you want to collect Python API objects from modules and docstrings for API
-reference documents:
+If you want to collect Python API objects from modules, packages, source-layout
+repositories, and docstrings for API reference documents:
 
 ```powershell
 pip install "oodocs[apidoc]"
@@ -211,6 +211,8 @@ from oodocs import Chapter, Document, Paragraph
 from oodocs.apidoc import collect_api
 
 api = collect_api("oodocs", public_policy="__all__")
+# A repository checkout with a src/ layout also works:
+# api = collect_api(".", public_policy="__all__")
 classes = api.select(kind="class", module_prefix="oodocs.components")
 functions = api.select(kind="function")
 

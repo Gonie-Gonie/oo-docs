@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 from dataclasses import replace
+import copy
 import importlib.metadata
 import importlib.util
 from pathlib import Path
@@ -67,16 +68,17 @@ def collect_api(
         ```
     """
 
-    resolved = ApiCollectConfig.from_kwargs(
-        config,
-        collector=collector,
-        public_policy=public_policy,
-        explicit_names=normalize_explicit_names(explicit_names),
-        docstring_style=docstring_style,
-        include_imported=include_imported,
-        include_inherited=include_inherited,
-        class_signature_from_init=class_signature_from_init,
-    )
+    config_kwargs: dict[str, object | None] = {
+        "collector": collector,
+        "public_policy": public_policy,
+        "docstring_style": docstring_style,
+        "include_imported": include_imported,
+        "include_inherited": include_inherited,
+        "class_signature_from_init": class_signature_from_init,
+    }
+    if explicit_names is not None:
+        config_kwargs["explicit_names"] = normalize_explicit_names(explicit_names)
+    resolved = ApiCollectConfig.from_kwargs(config, **config_kwargs)
     if resolved.collector == "inspect":
         from oodocs.apidoc.collect_inspect import collect_package_inspect
 
@@ -145,12 +147,19 @@ def collect_object_api(
         LookupError: If the object cannot be found.
     """
 
-    module_name = obj_or_qualname.rsplit(".", 1)[0]
-    api = collect_api(module_name, config=config, **kwargs)
-    found = api.find(obj_or_qualname)
-    if not isinstance(found, ApiObject):
-        raise LookupError(f"API object not found: {obj_or_qualname}")
-    return found
+    errors: list[Exception] = []
+    for module_name in _candidate_module_prefixes(obj_or_qualname):
+        try:
+            api = collect_api(module_name, config=config, **kwargs)
+        except Exception as exc:
+            errors.append(exc)
+            continue
+        found = api.find(obj_or_qualname)
+        if isinstance(found, ApiObject):
+            return found
+    if errors:
+        raise LookupError(f"API object not found: {obj_or_qualname}") from errors[-1]
+    raise LookupError(f"API object not found: {obj_or_qualname}")
 
 
 def _collect_package_source(
@@ -179,12 +188,18 @@ def _collect_package_source(
             continue
         modules.append(module)
         issues.extend(_module_issues(module))
+    _add_reexported_objects(modules)
     return ApiPackage(
         package_name,
         version=_package_version(package_name),
         modules=sorted(modules, key=lambda item: item.name),
         issues=issues,
-        metadata={"collector": config.collector, "public_policy": config.public_policy},
+        metadata={
+            "collector": config.collector,
+            "file_count": len(files),
+            "public_policy": config.public_policy,
+            "source_root": str(root),
+        },
     )
 
 
@@ -210,7 +225,10 @@ def _collect_module_from_file(
         source_path=str(path),
         line_number=1,
         end_line_number=getattr(tree, "end_lineno", None),
-        metadata={"__all__": sorted(public_names) if public_names is not None else None},
+        metadata={
+            "__all__": sorted(public_names) if public_names is not None else None,
+            "reexports": _module_reexports(tree, module_name, public_names),
+        },
     )
     for node in tree.body:
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
@@ -516,10 +534,27 @@ def _resolve_source_files(package: str | PathLike) -> tuple[Path, str, list[Path
         resolved = candidate.resolve()
         if resolved.is_file():
             return resolved.parent, resolved.stem, [resolved]
-        package_name = resolved.name
-        root = resolved.parent if (resolved / "__init__.py").exists() else resolved
-        files = sorted(path for path in resolved.rglob("*.py") if "__pycache__" not in path.parts)
-        return root, package_name, files
+        if (resolved / "__init__.py").exists():
+            files = _python_files_under(resolved)
+            return resolved.parent, resolved.name, files
+
+        project_name = _project_name_from_pyproject(resolved) or resolved.name
+        src_root = resolved / "src"
+        if src_root.is_dir():
+            package_dirs = _package_dirs(src_root)
+            if package_dirs:
+                files = [file_path for package_dir in package_dirs for file_path in _python_files_under(package_dir)]
+                package_name = package_dirs[0].name if len(package_dirs) == 1 else project_name
+                return src_root, package_name, sorted(files)
+
+        package_dirs = _package_dirs(resolved)
+        if package_dirs:
+            files = [file_path for package_dir in package_dirs for file_path in _python_files_under(package_dir)]
+            package_name = package_dirs[0].name if len(package_dirs) == 1 else project_name
+            return resolved, package_name, sorted(files)
+
+        files = _python_files_under(resolved)
+        return resolved, project_name, files
 
     spec = importlib.util.find_spec(str(package))
     if spec is None:
@@ -539,11 +574,66 @@ def _module_name_for_file(path: Path, *, root: Path, package_name: str) -> str:
     parts = list(relative.parts)
     if parts and parts[-1] == "__init__":
         parts = parts[:-1]
+    if not parts:
+        return package_name
     if parts and parts[0] == package_name:
         return ".".join(parts)
-    if len(parts) == 1 and parts[0] == "__init__":
-        return package_name
+    if parts and (root / parts[0] / "__init__.py").exists():
+        return ".".join(parts)
+    if not package_name:
+        return ".".join(parts)
     return ".".join([package_name, *parts]) if package_name not in parts[:1] else ".".join(parts)
+
+
+def _python_files_under(directory: Path) -> list[Path]:
+    ignored = {
+        ".git",
+        ".hg",
+        ".mypy_cache",
+        ".pytest_cache",
+        ".ruff_cache",
+        ".tox",
+        ".venv",
+        "__pycache__",
+        "artifacts",
+        "build",
+        "dist",
+        "htmlcov",
+        "node_modules",
+        "site-packages",
+    }
+    return sorted(
+        path
+        for path in directory.rglob("*.py")
+        if not any(part in ignored for part in path.relative_to(directory).parts)
+    )
+
+
+def _package_dirs(source_root: Path) -> list[Path]:
+    return sorted(
+        path
+        for path in source_root.iterdir()
+        if path.is_dir()
+        and (path / "__init__.py").exists()
+        and not path.name.startswith(".")
+        and path.name != "__pycache__"
+    )
+
+
+def _project_name_from_pyproject(directory: Path) -> str | None:
+    path = directory / "pyproject.toml"
+    if not path.exists():
+        return None
+    in_project = False
+    for line in path.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if stripped.startswith("[") and stripped.endswith("]"):
+            in_project = stripped == "[project]"
+            continue
+        if in_project and stripped.startswith("name") and "=" in stripped:
+            value = stripped.split("=", 1)[1].strip().strip("\"'")
+            return value.replace("-", "_") or None
+    return None
 
 
 def _module_all_names(tree: ast.Module) -> set[str] | None:
@@ -556,6 +646,109 @@ def _module_all_names(tree: ast.Module) -> set[str] | None:
         elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name) and node.target.id == "__all__":
             names = _string_sequence(node.value)
     return names
+
+
+def _module_reexports(
+    tree: ast.Module,
+    module_name: str,
+    public_names: set[str] | None,
+) -> list[dict[str, str]]:
+    reexports: list[dict[str, str]] = []
+    for node in tree.body:
+        if not isinstance(node, ast.ImportFrom):
+            continue
+        target_module = _resolve_import_from_module(module_name, node.module, node.level)
+        if target_module is None:
+            continue
+        for alias in node.names:
+            if alias.name == "*":
+                continue
+            local_name = alias.asname or alias.name
+            if public_names is not None and local_name not in public_names:
+                continue
+            if public_names is None and local_name.startswith("_"):
+                continue
+            reexports.append(
+                {
+                    "name": local_name,
+                    "target_module": target_module,
+                    "target_name": alias.name,
+                    "target_qualname": f"{target_module}.{alias.name}",
+                }
+            )
+    return reexports
+
+
+def _add_reexported_objects(modules: list[ApiModule]) -> None:
+    module_map = {module.name: module for module in modules}
+    object_map = {
+        obj.qualname: obj
+        for module in modules
+        for obj in module.iter_objects(recursive=True)
+    }
+    for module in modules:
+        existing_names = {member.name for member in module.members}
+        for item in module.metadata.get("reexports", []):
+            if not isinstance(item, dict):
+                continue
+            local_name = str(item.get("name", ""))
+            target_qualname = str(item.get("target_qualname", ""))
+            target = object_map.get(target_qualname)
+            if not local_name or local_name in existing_names or target is None:
+                continue
+            alias = _reexport_alias(target, module.name, local_name, target_qualname)
+            module.members.append(alias)
+            existing_names.add(local_name)
+            object_map[alias.qualname] = alias
+        module.members.sort(key=lambda obj: (obj.line_number or 0, obj.name))
+
+
+def _reexport_alias(
+    target: ApiObject,
+    module_name: str,
+    local_name: str,
+    target_qualname: str,
+) -> ApiObject:
+    alias = ApiObject.from_dict(copy.deepcopy(target.to_dict()))
+    alias.name = local_name
+    alias.module = module_name
+    alias.qualname = f"{module_name}.{local_name}"
+    if alias.signature and alias.signature.startswith(target_qualname):
+        alias.signature = alias.qualname + alias.signature[len(target_qualname) :]
+    alias.metadata = dict(alias.metadata)
+    alias.metadata["reexported_from"] = target_qualname
+    return alias
+
+
+def _resolve_import_from_module(
+    current_module: str,
+    imported_module: str | None,
+    level: int,
+) -> str | None:
+    if level == 0:
+        return imported_module
+    current_parts = current_module.split(".")
+    base_length = max(0, len(current_parts) - level + 1)
+    base_parts = current_parts[:base_length]
+    if imported_module:
+        base_parts.extend(imported_module.split("."))
+    return ".".join(part for part in base_parts if part)
+
+
+def _candidate_module_prefixes(qualname: str) -> list[str]:
+    pieces = qualname.split(".")
+    candidates: list[str] = []
+    for end in range(len(pieces), 0, -1):
+        candidate = ".".join(pieces[:end])
+        try:
+            spec = importlib.util.find_spec(candidate)
+        except (ImportError, AttributeError, ValueError):
+            spec = None
+        if spec is not None:
+            candidates.append(candidate)
+    if "." in qualname:
+        candidates.append(qualname.rsplit(".", 1)[0])
+    return list(dict.fromkeys(candidates))
 
 
 def _string_sequence(node: ast.AST | None) -> set[str] | None:
