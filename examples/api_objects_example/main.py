@@ -2,10 +2,18 @@
 
 from __future__ import annotations
 
+import argparse
 from pathlib import Path
+from typing import Sequence
 
 from oodocs import Chapter, Document, Paragraph
-from oodocs.apidoc import ApiCoverageResult, ApiPackage, check_api_docs, collect_api
+from oodocs.apidoc import (
+    ApiCoverageResult,
+    ApiDocstringParser,
+    ApiPackage,
+    check_api_docs,
+    collect_api,
+)
 
 
 ARTIFACT_DIR = Path("artifacts/api-objects-example")
@@ -17,6 +25,53 @@ COVERAGE_STEM = "oodocs-api-coverage"
 def _log(message: str, *, verbose: bool) -> None:
     if verbose:
         print(message, flush=True)
+
+
+def collect_target_api(
+    target: str | Path = "oodocs",
+    *,
+    public_policy: str = "__all__",
+    collector: str = "auto",
+    docstring_style: str | ApiDocstringParser | None = None,
+) -> ApiPackage:
+    """Collect any Python package, module, file, or repository target.
+
+    Args:
+        target: Importable package/module name, Python file, package directory,
+            or repository checkout to document.
+        public_policy: Public boundary passed to ``collect_api``.
+        collector: Collector backend passed to ``collect_api``.
+        docstring_style: Docstring parser style or reusable parser object.
+            Defaults to ``ApiDocstringParser.auto()`` so mixed Google, NumPy,
+            Sphinx, Markdown, and plain docstrings can be normalized together.
+
+    Returns:
+        Collected API package object tree that can be queried, serialized, or
+        converted to OODocs blocks.
+
+    Examples:
+        Collect a normal ``src/`` layout repository with a reusable auto parser:
+
+        ```python
+        from examples.api_objects_example.main import collect_target_api
+        from oodocs.apidoc import ApiDocstringParser
+
+        api = collect_target_api(
+            ".",
+            public_policy="__all__",
+            docstring_style=ApiDocstringParser.auto(),
+        )
+        document = api.to_document(profile="compact")
+        ```
+    """
+
+    parser = docstring_style or ApiDocstringParser.auto()
+    return collect_api(
+        target,
+        public_policy=public_policy,
+        collector=collector,
+        docstring_style=parser,
+    )
 
 
 def collect_oodocs_api() -> ApiPackage:
@@ -37,15 +92,21 @@ def collect_oodocs_api() -> ApiPackage:
         ```
     """
 
-    return collect_api("oodocs", public_policy="__all__", collector="auto")
+    return collect_target_api("oodocs", public_policy="__all__", collector="auto")
 
 
-def build_full_package_document(api: ApiPackage | None = None) -> Document:
+def build_full_package_document(
+    api: ApiPackage | None = None,
+    *,
+    title: str | None = None,
+) -> Document:
     """Build a full package API reference document.
 
     Args:
         api: Optional pre-collected API package. When omitted, the OODocs
             package is collected from the current environment.
+        title: Optional document title. Defaults to ``"{api.name} API
+            Reference"``.
 
     Returns:
         Full package reference document built through ``ApiPackage.to_document``.
@@ -70,7 +131,7 @@ def build_full_package_document(api: ApiPackage | None = None) -> Document:
 
     api = api or collect_oodocs_api()
     return api.to_document(
-        title="OODocs Full API Reference",
+        title=title or f"{api.name} API Reference",
         profile="compact",
         include_coverage=True,
         include_modules=True,
@@ -175,15 +236,28 @@ def render_api_objects_example(
     coverage: ApiCoverageResult | None = None,
     output_dir: str | Path = ARTIFACT_DIR,
     *,
+    target: str | Path = "oodocs",
+    public_policy: str = "__all__",
+    collector: str = "auto",
+    docstring_style: str | ApiDocstringParser | None = None,
+    formats: Sequence[str] | None = None,
     verbose: bool = False,
 ) -> dict[str, Path]:
     """Render the full API-object example bundle.
 
     Args:
         api: Optional pre-collected API package. When omitted, the OODocs
-            package is collected from the current environment.
+            package or ``target`` is collected from the current environment.
         coverage: Optional pre-computed coverage result for ``api``.
         output_dir: Directory that receives rendered documents and sidecars.
+        target: Importable package/module name, Python file, package directory,
+            or repository checkout collected when ``api`` is omitted.
+        public_policy: Public boundary used when collecting ``target``.
+        collector: Collector backend used when collecting ``target``.
+        docstring_style: Docstring parser style or reusable parser object used
+            when collecting ``target``.
+        formats: Optional subset of formats passed to ``Document.save_all``.
+            Defaults to all supported formats.
         verbose: Whether to print major collection and rendering steps.
 
     Returns:
@@ -198,7 +272,9 @@ def render_api_objects_example(
         from examples.api_objects_example.main import render_api_objects_example
 
         outputs = render_api_objects_example(
+            target=".",
             output_dir="artifacts/api-objects-example",
+            docstring_style="auto",
             verbose=True,
         )
         full_reference_html = outputs["full_reference_html"]
@@ -209,11 +285,20 @@ def render_api_objects_example(
     output_path.mkdir(parents=True, exist_ok=True)
 
     if api is None:
-        _log("Collecting OODocs API objects...", verbose=verbose)
-        api = collect_oodocs_api()
+        _log(f"Collecting API objects from {target!s}...", verbose=verbose)
+        api = collect_target_api(
+            target,
+            public_policy=public_policy,
+            collector=collector,
+            docstring_style=docstring_style,
+        )
     if coverage is None:
         _log("Checking API documentation coverage...", verbose=verbose)
         coverage = check_api_docs(api)
+
+    save_kwargs: dict[str, object] = {"verbose": verbose}
+    if formats is not None:
+        save_kwargs["formats"] = tuple(formats)
 
     _log("Building full package API reference...", verbose=verbose)
     full_reference = build_full_package_document(api)
@@ -221,7 +306,7 @@ def render_api_objects_example(
     full_outputs = full_reference.save_all(
         output_path,
         stem=FULL_REFERENCE_STEM,
-        verbose=verbose,
+        **save_kwargs,
     )
 
     _log("Building composable API-object document...", verbose=verbose)
@@ -230,7 +315,7 @@ def render_api_objects_example(
     composition_outputs = document.save_all(
         output_path,
         stem=COMPOSITION_STEM,
-        verbose=verbose,
+        **save_kwargs,
     )
 
     _log("Writing API and coverage sidecars...", verbose=verbose)
@@ -248,20 +333,78 @@ def render_api_objects_example(
     return outputs
 
 
-def main() -> None:
+def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
+    """Parse command-line arguments for the API objects example."""
+
+    parser = argparse.ArgumentParser(
+        description="Render composable API-object documents for a Python target."
+    )
+    parser.add_argument(
+        "target",
+        nargs="?",
+        default="oodocs",
+        help="Importable module/package, Python file, package directory, or repo path.",
+    )
+    parser.add_argument(
+        "--out",
+        default=str(ARTIFACT_DIR),
+        help="Output directory for rendered documents and sidecars.",
+    )
+    parser.add_argument(
+        "--collector",
+        default="auto",
+        help="Collector backend passed to collect_api, such as auto, griffe, or inspect.",
+    )
+    parser.add_argument(
+        "--public-policy",
+        default="__all__",
+        help="Public API policy passed to collect_api.",
+    )
+    parser.add_argument(
+        "--docstring-style",
+        default="auto",
+        help="Docstring style or parser name passed to collect_api.",
+    )
+    parser.add_argument(
+        "--to",
+        action="append",
+        dest="formats",
+        help="Output format to render. Repeat for multiple formats.",
+    )
+    parser.add_argument(
+        "--quiet",
+        action="store_true",
+        help="Suppress progress output.",
+    )
+    return parser.parse_args(argv)
+
+
+def main(argv: Sequence[str] | None = None) -> None:
     """Render the API object example and sidecars.
 
+    Args:
+        argv: Optional argument list. Defaults to command-line arguments.
+
     Examples:
-        Run the example from the repository root:
+        Run the example for the current repository and render only HTML:
 
         ```python
         from examples.api_objects_example.main import main
 
-        main()
+        main([".", "--to", "html", "--out", "artifacts/api-objects-example"])
         ```
     """
 
-    outputs = render_api_objects_example(verbose=True)
+    args = _parse_args(argv)
+    outputs = render_api_objects_example(
+        output_dir=args.out,
+        target=args.target,
+        public_policy=args.public_policy,
+        collector=args.collector,
+        docstring_style=args.docstring_style,
+        formats=args.formats,
+        verbose=not args.quiet,
+    )
     for path in outputs.values():
         print(f"Wrote {path}", flush=True)
 

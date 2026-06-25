@@ -1,8 +1,10 @@
 # API Objects Example
 
-This example shows the composable API-documentation workflow:
+This example shows the composable API-documentation workflow for any Python
+package, module, file, or repository target:
 
-1. collect an `ApiPackage` from the `oodocs` source tree
+1. collect an `ApiPackage` from a target Python project with an auto docstring
+   parser
 2. render a full package API reference as DOCX, PDF, and HTML artifacts named
    `oodocs-full-api-reference`
 3. render a hand-composed `oodocs-api-objects` document that inserts selected
@@ -11,14 +13,27 @@ This example shows the composable API-documentation workflow:
 4. write deterministic API JSON plus coverage JSON/CSV sidecars for release
    evidence
 
-Run it from the repository root:
+Run it against the current repository:
 
 ```powershell
-python examples/api_objects_example/main.py
+python examples/api_objects_example/main.py . --public-policy __all__
 ```
 
-The script writes rendered files under `artifacts/api-objects-example`.
-Both the full package reference and the selected composition document are saved
-as DOCX, PDF, and HTML so the generated API documentation can be reviewed,
-published, or attached to release evidence directly. The sidecars use the
-`oodocs-api-objects.json` and `oodocs-api-coverage.{json,csv}` filenames.
+Run it against an installed package or importable module:
+
+```powershell
+python examples/api_objects_example/main.py oodocs --collector auto
+```
+
+For a quick HTML-only check while developing another package:
+
+```powershell
+python examples/api_objects_example/main.py C:\path\to\repo --collector inspect --public-policy underscore --to html
+```
+
+The script writes rendered files under `artifacts/api-objects-example` by
+default. Both the full package reference and the selected composition document
+are saved as DOCX, PDF, and HTML unless `--to` is supplied. The generated files
+can be reviewed, published, or attached to release evidence directly. The
+sidecars use the `oodocs-api-objects.json` and
+`oodocs-api-coverage.{json,csv}` filenames.

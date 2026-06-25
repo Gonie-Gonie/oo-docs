@@ -1960,6 +1960,12 @@ def test_api_objects_example_builds_full_reference_and_composable_document(
 
     api = collect_api(package_dir, public_policy="underscore")
     coverage = check_api_docs(api)
+    target_api = example.collect_target_api(
+        package_dir,
+        public_policy="underscore",
+        collector="inspect",
+        docstring_style=ApiDocstringParser.auto(),
+    )
     full_reference = example.build_full_package_document(api)
     composition = example.build_document(api, coverage)
     bundle_outputs = example.render_api_objects_example(
@@ -1981,6 +1987,8 @@ def test_api_objects_example_builds_full_reference_and_composable_document(
     assert bundle_outputs["composition_html"].exists()
     assert full_reference.validate(formats=("docx", "pdf", "html")).ok
     assert composition.validate(formats=("html",)).ok
+    assert target_api.name == "examplepkg"
+    assert target_api.find("examplepkg.Widget") is not None
     assert ApiPackage.read_json(bundle_outputs["api_json"]).name == "examplepkg"
     assert (
         ApiCoverageResult.read_json(bundle_outputs["coverage_json"]).package
@@ -1997,3 +2005,29 @@ def test_api_objects_example_builds_full_reference_and_composable_document(
         for child in composition.body.children
         if hasattr(child, "title")
     )
+
+    cli_output = tmp_path / "cli-bundle"
+    example.main(
+        [
+            str(package_dir),
+            "--public-policy",
+            "underscore",
+            "--collector",
+            "inspect",
+            "--docstring-style",
+            "auto",
+            "--to",
+            "html",
+            "--out",
+            str(cli_output),
+            "--quiet",
+        ]
+    )
+
+    assert (cli_output / "oodocs-full-api-reference.html").exists()
+    assert (cli_output / "oodocs-api-objects.html").exists()
+    cli_html = (cli_output / "oodocs-full-api-reference.html").read_text(
+        encoding="utf-8"
+    )
+    assert "examplepkg API Reference" in cli_html
+    assert "examplepkg.Widget" in cli_html

@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import importlib.util
+from pathlib import Path
+
 from apidoc_samples import write_mixed_docstring_repo
 from oodocs import Chapter, Document, Paragraph
 from oodocs.apidoc import (
@@ -15,6 +18,21 @@ from oodocs.apidoc import (
     collect_api,
 )
 from oodocs.apidoc.cli import main
+
+
+def _load_api_objects_example():
+    module_path = (
+        Path(__file__).resolve().parents[1]
+        / "examples"
+        / "api_objects_example"
+        / "main.py"
+    )
+    spec = importlib.util.spec_from_file_location("api_objects_example_main", module_path)
+    assert spec is not None
+    assert spec.loader is not None
+    example = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(example)
+    return example
 
 
 def test_general_repo_auto_parser_objects_compose_into_document(tmp_path) -> None:
@@ -133,6 +151,51 @@ def test_general_repo_package_render_helper_builds_complete_reference(tmp_path) 
     assert "mixedpkg API Reference" in html
     assert "API Contents" in html
     assert "API Documentation Coverage" in html
+    assert "mixedpkg.Client" in html
+    assert "mixedpkg.connect" in html
+
+
+def test_general_repo_api_objects_example_cli_targets_repo_path(tmp_path) -> None:
+    repo = write_mixed_docstring_repo(tmp_path)
+    output_dir = tmp_path / "example-bundle"
+    example = _load_api_objects_example()
+
+    example.main(
+        [
+            str(repo),
+            "--collector",
+            "inspect",
+            "--public-policy",
+            "__all__",
+            "--docstring-style",
+            "auto",
+            "--to",
+            "html",
+            "--out",
+            str(output_dir),
+            "--quiet",
+        ]
+    )
+
+    full_reference = output_dir / "oodocs-full-api-reference.html"
+    composition = output_dir / "oodocs-api-objects.html"
+    api_json = output_dir / "oodocs-api-objects.json"
+    coverage_json = output_dir / "oodocs-api-coverage.json"
+
+    assert full_reference.exists()
+    assert composition.exists()
+    assert api_json.exists()
+    assert coverage_json.exists()
+    rendered_api = ApiPackage.read_json(api_json)
+    rendered_method = rendered_api.find("mixedpkg.Client.connect")
+    assert rendered_api.name == "mixedpkg"
+    assert rendered_method is not None
+    assert rendered_method.metadata["docstring_style"] == "numpy"
+    assert rendered_method.parameters[0].description == "Timeout in seconds."
+    assert ApiCoverageResult.read_json(coverage_json).object_coverage == 1.0
+
+    html = full_reference.read_text(encoding="utf-8")
+    assert "mixedpkg API Reference" in html
     assert "mixedpkg.Client" in html
     assert "mixedpkg.connect" in html
 
