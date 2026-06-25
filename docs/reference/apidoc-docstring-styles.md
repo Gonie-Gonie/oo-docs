@@ -54,6 +54,11 @@ results before converting them into collected API objects.
 OODocs keeps fallback parsers so the public API remains usable without the
 optional extra.
 
+For NumPy-style `Returns` and `Yields` sections with multiple named values, the
+fallback parser keeps each value in `ApiReturn.description` as a stable
+line-delimited entry so rendered reference pages and serialized snapshots do not
+lose the return names.
+
 Use `ApiDocstringParser` when the same parser configuration should be reused
 across parsing, collection, coverage, and rendering steps.
 

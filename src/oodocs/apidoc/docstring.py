@@ -864,7 +864,7 @@ def _parse_numpy(text: str, qualname: str | None, module: str | None) -> ParsedD
         elif normalized == "attributes" and not parsed.attributes:
             parsed.attributes.extend(_parse_numpy_parameters(body))
         elif normalized in {"returns", "yields"} and parsed.returns is None:
-            parsed.returns = _parse_return_section(body)
+            parsed.returns = _parse_numpy_return_section(body)
         elif normalized == "raises" and not parsed.raises:
             parsed.raises.extend(_parse_numpy_raises(body))
         elif normalized == "examples" and not parsed.examples:
@@ -1254,6 +1254,50 @@ def _parse_numpy_raises(text: str) -> list[ApiRaises]:
         elif current is not None:
             current.description = _join_text(current.description, line.strip())
     return items
+
+
+def _parse_numpy_return_section(text: str) -> ApiReturn:
+    entries: list[tuple[str | None, str | None, str | None]] = []
+    current_index: int | None = None
+
+    for raw_line in text.splitlines():
+        line = raw_line.rstrip()
+        if not line.strip():
+            continue
+        stripped = line.strip()
+        name: str | None = None
+        annotation: str | None = stripped
+        named_match = None
+        if ":" in stripped:
+            possible_name, possible_annotation = stripped.split(":", 1)
+            if re.match(r"^[A-Za-z_][\w.]*(?:\s*,\s*[A-Za-z_][\w.]*)*$", possible_name.strip()):
+                named_match = (possible_name.strip(), possible_annotation.strip() or None)
+
+        if named_match is None and current_index is not None:
+            name, annotation, description = entries[current_index]
+            entries[current_index] = (name, annotation, _join_text(description, stripped))
+            continue
+        if named_match is not None:
+            name, annotation = named_match
+
+        entries.append((name, annotation or None, None))
+        current_index = len(entries) - 1
+
+    if not entries:
+        return ApiReturn(documented=True)
+    if len(entries) == 1:
+        name, annotation, description = entries[0]
+        if name:
+            description = _join_text(f"{name}:", description)
+        return ApiReturn(annotation=annotation, description=description, documented=True)
+
+    description_lines: list[str] = []
+    for name, annotation, description in entries:
+        label = name or annotation or "return"
+        if name and annotation:
+            label = f"{name} ({annotation})"
+        description_lines.append(_join_text(f"{label}:", description) or f"{label}:")
+    return ApiReturn(description="\n".join(description_lines), documented=True)
 
 
 def _parse_markdown_parameters(

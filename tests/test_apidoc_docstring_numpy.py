@@ -53,3 +53,39 @@ def test_numpy_fallback_parser_extracts_raises_sections(monkeypatch) -> None:
         ("RuntimeError", "If loading fails."),
         ("TypeError, OSError", "If input types or filesystem state are invalid."),
     ]
+
+
+def test_numpy_fallback_parser_preserves_return_values(monkeypatch) -> None:
+    monkeypatch.setattr(docstring_module.importlib.util, "find_spec", lambda name: None)
+
+    single = parse_docstring(
+        """
+        Load data.
+
+        Returns
+        -------
+        bool
+            Whether loading succeeded.
+        """,
+        style="numpy",
+    )
+    multiple = parse_docstring(
+        """
+        Load data.
+
+        Returns
+        -------
+        path : str
+            Output path.
+        count : int
+            Number of rows.
+        """,
+        style="numpy",
+    )
+
+    assert single.returns is not None
+    assert single.returns.annotation == "bool"
+    assert single.returns.description == "Whether loading succeeded."
+    assert multiple.returns is not None
+    assert multiple.returns.annotation is None
+    assert multiple.returns.description == "path (str): Output path.\ncount (int): Number of rows."
