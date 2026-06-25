@@ -32,6 +32,10 @@ class ApiCoverageResult:
         example_count: Parsed example count.
         syntax_checked_example_count: Python examples checked for syntax.
         syntax_ok_example_count: Syntax-valid Python examples.
+        doctest_checked_example_count: Doctest-style examples checked for
+            parse validity.
+        doctest_ok_example_count: Doctest-style examples with valid doctest
+            syntax.
         issues: Coverage issues.
 
     Examples:
@@ -61,6 +65,8 @@ class ApiCoverageResult:
     example_count: int
     syntax_checked_example_count: int
     syntax_ok_example_count: int
+    doctest_checked_example_count: int = 0
+    doctest_ok_example_count: int = 0
     issues: list[ApiDocIssue] = field(default_factory=list)
 
     @property
@@ -88,6 +94,8 @@ class ApiCoverageResult:
             "example_count": self.example_count,
             "syntax_checked_example_count": self.syntax_checked_example_count,
             "syntax_ok_example_count": self.syntax_ok_example_count,
+            "doctest_checked_example_count": self.doctest_checked_example_count,
+            "doctest_ok_example_count": self.doctest_ok_example_count,
             "object_coverage": self.object_coverage,
             "issues": [issue.to_dict() for issue in self.issues],
         }
@@ -133,6 +141,8 @@ class ApiCoverageResult:
             example_count=int(data.get("example_count", 0)),
             syntax_checked_example_count=int(data.get("syntax_checked_example_count", 0)),
             syntax_ok_example_count=int(data.get("syntax_ok_example_count", 0)),
+            doctest_checked_example_count=int(data.get("doctest_checked_example_count", 0)),
+            doctest_ok_example_count=int(data.get("doctest_ok_example_count", 0)),
             issues=[
                 ApiDocIssue.from_dict(issue)
                 for issue in data.get("issues", [])  # type: ignore[union-attr]
@@ -154,6 +164,8 @@ class ApiCoverageResult:
             ["Examples", str(self.example_count)],
             ["Syntax-checked examples", str(self.syntax_checked_example_count)],
             ["Syntax-valid examples", str(self.syntax_ok_example_count)],
+            ["Doctest-checked examples", str(self.doctest_checked_example_count)],
+            ["Doctest-valid examples", str(self.doctest_ok_example_count)],
             ["Issues", str(len(self.issues))],
         ]
         return Table(["Metric", "Value"], rows, caption=caption)
@@ -269,6 +281,8 @@ def check_api_docs(
     example_count = 0
     syntax_checked_example_count = 0
     syntax_ok_example_count = 0
+    doctest_checked_example_count = 0
+    doctest_ok_example_count = 0
 
     for obj in objects:
         if obj.documented:
@@ -315,6 +329,12 @@ def check_api_docs(
                 else:
                     issues.append(_issue(obj, "warning", "example-syntax-error", "Example contains invalid Python syntax."))
         issues.extend(check_doctest_examples(obj))
+        for example in obj.examples:
+            if example.doctest_ok is None:
+                continue
+            doctest_checked_example_count += 1
+            if example.doctest_ok:
+                doctest_ok_example_count += 1
 
     result = ApiCoverageResult(
         package=api.name,
@@ -330,6 +350,8 @@ def check_api_docs(
         example_count=example_count,
         syntax_checked_example_count=syntax_checked_example_count,
         syntax_ok_example_count=syntax_ok_example_count,
+        doctest_checked_example_count=doctest_checked_example_count,
+        doctest_ok_example_count=doctest_ok_example_count,
         issues=issues,
     )
     if fail_under is not None and result.object_coverage < fail_under:

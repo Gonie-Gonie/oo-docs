@@ -38,5 +38,7 @@ python -m oodocs apidoc check . --collector griffe --kind class --module-prefix 
 ```
 
 Coverage issues include missing summaries, missing parameter docs, extra
-parameter docs, missing return docs, example syntax errors, and missing
-deprecation guidance.
+parameter docs, missing return docs, example syntax errors, doctest parse
+failures, and missing deprecation guidance. The coverage table also records
+syntax-checked examples and doctest-checked examples separately so CI evidence
+can distinguish normal Python code blocks from `>>>` examples.

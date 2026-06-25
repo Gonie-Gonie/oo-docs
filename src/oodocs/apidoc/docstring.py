@@ -627,12 +627,17 @@ def _examples_from_docstring_parser_meta(meta: object) -> list[ApiExample]:
     description = getattr(meta, "description", None)
     examples: list[ApiExample] = []
     if snippet:
-        examples.append(ApiExample(str(snippet), language="python"))
+        snippet_text = str(snippet)
+        examples.append(ApiExample(snippet_text, language=_example_language(snippet_text)))
     if description:
         examples.extend(extract_code_blocks_from_docstring(str(description)))
         if not examples:
             examples.append(ApiExample(str(description), language="text"))
     return examples
+
+
+def _example_language(text: str) -> str:
+    return "pycon" if re.search(r"(?m)^\s*(>>>|\.\.\.)", text) else "python"
 
 
 def _parse_markdown(text: str, qualname: str | None, module: str | None) -> ParsedDocstring:

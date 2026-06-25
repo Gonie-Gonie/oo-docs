@@ -118,6 +118,15 @@ load("input.txt")
 
 def test_docstring_parsers_normalize_standard_styles() -> None:
     google = parse_docstring(GOOGLE_DOCSTRING, style="google")
+    google_doctest = parse_docstring(
+        """Echo a value.
+
+        Examples:
+            >>> echo("ok")
+            'ok'
+        """,
+        style="google",
+    )
     numpy = parse_docstring(NUMPY_DOCSTRING, style="numpy")
     sphinx = parse_docstring(SPHINX_DOCSTRING, style="sphinx")
     markdown = parse_docstring(MARKDOWN_DOCSTRING, style="markdown")
@@ -131,6 +140,7 @@ def test_docstring_parsers_normalize_standard_styles() -> None:
     assert google.returns and google.returns.annotation == "bool"
     assert google.raises[0].exception == "ValueError"
     assert google.examples[0].language == "python"
+    assert google_doctest.examples[0].language == "pycon"
     assert google.renderer_notes[0].format == "pdf"
 
     assert numpy.parameters[1].name == "retries"
@@ -566,6 +576,39 @@ def test_api_coverage_and_diff_detect_doc_changes(tmp_path: Path) -> None:
     assert diff_readback.changed_parameter_annotations
     assert diff_readback.changed_return_annotations
     assert isinstance(diff_readback.to_summary_table(), Table)
+
+
+def test_api_coverage_counts_doctest_examples(tmp_path: Path) -> None:
+    package_dir = tmp_path / "doctestpkg"
+    package_dir.mkdir()
+    (package_dir / "__init__.py").write_text(
+        "def echo(value: str) -> str:\n"
+        '    """Echo a value.\n\n'
+        "    Args:\n"
+        "        value: Value to echo.\n"
+        "    Returns:\n"
+        "        str: Echoed value.\n\n"
+        "    Examples:\n"
+        "        >>> echo('ok')\n"
+        "        'ok'\n"
+        '    """\n'
+        "    return value\n",
+        encoding="utf-8",
+    )
+
+    api = collect_api(package_dir, public_policy="underscore")
+    coverage = check_api_docs(api)
+
+    assert coverage.example_count == 1
+    assert coverage.syntax_checked_example_count == 1
+    assert coverage.syntax_ok_example_count == 1
+    assert coverage.doctest_checked_example_count == 1
+    assert coverage.doctest_ok_example_count == 1
+    assert coverage.to_dict()["doctest_ok_example_count"] == 1
+    assert any(
+        row[0].content.plain_text() == "Doctest-valid examples"
+        for row in coverage.to_table().rows
+    )
 
 
 def test_apidoc_cli_collect_check_build_snapshot_and_diff(tmp_path: Path, capsys) -> None:
