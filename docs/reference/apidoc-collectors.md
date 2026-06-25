@@ -62,6 +62,12 @@ for overload in parse.metadata.get("overloads", []):
     print(overload["signature"])
 ```
 
+When griffe resolves a public re-export inside the collected package, OODocs
+copies missing documentation fields from the collected target object onto the
+alias. This keeps top-level convenience imports such as `mypkg.Widget` or
+`mypkg.OutputFormat` useful in rendered reference pages while preserving
+`metadata["reexported_from"]` for traceability.
+
 Class signatures use `__init__` parameters by default. When a class docstring
 does not document those parameters directly, both source and griffe collection
 can use the `__init__` docstring's parameter section as the class constructor

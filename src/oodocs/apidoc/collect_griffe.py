@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import copy
 from dataclasses import replace
 from pathlib import Path
 import textwrap
@@ -114,6 +115,8 @@ def collect_package_griffe(
         module = _module_from_griffe(module_obj, module_name, config=resolved)
         modules.append(module)
         issues.extend(_module_issues(module))
+
+    _merge_reexported_object_docs(modules)
 
     collected_names = {module.name for module in modules}
     for file_path in files:
@@ -230,6 +233,52 @@ def _module_from_griffe(
         key=lambda item: (item.line_number or 0, item.name),
     )
     return module
+
+
+def _merge_reexported_object_docs(modules: list[ApiModule]) -> None:
+    object_map = {
+        obj.qualname: obj
+        for module in modules
+        for obj in module.iter_objects(recursive=True)
+    }
+    for obj in object_map.values():
+        target_qualname = obj.metadata.get("reexported_from")
+        if not isinstance(target_qualname, str):
+            continue
+        target = object_map.get(target_qualname)
+        if target is None:
+            continue
+        _copy_missing_doc_fields(obj, target)
+
+
+def _copy_missing_doc_fields(obj: ApiObject, target: ApiObject) -> None:
+    if not obj.summary:
+        obj.summary = target.summary
+    if not obj.description:
+        obj.description = target.description
+    if not obj.parameters:
+        obj.parameters = copy.deepcopy(target.parameters)
+    if obj.returns is None:
+        obj.returns = copy.deepcopy(target.returns)
+    if not obj.raises:
+        obj.raises = copy.deepcopy(target.raises)
+    if not obj.examples:
+        obj.examples = copy.deepcopy(target.examples)
+    if not obj.see_also:
+        obj.see_also = copy.deepcopy(target.see_also)
+    if not obj.notes:
+        obj.notes = copy.deepcopy(target.notes)
+    if not obj.warnings:
+        obj.warnings = copy.deepcopy(target.warnings)
+    if not obj.renderer_notes:
+        obj.renderer_notes = copy.deepcopy(target.renderer_notes)
+    if target.deprecated and not obj.deprecated:
+        obj.deprecated = True
+    if not obj.deprecation_message:
+        obj.deprecation_message = target.deprecation_message
+    if target.metadata.get("docstring_source") and not obj.metadata.get("docstring_source"):
+        obj.metadata["docstring_source"] = target.metadata["docstring_source"]
+    obj.metadata.setdefault("docstring_source", "reexported")
 
 
 def _object_from_griffe(

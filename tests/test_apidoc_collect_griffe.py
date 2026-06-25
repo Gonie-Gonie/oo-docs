@@ -85,6 +85,52 @@ def test_griffe_collector_can_exclude_member_kinds(tmp_path) -> None:
     assert api.find("samplepkg.Widget.render") is None
 
 
+def test_griffe_collector_copies_reexported_attribute_docs(tmp_path) -> None:
+    if importlib.util.find_spec("griffe") is None:
+        pytest.skip("griffe is not installed")
+
+    package_dir = tmp_path / "reexportpkg"
+    package_dir.mkdir()
+    (package_dir / "__init__.py").write_text(
+        "\n".join(
+            [
+                "from .core import OutputFormat",
+                "",
+                '__all__ = ["OutputFormat"]',
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (package_dir / "core.py").write_text(
+        "\n".join(
+            [
+                '"""Core public types.',
+                "",
+                "Attributes:",
+                "    OutputFormat: Supported output target names.",
+                '"""',
+                "",
+                "from typing import Literal",
+                "",
+                'OutputFormat = Literal["docx", "pdf"]',
+                "",
+                '__all__ = ["OutputFormat"]',
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    api = collect_api(package_dir, collector="griffe", public_policy="__all__")
+    target = api.find("reexportpkg.core.OutputFormat")
+    exported = api.find("reexportpkg.OutputFormat")
+
+    assert target is not None
+    assert target.summary == "Supported output target names."
+    assert exported is not None
+    assert exported.summary == "Supported output target names."
+    assert exported.metadata["reexported_from"] == "reexportpkg.core.OutputFormat"
+
+
 def test_griffe_collector_can_strip_source_locations(tmp_path) -> None:
     if importlib.util.find_spec("griffe") is None:
         pytest.skip("griffe is not installed")
