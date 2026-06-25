@@ -37,7 +37,14 @@ def test_apidoc_cli_builds_html_and_sidecars_for_general_repo(tmp_path) -> None:
     )
 
     assert (output_dir / "samplepkg-api.html").exists()
-    assert ApiPackage.read_json(output_dir / "samplepkg-api.json").name == "samplepkg"
+    api = ApiPackage.read_json(output_dir / "samplepkg-api.json")
+    render = api.find("samplepkg.Widget.render")
+
+    assert api.name == "samplepkg"
+    assert render is not None
+    assert render.examples
+    assert render.examples[0].syntax_ok is True
+    assert render.examples[0].doctest_ok is True
 
 
 def test_apidoc_cli_builds_setuptools_package_dir_repo(tmp_path) -> None:

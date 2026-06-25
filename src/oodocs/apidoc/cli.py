@@ -551,8 +551,8 @@ def _print_outputs(outputs: dict[object, Path]) -> None:
 
 def _write_build_sidecars(api: ApiPackage, output_dir: str | Path, stem: str) -> None:
     directory = Path(output_dir)
-    api_path = api.write_json(directory / f"{stem}.json")
     coverage = check_api_docs(api)
+    api_path = api.write_json(directory / f"{stem}.json")
     coverage_json_path = coverage.write_json(directory / f"{stem}-coverage.json")
     coverage_csv_path = coverage.write_csv(directory / f"{stem}-coverage.csv")
     print(f"Wrote api-json: {api_path}")
