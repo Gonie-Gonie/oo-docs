@@ -144,6 +144,11 @@ ApiBuildConfig(profile="website", output_formats=("html",), sidecars=True).write
 python -m oodocs apidoc build . --config pyproject.toml --out artifacts/api
 ```
 
+When griffe collection is used with a standard style (`auto`, `google`,
+`numpy`, or `sphinx`), OODocs passes the same style hint to `griffe.load(...)`
+and then normalizes the raw docstring through the OODocs parser schema. Custom,
+Markdown, and plain parser styles stay in the OODocs parser layer.
+
 Use `module_include_patterns` and `module_exclude_patterns` to narrow collection
 before parsing module contents. Patterns match fully qualified module names with
 standard glob syntax.

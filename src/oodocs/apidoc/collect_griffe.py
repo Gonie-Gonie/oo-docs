@@ -22,6 +22,7 @@ from oodocs.core import PathLike
 
 
 _DEPRECATION_DECORATORS = {"deprecated", "deprecate", "deprecated_alias"}
+_GRIFFE_DOCSTRING_PARSERS = {"auto", "google", "numpy", "sphinx"}
 
 
 def collect_package_griffe(
@@ -90,6 +91,7 @@ def collect_package_griffe(
             package_name,
             search_paths=[str(root)],
             submodules=True,
+            docstring_parser=_griffe_docstring_parser(config),
             allow_inspection=False,
         )
     except Exception as exc:
@@ -517,10 +519,26 @@ def _parse_object_docstring(
     docstring = getattr(obj, "docstring", None)
     return parse_docstring(
         getattr(docstring, "value", None),
-        style=config.docstring_style,
+        style=_docstring_style_from_griffe(docstring, config=config),
         qualname=qualname,
         module=module,
     )
+
+
+def _griffe_docstring_parser(config: ApiCollectConfig) -> str | None:
+    return config.docstring_style if config.docstring_style in _GRIFFE_DOCSTRING_PARSERS else None
+
+
+def _docstring_style_from_griffe(
+    docstring: object | None,
+    *,
+    config: ApiCollectConfig,
+) -> str:
+    if config.docstring_style != "auto":
+        return config.docstring_style
+    parser = getattr(docstring, "parser", None)
+    style = str(getattr(parser, "value", parser or "")).strip().lower()
+    return style if style in _GRIFFE_DOCSTRING_PARSERS else config.docstring_style
 
 
 def _parameters_from_griffe(parameters: Iterable[object], *, drop_first: bool) -> list[ApiParameter]:

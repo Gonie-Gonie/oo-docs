@@ -36,6 +36,29 @@ def test_griffe_collector_collects_general_package_tree(tmp_path) -> None:
     assert api.find("samplepkg.make_widget") is not None
 
 
+def test_griffe_collector_passes_docstring_parser_hint(tmp_path, monkeypatch) -> None:
+    griffe = pytest.importorskip("griffe")
+    original_load = griffe.load
+    seen_parsers: list[object] = []
+
+    def spy_load(*args, **kwargs):
+        seen_parsers.append(kwargs.get("docstring_parser"))
+        return original_load(*args, **kwargs)
+
+    monkeypatch.setattr(griffe, "load", spy_load)
+    api = collect_sample_api(tmp_path, collector="griffe", docstring_style="google")
+    render = api.find("samplepkg.Widget.render")
+
+    assert seen_parsers[-1] == "google"
+    assert render is not None
+    assert render.metadata["docstring_style"] == "google"
+
+    plain_root = tmp_path / "plain"
+    plain_root.mkdir()
+    collect_sample_api(plain_root, collector="griffe", docstring_style="plain")
+    assert seen_parsers[-1] is None
+
+
 def test_griffe_collector_can_exclude_member_kinds(tmp_path) -> None:
     if importlib.util.find_spec("griffe") is None:
         pytest.skip("griffe is not installed")
