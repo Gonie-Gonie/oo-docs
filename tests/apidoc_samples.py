@@ -304,6 +304,103 @@ def write_setuptools_find_repo(
     return repo
 
 
+def write_hatch_package_repo(
+    tmp_path: Path,
+    *,
+    repo_name: str = "hatch-repo",
+    package_name: str = "hatchpkg",
+    source_root: str = "lib",
+) -> Path:
+    repo = tmp_path / repo_name
+    package_dir = repo / source_root / package_name
+    package_dir.mkdir(parents=True)
+    (repo / "pyproject.toml").write_text(
+        dedent(
+            f'''\
+            [build-system]
+            requires = ["hatchling"]
+            build-backend = "hatchling.build"
+
+            [project]
+            name = "{package_name.replace("_", "-")}"
+
+            [tool.hatch.build.targets.wheel]
+            packages = ["{source_root}/{package_name}"]
+            '''
+        ),
+        encoding="utf-8",
+    )
+    (package_dir / "__init__.py").write_text(
+        '"""Hatch package."""\nfrom .core import run\n__all__ = ["run"]\n',
+        encoding="utf-8",
+    )
+    (package_dir / "core.py").write_text(
+        dedent(
+            '''\
+            def run(path: str) -> str:
+                """Run from a Hatch-layout repository.
+
+                Args:
+                    path: Input path.
+
+                Returns:
+                    str: Input path.
+                """
+
+                return path
+            '''
+        ),
+        encoding="utf-8",
+    )
+    return repo
+
+
+def write_poetry_package_repo(
+    tmp_path: Path,
+    *,
+    repo_name: str = "poetry-repo",
+    package_name: str = "poetrypkg",
+    source_root: str = "lib",
+) -> Path:
+    repo = tmp_path / repo_name
+    package_dir = repo / source_root / package_name
+    package_dir.mkdir(parents=True)
+    (repo / "pyproject.toml").write_text(
+        dedent(
+            f'''\
+            [tool.poetry]
+            name = "{package_name.replace("_", "-")}"
+            version = "0.1.0"
+            packages = [{{ include = "{package_name}", from = "{source_root}" }}]
+            '''
+        ),
+        encoding="utf-8",
+    )
+    (package_dir / "__init__.py").write_text(
+        '"""Poetry package."""\nfrom .core import run\n__all__ = ["run"]\n',
+        encoding="utf-8",
+    )
+    (package_dir / "core.py").write_text(
+        dedent(
+            '''\
+            def run(path: str) -> str:
+                """Run from a Poetry-layout repository.
+
+                Args:
+                    path: Input path.
+
+                Returns:
+                    str: Input path.
+                """
+
+                return path
+            '''
+        ),
+        encoding="utf-8",
+    )
+    return repo
+
+
 def write_mixed_docstring_repo(tmp_path: Path) -> Path:
     repo = tmp_path / "mixed-repo"
     package_dir = repo / "src" / "mixedpkg"

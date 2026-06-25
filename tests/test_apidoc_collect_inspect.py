@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from apidoc_samples import (
     collect_sample_api,
+    write_hatch_package_repo,
+    write_poetry_package_repo,
     write_setuptools_find_repo,
     write_setuptools_package_dir_repo,
     write_setuptools_py_module_repo,
@@ -98,6 +100,28 @@ def test_inspect_collector_uses_pyproject_setuptools_py_modules(tmp_path) -> Non
     assert [module.name for module in api.modules] == ["singlemod"]
     assert api.find("singlemod.Client.connect") is not None
     assert api.find("src.singlemod.Client") is None
+
+
+def test_inspect_collector_uses_pyproject_hatch_packages(tmp_path) -> None:
+    repo = write_hatch_package_repo(tmp_path)
+
+    api = collect_api(repo, collector="inspect", public_policy="__all__")
+
+    assert [module.name for module in api.modules] == ["hatchpkg", "hatchpkg.core"]
+    assert api.find("hatchpkg.run") is not None
+    assert api.find("hatchpkg.core.run") is not None
+    assert api.find("lib.hatchpkg.run") is None
+
+
+def test_inspect_collector_uses_pyproject_poetry_packages(tmp_path) -> None:
+    repo = write_poetry_package_repo(tmp_path)
+
+    api = collect_api(repo, collector="inspect", public_policy="__all__")
+
+    assert [module.name for module in api.modules] == ["poetrypkg", "poetrypkg.core"]
+    assert api.find("poetrypkg.run") is not None
+    assert api.find("poetrypkg.core.run") is not None
+    assert api.find("lib.poetrypkg.run") is None
 
 
 def test_inspect_collector_uses_explicit_setuptools_package_mapping(tmp_path) -> None:

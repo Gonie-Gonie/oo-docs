@@ -25,7 +25,8 @@ public boundary, docstring parser modules, object filters, profile, formats,
 and max-level settings as `python -m oodocs apidoc build`. JSON config files
 can live outside the target checkout; the example still adds the target root
 and configured source roots such as `src/`, `package-dir`, or
-`packages.find.where` entries while loading repository-local parser modules.
+`packages.find.where` entries, plus hatch/Poetry package roots, while loading
+repository-local parser modules.
 
 Run it against an installed package or importable module:
 

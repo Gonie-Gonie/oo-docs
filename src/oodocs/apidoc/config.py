@@ -1560,7 +1560,8 @@ def _project_source_roots(directory: Path) -> list[Path]:
 
     Returns:
         Existing source roots from setuptools ``package-dir`` mappings,
-        ``packages.find.where`` settings, and the conventional ``src/`` layout.
+        ``packages.find.where`` settings, hatch wheel package settings, Poetry
+        package entries, and the conventional ``src/`` layout.
     """
 
     roots: list[Path] = []
@@ -1585,6 +1586,8 @@ def _project_source_roots(directory: Path) -> list[Path]:
                 roots.append(directory / where)
             elif isinstance(where, Sequence) and not isinstance(where, (str, bytes, bytearray)):
                 roots.extend(directory / item for item in where if isinstance(item, str))
+        roots.extend(_hatch_source_roots(directory, tool))
+        roots.extend(_poetry_source_roots(directory, tool))
 
     roots.append(directory / "src")
     return _existing_unique_paths(roots)
@@ -1618,6 +1621,51 @@ def _project_pyproject_data(directory: Path) -> dict[str, object] | None:
     except (OSError, tomllib.TOMLDecodeError):
         return None
     return data if isinstance(data, dict) else None
+
+
+def _hatch_source_roots(directory: Path, tool: object) -> list[Path]:
+    if not isinstance(tool, Mapping):
+        return []
+    hatch = tool.get("hatch")
+    build = hatch.get("build") if isinstance(hatch, Mapping) else None
+    targets = build.get("targets") if isinstance(build, Mapping) else None
+    wheel = targets.get("wheel") if isinstance(targets, Mapping) else None
+    if not isinstance(wheel, Mapping):
+        return []
+    roots: list[Path] = []
+    for key in ("packages", "only-include", "sources"):
+        roots.extend(directory / value for value in _path_strings(wheel.get(key)))
+    return roots
+
+
+def _poetry_source_roots(directory: Path, tool: object) -> list[Path]:
+    if not isinstance(tool, Mapping):
+        return []
+    poetry = tool.get("poetry")
+    packages = poetry.get("packages") if isinstance(poetry, Mapping) else None
+    if not isinstance(packages, Sequence) or isinstance(packages, (str, bytes, bytearray)):
+        return []
+    roots: list[Path] = []
+    for package in packages:
+        if not isinstance(package, Mapping):
+            continue
+        from_root = package.get("from")
+        include = package.get("include")
+        if isinstance(from_root, str) and from_root.strip():
+            roots.append(directory / from_root)
+        elif isinstance(include, str) and include.strip() and "*" not in include:
+            roots.append(directory / include)
+    return roots
+
+
+def _path_strings(value: object) -> tuple[str, ...]:
+    if isinstance(value, str):
+        return (value.strip(),) if value.strip() else ()
+    if isinstance(value, Mapping):
+        return tuple(str(item).strip() for item in value.values() if str(item).strip())
+    if isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray)):
+        return tuple(str(item).strip() for item in value if str(item).strip())
+    return ()
 
 
 def _existing_unique_paths(paths: Iterable[Path]) -> list[Path]:

@@ -104,7 +104,8 @@ docstring-parser-modules = ["mypkg.docs_parsers"]
 The same parser hook can be supplied directly on the command line. When the
 target is a repository path, `apidoc` temporarily adds that repository root,
 its configured source roots (`src/`, `package-dir`, or `packages.find.where`),
-and the package parent to Python's import path while loading parser modules:
+hatch/Poetry package roots, and the package parent to Python's import path
+while loading parser modules:
 
 ```powershell
 python -m oodocs apidoc build . --docstring-parser-module docs_parsers --docstring-style brief --out artifacts/api

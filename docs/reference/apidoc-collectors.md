@@ -7,7 +7,8 @@ omits `__init__.py`, or a repository root that publishes direct module files
 through `[tool.setuptools] py-modules`. Repository roots that use setuptools
 custom source roots are also supported through
 `[tool.setuptools] package-dir = {"" = "lib"}` or
-`[tool.setuptools.packages.find] where = ["lib"]`.
+`[tool.setuptools.packages.find] where = ["lib"]`, hatch wheel
+`packages`/`only-include` settings, and Poetry `packages` entries.
 
 ```toml
 [project]
