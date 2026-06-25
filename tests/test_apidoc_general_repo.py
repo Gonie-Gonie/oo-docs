@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 from pathlib import Path
 
 from apidoc_samples import (
@@ -476,6 +477,106 @@ def test_api_objects_example_config_loads_repo_docstring_parser_modules(
     assert "brief:Runner class." in html
     assert "brief:Run custom command." in html
     assert_html_internal_links_resolve(full_reference)
+
+
+def test_api_objects_example_external_json_config_loads_target_parser_modules(
+    tmp_path: Path,
+) -> None:
+    repo = tmp_path / "external-example-config-repo"
+    package_dir = repo / "src" / "examplejsonpkg"
+    package_dir.mkdir(parents=True)
+    (repo / "pyproject.toml").write_text(
+        "\n".join(
+            [
+                "[project]",
+                'name = "examplejsonpkg"',
+                "",
+                "[tool.setuptools]",
+                'package-dir = {"" = "src"}',
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (repo / "example_json_parsers.py").write_text(
+        "\n".join(
+            [
+                "from oodocs.apidoc import ParsedDocstring, docstring_parser_names, register_docstring_parser",
+                "",
+                "def parse_example_json_style(text, qualname=None, module=None):",
+                "    first = (text or '').strip().splitlines()[0]",
+                '    return ParsedDocstring(summary=f"example-json:{first}", style="example-json-brief")',
+                "",
+                'if "example-json-brief" not in docstring_parser_names():',
+                '    register_docstring_parser("example-json-brief", parse_example_json_style)',
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (package_dir / "__init__.py").write_text(
+        "\n".join(
+            [
+                '"""Example JSON package."""',
+                "",
+                '__all__ = ["run"]',
+                "",
+                "def run() -> None:",
+                '    """Run from the example external config."""',
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    config_path = tmp_path / "generated-example-apidoc.json"
+    output_dir = tmp_path / "external-example-config-output"
+    config_path.write_text(
+        json.dumps(
+            {
+                "collector": "inspect",
+                "public_policy": "__all__",
+                "docstring_style": "example-json-brief",
+                "docstring_parser_modules": ["example_json_parsers"],
+                "profile": "compact",
+                "formats": ["html"],
+                "sidecars": True,
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    example = _load_api_objects_example()
+
+    example.main(
+        [
+            str(repo),
+            "--config",
+            str(config_path),
+            "--out",
+            str(output_dir),
+            "--quiet",
+        ]
+    )
+
+    full_reference = output_dir / "oodocs-full-api-reference.html"
+    api_json = output_dir / "oodocs-api-objects.json"
+    coverage_json = output_dir / "oodocs-api-coverage.json"
+    assert full_reference.exists()
+    assert api_json.exists()
+    assert coverage_json.exists()
+
+    api = ApiPackage.read_json(api_json)
+    run = api.find("examplejsonpkg.run")
+
+    assert run is not None
+    assert run.summary == "example-json:Run from the example external config."
+    assert ApiCoverageResult.read_json(coverage_json).object_coverage == 1.0
+    assert_html_internal_links_resolve(
+        full_reference,
+        required_text=("example-json:Run from the example external config.",),
+    )
 
 
 def test_collect_api_loads_repo_local_docstring_parser_modules(

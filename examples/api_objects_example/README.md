@@ -22,7 +22,9 @@ python examples/api_objects_example/main.py . --config pyproject.toml
 `--config` accepts a project root, `pyproject.toml`, or JSON config produced by
 `oodocs apidoc init`. When supplied, the example reuses the same collector,
 public boundary, docstring parser modules, object filters, profile, formats,
-and max-level settings as `python -m oodocs apidoc build`.
+and max-level settings as `python -m oodocs apidoc build`. JSON config files
+can live outside the target checkout; the example still adds the target root
+and `src/` directory while loading repository-local parser modules.
 
 Run it against an installed package or importable module:
 

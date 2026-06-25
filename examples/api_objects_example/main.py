@@ -15,6 +15,7 @@ from oodocs.apidoc import (
     ApiPackage,
     check_api_docs,
     collect_api,
+    docstring_parser_import_paths,
 )
 
 
@@ -459,7 +460,11 @@ def main(argv: Sequence[str] | None = None) -> None:
     """
 
     args = _parse_args(argv)
-    build_config = ApiBuildConfig.read_file(args.config) if args.config else None
+    if args.config:
+        with docstring_parser_import_paths(args.target):
+            build_config = ApiBuildConfig.read_file(args.config)
+    else:
+        build_config = None
     outputs = render_api_objects_example(
         output_dir=args.out,
         target=args.target,
