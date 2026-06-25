@@ -335,6 +335,100 @@ def test_apidoc_cli_external_json_config_loads_target_parser_modules(tmp_path) -
     )
 
 
+def test_apidoc_cli_external_json_config_loads_griffe_target_parser_modules(
+    tmp_path,
+) -> None:
+    pytest.importorskip("griffe")
+    repo = tmp_path / "external-griffe-json-repo"
+    package_dir = repo / "src" / "externalgriffepkg"
+    package_dir.mkdir(parents=True)
+    (repo / "pyproject.toml").write_text(
+        "\n".join(
+            [
+                "[project]",
+                'name = "externalgriffepkg"',
+                "",
+                "[tool.setuptools]",
+                'package-dir = {"" = "src"}',
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (repo / "external_griffe_parsers.py").write_text(
+        "\n".join(
+            [
+                "from oodocs.apidoc import ParsedDocstring, docstring_parser_names, register_docstring_parser",
+                "",
+                "def parse_external_griffe_style(text, qualname=None, module=None):",
+                "    first = (text or '').strip().splitlines()[0]",
+                '    return ParsedDocstring(summary=f"griffe-json:{first}", style="external-griffe-json-brief")',
+                "",
+                'if "external-griffe-json-brief" not in docstring_parser_names():',
+                '    register_docstring_parser("external-griffe-json-brief", parse_external_griffe_style)',
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (package_dir / "__init__.py").write_text(
+        "\n".join(
+            [
+                '"""External griffe JSON config package."""',
+                "",
+                '__all__ = ["run"]',
+                "",
+                "def run() -> None:",
+                '    """Run from external griffe JSON config."""',
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    output_dir = tmp_path / "external-griffe-json-api"
+    config_path = tmp_path / "generated-griffe-apidoc-build.json"
+    config_path.write_text(
+        json.dumps(
+            {
+                "collector": "griffe",
+                "public_policy": "__all__",
+                "docstring_style": "external-griffe-json-brief",
+                "docstring_parser_modules": ["external_griffe_parsers"],
+                "profile": "compact",
+                "formats": ["html"],
+                "out": str(output_dir),
+                "stem": "externalgriffepkg-api",
+                "sidecars": True,
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    assert "external-griffe-json-brief" not in docstring_parser_names()
+    assert main(["apidoc", "build", str(repo), "--config", str(config_path)]) == 0
+
+    html_path = output_dir / "externalgriffepkg-api.html"
+    api = ApiPackage.read_json(output_dir / "externalgriffepkg-api.json")
+    run = api.find("externalgriffepkg.run")
+
+    assert api.metadata["collector"] == "griffe"
+    assert_html_internal_links_resolve(
+        html_path,
+        required_text=("griffe-json:Run from external griffe JSON config.",),
+    )
+    assert run is not None
+    assert run.summary == "griffe-json:Run from external griffe JSON config."
+    assert (
+        ApiCoverageResult.read_json(
+            output_dir / "externalgriffepkg-api-coverage.json"
+        ).object_coverage
+        == 1.0
+    )
+
+
 def test_apidoc_cli_collect_external_json_config_loads_target_parser_modules(
     tmp_path,
 ) -> None:
