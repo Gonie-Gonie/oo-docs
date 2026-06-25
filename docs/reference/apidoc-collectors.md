@@ -163,10 +163,11 @@ sidecars = true
 ```
 
 ```python
-from oodocs.apidoc import ApiBuildConfig, collect_api
+from oodocs.apidoc import ApiBuildConfig
 
 build = ApiBuildConfig.from_pyproject(".")
-api = collect_api(".", config=build.collection)
+outputs = build.save_all(".", output_dir="artifacts/api")
+api_json = outputs["api-json"]
 ```
 
 When a repository defines a custom parser, store the import hook next to the

@@ -579,6 +579,56 @@ def test_api_objects_example_external_json_config_loads_target_parser_modules(
     )
 
 
+def test_build_config_save_all_targets_repo_with_parser_modules(
+    tmp_path: Path,
+) -> None:
+    repo = write_custom_docstring_parser_repo(tmp_path)
+    config_path = tmp_path / "external-brief-build.json"
+    output_dir = tmp_path / "brief-build-output"
+    config_path.write_text(
+        json.dumps(
+            {
+                "collector": "inspect",
+                "public_policy": "__all__",
+                "docstring_style": "example-brief",
+                "docstring_parser_modules": ["example_brief_parsers"],
+                "profile": "compact",
+                "formats": ["html"],
+                "out": str(output_dir),
+                "sidecars": True,
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    build = ApiBuildConfig.read_file(config_path, target=repo)
+    api = build.collect(repo)
+    document = build.to_document(repo)
+    outputs = build.save_all(repo)
+    run = api.find("briefpkg.run")
+
+    assert build.collection.docstring_parser().style == "example-brief"
+    assert run is not None
+    assert run.summary == "brief:Run custom command."
+    assert document.validate(formats=("html",)).ok
+    assert outputs["html"] == output_dir / "briefpkg-api.html"
+    assert outputs["api-json"] == output_dir / "briefpkg-api.json"
+    assert outputs["coverage-json"] == output_dir / "briefpkg-api-coverage.json"
+    assert outputs["coverage-csv"] == output_dir / "briefpkg-api-coverage.csv"
+    assert_html_internal_links_resolve(
+        outputs["html"],
+        required_text=("brief:Run custom command.",),
+    )
+    saved_api = ApiPackage.read_json(outputs["api-json"])
+    saved_run = saved_api.find("briefpkg.run")
+    assert saved_run is not None
+    assert saved_run.summary == "brief:Run custom command."
+    assert ApiCoverageResult.read_json(outputs["coverage-json"]).object_coverage == 1.0
+
+
 def test_collect_api_loads_repo_local_docstring_parser_modules(
     tmp_path: Path,
 ) -> None:

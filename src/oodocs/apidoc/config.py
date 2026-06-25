@@ -14,10 +14,14 @@ import json
 from pathlib import Path
 import sys
 import tomllib
-from typing import Literal, Mapping, Sequence
+from typing import TYPE_CHECKING, Literal, Mapping, Sequence
 
 from oodocs.compatibility import normalize_output_formats
 from oodocs.core import PathLike
+
+if TYPE_CHECKING:
+    from oodocs.apidoc.model import ApiPackage
+    from oodocs.document import Document
 
 ApiCollectorName = Literal["auto", "inspect", "griffe"]
 ApiFallbackCollectorName = Literal["inspect", "none"]
@@ -771,14 +775,10 @@ class ApiBuildConfig:
         them from Python or the CLI:
 
         ```python
-        from oodocs.apidoc import ApiBuildConfig, collect_api
+        from oodocs.apidoc import ApiBuildConfig
 
         build = ApiBuildConfig.from_pyproject(".")
-        api = collect_api(".", config=build.collection)
-        api.to_document(profile=build.profile).save_all(
-            build.output_dir or "artifacts/api",
-            formats=build.output_formats,
-        )
+        outputs = build.save_all(".", output_dir="artifacts/api")
         ```
     """
 
@@ -828,7 +828,7 @@ class ApiBuildConfig:
             render a package reference:
 
             ```python
-            from oodocs.apidoc import ApiBuildConfig, collect_api
+            from oodocs.apidoc import ApiBuildConfig
 
             build = ApiBuildConfig.from_dict({
                 "collector": "griffe",
@@ -837,11 +837,7 @@ class ApiBuildConfig:
                 "formats": ["docx", "html"],
                 "out": "artifacts/api",
             })
-            api = collect_api(".", config=build.collection)
-            api.to_document(profile=build.profile).save_all(
-                build.output_dir or "artifacts/api",
-                formats=build.output_formats,
-            )
+            outputs = build.save_all(".")
             ```
         """
 
@@ -891,15 +887,10 @@ class ApiBuildConfig:
             Reuse the same build defaults that ``oodocs apidoc build`` reads:
 
             ```python
-            from oodocs.apidoc import ApiBuildConfig, collect_api
+            from oodocs.apidoc import ApiBuildConfig
 
             build = ApiBuildConfig.from_pyproject(".")
-            api = collect_api(".", config=build.collection)
-            api.to_document(profile=build.profile).save_all(
-                build.output_dir or "artifacts/api",
-                stem=build.stem,
-                formats=build.output_formats,
-            )
+            outputs = build.save_all(".", output_dir="artifacts/api")
             ```
         """
 
@@ -939,6 +930,7 @@ class ApiBuildConfig:
             from oodocs.apidoc import ApiBuildConfig
 
             build = ApiBuildConfig.read_json("apidoc-build.json", target=".")
+            outputs = build.save_all(".", output_dir="artifacts/api")
             ```
         """
 
@@ -971,6 +963,7 @@ class ApiBuildConfig:
             from oodocs.apidoc import ApiBuildConfig
 
             build = ApiBuildConfig.read_file("pyproject.toml", target=".")
+            document = build.to_document(".")
             ```
         """
 
@@ -1006,6 +999,159 @@ class ApiBuildConfig:
             raise ValueError("max_level must be >= 1")
         if not self.output_formats:
             raise ValueError("output_formats must include at least one format")
+
+    def collect(self, target: str | PathLike) -> ApiPackage:
+        """Collect and filter a target with this build configuration.
+
+        Args:
+            target: Importable package/module name, Python file, package
+                directory, or repository root.
+
+        Returns:
+            ``ApiPackage`` collected with ``collection`` settings and filtered
+            by this build config's ``kind`` and ``module_prefix`` options.
+
+        Examples:
+            Load an external build config, then collect a normal Python
+            repository with the configured parser object and object filters:
+
+            ```python
+            from oodocs.apidoc import ApiBuildConfig
+
+            build = ApiBuildConfig.read_file("apidoc-build.json", target=".")
+            api = build.collect(".")
+            assert api.modules
+            ```
+        """
+
+        from oodocs.apidoc.collect import collect_api
+
+        api = collect_api(target, config=self.collection)
+        return _filter_api_for_build(
+            api,
+            kind=self.kind or None,
+            module_prefix=self.module_prefix,
+        )
+
+    def to_document(
+        self,
+        target: str | PathLike,
+        title: str | None = None,
+        *,
+        settings: object | None = None,
+        citations: object | None = None,
+    ) -> Document:
+        """Collect a target and return a rendered API reference document.
+
+        Args:
+            target: Importable package/module name, Python file, package
+                directory, or repository root.
+            title: Optional document title. Defaults to
+                ``"{api.name} API Reference"``.
+            settings: Optional ``DocumentSettings`` passed to ``Document``.
+            citations: Optional citation library passed to ``Document``.
+
+        Returns:
+            OODocs ``Document`` ready for ``save_docx``, ``save_pdf``,
+            ``save_html``, or ``save_all``.
+
+        Examples:
+            Build a complete reference document from a repository config:
+
+            ```python
+            from oodocs.apidoc import ApiBuildConfig
+
+            build = ApiBuildConfig.from_pyproject(".")
+            document = build.to_document(".")
+            document.save_all("artifacts/api", stem="mypkg-api")
+            ```
+        """
+
+        return _document_for_build(
+            self.collect(target),
+            self,
+            title=title,
+            settings=settings,
+            citations=citations,
+        )
+
+    def save_all(
+        self,
+        target: str | PathLike,
+        output_dir: PathLike | None = None,
+        *,
+        stem: str | None = None,
+        formats: Sequence[str] | None = None,
+        sidecars: bool | None = None,
+        title: str | None = None,
+        settings: object | None = None,
+        citations: object | None = None,
+    ) -> dict[object, Path]:
+        """Collect a target and write rendered API reference outputs.
+
+        Args:
+            target: Importable package/module name, Python file, package
+                directory, or repository root.
+            output_dir: Optional output directory. Defaults to this config's
+                ``output_dir``.
+            stem: Optional output filename stem. Defaults to this config's
+                ``stem`` or ``"{api.name}-api"``.
+            formats: Optional output formats. Defaults to ``output_formats``.
+            sidecars: Whether to write API JSON and coverage JSON/CSV sidecars.
+                Defaults to this config's ``sidecars``.
+            title: Optional document title.
+            settings: Optional ``DocumentSettings`` passed to ``Document``.
+            citations: Optional citation library passed to ``Document``.
+
+        Returns:
+            Mapping of rendered output names to written paths. When sidecars
+            are enabled, the mapping also includes ``"api-json"``,
+            ``"coverage-json"``, and ``"coverage-csv"``.
+
+        Raises:
+            ValueError: If no output directory is supplied by the call or
+                stored config.
+
+        Examples:
+            Render a full API bundle for a different Python repository using
+            an external JSON config. Repository-local custom parser modules are
+            loaded when ``read_file(..., target=repo)`` validates the config:
+
+            ```python
+            from oodocs.apidoc import ApiBuildConfig
+
+            repo = r"C:\\work\\mypkg"
+            build = ApiBuildConfig.read_file(r"C:\\configs\\mypkg-apidoc.json", target=repo)
+            outputs = build.save_all(repo)
+            assert outputs["html"].exists()
+            assert outputs["api-json"].exists()
+            ```
+        """
+
+        api = self.collect(target)
+        resolved_output_dir = output_dir if output_dir is not None else self.output_dir
+        if resolved_output_dir is None:
+            raise ValueError("ApiBuildConfig.save_all requires output_dir or config output_dir")
+        resolved_stem = stem or self.stem or f"{api.name.replace('.', '-')}-api"
+        resolved_formats = normalize_output_formats(
+            tuple(formats) if formats is not None else self.output_formats
+        )
+        document = _document_for_build(
+            api,
+            self,
+            title=title,
+            settings=settings,
+            citations=citations,
+        )
+        outputs = document.save_all(
+            resolved_output_dir,
+            stem=resolved_stem,
+            formats=resolved_formats,
+        )
+        write_sidecars = self.sidecars if sidecars is None else sidecars
+        if write_sidecars:
+            outputs.update(_write_build_sidecars(api, resolved_output_dir, resolved_stem))
+        return outputs
 
     def to_dict(self) -> dict[str, object]:
         """Return this build config as JSON-serializable data.
@@ -1139,6 +1285,84 @@ class ApiBuildConfig:
         else:
             pyproject_path.write_text(self.to_toml_section(), encoding="utf-8")
         return pyproject_path
+
+
+def _filter_api_for_build(
+    api: ApiPackage,
+    *,
+    kind: tuple[str, ...] | None,
+    module_prefix: str | None,
+) -> ApiPackage:
+    if not _has_build_filters(kind, module_prefix):
+        return api
+    return api.filtered(kind=kind, module_prefix=module_prefix)
+
+
+def _document_for_build(
+    api: ApiPackage,
+    config: ApiBuildConfig,
+    *,
+    title: str | None = None,
+    settings: object | None = None,
+    citations: object | None = None,
+) -> Document:
+    if _has_build_filters(config.kind or None, config.module_prefix):
+        from oodocs.components.blocks import Chapter
+        from oodocs.document import Document
+
+        selected = _top_level_objects(api)
+        return Document(
+            title or f"{api.name} API Reference",
+            Chapter(
+                "Selected API",
+                api.to_summary_table(
+                    selected,
+                    caption="Selected public API objects",
+                    profile=config.profile,
+                ),
+                *[
+                    obj.to_section(
+                        level=2,
+                        profile=config.profile,
+                        max_level=config.max_level,
+                    )
+                    for obj in selected
+                ],
+            ),
+            settings=settings,  # type: ignore[arg-type]
+            citations=citations,  # type: ignore[arg-type]
+        )
+    return api.to_document(
+        title=title,
+        profile=config.profile,
+        settings=settings,
+        citations=citations,
+        max_level=config.max_level,
+    )
+
+
+def _write_build_sidecars(
+    api: ApiPackage,
+    output_dir: PathLike,
+    stem: str,
+) -> dict[object, Path]:
+    from oodocs.apidoc.coverage import check_api_docs
+
+    directory = Path(output_dir)
+    coverage = check_api_docs(api)
+    return {
+        "api-json": api.write_json(directory / f"{stem}.json"),
+        "coverage-json": coverage.write_json(directory / f"{stem}-coverage.json"),
+        "coverage-csv": coverage.write_csv(directory / f"{stem}-coverage.csv"),
+    }
+
+
+def _has_build_filters(kind: tuple[str, ...] | None, module_prefix: str | None) -> bool:
+    return bool(kind or module_prefix)
+
+
+def _top_level_objects(api: ApiPackage) -> list[object]:
+    return [member for module in api.modules for member in module.members]
 
 
 def normalize_explicit_names(names: Sequence[str] | None) -> tuple[str, ...]:
