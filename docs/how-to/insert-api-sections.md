@@ -64,6 +64,27 @@ doc = Document(
 `ApiObject.to_section(...)` returns a normal OODocs `Section`, so it can be
 mixed with handwritten paragraphs, tables, figures, and generated pages.
 
+When the target object is already importable in a development environment, pass
+the live class, function, method, property, or bound method to
+`collect_object_api(...)`.
+
+```python
+from mypkg.client import Client
+from oodocs import Chapter, Document
+from oodocs.apidoc import collect_object_api
+
+client_api = collect_object_api(
+    Client,
+    collector="inspect",
+    public_policy="underscore",
+)
+
+doc = Document(
+    "Client API Notes",
+    Chapter("Client", client_api.to_section(level=2, profile="manual")),
+)
+```
+
 ## Insert One Module
 
 Use `collect_module_api(...)` when the target module is importable, such as

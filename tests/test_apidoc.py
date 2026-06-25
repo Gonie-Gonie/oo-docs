@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+import importlib
+import importlib.util
 import json
 from pathlib import Path
-import importlib.util
 
 import pytest
 
@@ -817,6 +818,11 @@ def test_collect_api_supports_src_layout_repo_reexports_and_deep_object_lookup(
                 "    def __init__(self, name: str) -> None:",
                 "        self.name = name",
                 "",
+                "    @property",
+                "    def title(self) -> str:",
+                '        """Widget title."""',
+                "        return self.name",
+                "",
                 "    def render(self, path: str) -> str:",
                 '        """Render the widget.',
                 "",
@@ -868,6 +874,41 @@ def test_collect_api_supports_src_layout_repo_reexports_and_deep_object_lookup(
     )
     assert looked_up.kind == "method"
     assert looked_up.parameters[0].name == "path"
+
+    core = importlib.import_module("widgetlib.core")
+    live_class = collect_object_api(
+        core.Widget,
+        public_policy="underscore",
+        collector="inspect",
+    )
+    live_method = collect_object_api(
+        core.Widget.render,
+        public_policy="underscore",
+        collector="inspect",
+    )
+    live_function = collect_object_api(
+        core.make_widget,
+        public_policy="underscore",
+        collector="inspect",
+    )
+    live_property = collect_object_api(
+        core.Widget.title,
+        public_policy="underscore",
+        collector="inspect",
+    )
+    bound_method = collect_object_api(
+        core.Widget("demo").render,
+        public_policy="underscore",
+        collector="inspect",
+    )
+
+    assert live_class.qualname == "widgetlib.core.Widget"
+    assert live_method.kind == "method"
+    assert live_method.parameters[0].name == "path"
+    assert live_function.qualname == "widgetlib.core.make_widget"
+    assert live_property.kind == "property"
+    assert live_property.qualname == "widgetlib.core.Widget.title"
+    assert bound_method.qualname == "widgetlib.core.Widget.render"
 
 
 def test_collect_api_supports_src_layout_namespace_package_repo(tmp_path: Path) -> None:

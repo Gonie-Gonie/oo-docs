@@ -267,15 +267,16 @@ def collect_module_api(
 
 
 def collect_object_api(
-    obj_or_qualname: str,
+    obj_or_qualname: object,
     *,
     config: ApiCollectConfig | None = None,
     **kwargs: object,
 ) -> ApiObject:
-    """Collect one object by fully qualified name.
+    """Collect one object by fully qualified name or live Python object.
 
     Args:
-        obj_or_qualname: Fully qualified object name.
+        obj_or_qualname: Fully qualified object name or an importable Python
+            class, function, method, or property object.
         config: Optional base config.
         **kwargs: Config overrides accepted by ``collect_api``.
 
@@ -283,6 +284,8 @@ def collect_object_api(
         Matching API object.
 
     Raises:
+        TypeError: If a live object does not expose importable module and
+            qualname metadata.
         LookupError: If the object cannot be found.
 
     Examples:
@@ -298,21 +301,49 @@ def collect_object_api(
             Chapter("Document Settings", obj.to_compact_box(profile="manual")),
         )
         ```
+
+        Pass a live object while developing an importable module:
+
+        ```python
+        from mypkg.settings import DocumentSettings
+        from oodocs.apidoc import collect_object_api
+
+        obj = collect_object_api(DocumentSettings, public_policy="underscore")
+        section = obj.to_section(level=2, profile="manual")
+        ```
     """
 
+    qualname, preferred_module = _object_lookup_target(obj_or_qualname)
     errors: list[Exception] = []
-    for module_name in _candidate_module_prefixes(obj_or_qualname):
+    module_candidates = _candidate_module_prefixes(qualname)
+    if preferred_module is not None:
+        module_candidates.insert(0, preferred_module)
+    for module_name in list(dict.fromkeys(module_candidates)):
         try:
             api = collect_api(module_name, config=config, **kwargs)
         except Exception as exc:
             errors.append(exc)
             continue
-        found = api.find(obj_or_qualname)
+        found = api.find(qualname)
         if isinstance(found, ApiObject):
             return found
     if errors:
-        raise LookupError(f"API object not found: {obj_or_qualname}") from errors[-1]
-    raise LookupError(f"API object not found: {obj_or_qualname}")
+        raise LookupError(f"API object not found: {qualname}") from errors[-1]
+    raise LookupError(f"API object not found: {qualname}")
+
+
+def _object_lookup_target(obj_or_qualname: object) -> tuple[str, str | None]:
+    if isinstance(obj_or_qualname, str):
+        return obj_or_qualname, None
+    target = obj_or_qualname.fget if isinstance(obj_or_qualname, property) else obj_or_qualname
+    target = getattr(target, "__func__", target)
+    module = getattr(target, "__module__", None)
+    qualname = getattr(target, "__qualname__", None)
+    if not isinstance(module, str) or not isinstance(qualname, str) or not module or not qualname:
+        raise TypeError("obj_or_qualname must be a fully qualified name or importable Python object")
+    if "<locals>" in qualname:
+        raise TypeError("local Python objects cannot be collected by collect_object_api")
+    return f"{module}.{qualname}", module
 
 
 def _collect_package_source(
