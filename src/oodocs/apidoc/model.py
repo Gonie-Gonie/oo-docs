@@ -801,70 +801,173 @@ class ApiObject:
         return row
 
     def to_summary_paragraph(self):
-        """Return a compact OODocs paragraph for this object."""
+        """Return a compact OODocs paragraph for this object.
+
+        Returns:
+            OODocs paragraph containing the object kind, display name, and
+            short summary.
+
+        Examples:
+            Insert one API summary into a hand-authored chapter:
+
+            ```python
+            from oodocs import Chapter, Document
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            obj = api.functions()[0]
+            doc = Document("API Notes", Chapter("Selected API", obj.to_summary_paragraph()))
+            ```
+        """
 
         from oodocs.apidoc.blocks import api_object_summary_paragraph
 
         return api_object_summary_paragraph(self)
 
     def to_signature_block(self, profile: object = "reference"):
-        """Return this object's signature as an OODocs code block."""
+        """Return this object's signature as an OODocs code block.
+
+        Args:
+            profile: Presentation profile name or object controlling signature
+                wrapping and visibility.
+
+        Returns:
+            OODocs code block, or ``None`` when the profile suppresses
+            signatures or the object has no signature.
+        """
 
         from oodocs.apidoc.blocks import api_signature_block
 
         return api_signature_block(self, profile)
 
     def to_parameter_table(self, profile: object = "reference"):
-        """Return this object's parameter table, if parameters are available."""
+        """Return this object's parameter table, if parameters are available.
+
+        Args:
+            profile: Presentation profile name or object controlling parameter
+                columns and truncation.
+
+        Returns:
+            OODocs table, or ``None`` when the object has no parameters or the
+            profile suppresses parameter tables.
+
+        Examples:
+            Add a function's parameters to a review document:
+
+            ```python
+            from oodocs import Chapter, Document
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            fn = api.functions()[0]
+            table = fn.to_parameter_table(profile="review")
+            doc = Document(
+                "API Review",
+                Chapter("Parameters", table) if table is not None else Chapter("Parameters"),
+            )
+            ```
+        """
 
         from oodocs.apidoc.blocks import api_parameter_table
 
         return api_parameter_table(self, profile)
 
     def to_returns_blocks(self, profile: object = "reference") -> list[object]:
-        """Return OODocs blocks documenting return values."""
+        """Return OODocs blocks documenting return values.
+
+        Args:
+            profile: Presentation profile name or object.
+
+        Returns:
+            Renderer-neutral OODocs blocks. Returns an empty list when no return
+            documentation should render.
+        """
 
         from oodocs.apidoc.blocks import api_returns_blocks
 
         return api_returns_blocks(self, profile)
 
     def to_raises_table(self, profile: object = "reference"):
-        """Return this object's raises table, if exceptions are documented."""
+        """Return this object's raises table, if exceptions are documented.
+
+        Args:
+            profile: Presentation profile name or object.
+
+        Returns:
+            OODocs table, or ``None`` when no exception documentation should
+            render.
+        """
 
         from oodocs.apidoc.blocks import api_raises_table
 
         return api_raises_table(self, profile)
 
     def to_examples_blocks(self, profile: object = "reference") -> list[object]:
-        """Return OODocs blocks for examples."""
+        """Return OODocs blocks for examples.
+
+        Args:
+            profile: Presentation profile name or object controlling example
+                inclusion and maximum example count.
+
+        Returns:
+            OODocs code blocks and optional captions for parsed examples.
+        """
 
         from oodocs.apidoc.blocks import api_examples_blocks
 
         return api_examples_blocks(self, profile)
 
     def to_see_also_blocks(self, profile: object = "reference") -> list[object]:
-        """Return OODocs blocks for related API entries."""
+        """Return OODocs blocks for related API entries.
+
+        Args:
+            profile: Presentation profile name or object.
+
+        Returns:
+            OODocs blocks for parsed ``See Also`` entries.
+        """
 
         from oodocs.apidoc.blocks import api_see_also_blocks
 
         return api_see_also_blocks(self, profile)
 
     def to_notes_blocks(self, profile: object = "reference") -> list[object]:
-        """Return OODocs blocks for parsed general notes."""
+        """Return OODocs blocks for parsed general notes.
+
+        Args:
+            profile: Presentation profile name or object.
+
+        Returns:
+            OODocs paragraphs for parsed notes.
+        """
 
         from oodocs.apidoc.blocks import api_notes_blocks
 
         return api_notes_blocks(self, profile)
 
     def to_warnings_blocks(self, profile: object = "reference") -> list[object]:
-        """Return OODocs blocks for parsed warning notes."""
+        """Return OODocs blocks for parsed warning notes.
+
+        Args:
+            profile: Presentation profile name or object.
+
+        Returns:
+            OODocs warning blocks for parsed warning notes.
+        """
 
         from oodocs.apidoc.blocks import api_warnings_blocks
 
         return api_warnings_blocks(self, profile)
 
     def to_renderer_notes_blocks(self, profile: object = "reference") -> list[object]:
-        """Return OODocs blocks for renderer-specific notes."""
+        """Return OODocs blocks for renderer-specific notes.
+
+        Args:
+            profile: Presentation profile name or object.
+
+        Returns:
+            OODocs blocks for parsed renderer-specific notes.
+        """
 
         from oodocs.apidoc.blocks import api_renderer_notes_blocks
 
@@ -887,6 +990,20 @@ class ApiObject:
 
         Returns:
             Renderer-neutral OODocs block list.
+
+        Examples:
+            Insert one API object into an existing chapter without adding a new
+            heading:
+
+            ```python
+            from oodocs import Chapter, Document
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            obj = api.find("mypkg.load")
+            assert obj is not None
+            doc = Document("API Notes", Chapter("load", *obj.to_blocks(profile="manual")))
+            ```
         """
 
         from oodocs.apidoc.blocks import api_object_to_blocks
@@ -917,6 +1034,21 @@ class ApiObject:
 
         Returns:
             OODocs ``Section``/``Chapter`` appropriate for ``level``.
+
+        Examples:
+            Compose selected classes into a normal OODocs document:
+
+            ```python
+            from oodocs import Chapter, Document
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            classes = api.select(kind="class", module_prefix="mypkg.widgets")
+            doc = Document(
+                "Widget API",
+                Chapter("Classes", *[item.to_section(level=2) for item in classes]),
+            )
+            ```
         """
 
         from oodocs.apidoc.blocks import api_object_to_section
@@ -930,14 +1062,25 @@ class ApiObject:
         )
 
     def to_compact_box(self, profile: object = "compact"):
-        """Return this object as a compact OODocs box."""
+        """Return this object as a compact OODocs box.
+
+        Args:
+            profile: Presentation profile name or object.
+
+        Returns:
+            OODocs box with the object summary and optional signature.
+        """
 
         from oodocs.apidoc.blocks import api_object_to_compact_box
 
         return api_object_to_compact_box(self, profile=profile)
 
     def to_index_row(self) -> list[object]:
-        """Return a row suitable for API index tables."""
+        """Return a row suitable for API index tables.
+
+        Returns:
+            ``[kind, qualname, module, location, summary]``.
+        """
 
         location = ""
         if self.source_path:
@@ -947,7 +1090,12 @@ class ApiObject:
         return [self.kind, self.qualname, self.module, location, self.plain_summary()]
 
     def to_doc_issue_rows(self) -> list[list[object]]:
-        """Return issue rows stored on this object metadata."""
+        """Return issue rows stored on this object metadata.
+
+        Returns:
+            Rows converted from parser or merge diagnostics stored in
+            ``metadata["issues"]``.
+        """
 
         rows: list[list[object]] = []
         for item in self.metadata.get("issues", []):
