@@ -323,7 +323,7 @@ class ApiCollectConfig:
     def __post_init__(self) -> None:
         policy = ApiPublicPolicy.from_value(
             self.public_policy,
-            explicit_names=self.explicit_names,
+            explicit_names=self.explicit_names or None,
         )
         object.__setattr__(self, "public_policy", policy.name)
         object.__setattr__(self, "explicit_names", policy.explicit_names)
