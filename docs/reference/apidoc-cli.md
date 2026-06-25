@@ -171,7 +171,10 @@ When those build options are omitted, `build` can read `profile`, `formats`,
 `stem`, `max-level`, `out`/`output-dir`, and `sidecars` from
 `[tool.oodocs.apidoc]`. The `kind` and `module-prefix` settings in the same
 section are object filters shared by `check`, `snapshot`, and `build`, with
-explicit CLI flags taking precedence. Custom parser modules can be stored as
+explicit CLI flags taking precedence. In `pyproject.toml`, `module-prefix` is a
+single string such as `module-prefix = "mypkg.adapters"`; use
+`module-include-patterns = ["mypkg.*", "plugins.*"]` when collection should
+include several module families. Custom parser modules can be stored as
 `docstring-parser-modules = ["mypkg.docs_parsers"]` or supplied with
 `--docstring-parser-module`. `init` writes the same section to `pyproject.toml`
 by default, or writes a standalone JSON config when the target path ends in

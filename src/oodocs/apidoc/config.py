@@ -780,6 +780,8 @@ class ApiBuildConfig:
         object.__setattr__(self, "output_formats", normalize_output_formats(self.output_formats))
         object.__setattr__(self, "kind", _string_tuple(self.kind))
         if self.module_prefix is not None:
+            if _is_sequence_or_mapping(self.module_prefix):
+                raise TypeError("module_prefix must be a string")
             object.__setattr__(self, "module_prefix", str(self.module_prefix).strip() or None)
         if self.output_dir is not None:
             object.__setattr__(self, "output_dir", str(self.output_dir))
@@ -835,7 +837,7 @@ class ApiBuildConfig:
             sidecars=bool(normalized.get("sidecars", False)),
             output_dir=_optional_str(output_dir),
             kind=_string_tuple(normalized.get("kind", ())),
-            module_prefix=_optional_str(normalized.get("module_prefix")),
+            module_prefix=_optional_config_str("module_prefix", normalized.get("module_prefix")),
         )
 
     @classmethod
@@ -1155,6 +1157,20 @@ def _optional_str(value: object) -> str | None:
         return None
     text = str(value).strip()
     return text or None
+
+
+def _optional_config_str(name: str, value: object) -> str | None:
+    if value is None:
+        return None
+    if _is_sequence_or_mapping(value):
+        raise TypeError(f"{name} must be a string")
+    return _optional_str(value)
+
+
+def _is_sequence_or_mapping(value: object) -> bool:
+    return isinstance(value, Mapping) or (
+        isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray))
+    )
 
 
 def _optional_int(value: object) -> int | None:

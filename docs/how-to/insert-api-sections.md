@@ -117,11 +117,15 @@ collect the same public surface:
 collector = "griffe"
 public-policy = "__all__"
 docstring-style = "auto"
-module-prefix = ["mypkg"]
+module-prefix = "mypkg"
 profile = "manual"
 formats = ["docx", "pdf", "html"]
 sidecars = true
 ```
+
+`module-prefix` is a single post-collection filter. Use
+`module-include-patterns = ["mypkg.*", "plugins.*"]` when the collection step
+should include several module families.
 
 Then build a full reference bundle or sidecars from the command line:
 

@@ -274,7 +274,7 @@ def write_mixed_docstring_repo(tmp_path: Path) -> Path:
             collector = "inspect"
             public-policy = "__all__"
             docstring-style = "auto"
-            module-prefix = ["mixedpkg"]
+            module-prefix = "mixedpkg"
             profile = "manual"
             formats = ["html"]
             sidecars = true

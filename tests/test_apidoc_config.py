@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from oodocs.apidoc import ApiBuildConfig, ApiCollectConfig, ApiDocstringParser, ApiPublicPolicy
 
 
@@ -42,3 +44,8 @@ def test_apidoc_config_roundtrip_supports_general_repo_policy(tmp_path) -> None:
     )
     assert readback.output_formats == ("html",)
     assert ApiCollectConfig.from_dict({"fallback-parser": "none"}).fallback_collector == "none"
+
+
+def test_apidoc_build_config_rejects_sequence_module_prefix() -> None:
+    with pytest.raises(TypeError, match="module_prefix must be a string"):
+        ApiBuildConfig.from_dict({"module-prefix": ["samplepkg"]})
