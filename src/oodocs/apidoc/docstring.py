@@ -880,6 +880,9 @@ def _parse_numpy(text: str, qualname: str | None, module: str | None) -> ParsedD
             parsed.warnings.extend(_paragraphs(body))
         elif normalized == "renderer notes":
             parsed.renderer_notes.extend(_parse_renderer_notes(body))
+        elif normalized == "deprecated":
+            parsed.deprecated = True
+            parsed.deprecation_message = " ".join(body.split()) or None
     if not parsed.examples:
         parsed.examples.extend(extract_code_blocks_from_docstring(text))
     return parsed

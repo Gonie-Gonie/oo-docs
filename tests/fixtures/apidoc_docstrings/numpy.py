@@ -37,6 +37,10 @@ def load_widget(path: str) -> bool:
     Renderer Notes
     --------------
     HTML: Adds stable anchors for generated API pages.
+
+    Deprecated
+    ----------
+    Use load_widget_v2 instead.
     """
 
     return bool(path)

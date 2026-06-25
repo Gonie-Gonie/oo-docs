@@ -20,6 +20,8 @@ def test_numpy_docstring_fixture_extracts_shared_fields() -> None:
     assert function.examples
     assert function.notes
     assert function.renderer_notes[0].format == "html"
+    assert function.deprecated
+    assert function.deprecation_message == "Use load_widget_v2 instead."
     assert class_doc.parameters[0].name == "name"
     assert class_doc.attributes[0].name == "label"
     assert method.parameters[0].name == "path"
