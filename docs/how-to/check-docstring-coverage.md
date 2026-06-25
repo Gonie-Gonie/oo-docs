@@ -31,6 +31,13 @@ CLI equivalent:
 python -m oodocs apidoc check oodocs --collector griffe --public-policy __all__ --fail-under 0.90
 ```
 
+When a repository needs a rendered API reference and coverage evidence from one
+command, build with sidecars:
+
+```powershell
+python -m oodocs apidoc build . --config pyproject.toml --out artifacts/api --to docx,pdf,html --sidecars
+```
+
 For larger repositories, gate only the API area currently under review:
 
 ```powershell

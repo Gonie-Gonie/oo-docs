@@ -33,6 +33,12 @@ Build rendered API documents:
 python -m oodocs apidoc build oodocs --profile reference --out artifacts/api --to docx,pdf,html
 ```
 
+Write API object and coverage sidecars beside the rendered bundle:
+
+```powershell
+python -m oodocs apidoc build . --config pyproject.toml --profile reference --out artifacts/api --to docx,pdf,html --sidecars
+```
+
 Limit nested API heading depth for larger repositories:
 
 ```powershell
@@ -68,4 +74,6 @@ Module include/exclude patterns are applied before module contents are
 collected, while `check`, `build`, and `snapshot` also accept `--kind` and
 `--module-prefix` object filters after collection. `build` also accepts
 `--max-level` to cap nested API section depth and the generated table of
-contents.
+contents. Use `--sidecars` when one build should leave the rendered documents,
+the collected API object JSON, and coverage JSON/CSV evidence in the same
+output directory.

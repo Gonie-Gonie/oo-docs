@@ -1063,8 +1063,13 @@ def test_apidoc_cli_collect_check_build_snapshot_and_diff(tmp_path: Path, capsys
     assert main(["apidoc", "collect", str(package_dir), "--out", str(api_json)]) == 0
     assert api_json.exists()
     assert main(["apidoc", "check", str(package_dir)]) == 0
-    assert main(["apidoc", "build", str(package_dir), "--out", str(build_dir), "--to", "html"]) == 0
+    assert main(["apidoc", "build", str(package_dir), "--out", str(build_dir), "--to", "html", "--sidecars"]) == 0
     assert any(path.suffix == ".html" for path in build_dir.iterdir())
+    assert (build_dir / "clipkg-api.json").exists()
+    assert (build_dir / "clipkg-api-coverage.json").exists()
+    assert (build_dir / "clipkg-api-coverage.csv").exists()
+    built_api = json.loads((build_dir / "clipkg-api.json").read_text(encoding="utf-8"))
+    assert built_api["modules"][0]["name"] == "clipkg"
     assert main(["apidoc", "snapshot", str(package_dir), "--out", str(snapshot_json)]) == 0
     assert snapshot_json.exists()
     assert main(
@@ -1085,6 +1090,7 @@ def test_apidoc_cli_collect_check_build_snapshot_and_diff(tmp_path: Path, capsys
 
     captured = capsys.readouterr()
     assert "Wrote api-json" in captured.out
+    assert "Wrote coverage-csv" in captured.out
 
 
 def test_apidoc_cli_filters_check_and_snapshot(tmp_path: Path) -> None:
@@ -1237,11 +1243,18 @@ def test_apidoc_cli_filters_check_and_snapshot(tmp_path: Path) -> None:
             str(build_dir),
             "--to",
             "html",
+            "--sidecars",
         ]
     ) == 0
     html = (build_dir / "filterpkg-api.html").read_text(encoding="utf-8")
     assert 'href="#filterpkg-core-run"' in html
     assert 'id="filterpkg-core-run"' in html
+    filtered_build_api = json.loads(
+        (build_dir / "filterpkg-api.json").read_text(encoding="utf-8")
+    )
+    assert [module["name"] for module in filtered_build_api["modules"]] == ["filterpkg.core"]
+    assert filtered_build_api["modules"][0]["members"][0]["qualname"] == "filterpkg.core.run"
+    assert (build_dir / "filterpkg-api-coverage.csv").exists()
 
     assert main(
         [

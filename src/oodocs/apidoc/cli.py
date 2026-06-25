@@ -60,6 +60,11 @@ def _build_parser() -> argparse.ArgumentParser:
     build.add_argument("--stem", help="Output file stem.")
     build.add_argument("--profile", default="reference", help="Presentation profile.")
     build.add_argument(
+        "--sidecars",
+        action="store_true",
+        help="Write API JSON and coverage JSON/CSV sidecars beside rendered documents.",
+    )
+    build.add_argument(
         "--max-level",
         type=int,
         help="Deepest heading level to render for nested API sections.",
@@ -171,15 +176,16 @@ def _run_check(args: argparse.Namespace) -> int:
 
 def _run_build(args: argparse.Namespace) -> int:
     api = _collect_from_args(args)
+    rendered_api = _filter_from_args(api, args)
     formats = normalize_output_formats(_split_csv(args.to))
+    stem = args.stem or f"{api.name.replace('.', '-')}-api"
     if _has_filters(args):
-        filtered = _filter_from_args(api, args)
-        selected = _top_level_objects(filtered)
+        selected = _top_level_objects(rendered_api)
         document = Document(
             f"{api.name} API Reference",
             Chapter(
                 "Selected API",
-                api.to_summary_table(
+                rendered_api.to_summary_table(
                     selected,
                     caption="Selected public API objects",
                     profile=args.profile,
@@ -195,13 +201,15 @@ def _run_build(args: argparse.Namespace) -> int:
             ),
         )
     else:
-        document = api.to_document(profile=args.profile, max_level=args.max_level)
+        document = rendered_api.to_document(profile=args.profile, max_level=args.max_level)
     outputs = document.save_all(
         args.out,
-        stem=args.stem or f"{api.name.replace('.', '-')}-api",
+        stem=stem,
         formats=formats,
     )
     _print_outputs(outputs)
+    if args.sidecars:
+        _write_build_sidecars(rendered_api, args.out, stem)
     return 0
 
 
@@ -267,6 +275,17 @@ def _split_csv(value: str) -> tuple[str, ...]:
 def _print_outputs(outputs: dict[object, Path]) -> None:
     for output_format, path in outputs.items():
         print(f"Wrote {output_format}: {path}")
+
+
+def _write_build_sidecars(api: ApiPackage, output_dir: str | Path, stem: str) -> None:
+    directory = Path(output_dir)
+    api_path = api.write_json(directory / f"{stem}.json")
+    coverage = check_api_docs(api)
+    coverage_json_path = coverage.write_json(directory / f"{stem}-coverage.json")
+    coverage_csv_path = coverage.write_csv(directory / f"{stem}-coverage.csv")
+    print(f"Wrote api-json: {api_path}")
+    print(f"Wrote coverage-json: {coverage_json_path}")
+    print(f"Wrote coverage-csv: {coverage_csv_path}")
 
 
 if __name__ == "__main__":
