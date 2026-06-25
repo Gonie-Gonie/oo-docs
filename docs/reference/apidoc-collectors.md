@@ -27,7 +27,8 @@ assert api.find("samplepkg.run") is not None
   attributes, and line metadata without importing the target package.
 - `collector="inspect"` uses the source-compatible collector and avoids runtime
   imports while normalizing the same object kinds when they can be inferred from
-  source.
+  source. It records an informational `inspect-source-collector` issue so
+  JSON sidecars and issue tables make the import-safe path explicit.
 - `collector="auto"` tries griffe first and records a fallback issue if source
   collection is used.
 
