@@ -54,6 +54,40 @@ api = collect_api(
 section = api.find("reporting.build_report").to_section(profile="manual")
 ```
 
+## Build A Full Reference Bundle
+
+Use `ApiPackage.to_document(...)` when the whole collected package should become
+a standalone API reference. The returned value is a normal `Document`, so the
+same `save_all(...)` call can produce DOCX, PDF, and HTML through the usual
+OODocs renderer path. Keep the collected API and coverage result beside those
+files as deterministic JSON/CSV sidecars when release review needs evidence.
+
+```python
+from oodocs.apidoc import ApiDocstringParser, check_api_docs, collect_api
+
+api = collect_api(
+    ".",
+    collector="griffe",
+    public_policy="__all__",
+    docstring_style=ApiDocstringParser.auto(),
+)
+coverage = check_api_docs(api, fail_under=0.90)
+
+document = api.to_document(
+    title=f"{api.name} API Reference",
+    profile="reference",
+    max_level=3,
+)
+document.save_all(
+    "artifacts/api",
+    stem=f"{api.name}-api",
+    formats=("docx", "pdf", "html"),
+)
+api.write_json("artifacts/api/api-objects.json")
+coverage.write_json("artifacts/api/api-coverage.json")
+coverage.write_csv("artifacts/api/api-coverage.csv")
+```
+
 ## Insert One Object
 
 Use `find(...)` when a guide needs one class or function rather than a full
