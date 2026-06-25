@@ -163,6 +163,27 @@ def test_sphinx_parser_extracts_keyword_parameters() -> None:
     ]
 
 
+def test_sphinx_parser_extracts_varargs_and_kwargs() -> None:
+    parsed = parse_docstring(
+        """
+        Call a hook.
+
+        :param *args: Positional hook arguments.
+        :type *args: tuple[object, ...]
+        :param **kwargs: Keyword hook arguments.
+        :type **kwargs: dict[str, object]
+        :returns: Hook result.
+        :rtype: object
+        """,
+        style="sphinx",
+    )
+
+    assert [(item.name, item.annotation, item.description) for item in parsed.parameters] == [
+        ("*args", "tuple[object, ...]", "Positional hook arguments."),
+        ("**kwargs", "dict[str, object]", "Keyword hook arguments."),
+    ]
+
+
 def test_sphinx_fallback_parser_degrades_inline_rest_markup_to_plain_text(monkeypatch) -> None:
     monkeypatch.setattr(docstring_module.importlib.util, "find_spec", lambda name: None)
 
@@ -245,4 +266,27 @@ def test_sphinx_fallback_parser_extracts_keyword_parameters(monkeypatch) -> None
         ("path", "str", "Input path.", None),
         ("retries", "int", "Retry count.", "keyword-only"),
         ("timeout", "float", "Timeout in seconds.", "keyword-only"),
+    ]
+
+
+def test_sphinx_fallback_parser_extracts_varargs_and_kwargs(monkeypatch) -> None:
+    monkeypatch.setattr(docstring_module.importlib.util, "find_spec", lambda name: None)
+
+    parsed = parse_docstring(
+        """
+        Call a hook.
+
+        :param *args: Positional hook arguments.
+        :type *args: tuple[object, ...]
+        :param **kwargs: Keyword hook arguments.
+        :type **kwargs: dict[str, object]
+        :returns: Hook result.
+        :rtype: object
+        """,
+        style="sphinx",
+    )
+
+    assert [(item.name, item.annotation, item.description) for item in parsed.parameters] == [
+        ("*args", "tuple[object, ...]", "Positional hook arguments."),
+        ("**kwargs", "dict[str, object]", "Keyword hook arguments."),
     ]

@@ -12,10 +12,10 @@ Supported styles:
 - `numpy`: dashed section headings such as `Parameters`, `Other Parameters`,
   `Attributes`, `Returns`, `Yields`, `Raises`, `Examples`, `See Also`,
   `Notes`, `Warnings`, `Renderer Notes`, and `Deprecated`.
-- `sphinx`: `:param:`, `:type:`, `:keyword:`, `:kwarg:`, `:key:`,
-  `:kwtype:`, `:returns:`, `:rtype:`, `:yields:`, `:ytype:`,
-  `.. seealso::`, `.. admonition:: Renderer Notes`, directives, and code
-  blocks.
+- `sphinx`: `:param:`, `:type:`, `:param *args:`, `:param **kwargs:`,
+  `:keyword:`, `:kwarg:`, `:key:`, `:kwtype:`, `:returns:`, `:rtype:`,
+  `:yields:`, `:ytype:`, `.. seealso::`,
+  `.. admonition:: Renderer Notes`, directives, and code blocks.
 - `markdown`: Markdown headings, parameter tables, bullet lists, plain
   `name (type): description` lines, NumPy-like `name : type` definition
   lists, `Parameters`, `Keyword Arguments`, `Other Parameters`,
@@ -137,6 +137,26 @@ parsed = parse_docstring(
 assert [parameter.name for parameter in parsed.parameters] == ["path", "cache"]
 assert parsed.see_also[0].label == "open_data"
 assert parsed.renderer_notes[0].format == "html"
+```
+
+Sphinx varargs names are preserved with their leading stars so they match
+signature parameters during coverage checks:
+
+```python
+from oodocs.apidoc import parse_docstring
+
+parsed = parse_docstring(
+    """Call a hook.
+
+    :param *args: Positional hook arguments.
+    :type *args: tuple[object, ...]
+    :param **kwargs: Keyword hook arguments.
+    :type **kwargs: dict[str, object]
+    """,
+    style="sphinx",
+)
+
+assert [parameter.name for parameter in parsed.parameters] == ["*args", "**kwargs"]
 ```
 
 `ParsedDocstring.to_dict()` and `ParsedDocstring.from_dict(...)` preserve the

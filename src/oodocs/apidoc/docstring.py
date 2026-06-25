@@ -986,7 +986,7 @@ def _parse_sphinx(text: str, qualname: str | None, module: str | None) -> Parsed
         line = lines[i]
         stripped = line.strip()
         if match := re.match(
-            r"^:param\s+(?:(?P<type>[^:\s]+)\s+)?(?P<name>[A-Za-z_][\w.]*)\s*:\s*(?P<body>.*)$",
+            r"^:param\s+(?:(?P<type>[^:\s]+)\s+)?(?P<name>[*]{0,2}[A-Za-z_][\w.]*)\s*:\s*(?P<body>.*)$",
             stripped,
         ):
             name = match.group("name")
@@ -999,7 +999,7 @@ def _parse_sphinx(text: str, qualname: str | None, module: str | None) -> Parsed
                     documented=True,
                 )
             i = next_index - 1
-        elif match := re.match(r"^:type\s+([A-Za-z_][\w.]*)\s*:\s*(.*)$", stripped):
+        elif match := re.match(r"^:type\s+([*]{0,2}[A-Za-z_][\w.]*)\s*:\s*(.*)$", stripped):
             name, annotation = match.groups()
             annotation, next_index = _collect_sphinx_field_body(lines, i, annotation)
             if not parsed.parameters:

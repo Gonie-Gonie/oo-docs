@@ -348,6 +348,62 @@ def test_general_repo_auto_parser_extended_parameter_sections_render(
     assert "Whether to skip side effects." in html
 
 
+def test_general_repo_sphinx_varargs_match_signature_and_render(
+    tmp_path: Path,
+) -> None:
+    repo = tmp_path / "varrepo"
+    package_dir = repo / "varpkg"
+    package_dir.mkdir(parents=True)
+    (package_dir / "__init__.py").write_text(
+        "\n".join(
+            [
+                '"""Varargs package."""',
+                "",
+                "__all__ = ['call_hook']",
+                "",
+                "def call_hook(*args: object, **kwargs: object) -> object:",
+                '    """Call a hook.',
+                "",
+                "    :param *args: Positional hook arguments.",
+                "    :type *args: tuple[object, ...]",
+                "    :param **kwargs: Keyword hook arguments.",
+                "    :type **kwargs: dict[str, object]",
+                "    :returns: Hook result.",
+                "    :rtype: object",
+                '    """',
+                "    return kwargs.get('result', args[0] if args else None)",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    api = collect_api(
+        repo,
+        collector="inspect",
+        public_policy="__all__",
+        docstring_style=ApiDocstringParser.auto(),
+    )
+    obj = api.find("varpkg.call_hook")
+    coverage = check_api_docs(api, fail_under=1.0)
+
+    assert obj is not None
+    assert obj.metadata["docstring_style"] == "sphinx"
+    assert [(item.name, item.documented, item.description) for item in obj.parameters] == [
+        ("*args", True, "Positional hook arguments."),
+        ("**kwargs", True, "Keyword hook arguments."),
+    ]
+    assert not [issue for issue in coverage.issues if issue.code in {"missing-parameter-doc", "extra-parameter-doc"}]
+
+    document = Document("Varargs API", Chapter("Selected API", obj.to_section(level=2)))
+    html_path = tmp_path / "varargs-api.html"
+    document.save_html(html_path)
+
+    assert_html_internal_links_resolve(html_path)
+    html = html_path.read_text(encoding="utf-8")
+    assert "Positional hook arguments." in html
+    assert "Keyword hook arguments." in html
+
+
 def test_general_repo_auto_parser_object_survives_build_config_json_roundtrip(
     tmp_path: Path,
 ) -> None:
