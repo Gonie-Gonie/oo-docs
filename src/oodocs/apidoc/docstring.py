@@ -4,9 +4,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 import inspect
+import importlib
 import importlib.util
 import re
-from typing import Callable, Mapping
+from typing import Callable, Iterable, Mapping
 
 from oodocs.apidoc.model import (
     ApiDocIssue,
@@ -433,6 +434,36 @@ def register_docstring_parser(name: str, parser: DocstringParser) -> None:
     if normalized in _PARSERS:
         raise ValueError(f"Docstring parser already registered: {name!r}")
     _PARSERS[normalized] = parser
+
+
+def load_docstring_parser_modules(modules: Iterable[str] | None) -> tuple[str, ...]:
+    """Import modules that register custom docstring parsers.
+
+    Args:
+        modules: Importable module names. Each module is expected to call
+            ``register_docstring_parser(...)`` at import time.
+
+    Returns:
+        Normalized module names that were imported.
+
+    Raises:
+        ImportError: If a parser module cannot be imported.
+
+    Examples:
+        Load repository-local parser hooks before collecting a package:
+
+        ```python
+        from oodocs.apidoc import collect_api, load_docstring_parser_modules
+
+        load_docstring_parser_modules(["mypkg.docs.parsers"])
+        api = collect_api(".", docstring_style="my-custom-style")
+        ```
+    """
+
+    normalized = tuple(str(module).strip() for module in modules or () if str(module).strip())
+    for module in normalized:
+        importlib.import_module(module)
+    return normalized
 
 
 def docstring_parser_names() -> tuple[str, ...]:
@@ -1058,6 +1089,7 @@ __all__ = [
     "detect_docstring_style",
     "docstring_parser_names",
     "is_docstring_style_supported",
+    "load_docstring_parser_modules",
     "parse_docstring",
     "register_docstring_parser",
 ]

@@ -219,6 +219,8 @@ api = collect_api("oodocs", public_policy="__all__")
 # api = collect_api(".", public_policy="__all__", collector="griffe")
 # ApiDocstringParser.auto() can be passed as docstring_style when one parser
 # configuration should be reused across collection and coverage steps.
+# Custom parser names can be loaded from repo modules through
+# docstring-parser-modules in pyproject.toml or --docstring-parser-module.
 # For curated public boundaries, pass an ApiPublicPolicy object instead of a
 # string and reuse it across collect/check/build steps.
 # ApiCollectConfig.from_pyproject(".") can load [tool.oodocs.apidoc], and

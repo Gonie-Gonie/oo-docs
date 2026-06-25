@@ -249,6 +249,75 @@ def test_reusable_docstring_parser_object_and_custom_registry(tmp_path: Path) ->
     assert run.summary == "Brief function."
 
 
+def test_apidoc_cli_loads_custom_docstring_parser_modules_from_pyproject(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    repo = tmp_path / "repo"
+    package_dir = repo / "src" / "hookpkg"
+    package_dir.mkdir(parents=True)
+    (repo / "repo_apidoc_parsers.py").write_text(
+        "\n".join(
+            [
+                "from oodocs.apidoc import ParsedDocstring, docstring_parser_names, register_docstring_parser",
+                "",
+                "def parse_repo_style(text, qualname=None, module=None):",
+                '    return ParsedDocstring(summary=f"custom:{text.strip()}", style="repo-brief-cli")',
+                "",
+                'if "repo-brief-cli" not in docstring_parser_names():',
+                '    register_docstring_parser("repo-brief-cli", parse_repo_style)',
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (repo / "pyproject.toml").write_text(
+        "\n".join(
+            [
+                "[project]",
+                'name = "hookpkg"',
+                "",
+                "[tool.oodocs.apidoc]",
+                'collector = "inspect"',
+                'public-policy = "underscore"',
+                'docstring-style = "repo-brief-cli"',
+                'docstring-parser-modules = ["repo_apidoc_parsers"]',
+                'profile = "compact"',
+                'formats = ["html"]',
+                'out = "artifacts/api"',
+                "sidecars = true",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (package_dir / "__init__.py").write_text(
+        "\n".join(
+            [
+                '"""Hook package."""',
+                "",
+                "def run() -> None:",
+                '    """Run command."""',
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    monkeypatch.chdir(repo)
+    monkeypatch.syspath_prepend(str(repo))
+
+    assert main(["apidoc", "build", ".", "--config", "pyproject.toml"]) == 0
+    config = ApiBuildConfig.from_pyproject(repo)
+    built_api = ApiPackage.read_json(repo / "artifacts" / "api" / "hookpkg-api.json")
+    run = built_api.find("hookpkg.run")
+
+    assert config.collection.docstring_parser_modules == ("repo_apidoc_parsers",)
+    assert run is not None
+    assert run.summary == "custom:Run command."
+    assert (repo / "artifacts" / "api" / "hookpkg-api-coverage.json").exists()
+
+
 def test_collect_api_builds_queryable_object_tree_and_blocks(tmp_path: Path) -> None:
     package_dir = tmp_path / "samplepkg"
     package_dir.mkdir()

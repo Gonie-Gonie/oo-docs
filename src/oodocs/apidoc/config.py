@@ -17,6 +17,7 @@ ApiPublicPolicyName = Literal["__all__", "underscore", "all", "explicit"]
 _COLLECT_CONFIG_KEYS = {
     "class_signature_from_init",
     "collector",
+    "docstring_parser_modules",
     "docstring_style",
     "explicit_names",
     "include_imported",
@@ -205,6 +206,8 @@ class ApiCollectConfig:
         public_policy: Public API boundary policy.
         explicit_names: Names included when ``public_policy="explicit"``.
         docstring_style: Docstring parser style.
+        docstring_parser_modules: Importable modules that register custom
+            docstring parsers before style validation and collection.
         include_imported: Whether imported public aliases may be included.
             Source collection records unresolved external imports as ``data``
             objects, while griffe may resolve richer imported targets.
@@ -227,6 +230,7 @@ class ApiCollectConfig:
     public_policy: ApiPublicPolicyName | ApiPublicPolicy | Mapping[str, object] = "__all__"
     explicit_names: tuple[str, ...] = field(default_factory=tuple)
     docstring_style: str = "auto"
+    docstring_parser_modules: tuple[str, ...] = field(default_factory=tuple)
     include_imported: bool = False
     include_inherited: bool = False
     class_signature_from_init: bool = True
@@ -247,6 +251,11 @@ class ApiCollectConfig:
             object.__setattr__(self, "docstring_style", parser.style)
         else:
             object.__setattr__(self, "docstring_style", str(self.docstring_style).strip().lower())
+        object.__setattr__(self, "docstring_parser_modules", _string_tuple(self.docstring_parser_modules))
+        if self.docstring_parser_modules:
+            from oodocs.apidoc.docstring import load_docstring_parser_modules
+
+            load_docstring_parser_modules(self.docstring_parser_modules)
         self.validate()
 
     @classmethod
@@ -284,6 +293,7 @@ class ApiCollectConfig:
             ).style
         for field_name in (
             "explicit_names",
+            "docstring_parser_modules",
             "module_include_patterns",
             "module_exclude_patterns",
         ):
@@ -403,6 +413,7 @@ class ApiCollectConfig:
             "public_policy": self.public_policy,
             "explicit_names": list(self.explicit_names),
             "docstring_style": self.docstring_style,
+            "docstring_parser_modules": list(self.docstring_parser_modules),
             "include_imported": self.include_imported,
             "include_inherited": self.include_inherited,
             "class_signature_from_init": self.class_signature_from_init,

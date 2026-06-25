@@ -36,6 +36,7 @@ def collect_api(
     public_policy: str | ApiPublicPolicy | None = None,
     explicit_names: Iterable[str] | None = None,
     docstring_style: str | ApiDocstringParser | None = None,
+    docstring_parser_modules: Iterable[str] | None = None,
     include_imported: bool | None = None,
     include_inherited: bool | None = None,
     class_signature_from_init: bool | None = None,
@@ -56,6 +57,8 @@ def collect_api(
         explicit_names: Names used with ``public_policy="explicit"``.
         docstring_style: Docstring parser style name or reusable
             ``ApiDocstringParser`` object.
+        docstring_parser_modules: Importable modules that register custom
+            parser styles before collection.
         include_imported: Whether imported public aliases should be included.
             Source collection records unresolved external imports as ``data``
             objects; griffe can resolve richer imported targets when available.
@@ -88,6 +91,9 @@ def collect_api(
         "collector": collector,
         "public_policy": public_policy,
         "docstring_style": docstring_style,
+        "docstring_parser_modules": tuple(docstring_parser_modules)
+        if docstring_parser_modules is not None
+        else None,
         "include_imported": include_imported,
         "include_inherited": include_inherited,
         "class_signature_from_init": class_signature_from_init,

@@ -89,3 +89,33 @@ def parse_brief(text, qualname, module):
 register_docstring_parser("brief", parse_brief)
 parser = ApiDocstringParser("brief")
 ```
+
+For CLI and `pyproject.toml` workflows, put the registration code in an
+importable module and list it in `docstring-parser-modules`. The module should
+call `register_docstring_parser(...)` when imported:
+
+```python
+# docs_parsers.py
+from oodocs.apidoc import ParsedDocstring, register_docstring_parser
+
+def parse_brief(text, qualname=None, module=None):
+    return ParsedDocstring(summary=text.strip(), style="brief")
+
+register_docstring_parser("brief", parse_brief)
+```
+
+```toml
+[tool.oodocs.apidoc]
+docstring-style = "brief"
+docstring-parser-modules = ["docs_parsers"]
+```
+
+```powershell
+python -m oodocs apidoc build . --config pyproject.toml
+```
+
+The same hook can be supplied directly to one command:
+
+```powershell
+python -m oodocs apidoc check . --docstring-parser-module docs_parsers --docstring-style brief
+```

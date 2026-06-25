@@ -10,6 +10,7 @@ from oodocs.apidoc.collect import collect_api
 from oodocs.apidoc.config import ApiBuildConfig, ApiCollectConfig
 from oodocs.apidoc.coverage import check_api_docs
 from oodocs.apidoc.diff import ApiSnapshot, diff_api
+from oodocs.apidoc.docstring import load_docstring_parser_modules
 from oodocs.apidoc.model import ApiObject, ApiPackage
 from oodocs.compatibility import normalize_output_formats
 from oodocs.components.blocks import Chapter
@@ -141,8 +142,13 @@ def _add_collect_options(parser: argparse.ArgumentParser, *, include_config: boo
     )
     parser.add_argument(
         "--docstring-style",
-        choices=("auto", "google", "numpy", "sphinx", "markdown", "plain"),
-        help="Docstring parser style.",
+        help="Docstring parser style or registered custom parser name.",
+    )
+    parser.add_argument(
+        "--docstring-parser-module",
+        action="append",
+        dest="docstring_parser_modules",
+        help="Import a module that registers custom docstring parsers; may be repeated.",
     )
     parser.add_argument(
         "--include-imported",
@@ -181,6 +187,7 @@ def _run_init(args: argparse.Namespace) -> int:
         public_policy=args.public_policy,
         explicit_names=args.explicit_names,
         docstring_style=args.docstring_style,
+        docstring_parser_modules=args.docstring_parser_modules,
         include_imported=args.include_imported,
         include_inherited=args.include_inherited,
         module_include_patterns=args.module_include_patterns,
@@ -240,6 +247,7 @@ def _run_check(args: argparse.Namespace) -> int:
 
 
 def _run_build(args: argparse.Namespace) -> int:
+    _load_docstring_parser_modules_from_args(args)
     build_config = ApiBuildConfig.read_file(args.config) if args.config else ApiBuildConfig()
     api = _collect_from_args(args, config=build_config.collection)
     kind = tuple(args.kind) if args.kind else build_config.kind or None
@@ -314,6 +322,7 @@ def _collect_from_args(
     *,
     config: ApiCollectConfig | None = None,
 ):
+    _load_docstring_parser_modules_from_args(args)
     if config is None and args.config:
         config = ApiCollectConfig.read_file(args.config)
     return collect_api(
@@ -323,11 +332,18 @@ def _collect_from_args(
         public_policy=args.public_policy,
         explicit_names=args.explicit_names,
         docstring_style=args.docstring_style,
+        docstring_parser_modules=args.docstring_parser_modules,
         include_imported=args.include_imported,
         include_inherited=args.include_inherited,
         module_include_patterns=args.module_include_patterns,
         module_exclude_patterns=args.module_exclude_patterns,
     )
+
+
+def _load_docstring_parser_modules_from_args(args: argparse.Namespace) -> None:
+    modules = getattr(args, "docstring_parser_modules", None)
+    if modules:
+        load_docstring_parser_modules(modules)
 
 
 def _filter_from_args(api: ApiPackage, args: argparse.Namespace) -> ApiPackage:

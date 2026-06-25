@@ -73,6 +73,14 @@ module-exclude-patterns = ["mypkg.tests*"]
 python -m oodocs apidoc build . --config pyproject.toml
 ```
 
+Custom docstring parser modules can live in the same section:
+
+```toml
+[tool.oodocs.apidoc]
+docstring-style = "brief"
+docstring-parser-modules = ["mypkg.docs_parsers"]
+```
+
 Limit nested API heading depth for larger repositories:
 
 ```powershell
@@ -102,8 +110,9 @@ value changes, parameter annotation changes, return annotation changes,
 docstring changes, deprecated objects, and coverage deltas.
 
 Common collection options are `--collector`, `--public-policy`,
-`--explicit-name`, `--docstring-style`, `--include-imported`, `--config`,
-`--include-inherited`, `--module-include`, and `--module-exclude`.
+`--explicit-name`, `--docstring-style`, `--docstring-parser-module`,
+`--include-imported`, `--config`, `--include-inherited`, `--module-include`,
+and `--module-exclude`.
 Module include/exclude patterns are applied before module contents are
 collected, while `check`, `build`, and `snapshot` also accept `--kind` and
 `--module-prefix` object filters after collection. `check` also accepts
@@ -112,6 +121,8 @@ and `--out-csv`. `build` also accepts `--profile`, `--to`, `--stem`,
 `--max-level`, `--out`, and `--sidecars`.
 When those build options are omitted, `build` can read `profile`, `formats`,
 `stem`, `max-level`, `out`/`output-dir`, `sidecars`, `kind`, and
-`module-prefix` from `[tool.oodocs.apidoc]`. `init` writes the same section to
-`pyproject.toml` by default, or writes a standalone JSON config when the target
-path ends in `.json` or `--format json` is passed.
+`module-prefix` from `[tool.oodocs.apidoc]`. Custom parser modules can be
+stored as `docstring-parser-modules = ["mypkg.docs_parsers"]` or supplied with
+`--docstring-parser-module`. `init` writes the same section to `pyproject.toml`
+by default, or writes a standalone JSON config when the target path ends in
+`.json` or `--format json` is passed.

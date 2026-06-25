@@ -22,6 +22,7 @@ from oodocs.apidoc.docstring import (
     detect_docstring_style,
     docstring_parser_names,
     is_docstring_style_supported,
+    load_docstring_parser_modules,
     parse_docstring,
     register_docstring_parser,
 )
@@ -105,6 +106,7 @@ __all__ = [
     "docstring_parser_names",
     "extract_code_blocks_from_docstring",
     "is_docstring_style_supported",
+    "load_docstring_parser_modules",
     "parse_docstring",
     "profile_names",
     "register_docstring_parser",

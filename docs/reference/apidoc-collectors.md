@@ -69,6 +69,16 @@ build = ApiBuildConfig.from_pyproject(".")
 api = collect_api(".", config=build.collection)
 ```
 
+When a repository defines a custom parser, store the import hook next to the
+style name. OODocs imports those modules before validating the configured
+style, so the hook can register parser names that are not built in:
+
+```toml
+[tool.oodocs.apidoc]
+docstring-style = "brief"
+docstring-parser-modules = ["mypkg.docs_parsers"]
+```
+
 To create that config from Python instead of the CLI:
 
 ```python
