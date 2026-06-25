@@ -8,6 +8,7 @@ import copy
 import importlib.metadata
 import importlib.util
 from pathlib import Path
+import re
 from typing import Iterable
 
 from oodocs.apidoc.config import ApiCollectConfig, normalize_explicit_names
@@ -256,7 +257,10 @@ def _collect_module_from_file(
                             metadata={"default": default} if default is not None else {},
                         )
                     )
-    module.members = sorted(members, key=lambda obj: (obj.line_number or 0, obj.name))
+    module.members = sorted(
+        _merge_attribute_docs(members, parsed_module.attributes),
+        key=lambda obj: (obj.line_number or 0, obj.name),
+    )
     return module
 
 
@@ -320,6 +324,7 @@ def _class_object(
                             metadata={"default": default} if default is not None else {},
                         )
                     )
+    members = _merge_attribute_docs(members, _class_attribute_docs(parsed))
     obj = ApiObject(
         kind="class",
         name=node.name,
@@ -513,6 +518,61 @@ def _merge_parameters(
             )
         )
     return merged, issues
+
+
+def _merge_attribute_docs(
+    members: list[ApiObject],
+    doc_attributes: list[ApiParameter],
+) -> list[ApiObject]:
+    """Apply class or module ``Attributes:`` docs to child API objects."""
+
+    if not doc_attributes:
+        return members
+    docs_by_name = {
+        _normalize_param_name(attribute.name): attribute
+        for attribute in doc_attributes
+        if attribute.name
+    }
+    for member in members:
+        if member.kind not in {"attribute", "property", "data"}:
+            continue
+        attribute_doc = docs_by_name.get(_normalize_param_name(member.name))
+        if attribute_doc is None:
+            continue
+        summary, description = _summary_description_from_attribute(attribute_doc.description)
+        if summary and not member.summary:
+            member.summary = summary
+        if description and not member.description:
+            member.description = description
+        if attribute_doc.annotation:
+            if ":" not in (member.signature or ""):
+                member.signature = f"{member.name}: {attribute_doc.annotation}"
+            member.metadata.setdefault("annotation", attribute_doc.annotation)
+        member.metadata.setdefault("docstring_source", "attributes")
+    return members
+
+
+def _class_attribute_docs(parsed: ParsedDocstring) -> list[ApiParameter]:
+    """Return docs that can describe child class attributes."""
+
+    by_name: dict[str, ApiParameter] = {}
+    for parameter in parsed.parameters:
+        by_name.setdefault(_normalize_param_name(parameter.name), parameter)
+    for attribute in parsed.attributes:
+        by_name[_normalize_param_name(attribute.name)] = attribute
+    return list(by_name.values())
+
+
+def _summary_description_from_attribute(text: str | None) -> tuple[str | None, str | None]:
+    cleaned = " ".join((text or "").split())
+    if not cleaned:
+        return None, None
+    match = re.match(r"(.+?[.!?])(?:\s+|$)(.*)$", cleaned)
+    if not match:
+        return cleaned, None
+    summary = match.group(1).strip()
+    remainder = match.group(2).strip()
+    return summary, remainder or None
 
 
 def _signature_parameter_text(parameters: list[ApiParameter]) -> str:

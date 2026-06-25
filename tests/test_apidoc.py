@@ -44,6 +44,9 @@ See Also:
 
 Renderer Notes:
     PDF: Long signatures may wrap.
+
+Attributes:
+    cache_key (str): Stable cache key used in generated indexes.
 """
 
 
@@ -115,6 +118,8 @@ def test_docstring_parsers_normalize_standard_styles() -> None:
     assert google.summary == "Load an object."
     assert google.parameters[0].name == "path"
     assert google.parameters[0].annotation == "str"
+    assert google.attributes[0].name == "cache_key"
+    assert google.attributes[0].annotation == "str"
     assert google.returns and google.returns.annotation == "bool"
     assert google.raises[0].exception == "ValueError"
     assert google.examples[0].language == "python"
@@ -169,6 +174,9 @@ def test_collect_api_builds_queryable_object_tree_and_blocks(tmp_path: Path) -> 
                 "",
                 "    Args:",
                 "        name: Widget name.",
+                "",
+                "    Attributes:",
+                "        label: User-facing label shown in summaries.",
                 '    """',
                 "    label: str",
                 "",
@@ -215,6 +223,9 @@ def test_collect_api_builds_queryable_object_tree_and_blocks(tmp_path: Path) -> 
     assert [obj.qualname for obj in functions] == ["samplepkg.make_widget"]
     assert api.find("samplepkg.Widget") is classes[0]
     assert classes[0].select(kind="method")[0].name == "render"
+    label = classes[0].find("label")
+    assert label is not None
+    assert label.summary == "User-facing label shown in summaries."
     assert isinstance(classes[0].to_section(level=2, profile="compact"), Section)
     assert isinstance(functions[0].to_parameter_table(), Table)
     assert isinstance(api.to_summary_table(functions), Table)
@@ -342,6 +353,8 @@ def test_griffe_collector_matches_inspect_schema_on_src_layout_repo(
                 "",
                 "    Args:",
                 "        name: Widget name.",
+                "    Attributes:",
+                "        label: User-facing label.",
                 '    """',
                 "    label: str",
                 "    def __init__(self, name: str = 'demo') -> None:",
@@ -386,6 +399,9 @@ def test_griffe_collector_matches_inspect_schema_on_src_layout_repo(
     property_obj = griffe_api.find("pkg.core.Widget.title")
     assert property_obj is not None
     assert getattr(property_obj, "kind") == "property"
+    label_obj = griffe_api.find("pkg.core.Widget.label")
+    assert label_obj is not None
+    assert label_obj.summary == "User-facing label."
     method = griffe_api.find("pkg.core.Widget.render")
     assert method is not None
     assert method.parameters[0].name == "path"

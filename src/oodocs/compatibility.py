@@ -1,4 +1,11 @@
-"""Shared output-format compatibility helpers."""
+"""Shared output-format compatibility helpers.
+
+Attributes:
+    OutputFormat: Type alias for supported renderer output format names.
+    OUTPUT_FORMATS: Ordered tuple of supported output format names.
+    OUTPUT_FORMAT_LABELS: Human-readable labels for each output format.
+    COMPATIBILITY_NOTES: Registry of known cross-renderer compatibility notes.
+"""
 
 from __future__ import annotations
 

@@ -1,4 +1,26 @@
-"""Common structural and block-level document components."""
+"""Common structural and block-level document components.
+
+Attributes:
+    CodeLanguagePosition: Type alias for code block language-label positions.
+    MIN_SECTION_LEVEL: Lowest supported heading level.
+    MAX_SECTION_LEVEL: Highest supported heading level.
+    DEFAULT_COUNTABLE_COUNTER: Default counter key for generated countable
+        blocks.
+    THEOREM_COUNTER: Shared counter key for theorem-like generated blocks.
+    Definition: Generated countable block class for definitions.
+    Lemma: Generated countable block class for lemmas.
+    Proposition: Generated countable block class for propositions.
+    Theorem: Generated countable block class for theorems.
+    Corollary: Generated countable block class for corollaries.
+    Proof: Generated unnumbered block class for proofs.
+    Example: Generated countable block class for examples.
+    Remark: Generated countable block class for remarks.
+    Assumption: Generated countable block class for assumptions.
+    Axiom: Generated countable block class for axioms.
+    Claim: Generated countable block class for claims.
+    Conjecture: Generated countable block class for conjectures.
+    CellInput: Type alias for values accepted by table cells.
+"""
 
 from __future__ import annotations
 

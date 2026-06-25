@@ -32,6 +32,8 @@ class ParsedDocstring:
         summary: First sentence or short paragraph.
         description: Longer prose after the summary.
         parameters: Parsed parameter documentation.
+        attributes: Parsed attribute documentation from module or class
+            docstrings.
         returns: Parsed return/yield documentation.
         raises: Parsed exception documentation.
         examples: Parsed code examples.
@@ -58,6 +60,7 @@ class ParsedDocstring:
     summary: str | None = None
     description: str | None = None
     parameters: list[ApiParameter] = field(default_factory=list)
+    attributes: list[ApiParameter] = field(default_factory=list)
     returns: ApiReturn | None = None
     raises: list[ApiRaises] = field(default_factory=list)
     examples: list[ApiExample] = field(default_factory=list)
@@ -81,6 +84,8 @@ _GOOGLE_SECTION_NAMES = {
     "args",
     "arguments",
     "parameters",
+    "attributes",
+    "attribute",
     "returns",
     "yields",
     "raises",
@@ -203,9 +208,9 @@ def detect_docstring_style(text: str | None) -> ApiDocstringStyleName:
         return "sphinx"
     if re.search(r"(?m)^[A-Za-z][A-Za-z ]+\n-{3,}\s*$", cleaned):
         return "numpy"
-    if re.search(r"(?m)^#{1,6}\s+(Parameters|Returns|Raises|Examples|See Also|Renderer Notes)\s*$", cleaned):
+    if re.search(r"(?m)^#{1,6}\s+(Parameters|Attributes|Returns|Raises|Examples|See Also|Renderer Notes)\s*$", cleaned):
         return "markdown"
-    if re.search(r"(?m)^(Args|Arguments|Parameters|Returns|Yields|Raises|Examples|See Also|Notes|Renderer Notes|Deprecated):\s*$", cleaned):
+    if re.search(r"(?m)^(Args|Arguments|Parameters|Attributes|Returns|Yields|Raises|Examples|See Also|Notes|Renderer Notes|Deprecated):\s*$", cleaned):
         return "google"
     return "plain"
 
@@ -241,6 +246,8 @@ def _parse_google(text: str, qualname: str | None, module: str | None) -> Parsed
         normalized = name.lower()
         if normalized in {"args", "arguments", "parameters"} and not parsed.parameters:
             parsed.parameters.extend(_parse_colon_items(body))
+        elif normalized in {"attributes", "attribute"} and not parsed.attributes:
+            parsed.attributes.extend(_parse_colon_items(body))
         elif normalized in {"returns", "yields"} and parsed.returns is None:
             parsed.returns = _parse_return_section(body)
         elif normalized == "raises" and not parsed.raises:
@@ -282,6 +289,8 @@ def _parse_numpy(text: str, qualname: str | None, module: str | None) -> ParsedD
         normalized = name.lower()
         if normalized == "parameters" and not parsed.parameters:
             parsed.parameters.extend(_parse_numpy_parameters(body))
+        elif normalized == "attributes" and not parsed.attributes:
+            parsed.attributes.extend(_parse_numpy_parameters(body))
         elif normalized in {"returns", "yields"} and parsed.returns is None:
             parsed.returns = _parse_return_section(body)
         elif normalized == "raises" and not parsed.raises:
@@ -401,17 +410,20 @@ def _parse_with_docstring_parser(
     for meta in parsed_doc.meta:
         class_name = type(meta).__name__
         if class_name == "DocstringParam":
-            parsed.parameters.append(
-                ApiParameter(
-                    name=str(getattr(meta, "arg_name", "") or ""),
-                    annotation=getattr(meta, "type_name", None),
-                    default=getattr(meta, "default", None),
-                    description=getattr(meta, "description", None),
-                    required=not bool(getattr(meta, "is_optional", False)),
-                    documented=True,
-                    source="docstring",
-                )
+            parameter = ApiParameter(
+                name=str(getattr(meta, "arg_name", "") or ""),
+                annotation=getattr(meta, "type_name", None),
+                default=getattr(meta, "default", None),
+                description=getattr(meta, "description", None),
+                required=not bool(getattr(meta, "is_optional", False)),
+                documented=True,
+                source="docstring",
             )
+            meta_args = [str(arg).lower() for arg in getattr(meta, "args", []) if arg is not None]
+            if meta_args and meta_args[0] in {"attribute", "attributes", "ivar", "cvar", "var"}:
+                parsed.attributes.append(parameter)
+            else:
+                parsed.parameters.append(parameter)
         elif class_name == "DocstringReturns":
             parsed.returns = ApiReturn(
                 annotation=getattr(meta, "type_name", None),
@@ -428,6 +440,7 @@ def _parse_with_docstring_parser(
             parsed.deprecated = True
             parsed.deprecation_message = getattr(meta, "description", None)
     parsed.parameters = [parameter for parameter in parsed.parameters if parameter.name]
+    parsed.attributes = [attribute for attribute in parsed.attributes if attribute.name]
     if not parsed.examples:
         parsed.examples.extend(extract_code_blocks_from_docstring(text))
     return parsed
@@ -454,6 +467,8 @@ def _parse_markdown(text: str, qualname: str | None, module: str | None) -> Pars
         normalized = name.lower()
         if normalized == "parameters":
             parsed.parameters.extend(_parse_markdown_parameters(body))
+        elif normalized == "attributes":
+            parsed.attributes.extend(_parse_markdown_parameters(body))
         elif normalized in {"returns", "yields"}:
             parsed.returns = _parse_return_section(body)
         elif normalized == "raises":
@@ -557,6 +572,7 @@ def _parse_colon_items(
                 annotation=None if annotation_in_name else annotation,
                 description=description or None,
                 documented=True,
+                source="docstring",
             )
             items.append(current)
         elif current is not None:
@@ -583,6 +599,7 @@ def _parse_numpy_parameters(
                 name=name,
                 annotation=None if annotation_in_name else annotation or None,
                 documented=True,
+                source="docstring",
             )
             items.append(current)
         elif current is not None:
@@ -609,6 +626,7 @@ def _parse_markdown_parameters(
                     annotation=None if annotation_in_name else annotation,
                     description=description or None,
                     documented=True,
+                    source="docstring",
                 )
             )
     return items
@@ -635,6 +653,7 @@ def _parse_markdown_parameter_table(
                 annotation=None if annotation_in_name else values.get("type") or values.get("annotation") or None,
                 description=values.get("description") or None,
                 documented=True,
+                source="docstring",
             )
         )
     return [item for item in items if item.name]

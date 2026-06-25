@@ -260,15 +260,17 @@ doc = Document(
 - optional title matter such as subtitle, structured `Author(...)` metadata, `AuthorLayout(...)`, affiliations, and a cover page
 - inline hyperlinks and heading/caption anchors for cross-references
 - release evidence adapters for pyproject metadata, GitHub Actions workflows, JSON manifests, CSV/TSV evidence tables, checksums, and generated evidence reports
+- API object collection, docstring coverage checks, API snapshots, API diffs, and composable API-reference sections through `oodocs.apidoc`
 
 ## Example Scripts
 
-The repository includes four standalone example directories:
+The repository includes five standalone example directories:
 
 - `examples/usage_guide_example/`
 - `examples/journal_paper_example/`
 - `examples/native_benchmark_report/`
 - `examples/release_notes_digest/`
+- `examples/api_objects_example/`
 
 Run them directly from the repository checkout:
 
@@ -277,6 +279,7 @@ Run them directly from the repository checkout:
 .\.venv\Scripts\python.exe .\examples\journal_paper_example\main.py
 .\.venv\Scripts\python.exe .\examples\native_benchmark_report\main.py
 .\.venv\Scripts\python.exe .\examples\release_notes_digest\main.py
+.\.venv\Scripts\python.exe .\examples\api_objects_example\main.py
 ```
 
 Direct example scripts print slow major render steps. Imported build functions stay quiet by default; pass `verbose=True` when you want the same progress messages.
@@ -288,6 +291,7 @@ What they show:
 - `journal_paper_example` shows a longer manuscript-style workflow with article-style sections, unnumbered abstract/highlights/acknowledgements, CSV-backed tables, and matplotlib figures inserted directly from Python objects
 - `native_benchmark_report` shows a compact Python-native workflow where a script generates an in-memory workload, benchmarks several callables, turns structured result objects into tables and prose, and exports one report bundle
 - `release_notes_digest` collects `release-notes/*.md`, sorts semantic versions from filenames, imports the Markdown bodies, and builds a release-note document with a version-management table and runbook
+- `api_objects_example` collects the OODocs API, inserts selected API object sections and summary tables into a document, and writes JSON/CSV sidecars for release evidence
 
 By default they write outputs under:
 
@@ -295,6 +299,7 @@ By default they write outputs under:
 - `artifacts/journal-paper/`
 - `artifacts/native-benchmark-report/`
 - `artifacts/release-notes/`
+- `artifacts/api-objects-example/`
 
 The main exported filenames are:
 
@@ -302,6 +307,7 @@ The main exported filenames are:
 - `artifacts/journal-paper/oodocs-development-philosophy.pdf`
 - `artifacts/native-benchmark-report/native-python-benchmark.pdf`
 - `artifacts/release-notes/oodocs-release-notes.pdf`
+- `artifacts/api-objects-example/oodocs-api-objects.pdf`
 
 ## Project Layout
 
@@ -358,7 +364,7 @@ Create and push a release tag like this:
 .\scripts\release.ps1 1.0.4
 ```
 
-That pushes `v1.0.4`, and the GitHub release workflow runs the test suite, builds the wheel/sdist artifacts, renders the release documents, builds the release evidence bundle, attaches the curated PDFs to the matching GitHub Release, and uploads the Python distributions to PyPI.
+That pushes `v1.0.4`, and the GitHub release workflow runs the test suite, enforces API documentation coverage with `oodocs apidoc check`, builds the wheel/sdist artifacts, renders the release documents, builds the release evidence bundle, attaches the curated PDFs to the matching GitHub Release, and uploads the Python distributions to PyPI.
 
 If you want a curated release body instead of GitHub's generated notes, add a file such as `release-notes/v1.0.4.md` before pushing the tag.
 

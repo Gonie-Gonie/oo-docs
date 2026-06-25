@@ -59,6 +59,9 @@ jobs:
       - name: Run tests
         run: python -m pytest
 
+      - name: Check API documentation coverage
+        run: python -m oodocs apidoc check oodocs --collector griffe --public-policy __all__ --fail-under 0.90
+
       - name: Build distributions
         run: python -m build
 
@@ -67,6 +70,7 @@ jobs:
           python examples/usage_guide_example/main.py
           python examples/journal_paper_example/main.py
           python examples/release_notes_digest/main.py
+          python examples/api_objects_example/main.py
 
       - name: Build release evidence
         run: python -m oodocs.evidence build --out artifacts/evidence
@@ -98,6 +102,7 @@ jobs:
             artifacts/usage-guide/oodocs-user-guide.pdf
             artifacts/journal-paper/oodocs-development-philosophy.pdf
             artifacts/release-notes/oodocs-release-notes.pdf
+            artifacts/api-objects-example/oodocs-api-objects.pdf
             artifacts/evidence/oodocs-evidence-report.pdf
           body_path: ${{ steps.release_notes.outputs.path }}
 
@@ -110,6 +115,7 @@ jobs:
             artifacts/usage-guide/oodocs-user-guide.pdf
             artifacts/journal-paper/oodocs-development-philosophy.pdf
             artifacts/release-notes/oodocs-release-notes.pdf
+            artifacts/api-objects-example/oodocs-api-objects.pdf
             artifacts/evidence/oodocs-evidence-report.pdf
           generate_release_notes: true
 

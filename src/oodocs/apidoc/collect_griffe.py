@@ -167,7 +167,12 @@ def _module_from_griffe(
             if is_alias:
                 obj.metadata["reexported_from"] = getattr(member, "target_path", None) or getattr(target, "path", None)
             members.append(obj)
-    module.members = sorted(members, key=lambda item: (item.line_number or 0, item.name))
+    from oodocs.apidoc.collect import _merge_attribute_docs
+
+    module.members = sorted(
+        _merge_attribute_docs(members, parsed.attributes),
+        key=lambda item: (item.line_number or 0, item.name),
+    )
     return module
 
 
@@ -239,6 +244,9 @@ def _class_from_griffe(
         )
         if child is not None:
             members.append(child)
+    from oodocs.apidoc.collect import _class_attribute_docs, _merge_attribute_docs
+
+    members = _merge_attribute_docs(members, _class_attribute_docs(parsed))
     signature = f"{qualname}({_signature_parameter_text(parameters)})"
     return ApiObject(
         kind="class",
