@@ -137,7 +137,7 @@ profiles or repository-local automation:
   "collector": "inspect",
   "docstring_style": "brief",
   "docstring_parser_modules": ["docs_parsers"],
-  "formats": ["html"],
+  "formats": ["docx", "pdf", "html"],
   "out": "artifacts/api",
   "sidecars": true
 }
@@ -188,6 +188,10 @@ from oodocs.apidoc import ApiBuildConfig
 repo = r"C:\work\mypkg"
 build = ApiBuildConfig.read_file(r"C:\configs\mypkg-apidoc.json", target=repo)
 outputs = build.save_all(repo, output_dir=r"C:\work\mypkg\artifacts\api")
+assert outputs["docx"].exists()
+assert outputs["pdf"].exists()
+assert outputs["html"].exists()
+assert outputs["api-json"].exists()
 ```
 
 When you construct an `ApiCollectConfig` object directly rather than reading a

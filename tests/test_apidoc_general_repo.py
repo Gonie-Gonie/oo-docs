@@ -1196,7 +1196,7 @@ def test_build_config_save_all_targets_repo_with_parser_modules(
                 "docstring_style": "example-brief",
                 "docstring_parser_modules": ["example_brief_parsers"],
                 "profile": "compact",
-                "formats": ["html"],
+                "formats": ["docx", "pdf", "html"],
                 "out": str(output_dir),
                 "sidecars": True,
             },
@@ -1224,11 +1224,35 @@ def test_build_config_save_all_targets_repo_with_parser_modules(
     assert ApiSnapshot.read_json(snapshot_path).objects["briefpkg.run"]["summary"] == (
         "brief:Run custom command."
     )
-    assert document.validate(formats=("html",)).ok
+    assert document.validate(formats=("docx", "pdf", "html")).ok
+    assert outputs["docx"] == output_dir / "briefpkg-api.docx"
+    assert outputs["pdf"] == output_dir / "briefpkg-api.pdf"
     assert outputs["html"] == output_dir / "briefpkg-api.html"
     assert outputs["api-json"] == output_dir / "briefpkg-api.json"
     assert outputs["coverage-json"] == output_dir / "briefpkg-api-coverage.json"
     assert outputs["coverage-csv"] == output_dir / "briefpkg-api-coverage.csv"
+    assert_rendered_bundle(outputs["docx"], outputs["pdf"], outputs["html"])
+    assert_docx_structure(
+        outputs["docx"],
+        required_paragraphs=(
+            "briefpkg API Reference",
+            "1 API Documentation Coverage",
+            "2 briefpkg",
+            "2.1 briefpkg.Runner",
+            "2.2 briefpkg.run",
+        ),
+        min_tables=2,
+    )
+    assert_pdf_text_and_pages(
+        outputs["pdf"],
+        required_text=(
+            "briefpkg API Reference",
+            "API Documentation Coverage",
+            "brief:Runner class.",
+            "brief:Run custom command.",
+        ),
+        min_pages=1,
+    )
     assert_html_internal_links_resolve(
         outputs["html"],
         required_text=("brief:Run custom command.",),
