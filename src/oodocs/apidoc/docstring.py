@@ -890,6 +890,7 @@ def _parse_sphinx(text: str, qualname: str | None, module: str | None) -> Parsed
     preamble_lines: list[str] = []
     parsed = _parse_with_docstring_parser(text, "sphinx", qualname, module) or ParsedDocstring(style="sphinx")
     param_map: dict[str, ApiParameter] = {}
+    attr_map: dict[str, ApiParameter] = {}
     return_annotation: str | None = None
     i = 0
     while i < len(lines):
@@ -903,6 +904,22 @@ def _parse_sphinx(text: str, qualname: str | None, module: str | None) -> Parsed
             name, annotation = match.groups()
             if not parsed.parameters:
                 param_map.setdefault(name, ApiParameter(name=name, documented=True)).annotation = annotation or None
+        elif match := re.match(r"^:(?:ivar|var|cvar)\s+([A-Za-z_][\w.]*)\s*:\s*(.*)$", stripped):
+            name, desc = match.groups()
+            if not parsed.attributes:
+                attr_map[name] = ApiParameter(
+                    name=name,
+                    description=desc or None,
+                    documented=True,
+                    source="docstring",
+                )
+        elif match := re.match(r"^:vartype\s+([A-Za-z_][\w.]*)\s*:\s*(.*)$", stripped):
+            name, annotation = match.groups()
+            if not parsed.attributes:
+                attr_map.setdefault(
+                    name,
+                    ApiParameter(name=name, documented=True, source="docstring"),
+                ).annotation = annotation or None
         elif match := re.match(r"^:returns?\s*:\s*(.*)$", stripped):
             if parsed.returns is None:
                 parsed.returns = ApiReturn(description=match.group(1) or None, documented=True)
@@ -932,6 +949,8 @@ def _parse_sphinx(text: str, qualname: str | None, module: str | None) -> Parsed
         parsed.summary, parsed.description = _summary_and_description("\n".join(preamble_lines))
     if not parsed.parameters:
         parsed.parameters = list(param_map.values())
+    if not parsed.attributes:
+        parsed.attributes = list(attr_map.values())
     if return_annotation:
         if parsed.returns is None:
             parsed.returns = ApiReturn(documented=True)

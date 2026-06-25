@@ -1,26 +1,27 @@
 from __future__ import annotations
 
+import inspect
+
 from oodocs.apidoc import parse_docstring
+from tests.fixtures.apidoc_docstrings import google as fixture
 
 
-def test_google_docstring_parser_extracts_sections() -> None:
-    parsed = parse_docstring(
-        """Load data.
+def test_google_docstring_fixture_extracts_shared_fields() -> None:
+    function = parse_docstring(inspect.getdoc(fixture.load_widget), style="google")
+    class_doc = parse_docstring(inspect.getdoc(fixture.Widget), style="google")
+    method = parse_docstring(inspect.getdoc(fixture.Widget.render), style="google")
+    property_doc = parse_docstring(inspect.getdoc(fixture.Widget.title.fget), style="google")
+    dataclass_doc = parse_docstring(inspect.getdoc(fixture.WidgetRecord), style="google")
 
-        Args:
-            path (str): Input path.
-
-        Returns:
-            bool: Whether loading succeeded.
-
-        Examples:
-            >>> load("data.csv")
-            True
-        """,
-        style="google",
-    )
-
-    assert parsed.style == "google"
-    assert parsed.parameters[0].name == "path"
-    assert parsed.returns is not None
-    assert parsed.examples
+    assert function.style == "google"
+    assert function.parameters[0].name == "path"
+    assert function.returns is not None
+    assert function.raises[0].exception == "ValueError"
+    assert function.examples
+    assert function.notes
+    assert function.renderer_notes[0].format == "html"
+    assert class_doc.parameters[0].name == "name"
+    assert class_doc.attributes[0].name == "label"
+    assert method.parameters[0].name == "path"
+    assert property_doc.returns is not None
+    assert dataclass_doc.attributes[0].name == "identifier"
