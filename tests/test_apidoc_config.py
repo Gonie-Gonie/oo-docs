@@ -7,6 +7,7 @@ def test_apidoc_config_roundtrip_supports_general_repo_policy(tmp_path) -> None:
     config = ApiBuildConfig(
         collection=ApiCollectConfig(
             collector="inspect",
+            fallback_collector="none",
             public_policy=ApiPublicPolicy.explicit("samplepkg.Widget"),
             docstring_style=ApiDocstringParser.google(),
             module_exclude_patterns=("samplepkg.tests*",),
@@ -22,6 +23,7 @@ def test_apidoc_config_roundtrip_supports_general_repo_policy(tmp_path) -> None:
     readback = ApiBuildConfig.read_json(path)
 
     assert readback.collection.public_policy == "explicit"
+    assert readback.collection.fallback_collector == "none"
     assert readback.collection.explicit_names == ("samplepkg.Widget",)
     assert readback.collection.docstring_style == "google"
     assert readback.collection.object_exclude_patterns == (
@@ -29,3 +31,4 @@ def test_apidoc_config_roundtrip_supports_general_repo_policy(tmp_path) -> None:
         "*.render_to_html",
     )
     assert readback.output_formats == ("html",)
+    assert ApiCollectConfig.from_dict({"fallback-parser": "none"}).fallback_collector == "none"

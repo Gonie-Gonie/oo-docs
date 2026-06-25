@@ -4,6 +4,10 @@ The ``oodocs.apidoc`` package turns Python modules into structured API objects
 that can be queried, filtered, serialized, checked, and inserted into ordinary
 OODocs documents as ``Section``, ``Table``, ``Paragraph``, ``CodeBlock``, and
 ``Box`` blocks.
+
+Attributes:
+    ApiCollectorName: Literal collector backend names.
+    ApiFallbackCollectorName: Literal collector fallback policy names.
 """
 
 from oodocs.apidoc.collect import collect_api, collect_module_api, collect_object_api
@@ -11,6 +15,7 @@ from oodocs.apidoc.config import (
     ApiBuildConfig,
     ApiCollectConfig,
     ApiCollectorName,
+    ApiFallbackCollectorName,
     ApiPublicPolicy,
     ApiPublicPolicyName,
 )
@@ -74,6 +79,7 @@ __all__ = [
     "ApiDocProfile",
     "ApiDocstringParser",
     "ApiDocstringStyleName",
+    "ApiFallbackCollectorName",
     "ApiExample",
     "ApiKind",
     "ApiModule",

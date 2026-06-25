@@ -49,6 +49,7 @@ def collect_api(
     *,
     config: ApiCollectConfig | None = None,
     collector: str | None = None,
+    fallback_collector: str | None = None,
     public_policy: str | ApiPublicPolicy | None = None,
     explicit_names: Iterable[str] | None = None,
     docstring_style: str | ApiDocstringParser | None = None,
@@ -70,6 +71,9 @@ def collect_api(
         collector: Collector backend name. ``"auto"``, ``"griffe"``, and
             ``"inspect"`` currently produce the same normalized schema, with
             source-based collection used when griffe is not installed.
+        fallback_collector: Fallback backend used when griffe is unavailable
+            or cannot load the target. Use ``"none"`` to surface a collection
+            error instead of falling back.
         public_policy: Public API boundary policy name or reusable
             ``ApiPublicPolicy`` object.
         explicit_names: Names used with ``public_policy="explicit"``.
@@ -137,6 +141,7 @@ def collect_api(
 
     config_kwargs: dict[str, object | None] = {
         "collector": collector,
+        "fallback_collector": fallback_collector,
         "public_policy": public_policy,
         "docstring_style": docstring_style,
         "docstring_parser_modules": tuple(docstring_parser_modules)
@@ -175,15 +180,26 @@ def collect_api(
 
             api = collect_package_griffe(package, config=resolved)
         except Exception as exc:  # pragma: no cover - fallback path is environment-sensitive.
-            fallback_config = replace(resolved, collector="inspect")
-            api = _collect_package_source(package, config=fallback_config)
-            api.issues.append(
-                ApiDocIssue(
-                    "info",
-                    "collector-auto-fallback",
-                    f"Fell back to inspect-compatible source collection: {exc}",
+            if resolved.fallback_collector == "none":
+                api = _failed_collect_package(
+                    package,
+                    config=resolved,
+                    code="collector-auto-fallback-disabled",
+                    message=(
+                        "Collector auto fallback is disabled and griffe "
+                        f"collection failed: {exc}"
+                    ),
                 )
-            )
+            else:
+                fallback_config = replace(resolved, collector="inspect")
+                api = _collect_package_source(package, config=fallback_config)
+                api.issues.append(
+                    ApiDocIssue(
+                        "info",
+                        "collector-auto-fallback",
+                        f"Fell back to inspect-compatible source collection: {exc}",
+                    )
+                )
     return _filter_collected_objects(api, config=resolved)
 
 
@@ -321,6 +337,42 @@ def _collect_package_source(
         metadata={
             "collector": config.collector,
             "file_count": len(included_module_files),
+            "public_policy": config.public_policy,
+            "source_root": str(root),
+        },
+    )
+
+
+def _failed_collect_package(
+    package: str | PathLike,
+    *,
+    config: ApiCollectConfig,
+    code: str,
+    message: str,
+) -> ApiPackage:
+    try:
+        root, package_name, files = _resolve_source_files(package)
+    except Exception:
+        root = Path.cwd()
+        package_name = Path(str(package)).stem or str(package)
+        files = []
+    file_count = sum(
+        1
+        for file_path in files
+        if _module_is_included(
+            _module_name_for_file(file_path, root=root, package_name=package_name),
+            config,
+        )
+    )
+    return ApiPackage(
+        package_name,
+        version=_package_version(package_name),
+        modules=[],
+        issues=[ApiDocIssue("error", code, message)],
+        metadata={
+            "collector": config.collector,
+            "fallback_collector": config.fallback_collector,
+            "file_count": file_count,
             "public_policy": config.public_policy,
             "source_root": str(root),
         },

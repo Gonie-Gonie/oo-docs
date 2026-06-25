@@ -1,4 +1,10 @@
-"""Configuration objects for API collection."""
+"""Configuration objects for API collection.
+
+Attributes:
+    ApiCollectorName: Literal collector backend names.
+    ApiFallbackCollectorName: Literal collector fallback policy names.
+    ApiPublicPolicyName: Literal public API boundary policy names.
+"""
 
 from __future__ import annotations
 
@@ -14,6 +20,7 @@ from oodocs.compatibility import normalize_output_formats
 from oodocs.core import PathLike
 
 ApiCollectorName = Literal["auto", "inspect", "griffe"]
+ApiFallbackCollectorName = Literal["inspect", "none"]
 ApiPublicPolicyName = Literal["__all__", "underscore", "all", "explicit"]
 
 _COLLECT_CONFIG_KEYS = {
@@ -22,6 +29,8 @@ _COLLECT_CONFIG_KEYS = {
     "docstring_parser_modules",
     "docstring_style",
     "explicit_names",
+    "fallback_collector",
+    "fallback_parser",
     "include_imported",
     "include_inherited",
     "module_exclude_patterns",
@@ -290,6 +299,8 @@ class ApiCollectConfig:
     Attributes:
         collector: Collector backend. ``"auto"`` prefers griffe-compatible
             source collection and falls back to inspect-compatible collection.
+        fallback_collector: Fallback backend used when griffe is unavailable or
+            cannot load the target. Use ``"none"`` for strict CI runs.
         public_policy: Public API boundary policy.
         explicit_names: Names included when ``public_policy="explicit"``.
         docstring_style: Docstring parser style.
@@ -322,6 +333,7 @@ class ApiCollectConfig:
     """
 
     collector: ApiCollectorName = "auto"
+    fallback_collector: ApiFallbackCollectorName = "inspect"
     public_policy: ApiPublicPolicyName | ApiPublicPolicy | Mapping[str, object] = "__all__"
     explicit_names: tuple[str, ...] = field(default_factory=tuple)
     docstring_style: str = "auto"
@@ -341,6 +353,7 @@ class ApiCollectConfig:
         )
         object.__setattr__(self, "public_policy", policy.name)
         object.__setattr__(self, "explicit_names", policy.explicit_names)
+        object.__setattr__(self, "fallback_collector", str(self.fallback_collector).strip().lower())
         if isinstance(self.docstring_style, Mapping) or _is_docstring_parser(self.docstring_style):
             from oodocs.apidoc.docstring import ApiDocstringParser
 
@@ -512,6 +525,8 @@ class ApiCollectConfig:
 
         if self.collector not in {"auto", "inspect", "griffe"}:
             raise ValueError("collector must be 'auto', 'inspect', or 'griffe'")
+        if self.fallback_collector not in {"inspect", "none"}:
+            raise ValueError("fallback_collector must be 'inspect' or 'none'")
         if self.public_policy not in {"__all__", "underscore", "all", "explicit"}:
             raise ValueError("public_policy must be '__all__', 'underscore', 'all', or 'explicit'")
         if self.public_policy == "explicit" and not self.explicit_names:
@@ -591,6 +606,7 @@ class ApiCollectConfig:
 
         return {
             "collector": self.collector,
+            "fallback_collector": self.fallback_collector,
             "public_policy": self.public_policy,
             "explicit_names": list(self.explicit_names),
             "docstring_style": self.docstring_style,
@@ -1082,7 +1098,11 @@ def _is_docstring_parser(value: object) -> bool:
 
 
 def _normalize_config_mapping(data: Mapping[str, object]) -> dict[str, object]:
-    return {str(key).replace("-", "_"): value for key, value in data.items()}
+    normalized = {str(key).replace("-", "_"): value for key, value in data.items()}
+    if "fallback_parser" in normalized and "fallback_collector" not in normalized:
+        normalized["fallback_collector"] = normalized["fallback_parser"]
+    normalized.pop("fallback_parser", None)
+    return normalized
 
 
 def _validate_known_config_keys(data: Mapping[str, object]) -> None:
@@ -1170,6 +1190,7 @@ __all__ = [
     "ApiBuildConfig",
     "ApiCollectConfig",
     "ApiCollectorName",
+    "ApiFallbackCollectorName",
     "ApiPublicPolicy",
     "ApiPublicPolicyName",
     "normalize_explicit_names",

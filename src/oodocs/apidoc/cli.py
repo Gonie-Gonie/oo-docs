@@ -150,6 +150,11 @@ def _add_collect_options(parser: argparse.ArgumentParser, *, include_config: boo
         help="Collector backend.",
     )
     parser.add_argument(
+        "--fallback-collector",
+        choices=("inspect", "none"),
+        help="Fallback backend when griffe is unavailable or cannot load the target.",
+    )
+    parser.add_argument(
         "--public-policy",
         choices=("__all__", "underscore", "all", "explicit"),
         help="Public API boundary policy.",
@@ -228,6 +233,7 @@ def _add_filter_options(parser: argparse.ArgumentParser) -> None:
 def _run_init(args: argparse.Namespace) -> int:
     collection = ApiCollectConfig.from_kwargs(
         collector=args.collector,
+        fallback_collector=args.fallback_collector,
         public_policy=args.public_policy,
         explicit_names=args.explicit_names,
         docstring_style=args.docstring_style,

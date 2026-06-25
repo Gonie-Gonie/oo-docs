@@ -73,7 +73,7 @@ def collect_package_griffe(
             package,
             config=config,
             code="griffe-unavailable",
-            message="griffe is not installed; used source parsing with griffe-compatible output.",
+            message="griffe is not installed.",
         )
 
     from oodocs.apidoc.collect import (
@@ -97,7 +97,7 @@ def collect_package_griffe(
             package,
             config=resolved,
             code="griffe-load-failed",
-            message=f"griffe could not load the target; used source parsing instead: {exc}",
+            message=f"griffe could not load the target: {exc}",
         )
 
     modules: list[ApiModule] = []
@@ -157,10 +157,20 @@ def _fallback_collect(
     code: str,
     message: str,
 ) -> ApiPackage:
-    from oodocs.apidoc.collect import _collect_package_source
+    from oodocs.apidoc.collect import _collect_package_source, _failed_collect_package
 
-    api = _collect_package_source(package, config=replace(config, collector="griffe"))
-    api.issues.append(ApiDocIssue("info", code, message))
+    if config.fallback_collector == "none":
+        return _failed_collect_package(package, config=config, code=code, message=message)
+    api = _collect_package_source(package, config=replace(config, collector="inspect"))
+    api.metadata["requested_collector"] = config.collector
+    api.metadata["fallback_collector"] = config.fallback_collector
+    api.issues.append(
+        ApiDocIssue(
+            "info",
+            code,
+            f"{message} Used inspect-compatible source collection instead.",
+        )
+    )
     return api
 
 

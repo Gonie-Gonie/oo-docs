@@ -12,6 +12,20 @@ a `src/` layout namespace package that omits `__init__.py`.
 - `collector="auto"` tries griffe first and records a fallback issue if source
   collection is used.
 
+By default, griffe failures fall back to the inspect-compatible source
+collector. Set `fallback_collector="none"` when CI should fail loudly instead
+of rendering a best-effort fallback reference:
+
+```python
+api = collect_api(".", collector="griffe", fallback_collector="none")
+```
+
+```toml
+[tool.oodocs.apidoc]
+collector = "griffe"
+fallback-collector = "none"
+```
+
 Collectors mark objects as deprecated when docstrings contain `Deprecated:` or
 Sphinx `.. deprecated::`, when class/function decorators are named
 `deprecated`, `deprecate`, or `deprecated_alias`, or when function bodies call

@@ -124,11 +124,11 @@ value changes, parameter annotation changes, return annotation changes,
 docstring changes, deprecated objects, and coverage deltas.
 
 Common collection options are `--collector`, `--public-policy`,
-`--explicit-name`, `--docstring-style`, `--docstring-parser-module`,
-`--include-imported`, `--config`, `--include-inherited`,
-`--class-signature-from-init`, `--no-class-signature-from-init`,
-`--module-include`, `--module-exclude`, `--object-include`, and
-`--object-exclude`.
+`--fallback-collector`, `--explicit-name`, `--docstring-style`,
+`--docstring-parser-module`, `--include-imported`, `--config`,
+`--include-inherited`, `--class-signature-from-init`,
+`--no-class-signature-from-init`, `--module-include`, `--module-exclude`,
+`--object-include`, and `--object-exclude`.
 Module include/exclude patterns are applied before module contents are
 collected. Object include/exclude patterns are applied after collection and can
 remove public-but-internal hooks such as renderer adapters from the generated

@@ -4,6 +4,8 @@ import json
 from pathlib import Path
 import importlib.util
 
+import pytest
+
 from oodocs import Chapter, Document
 from oodocs.apidoc import (
     ApiBuildConfig,
@@ -1258,6 +1260,44 @@ def test_griffe_collector_matches_inspect_schema_on_src_layout_repo(
     assert method is not None
     assert method.parameters[0].name == "path"
     assert method.returns and method.returns.annotation == "str"
+
+
+def test_griffe_fallback_can_be_disabled_for_strict_collection(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    griffe = pytest.importorskip("griffe")
+    package_dir = tmp_path / "strictpkg"
+    package_dir.mkdir()
+    (package_dir / "__init__.py").write_text(
+        "\n".join(
+            [
+                "def run() -> None:",
+                '    """Run the strict package."""',
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    def fail_load(*args, **kwargs):
+        raise RuntimeError("forced griffe failure")
+
+    monkeypatch.setattr(griffe, "load", fail_load)
+    api = collect_api(
+        package_dir,
+        collector="griffe",
+        fallback_collector="none",
+        public_policy="underscore",
+    )
+
+    assert api.name == "strictpkg"
+    assert not api.modules
+    assert any(
+        issue.severity == "error" and issue.code == "griffe-load-failed"
+        for issue in api.issues
+    )
+    assert api.metadata["fallback_collector"] == "none"
 
 
 def test_collectors_detect_deprecated_decorators_and_warning_bodies(
