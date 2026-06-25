@@ -773,7 +773,7 @@ def detect_docstring_style(text: str | None) -> ApiDocstringStyleName:
     cleaned = inspect.cleandoc(text or "")
     if not cleaned:
         return "plain"
-    if re.search(r"(?m)^:(param|type|returns?|rtype|raises?)\b", cleaned) or re.search(
+    if re.search(r"(?m)^:(param|type|returns?|rtype|yields?|ytype|yieldtype|raises?)\b", cleaned) or re.search(
         r"(?m)^\.\. (deprecated|warning|note|code-block)::",
         cleaned,
     ):
@@ -920,10 +920,10 @@ def _parse_sphinx(text: str, qualname: str | None, module: str | None) -> Parsed
                     name,
                     ApiParameter(name=name, documented=True, source="docstring"),
                 ).annotation = annotation or None
-        elif match := re.match(r"^:returns?\s*:\s*(.*)$", stripped):
+        elif match := re.match(r"^:(?:returns?|yields?)\s*:\s*(.*)$", stripped):
             if parsed.returns is None:
                 parsed.returns = ApiReturn(description=match.group(1) or None, documented=True)
-        elif match := re.match(r"^:rtype\s*:\s*(.*)$", stripped):
+        elif match := re.match(r"^:(?:rtype|ytype|yieldtype)\s*:\s*(.*)$", stripped):
             return_annotation = match.group(1) or None
         elif match := re.match(r"^:raises?\s+([^:]+)\s*:\s*(.*)$", stripped):
             if not parsed.raises:

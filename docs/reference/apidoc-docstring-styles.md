@@ -5,14 +5,15 @@ schema.
 
 Supported styles:
 
-- `google`: `Args:`, `Attributes:`, `Returns:`, `Raises:`, `Examples:`,
-  `See Also:`, `Notes:`, `Warnings:`, `Renderer Notes:`, and `Deprecated:`.
-- `numpy`: dashed section headings such as `Parameters`, `Returns`, `Notes`,
-  `Warnings`, and `Renderer Notes`.
-- `sphinx`: `:param:`, `:type:`, `:returns:`, `:rtype:`, directives, and code
-  blocks.
-- `markdown`: Markdown headings, parameter tables, notes, warnings, renderer
-  notes, and deprecation sections.
+- `google`: `Args:`, `Attributes:`, `Returns:`, `Yields:`, `Raises:`,
+  `Examples:`, `See Also:`, `Notes:`, `Warnings:`, `Renderer Notes:`, and
+  `Deprecated:`.
+- `numpy`: dashed section headings such as `Parameters`, `Returns`, `Yields`,
+  `Notes`, `Warnings`, and `Renderer Notes`.
+- `sphinx`: `:param:`, `:type:`, `:returns:`, `:rtype:`, `:yields:`,
+  `:ytype:`, directives, and code blocks.
+- `markdown`: Markdown headings, parameter tables, `Returns`/`Yields`, notes,
+  warnings, renderer notes, and deprecation sections.
 - `plain`: summary and paragraph extraction only.
 - `auto`: style detection.
 

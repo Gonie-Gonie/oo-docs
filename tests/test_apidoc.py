@@ -192,6 +192,52 @@ def test_docstring_parsers_normalize_standard_styles() -> None:
     assert detect_docstring_style(MARKDOWN_DOCSTRING) == "markdown"
 
 
+def test_docstring_parsers_normalize_yields_sections() -> None:
+    google = parse_docstring(
+        """Iterate values.
+
+        Yields:
+            str: Next value.
+        """,
+        style="google",
+    )
+    numpy = parse_docstring(
+        """Iterate values.
+
+        Yields
+        ------
+        str
+            Next value.
+        """,
+        style="numpy",
+    )
+    sphinx = parse_docstring(
+        """Iterate values.
+
+        :yields: Next value.
+        :ytype: str
+        """,
+        style="sphinx",
+    )
+    markdown = parse_docstring(
+        """Iterate values.
+
+        ## Yields
+
+        str: Next value.
+        """,
+        style="markdown",
+    )
+
+    for parsed in (google, numpy, sphinx, markdown):
+        assert parsed.returns is not None
+        assert parsed.returns.annotation == "str"
+        assert parsed.returns.description == "Next value."
+        assert parsed.returns.documented
+
+    assert detect_docstring_style(":yields: Next value.\n:ytype: str") == "sphinx"
+
+
 def test_example_extraction_does_not_duplicate_fenced_doctest_blocks() -> None:
     fenced_pycon = extract_code_blocks_from_docstring(
         """Run an interactive example.
