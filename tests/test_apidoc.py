@@ -743,6 +743,10 @@ def test_collect_api_filters_modules_before_collection(tmp_path: Path) -> None:
     assert api.find("filtermods.experimental.preview") is None
     assert api.find("filtermods.tests.helper") is None
     assert config.to_dict()["module_include_patterns"] == ["filtermods.*"]
+    assert ApiCollectConfig.from_dict(config.to_dict()) == config
+    config_path = tmp_path / "apidoc-config.json"
+    config.write_json(config_path)
+    assert ApiCollectConfig.read_json(config_path) == config
 
     if importlib.util.find_spec("griffe") is not None:
         griffe_api = collect_api(
@@ -1093,6 +1097,14 @@ def test_apidoc_cli_filters_check_and_snapshot(tmp_path: Path) -> None:
     snapshot_json = tmp_path / "filtered-snapshot.json"
     build_dir = tmp_path / "filtered-build"
     max_level_build_dir = tmp_path / "max-level-build"
+    config_path = tmp_path / "apidoc-config.json"
+    config_json = tmp_path / "configured-api.json"
+    ApiCollectConfig(
+        collector="inspect",
+        public_policy="underscore",
+        module_include_patterns=("filterpkg.core",),
+        module_exclude_patterns=("filterpkg.legacy",),
+    ).write_json(config_path)
 
     assert main(
         [
@@ -1140,6 +1152,21 @@ def test_apidoc_cli_filters_check_and_snapshot(tmp_path: Path) -> None:
     ) == 0
     collected = json.loads(collected_json.read_text(encoding="utf-8"))
     assert [module["name"] for module in collected["modules"]] == ["filterpkg.core"]
+
+    assert main(
+        [
+            "apidoc",
+            "collect",
+            str(package_dir),
+            "--config",
+            str(config_path),
+            "--out",
+            str(config_json),
+        ]
+    ) == 0
+    configured = json.loads(config_json.read_text(encoding="utf-8"))
+    assert [module["name"] for module in configured["modules"]] == ["filterpkg.core"]
+    assert configured["metadata"]["collector"] == "inspect"
 
     assert main(
         [

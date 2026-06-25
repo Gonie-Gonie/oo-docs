@@ -8,6 +8,12 @@ Collect an API tree:
 python -m oodocs apidoc collect oodocs --collector griffe --public-policy __all__ --out artifacts/api-index.json
 ```
 
+Reuse a collection config JSON:
+
+```powershell
+python -m oodocs apidoc collect . --config apidoc-config.json --out artifacts/api-index.json
+```
+
 Check documentation coverage:
 
 ```powershell
@@ -55,7 +61,7 @@ value changes, parameter annotation changes, return annotation changes,
 docstring changes, deprecated objects, and coverage deltas.
 
 Common collection options are `--collector`, `--public-policy`,
-`--explicit-name`, `--docstring-style`, `--include-imported`,
+`--explicit-name`, `--docstring-style`, `--include-imported`, `--config`,
 `--include-inherited`, `--module-include`, and `--module-exclude`.
 Module include/exclude patterns are applied before module contents are
 collected, while `check`, `build`, and `snapshot` also accept `--kind` and

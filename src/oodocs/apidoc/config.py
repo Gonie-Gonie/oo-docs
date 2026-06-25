@@ -3,7 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import json
+from pathlib import Path
 from typing import Literal, Mapping, Sequence
+
+from oodocs.core import PathLike
 
 ApiCollectorName = Literal["auto", "inspect", "griffe"]
 ApiPublicPolicyName = Literal["__all__", "underscore", "all", "explicit"]
@@ -260,6 +264,33 @@ class ApiCollectConfig:
         resolved.validate()
         return resolved
 
+    @classmethod
+    def from_dict(cls, data: Mapping[str, object]) -> ApiCollectConfig:
+        """Reconstruct a config from serialized data.
+
+        Args:
+            data: Mapping produced by ``to_dict``.
+
+        Returns:
+            Validated collection configuration.
+
+        Examples:
+            Reuse configuration loaded from a deployment manifest:
+
+            ```python
+            from oodocs.apidoc import ApiCollectConfig, collect_api
+
+            config = ApiCollectConfig.from_dict({
+                "collector": "griffe",
+                "public_policy": "__all__",
+                "docstring_style": "auto",
+            })
+            api = collect_api(".", config=config)
+            ```
+        """
+
+        return cls.from_kwargs(**dict(data))
+
     def validate(self) -> None:
         """Validate config values.
 
@@ -304,6 +335,62 @@ class ApiCollectConfig:
             "module_include_patterns": list(self.module_include_patterns),
             "module_exclude_patterns": list(self.module_exclude_patterns),
         }
+
+    def write_json(self, path: PathLike) -> Path:
+        """Write this collection config as deterministic JSON.
+
+        Args:
+            path: Output JSON path.
+
+        Returns:
+            Written path.
+
+        Examples:
+            Persist one repository policy for local scripts and CLI commands:
+
+            ```python
+            from oodocs.apidoc import ApiCollectConfig
+
+            config = ApiCollectConfig(
+                collector="griffe",
+                public_policy="__all__",
+                module_exclude_patterns=("mypkg.tests*",),
+            )
+            config.write_json("apidoc-config.json")
+            ```
+        """
+
+        output_path = Path(path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(
+            json.dumps(self.to_dict(), indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        return output_path
+
+    @classmethod
+    def read_json(cls, path: PathLike) -> ApiCollectConfig:
+        """Read a collection config JSON sidecar.
+
+        Args:
+            path: JSON sidecar path.
+
+        Returns:
+            Validated collection configuration.
+
+        Examples:
+            Load the same collection policy that the CLI uses with
+            ``--config``:
+
+            ```python
+            from oodocs.apidoc import ApiCollectConfig, collect_api
+
+            config = ApiCollectConfig.read_json("apidoc-config.json")
+            api = collect_api(".", config=config)
+            ```
+        """
+
+        return cls.from_dict(json.loads(Path(path).read_text(encoding="utf-8")))
 
 
 def normalize_explicit_names(names: Sequence[str] | None) -> tuple[str, ...]:

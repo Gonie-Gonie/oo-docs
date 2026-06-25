@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Sequence
 
 from oodocs.apidoc.collect import collect_api
+from oodocs.apidoc.config import ApiCollectConfig
 from oodocs.apidoc.coverage import check_api_docs
 from oodocs.apidoc.diff import ApiSnapshot, diff_api
 from oodocs.apidoc.model import ApiObject, ApiPackage
@@ -86,15 +87,17 @@ def _build_parser() -> argparse.ArgumentParser:
 
 def _add_collect_options(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
+        "--config",
+        help="API collection config JSON written by ApiCollectConfig.write_json.",
+    )
+    parser.add_argument(
         "--collector",
         choices=("auto", "inspect", "griffe"),
-        default="auto",
         help="Collector backend.",
     )
     parser.add_argument(
         "--public-policy",
         choices=("__all__", "underscore", "all", "explicit"),
-        default="__all__",
         help="Public API boundary policy.",
     )
     parser.add_argument(
@@ -106,17 +109,18 @@ def _add_collect_options(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--docstring-style",
         choices=("auto", "google", "numpy", "sphinx", "markdown", "plain"),
-        default="auto",
         help="Docstring parser style.",
     )
     parser.add_argument(
         "--include-imported",
         action="store_true",
+        default=None,
         help="Include public imported aliases when the collector can represent them.",
     )
     parser.add_argument(
         "--include-inherited",
         action="store_true",
+        default=None,
         help="Include inherited class members when the collector can resolve them.",
     )
     parser.add_argument(
@@ -224,8 +228,10 @@ def _run_diff(args: argparse.Namespace) -> int:
 
 
 def _collect_from_args(args: argparse.Namespace):
+    config = ApiCollectConfig.read_json(args.config) if args.config else None
     return collect_api(
         args.package,
+        config=config,
         collector=args.collector,
         public_policy=args.public_policy,
         explicit_names=args.explicit_names,
