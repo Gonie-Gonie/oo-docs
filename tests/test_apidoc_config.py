@@ -4,7 +4,11 @@ import json
 
 import pytest
 
-from apidoc_samples import write_hatch_package_repo, write_setuptools_find_repo
+from apidoc_samples import (
+    write_hatch_package_repo,
+    write_pdm_package_dir_repo,
+    write_setuptools_find_repo,
+)
 from oodocs.apidoc import (
     ApiBuildConfig,
     ApiCollectConfig,
@@ -332,3 +336,62 @@ def test_apidoc_build_config_read_file_uses_hatch_target_import_roots(tmp_path) 
     assert document.validate(formats=("html",)).ok
     assert run is not None
     assert run.summary == "hatch-target:Run from a Hatch-layout repository."
+
+
+def test_apidoc_build_config_read_file_uses_pdm_target_import_roots(tmp_path) -> None:
+    repo = write_pdm_package_dir_repo(
+        tmp_path,
+        repo_name="pdm-target-build-config-repo",
+        package_name="pdmtargetpkg",
+    )
+    parser_path = repo / "lib" / "pdmtargetpkg" / "docs_parsers.py"
+    parser_path.write_text(
+        "\n".join(
+            [
+                "from oodocs.apidoc import ParsedDocstring, docstring_parser_names, register_docstring_parser",
+                "",
+                "def parse_pdm_target_style(text, qualname=None, module=None):",
+                "    lines = (text or '').strip().splitlines()",
+                "    first = lines[0] if lines else ''",
+                "    summary = f'pdm-target:{first}' if first else None",
+                '    return ParsedDocstring(summary=summary, style="pdm-target-brief")',
+                "",
+                'if "pdm-target-brief" not in docstring_parser_names():',
+                '    register_docstring_parser("pdm-target-brief", parse_pdm_target_style)',
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    config_path = tmp_path / "external-pdm-build-config.json"
+    config_path.write_text(
+        json.dumps(
+            {
+                "collector": "inspect",
+                "public_policy": "__all__",
+                "docstring_style": "pdm-target-brief",
+                "docstring_parser_modules": ["pdmtargetpkg.docs_parsers"],
+                "profile": "compact",
+                "formats": ["html"],
+                "module_exclude_patterns": ["*.docs_parsers"],
+                "sidecars": True,
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    assert "pdm-target-brief" not in docstring_parser_names()
+    with pytest.raises(ImportError):
+        ApiBuildConfig.read_file(config_path)
+
+    build = ApiBuildConfig.read_file(config_path, target=repo)
+    api = build.collect(repo)
+    document = build.to_document(repo)
+    run = api.find("pdmtargetpkg.run")
+
+    assert document.validate(formats=("html",)).ok
+    assert run is not None
+    assert run.summary == "pdm-target:Run from a PDM-layout repository."

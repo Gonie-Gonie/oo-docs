@@ -8,7 +8,8 @@ through `[tool.setuptools] py-modules`. Repository roots that use setuptools
 custom source roots are also supported through
 `[tool.setuptools] package-dir = {"" = "lib"}` or
 `[tool.setuptools.packages.find] where = ["lib"]`, hatch wheel
-`packages`/`only-include` settings, and Poetry `packages` entries.
+`packages`/`only-include` settings, Poetry `packages` entries, and PDM
+`[tool.pdm.build] package-dir`/`includes` settings.
 Multiple hatch `packages` entries are grouped under their common source roots,
 so one repository reference can include several top-level packages.
 
@@ -24,6 +25,27 @@ package-dir = {"" = "lib"}
 from oodocs.apidoc import collect_api
 
 api = collect_api(".", collector="inspect", public_policy="__all__")
+assert api.find("samplepkg.run") is not None
+```
+
+PDM projects with a custom source directory can be targeted the same way:
+
+```toml
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[project]
+name = "sample-project"
+
+[tool.pdm.build]
+package-dir = "lib"
+```
+
+```python
+from oodocs.apidoc import collect_api
+
+api = collect_api(".", collector="griffe", public_policy="__all__")
 assert api.find("samplepkg.run") is not None
 ```
 
@@ -45,6 +67,13 @@ from oodocs.apidoc import collect_api
 
 api = collect_api(".", collector="inspect", public_policy="__all__")
 assert api.find("reporting.build_report") is not None
+```
+
+PDM module-file repositories can declare the module through `includes`:
+
+```toml
+[tool.pdm.build]
+includes = ["reporting.py"]
 ```
 
 For a standalone module file, pass the file path directly. The file stem becomes

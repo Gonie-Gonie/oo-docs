@@ -9,6 +9,8 @@ from apidoc_samples import (
     write_hatch_multi_package_repo,
     write_hatch_package_repo,
     write_mixed_docstring_repo,
+    write_pdm_package_dir_repo,
+    write_pdm_module_file_repo,
     write_poetry_package_repo,
     write_dataclass_package,
     write_overload_package,
@@ -349,6 +351,36 @@ def test_griffe_collector_uses_pyproject_poetry_packages(tmp_path) -> None:
     assert api.find("poetrypkg.run") is not None
     assert api.find("poetrypkg.core.run") is not None
     assert api.find("lib.poetrypkg.run") is None
+
+
+def test_griffe_collector_uses_pyproject_pdm_package_dir(tmp_path) -> None:
+    if importlib.util.find_spec("griffe") is None:
+        pytest.skip("griffe is not installed")
+
+    repo = write_pdm_package_dir_repo(tmp_path)
+
+    api = collect_api(repo, collector="griffe", public_policy="__all__")
+
+    assert api.metadata["collector"] == "griffe"
+    assert [module.name for module in api.modules] == ["pdmpkg", "pdmpkg.core"]
+    assert api.find("pdmpkg.run") is not None
+    assert api.find("pdmpkg.core.run") is not None
+    assert api.find("lib.pdmpkg.run") is None
+
+
+def test_griffe_collector_uses_pyproject_pdm_module_includes(tmp_path) -> None:
+    if importlib.util.find_spec("griffe") is None:
+        pytest.skip("griffe is not installed")
+
+    repo = write_pdm_module_file_repo(tmp_path)
+
+    api = collect_api(repo, collector="griffe", public_policy="__all__")
+
+    assert api.metadata["collector"] == "griffe"
+    assert api.name == "pdmrunner"
+    assert [module.name for module in api.modules] == ["pdmrunner"]
+    assert api.find("pdmrunner.Client.connect") is not None
+    assert api.find("pdm_module_repo.pdmrunner.Client") is None
 
 
 def test_griffe_collector_records_load_failure_fallback_issue(

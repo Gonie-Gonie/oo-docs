@@ -445,6 +445,120 @@ def write_poetry_package_repo(
     return repo
 
 
+def write_pdm_package_dir_repo(
+    tmp_path: Path,
+    *,
+    repo_name: str = "pdm-repo",
+    package_name: str = "pdmpkg",
+    source_root: str = "lib",
+) -> Path:
+    repo = tmp_path / repo_name
+    package_dir = repo / source_root / package_name
+    package_dir.mkdir(parents=True)
+    (repo / "pyproject.toml").write_text(
+        dedent(
+            f'''\
+            [build-system]
+            requires = ["pdm-backend"]
+            build-backend = "pdm.backend"
+
+            [project]
+            name = "{package_name.replace("_", "-")}"
+
+            [tool.pdm.build]
+            package-dir = "{source_root}"
+            '''
+        ),
+        encoding="utf-8",
+    )
+    (package_dir / "__init__.py").write_text(
+        '"""PDM package."""\nfrom .core import run\n__all__ = ["run"]\n',
+        encoding="utf-8",
+    )
+    (package_dir / "core.py").write_text(
+        dedent(
+            '''\
+            def run(path: str) -> str:
+                """Run from a PDM-layout repository.
+
+                Args:
+                    path: Input path.
+
+                Returns:
+                    str: Input path.
+                """
+
+                return path
+            '''
+        ),
+        encoding="utf-8",
+    )
+    return repo
+
+
+def write_pdm_module_file_repo(
+    tmp_path: Path,
+    *,
+    repo_name: str = "pdm-module-repo",
+    module_name: str = "pdmrunner",
+) -> Path:
+    repo = tmp_path / repo_name
+    repo.mkdir()
+    (repo / "pyproject.toml").write_text(
+        dedent(
+            f'''\
+            [build-system]
+            requires = ["pdm-backend"]
+            build-backend = "pdm.backend"
+
+            [project]
+            name = "{module_name.replace("_", "-")}"
+
+            [tool.pdm.build]
+            includes = ["{module_name}.py"]
+            '''
+        ),
+        encoding="utf-8",
+    )
+    (repo / f"{module_name}.py").write_text(
+        dedent(
+            '''\
+            __all__ = ["Client", "stream"]
+
+            class Client:
+                """Client object."""
+
+                def connect(self, endpoint: str) -> bool:
+                    """Connect to an endpoint.
+
+                    Args:
+                        endpoint: Target endpoint.
+
+                    Returns:
+                        bool: Whether the connection succeeded.
+                    """
+
+                    return bool(endpoint)
+
+
+            def stream(endpoint: str) -> str:
+                """Stream from an endpoint.
+
+                Args:
+                    endpoint: Target endpoint.
+
+                Returns:
+                    str: Endpoint value.
+                """
+
+                return endpoint
+            '''
+        ),
+        encoding="utf-8",
+    )
+    return repo
+
+
 def write_mixed_docstring_repo(tmp_path: Path) -> Path:
     repo = tmp_path / "mixed-repo"
     package_dir = repo / "src" / "mixedpkg"

@@ -1530,15 +1530,49 @@ def _py_modules_from_pyproject(directory: Path) -> tuple[str, ...]:
     if not data:
         return ()
     tool = data.get("tool")
+    modules: list[str] = []
     setuptools = tool.get("setuptools") if isinstance(tool, dict) else None
-    if not isinstance(setuptools, dict):
-        return ()
-    value = setuptools.get("py-modules", setuptools.get("py_modules"))
+    if isinstance(setuptools, dict):
+        value = setuptools.get("py-modules", setuptools.get("py_modules"))
+        modules.extend(_module_names_from_value(value))
+    modules.extend(_pdm_module_names_from_tool(tool))
+    return tuple(dict.fromkeys(modules))
+
+
+def _module_names_from_value(value: object) -> list[str]:
     if isinstance(value, str):
-        return (value.strip(),) if value.strip() else ()
-    if isinstance(value, Sequence):
-        return tuple(str(item).strip() for item in value if str(item).strip())
-    return ()
+        return [value.strip()] if value.strip() else []
+    if isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray)):
+        return [str(item).strip() for item in value if str(item).strip()]
+    return []
+
+
+def _pdm_module_names_from_tool(tool: object) -> list[str]:
+    if not isinstance(tool, dict):
+        return []
+    pdm = tool.get("pdm")
+    build = pdm.get("build") if isinstance(pdm, dict) else None
+    if not isinstance(build, dict):
+        return []
+    package_dir = build.get("package-dir", build.get("package_dir"))
+    package_dir_parts = _path_parts(package_dir) if isinstance(package_dir, str) else ()
+    modules: list[str] = []
+    for include in _module_names_from_value(build.get("includes")):
+        if not include.endswith(".py") or any(character in include for character in "*?["):
+            continue
+        path = Path(include).with_suffix("")
+        parts = path.parts
+        if parts and parts[-1] == "__init__":
+            continue
+        if package_dir_parts and parts[: len(package_dir_parts)] == package_dir_parts:
+            parts = parts[len(package_dir_parts) :]
+        if parts:
+            modules.append(".".join(parts))
+    return modules
+
+
+def _path_parts(value: str) -> tuple[str, ...]:
+    return tuple(part for part in Path(value.strip().rstrip("/\\")).parts if part)
 
 
 def _pyproject_data(directory: Path) -> dict[str, object] | None:

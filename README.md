@@ -215,8 +215,9 @@ from oodocs import Chapter, Document, Paragraph
 from oodocs.apidoc import collect_api
 
 api = collect_api("oodocs", public_policy="__all__")
-# A repository checkout with a src/ layout also works. When the apidoc extra is
-# installed, collector="griffe" reads source without importing the target repo.
+# A repository checkout with src/, setuptools, hatch, Poetry, or PDM layout
+# metadata also works. When the apidoc extra is installed, collector="griffe"
+# reads source without importing the target repo.
 # api = collect_api(".", public_policy="__all__", collector="griffe")
 # ApiDocstringParser.auto() can be passed as docstring_style when one parser
 # configuration should be reused across collection and coverage steps.

@@ -1565,7 +1565,8 @@ def _project_source_roots(directory: Path) -> list[Path]:
     Returns:
         Existing source roots from setuptools ``package-dir`` mappings,
         ``packages.find.where`` settings, hatch wheel package settings, Poetry
-        package entries, and the conventional ``src/`` layout.
+        package entries, PDM build settings, and the conventional ``src/``
+        layout.
     """
 
     roots: list[Path] = []
@@ -1592,6 +1593,7 @@ def _project_source_roots(directory: Path) -> list[Path]:
                 roots.extend(directory / item for item in where if isinstance(item, str))
         roots.extend(_hatch_source_roots(directory, tool))
         roots.extend(_poetry_source_roots(directory, tool))
+        roots.extend(_pdm_source_roots(directory, tool))
 
     roots.append(directory / "src")
     return _existing_unique_paths(roots)
@@ -1661,6 +1663,43 @@ def _poetry_source_roots(directory: Path, tool: object) -> list[Path]:
         elif isinstance(include, str) and include.strip() and "*" not in include:
             roots.append(directory / include)
     return roots
+
+
+def _pdm_source_roots(directory: Path, tool: object) -> list[Path]:
+    if not isinstance(tool, Mapping):
+        return []
+    pdm = tool.get("pdm")
+    build = pdm.get("build") if isinstance(pdm, Mapping) else None
+    if not isinstance(build, Mapping):
+        return []
+    roots: list[Path] = []
+    package_dir = build.get("package-dir", build.get("package_dir"))
+    if isinstance(package_dir, str) and package_dir.strip():
+        roots.append(directory / package_dir)
+    roots.extend(
+        root
+        for include in _path_strings(build.get("includes"))
+        if (root := _pdm_include_source_root(directory, include)) is not None
+    )
+    return roots
+
+
+def _pdm_include_source_root(directory: Path, include: str) -> Path | None:
+    normalized = include.strip().rstrip("/\\")
+    if not normalized or any(character in normalized for character in "*?["):
+        return None
+    path = directory / normalized
+    if path.suffix == ".py":
+        if path.name == "__init__.py":
+            return path.parent.parent
+        return path.parent
+    if path.name in {"src", "lib"}:
+        return path
+    if (path / "__init__.py").exists():
+        return path.parent
+    if path.is_dir() and any(child.name == "__init__.py" for child in path.rglob("__init__.py")):
+        return path.parent
+    return path
 
 
 def _path_strings(value: object) -> tuple[str, ...]:

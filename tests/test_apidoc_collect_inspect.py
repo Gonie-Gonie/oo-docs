@@ -4,6 +4,8 @@ from apidoc_samples import (
     collect_sample_api,
     write_hatch_multi_package_repo,
     write_hatch_package_repo,
+    write_pdm_package_dir_repo,
+    write_pdm_module_file_repo,
     write_poetry_package_repo,
     write_setuptools_find_repo,
     write_setuptools_package_dir_repo,
@@ -139,6 +141,28 @@ def test_inspect_collector_uses_pyproject_poetry_packages(tmp_path) -> None:
     assert api.find("poetrypkg.run") is not None
     assert api.find("poetrypkg.core.run") is not None
     assert api.find("lib.poetrypkg.run") is None
+
+
+def test_inspect_collector_uses_pyproject_pdm_package_dir(tmp_path) -> None:
+    repo = write_pdm_package_dir_repo(tmp_path)
+
+    api = collect_api(repo, collector="inspect", public_policy="__all__")
+
+    assert [module.name for module in api.modules] == ["pdmpkg", "pdmpkg.core"]
+    assert api.find("pdmpkg.run") is not None
+    assert api.find("pdmpkg.core.run") is not None
+    assert api.find("lib.pdmpkg.run") is None
+
+
+def test_inspect_collector_uses_pyproject_pdm_module_includes(tmp_path) -> None:
+    repo = write_pdm_module_file_repo(tmp_path)
+
+    api = collect_api(repo, collector="inspect", public_policy="__all__")
+
+    assert api.name == "pdmrunner"
+    assert [module.name for module in api.modules] == ["pdmrunner"]
+    assert api.find("pdmrunner.Client.connect") is not None
+    assert api.find("pdm_module_repo.pdmrunner.Client") is None
 
 
 def test_inspect_collector_uses_explicit_setuptools_package_mapping(tmp_path) -> None:
