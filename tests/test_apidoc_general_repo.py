@@ -577,7 +577,29 @@ def test_general_python_file_module_targets_build_reference_and_example(
     outputs = document.save_all(
         composed_output,
         stem="single-file-api",
-        formats=("html",),
+        formats=("docx", "pdf", "html"),
+    )
+    assert_rendered_bundle(outputs["docx"], outputs["pdf"], outputs["html"])
+    assert document.validate(formats=("docx", "pdf", "html")).ok
+    assert_docx_structure(
+        outputs["docx"],
+        required_paragraphs=(
+            "Single File API Notes",
+            "1 Selected API",
+            "1.1 singlemod.Client",
+            "2 Function Index",
+        ),
+        min_tables=3,
+    )
+    assert_pdf_text_and_pages(
+        outputs["pdf"],
+        required_text=(
+            "Single File API Notes",
+            "singlemod.Client",
+            "Timeout in seconds.",
+            "Function Index",
+        ),
+        min_pages=1,
     )
     assert "singlemod.Client" in outputs["html"].read_text(encoding="utf-8")
     assert_html_internal_links_resolve(outputs["html"])

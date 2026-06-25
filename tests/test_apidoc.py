@@ -7,7 +7,12 @@ from pathlib import Path
 
 import pytest
 
-from example_regression import assert_html_internal_links_resolve
+from example_regression import (
+    assert_docx_structure,
+    assert_html_internal_links_resolve,
+    assert_pdf_text_and_pages,
+    assert_rendered_bundle,
+)
 from oodocs import Chapter, Document
 from oodocs.apidoc import (
     ApiBuildConfig,
@@ -2021,14 +2026,44 @@ def test_api_objects_example_builds_full_reference_and_composable_document(
         "pdf": bundle_outputs["full_reference_pdf"],
         "html": bundle_outputs["full_reference_html"],
     }
+    composition_outputs = {
+        "docx": bundle_outputs["composition_docx"],
+        "pdf": bundle_outputs["composition_pdf"],
+        "html": bundle_outputs["composition_html"],
+    }
 
     assert set(outputs) == {"docx", "pdf", "html"}
-    assert all(path.exists() for path in outputs.values())
-    assert bundle_outputs["composition_docx"].exists()
-    assert bundle_outputs["composition_pdf"].exists()
-    assert bundle_outputs["composition_html"].exists()
+    assert set(composition_outputs) == {"docx", "pdf", "html"}
+    assert_rendered_bundle(outputs["docx"], outputs["pdf"], outputs["html"])
+    assert_rendered_bundle(
+        composition_outputs["docx"],
+        composition_outputs["pdf"],
+        composition_outputs["html"],
+    )
     assert full_reference.validate(formats=("docx", "pdf", "html")).ok
-    assert composition.validate(formats=("html",)).ok
+    assert composition.validate(formats=("docx", "pdf", "html")).ok
+    assert_docx_structure(
+        composition_outputs["docx"],
+        required_paragraphs=(
+            "OODocs API Object Composition",
+            "1 Selected Classes",
+            "2 Focused Module: examplepkg",
+            "3 Function Summary",
+            "4 Coverage Summary",
+        ),
+        min_tables=3,
+    )
+    assert_pdf_text_and_pages(
+        composition_outputs["pdf"],
+        required_text=(
+            "OODocs API Object Composition",
+            "Selected Classes",
+            "Focused Module: examplepkg",
+            "Function Summary",
+            "Coverage Summary",
+        ),
+        min_pages=1,
+    )
     assert target_api.name == "examplepkg"
     assert target_api.find("examplepkg.Widget") is not None
     assert ApiPackage.read_json(bundle_outputs["api_json"]).name == "examplepkg"
