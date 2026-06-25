@@ -460,8 +460,10 @@ def _collect_from_args(
 ):
     _load_docstring_parser_modules_from_args(args)
     if config is None and args.config:
-        with docstring_parser_import_paths(_target_from_args(args)):
-            config = ApiCollectConfig.read_file(args.config)
+        config = ApiCollectConfig.read_file(
+            args.config,
+            target=_target_from_args(args),
+        )
     return collect_api(
         args.package,
         config=config,
@@ -490,8 +492,7 @@ def _build_config_from_args(args: argparse.Namespace) -> ApiBuildConfig:
     _load_docstring_parser_modules_from_args(args)
     if not args.config:
         return ApiBuildConfig()
-    with docstring_parser_import_paths(_target_from_args(args)):
-        return ApiBuildConfig.read_file(args.config)
+    return ApiBuildConfig.read_file(args.config, target=_target_from_args(args))
 
 
 def _filter_options_from_args(

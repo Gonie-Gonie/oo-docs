@@ -172,9 +172,26 @@ api = collect_api(
 )
 ```
 
-When you need to construct an `ApiCollectConfig` object yourself before calling
-`collect_api(...)`, wrap that construction with `docstring_parser_import_paths`
-so repo-local parser modules are importable while the config validates:
+When a Python script reads a generated config file that lives outside the
+target checkout, pass the target path while reading the config. The config
+reader adds both the config directory and target repository import roots while
+validating parser modules:
+
+```python
+from oodocs.apidoc import ApiBuildConfig, collect_api
+
+repo = r"C:\work\mypkg"
+build = ApiBuildConfig.read_file(r"C:\configs\mypkg-apidoc.json", target=repo)
+api = collect_api(repo, config=build.collection)
+api.to_document(profile=build.profile).save_all(
+    build.output_dir or "artifacts/api",
+    formats=build.output_formats,
+)
+```
+
+When you construct an `ApiCollectConfig` object directly rather than reading a
+file, use `docstring_parser_import_paths` around construction so repo-local
+parser modules are importable while the config validates:
 
 ```python
 from oodocs.apidoc import ApiCollectConfig, collect_api, docstring_parser_import_paths

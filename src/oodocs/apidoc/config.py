@@ -486,11 +486,19 @@ class ApiCollectConfig:
         )
 
     @classmethod
-    def from_pyproject(cls, path: PathLike = "pyproject.toml") -> ApiCollectConfig:
+    def from_pyproject(
+        cls,
+        path: PathLike = "pyproject.toml",
+        *,
+        target: object | None = None,
+    ) -> ApiCollectConfig:
         """Read apidoc collection config from ``pyproject.toml``.
 
         Args:
             path: Project root directory or ``pyproject.toml`` path.
+            target: Optional target repository, package directory, Python
+                file, or importable name whose local parser modules should be
+                importable while the config validates.
 
         Returns:
             Validated collection configuration from ``[tool.oodocs.apidoc]``.
@@ -520,7 +528,7 @@ class ApiCollectConfig:
             raise KeyError("pyproject.toml must contain [tool.oodocs.apidoc]") from exc
         if not isinstance(section, Mapping):
             raise TypeError("[tool.oodocs.apidoc] must be a table")
-        with _config_import_paths(pyproject_path):
+        with _config_and_target_import_paths(pyproject_path, target):
             return cls.from_dict(section)
 
     def validate(self) -> None:
@@ -678,11 +686,19 @@ class ApiCollectConfig:
         return output_path
 
     @classmethod
-    def read_json(cls, path: PathLike) -> ApiCollectConfig:
+    def read_json(
+        cls,
+        path: PathLike,
+        *,
+        target: object | None = None,
+    ) -> ApiCollectConfig:
         """Read a collection config JSON sidecar.
 
         Args:
             path: JSON sidecar path.
+            target: Optional target repository, package directory, Python
+                file, or importable name whose local parser modules should be
+                importable while the config validates.
 
         Returns:
             Validated collection configuration.
@@ -694,21 +710,29 @@ class ApiCollectConfig:
             ```python
             from oodocs.apidoc import ApiCollectConfig, collect_api
 
-            config = ApiCollectConfig.read_json("apidoc-config.json")
+            config = ApiCollectConfig.read_json("apidoc-config.json", target=".")
             api = collect_api(".", config=config)
             ```
         """
 
         config_path = Path(path)
-        with _config_import_paths(config_path):
+        with _config_and_target_import_paths(config_path, target):
             return cls.from_dict(json.loads(config_path.read_text(encoding="utf-8")))
 
     @classmethod
-    def read_file(cls, path: PathLike) -> ApiCollectConfig:
+    def read_file(
+        cls,
+        path: PathLike,
+        *,
+        target: object | None = None,
+    ) -> ApiCollectConfig:
         """Read a collection config from JSON or ``pyproject.toml``.
 
         Args:
             path: JSON sidecar, project root directory, or TOML file path.
+            target: Optional target repository, package directory, Python
+                file, or importable name whose local parser modules should be
+                importable while the config validates.
 
         Returns:
             Validated collection configuration.
@@ -717,14 +741,14 @@ class ApiCollectConfig:
             ```python
             from oodocs.apidoc import ApiCollectConfig
 
-            config = ApiCollectConfig.read_file("pyproject.toml")
+            config = ApiCollectConfig.read_file("pyproject.toml", target=".")
             ```
         """
 
         config_path = Path(path)
         if config_path.is_dir() or config_path.suffix.lower() == ".toml":
-            return cls.from_pyproject(config_path)
-        return cls.read_json(config_path)
+            return cls.from_pyproject(config_path, target=target)
+        return cls.read_json(config_path, target=target)
 
 
 @dataclass(frozen=True, slots=True)
@@ -841,11 +865,19 @@ class ApiBuildConfig:
         )
 
     @classmethod
-    def from_pyproject(cls, path: PathLike = "pyproject.toml") -> ApiBuildConfig:
+    def from_pyproject(
+        cls,
+        path: PathLike = "pyproject.toml",
+        *,
+        target: object | None = None,
+    ) -> ApiBuildConfig:
         """Read build config from ``pyproject.toml``.
 
         Args:
             path: Project root directory or ``pyproject.toml`` path.
+            target: Optional target repository, package directory, Python
+                file, or importable name whose local parser modules should be
+                importable while the config validates.
 
         Returns:
             Build configuration from ``[tool.oodocs.apidoc]``.
@@ -879,15 +911,23 @@ class ApiBuildConfig:
             raise KeyError("pyproject.toml must contain [tool.oodocs.apidoc]") from exc
         if not isinstance(section, Mapping):
             raise TypeError("[tool.oodocs.apidoc] must be a table")
-        with _config_import_paths(pyproject_path):
+        with _config_and_target_import_paths(pyproject_path, target):
             return cls.from_dict(section)
 
     @classmethod
-    def read_json(cls, path: PathLike) -> ApiBuildConfig:
+    def read_json(
+        cls,
+        path: PathLike,
+        *,
+        target: object | None = None,
+    ) -> ApiBuildConfig:
         """Read a build config JSON sidecar.
 
         Args:
             path: JSON sidecar path.
+            target: Optional target repository, package directory, Python
+                file, or importable name whose local parser modules should be
+                importable while the config validates.
 
         Returns:
             Validated build configuration.
@@ -898,20 +938,28 @@ class ApiBuildConfig:
             ```python
             from oodocs.apidoc import ApiBuildConfig
 
-            build = ApiBuildConfig.read_json("apidoc-build.json")
+            build = ApiBuildConfig.read_json("apidoc-build.json", target=".")
             ```
         """
 
         config_path = Path(path)
-        with _config_import_paths(config_path):
+        with _config_and_target_import_paths(config_path, target):
             return cls.from_dict(json.loads(config_path.read_text(encoding="utf-8")))
 
     @classmethod
-    def read_file(cls, path: PathLike) -> ApiBuildConfig:
+    def read_file(
+        cls,
+        path: PathLike,
+        *,
+        target: object | None = None,
+    ) -> ApiBuildConfig:
         """Read a build config from JSON or ``pyproject.toml``.
 
         Args:
             path: JSON sidecar, project root directory, or TOML file path.
+            target: Optional target repository, package directory, Python
+                file, or importable name whose local parser modules should be
+                importable while the config validates.
 
         Returns:
             Validated build configuration.
@@ -922,14 +970,14 @@ class ApiBuildConfig:
             ```python
             from oodocs.apidoc import ApiBuildConfig
 
-            build = ApiBuildConfig.read_file("pyproject.toml")
+            build = ApiBuildConfig.read_file("pyproject.toml", target=".")
             ```
         """
 
         config_path = Path(path)
         if config_path.is_dir() or config_path.suffix.lower() == ".toml":
-            return cls.from_pyproject(config_path)
-        return cls.read_json(config_path)
+            return cls.from_pyproject(config_path, target=target)
+        return cls.read_json(config_path, target=target)
 
     def validate(self) -> None:
         """Validate build settings.
@@ -1200,6 +1248,18 @@ def _config_import_paths(path: Path):
                 sys.path.remove(root)
             except ValueError:  # pragma: no cover - defensive against user mutation.
                 pass
+
+
+@contextmanager
+def _config_and_target_import_paths(path: Path, target: object | None):
+    with _config_import_paths(path):
+        if target is None:
+            yield
+            return
+        from oodocs.apidoc.docstring import docstring_parser_import_paths
+
+        with docstring_parser_import_paths(target):
+            yield
 
 
 def _toml_value(value: object) -> str:

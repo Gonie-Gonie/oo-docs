@@ -1,8 +1,17 @@
 from __future__ import annotations
 
+import json
+
 import pytest
 
-from oodocs.apidoc import ApiBuildConfig, ApiCollectConfig, ApiDocstringParser, ApiPublicPolicy
+from oodocs.apidoc import (
+    ApiBuildConfig,
+    ApiCollectConfig,
+    ApiDocstringParser,
+    ApiPublicPolicy,
+    collect_api,
+    docstring_parser_names,
+)
 
 
 def test_apidoc_config_roundtrip_supports_general_repo_policy(tmp_path) -> None:
@@ -49,3 +58,158 @@ def test_apidoc_config_roundtrip_supports_general_repo_policy(tmp_path) -> None:
 def test_apidoc_build_config_rejects_sequence_module_prefix() -> None:
     with pytest.raises(TypeError, match="module_prefix must be a string"):
         ApiBuildConfig.from_dict({"module-prefix": ["samplepkg"]})
+
+
+def test_apidoc_config_read_file_accepts_target_for_parser_modules(tmp_path) -> None:
+    repo = tmp_path / "target-config-repo"
+    package_dir = repo / "src" / "targetconfigpkg"
+    package_dir.mkdir(parents=True)
+    (repo / "pyproject.toml").write_text(
+        "\n".join(
+            [
+                "[project]",
+                'name = "targetconfigpkg"',
+                "",
+                "[tool.setuptools]",
+                'package-dir = {"" = "src"}',
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (repo / "target_config_parsers.py").write_text(
+        "\n".join(
+            [
+                "from oodocs.apidoc import ParsedDocstring, docstring_parser_names, register_docstring_parser",
+                "",
+                "def parse_target_config_style(text, qualname=None, module=None):",
+                "    first = (text or '').strip().splitlines()[0]",
+                '    return ParsedDocstring(summary=f"target-config:{first}", style="target-config-brief")',
+                "",
+                'if "target-config-brief" not in docstring_parser_names():',
+                '    register_docstring_parser("target-config-brief", parse_target_config_style)',
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (package_dir / "__init__.py").write_text(
+        "\n".join(
+            [
+                '"""Target-aware config package."""',
+                "",
+                '__all__ = ["run"]',
+                "",
+                "def run() -> None:",
+                '    """Run through target-aware config."""',
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    config_path = tmp_path / "external-collect-config.json"
+    config_path.write_text(
+        json.dumps(
+            {
+                "collector": "inspect",
+                "public_policy": "__all__",
+                "docstring_style": "target-config-brief",
+                "docstring_parser_modules": ["target_config_parsers"],
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    assert "target-config-brief" not in docstring_parser_names()
+    with pytest.raises(ImportError):
+        ApiCollectConfig.read_file(config_path)
+
+    config = ApiCollectConfig.read_file(config_path, target=repo)
+    api = collect_api(repo, config=config)
+    run = api.find("targetconfigpkg.run")
+
+    assert run is not None
+    assert run.summary == "target-config:Run through target-aware config."
+
+
+def test_apidoc_build_config_read_file_accepts_target_for_parser_modules(tmp_path) -> None:
+    repo = tmp_path / "target-build-config-repo"
+    package_dir = repo / "src" / "targetbuildpkg"
+    package_dir.mkdir(parents=True)
+    (repo / "pyproject.toml").write_text(
+        "\n".join(
+            [
+                "[project]",
+                'name = "targetbuildpkg"',
+                "",
+                "[tool.setuptools]",
+                'package-dir = {"" = "src"}',
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (repo / "target_build_parsers.py").write_text(
+        "\n".join(
+            [
+                "from oodocs.apidoc import ParsedDocstring, docstring_parser_names, register_docstring_parser",
+                "",
+                "def parse_target_build_style(text, qualname=None, module=None):",
+                "    first = (text or '').strip().splitlines()[0]",
+                '    return ParsedDocstring(summary=f"target-build:{first}", style="target-build-brief")',
+                "",
+                'if "target-build-brief" not in docstring_parser_names():',
+                '    register_docstring_parser("target-build-brief", parse_target_build_style)',
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (package_dir / "__init__.py").write_text(
+        "\n".join(
+            [
+                '"""Target-aware build config package."""',
+                "",
+                '__all__ = ["run"]',
+                "",
+                "def run() -> None:",
+                '    """Run through target-aware build config."""',
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    config_path = tmp_path / "external-build-config.json"
+    config_path.write_text(
+        json.dumps(
+            {
+                "collector": "inspect",
+                "public_policy": "__all__",
+                "docstring_style": "target-build-brief",
+                "docstring_parser_modules": ["target_build_parsers"],
+                "profile": "compact",
+                "formats": ["html"],
+                "sidecars": True,
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    assert "target-build-brief" not in docstring_parser_names()
+    with pytest.raises(ImportError):
+        ApiBuildConfig.read_file(config_path)
+
+    build = ApiBuildConfig.read_file(config_path, target=repo)
+    api = collect_api(repo, config=build.collection)
+    run = api.find("targetbuildpkg.run")
+
+    assert build.profile == "compact"
+    assert build.output_formats == ("html",)
+    assert run is not None
+    assert run.summary == "target-build:Run through target-aware build config."
