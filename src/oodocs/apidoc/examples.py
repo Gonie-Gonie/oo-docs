@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import doctest
 import re
+import textwrap
 from typing import Mapping
 
 from oodocs.apidoc.model import ApiDocIssue, ApiExample, ApiObject
@@ -48,12 +49,15 @@ def extract_code_blocks_from_docstring(text: str | None) -> list[ApiExample]:
 
     source = text or ""
     examples = [
-        ApiExample(match.group("code").strip("\n"), language=match.group("language") or "text")
+        ApiExample(
+            textwrap.dedent(match.group("code").strip("\n")).strip("\n"),
+            language=match.group("language") or "text",
+            caption=_caption_before_offset(source, match.start()),
+        )
         for match in _FENCED_BLOCK_RE.finditer(source)
     ]
-    doctest_code = _extract_doctest_block(_strip_fenced_blocks(source))
-    if doctest_code:
-        examples.append(ApiExample(doctest_code, language="pycon"))
+    for doctest_code, caption in _extract_doctest_blocks(_strip_fenced_blocks(source)):
+        examples.append(ApiExample(doctest_code, language="pycon", caption=caption))
     return examples
 
 
@@ -185,19 +189,58 @@ def check_doctest_examples(
     return issues
 
 
-def _extract_doctest_block(text: str) -> str | None:
-    lines = []
+def _extract_doctest_blocks(text: str) -> list[tuple[str, str | None]]:
+    lines = text.splitlines()
+    blocks: list[tuple[str, str | None]] = []
+    current: list[str] = []
+    current_start: int | None = None
     in_block = False
-    for line in text.splitlines():
+    for index, line in enumerate(lines):
         stripped = line.lstrip()
         if stripped.startswith(">>>") or stripped.startswith("..."):
+            if not in_block:
+                current_start = index
             in_block = True
-            lines.append(stripped)
+            current.append(stripped)
         elif in_block and stripped:
-            lines.append(stripped)
+            current.append(stripped)
         elif in_block:
-            break
-    return "\n".join(lines) if lines else None
+            blocks.append(("\n".join(current), _caption_before_line(lines, current_start)))
+            current = []
+            current_start = None
+            in_block = False
+            continue
+    if in_block and current:
+        blocks.append(("\n".join(current), _caption_before_line(lines, current_start)))
+    return blocks
+
+
+_EXAMPLE_SECTION_CAPTIONS = {"example", "examples"}
+
+
+def _caption_before_offset(text: str, offset: int) -> str | None:
+    prefix = text[:offset]
+    return _caption_before_line(prefix.splitlines(), len(prefix.splitlines()))
+
+
+def _caption_before_line(lines: list[str], line_index: int | None) -> str | None:
+    if line_index is None:
+        return None
+    for line in reversed(lines[:line_index]):
+        stripped = line.strip()
+        if not stripped:
+            continue
+        if stripped.startswith("#"):
+            caption = stripped.lstrip("#").strip()
+        elif stripped.endswith(":"):
+            caption = stripped[:-1].strip()
+        else:
+            return None
+        normalized = caption.strip("` ").lower()
+        if normalized in _EXAMPLE_SECTION_CAPTIONS:
+            return None
+        return caption or None
+    return None
 
 
 def _strip_fenced_blocks(text: str) -> str:

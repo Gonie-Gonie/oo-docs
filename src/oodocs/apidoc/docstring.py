@@ -969,6 +969,7 @@ def _parse_sphinx(text: str, qualname: str | None, module: str | None) -> Parsed
     param_map: dict[str, ApiParameter] = {}
     attr_map: dict[str, ApiParameter] = {}
     return_annotation: str | None = None
+    sphinx_raises_seen = False
     i = 0
     while i < len(lines):
         line = lines[i]
@@ -1027,8 +1028,10 @@ def _parse_sphinx(text: str, qualname: str | None, module: str | None) -> Parsed
             i = next_index - 1
         elif match := re.match(r"^:raises?\s+([^:]+)\s*:\s*(.*)$", stripped):
             description, next_index = _collect_sphinx_field_body(lines, i, match.group(2))
-            if not parsed.raises:
-                parsed.raises.append(ApiRaises(match.group(1).strip(), description))
+            if not sphinx_raises_seen:
+                parsed.raises = []
+                sphinx_raises_seen = True
+            parsed.raises.append(ApiRaises(match.group(1).strip(), description))
             i = next_index - 1
         elif stripped.startswith(".. deprecated::"):
             parsed.deprecated = True
@@ -1061,6 +1064,7 @@ def _parse_sphinx(text: str, qualname: str | None, module: str | None) -> Parsed
         if parsed.returns is None:
             parsed.returns = ApiReturn(documented=True)
         parsed.returns.annotation = return_annotation
+    _normalize_sphinx_markup(parsed)
     if not parsed.examples:
         parsed.examples.extend(extract_code_blocks_from_docstring(text))
     return parsed
@@ -1159,6 +1163,55 @@ def _examples_from_docstring_parser_meta(meta: object) -> list[ApiExample]:
 
 def _example_language(text: str) -> str:
     return "pycon" if re.search(r"(?m)^\s*(>>>|\.\.\.)", text) else "python"
+
+
+def _normalize_sphinx_markup(parsed: ParsedDocstring) -> None:
+    parsed.summary = _plain_sphinx_text(parsed.summary)
+    parsed.description = _plain_sphinx_text(parsed.description)
+    parsed.notes = [_plain_sphinx_text(note) or "" for note in parsed.notes]
+    parsed.warnings = [_plain_sphinx_text(warning) or "" for warning in parsed.warnings]
+    if parsed.deprecation_message:
+        parsed.deprecation_message = _plain_sphinx_text(parsed.deprecation_message)
+    for parameter in [*parsed.parameters, *parsed.attributes]:
+        parameter.annotation = _plain_sphinx_text(parameter.annotation)
+        parameter.description = _plain_sphinx_text(parameter.description)
+    if parsed.returns is not None:
+        parsed.returns.annotation = _plain_sphinx_text(parsed.returns.annotation)
+        parsed.returns.description = _plain_sphinx_text(parsed.returns.description)
+    for item in parsed.raises:
+        item.exception = _plain_sphinx_text(item.exception) or item.exception
+        item.description = _plain_sphinx_text(item.description)
+    for item in parsed.see_also:
+        item.label = _plain_sphinx_text(item.label) or item.label
+        item.target = _plain_sphinx_text(item.target)
+        item.description = _plain_sphinx_text(item.description)
+    for note in parsed.renderer_notes:
+        note.message = _plain_sphinx_text(note.message) or note.message
+
+
+def _plain_sphinx_text(value: str | None) -> str | None:
+    if value is None:
+        return None
+    text = value.strip()
+    if not text:
+        return None
+    text = re.sub(r":(?:[A-Za-z][\w.-]*:)?[A-Za-z][\w.-]*:`([^`]+)`", _plain_sphinx_role, text)
+    text = re.sub(r"``([^`]+)``", r"\1", text)
+    text = re.sub(r"`([^`<>]+?)\s*<[^`>]+>`_", r"\1", text)
+    text = re.sub(r"`([^`]+)`_", r"\1", text)
+    text = re.sub(r"\*\*([^*\n]+)\*\*", r"\1", text)
+    text = re.sub(r"(?<!\w)\*([^*\n]+)\*(?!\w)", r"\1", text)
+    text = re.sub(r"[ \t]+", " ", text)
+    return text.strip() or None
+
+
+def _plain_sphinx_role(match: re.Match[str]) -> str:
+    target = match.group(1).strip()
+    if "<" in target and target.endswith(">"):
+        target = target.split("<", 1)[0].strip()
+    if target.startswith("~"):
+        target = target.rsplit(".", 1)[-1]
+    return target
 
 
 def _parse_markdown(text: str, qualname: str | None, module: str | None) -> ParsedDocstring:

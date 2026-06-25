@@ -72,3 +72,61 @@ def test_sphinx_fallback_parser_preserves_multiline_field_bodies(monkeypatch) ->
     )
     assert parsed.notes == ["Used by fallback parser regression tests."]
     assert parsed.examples[0].code == 'load_widget("widget.json")'
+
+
+def test_sphinx_parser_degrades_inline_rest_markup_to_plain_text() -> None:
+    parsed = parse_docstring(
+        """
+        Load a :class:`~widgets.Widget`.
+
+        :param path: Input ``path`` for :func:`open_widget`.
+        :type path: :class:`str`
+        :returns: A `widget label <https://example.test/widget>`_ with *markup*.
+        :rtype: :class:`str`
+        :raises ValueError: If ``path`` is blank.
+
+        .. note::
+
+            See :mod:`widgets.registry` before calling.
+
+        .. warning::
+
+            Avoid **mutable** defaults.
+        """,
+        style="sphinx",
+    )
+
+    assert parsed.summary == "Load a Widget."
+    assert parsed.parameters[0].annotation == "str"
+    assert parsed.parameters[0].description == "Input path for open_widget."
+    assert parsed.returns is not None
+    assert parsed.returns.annotation == "str"
+    assert parsed.returns.description == "A widget label with markup."
+    assert parsed.raises[0].description == "If path is blank."
+    assert parsed.notes == ["See widgets.registry before calling."]
+    assert parsed.warnings == ["Avoid mutable defaults."]
+
+
+def test_sphinx_fallback_parser_degrades_inline_rest_markup_to_plain_text(monkeypatch) -> None:
+    monkeypatch.setattr(docstring_module.importlib.util, "find_spec", lambda name: None)
+
+    parsed = parse_docstring(
+        """
+        Load a :class:`~widgets.Widget`.
+
+        :param path: Input ``path`` for :func:`open_widget`.
+        :type path: :class:`str`
+        :returns: A `widget label <https://example.test/widget>`_ with *markup*.
+        :rtype: :class:`str`
+        :raises ValueError: If ``path`` is blank.
+        """,
+        style="sphinx",
+    )
+
+    assert parsed.summary == "Load a Widget."
+    assert parsed.parameters[0].annotation == "str"
+    assert parsed.parameters[0].description == "Input path for open_widget."
+    assert parsed.returns is not None
+    assert parsed.returns.annotation == "str"
+    assert parsed.returns.description == "A widget label with markup."
+    assert parsed.raises[0].description == "If path is blank."

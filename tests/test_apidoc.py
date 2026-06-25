@@ -274,6 +274,37 @@ def test_example_extraction_does_not_duplicate_fenced_doctest_blocks() -> None:
     assert [example.language for example in mixed] == ["python", "pycon"]
 
 
+def test_example_extraction_preserves_multiple_case_captions() -> None:
+    examples = extract_code_blocks_from_docstring(
+        """Show common usage cases.
+
+        Examples:
+            Basic file:
+                ```python
+                load("basic.json")
+                ```
+
+            Retry session:
+                >>> load("retry.json", retries=2)
+                'ok'
+
+            Alternate session:
+                >>> load("alternate.json")
+                'ok'
+        """
+    )
+
+    assert [example.language for example in examples] == ["python", "pycon", "pycon"]
+    assert [example.caption for example in examples] == [
+        "Basic file",
+        "Retry session",
+        "Alternate session",
+    ]
+    assert examples[0].code == 'load("basic.json")'
+    assert 'load("retry.json", retries=2)' in examples[1].code
+    assert 'load("alternate.json")' in examples[2].code
+
+
 def test_docstring_parser_backend_enriches_standard_style_metadata() -> None:
     if importlib.util.find_spec("docstring_parser") is None:
         return
