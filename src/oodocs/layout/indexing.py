@@ -573,7 +573,8 @@ def _register_heading_anchor(render_index: RenderIndex, block: object) -> str:
     anchor = render_index.heading_anchors.get(id(block))
     if anchor is not None:
         return anchor
-    anchor = f"heading_{len(render_index.heading_anchors) + 1}"
+    custom_anchor = getattr(block, "anchor", None)
+    anchor = str(custom_anchor) if custom_anchor else f"heading_{len(render_index.heading_anchors) + 1}"
     render_index.heading_anchors[id(block)] = anchor
     return anchor
 

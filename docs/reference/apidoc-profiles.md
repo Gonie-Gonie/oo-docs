@@ -11,7 +11,8 @@ not change collection or parsing.
 - `evidence`: coverage and issue oriented output.
 - `review`: editable DOCX-friendly structure with generated review-note
   comments for each rendered API object.
-- `website`: anchor/source-link oriented structure for HTML output.
+- `website`: anchor/source-link oriented structure for HTML output. Summary
+  table names link to the stable section anchors generated for each API object.
 
 ```python
 from oodocs import Chapter, Document

@@ -26,6 +26,7 @@ from oodocs.apidoc import (
 )
 from oodocs.cli import main
 from oodocs.components.blocks import Paragraph, Section
+from oodocs.components.inline import Hyperlink
 from oodocs.components.media import Table
 
 
@@ -292,6 +293,13 @@ def test_collect_api_builds_queryable_object_tree_and_blocks(tmp_path: Path) -> 
     assert ApiDocProfile.from_dict(ApiDocProfile.review().to_dict()).include_review_notes
     assert isinstance(functions[0].to_parameter_table(), Table)
     assert isinstance(api.to_summary_table(functions), Table)
+    website_table = api.to_summary_table(classes, profile="website")
+    website_name = website_table.rows[0][2].content.content[0]
+    assert isinstance(website_name, Hyperlink)
+    assert website_name.internal
+    assert website_name.target == classes[0].anchor_id()
+    website_section = classes[0].to_section(level=2, profile="website")
+    assert website_section.anchor == website_name.target
     filtered = api.filtered(kind="class", module_prefix="samplepkg")
     assert [obj.qualname for obj in filtered.public_objects() if obj.kind == "class"] == ["samplepkg.Widget"]
     assert filtered.metadata["filters"]["kind"] == ["class"]
@@ -304,6 +312,19 @@ def test_collect_api_builds_queryable_object_tree_and_blocks(tmp_path: Path) -> 
     html_path = tmp_path / "api.html"
     document.save_html(html_path)
     assert html_path.exists()
+    website_doc = Document(
+        "Website API",
+        Chapter(
+            "Index",
+            api.to_summary_table(classes, profile="website"),
+            website_section,
+        ),
+    )
+    website_path = tmp_path / "website-api.html"
+    website_doc.save_html(website_path)
+    website_html = website_path.read_text(encoding="utf-8")
+    assert f'id="{classes[0].anchor_id()}"' in website_html
+    assert f'href="#{classes[0].anchor_id()}"' in website_html
 
     sidecar = tmp_path / "api.json"
     api.write_json(sidecar)

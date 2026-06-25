@@ -383,9 +383,8 @@ def api_object_to_section(
         heading,
         *api_object_to_blocks(obj, profile=profile, level=level),
         level=level,
+        anchor=obj.anchor_id(),
     )
-    if hasattr(section, "identifier"):
-        section.identifier = obj.anchor_id()
     return section
 
 
@@ -409,10 +408,18 @@ def api_objects_to_summary_table(
     caption: str | None = None,
     include_module: bool = True,
 ) -> Table:
-    """Return a summary table for API objects."""
+    """Return a summary table for API objects.
 
+    The website profile links object names to the stable section anchors
+    produced by ``ApiObject.to_section(...)``.
+    """
+
+    resolved = resolve_profile(profile)
     headers = ["Kind", "Module", "Name", "Summary"] if include_module else ["Kind", "Name", "Summary"]
-    rows = [obj.to_summary_row(include_module=include_module) for obj in objects]
+    rows = [
+        obj.to_summary_row(include_module=include_module, link_name=resolved.name == "website")
+        for obj in objects
+    ]
     return Table(headers, rows, caption=caption)
 
 

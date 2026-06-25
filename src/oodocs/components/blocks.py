@@ -1798,6 +1798,8 @@ class Section(Block):
         numbered: Whether the heading should be numbered.
         toc: Whether the section should appear in generated tables of contents.
             Defaults to ``numbered``.
+        anchor: Optional stable heading anchor used by renderers for internal
+            links.
         paragraph_title_style: Optional paragraph-title style inherited by
             paragraphs in this section subtree.
 
@@ -1823,6 +1825,7 @@ class Section(Block):
     level: int
     numbered: bool
     toc: bool
+    anchor: str | None
     paragraph_title_style: ParagraphTitleStyle | None
 
     def __init__(
@@ -1832,6 +1835,7 @@ class Section(Block):
         level: int = 2,
         numbered: bool = True,
         toc: bool | None = None,
+        anchor: str | None = None,
         paragraph_title_style: ParagraphTitleStyle | None = None,
     ) -> None:
         if level < 1:
@@ -1841,6 +1845,7 @@ class Section(Block):
         self.level = level
         self.numbered = numbered
         self.toc = numbered if toc is None else bool(toc)
+        self.anchor = anchor
         self.paragraph_title_style = paragraph_title_style
 
     def add(self, *children: BlockInput) -> Section:
@@ -1946,6 +1951,8 @@ class Chapter(Section):
         *children: Child block content.
         numbered: Whether the chapter should be numbered.
         toc: Whether the chapter should appear in generated tables of contents.
+        anchor: Optional stable heading anchor used by renderers for internal
+            links.
         paragraph_title_style: Optional paragraph-title style inherited by
             paragraphs in this chapter subtree.
 
@@ -1964,6 +1971,7 @@ class Chapter(Section):
         *children: BlockInput,
         numbered: bool = True,
         toc: bool | None = None,
+        anchor: str | None = None,
         paragraph_title_style: ParagraphTitleStyle | None = None,
     ) -> None:
         super().__init__(
@@ -1972,6 +1980,7 @@ class Chapter(Section):
             level=1,
             numbered=numbered,
             toc=toc,
+            anchor=anchor,
             paragraph_title_style=paragraph_title_style,
         )
 
@@ -1985,6 +1994,8 @@ class Subsection(Section):
         numbered: Whether the subsection should be numbered.
         toc: Whether the subsection should appear in generated tables of
             contents.
+        anchor: Optional stable heading anchor used by renderers for internal
+            links.
         paragraph_title_style: Optional paragraph-title style inherited by
             paragraphs in this subsection subtree.
 
@@ -2003,6 +2014,7 @@ class Subsection(Section):
         *children: BlockInput,
         numbered: bool = True,
         toc: bool | None = None,
+        anchor: str | None = None,
         paragraph_title_style: ParagraphTitleStyle | None = None,
     ) -> None:
         super().__init__(
@@ -2011,6 +2023,7 @@ class Subsection(Section):
             level=3,
             numbered=numbered,
             toc=toc,
+            anchor=anchor,
             paragraph_title_style=paragraph_title_style,
         )
 
@@ -2024,6 +2037,8 @@ class Subsubsection(Section):
         numbered: Whether the subsubsection should be numbered.
         toc: Whether the subsubsection should appear in generated tables of
             contents.
+        anchor: Optional stable heading anchor used by renderers for internal
+            links.
         paragraph_title_style: Optional paragraph-title style inherited by
             paragraphs in this subsubsection subtree.
 
@@ -2042,6 +2057,7 @@ class Subsubsection(Section):
         *children: BlockInput,
         numbered: bool = True,
         toc: bool | None = None,
+        anchor: str | None = None,
         paragraph_title_style: ParagraphTitleStyle | None = None,
     ) -> None:
         super().__init__(
@@ -2050,6 +2066,7 @@ class Subsubsection(Section):
             level=4,
             numbered=numbered,
             toc=toc,
+            anchor=anchor,
             paragraph_title_style=paragraph_title_style,
         )
 
@@ -2062,6 +2079,7 @@ def section_for_level(
     toc: bool | None = None,
     min_level: int = MIN_SECTION_LEVEL,
     max_level: int = MAX_SECTION_LEVEL,
+    anchor: str | None = None,
     paragraph_title_style: ParagraphTitleStyle | None = None,
 ) -> Section:
     """Create the section-like object that best matches a heading level.
@@ -2074,6 +2092,8 @@ def section_for_level(
         toc: Whether the section should appear in generated tables of contents.
         min_level: Lowest accepted heading level.
         max_level: Highest accepted heading level.
+        anchor: Optional stable heading anchor used by renderers for internal
+            links.
         paragraph_title_style: Optional paragraph-title style inherited by
             paragraphs in this section subtree.
 
@@ -2099,6 +2119,7 @@ def section_for_level(
             *children,
             numbered=numbered,
             toc=toc,
+            anchor=anchor,
             paragraph_title_style=paragraph_title_style,
         )
     if level == 3:
@@ -2107,6 +2128,7 @@ def section_for_level(
             *children,
             numbered=numbered,
             toc=toc,
+            anchor=anchor,
             paragraph_title_style=paragraph_title_style,
         )
     if level == 4:
@@ -2115,6 +2137,7 @@ def section_for_level(
             *children,
             numbered=numbered,
             toc=toc,
+            anchor=anchor,
             paragraph_title_style=paragraph_title_style,
         )
     return Section(
@@ -2123,6 +2146,7 @@ def section_for_level(
         level=level,
         numbered=numbered,
         toc=toc,
+        anchor=anchor,
         paragraph_title_style=paragraph_title_style,
     )
 
@@ -2220,6 +2244,7 @@ def shift_heading_level(
         toc=block.toc,
         min_level=min_level,
         max_level=max_level,
+        anchor=block.anchor,
         paragraph_title_style=block.paragraph_title_style,
     )
 

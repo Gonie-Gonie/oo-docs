@@ -764,10 +764,29 @@ class ApiObject:
                 return member
         return None
 
-    def to_summary_row(self, *, include_module: bool = True) -> list[object]:
-        """Return an OODocs table row summarizing this object."""
+    def to_summary_row(
+        self,
+        *,
+        include_module: bool = True,
+        link_name: bool = False,
+    ) -> list[object]:
+        """Return an OODocs table row summarizing this object.
 
-        row: list[object] = [self.kind, self.display_name(), self.plain_summary()]
+        Args:
+            include_module: Whether to include the module column.
+            link_name: Whether the name cell should link to this object's
+                section anchor.
+
+        Returns:
+            Table row suitable for ``ApiPackage.to_summary_table``.
+        """
+
+        name: object = self.display_name()
+        if link_name:
+            from oodocs.components.inline import Hyperlink
+
+            name = Hyperlink.internal_anchor(self.anchor_id(), self.display_name())
+        row: list[object] = [self.kind, name, self.plain_summary()]
         if include_module:
             row.insert(1, self.module)
         return row
