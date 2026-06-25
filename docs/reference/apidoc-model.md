@@ -33,3 +33,6 @@ serialization through `to_dict()`/`from_dict()` or package/snapshot JSON helpers
 Diff sidecars preserve parameter annotation and return annotation changes as
 first-class lists so compatibility reports do not need to infer them from the
 rendered signature string.
+
+Use `api.iter_issues()` or `api.to_issue_table()` when parser diagnostics stored
+on individual API objects should appear beside package-level collection issues.

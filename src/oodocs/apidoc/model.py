@@ -1386,6 +1386,37 @@ class ApiPackage:
 
         return self.select(visibility="public", documented=False)
 
+    def iter_issues(self, *, include_object_issues: bool = True) -> Iterator[ApiDocIssue]:
+        """Iterate package and object-level diagnostics.
+
+        Args:
+            include_object_issues: Whether to include parser/merge issues
+                stored on collected API objects.
+
+        Yields:
+            Package issues followed by object metadata issues in deterministic
+            object order.
+
+        Examples:
+            ```python
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".", docstring_style="google")
+            style_warnings = [
+                issue for issue in api.iter_issues()
+                if issue.code == "docstring-style-mismatch"
+            ]
+            ```
+        """
+
+        yield from self.issues
+        if not include_object_issues:
+            return
+        for obj in self.iter_objects(recursive=True):
+            for item in obj.metadata.get("issues", []):
+                if isinstance(item, dict):
+                    yield ApiDocIssue.from_dict(item)
+
     def to_summary_table(
         self,
         objects: Sequence[ApiObject] | None = None,
@@ -1408,14 +1439,33 @@ class ApiPackage:
         ]
         return Table(["Module", "Objects", "Summary"], rows, caption=caption)
 
-    def to_issue_table(self, *, caption: str | None = None):
-        """Return collected issues as an OODocs table."""
+    def to_issue_table(
+        self,
+        *,
+        caption: str | None = None,
+        include_object_issues: bool = True,
+    ):
+        """Return collected issues as an OODocs table.
+
+        Args:
+            caption: Optional table caption.
+            include_object_issues: Whether to include parser/merge diagnostics
+                stored on API objects.
+
+        Returns:
+            OODocs table with package and object-level diagnostics.
+        """
 
         from oodocs.components.media import Table
 
         return Table(
             ["Severity", "Code", "Object", "Module", "Location", "Message"],
-            [issue.to_row() for issue in self.issues],
+            [
+                issue.to_row()
+                for issue in self.iter_issues(
+                    include_object_issues=include_object_issues
+                )
+            ],
             caption=caption,
         )
 

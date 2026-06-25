@@ -50,6 +50,21 @@ parser = ApiDocstringParser.auto()
 api = collect_api(".", collector="griffe", docstring_style=parser)
 ```
 
+When an explicit style is requested but the docstring looks like another
+supported style, the parser records a `docstring-style-mismatch` warning. These
+warnings are available on parsed results and through package issue tables after
+collection:
+
+```python
+from oodocs.apidoc import collect_api, parse_docstring
+
+parsed = parse_docstring("Summary.\n\nArgs:\n    path: Input path.", style="numpy")
+assert parsed.issues[0].code == "docstring-style-mismatch"
+
+api = collect_api(".", docstring_style="numpy")
+issue_table = api.to_issue_table()
+```
+
 Custom styles can be registered and then used by parser objects or
 `collect_api(...)`.
 

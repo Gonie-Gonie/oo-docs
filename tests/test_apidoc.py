@@ -144,6 +144,8 @@ def test_docstring_parsers_normalize_standard_styles() -> None:
     assert google.examples[0].language == "python"
     assert google_doctest.examples[0].language == "pycon"
     assert google.renderer_notes[0].format == "pdf"
+    mismatch = parse_docstring(GOOGLE_DOCSTRING, style="numpy", qualname="pkg.load", module="pkg")
+    assert any(issue.code == "docstring-style-mismatch" for issue in mismatch.issues)
 
     assert numpy.parameters[1].name == "retries"
     assert numpy.returns and numpy.returns.documented
@@ -329,6 +331,32 @@ def test_collect_api_builds_queryable_object_tree_and_blocks(tmp_path: Path) -> 
     sidecar = tmp_path / "api.json"
     api.write_json(sidecar)
     assert ApiPackage.read_json(sidecar).find("samplepkg.Widget") is not None
+
+
+def test_collect_api_exposes_docstring_parser_issues_in_issue_table(tmp_path: Path) -> None:
+    package_dir = tmp_path / "stylepkg"
+    package_dir.mkdir()
+    (package_dir / "__init__.py").write_text(
+        "def load(path: str) -> str:\n"
+        '    """Load a path.\n\n'
+        "    Args:\n"
+        "        path: Input path.\n"
+        "    Returns:\n"
+        "        str: Loaded path.\n"
+        '    """\n'
+        "    return path\n",
+        encoding="utf-8",
+    )
+
+    api = collect_api(package_dir, public_policy="underscore", docstring_style="numpy")
+    issues = list(api.iter_issues())
+
+    assert any(issue.code == "docstring-style-mismatch" for issue in issues)
+    issue_table = api.to_issue_table()
+    assert any(
+        row[1].content.plain_text() == "docstring-style-mismatch"
+        for row in issue_table.rows
+    )
 
 
 def test_collect_api_supports_src_layout_repo_reexports_and_deep_object_lookup(
