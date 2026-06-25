@@ -248,6 +248,41 @@ def api_see_also_blocks(
     return [Table(["Label", "Target", "Kind", "Description"], rows, caption="See also")]
 
 
+def api_notes_blocks(
+    obj: ApiObject,
+    profile: str | ApiDocProfile = "reference",
+) -> list[Block]:
+    """Return parsed general notes as OODocs blocks."""
+
+    resolved = resolve_profile(profile)
+    if not resolved.include_notes or not obj.notes:
+        return []
+    return [
+        Paragraph(note, title="Notes" if index == 0 else None)
+        for index, note in enumerate(obj.notes)
+    ]
+
+
+def api_warnings_blocks(
+    obj: ApiObject,
+    profile: str | ApiDocProfile = "reference",
+) -> list[Block]:
+    """Return parsed warning notes as OODocs blocks."""
+
+    resolved = resolve_profile(profile)
+    if not resolved.include_warnings or not obj.warnings:
+        return []
+    warning_text = "\n\n".join(obj.warnings)
+    return [
+        Box(
+            Paragraph(warning_text),
+            title="Warnings",
+            border_color="F59E0B",
+            background_color="FFFBEB",
+        )
+    ]
+
+
 def api_renderer_notes_table(
     obj: ApiObject,
     profile: str | ApiDocProfile = "reference",
@@ -358,6 +393,8 @@ def api_object_to_blocks(
     blocks.extend(api_returns_blocks(obj, resolved))
     if raises_table := api_raises_table(obj, resolved, caption="Raises"):
         blocks.append(raises_table)
+    blocks.extend(api_notes_blocks(obj, resolved))
+    blocks.extend(api_warnings_blocks(obj, resolved))
     blocks.extend(api_examples_blocks(obj, resolved))
     blocks.extend(api_see_also_blocks(obj, resolved))
     blocks.extend(api_renderer_notes_blocks(obj, resolved))
@@ -570,6 +607,7 @@ __all__ = [
     "api_kind_chip",
     "api_member_summary_table",
     "api_module_to_chapter",
+    "api_notes_blocks",
     "api_object_summary_paragraph",
     "api_object_to_blocks",
     "api_object_to_compact_box",
@@ -587,4 +625,5 @@ __all__ = [
     "api_signature_block",
     "api_source_location_paragraph",
     "api_visibility_chip",
+    "api_warnings_blocks",
 ]

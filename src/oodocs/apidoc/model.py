@@ -509,6 +509,8 @@ class ApiObject:
         raises: Documented exceptions.
         examples: Parsed code examples.
         see_also: Parsed related API entries.
+        notes: Parsed general notes.
+        warnings: Parsed warning notes.
         renderer_notes: Renderer-specific notes.
         members: Child methods, properties, attributes, or nested objects.
         source_path: Optional source file path.
@@ -546,6 +548,8 @@ class ApiObject:
     raises: list[ApiRaises] = field(default_factory=list)
     examples: list[ApiExample] = field(default_factory=list)
     see_also: list[ApiSeeAlso] = field(default_factory=list)
+    notes: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
     renderer_notes: list[ApiRendererNote] = field(default_factory=list)
     members: list[ApiObject] = field(default_factory=list)
     source_path: str | None = None
@@ -582,6 +586,8 @@ class ApiObject:
             "raises": [item.to_dict() for item in self.raises],
             "examples": [item.to_dict() for item in self.examples],
             "see_also": [item.to_dict() for item in self.see_also],
+            "notes": list(self.notes),
+            "warnings": list(self.warnings),
             "renderer_notes": [item.to_dict() for item in self.renderer_notes],
             "members": [member.to_dict() for member in self.members],
             "source_path": self.source_path,
@@ -630,6 +636,8 @@ class ApiObject:
                 ApiSeeAlso.from_dict(item)
                 for item in data.get("see_also", [])  # type: ignore[union-attr]
             ],
+            notes=[str(item) for item in data.get("notes", [])],  # type: ignore[union-attr]
+            warnings=[str(item) for item in data.get("warnings", [])],  # type: ignore[union-attr]
             renderer_notes=[
                 ApiRendererNote.from_dict(item)
                 for item in data.get("renderer_notes", [])  # type: ignore[union-attr]
@@ -840,6 +848,20 @@ class ApiObject:
         from oodocs.apidoc.blocks import api_see_also_blocks
 
         return api_see_also_blocks(self, profile)
+
+    def to_notes_blocks(self, profile: object = "reference") -> list[object]:
+        """Return OODocs blocks for parsed general notes."""
+
+        from oodocs.apidoc.blocks import api_notes_blocks
+
+        return api_notes_blocks(self, profile)
+
+    def to_warnings_blocks(self, profile: object = "reference") -> list[object]:
+        """Return OODocs blocks for parsed warning notes."""
+
+        from oodocs.apidoc.blocks import api_warnings_blocks
+
+        return api_warnings_blocks(self, profile)
 
     def to_renderer_notes_blocks(self, profile: object = "reference") -> list[object]:
         """Return OODocs blocks for renderer-specific notes."""

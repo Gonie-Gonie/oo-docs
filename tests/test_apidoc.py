@@ -54,6 +54,12 @@ Examples:
 See Also:
     open_file: Lower-level file opener.
 
+Notes:
+    This loader is safe for generated reference documents.
+
+Warnings:
+    Retries should stay low in examples.
+
 Renderer Notes:
     PDF: Long signatures may wrap.
 
@@ -83,6 +89,14 @@ Examples
 ```python
 load("input.txt")
 ```
+
+Notes
+-----
+NumPy notes survive parsing.
+
+Warnings
+--------
+NumPy warnings survive parsing.
 """
 
 
@@ -117,6 +131,14 @@ bool: Whether loading succeeded.
 ```python
 load("input.txt")
 ```
+
+## Notes
+
+Markdown notes survive parsing.
+
+## Warnings
+
+Markdown warnings survive parsing.
 """
 
 
@@ -145,14 +167,20 @@ def test_docstring_parsers_normalize_standard_styles() -> None:
     assert google.raises[0].exception == "ValueError"
     assert google.examples[0].language == "python"
     assert google_doctest.examples[0].language == "pycon"
+    assert google.notes == ["This loader is safe for generated reference documents."]
+    assert google.warnings == ["Retries should stay low in examples."]
     assert google.renderer_notes[0].format == "pdf"
     mismatch = parse_docstring(GOOGLE_DOCSTRING, style="numpy", qualname="pkg.load", module="pkg")
     assert any(issue.code == "docstring-style-mismatch" for issue in mismatch.issues)
 
     assert numpy.parameters[1].name == "retries"
     assert numpy.returns and numpy.returns.documented
+    assert numpy.notes == ["NumPy notes survive parsing."]
+    assert numpy.warnings == ["NumPy warnings survive parsing."]
     assert sphinx.parameters[0].annotation == "str"
     assert markdown.parameters[0].description == "Input path."
+    assert markdown.notes == ["Markdown notes survive parsing."]
+    assert markdown.warnings == ["Markdown warnings survive parsing."]
     assert plain.description == "Additional paragraph."
     assert detect_docstring_style(GOOGLE_DOCSTRING) == "google"
     assert detect_docstring_style(NUMPY_DOCSTRING) == "numpy"
@@ -266,6 +294,12 @@ def test_collect_api_builds_queryable_object_tree_and_blocks(tmp_path: Path) -> 
                 "        ```python",
                 "        make_widget('demo')",
                 "        ```",
+                "",
+                "    Notes:",
+                "        Use this helper when API docs need a factory example.",
+                "",
+                "    Warnings:",
+                "        Do not pass user-facing secrets as names.",
                 '    """',
                 "    return Widget(name)",
             ]
@@ -296,6 +330,19 @@ def test_collect_api_builds_queryable_object_tree_and_blocks(tmp_path: Path) -> 
     assert "Review note[?]" in review_notes[0].plain_text()
     assert ApiDocProfile.from_dict(ApiDocProfile.review().to_dict()).include_review_notes
     assert isinstance(functions[0].to_parameter_table(), Table)
+    assert functions[0].notes == ["Use this helper when API docs need a factory example."]
+    assert functions[0].warnings == ["Do not pass user-facing secrets as names."]
+    assert any("Use this helper" in block.plain_text() for block in functions[0].to_notes_blocks())
+    warning_blocks = functions[0].to_warnings_blocks()
+    assert warning_blocks
+    warning_text = " ".join(
+        child.plain_text()
+        for block in warning_blocks
+        for child in getattr(block, "children", [])
+        if hasattr(child, "plain_text")
+    )
+    assert "Do not pass" in warning_text
+    assert ApiObject.from_dict(functions[0].to_dict()).warnings == functions[0].warnings
     assert isinstance(api.to_summary_table(functions), Table)
     website_table = api.to_summary_table(classes, profile="website")
     website_name = website_table.rows[0][2].content.content[0]

@@ -4,10 +4,12 @@ Profiles control how API objects become renderer-neutral OODocs blocks. They do
 not change collection or parsing.
 
 - `reference`: full signatures, descriptions, parameter tables, returns,
-  raises, examples, see-also entries, renderer notes, source locations, and
-  member summaries.
-- `compact`: summary-first layout with shorter tables and fewer examples.
-- `manual`: guide-friendly sections that fit into authored documents.
+  raises, notes, warnings, examples, see-also entries, renderer notes, source
+  locations, and member summaries.
+- `compact`: summary-first layout with shorter tables, warning blocks, and
+  fewer examples.
+- `manual`: guide-friendly sections that fit into authored documents, including
+  parsed notes and warnings.
 - `evidence`: coverage and issue oriented output.
 - `review`: editable DOCX-friendly structure with generated review-note
   comments for each rendered API object.
@@ -38,6 +40,10 @@ usable in fixed-page outputs. This keeps the generated OODocs block tree
 suitable for narrow DOCX/PDF pages before any renderer-specific output is
 created. The `parameter_columns` option controls table width in the same
 renderer-neutral way.
+
+Profiles also control parsed `Notes:` and `Warnings:` sections. `compact` and
+`evidence` suppress general notes to keep reference bundles short, but warnings
+remain visible because they often affect API usage.
 
 Custom profiles can enable the same review workflow:
 

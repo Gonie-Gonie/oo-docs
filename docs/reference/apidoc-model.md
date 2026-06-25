@@ -9,8 +9,9 @@ Core objects:
 - `ApiObject`: normalized API item for classes, functions, methods, properties,
   attributes, and data.
 - `ApiParameter`: signature or docstring parameter/attribute metadata.
-- `ApiReturn`, `ApiRaises`, `ApiExample`, `ApiSeeAlso`, `ApiRendererNote`:
-  normalized docstring subsections.
+- `ApiReturn`, `ApiRaises`, `ApiExample`, `ApiSeeAlso`, `ApiRendererNote`,
+  plus `ApiObject.notes` and `ApiObject.warnings`: normalized docstring
+  subsections.
 - `ApiDocIssue`: stable diagnostics from parsing, collection, coverage, and
   examples.
 - `ApiSnapshot` and `ApiDiffResult`: release comparison sidecars for added,
@@ -33,6 +34,11 @@ serialization through `to_dict()`/`from_dict()` or package/snapshot JSON helpers
 Diff sidecars preserve parameter annotation and return annotation changes as
 first-class lists so compatibility reports do not need to infer them from the
 rendered signature string.
+
+Parsed notes and warnings remain on each `ApiObject`, survive JSON sidecars, and
+can be inserted directly with `obj.to_notes_blocks()` or
+`obj.to_warnings_blocks()` when a document wants those sections outside the
+full `obj.to_section(...)` rendering.
 
 Use `api.iter_issues()` or `api.to_issue_table()` when parser diagnostics stored
 on individual API objects should appear beside package-level collection issues.

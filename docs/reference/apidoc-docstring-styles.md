@@ -7,10 +7,12 @@ Supported styles:
 
 - `google`: `Args:`, `Attributes:`, `Returns:`, `Raises:`, `Examples:`,
   `See Also:`, `Notes:`, `Warnings:`, `Renderer Notes:`, and `Deprecated:`.
-- `numpy`: dashed section headings such as `Parameters` and `Returns`.
+- `numpy`: dashed section headings such as `Parameters`, `Returns`, `Notes`,
+  `Warnings`, and `Renderer Notes`.
 - `sphinx`: `:param:`, `:type:`, `:returns:`, `:rtype:`, directives, and code
   blocks.
-- `markdown`: Markdown headings and parameter tables.
+- `markdown`: Markdown headings, parameter tables, notes, warnings, renderer
+  notes, and deprecation sections.
 - `plain`: summary and paragraph extraction only.
 - `auto`: style detection.
 
@@ -28,6 +30,12 @@ parsed = parse_docstring(
 
     Returns:
         bool: Whether loading succeeded.
+
+    Notes:
+        The parsed notes remain available on ApiObject.notes.
+
+    Warnings:
+        The parsed warnings render as warning blocks in full profiles.
     """,
     style="google",
 )

@@ -384,9 +384,9 @@ def detect_docstring_style(text: str | None) -> ApiDocstringStyleName:
         return "sphinx"
     if re.search(r"(?m)^[A-Za-z][A-Za-z ]+\n-{3,}\s*$", cleaned):
         return "numpy"
-    if re.search(r"(?m)^#{1,6}\s+(Parameters|Attributes|Returns|Raises|Examples|See Also|Renderer Notes)\s*$", cleaned):
+    if re.search(r"(?m)^#{1,6}\s+(Parameters|Attributes|Returns|Raises|Examples|See Also|Notes|Warnings|Renderer Notes|Deprecated)\s*$", cleaned):
         return "markdown"
-    if re.search(r"(?m)^(Args|Arguments|Parameters|Attributes|Returns|Yields|Raises|Examples|See Also|Notes|Renderer Notes|Deprecated):\s*$", cleaned):
+    if re.search(r"(?m)^(Args|Arguments|Parameters|Attributes|Returns|Yields|Raises|Examples|See Also|Notes|Warnings|Renderer Notes|Deprecated):\s*$", cleaned):
         return "google"
     return "plain"
 
@@ -661,8 +661,15 @@ def _parse_markdown(text: str, qualname: str | None, module: str | None) -> Pars
             parsed.examples.extend(_examples_or_text(body))
         elif normalized == "see also":
             parsed.see_also.extend(_parse_see_also(body))
+        elif normalized == "notes":
+            parsed.notes.extend(_paragraphs(body))
+        elif normalized == "warnings":
+            parsed.warnings.extend(_paragraphs(body))
         elif normalized == "renderer notes":
             parsed.renderer_notes.extend(_parse_renderer_notes(body))
+        elif normalized == "deprecated":
+            parsed.deprecated = True
+            parsed.deprecation_message = " ".join(body.split()) or None
     if not parsed.examples:
         parsed.examples.extend(extract_code_blocks_from_docstring(text))
     return parsed

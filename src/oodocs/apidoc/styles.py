@@ -24,6 +24,8 @@ class ApiDocProfile:
         include_raises: Whether to include an exception table.
         include_examples: Whether to include examples.
         include_see_also: Whether to include related API references.
+        include_notes: Whether to include general docstring notes.
+        include_warnings: Whether to include warning notes.
         include_renderer_notes: Whether to include renderer-specific notes.
         include_source: Whether to include source file and line information.
         include_member_summary: Whether class/module members get a summary
@@ -72,6 +74,8 @@ class ApiDocProfile:
     include_raises: bool = True
     include_examples: bool = True
     include_see_also: bool = True
+    include_notes: bool = True
+    include_warnings: bool = True
     include_renderer_notes: bool = True
     include_source: bool = True
     include_member_summary: bool = True
@@ -116,6 +120,7 @@ class ApiDocProfile:
         return cls(
             name="compact",
             include_member_sections=False,
+            include_notes=False,
             max_signature_width=88,
             max_signature_lines=24,
             max_description_chars=180,
@@ -148,6 +153,8 @@ class ApiDocProfile:
             include_description=True,
             include_examples=False,
             include_see_also=False,
+            include_notes=False,
+            include_warnings=True,
             include_renderer_notes=True,
             include_member_sections=False,
             max_signature_width=88,
@@ -204,6 +211,8 @@ class ApiDocProfile:
             "include_raises": self.include_raises,
             "include_examples": self.include_examples,
             "include_see_also": self.include_see_also,
+            "include_notes": self.include_notes,
+            "include_warnings": self.include_warnings,
             "include_renderer_notes": self.include_renderer_notes,
             "include_source": self.include_source,
             "include_member_summary": self.include_member_summary,
