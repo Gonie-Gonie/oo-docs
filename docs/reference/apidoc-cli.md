@@ -130,6 +130,13 @@ Private and protected names can be collected for internal review documents:
 python -m oodocs apidoc collect . --include-private --out artifacts/internal-api.json
 ```
 
+Curated public boundaries can be built with `public-policy=explicit` and one
+or more `--explicit-name` values:
+
+```powershell
+python -m oodocs apidoc build . --public-policy explicit --explicit-name mypkg.Client --explicit-name mypkg.connect --out artifacts/api --to html --sidecars
+```
+
 Source locations can also be stripped during collection when rendered
 references or JSON sidecars should not expose local paths:
 

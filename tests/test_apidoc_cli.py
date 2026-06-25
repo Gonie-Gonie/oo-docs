@@ -66,6 +66,43 @@ def test_apidoc_cli_builds_setuptools_package_dir_repo(tmp_path) -> None:
     assert api.find("lib.samplepkg.run") is None
 
 
+def test_apidoc_cli_build_respects_explicit_public_policy(tmp_path) -> None:
+    package_dir = write_sample_package(tmp_path)
+    output_dir = tmp_path / "explicit-api"
+
+    assert (
+        main(
+            [
+                "apidoc",
+                "build",
+                str(package_dir),
+                "--collector",
+                "inspect",
+                "--public-policy",
+                "explicit",
+                "--explicit-name",
+                "samplepkg.make_widget",
+                "--out",
+                str(output_dir),
+                "--to",
+                "html",
+                "--sidecars",
+            ]
+        )
+        == 0
+    )
+
+    api = ApiPackage.read_json(output_dir / "samplepkg-api.json")
+    html = (output_dir / "samplepkg-api.html").read_text(encoding="utf-8")
+
+    assert api.metadata["public_policy"] == "explicit"
+    assert api.find("samplepkg.make_widget") is not None
+    assert api.find("samplepkg.Widget") is None
+    assert api.find("samplepkg.CONSTANT") is None
+    assert 'id="samplepkg-make_widget"' in html
+    assert 'id="samplepkg-widget"' not in html
+
+
 def test_apidoc_cli_passes_fallback_collector_to_collection(
     tmp_path,
     monkeypatch,
