@@ -89,6 +89,16 @@ class ApiParameter:
 
         Returns:
             JSON-serializable parameter mapping.
+
+        Examples:
+            Store parameter metadata in a custom sidecar:
+
+            ```python
+            from oodocs.apidoc import ApiParameter
+
+            parameter = ApiParameter("path", "str", description="Input path.")
+            payload = parameter.to_dict()
+            ```
         """
 
         return {
@@ -111,6 +121,19 @@ class ApiParameter:
 
         Returns:
             Parameter object.
+
+        Examples:
+            Rehydrate a parameter before building a review table:
+
+            ```python
+            from oodocs.apidoc import ApiParameter
+
+            parameter = ApiParameter.from_dict({
+                "name": "path",
+                "annotation": "str",
+                "description": "Input path.",
+            })
+            ```
         """
 
         return cls(
@@ -130,6 +153,16 @@ class ApiParameter:
         Returns:
             Empty string when there is no default, otherwise stable default
             text.
+
+        Examples:
+            Display a default in a custom parameter table:
+
+            ```python
+            from oodocs.apidoc import ApiParameter
+
+            parameter = ApiParameter("retries", "int", default="3")
+            assert parameter.display_default() == "3"
+            ```
         """
 
         if self.default in {None, "", str(_empty), str(MISSING)}:
@@ -141,6 +174,16 @@ class ApiParameter:
 
         Returns:
             Empty string when no annotation is known.
+
+        Examples:
+            Normalize imported typing prefixes for display:
+
+            ```python
+            from oodocs.apidoc import ApiParameter
+
+            parameter = ApiParameter("items", "typing.Sequence[str]")
+            assert parameter.display_annotation() == "Sequence[str]"
+            ```
         """
 
         if self.annotation in {None, "", str(_empty)}:
@@ -158,6 +201,20 @@ class ApiParameter:
 
         Returns:
             Values suitable for ``oodocs.Table`` rows.
+
+        Examples:
+            Build a row for a custom OODocs table:
+
+            ```python
+            from oodocs import Table
+            from oodocs.apidoc import ApiParameter
+
+            parameter = ApiParameter("path", "str", description="Input path.")
+            table = Table(
+                ["Name", "Type", "Description"],
+                [parameter.to_table_cell_values(("name", "type", "description"))],
+            )
+            ```
         """
 
         values = {
@@ -181,6 +238,16 @@ class ApiParameter:
 
         Returns:
             List of table cell values.
+
+        Examples:
+            Use the shorthand row helper with a compact column set:
+
+            ```python
+            from oodocs.apidoc import ApiParameter
+
+            parameter = ApiParameter("verbose", "bool", default="False")
+            row = parameter.to_row(("name", "default", "required"))
+            ```
         """
 
         return self.to_table_cell_values(columns)
@@ -190,6 +257,17 @@ class ApiParameter:
 
         Returns:
             ``oodocs.Paragraph`` containing the parameter name and description.
+
+        Examples:
+            Add a single parameter note to an authored chapter:
+
+            ```python
+            from oodocs import Chapter, Document
+            from oodocs.apidoc import ApiParameter
+
+            parameter = ApiParameter("path", "str", description="Input path.")
+            doc = Document("API Notes", Chapter("Parameter", parameter.to_paragraph()))
+            ```
         """
 
         from oodocs.components.blocks import Paragraph
@@ -225,7 +303,20 @@ class ApiReturn:
     documented: bool = False
 
     def to_dict(self) -> dict[str, object]:
-        """Return deterministic serialized data."""
+        """Return deterministic serialized data.
+
+        Returns:
+            JSON-serializable return metadata.
+
+        Examples:
+            Store return metadata in an API sidecar:
+
+            ```python
+            from oodocs.apidoc import ApiReturn
+
+            payload = ApiReturn("bool", "Whether validation passed.").to_dict()
+            ```
+        """
 
         return {
             "annotation": self.annotation,
@@ -235,7 +326,27 @@ class ApiReturn:
 
     @classmethod
     def from_dict(cls, data: dict[str, object]) -> ApiReturn:
-        """Reconstruct return metadata from serialized data."""
+        """Reconstruct return metadata from serialized data.
+
+        Args:
+            data: Mapping produced by ``to_dict``.
+
+        Returns:
+            Return metadata object.
+
+        Examples:
+            Rehydrate return metadata before attaching it to an API object:
+
+            ```python
+            from oodocs.apidoc import ApiReturn
+
+            returns = ApiReturn.from_dict({
+                "annotation": "bool",
+                "description": "Whether validation passed.",
+                "documented": True,
+            })
+            ```
+        """
 
         return cls(
             annotation=_optional_str(data.get("annotation")),
@@ -251,19 +362,66 @@ class ApiRaises:
     Attributes:
         exception: Exception class or label.
         description: Optional reason the exception is raised.
+
+    Examples:
+        Attach documented exceptions to a parsed API object:
+
+        ```python
+        from oodocs.apidoc import ApiObject, ApiRaises
+
+        obj = ApiObject(
+            "function",
+            "load",
+            "mypkg.load",
+            "mypkg",
+            raises=[ApiRaises("ValueError", "If the path is invalid.")],
+        )
+        ```
     """
 
     exception: str
     description: str | None = None
 
     def to_dict(self) -> dict[str, object]:
-        """Return deterministic serialized data."""
+        """Return deterministic serialized data.
+
+        Returns:
+            JSON-serializable exception metadata.
+
+        Examples:
+            Serialize an exception entry for a sidecar:
+
+            ```python
+            from oodocs.apidoc import ApiRaises
+
+            payload = ApiRaises("ValueError", "Invalid path.").to_dict()
+            ```
+        """
 
         return {"exception": self.exception, "description": self.description}
 
     @classmethod
     def from_dict(cls, data: dict[str, object]) -> ApiRaises:
-        """Reconstruct exception metadata from serialized data."""
+        """Reconstruct exception metadata from serialized data.
+
+        Args:
+            data: Mapping produced by ``to_dict``.
+
+        Returns:
+            Exception metadata object.
+
+        Examples:
+            Rehydrate an exception entry from API JSON:
+
+            ```python
+            from oodocs.apidoc import ApiRaises
+
+            item = ApiRaises.from_dict({
+                "exception": "ValueError",
+                "description": "Invalid path.",
+            })
+            ```
+        """
 
         return cls(
             exception=str(data["exception"]),
@@ -303,7 +461,20 @@ class ApiExample:
     doctest_ok: bool | None = None
 
     def to_dict(self) -> dict[str, object]:
-        """Return deterministic serialized data."""
+        """Return deterministic serialized data.
+
+        Returns:
+            JSON-serializable example metadata.
+
+        Examples:
+            Store a parsed example in a sidecar:
+
+            ```python
+            from oodocs.apidoc import ApiExample
+
+            payload = ApiExample("print('ok')", language="python").to_dict()
+            ```
+        """
 
         return {
             "code": self.code,
@@ -316,7 +487,27 @@ class ApiExample:
 
     @classmethod
     def from_dict(cls, data: dict[str, object]) -> ApiExample:
-        """Reconstruct example metadata from serialized data."""
+        """Reconstruct example metadata from serialized data.
+
+        Args:
+            data: Mapping produced by ``to_dict``.
+
+        Returns:
+            Example metadata object.
+
+        Examples:
+            Rehydrate an example and render it as a code block:
+
+            ```python
+            from oodocs.apidoc import ApiExample
+
+            example = ApiExample.from_dict({
+                "code": "print('ok')",
+                "language": "python",
+            })
+            block = example.to_block()
+            ```
+        """
 
         return cls(
             code=str(data["code"]),
@@ -333,6 +524,17 @@ class ApiExample:
         Returns:
             ``oodocs.CodeBlock`` using the example language and code, with
             XML-incompatible control characters escaped for renderer safety.
+
+        Examples:
+            Insert a parsed example into an OODocs document:
+
+            ```python
+            from oodocs import Chapter, Document
+            from oodocs.apidoc import ApiExample
+
+            example = ApiExample("print('ok')", language="python")
+            doc = Document("Examples", Chapter("Quickstart", example.to_block()))
+            ```
         """
 
         from oodocs.components.blocks import CodeBlock
@@ -349,6 +551,21 @@ class ApiSeeAlso:
         target: Optional fully qualified target.
         description: Optional relationship description.
         kind: Optional target kind.
+
+    Examples:
+        Attach related API entries to an object reference:
+
+        ```python
+        from oodocs.apidoc import ApiObject, ApiSeeAlso
+
+        obj = ApiObject(
+            "function",
+            "load",
+            "mypkg.load",
+            "mypkg",
+            see_also=[ApiSeeAlso("save", target="mypkg.save", kind="function")],
+        )
+        ```
     """
 
     label: str
@@ -357,7 +574,20 @@ class ApiSeeAlso:
     kind: str | None = None
 
     def to_dict(self) -> dict[str, object]:
-        """Return deterministic serialized data."""
+        """Return deterministic serialized data.
+
+        Returns:
+            JSON-serializable related API metadata.
+
+        Examples:
+            Store a see-also entry in API JSON:
+
+            ```python
+            from oodocs.apidoc import ApiSeeAlso
+
+            payload = ApiSeeAlso("save", target="mypkg.save").to_dict()
+            ```
+        """
 
         return {
             "label": self.label,
@@ -368,7 +598,27 @@ class ApiSeeAlso:
 
     @classmethod
     def from_dict(cls, data: dict[str, object]) -> ApiSeeAlso:
-        """Reconstruct see-also metadata from serialized data."""
+        """Reconstruct see-also metadata from serialized data.
+
+        Args:
+            data: Mapping produced by ``to_dict``.
+
+        Returns:
+            Related API metadata object.
+
+        Examples:
+            Rehydrate a related API entry from a sidecar:
+
+            ```python
+            from oodocs.apidoc import ApiSeeAlso
+
+            item = ApiSeeAlso.from_dict({
+                "label": "save",
+                "target": "mypkg.save",
+                "kind": "function",
+            })
+            ```
+        """
 
         return cls(
             label=str(data["label"]),
@@ -386,6 +636,21 @@ class ApiRendererNote:
         format: Optional output format label.
         message: Note text.
         severity: Note severity.
+
+    Examples:
+        Attach output-format guidance to an API object:
+
+        ```python
+        from oodocs.apidoc import ApiObject, ApiRendererNote
+
+        obj = ApiObject(
+            "function",
+            "plot",
+            "mypkg.plot",
+            "mypkg",
+            renderer_notes=[ApiRendererNote("pdf", "Wide tables may wrap.")],
+        )
+        ```
     """
 
     format: Literal["docx", "pdf", "html"] | None
@@ -393,7 +658,20 @@ class ApiRendererNote:
     severity: Literal["info", "warning"] = "info"
 
     def to_dict(self) -> dict[str, object]:
-        """Return deterministic serialized data."""
+        """Return deterministic serialized data.
+
+        Returns:
+            JSON-serializable renderer note metadata.
+
+        Examples:
+            Store renderer-specific guidance in a sidecar:
+
+            ```python
+            from oodocs.apidoc import ApiRendererNote
+
+            payload = ApiRendererNote("html", "Adds anchors.").to_dict()
+            ```
+        """
 
         return {
             "format": self.format,
@@ -403,7 +681,27 @@ class ApiRendererNote:
 
     @classmethod
     def from_dict(cls, data: dict[str, object]) -> ApiRendererNote:
-        """Reconstruct renderer-note metadata from serialized data."""
+        """Reconstruct renderer-note metadata from serialized data.
+
+        Args:
+            data: Mapping produced by ``to_dict``.
+
+        Returns:
+            Renderer note metadata object.
+
+        Examples:
+            Rehydrate renderer guidance before rendering reference docs:
+
+            ```python
+            from oodocs.apidoc import ApiRendererNote
+
+            note = ApiRendererNote.from_dict({
+                "format": "pdf",
+                "message": "Wide tables may wrap.",
+                "severity": "warning",
+            })
+            ```
+        """
 
         return cls(
             format=data.get("format"),  # type: ignore[arg-type]
@@ -443,7 +741,25 @@ class ApiDocIssue:
         self.code = _normalize_issue_code(self.code)
 
     def to_dict(self) -> dict[str, object]:
-        """Return deterministic serialized data."""
+        """Return deterministic serialized data.
+
+        Returns:
+            JSON-serializable diagnostic mapping.
+
+        Examples:
+            Store parser or coverage diagnostics in API JSON:
+
+            ```python
+            from oodocs.apidoc import ApiDocIssue
+
+            payload = ApiDocIssue(
+                "warning",
+                "missing-docstring",
+                "No docstring.",
+                qualname="mypkg.load",
+            ).to_dict()
+            ```
+        """
 
         return {
             "severity": self.severity,
@@ -457,7 +773,27 @@ class ApiDocIssue:
 
     @classmethod
     def from_dict(cls, data: dict[str, object]) -> ApiDocIssue:
-        """Reconstruct an issue from serialized data."""
+        """Reconstruct an issue from serialized data.
+
+        Args:
+            data: Mapping produced by ``to_dict``.
+
+        Returns:
+            Diagnostic issue object.
+
+        Examples:
+            Rehydrate a diagnostic from an API sidecar:
+
+            ```python
+            from oodocs.apidoc import ApiDocIssue
+
+            issue = ApiDocIssue.from_dict({
+                "severity": "warning",
+                "code": "missing-docstring",
+                "message": "No docstring.",
+            })
+            ```
+        """
 
         return cls(
             severity=str(data["severity"]),  # type: ignore[arg-type]
@@ -474,6 +810,20 @@ class ApiDocIssue:
 
         Returns:
             ``[severity, code, qualname, module, location, message]``.
+
+        Examples:
+            Convert diagnostics into table rows for release evidence:
+
+            ```python
+            from oodocs import Table
+            from oodocs.apidoc import ApiDocIssue
+
+            issue = ApiDocIssue("warning", "missing-docstring", "No docstring.")
+            table = Table(
+                ["Severity", "Code", "Object", "Module", "Location", "Message"],
+                [issue.to_row()],
+            )
+            ```
         """
 
         location = ""
