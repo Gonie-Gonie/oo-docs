@@ -178,6 +178,7 @@ The default behavior is intentionally conventional:
 ## What To Use When
 
 - Use `Paragraph(...)` for prose. Pass strings and inline helpers directly; you do not need to pre-build `Text(...)` objects for normal writing.
+- Use `Paragraph(..., title="Outcome")` for run-in paragraph titles such as LaTeX-style bold labels before body text. Override one paragraph with `title_style=ParagraphTitleStyle(...)`, set a section/chapter scope with `Section(..., paragraph_title_style=...)`, or set the document default with `Theme(paragraph_title_style=...)`.
 - Use `tag(...)`, `badge(...)`, `status(...)`, and `keyboard(...)` for compact inline labels. They share the `InlineChip(...)` model; DOCX emits small inline images, while PDF and HTML keep styled text.
 - Use `highlight(...)`, `strike(...)`, and `line_break()` for Word-style emphasis and manual line breaks inside one paragraph.
 - Use `Theme(paragraph_alignment=...)` for the document-wide paragraph default, and direct paragraph kwargs such as `alignment=...` when one paragraph should override it.
