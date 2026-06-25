@@ -252,7 +252,17 @@ def test_collect_api_builds_queryable_object_tree_and_blocks(tmp_path: Path) -> 
     (package_dir / "__init__.py").write_text(
         "\n".join(
             [
-                '"""Sample package."""',
+                '"""Sample package.',
+                "",
+                "Notes:",
+                "    Module notes survive API collection.",
+                "",
+                "Warnings:",
+                "    Module warnings are rendered in module chapters.",
+                "",
+                "Renderer Notes:",
+                "    HTML: Module renderer notes are visible in references.",
+                '"""',
                 "",
                 "__all__ = ['Widget', 'make_widget']",
                 "",
@@ -310,8 +320,12 @@ def test_collect_api_builds_queryable_object_tree_and_blocks(tmp_path: Path) -> 
     api = collect_api(package_dir, public_policy="__all__", collector="auto")
     classes = api.select(kind="class")
     functions = api.select(kind="function")
+    module = api.modules_by_name()["samplepkg"]
 
     assert isinstance(api, ApiPackage)
+    assert module.notes == ["Module notes survive API collection."]
+    assert module.warnings == ["Module warnings are rendered in module chapters."]
+    assert module.renderer_notes[0].format == "html"
     assert [obj.qualname for obj in classes] == ["samplepkg.Widget"]
     assert [obj.qualname for obj in functions] == ["samplepkg.make_widget"]
     assert api.find("samplepkg.Widget") is classes[0]
@@ -379,7 +393,17 @@ def test_collect_api_builds_queryable_object_tree_and_blocks(tmp_path: Path) -> 
 
     sidecar = tmp_path / "api.json"
     api.write_json(sidecar)
-    assert ApiPackage.read_json(sidecar).find("samplepkg.Widget") is not None
+    readback = ApiPackage.read_json(sidecar)
+    assert readback.find("samplepkg.Widget") is not None
+    assert readback.modules_by_name()["samplepkg"].warnings == module.warnings
+
+    module_doc = Document("Module API", module.to_chapter(profile="reference"))
+    module_html = tmp_path / "module-api.html"
+    module_doc.save_html(module_html)
+    module_html_text = module_html.read_text(encoding="utf-8")
+    assert "Module notes survive API collection." in module_html_text
+    assert "Module warnings are rendered in module chapters." in module_html_text
+    assert "Module renderer notes are visible in references." in module_html_text
 
 
 def test_api_doc_profiles_wrap_long_signature_blocks() -> None:

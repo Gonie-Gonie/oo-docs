@@ -4,8 +4,8 @@ Core objects:
 
 - `ApiPackage`: package-level container with modules, issues, selection helpers,
   rendering helpers, and JSON sidecar IO.
-- `ApiModule`: module-level container with public objects and chapter/table
-  helpers.
+- `ApiModule`: module-level container with public objects, parsed module
+  notes/warnings/renderer notes, and chapter/table helpers.
 - `ApiObject`: normalized API item for classes, functions, methods, properties,
   attributes, and data.
 - `ApiParameter`: signature or docstring parameter/attribute metadata.
@@ -39,6 +39,11 @@ Parsed notes and warnings remain on each `ApiObject`, survive JSON sidecars, and
 can be inserted directly with `obj.to_notes_blocks()` or
 `obj.to_warnings_blocks()` when a document wants those sections outside the
 full `obj.to_section(...)` rendering.
+
+Module docstring notes, warnings, and renderer notes are preserved on
+`ApiModule` as well. `module.to_chapter(...)` renders them before the module API
+summary table so overview-level guidance is not lost when a repository uses
+module docstrings as reference introductions.
 
 Use `api.iter_issues()` or `api.to_issue_table()` when parser diagnostics stored
 on individual API objects should appear beside package-level collection issues.

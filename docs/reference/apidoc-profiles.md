@@ -43,7 +43,8 @@ renderer-neutral way.
 
 Profiles also control parsed `Notes:` and `Warnings:` sections. `compact` and
 `evidence` suppress general notes to keep reference bundles short, but warnings
-remain visible because they often affect API usage.
+remain visible because they often affect API usage. The same policy is applied
+to both `ApiObject` sections and `ApiModule` chapters.
 
 Custom profiles can enable the same review workflow:
 

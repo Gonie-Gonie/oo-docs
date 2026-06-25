@@ -476,14 +476,40 @@ def api_module_to_chapter(
 
     from oodocs.components.blocks import Chapter
 
+    resolved = resolve_profile(profile)
     blocks: list[Block] = []
     if module.summary:
         blocks.append(Paragraph(module.summary))
     if module.description:
         blocks.append(Paragraph(module.description))
+    if resolved.include_notes:
+        blocks.extend(
+            Paragraph(note, title="Notes" if index == 0 else None)
+            for index, note in enumerate(module.notes)
+        )
+    if resolved.include_warnings and module.warnings:
+        blocks.append(
+            Box(
+                Paragraph("\n\n".join(module.warnings)),
+                title="Warnings",
+                border_color="F59E0B",
+                background_color="FFFBEB",
+            )
+        )
+    if resolved.include_renderer_notes and module.renderer_notes:
+        blocks.append(
+            Table(
+                ["Format", "Severity", "Message"],
+                [
+                    [note.format or "all", note.severity, note.message]
+                    for note in module.renderer_notes
+                ],
+                caption="Renderer notes",
+            )
+        )
     if module.members:
-        blocks.append(module.to_summary_table(caption="Module API", profile=profile))
-    blocks.extend(module.to_sections(profile=profile, level=2))
+        blocks.append(module.to_summary_table(caption="Module API", profile=resolved))
+    blocks.extend(module.to_sections(profile=resolved, level=2))
     return Chapter(title or module.name, *blocks)
 
 

@@ -948,6 +948,9 @@ class ApiModule:
         members: Module-level API objects.
         summary: Module docstring summary.
         description: Module docstring description.
+        notes: Parsed module-level notes.
+        warnings: Parsed module-level warning notes.
+        renderer_notes: Parsed module-level renderer notes.
         source_path: Optional source file path.
         line_number: Optional module docstring line.
         end_line_number: Optional final source line.
@@ -958,6 +961,9 @@ class ApiModule:
     members: list[ApiObject] = field(default_factory=list)
     summary: str | None = None
     description: str | None = None
+    notes: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
+    renderer_notes: list[ApiRendererNote] = field(default_factory=list)
     source_path: str | None = None
     line_number: int | None = None
     end_line_number: int | None = None
@@ -983,6 +989,9 @@ class ApiModule:
             "members": [member.to_dict() for member in self.members],
             "summary": self.summary,
             "description": self.description,
+            "notes": list(self.notes),
+            "warnings": list(self.warnings),
+            "renderer_notes": [item.to_dict() for item in self.renderer_notes],
             "source_path": self.source_path,
             "line_number": self.line_number,
             "end_line_number": self.end_line_number,
@@ -1001,6 +1010,12 @@ class ApiModule:
             ],
             summary=_optional_str(data.get("summary")),
             description=_optional_str(data.get("description")),
+            notes=[str(item) for item in data.get("notes", [])],  # type: ignore[union-attr]
+            warnings=[str(item) for item in data.get("warnings", [])],  # type: ignore[union-attr]
+            renderer_notes=[
+                ApiRendererNote.from_dict(item)
+                for item in data.get("renderer_notes", [])  # type: ignore[union-attr]
+            ],
             source_path=_optional_str(data.get("source_path")),
             line_number=_optional_int(data.get("line_number")),
             end_line_number=_optional_int(data.get("end_line_number")),
@@ -1325,6 +1340,9 @@ class ApiPackage:
                     members=sorted(grouped[module_name], key=lambda obj: (obj.line_number or 0, obj.name)),
                     summary=source_module.summary if source_module else None,
                     description=source_module.description if source_module else None,
+                    notes=list(source_module.notes) if source_module else [],
+                    warnings=list(source_module.warnings) if source_module else [],
+                    renderer_notes=list(source_module.renderer_notes) if source_module else [],
                     source_path=source_module.source_path if source_module else None,
                     line_number=source_module.line_number if source_module else None,
                     end_line_number=source_module.end_line_number if source_module else None,

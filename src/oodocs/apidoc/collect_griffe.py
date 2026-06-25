@@ -155,6 +155,9 @@ def _module_from_griffe(
         module_name,
         summary=parsed.summary,
         description=parsed.description,
+        notes=parsed.notes,
+        warnings=parsed.warnings,
+        renderer_notes=parsed.renderer_notes,
         source_path=str(_object_filepath(module_obj)) if _object_filepath(module_obj) else None,
         metadata={"__all__": sorted(public_names) if public_names is not None else None},
     )
