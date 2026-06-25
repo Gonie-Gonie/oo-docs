@@ -9,6 +9,7 @@ from apidoc_samples import (
     write_dataclass_package,
     write_overload_package,
     write_private_package,
+    write_setuptools_package_dir_repo,
 )
 from oodocs.apidoc import collect_api
 
@@ -105,6 +106,21 @@ def test_griffe_collector_can_strip_source_locations(tmp_path) -> None:
     assert render is not None
     assert render.source_path is None
     assert render.line_number is None
+
+
+def test_griffe_collector_uses_pyproject_setuptools_package_dir(tmp_path) -> None:
+    if importlib.util.find_spec("griffe") is None:
+        pytest.skip("griffe is not installed")
+
+    repo = write_setuptools_package_dir_repo(tmp_path)
+
+    api = collect_api(repo, collector="griffe", public_policy="__all__")
+
+    assert api.metadata["collector"] == "griffe"
+    assert [module.name for module in api.modules] == ["samplepkg", "samplepkg.core"]
+    assert api.find("samplepkg.run") is not None
+    assert api.find("samplepkg.core.run") is not None
+    assert api.find("lib.samplepkg.run") is None
 
 
 def test_griffe_collector_can_include_private_objects(tmp_path) -> None:

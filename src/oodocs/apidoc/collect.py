@@ -10,6 +10,7 @@ import importlib.metadata
 import importlib.util
 from pathlib import Path
 import re
+import tomllib
 from typing import Iterable, Sequence
 
 from oodocs.apidoc.config import ApiCollectConfig, ApiPublicPolicy, normalize_explicit_names
@@ -1316,18 +1317,20 @@ def _resolve_source_files(package: str | PathLike) -> tuple[Path, str, list[Path
             return resolved.parent, resolved.name, files
 
         project_name = _project_name_from_pyproject(resolved) or resolved.name
-        src_root = resolved / "src"
-        if src_root.is_dir():
-            package_dirs = _package_dirs(src_root)
+        for source_root in _source_roots_for_project(resolved):
+            if (source_root / "__init__.py").exists():
+                files = _python_files_under(source_root)
+                return source_root.parent, source_root.name, sorted(files)
+            package_dirs = _package_dirs(source_root)
             if package_dirs:
                 files = [file_path for package_dir in package_dirs for file_path in _python_files_under(package_dir)]
                 package_name = package_dirs[0].name if len(package_dirs) == 1 else project_name
-                return src_root, package_name, sorted(files)
-            namespace_dirs = _namespace_package_dirs(src_root)
+                return source_root, package_name, sorted(files)
+            namespace_dirs = _namespace_package_dirs(source_root)
             if namespace_dirs:
                 files = [file_path for package_dir in namespace_dirs for file_path in _python_files_under(package_dir)]
                 package_name = namespace_dirs[0].name if len(namespace_dirs) == 1 else project_name
-                return src_root, package_name, sorted(files)
+                return source_root, package_name, sorted(files)
 
         package_dirs = _package_dirs(resolved)
         if package_dirs:
@@ -1415,19 +1418,60 @@ def _is_namespace_source_dir(path: Path) -> bool:
 
 
 def _project_name_from_pyproject(directory: Path) -> str | None:
+    data = _pyproject_data(directory)
+    if not data:
+        return None
+    project = data.get("project")
+    if isinstance(project, dict):
+        name = project.get("name")
+        if isinstance(name, str):
+            return name.replace("-", "_") or None
+    return None
+
+
+def _source_roots_for_project(directory: Path) -> list[Path]:
+    roots: list[Path] = []
+    data = _pyproject_data(directory)
+    if data:
+        tool = data.get("tool")
+        setuptools = tool.get("setuptools") if isinstance(tool, dict) else None
+        if isinstance(setuptools, dict):
+            package_dir = setuptools.get("package-dir")
+            if isinstance(package_dir, dict):
+                default_root = package_dir.get("")
+                if isinstance(default_root, str):
+                    roots.append(directory / default_root)
+                for value in package_dir.values():
+                    if isinstance(value, str):
+                        roots.append(directory / value)
+            packages = setuptools.get("packages")
+            find = packages.get("find") if isinstance(packages, dict) else None
+            where = find.get("where") if isinstance(find, dict) else None
+            if isinstance(where, str):
+                roots.append(directory / where)
+            elif isinstance(where, list):
+                roots.extend(directory / item for item in where if isinstance(item, str))
+    roots.append(directory / "src")
+    normalized: list[Path] = []
+    seen: set[Path] = set()
+    for root in roots:
+        resolved = root.resolve()
+        if resolved in seen or not resolved.is_dir():
+            continue
+        normalized.append(resolved)
+        seen.add(resolved)
+    return normalized
+
+
+def _pyproject_data(directory: Path) -> dict[str, object] | None:
     path = directory / "pyproject.toml"
     if not path.exists():
         return None
-    in_project = False
-    for line in path.read_text(encoding="utf-8-sig").splitlines():
-        stripped = line.strip()
-        if stripped.startswith("[") and stripped.endswith("]"):
-            in_project = stripped == "[project]"
-            continue
-        if in_project and stripped.startswith("name") and "=" in stripped:
-            value = stripped.split("=", 1)[1].strip().strip("\"'")
-            return value.replace("-", "_") or None
-    return None
+    try:
+        data = tomllib.loads(path.read_text(encoding="utf-8-sig"))
+    except (OSError, tomllib.TOMLDecodeError):
+        return None
+    return data if isinstance(data, dict) else None
 
 
 def _module_all_names(tree: ast.Module) -> set[str] | None:

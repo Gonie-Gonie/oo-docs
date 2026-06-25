@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from apidoc_samples import write_private_package, write_sample_package
+from apidoc_samples import write_private_package, write_sample_package, write_setuptools_package_dir_repo
 import pytest
 
 from oodocs.apidoc import ApiPackage
@@ -33,6 +33,37 @@ def test_apidoc_cli_builds_html_and_sidecars_for_general_repo(tmp_path) -> None:
 
     assert (output_dir / "samplepkg-api.html").exists()
     assert ApiPackage.read_json(output_dir / "samplepkg-api.json").name == "samplepkg"
+
+
+def test_apidoc_cli_builds_setuptools_package_dir_repo(tmp_path) -> None:
+    repo = write_setuptools_package_dir_repo(tmp_path)
+    output_dir = tmp_path / "api"
+
+    assert (
+        main(
+            [
+                "apidoc",
+                "build",
+                str(repo),
+                "--collector",
+                "inspect",
+                "--public-policy",
+                "__all__",
+                "--out",
+                str(output_dir),
+                "--to",
+                "html",
+                "--sidecars",
+            ]
+        )
+        == 0
+    )
+
+    api = ApiPackage.read_json(output_dir / "samplepkg-api.json")
+
+    assert (output_dir / "samplepkg-api.html").exists()
+    assert api.find("samplepkg.run") is not None
+    assert api.find("lib.samplepkg.run") is None
 
 
 def test_apidoc_cli_passes_fallback_collector_to_collection(

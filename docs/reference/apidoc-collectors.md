@@ -2,7 +2,25 @@
 
 Collectors normalize Python source metadata into the same `ApiPackage` schema.
 Repository paths may point at a package directory, a `src/` layout package, or
-a `src/` layout namespace package that omits `__init__.py`.
+a `src/` layout namespace package that omits `__init__.py`. Repository roots
+that use setuptools custom source roots are also supported through
+`[tool.setuptools] package-dir = {"" = "lib"}` or
+`[tool.setuptools.packages.find] where = ["lib"]`.
+
+```toml
+[project]
+name = "sample-project"
+
+[tool.setuptools]
+package-dir = {"" = "lib"}
+```
+
+```python
+from oodocs.apidoc import collect_api
+
+api = collect_api(".", collector="inspect", public_policy="__all__")
+assert api.find("samplepkg.run") is not None
+```
 
 - `collector="griffe"` uses griffe when installed. It captures module data,
   aliases, properties, class attributes, public `__init__` instance

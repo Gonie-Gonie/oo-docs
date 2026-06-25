@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from apidoc_samples import (
     collect_sample_api,
+    write_setuptools_package_dir_repo,
     write_dataclass_package,
     write_overload_package,
     write_private_package,
@@ -56,6 +57,32 @@ def test_inspect_collector_can_strip_source_locations(tmp_path) -> None:
     assert render is not None
     assert render.source_path is None
     assert render.line_number is None
+
+
+def test_inspect_collector_uses_pyproject_setuptools_package_dir(tmp_path) -> None:
+    repo = write_setuptools_package_dir_repo(tmp_path)
+
+    api = collect_api(repo, collector="inspect", public_policy="__all__")
+
+    assert [module.name for module in api.modules] == ["samplepkg", "samplepkg.core"]
+    assert api.find("samplepkg.run") is not None
+    assert api.find("samplepkg.core.run") is not None
+    assert api.find("lib.samplepkg.run") is None
+
+
+def test_inspect_collector_uses_explicit_setuptools_package_mapping(tmp_path) -> None:
+    repo = write_setuptools_package_dir_repo(
+        tmp_path,
+        repo_name="explicit-repo",
+        source_root="lib/samplepkg",
+        package_dir_key="samplepkg",
+    )
+
+    api = collect_api(repo, collector="inspect", public_policy="__all__")
+
+    assert [module.name for module in api.modules] == ["samplepkg", "samplepkg.core"]
+    assert api.find("samplepkg.run") is not None
+    assert api.find("lib.samplepkg.run") is None
 
 
 def test_inspect_collector_can_include_private_objects(tmp_path) -> None:

@@ -208,6 +208,55 @@ def write_dataclass_package(tmp_path: Path, name: str = "datapkg") -> Path:
     return package_dir
 
 
+def write_setuptools_package_dir_repo(
+    tmp_path: Path,
+    *,
+    repo_name: str = "repo",
+    package_name: str = "samplepkg",
+    source_root: str = "lib",
+    package_dir_key: str = "",
+) -> Path:
+    repo = tmp_path / repo_name
+    package_dir = repo / source_root if package_dir_key else repo / source_root / package_name
+    package_dir.mkdir(parents=True)
+    package_dir_entry = f'"{package_dir_key}" = "{source_root}"' if package_dir_key else f'"" = "{source_root}"'
+    (repo / "pyproject.toml").write_text(
+        dedent(
+            f'''\
+            [project]
+            name = "sample-project"
+
+            [tool.setuptools]
+            package-dir = {{{package_dir_entry}}}
+            '''
+        ),
+        encoding="utf-8",
+    )
+    (package_dir / "__init__.py").write_text(
+        '"""Sample package."""\nfrom .core import run\n__all__ = ["run"]\n',
+        encoding="utf-8",
+    )
+    (package_dir / "core.py").write_text(
+        dedent(
+            '''\
+            def run(path: str) -> str:
+                """Run a task.
+
+                Args:
+                    path: Input path.
+
+                Returns:
+                    str: Input path.
+                """
+
+                return path
+            '''
+        ),
+        encoding="utf-8",
+    )
+    return repo
+
+
 def collect_sample_api(tmp_path: Path, **kwargs: object) -> ApiPackage:
     package_dir = write_sample_package(tmp_path)
     options = {
