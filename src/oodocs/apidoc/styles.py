@@ -35,6 +35,13 @@ class ApiDocProfile:
         max_examples: Optional maximum number of examples to render.
         prefer_editable_tables: Whether tables should be favored over compact
             prose in review-style output.
+        include_review_notes: Whether to add reviewer note blocks beside API
+            objects.
+        review_note_text: Optional reviewer note body used when review notes
+            are enabled.
+        review_note_author: Optional author label for generated inline
+            comments.
+        review_note_initials: Optional initials for generated inline comments.
 
     Examples:
         Use a compact profile when embedding API notes into a larger document:
@@ -66,6 +73,10 @@ class ApiDocProfile:
     max_description_chars: int | None = None
     max_examples: int | None = None
     prefer_editable_tables: bool = True
+    include_review_notes: bool = False
+    review_note_text: str | None = None
+    review_note_author: str | None = None
+    review_note_initials: str | None = None
 
     @classmethod
     def reference(cls) -> ApiDocProfile:
@@ -139,7 +150,17 @@ class ApiDocProfile:
             Profile that prefers editable tables and plain block structure.
         """
 
-        return cls(name="review", prefer_editable_tables=True)
+        return cls(
+            name="review",
+            prefer_editable_tables=True,
+            include_review_notes=True,
+            review_note_text=(
+                "Check this API object's summary, parameters, returns, "
+                "examples, renderer notes, and source location before publishing."
+            ),
+            review_note_author="OODocs",
+            review_note_initials="API",
+        )
 
     @classmethod
     def website(cls) -> ApiDocProfile:
@@ -176,6 +197,10 @@ class ApiDocProfile:
             "max_description_chars": self.max_description_chars,
             "max_examples": self.max_examples,
             "prefer_editable_tables": self.prefer_editable_tables,
+            "include_review_notes": self.include_review_notes,
+            "review_note_text": self.review_note_text,
+            "review_note_author": self.review_note_author,
+            "review_note_initials": self.review_note_initials,
         }
 
     @classmethod

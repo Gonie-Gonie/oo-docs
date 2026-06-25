@@ -9,6 +9,7 @@ from oodocs.apidoc import (
     ApiCollectConfig,
     ApiCoverageResult,
     ApiDiffResult,
+    ApiDocProfile,
     ApiDocstringParser,
     ApiPackage,
     ApiPublicPolicy,
@@ -24,7 +25,7 @@ from oodocs.apidoc import (
     register_docstring_parser,
 )
 from oodocs.cli import main
-from oodocs.components.blocks import Section
+from oodocs.components.blocks import Paragraph, Section
 from oodocs.components.media import Table
 
 
@@ -280,6 +281,15 @@ def test_collect_api_builds_queryable_object_tree_and_blocks(tmp_path: Path) -> 
     assert label is not None
     assert label.summary == "User-facing label shown in summaries."
     assert isinstance(classes[0].to_section(level=2, profile="compact"), Section)
+    review_blocks = classes[0].to_blocks(profile="review")
+    review_notes = [
+        block
+        for block in review_blocks
+        if isinstance(block, Paragraph) and "Review note[?]" in block.plain_text()
+    ]
+    assert review_notes
+    assert "Review note[?]" in review_notes[0].plain_text()
+    assert ApiDocProfile.from_dict(ApiDocProfile.review().to_dict()).include_review_notes
     assert isinstance(functions[0].to_parameter_table(), Table)
     assert isinstance(api.to_summary_table(functions), Table)
     filtered = api.filtered(kind="class", module_prefix="samplepkg")

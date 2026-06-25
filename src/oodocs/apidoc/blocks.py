@@ -8,7 +8,7 @@ from oodocs.apidoc.model import ApiModule, ApiObject, ApiPackage
 from oodocs.apidoc.styles import ApiDocProfile, resolve_profile
 from oodocs.components.base import Block
 from oodocs.components.blocks import Box, CodeBlock, Paragraph, Section, section_for_level
-from oodocs.components.inline import InlineChip, InlineChipStyle, Text, bold, code, italic
+from oodocs.components.inline import InlineChip, InlineChipStyle, Text, bold, code, comment, italic
 from oodocs.components.media import Table
 
 
@@ -290,6 +290,37 @@ def api_source_location_paragraph(
     return Paragraph(location, title="Source")
 
 
+def api_review_note_paragraph(
+    obj: ApiObject,
+    profile: str | ApiDocProfile = "reference",
+) -> Paragraph | None:
+    """Return a reviewer note paragraph when enabled by the profile.
+
+    Args:
+        obj: API object being rendered.
+        profile: Presentation profile.
+
+    Returns:
+        Paragraph containing an inline comment, or ``None`` when review notes
+        are disabled.
+    """
+
+    resolved = resolve_profile(profile)
+    if not resolved.include_review_notes:
+        return None
+    note_text = resolved.review_note_text or "Review this API object's docstring before publishing."
+    note_text = f"{note_text} Object: {obj.qualname}."
+    return Paragraph(
+        comment(
+            "Review note",
+            note_text,
+            author=resolved.review_note_author,
+            initials=resolved.review_note_initials,
+        ),
+        title="API review",
+    )
+
+
 def api_member_summary_table(
     obj: ApiObject,
     profile: str | ApiDocProfile = "reference",
@@ -328,6 +359,8 @@ def api_object_to_blocks(
         blocks.append(member_summary)
     if source := api_source_location_paragraph(obj, resolved):
         blocks.append(source)
+    if review_note := api_review_note_paragraph(obj, resolved):
+        blocks.append(review_note)
 
     if resolved.include_member_sections:
         child_level = min(level + 1, 6)
@@ -462,6 +495,7 @@ __all__ = [
     "api_package_to_chapters",
     "api_parameter_table",
     "api_raises_table",
+    "api_review_note_paragraph",
     "api_renderer_notes_blocks",
     "api_renderer_notes_table",
     "api_returns_blocks",

@@ -9,7 +9,8 @@ not change collection or parsing.
 - `compact`: summary-first layout with shorter tables and fewer examples.
 - `manual`: guide-friendly sections that fit into authored documents.
 - `evidence`: coverage and issue oriented output.
-- `review`: editable DOCX-friendly structure.
+- `review`: editable DOCX-friendly structure with generated review-note
+  comments for each rendered API object.
 - `website`: anchor/source-link oriented structure for HTML output.
 
 ```python
@@ -29,3 +30,15 @@ doc = Document(
 The same `Document` can still be saved as DOCX, PDF, or HTML through the normal
 OODocs renderers.
 
+Custom profiles can enable the same review workflow:
+
+```python
+from dataclasses import replace
+from oodocs.apidoc import ApiDocProfile
+
+profile = replace(
+    ApiDocProfile.compact(),
+    include_review_notes=True,
+    review_note_text="Check whether this object needs a richer example.",
+)
+```
