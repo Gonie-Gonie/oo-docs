@@ -49,6 +49,11 @@ def paragraph_style_with_overrides(
 
     Returns:
         Existing style, copied style, or a new style with overrides applied.
+
+    Examples:
+        ```python
+        style = paragraph_style_with_overrides(None, alignment="center")
+        ```
     """
 
     return _style_with_overrides(style, ParagraphStyle, overrides)  # type: ignore[return-value]
@@ -66,6 +71,11 @@ def box_style_with_overrides(
 
     Returns:
         Existing style, copied style, or a new style with overrides applied.
+
+    Examples:
+        ```python
+        style = box_style_with_overrides(None, background_color="F8FAFC")
+        ```
     """
 
     return _style_with_overrides(style, BoxStyle, overrides)  # type: ignore[return-value]
@@ -83,6 +93,11 @@ def table_style_with_overrides(
 
     Returns:
         Existing style, copied style, or a new style with overrides applied.
+
+    Examples:
+        ```python
+        style = table_style_with_overrides(None, repeat_header_rows=True)
+        ```
     """
 
     return _style_with_overrides(style, TableStyle, overrides)  # type: ignore[return-value]
@@ -103,6 +118,11 @@ def list_style_with_overrides(
 
     Returns:
         ``None`` when no style is needed, otherwise a concrete list style.
+
+    Examples:
+        ```python
+        style = list_style_with_overrides(None, ordered=True, marker_format="lower-alpha")
+        ```
     """
 
     values = {name: value for name, value in overrides.items() if value is not None}
@@ -137,6 +157,13 @@ class TextStyle:
         all_caps: Optional all-caps override.
         subscript: Optional subscript override.
         superscript: Optional superscript override.
+
+    Examples:
+        ```python
+        from oodocs import Text, TextStyle
+
+        fragment = Text("Important", style=TextStyle(bold=True))
+        ```
     """
 
     font_name: str | None = None
@@ -227,6 +254,13 @@ class ParagraphStyle:
         page_break_before: Optional page-break-before flag.
         widow_control: Optional widow-control flag.
         unit: Unit for length values.
+
+    Examples:
+        ```python
+        from oodocs import Paragraph, ParagraphStyle
+
+        paragraph = Paragraph("Indented text", style=ParagraphStyle.hanging())
+        ```
     """
 
     alignment: str | None = None
@@ -296,6 +330,11 @@ class ParagraphStyle:
 
         Raises:
             ValueError: If ``by`` is negative.
+
+        Examples:
+            ```python
+            style = ParagraphStyle.hanging(left=0.5, by=0.25, unit="in")
+            ```
         """
 
         hanging_by = left if by is None else by
@@ -367,6 +406,12 @@ class HeadingNumbering:
         separator: Separator between level counters.
         prefix: Prefix before the full label.
         suffix: Suffix after the full label.
+
+    Examples:
+        ```python
+        numbering = HeadingNumbering(formats=("upper-roman", "decimal"))
+        assert numbering.format_label([2, 3]) == "II.3"
+        ```
     """
 
     enabled: bool = True
@@ -413,6 +458,12 @@ class ListStyle:
         start: First counter value for ordered markers.
         indent: List indent in inches.
         marker_gap: Gap between marker and item text in inches.
+
+    Examples:
+        ```python
+        style = ListStyle(marker_format="lower-alpha", suffix=")")
+        assert style.marker_for(0) == "a)"
+        ```
     """
 
     marker_format: str = "decimal"
@@ -467,6 +518,13 @@ class BoxStyle:
         space_after: Space after the box in points.
         width: Optional box width in ``unit``.
         alignment: Optional horizontal alignment override.
+
+    Examples:
+        ```python
+        from oodocs import Box, BoxStyle
+
+        box = Box("Note body", title="Note", style=BoxStyle(background_color="F7FAFC"))
+        ```
     """
 
     border_color: str = "B7C2D0"
@@ -537,6 +595,13 @@ class TableStyle:
         cell_padding: Default cell padding in points.
         border_width: Border width in points.
         repeat_header_rows: Whether renderers should repeat header rows.
+
+    Examples:
+        ```python
+        from oodocs import Table, TableStyle
+
+        table = Table(["A"], [[1]], style=TableStyle.compact())
+        ```
     """
 
     header_background_color: str = "E8EDF5"
@@ -602,6 +667,11 @@ class TableStyle:
 
         Returns:
             Plain table style.
+
+        Examples:
+            ```python
+            style = TableStyle.plain()
+            ```
         """
 
         return cls(
@@ -617,6 +687,11 @@ class TableStyle:
 
         Returns:
             Compact table style.
+
+        Examples:
+            ```python
+            style = TableStyle.compact()
+            ```
         """
 
         return cls(
@@ -634,6 +709,11 @@ class TableStyle:
 
         Returns:
             Evidence-oriented table style.
+
+        Examples:
+            ```python
+            style = TableStyle.evidence()
+            ```
         """
 
         return cls(
@@ -672,6 +752,13 @@ class TypographyOptions:
         body_font_size: Body font size in points.
         heading_sizes: Heading font sizes by level.
         caption_font_size: Optional caption font size override.
+
+    Examples:
+        ```python
+        from oodocs import Theme, TypographyOptions
+
+        theme = Theme(TypographyOptions(body_font_name="Arial", body_font_size=10.5))
+        ```
     """
 
     body_font_name: str = "Times New Roman"
@@ -696,6 +783,13 @@ class CaptionOptions:
         figure_caption_label: Optional figure caption label override.
         table_reference_label: Optional table reference label override.
         figure_reference_label: Optional figure reference label override.
+
+    Examples:
+        ```python
+        from oodocs import CaptionOptions, Theme
+
+        theme = Theme(CaptionOptions(table_caption_position="below"))
+        ```
     """
 
     caption_alignment: str = "center"
@@ -716,6 +810,13 @@ class CitationOptions:
     Attributes:
         citation_format: Inline citation style identifier.
         reference_format: Reference list style identifier.
+
+    Examples:
+        ```python
+        from oodocs import CitationOptions, Theme
+
+        theme = Theme(CitationOptions(citation_format="author-year"))
+        ```
     """
 
     citation_format: str = "numeric"
@@ -735,6 +836,13 @@ class GeneratedPageOptions:
         contents_title: Default title for generated contents pages.
         generated_section_level: Heading level used by generated pages.
         generated_page_breaks: Whether generated pages start on new pages.
+
+    Examples:
+        ```python
+        from oodocs import GeneratedPageOptions, Theme
+
+        theme = Theme(GeneratedPageOptions(references_title="Bibliography"))
+        ```
     """
 
     list_of_tables_title: str = "List of Tables"
@@ -758,6 +866,13 @@ class PageNumberOptions:
         front_matter_page_number_format: Front-matter numbering style.
         main_matter_page_number_format: Main-matter numbering style.
         page_number_font_size: Footer page-number font size in points.
+
+    Examples:
+        ```python
+        from oodocs import PageNumberOptions, Theme
+
+        theme = Theme(PageNumberOptions(show_page_numbers=True))
+        ```
     """
 
     show_page_numbers: bool = False
@@ -778,6 +893,13 @@ class TitleMatterOptions:
         author_alignment: Author line alignment.
         affiliation_alignment: Affiliation line alignment.
         author_detail_alignment: Author detail line alignment.
+
+    Examples:
+        ```python
+        from oodocs import Theme, TitleMatterOptions
+
+        theme = Theme(TitleMatterOptions(title_alignment="left"))
+        ```
     """
 
     title_alignment: str = "center"
@@ -804,6 +926,13 @@ class BlockOptions:
         heading_numbering: Heading numbering configuration.
         bullet_list_style: Default bullet list style.
         numbered_list_style: Default numbered list style.
+
+    Examples:
+        ```python
+        from oodocs import BlockOptions, HeadingNumbering, Theme
+
+        theme = Theme(BlockOptions(heading_numbering=HeadingNumbering(enabled=False)))
+        ```
     """
 
     page_background_color: str = "FFFFFF"
@@ -845,6 +974,14 @@ class Theme:
         TypeError: If a positional option is not a supported option group.
         ValueError: If alignment, format, numbering, or color values are
             invalid.
+
+    Examples:
+        ```python
+        from oodocs import Document, DocumentSettings, Paragraph, Theme, TypographyOptions
+
+        theme = Theme(TypographyOptions(body_font_name="Arial"), paragraph_alignment="left")
+        document = Document("Report", Paragraph("Body"), settings=DocumentSettings(theme=theme))
+        ```
     """
 
     typography: TypographyOptions
@@ -1220,6 +1357,11 @@ class Theme:
 
         Returns:
             Font size for the nearest configured level.
+
+        Examples:
+            ```python
+            assert Theme(heading_sizes=(20.0, 16.0)).heading_size(3) == 16.0
+            ```
         """
 
         index = min(max(level - 1, 0), len(self.heading_sizes) - 1)
@@ -1233,6 +1375,11 @@ class Theme:
 
         Returns:
             ``(bold, italic)`` emphasis flags.
+
+        Examples:
+            ```python
+            assert Theme().heading_emphasis(1) == (True, False)
+            ```
         """
 
         emphasis = (
@@ -1252,6 +1399,11 @@ class Theme:
 
         Returns:
             Heading alignment.
+
+        Examples:
+            ```python
+            assert Theme().heading_alignment(2) == "left"
+            ```
         """
 
         return "left"
@@ -1264,6 +1416,12 @@ class Theme:
 
         Returns:
             Effective paragraph alignment.
+
+        Examples:
+            ```python
+            theme = Theme(paragraph_alignment="left")
+            assert theme.resolve_paragraph_alignment(ParagraphStyle()) == "left"
+            ```
         """
 
         return style.alignment or self.paragraph_alignment
@@ -1273,6 +1431,11 @@ class Theme:
 
         Returns:
             Effective table caption label.
+
+        Examples:
+            ```python
+            assert Theme(table_caption_label="Tbl.").table_caption_label_text() == "Tbl."
+            ```
         """
 
         return self.table_caption_label or self.table_label
@@ -1282,6 +1445,11 @@ class Theme:
 
         Returns:
             Effective figure caption label.
+
+        Examples:
+            ```python
+            assert Theme(figure_caption_label="Fig.").figure_caption_label_text() == "Fig."
+            ```
         """
 
         return self.figure_caption_label or self.figure_label
@@ -1291,6 +1459,11 @@ class Theme:
 
         Returns:
             Effective table reference label.
+
+        Examples:
+            ```python
+            assert Theme(table_reference_label="Tbl.").table_reference_label_text() == "Tbl."
+            ```
         """
 
         return self.table_reference_label or self.table_label
@@ -1300,6 +1473,11 @@ class Theme:
 
         Returns:
             Effective figure reference label.
+
+        Examples:
+            ```python
+            assert Theme(figure_reference_label="Fig.").figure_reference_label_text() == "Fig."
+            ```
         """
 
         return self.figure_reference_label or self.figure_label
@@ -1309,6 +1487,11 @@ class Theme:
 
         Returns:
             Caption font size, falling back to body font size.
+
+        Examples:
+            ```python
+            assert Theme(body_font_size=11.0).caption_size() == 11.0
+            ```
         """
 
         return self.body_font_size if self.caption_font_size is None else self.caption_font_size
@@ -1327,6 +1510,12 @@ class Theme:
 
         Returns:
             Formatted page number text.
+
+        Examples:
+            ```python
+            theme = Theme(page_number_format="Page {page}")
+            assert theme.format_page_number(3) == "Page 3"
+            ```
         """
 
         marker_format = (
@@ -1346,6 +1535,11 @@ class Theme:
 
         Returns:
             Formatted heading label, or ``None`` when numbering is disabled.
+
+        Examples:
+            ```python
+            assert Theme().format_heading_label([1, 2]) == "1.2"
+            ```
         """
 
         return self.heading_numbering.format_label(counters)
@@ -1359,6 +1553,11 @@ class Theme:
         Returns:
             Formatted part label, or ``None`` when heading numbering is
             disabled.
+
+        Examples:
+            ```python
+            assert Theme().format_part_label(2) == "Part II"
+            ```
         """
 
         if not self.heading_numbering.enabled:
@@ -1374,6 +1573,11 @@ class Theme:
 
         Returns:
             Default list style for the requested list kind.
+
+        Examples:
+            ```python
+            assert Theme().list_style(ordered=True).marker_for(0) == "1."
+            ```
         """
 
         return self.numbered_list_style if ordered else self.bullet_list_style

@@ -20,6 +20,13 @@ class Text:
     Args:
         value: Literal text content.
         style: Optional inline style overrides.
+
+    Examples:
+        ```python
+        from oodocs import Paragraph, Text, TextStyle
+
+        paragraph = Paragraph(Text("Important", style=TextStyle(bold=True)))
+        ```
     """
 
     value: str
@@ -44,6 +51,11 @@ class Text:
 
         Returns:
             Styled text fragment.
+
+        Examples:
+            ```python
+            fragment = Text.styled("Approved", color="008000", bold=True)
+            ```
         """
 
         return cls(value=value, style=TextStyle(**style_values))
@@ -202,6 +214,11 @@ class Text:
 
         Returns:
             Parsed inline fragments.
+
+        Examples:
+            ```python
+            fragments = Text.from_markup("Use **bold** and `code` inline.")
+            ```
         """
 
         from oodocs.components.markup import markup
@@ -215,6 +232,13 @@ class Bold(Text):
     Args:
         value: Literal text content.
         style: Additional style values to merge.
+
+    Examples:
+        ```python
+        from oodocs.components.inline import Bold
+
+        fragment = Bold("required")
+        ```
     """
 
     def __init__(self, value: str, style: TextStyle | None = None) -> None:
@@ -227,6 +251,13 @@ class Italic(Text):
     Args:
         value: Literal text content.
         style: Additional style values to merge.
+
+    Examples:
+        ```python
+        from oodocs.components.inline import Italic
+
+        fragment = Italic("optional")
+        ```
     """
 
     def __init__(self, value: str, style: TextStyle | None = None) -> None:
@@ -239,6 +270,13 @@ class Monospace(Text):
     Args:
         value: Literal text content.
         style: Additional style values to merge.
+
+    Examples:
+        ```python
+        from oodocs.components.inline import Monospace
+
+        fragment = Monospace("pip install oodocs")
+        ```
     """
 
     def __init__(self, value: str, style: TextStyle | None = None) -> None:
@@ -284,6 +322,13 @@ class InlineChipStyle:
         bold: Whether chip text is bold.
         italic: Whether chip text is italic.
         uppercase: Whether display text is uppercased.
+
+    Examples:
+        ```python
+        from oodocs import InlineChipStyle, tag
+
+        fragment = tag("beta", chip_style=InlineChipStyle(background_color="EEF2FF"))
+        ```
     """
 
     background_color: str = "E8F1FF"
@@ -324,6 +369,11 @@ class InlineChipStyle:
         Raises:
             TypeError: If an override name is not a style field.
             ValueError: If resulting color or dimension values are invalid.
+
+        Examples:
+            ```python
+            style = InlineChipStyle().merged(background_color="ECFDF3", text_color="166534")
+            ```
         """
 
         values = {
@@ -416,6 +466,13 @@ class InlineChip(Text):
 
     Raises:
         ValueError: If ``kind`` is invalid.
+
+    Examples:
+        ```python
+        from oodocs import InlineChip
+
+        chip = InlineChip("approved", kind="status")
+        ```
     """
 
     __slots__ = ("chip_style", "kind")
@@ -438,6 +495,12 @@ class InlineChip(Text):
 
         Returns:
             Uppercased or original chip text depending on the style.
+
+        Examples:
+            ```python
+            chip = InlineChip("approved", kind="status")
+            assert chip.display_text() == "APPROVED"
+            ```
         """
 
         return self.value.upper() if self.chip_style.uppercase else self.value
@@ -459,6 +522,13 @@ class Highlight(Text):
         value: Literal text content.
         color: Highlight color as a hex string.
         style: Additional style values to merge.
+
+    Examples:
+        ```python
+        from oodocs.components.inline import Highlight
+
+        fragment = Highlight("changed", color="FFF3B0")
+        ```
     """
 
     def __init__(
@@ -480,6 +550,13 @@ class Strikethrough(Text):
     Args:
         value: Literal text content.
         style: Additional style values to merge.
+
+    Examples:
+        ```python
+        from oodocs.components.inline import Strikethrough
+
+        fragment = Strikethrough("deprecated")
+        ```
     """
 
     def __init__(self, value: str, style: TextStyle | None = None) -> None:
@@ -495,6 +572,13 @@ class LineBreak(Text):
     Attributes:
         value: Newline text emitted for plain-text extraction.
         style: Text style inherited from ``Text``.
+
+    Examples:
+        ```python
+        from oodocs import Paragraph, line_break
+
+        paragraph = Paragraph("First line", line_break(), "Second line")
+        ```
     """
 
     def __init__(self) -> None:
@@ -505,6 +589,11 @@ class LineBreak(Text):
 
         Returns:
             A newline character.
+
+        Examples:
+            ```python
+            assert LineBreak().plain_text() == "\\n"
+            ```
         """
 
         return "\n"
@@ -517,6 +606,14 @@ class BlockReference(Text):
         target: Document object to reference.
         *label: Optional inline label override.
         style: Optional inline style.
+
+    Examples:
+        ```python
+        from oodocs import Paragraph
+
+        target = Paragraph("Details")
+        reference = target.reference("the details")
+        ```
     """
 
     __slots__ = ("target", "label")
@@ -584,6 +681,14 @@ def reference(
 
     Raises:
         TypeError: If ``target`` is not referenceable.
+
+    Examples:
+        ```python
+        from oodocs import Figure, Paragraph, reference
+
+        figure = Figure("diagram.png", caption="System diagram")
+        paragraph = Paragraph("See ", reference(figure), ".")
+        ```
     """
 
     if not _is_referenceable(target):
@@ -597,6 +702,14 @@ class Citation(Text):
     Args:
         target: Citation source object or citation key.
         style: Optional inline style.
+
+    Examples:
+        ```python
+        from oodocs import CitationSource, cite
+
+        source = CitationSource("Doe 2024", author="Doe", title="A Study")
+        citation = cite(source)
+        ```
     """
 
     __slots__ = ("target",)
@@ -643,6 +756,13 @@ def cite(target: CitationSource | str, *, style: TextStyle | None = None) -> Cit
 
     Returns:
         Inline citation fragment.
+
+    Examples:
+        ```python
+        from oodocs import Paragraph, cite
+
+        paragraph = Paragraph("Prior work supports this ", cite("doe2024"), ".")
+        ```
     """
 
     return Citation.reference(target, style=style)
@@ -656,6 +776,13 @@ class Hyperlink(Text):
         *label: Optional visible label. Defaults to ``target``.
         internal: Whether the target is an internal anchor.
         style: Optional inline style.
+
+    Examples:
+        ```python
+        from oodocs import Paragraph, link
+
+        paragraph = Paragraph("Open ", link("https://example.com", "the dashboard"))
+        ```
     """
 
     __slots__ = ("target", "label", "internal")
@@ -734,6 +861,13 @@ class Comment(Text):
         author: Optional comment author.
         initials: Optional author initials.
         style: Optional inline style for the visible text.
+
+    Examples:
+        ```python
+        from oodocs import comment
+
+        fragment = comment("metric", "Confirm source before publishing.", author="QA")
+        ```
     """
 
     __slots__ = ("comment", "author", "initials")
@@ -809,6 +943,11 @@ def comment(
 
     Returns:
         Inline comment fragment.
+
+    Examples:
+        ```python
+        fragment = comment("estimate", "Needs finance review.", initials="FR")
+        ```
     """
 
     return Comment.annotated(
@@ -827,6 +966,13 @@ class Footnote(Text):
         value: Visible inline text.
         *note: Footnote body content.
         style: Optional inline style for the visible text.
+
+    Examples:
+        ```python
+        from oodocs import footnote
+
+        fragment = footnote("SLA", "Service-level agreement.")
+        ```
     """
 
     __slots__ = ("note",)
@@ -884,6 +1030,11 @@ def footnote(
 
     Returns:
         Inline footnote fragment.
+
+    Examples:
+        ```python
+        fragment = footnote("baseline", "Measured on 2026-06-01.")
+        ```
     """
 
     return Footnote.annotated(value, *note, style=style)
@@ -895,6 +1046,13 @@ class Math(Text):
     Args:
         value: LaTeX-like math source.
         style: Optional inline style.
+
+    Examples:
+        ```python
+        from oodocs import Paragraph, math
+
+        paragraph = Paragraph("Energy is ", math(r"E = mc^2"), ".")
+        ```
     """
 
     def __init__(self, value: str, style: TextStyle | None = None) -> None:
@@ -933,6 +1091,11 @@ def math(value: str, *, style: TextStyle | None = None) -> Math:
 
     Returns:
         Inline math fragment.
+
+    Examples:
+        ```python
+        fragment = math(r"\alpha + \beta")
+        ```
     """
 
     return Math.inline(value, style=style)
@@ -947,6 +1110,11 @@ def styled(value: str, **style_values: object) -> Text:
 
     Returns:
         Styled text fragment.
+
+    Examples:
+        ```python
+        fragment = styled("Green", color="008000", bold=True)
+        ```
     """
 
     return Text.styled(value, **style_values)
@@ -961,6 +1129,11 @@ def bold(value: str, *, style: TextStyle | None = None) -> Bold:
 
     Returns:
         Bold text fragment.
+
+    Examples:
+        ```python
+        fragment = bold("required")
+        ```
     """
 
     return Text.bold(value, style=style)
@@ -975,6 +1148,11 @@ def italic(value: str, *, style: TextStyle | None = None) -> Italic:
 
     Returns:
         Italic text fragment.
+
+    Examples:
+        ```python
+        fragment = italic("optional")
+        ```
     """
 
     return Text.italic(value, style=style)
@@ -989,6 +1167,11 @@ def code(value: str, *, style: TextStyle | None = None) -> Monospace:
 
     Returns:
         Monospace text fragment.
+
+    Examples:
+        ```python
+        fragment = code("pip install oodocs")
+        ```
     """
 
     return Text.code(value, style=style)
@@ -1003,6 +1186,11 @@ def superscript(value: object, *, style: TextStyle | None = None) -> Text:
 
     Returns:
         Superscript text fragment.
+
+    Examples:
+        ```python
+        fragment = superscript(2)
+        ```
     """
 
     return Text.superscript(value, style=style)
@@ -1017,6 +1205,11 @@ def subscript(value: object, *, style: TextStyle | None = None) -> Text:
 
     Returns:
         Subscript text fragment.
+
+    Examples:
+        ```python
+        fragment = subscript("n")
+        ```
     """
 
     return Text.subscript(value, style=style)
@@ -1039,6 +1232,11 @@ def prescript(
 
     Returns:
         Inline fragments containing prescripts and body content.
+
+    Examples:
+        ```python
+        fragments = prescript(14, 6, "C")
+        ```
     """
 
     return [
@@ -1101,6 +1299,11 @@ def tag(
 
     Returns:
         Inline chip fragment.
+
+    Examples:
+        ```python
+        fragment = tag("api")
+        ```
     """
 
     return _chip(value, kind="tag", chip_style=chip_style, style=style, **style_values)
@@ -1123,6 +1326,11 @@ def badge(
 
     Returns:
         Inline chip fragment.
+
+    Examples:
+        ```python
+        fragment = badge("v1.2")
+        ```
     """
 
     return _chip(value, kind="badge", chip_style=chip_style, style=style, **style_values)
@@ -1150,6 +1358,11 @@ def status(
 
     Raises:
         ValueError: If ``state`` is not supported.
+
+    Examples:
+        ```python
+        fragment = status("passed", state="success")
+        ```
     """
 
     resolved_style = chip_style or _default_status_chip_style(state)
@@ -1175,6 +1388,11 @@ def keyboard(
 
     Returns:
         Inline chip fragment.
+
+    Examples:
+        ```python
+        fragment = keyboard("Ctrl+S")
+        ```
     """
 
     return _chip(value, kind="keyboard", chip_style=chip_style, style=style, **style_values)
@@ -1195,6 +1413,11 @@ def color(
 
     Returns:
         Text fragment with the requested color.
+
+    Examples:
+        ```python
+        fragment = color("Alert", "C00000")
+        ```
     """
 
     return Text.color(value, color, style=style)
@@ -1215,6 +1438,11 @@ def highlight(
 
     Returns:
         Highlighted text fragment.
+
+    Examples:
+        ```python
+        fragment = highlight("review")
+        ```
     """
 
     return Text.highlight(value, color=color, style=style)
@@ -1229,6 +1457,11 @@ def strike(value: str, *, style: TextStyle | None = None) -> Strikethrough:
 
     Returns:
         Strikethrough text fragment.
+
+    Examples:
+        ```python
+        fragment = strike("deprecated")
+        ```
     """
 
     return Text.strikethrough(value, style=style)
@@ -1243,6 +1476,11 @@ def strikethrough(value: str, *, style: TextStyle | None = None) -> Strikethroug
 
     Returns:
         Strikethrough text fragment.
+
+    Examples:
+        ```python
+        fragment = strikethrough("removed")
+        ```
     """
 
     return Text.strikethrough(value, style=style)
@@ -1253,6 +1491,13 @@ def line_break() -> LineBreak:
 
     Returns:
         Line break inline fragment.
+
+    Examples:
+        ```python
+        from oodocs import Paragraph, line_break
+
+        paragraph = Paragraph("Line 1", line_break(), "Line 2")
+        ```
     """
 
     return LineBreak()
@@ -1272,6 +1517,11 @@ def link(
 
     Returns:
         External hyperlink fragment.
+
+    Examples:
+        ```python
+        fragment = link("https://example.com", "Example")
+        ```
     """
 
     return Hyperlink.external(target, *label, style=style)
@@ -1293,6 +1543,11 @@ def coerce_inlines(values: Iterable[InlineInput]) -> list[Text]:
     Raises:
         TypeError: If a value cannot be converted or must be referenced
             explicitly.
+
+    Examples:
+        ```python
+        fragments = coerce_inlines(["A ", bold("word"), None])
+        ```
     """
 
     normalized: list[Text] = []

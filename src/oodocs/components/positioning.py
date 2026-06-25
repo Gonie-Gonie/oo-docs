@@ -31,6 +31,12 @@ class PositionedBox:
         y: Page-relative y coordinate in inches.
         width: Width in inches.
         height: Height in inches.
+
+    Examples:
+        ```python
+        item = TextBox("DRAFT", width=2.0, height=0.5)
+        box = PositionedBox(item=item, x=1.0, y=1.0, width=2.0, height=0.5)
+        ```
     """
 
     item: PositionedItem
@@ -73,6 +79,21 @@ class TextBox(Block):
 
     Raises:
         ValueError: If placement, alignment, or dimensions are invalid.
+
+    Examples:
+        ```python
+        from oodocs import DocumentSettings, TextBox
+
+        watermark = TextBox(
+            "DRAFT",
+            x=1,
+            y=1,
+            width=2,
+            height=0.5,
+            font_size=24,
+        )
+        settings = DocumentSettings(page_items=[watermark])
+        ```
     """
 
     content: list[Text]
@@ -197,6 +218,20 @@ class Shape(Block):
 
     Raises:
         ValueError: If kind, placement, dimensions, or name are invalid.
+
+    Examples:
+        ```python
+        from oodocs import Shape
+
+        anchor = Shape.rect(
+            width=2,
+            height=1,
+            x=0.5,
+            y=0.5,
+            name="logo-area",
+            fill_color="F7FAFC",
+        )
+        ```
     """
 
     kind: ShapeKind
@@ -265,6 +300,11 @@ class Shape(Block):
 
         Returns:
             Rectangle shape.
+
+        Examples:
+            ```python
+            shape = Shape.rect(width=2, height=1, fill_color="E7EEF7")
+            ```
         """
 
         return cls("rect", width=width, height=height, **kwargs)
@@ -280,6 +320,11 @@ class Shape(Block):
 
         Returns:
             Ellipse shape.
+
+        Examples:
+            ```python
+            shape = Shape.ellipse(width=1, height=1, stroke_color="336699")
+            ```
         """
 
         return cls("ellipse", width=width, height=height, **kwargs)
@@ -295,6 +340,11 @@ class Shape(Block):
 
         Returns:
             Line shape.
+
+        Examples:
+            ```python
+            shape = Shape.line(width=3, height=0, stroke_width=0.5)
+            ```
         """
 
         return cls("line", width=width, height=height, **kwargs)
@@ -371,6 +421,13 @@ class ImageBox(Block):
 
     Raises:
         ValueError: If placement, dimensions, or fit are invalid.
+
+    Examples:
+        ```python
+        from oodocs import ImageBox
+
+        logo = ImageBox("logo.png", x=0.5, y=0.5, width=1.2, height=0.6)
+        ```
     """
 
     image_source: object
@@ -492,6 +549,11 @@ def coerce_positioned_items(values: Iterable[PositionedItem] | None) -> tuple[Po
     Raises:
         TypeError: If an item type is unsupported.
         ValueError: If an item is inline or references an unknown anchor.
+
+    Examples:
+        ```python
+        items = coerce_positioned_items([TextBox("DRAFT", width=2, height=0.5)])
+        ```
     """
 
     if values is None:
@@ -523,6 +585,18 @@ def resolve_positioned_boxes(
 
     Raises:
         ValueError: If anchors are unknown, duplicated, or cyclic.
+
+    Examples:
+        ```python
+        from oodocs import DocumentSettings, TextBox
+
+        settings = DocumentSettings()
+        boxes = resolve_positioned_boxes(
+            [TextBox("DRAFT", width=2, height=0.5)],
+            settings,
+            settings.unit,
+        )
+        ```
     """
 
     item_list = tuple(items)

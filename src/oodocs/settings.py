@@ -44,6 +44,13 @@ class PageSize:
         height: Page height in ``unit``.
         unit: Length unit for ``width`` and ``height``. When ``None``, callers
             must supply a default unit when resolving physical sizes.
+
+    Examples:
+        ```python
+        from oodocs import DocumentSettings, PageSize
+
+        settings = DocumentSettings(page_size=PageSize.letter())
+        ```
     """
 
     width: float
@@ -67,6 +74,11 @@ class PageSize:
 
         Returns:
             A ``PageSize`` configured as 21 x 29.7 cm.
+
+        Examples:
+            ```python
+            page_size = PageSize.a4()
+            ```
         """
 
         return cls(21.0, 29.7, unit="cm")
@@ -77,6 +89,11 @@ class PageSize:
 
         Returns:
             A ``PageSize`` configured as 8.5 x 11 inches.
+
+        Examples:
+            ```python
+            page_size = PageSize.letter()
+            ```
         """
 
         return cls(8.5, 11.0, unit="in")
@@ -89,6 +106,11 @@ class PageSize:
 
         Returns:
             The resolved page width in inches.
+
+        Examples:
+            ```python
+            assert PageSize.letter().width_in_inches("in") == 8.5
+            ```
         """
 
         return length_to_inches(self.width, self.unit or default_unit)
@@ -101,6 +123,11 @@ class PageSize:
 
         Returns:
             The resolved page height in inches.
+
+        Examples:
+            ```python
+            assert PageSize.letter().height_in_inches("in") == 11.0
+            ```
         """
 
         return length_to_inches(self.height, self.unit or default_unit)
@@ -117,6 +144,13 @@ class PageMargins:
         left: Left margin in ``unit``.
         unit: Length unit for all margin values. When ``None``, callers must
             supply a default unit when resolving physical margins.
+
+    Examples:
+        ```python
+        from oodocs import DocumentSettings, PageMargins
+
+        settings = DocumentSettings(page_margins=PageMargins(1.0, 0.8, 1.0, 0.8, unit="in"))
+        ```
     """
 
     top: float
@@ -150,6 +184,11 @@ class PageMargins:
 
         Returns:
             A ``PageMargins`` instance with equal sides.
+
+        Examples:
+            ```python
+            margins = PageMargins.all(1.0, unit="in")
+            ```
         """
 
         return cls(value, value, value, value, unit=unit)
@@ -171,6 +210,11 @@ class PageMargins:
 
         Returns:
             A ``PageMargins`` instance with symmetric sides.
+
+        Examples:
+            ```python
+            margins = PageMargins.symmetric(vertical=1.0, horizontal=0.75, unit="in")
+            ```
         """
 
         return cls(vertical, horizontal, vertical, horizontal, unit=unit)
@@ -183,6 +227,11 @@ class PageMargins:
 
         Returns:
             The top margin in inches.
+
+        Examples:
+            ```python
+            assert PageMargins.all(1.0, unit="in").top_in_inches("in") == 1.0
+            ```
         """
 
         return length_to_inches(self.top, self.unit or default_unit)
@@ -195,6 +244,12 @@ class PageMargins:
 
         Returns:
             The right margin in inches.
+
+        Examples:
+            ```python
+            margins = PageMargins.symmetric(vertical=1.0, horizontal=0.5, unit="in")
+            assert margins.right_in_inches("in") == 0.5
+            ```
         """
 
         return length_to_inches(self.right, self.unit or default_unit)
@@ -207,6 +262,11 @@ class PageMargins:
 
         Returns:
             The bottom margin in inches.
+
+        Examples:
+            ```python
+            assert PageMargins.all(1.0, unit="in").bottom_in_inches("in") == 1.0
+            ```
         """
 
         return length_to_inches(self.bottom, self.unit or default_unit)
@@ -219,6 +279,12 @@ class PageMargins:
 
         Returns:
             The left margin in inches.
+
+        Examples:
+            ```python
+            margins = PageMargins.symmetric(vertical=1.0, horizontal=0.5, unit="in")
+            assert margins.left_in_inches("in") == 0.5
+            ```
         """
 
         return length_to_inches(self.left, self.unit or default_unit)
@@ -242,6 +308,18 @@ class DocumentSettings:
         page_margins: Physical page margins.
         page_items: Absolute-positioned page decorations or overlays.
         theme: Rendering theme.
+
+    Examples:
+        ```python
+        from oodocs import Author, DocumentSettings, PageMargins, PageSize
+
+        settings = DocumentSettings(
+            authors=[Author("Jane Doe", email="jane@example.edu")],
+            page_size=PageSize.letter(),
+            page_margins=PageMargins.symmetric(vertical=1.0, horizontal=0.8, unit="in"),
+            cover_page=True,
+        )
+        ```
     """
 
     metadata_author: str | None
@@ -288,6 +366,12 @@ class DocumentSettings:
 
         Returns:
             Page width converted from the configured page unit to inches.
+
+        Examples:
+            ```python
+            settings = DocumentSettings(page_size=PageSize.letter())
+            assert settings.page_width_in_inches() == 8.5
+            ```
         """
 
         return self.page_size.width_in_inches(self.unit)
@@ -297,6 +381,12 @@ class DocumentSettings:
 
         Returns:
             Page height converted from the configured page unit to inches.
+
+        Examples:
+            ```python
+            settings = DocumentSettings(page_size=PageSize.letter())
+            assert settings.page_height_in_inches() == 11.0
+            ```
         """
 
         return self.page_size.height_in_inches(self.unit)
@@ -306,6 +396,12 @@ class DocumentSettings:
 
         Returns:
             A ``(top, right, bottom, left)`` tuple in inches.
+
+        Examples:
+            ```python
+            settings = DocumentSettings(page_margins=PageMargins.all(1.0, unit="in"))
+            assert settings.page_margin_inches() == (1.0, 1.0, 1.0, 1.0)
+            ```
         """
 
         return (
@@ -320,6 +416,15 @@ class DocumentSettings:
 
         Returns:
             Non-negative writable width in inches.
+
+        Examples:
+            ```python
+            settings = DocumentSettings(
+                page_size=PageSize.letter(),
+                page_margins=PageMargins.all(1.0, unit="in"),
+            )
+            assert settings.text_width_in_inches() == 6.5
+            ```
         """
 
         _, right, _, left = self.page_margin_inches()
@@ -330,6 +435,15 @@ class DocumentSettings:
 
         Returns:
             Non-negative writable height in inches.
+
+        Examples:
+            ```python
+            settings = DocumentSettings(
+                page_size=PageSize.letter(),
+                page_margins=PageMargins.all(1.0, unit="in"),
+            )
+            assert settings.text_height_in_inches() == 9.0
+            ```
         """
 
         top, _, bottom, _ = self.page_margin_inches()
@@ -344,6 +458,12 @@ class DocumentSettings:
 
         Returns:
             The scaled page width in the requested unit.
+
+        Examples:
+            ```python
+            settings = DocumentSettings(page_size=PageSize.letter())
+            assert settings.get_page_width(unit="in") == 8.5
+            ```
         """
 
         output_unit = normalize_length_unit(unit) if unit is not None else self.unit
@@ -358,6 +478,12 @@ class DocumentSettings:
 
         Returns:
             The scaled page height in the requested unit.
+
+        Examples:
+            ```python
+            settings = DocumentSettings(page_size=PageSize.letter())
+            assert settings.get_page_height(unit="in") == 11.0
+            ```
         """
 
         output_unit = normalize_length_unit(unit) if unit is not None else self.unit
@@ -372,6 +498,15 @@ class DocumentSettings:
 
         Returns:
             The scaled writable width in the requested unit.
+
+        Examples:
+            ```python
+            settings = DocumentSettings(
+                page_size=PageSize.letter(),
+                page_margins=PageMargins.all(1.0, unit="in"),
+            )
+            assert settings.get_text_width(unit="in") == 6.5
+            ```
         """
 
         output_unit = normalize_length_unit(unit) if unit is not None else self.unit
@@ -386,6 +521,15 @@ class DocumentSettings:
 
         Returns:
             The scaled writable height in the requested unit.
+
+        Examples:
+            ```python
+            settings = DocumentSettings(
+                page_size=PageSize.letter(),
+                page_margins=PageMargins.all(1.0, unit="in"),
+            )
+            assert settings.get_text_height(unit="in") == 9.0
+            ```
         """
 
         output_unit = normalize_length_unit(unit) if unit is not None else self.unit
@@ -397,6 +541,12 @@ class DocumentSettings:
         Returns:
             The explicit metadata author, a semicolon-separated author list, or
             ``None`` when no author data is available.
+
+        Examples:
+            ```python
+            settings = DocumentSettings(authors=["Jane Doe", "John Smith"])
+            assert settings.resolved_author() == "Jane Doe; John Smith"
+            ```
         """
 
         if self.metadata_author is not None:
@@ -410,6 +560,12 @@ class DocumentSettings:
 
         Yields:
             Tuples of ``(line, is_author_boundary)`` for renderer title matter.
+
+        Examples:
+            ```python
+            settings = DocumentSettings(authors=["Jane Doe"])
+            lines = list(settings.iter_author_title_lines())
+            ```
         """
 
         if self.author_layout.mode == "stacked":

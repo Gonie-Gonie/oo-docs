@@ -50,6 +50,13 @@ class OODocsError(Exception):
 
     Args:
         *args: Exception message arguments forwarded to ``Exception``.
+
+    Examples:
+        ```python
+        from oodocs import OODocsError
+
+        raise OODocsError("Rendering failed")
+        ```
     """
 
 

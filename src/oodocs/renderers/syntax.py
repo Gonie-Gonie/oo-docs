@@ -21,6 +21,11 @@ class SyntaxToken:
         color: Optional hex color without a leading ``#``.
         bold: Whether the token should render in bold.
         italic: Whether the token should render in italics.
+
+    Examples:
+        ```python
+        token = SyntaxToken("return", color="008000", bold=True)
+        ```
     """
 
     text: str
@@ -63,6 +68,12 @@ def syntax_tokens(source: str, language: str | None = None) -> list[SyntaxToken]
 
     Returns:
         Ordered syntax tokens preserving the source text.
+
+    Examples:
+        ```python
+        tokens = syntax_tokens("print('ok')", language="python")
+        assert "".join(token.text for token in tokens) == "print('ok')\\n"
+        ```
     """
 
     style = _pygments_style()
@@ -95,6 +106,12 @@ def syntax_html(source: str, language: str | None = None) -> str:
     Returns:
         Escaped HTML containing optional inline span styles for highlighted
         tokens.
+
+    Examples:
+        ```python
+        html = syntax_html("print('ok')", language="python")
+        assert "print" in html
+        ```
     """
 
     pieces: list[str] = []
@@ -126,6 +143,12 @@ def syntax_pdf_markup(source: str, language: str | None = None) -> str:
 
     Returns:
         Escaped ReportLab paragraph markup with font, bold, and italic tags.
+
+    Examples:
+        ```python
+        markup = syntax_pdf_markup("print('ok')", language="python")
+        assert "print" in markup
+        ```
     """
 
     pieces: list[str] = []

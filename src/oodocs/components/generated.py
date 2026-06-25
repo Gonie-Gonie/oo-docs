@@ -23,6 +23,11 @@ class TocLevelStyle:
         font_size_delta: Optional font-size delta from the base TOC style.
         bold: Optional bold override.
         italic: Optional italic override.
+
+    Examples:
+        ```python
+        style = TocLevelStyle(indent=0.25, bold=True)
+        ```
     """
 
     indent: float | None = None
@@ -47,6 +52,11 @@ def coerce_toc_level_style(value: TocLevelStyleInput) -> TocLevelStyle:
 
     Raises:
         TypeError: If ``value`` cannot be converted.
+
+    Examples:
+        ```python
+        style = coerce_toc_level_style({"indent": 0.25, "bold": True})
+        ```
     """
 
     if isinstance(value, TocLevelStyle):
@@ -63,6 +73,13 @@ class TableList(Block):
     Args:
         title: Optional page title. Renderers use their default title when
             omitted.
+
+    Examples:
+        ```python
+        from oodocs import Document, TableList
+
+        doc = Document("Report", TableList("Tables"))
+        ```
     """
 
     title: list[Text] | None
@@ -120,6 +137,13 @@ class FigureList(Block):
     Args:
         title: Optional page title. Renderers use their default title when
             omitted.
+
+    Examples:
+        ```python
+        from oodocs import Document, FigureList
+
+        doc = Document("Report", FigureList("Figures"))
+        ```
     """
 
     title: list[Text] | None
@@ -177,6 +201,13 @@ class ReferencesPage(Block):
     Args:
         title: Optional page title. Renderers use their default title when
             omitted.
+
+    Examples:
+        ```python
+        from oodocs import Document, ReferencesPage
+
+        doc = Document("Paper", ReferencesPage("Bibliography"))
+        ```
     """
 
     title: list[Text] | None
@@ -234,6 +265,13 @@ class CommentsPage(Block):
     Args:
         title: Optional page title. Renderers use their default title when
             omitted.
+
+    Examples:
+        ```python
+        from oodocs import CommentsPage, Document
+
+        doc = Document("Review", CommentsPage("Reviewer Notes"))
+        ```
     """
 
     title: list[Text] | None
@@ -291,6 +329,13 @@ class FootnotesPage(Block):
     Args:
         title: Optional page title. Renderers use their default title when
             omitted.
+
+    Examples:
+        ```python
+        from oodocs import Document, FootnotesPage
+
+        doc = Document("Report", FootnotesPage())
+        ```
     """
 
     title: list[Text] | None
@@ -357,6 +402,18 @@ class TableOfContents(Block):
 
     Raises:
         ValueError: If ``max_level`` is negative.
+
+    Examples:
+        ```python
+        from oodocs import Document, TableOfContents, TocLevelStyle
+
+        toc = TableOfContents(
+            "Contents",
+            max_level=2,
+            level_styles={1: TocLevelStyle(bold=True)},
+        )
+        doc = Document("Report", toc)
+        ```
     """
 
     title: list[Text] | None

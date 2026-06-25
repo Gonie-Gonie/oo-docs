@@ -42,6 +42,14 @@ class ImageData:
 
     Raises:
         ValueError: If image data or format is empty.
+
+    Examples:
+        ```python
+        from oodocs import Figure, ImageData
+
+        image = ImageData(png_bytes, format="png")
+        figure = Figure(image, caption="Generated chart")
+        ```
     """
 
     data: bytes
@@ -89,6 +97,11 @@ def coerce_image_source(source: PathLike | object) -> object:
     Returns:
         ``Path`` for path-like input, ``ImageData`` for bytes input, or the
         original object for plot-like sources.
+
+    Examples:
+        ```python
+        source = coerce_image_source("figures/chart.png")
+        ```
     """
 
     if isinstance(source, ImageData):
@@ -120,6 +133,12 @@ def image_source_to_buffer(
 
     Raises:
         TypeError: If ``source`` cannot be rendered to image bytes.
+
+    Examples:
+        ```python
+        buffer = image_source_to_buffer(ImageData(png_bytes), image_format="png")
+        assert buffer.tell() == 0
+        ```
     """
 
     if isinstance(source, ImageData):
@@ -155,6 +174,11 @@ def image_source_to_bytes(
 
     Raises:
         TypeError: If ``source`` cannot be rendered to image bytes.
+
+    Examples:
+        ```python
+        data = image_source_to_bytes(ImageData(png_bytes), image_format="png")
+        ```
     """
 
     if isinstance(source, ImageData):
@@ -178,6 +202,12 @@ def normalize_media_placement(value: str | None) -> MediaPlacement:
 
     Raises:
         ValueError: If the placement is unsupported.
+
+    Examples:
+        ```python
+        assert normalize_media_placement("h") == "here"
+        assert normalize_media_placement(None) == "auto"
+        ```
     """
 
     if value is None:
@@ -214,6 +244,12 @@ def normalize_table_split(value: TableSplit) -> TableSplit:
 
     Raises:
         ValueError: If the value is unsupported.
+
+    Examples:
+        ```python
+        assert normalize_table_split("auto") == "auto"
+        assert normalize_table_split(True) is True
+        ```
     """
 
     if isinstance(value, bool):
@@ -234,6 +270,13 @@ class TableCellStyle:
         italic: Optional italic override.
         horizontal_alignment: Optional horizontal alignment override.
         vertical_alignment: Optional vertical alignment override.
+
+    Examples:
+        ```python
+        from oodocs import TableCellStyle
+
+        style = TableCellStyle(background_color="F8FAFC", bold=True)
+        ```
     """
 
     background_color: str | None = None
@@ -265,6 +308,12 @@ class TableCellStyle:
 
         Returns:
             New merged table cell style.
+
+        Examples:
+            ```python
+            base = TableCellStyle(background_color="FFFFFF")
+            merged = base.merged(TableCellStyle(text_color="111827", bold=True))
+            ```
         """
 
         merged = TableCellStyle(
@@ -296,6 +345,12 @@ class TableCellStyle:
 
         Returns:
             Text style containing text color, bold, and italic values.
+
+        Examples:
+            ```python
+            style = TableCellStyle(text_color="111827", bold=True)
+            text_style = style.text_style()
+            ```
         """
 
         return TextStyle(
@@ -319,6 +374,11 @@ def coerce_table_cell_style(value: TableCellStyleInput) -> TableCellStyle:
 
     Raises:
         TypeError: If ``value`` cannot be converted.
+
+    Examples:
+        ```python
+        style = coerce_table_cell_style({"background_color": "EEF2FF"})
+        ```
     """
 
     if isinstance(value, TableCellStyle):
@@ -365,6 +425,14 @@ class TableCell:
 
     Raises:
         ValueError: If ``colspan`` or ``rowspan`` is less than one.
+
+    Examples:
+        ```python
+        from oodocs import Table, TableCell
+
+        header = TableCell("Model", colspan=2, bold=True)
+        table = Table([[header]], [["Baseline", "v1"]])
+        ```
     """
 
     content: Paragraph
@@ -427,6 +495,11 @@ def coerce_table_cell(value: TableCellInput) -> TableCell:
 
     Returns:
         Table cell instance.
+
+    Examples:
+        ```python
+        cell = coerce_table_cell("Accuracy")
+        ```
     """
 
     if isinstance(value, TableCell):
@@ -601,6 +674,11 @@ class TablePlacement:
         cell: Cell rendered at the position.
         header: Whether the placement belongs to a header row.
         body_row_index: Zero-based body row index when this is a body cell.
+
+    Examples:
+        ```python
+        placement = TablePlacement(row=0, column=0, cell=TableCell("Metric"), header=True)
+        ```
     """
 
     row: int
@@ -619,6 +697,12 @@ class TableLayout:
         column_count: Total rendered columns after spans are expanded.
         header_row_count: Number of leading header rows.
         placements: Positioned cells that begin at each rendered grid location.
+
+    Examples:
+        ```python
+        layout = build_table_layout([[TableCell("Metric")]], [[TableCell("Accuracy")]])
+        assert layout.column_count == 1
+        ```
     """
 
     row_count: int
@@ -642,6 +726,14 @@ def build_table_layout(
 
     Raises:
         ValueError: If row or column spans overlap.
+
+    Examples:
+        ```python
+        header = [[TableCell("Metric"), TableCell("Value")]]
+        body = [[TableCell("Latency"), TableCell("42 ms")]]
+        layout = build_table_layout(header, body)
+        assert layout.row_count == 2
+        ```
     """
 
     all_rows = [(True, row, None) for row in header_rows] + [
@@ -843,6 +935,18 @@ class Table(Block):
     Raises:
         ValueError: If rows are missing, thresholds are invalid, or column
             widths do not match the expanded layout.
+
+    Examples:
+        ```python
+        from oodocs import Document, Table
+
+        table = Table(
+            ["Metric", "Value"],
+            [["Latency", "42 ms"], ["Errors", "0"]],
+            caption="Service health",
+        )
+        doc = Document("Status", table)
+        ```
     """
 
     header_rows: list[list[TableCell]]
@@ -1129,6 +1233,13 @@ class Table(Block):
 
         Returns:
             Table built from the dataframe-like object.
+
+        Examples:
+            ```python
+            from oodocs import Table
+
+            table = Table.from_dataframe(df, caption="Experiment results")
+            ```
         """
 
         return cls(
@@ -1193,6 +1304,16 @@ class Table(Block):
         Raises:
             ValueError: If columns cannot be inferred or headers do not match.
             TypeError: If a record type is unsupported.
+
+        Examples:
+            ```python
+            from oodocs import Table
+
+            table = Table.from_records(
+                [{"name": "docx", "status": "ok"}, {"name": "pdf", "status": "ok"}],
+                caption="Renderer status",
+            )
+            ```
         """
 
         record_list = list(records)
@@ -1268,6 +1389,16 @@ class Table(Block):
 
         Raises:
             ValueError: If ``mapping`` is empty.
+
+        Examples:
+            ```python
+            from oodocs import Table
+
+            table = Table.from_mapping(
+                {"package": "oodocs", "version": "1.0.4"},
+                caption="Build metadata",
+            )
+            ```
         """
 
         if not mapping:
@@ -1314,6 +1445,13 @@ class Table(Block):
 
         Raises:
             ValueError: If the file has no rows.
+
+        Examples:
+            ```python
+            from oodocs import Table
+
+            table = Table.from_csv("artifacts/evidence/results.csv", caption="Results")
+            ```
         """
 
         with Path(path).open("r", encoding=encoding, newline="") as handle:
@@ -1353,6 +1491,13 @@ class Table(Block):
 
         Returns:
             Table built from the TSV rows.
+
+        Examples:
+            ```python
+            from oodocs import Table
+
+            table = Table.from_tsv("data/summary.tsv", caption="Summary")
+            ```
         """
 
         return cls.from_csv(
@@ -1420,6 +1565,13 @@ class Figure(Block):
         format: Image format for plot-like sources.
         dpi: Optional image DPI for plot-like sources.
         placement: Optional placement policy.
+
+    Examples:
+        ```python
+        from oodocs import Figure
+
+        figure = Figure("figures/architecture.png", caption="System architecture", width=4)
+        ```
     """
 
     image_source: object
@@ -1476,6 +1628,11 @@ class Figure(Block):
 
         Returns:
             Figure using in-memory image bytes.
+
+        Examples:
+            ```python
+            figure = Figure.from_bytes(png_bytes, caption="Generated plot")
+            ```
         """
 
         return cls(ImageData(data, format=format), format=format, **figure_kwargs)
@@ -1500,6 +1657,13 @@ class Figure(Block):
 
         Raises:
             TypeError: If ``buffer`` does not provide ``getvalue`` or ``read``.
+
+        Examples:
+            ```python
+            from io import BytesIO
+
+            figure = Figure.from_buffer(BytesIO(png_bytes), format="png")
+            ```
         """
 
         if hasattr(buffer, "getvalue"):
@@ -1606,6 +1770,13 @@ class SubFigure:
         format: Image format for plot-like sources.
         dpi: Optional image DPI for plot-like sources.
         label: Optional explicit subfigure label.
+
+    Examples:
+        ```python
+        from oodocs import SubFigure
+
+        left = SubFigure("before.png", caption="Before")
+        ```
     """
 
     image_source: object
@@ -1707,6 +1878,18 @@ class SubFigureGroup(Block):
 
     Raises:
         ValueError: If no subfigures are provided or layout values are invalid.
+
+    Examples:
+        ```python
+        from oodocs import SubFigure, SubFigureGroup
+
+        group = SubFigureGroup(
+            SubFigure("before.png", caption="Before"),
+            SubFigure("after.png", caption="After"),
+            caption="Before and after comparison",
+            columns=2,
+        )
+        ```
     """
 
     subfigures: list[SubFigure]

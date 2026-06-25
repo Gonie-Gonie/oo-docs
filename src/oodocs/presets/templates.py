@@ -77,6 +77,14 @@ class ManuscriptSection:
         children: Section child blocks.
         level: Heading level.
         numbered: Whether the section should be numbered.
+
+    Examples:
+        ```python
+        from oodocs import Paragraph
+        from oodocs.presets import ManuscriptSection
+
+        section = ManuscriptSection("Methods", [Paragraph("Cohort details.")])
+        ```
     """
 
     title: InlineInput
@@ -89,6 +97,11 @@ class ManuscriptSection:
 
         Returns:
             ``Section`` built from this descriptor.
+
+        Examples:
+            ```python
+            concrete = ManuscriptSection("Results", ["Model accuracy improved."]).to_section()
+            ```
         """
 
         return Section(
@@ -115,6 +128,18 @@ class JournalArticleTemplate:
         include_contents: Whether to include a table of contents by default.
         include_references: Whether to include a references page by default.
         cover_page: Whether to render title matter on a cover page by default.
+
+    Examples:
+        ```python
+        from oodocs.presets import JournalArticleTemplate
+
+        document = JournalArticleTemplate().build(
+            "Clinical Benchmark",
+            abstract="We compared model outputs across held-out tasks.",
+            sections=[("Results", ["The calibrated model reduced error."])],
+            keywords=["benchmark", "validation"],
+        )
+        ```
     """
 
     name: str = "Journal article"
@@ -162,6 +187,16 @@ class JournalArticleTemplate:
 
         Returns:
             Built document.
+
+        Examples:
+            ```python
+            template = JournalArticleTemplate(include_contents=True)
+            document = template.build(
+                "Release Evidence",
+                abstract="This report summarizes validation evidence.",
+                sections=[("Evaluation", ["All required checks passed."])],
+            )
+            ```
         """
 
         include_contents_value = self.include_contents if include_contents is None else include_contents

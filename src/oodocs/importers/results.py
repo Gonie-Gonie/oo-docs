@@ -119,6 +119,14 @@ class ImportPolicyError(OODocsError):
 
     Attributes:
         issues: Diagnostics that caused the strict import to fail.
+
+    Examples:
+        ```python
+        from oodocs import ImportIssue, ImportPolicyError
+
+        issue = ImportIssue("error", "unsupported-html", "Raw HTML is not supported.")
+        raise ImportPolicyError([issue])
+        ```
     """
 
     def __init__(self, issues: Sequence[ImportIssue]) -> None:
@@ -126,6 +134,11 @@ class ImportPolicyError(OODocsError):
 
         Args:
             issues: Import diagnostics that should block strict conversion.
+
+        Examples:
+            ```python
+            error = ImportPolicyError([ImportIssue("error", "unsupported", "Blocked.")])
+            ```
         """
 
         self.issues = tuple(issues)
@@ -181,6 +194,18 @@ def resolve_import_result(
         ImportPolicyError: If ``import_policy`` is ``"strict"`` and any issue
             was collected.
         ValueError: If ``import_policy`` is not supported.
+
+    Examples:
+        ```python
+        from oodocs import Paragraph
+
+        result = resolve_import_result(
+            [Paragraph("Imported")],
+            [],
+            diagnostics=True,
+            import_policy="warn",
+        )
+        ```
     """
 
     normalized_policy = normalize_import_policy(import_policy)

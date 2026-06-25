@@ -15,6 +15,19 @@ class Block:
 
     Attributes:
         None: Subclasses define concrete block data and renderer behavior.
+
+    Notes:
+        Application code usually instantiates concrete subclasses such as
+        ``Paragraph``, ``Table``, or ``Figure``. Custom block implementations
+        should override the renderer hooks.
+
+    Examples:
+        ```python
+        from oodocs import Paragraph
+
+        target = Paragraph("Deployment note")
+        paragraph = Paragraph("See ", target.reference("the deployment note"))
+        ```
     """
 
     def reference(
@@ -29,6 +42,14 @@ class Block:
 
         Returns:
             An inline block reference targeting this block.
+
+        Examples:
+            ```python
+            from oodocs import Paragraph
+
+            target = Paragraph("Important details")
+            reference = target.reference("details")
+            ```
         """
 
         from oodocs.components.inline import reference
@@ -109,6 +130,12 @@ def coerce_blocks(values: Iterable[BlockInput]) -> list[Block]:
 
     Raises:
         TypeError: If a value cannot be converted to a block.
+
+    Examples:
+        ```python
+        blocks = coerce_blocks(["Intro", None, ["Nested paragraph"]])
+        assert len(blocks) == 2
+        ```
     """
 
     from oodocs.components.blocks import Paragraph
@@ -136,6 +163,12 @@ class Body(Block):
 
     Args:
         *children: Initial block content using ``coerce_blocks`` rules.
+
+    Examples:
+        ```python
+        body = Body("Intro").add("Next paragraph")
+        assert len(body.children) == 2
+        ```
     """
 
     children: list[Block]
@@ -151,6 +184,12 @@ class Body(Block):
 
         Returns:
             This body, enabling fluent construction.
+
+        Examples:
+            ```python
+            body = Body()
+            body.add("Executive summary", "Evidence")
+            ```
         """
 
         self.children.extend(coerce_blocks(children))
@@ -164,6 +203,12 @@ class Body(Block):
 
         Returns:
             This body, enabling fluent construction.
+
+        Examples:
+            ```python
+            body = Body()
+            body.extend(["First paragraph", "Second paragraph"])
+            ```
         """
 
         self.children.extend(coerce_blocks(children))

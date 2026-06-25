@@ -48,6 +48,13 @@ def markup(
 
     Returns:
         Parsed inline fragments.
+
+    Examples:
+        ```python
+        from oodocs import Paragraph, markup
+
+        paragraph = Paragraph(markup("Use **bold** and `code`."))
+        ```
     """
 
     base_style = style or TextStyle()

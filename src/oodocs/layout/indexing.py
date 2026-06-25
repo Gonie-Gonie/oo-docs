@@ -43,6 +43,15 @@ class CitationReferenceEntry:
         number: Assigned citation number.
         source: Cited bibliography source.
         anchor: Anchor used by renderers for links.
+
+    Examples:
+        ```python
+        from oodocs import CitationSource
+        from oodocs.layout.indexing import CitationReferenceEntry
+
+        source = CitationSource("Validation Study", key="study")
+        entry = CitationReferenceEntry(1, source, "citation_1")
+        ```
     """
 
     number: int
@@ -57,6 +66,14 @@ class CommentReferenceEntry:
     Attributes:
         number: Assigned comment number.
         comment: Inline comment fragment.
+
+    Examples:
+        ```python
+        from oodocs import comment
+        from oodocs.layout.indexing import CommentReferenceEntry
+
+        entry = CommentReferenceEntry(1, comment("Needs reviewer confirmation"))
+        ```
     """
 
     number: int
@@ -70,6 +87,14 @@ class FootnoteReferenceEntry:
     Attributes:
         number: Assigned footnote number.
         footnote: Inline footnote fragment.
+
+    Examples:
+        ```python
+        from oodocs import footnote
+        from oodocs.layout.indexing import FootnoteReferenceEntry
+
+        entry = FootnoteReferenceEntry(1, footnote("Measured on the validation split."))
+        ```
     """
 
     number: int
@@ -85,6 +110,14 @@ class HeadingEntry:
         title: Heading title fragments.
         number: Optional rendered heading number.
         anchor: Optional heading anchor.
+
+    Examples:
+        ```python
+        from oodocs import Text
+        from oodocs.layout.indexing import HeadingEntry
+
+        entry = HeadingEntry(level=1, title=[Text("Methods")], number="1", anchor="heading_1")
+        ```
     """
 
     level: int
@@ -101,6 +134,15 @@ class CaptionEntry:
         number: Assigned caption number.
         block: Captioned table or figure block.
         anchor: Anchor used by renderers for links.
+
+    Examples:
+        ```python
+        from oodocs import Table
+        from oodocs.layout.indexing import CaptionEntry
+
+        table = Table(["Metric"], [["Accuracy"]], caption="Evaluation metrics")
+        entry = CaptionEntry(1, table, "table_1")
+        ```
     """
 
     number: int
@@ -117,6 +159,15 @@ class CountableEntry:
         block: Countable block.
         counter: Counter namespace.
         anchor: Anchor used by renderers for links.
+
+    Examples:
+        ```python
+        from oodocs import Theorem
+        from oodocs.layout.indexing import CountableEntry
+
+        theorem = Theorem("Every release has an audit trail.")
+        entry = CountableEntry(1, theorem, "theorem", "countable_1")
+        ```
     """
 
     number: int
@@ -138,6 +189,16 @@ class RenderIndex:
         headings: Indexed heading entries.
         countables: Indexed theorem-like countable blocks.
         block_anchors: Stable anchors keyed by block identity.
+
+    Examples:
+        ```python
+        from oodocs import Document, Table
+        from oodocs.layout.indexing import build_render_index
+
+        table = Table(["Metric"], [["Accuracy"]], caption="Evaluation metrics")
+        index = build_render_index(Document("Report", table))
+        assert index.table_number(table) == 1
+        ```
     """
 
     tables: list[CaptionEntry] = field(default_factory=list)
@@ -172,6 +233,11 @@ class RenderIndex:
 
         Returns:
             Assigned table number, or ``None`` when uncaptioned.
+
+        Examples:
+            ```python
+            number = render_index.table_number(table)
+            ```
         """
 
         return self.table_numbers.get(id(table))
@@ -184,6 +250,11 @@ class RenderIndex:
 
         Returns:
             Assigned figure number, or ``None`` when uncaptioned.
+
+        Examples:
+            ```python
+            number = render_index.figure_number(figure)
+            ```
         """
 
         return self.figure_numbers.get(id(figure))
@@ -211,6 +282,11 @@ class RenderIndex:
 
         Raises:
             OODocsError: If the target was not indexed.
+
+        Examples:
+            ```python
+            number = render_index.citation_number("smith2024")
+            ```
         """
 
         if isinstance(target, CitationSource):
@@ -235,6 +311,11 @@ class RenderIndex:
 
         Raises:
             OODocsError: If the target was not indexed.
+
+        Examples:
+            ```python
+            entry = render_index.citation_entry("smith2024")
+            ```
         """
 
         number = self.citation_number(target)
@@ -340,6 +421,11 @@ class RenderIndex:
 
         Raises:
             OODocsError: If the target was not indexed.
+
+        Examples:
+            ```python
+            anchor = render_index.citation_anchor("smith2024")
+            ```
         """
 
         return f"citation_{self.citation_number(target)}"
@@ -437,6 +523,16 @@ def build_render_index(document: Document) -> RenderIndex:
 
     Returns:
         Render index containing numbering, anchors, and generated-page entries.
+
+    Examples:
+        ```python
+        from oodocs import Document, Section
+        from oodocs.layout.indexing import build_render_index
+
+        section = Section("Results", "All checks passed.")
+        index = build_render_index(Document("Report", section))
+        assert index.heading_number(section) == "1"
+        ```
     """
 
     render_index = RenderIndex()

@@ -22,6 +22,15 @@ class Affiliation:
 
     Raises:
         ValueError: If every field is empty.
+
+    Examples:
+        ```python
+        affiliation = Affiliation(
+            department="AI Lab",
+            organization="Example University",
+            country="KR",
+        )
+        ```
     """
 
     label: str | None = None
@@ -80,6 +89,11 @@ class AuthorLayout:
 
     Raises:
         ValueError: If the mode or affiliation label format is unsupported.
+
+    Examples:
+        ```python
+        layout = AuthorLayout(mode="journal", corresponding_marker="*")
+        ```
     """
 
     mode: str = "journal"
@@ -108,6 +122,11 @@ class AuthorTitleLine:
 
     Raises:
         ValueError: If ``kind`` is unsupported or no fragments are supplied.
+
+    Examples:
+        ```python
+        line = AuthorTitleLine("name", (Text("Jane Doe"),))
+        ```
     """
 
     kind: str
@@ -133,6 +152,20 @@ class Author:
         corresponding: Whether this is a corresponding author.
         orcid: Optional ORCID identifier or URL.
         note: Optional author note.
+
+    Examples:
+        ```python
+        from oodocs import Author, Document, DocumentSettings
+
+        author = Author(
+            "Jane Doe",
+            affiliations=["Example University"],
+            email="jane@example.edu",
+            corresponding=True,
+        )
+        settings = DocumentSettings(authors=[author])
+        doc = Document("Research Note", settings=settings)
+        ```
     """
 
     name: str
@@ -271,6 +304,11 @@ def coerce_authors(values: Sequence[AuthorInput] | None) -> tuple[Author, ...]:
 
     Returns:
         Tuple of structured author objects.
+
+    Examples:
+        ```python
+        authors = coerce_authors(["Jane Doe", Author("John Smith")])
+        ```
     """
 
     if values is None:
@@ -289,6 +327,11 @@ def coerce_author_layout(value: AuthorLayout | None) -> AuthorLayout:
 
     Returns:
         Supplied layout or the default layout.
+
+    Examples:
+        ```python
+        layout = coerce_author_layout(None)
+        ```
     """
 
     return value if value is not None else AuthorLayout()

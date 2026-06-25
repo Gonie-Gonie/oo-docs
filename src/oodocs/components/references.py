@@ -48,6 +48,12 @@ def normalize_citation_format(value: str) -> str:
     Raises:
         TypeError: If ``value`` is not a string.
         ValueError: If the format is unsupported.
+
+    Examples:
+        ```python
+        normalize_citation_format("APA")
+        # "apa"
+        ```
     """
 
     if not isinstance(value, str):
@@ -73,6 +79,12 @@ def normalize_reference_format(value: str) -> str:
     Raises:
         TypeError: If ``value`` is not a string.
         ValueError: If the format is unsupported.
+
+    Examples:
+        ```python
+        normalize_reference_format("ieee")
+        # "ieee"
+        ```
     """
 
     if not isinstance(value, str):
@@ -100,6 +112,13 @@ def format_citation_label(
 
     Returns:
         Visible inline citation label.
+
+    Examples:
+        ```python
+        source = CitationSource("A Study", authors=("Doe",), year="2024")
+        label = format_citation_label(source, 1, "author-year")
+        # "(Doe, 2024)"
+        ```
     """
 
     resolved_format = normalize_citation_format(citation_format)
@@ -129,6 +148,16 @@ def reference_entry_marker(
 
     Returns:
         Marker prefix, or an empty string for unnumbered references.
+
+    Examples:
+        ```python
+        marker = reference_entry_marker(
+            1,
+            citation_format="numeric",
+            reference_format="plain",
+        )
+        # "[1]"
+        ```
     """
 
     resolved_citation_format = normalize_citation_format(citation_format)
@@ -151,6 +180,17 @@ class CitationSource:
         year: Optional publication year.
         url: Optional URL.
         note: Optional note.
+
+    Examples:
+        ```python
+        source = CitationSource(
+            "Reliable APIs",
+            key="doe2024",
+            authors=("Jane Doe",),
+            publisher="Journal of Docs",
+            year="2024",
+        )
+        ```
     """
 
     title: str
@@ -242,6 +282,14 @@ class CitationLibrary:
 
     Args:
         entries: Optional citation sources to register.
+
+    Examples:
+        ```python
+        library = CitationLibrary([
+            CitationSource("Reliable APIs", key="doe2024", authors=("Jane Doe",))
+        ])
+        citation = library.cite("doe2024")
+        ```
     """
 
     entries: dict[str, CitationSource] = field(default_factory=dict)
@@ -311,6 +359,13 @@ class CitationLibrary:
 
         Returns:
             Citation library containing parsed entries.
+
+        Examples:
+            ```python
+            library = CitationLibrary.from_bibtex(
+                "@article{doe2024, title={Reliable APIs}, author={Doe, Jane}}"
+            )
+            ```
         """
 
         entries: list[CitationSource] = []
@@ -351,6 +406,13 @@ def coerce_citation_library(
 
     Returns:
         Citation library instance.
+
+    Examples:
+        ```python
+        library = coerce_citation_library(
+            [CitationSource("Reliable APIs", key="doe2024")]
+        )
+        ```
     """
 
     if value is None:

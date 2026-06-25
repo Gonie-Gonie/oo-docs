@@ -117,6 +117,11 @@ class EquationSegment:
 
     Raises:
         ValueError: If ``vertical_align`` is unsupported.
+
+    Examples:
+        ```python
+        segment = EquationSegment("2", vertical_align=SUPERSCRIPT)
+        ```
     """
 
     text: str
@@ -135,6 +140,11 @@ def parse_latex_segments(source: str) -> list[EquationSegment]:
 
     Returns:
         Adjacent text segments merged by vertical alignment.
+
+    Examples:
+        ```python
+        segments = parse_latex_segments(r"x^2 + y_1")
+        ```
     """
 
     parser = _EquationParser(source)
@@ -149,6 +159,12 @@ def equation_plain_text(source: str) -> str:
 
     Returns:
         Plain-text approximation of the expression.
+
+    Examples:
+        ```python
+        equation_plain_text(r"\frac{a}{b}")
+        # "(a)/(b)"
+        ```
     """
 
     return "".join(segment.text for segment in parse_latex_segments(source))

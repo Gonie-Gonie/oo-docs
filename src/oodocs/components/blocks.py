@@ -56,6 +56,19 @@ class Paragraph(Block):
             paragraph.
         widow_control: Whether renderers should avoid widowed lines.
         unit: Unit for length overrides.
+
+    Examples:
+        ```python
+        from oodocs import Paragraph, bold, link
+
+        paragraph = Paragraph(
+            "Read the ",
+            link("release notes", "https://example.com/releases"),
+            " before approving ",
+            bold("production"),
+            ".",
+        )
+        ```
     """
 
     content: list[Text]
@@ -166,6 +179,12 @@ def coerce_list_item(value: ListInput) -> Paragraph:
 
     Returns:
         A paragraph suitable for use as a list item.
+
+    Examples:
+        ```python
+        item = coerce_list_item("First task")
+        assert item.plain_text() == "First task"
+        ```
     """
 
     if isinstance(value, Paragraph):
@@ -298,6 +317,13 @@ class BulletList(ListBlock):
         indent: Optional list indent.
         marker_gap: Optional gap between marker and item text.
         item_children: Optional nested lists for each list item.
+
+    Examples:
+        ```python
+        from oodocs import BulletList
+
+        tasks = BulletList("Collect metrics", "Review failures", "Publish report")
+        ```
     """
 
     def __init__(
@@ -342,6 +368,13 @@ class NumberedList(ListBlock):
         indent: Optional list indent.
         marker_gap: Optional gap between marker and item text.
         item_children: Optional nested lists for each list item.
+
+    Examples:
+        ```python
+        from oodocs import NumberedList
+
+        steps = NumberedList("Install", "Configure", "Run", start=1)
+        ```
     """
 
     def __init__(
@@ -397,6 +430,13 @@ class CodeBlock(Block):
 
     Raises:
         ValueError: If ``language_position`` is not supported.
+
+    Examples:
+        ```python
+        from oodocs import CodeBlock
+
+        snippet = CodeBlock("print('hello')", language="python")
+        ```
     """
 
     code: str
@@ -511,6 +551,13 @@ class Equation(Block):
         page_break_before: Whether renderers should start a new page first.
         widow_control: Whether renderers should avoid widowed lines.
         unit: Unit for length overrides.
+
+    Examples:
+        ```python
+        from oodocs import Equation
+
+        energy = Equation(r"E = mc^2")
+        ```
     """
 
     expression: str
@@ -609,6 +656,13 @@ class PageBreak(Block):
 
     Attributes:
         None: The block is a marker and carries no additional configuration.
+
+    Examples:
+        ```python
+        from oodocs import Document, PageBreak, Paragraph
+
+        document = Document("Report", Paragraph("Cover"), PageBreak(), Paragraph("Body"))
+        ```
     """
 
     def render_to_docx(
@@ -664,6 +718,13 @@ class VerticalSpace(Block):
 
     Raises:
         ValueError: If ``height`` is negative.
+
+    Examples:
+        ```python
+        from oodocs import VerticalSpace
+
+        spacer = VerticalSpace(18, unit="pt")
+        ```
     """
 
     height: float
@@ -742,6 +803,13 @@ class Divider(Block):
 
     Raises:
         ValueError: If dimensions or alignment are invalid.
+
+    Examples:
+        ```python
+        from oodocs import Divider
+
+        divider = Divider(color="B7C2D0", width=3.5, unit="in")
+        ```
     """
 
     color: str
@@ -845,6 +913,13 @@ class ColumnSpan(Block):
 
     Args:
         *children: Block content that should span every column.
+
+    Examples:
+        ```python
+        from oodocs import ColumnSpan, Paragraph
+
+        span = ColumnSpan(Paragraph("This paragraph spans all columns."))
+        ```
     """
 
     children: list[Block]
@@ -936,6 +1011,17 @@ class MultiColumn(Block):
     Raises:
         ValueError: If ``columns`` is less than one or ``column_gap`` is
             negative.
+
+    Examples:
+        ```python
+        from oodocs import MultiColumn, Paragraph
+
+        layout = MultiColumn(
+            Paragraph("Left flow."),
+            Paragraph("Right flow."),
+            columns=2,
+        )
+        ```
     """
 
     children: list[Block]
@@ -1105,6 +1191,13 @@ class Part(Block):
         numbered: Whether the part should be numbered.
         toc: Whether the part should appear in generated tables of contents.
             Defaults to ``numbered``.
+
+    Examples:
+        ```python
+        from oodocs import Chapter, Part
+
+        part = Part("Methods", Chapter("Data Collection"))
+        ```
     """
 
     title: list[Text]
@@ -1226,6 +1319,13 @@ class Box(Block):
         width: Optional preferred box width.
         unit: Unit for length overrides.
         alignment: Optional horizontal alignment.
+
+    Examples:
+        ```python
+        from oodocs import Box, Paragraph
+
+        note = Box(Paragraph("Review this before release."), title="Note")
+        ```
     """
 
     children: list[Block]
@@ -1358,6 +1458,18 @@ class CountableBlock(Block):
     Raises:
         TypeError: If ``label_suffix`` is not a string.
         ValueError: If kind, counter, or reference label values are invalid.
+
+    Examples:
+        ```python
+        from oodocs import CountableBlock, Paragraph
+
+        theorem = CountableBlock(
+            "Theorem",
+            Paragraph("Every finite tree has at least one leaf."),
+            title="Leaf existence",
+            counter="theorem",
+        )
+        ```
     """
 
     kind: str
@@ -1519,6 +1631,14 @@ def countable_kind(
 
     Raises:
         ValueError: If ``kind`` is empty.
+
+    Examples:
+        ```python
+        from oodocs import Paragraph, countable_kind
+
+        Requirement = countable_kind("Requirement", counter="requirement")
+        item = Requirement(Paragraph("The API must render to HTML."))
+        ```
     """
 
     normalized_kind = str(kind).strip()
@@ -1588,6 +1708,13 @@ class Section(Block):
 
     Raises:
         ValueError: If ``level`` is less than one.
+
+    Examples:
+        ```python
+        from oodocs import Paragraph, Section
+
+        section = Section("Results", Paragraph("The benchmark passed."), level=2)
+        ```
     """
 
     title: list[Text]
@@ -1712,6 +1839,13 @@ class Chapter(Section):
         *children: Child block content.
         numbered: Whether the chapter should be numbered.
         toc: Whether the chapter should appear in generated tables of contents.
+
+    Examples:
+        ```python
+        from oodocs import Chapter, Paragraph
+
+        chapter = Chapter("Introduction", Paragraph("This report summarizes the release."))
+        ```
     """
 
     def __init__(
@@ -1733,6 +1867,13 @@ class Subsection(Section):
         numbered: Whether the subsection should be numbered.
         toc: Whether the subsection should appear in generated tables of
             contents.
+
+    Examples:
+        ```python
+        from oodocs import Paragraph, Subsection
+
+        subsection = Subsection("Validation", Paragraph("All checks passed."))
+        ```
     """
 
     def __init__(
@@ -1754,6 +1895,13 @@ class Subsubsection(Section):
         numbered: Whether the subsubsection should be numbered.
         toc: Whether the subsubsection should appear in generated tables of
             contents.
+
+    Examples:
+        ```python
+        from oodocs import Paragraph, Subsubsection
+
+        subsection = Subsubsection("Audit Evidence", Paragraph("Evidence was archived."))
+        ```
     """
 
     def __init__(
@@ -1792,6 +1940,13 @@ def section_for_level(
 
     Raises:
         ValueError: If ``level`` is outside the allowed range.
+
+    Examples:
+        ```python
+        from oodocs import Paragraph, section_for_level
+
+        heading = section_for_level("Details", Paragraph("More context."), level=3)
+        ```
     """
 
     _validate_section_level(level, min_level=min_level, max_level=max_level)
@@ -1828,6 +1983,13 @@ def shift_heading_levels(
 
     Raises:
         ValueError: If a shifted heading level is outside the allowed range.
+
+    Examples:
+        ```python
+        from oodocs import Chapter, shift_heading_levels
+
+        shifted = shift_heading_levels([Chapter("Imported")], delta=1)
+        ```
     """
 
     return [
@@ -1862,6 +2024,13 @@ def shift_heading_level(
 
     Raises:
         ValueError: If a shifted heading level is outside the allowed range.
+
+    Examples:
+        ```python
+        from oodocs import Section, shift_heading_level
+
+        subsection = shift_heading_level(Section("Imported", level=2), delta=1)
+        ```
     """
 
     if not isinstance(block, Section):
@@ -1914,6 +2083,12 @@ def coerce_cell(value: CellInput) -> Paragraph:
 
     Returns:
         A paragraph suitable for a table cell or caption.
+
+    Examples:
+        ```python
+        cell = coerce_cell("Accuracy")
+        assert cell.plain_text() == "Accuracy"
+        ```
     """
 
     if isinstance(value, Paragraph):

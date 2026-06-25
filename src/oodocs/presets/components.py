@@ -53,6 +53,14 @@ class CalloutBox(Box):
 
     Raises:
         ValueError: If ``variant`` is unsupported.
+
+    Examples:
+        ```python
+        from oodocs import Document
+        from oodocs.presets import CalloutBox
+
+        doc = Document("Review", CalloutBox("Check logs before release.", variant="warning"))
+        ```
     """
 
     def __init__(
@@ -85,6 +93,13 @@ class CompactTable(Table):
         rows: Body rows. Required unless ``headers`` is dataframe-like.
         style: Optional base table style.
         **table_options: Additional arguments forwarded to ``Table``.
+
+    Examples:
+        ```python
+        from oodocs.presets import CompactTable
+
+        table = CompactTable(["Metric", "Value"], [["Latency", "42 ms"]])
+        ```
     """
 
     def __init__(
@@ -117,6 +132,13 @@ class KeyValueTable(CompactTable):
         caption: Optional table caption.
         style: Optional base table style.
         **table_options: Additional arguments forwarded to ``CompactTable``.
+
+    Examples:
+        ```python
+        from oodocs.presets import KeyValueTable
+
+        table = KeyValueTable({"Environment": "prod", "Version": "1.2.0"})
+        ```
     """
 
     def __init__(
@@ -156,6 +178,13 @@ class Nomenclature(Box):
 
     Raises:
         ValueError: If an entry does not have two or three values.
+
+    Examples:
+        ```python
+        from oodocs.presets import Nomenclature
+
+        symbols = Nomenclature([("R", "Recall"), ("P", "Precision")], title="Symbols")
+        ```
     """
 
     def __init__(
@@ -258,6 +287,13 @@ def option_table(
 
     Returns:
         Key/value table with option-oriented headers.
+
+    Examples:
+        ```python
+        from oodocs.presets import option_table
+
+        table = option_table({"timeout": "30 seconds", "retries": 3})
+        ```
     """
 
     return KeyValueTable(rows, headers=("Option", "Default or meaning"), caption=caption, **table_options)
@@ -273,6 +309,13 @@ def note_box(*children: BlockInput, title: CellInput | None = None, **style_opti
 
     Returns:
         Info variant callout box.
+
+    Examples:
+        ```python
+        from oodocs.presets import note_box
+
+        box = note_box("Rendered documents include generated references.")
+        ```
     """
 
     return CalloutBox(*children, title=title, variant="info", **style_options)
