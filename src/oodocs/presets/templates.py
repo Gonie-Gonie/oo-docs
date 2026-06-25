@@ -131,6 +131,8 @@ class JournalArticleTemplate:
         cover_page: Whether to render title matter on a cover page by default.
 
     Examples:
+        Build a compact article from content-oriented inputs:
+
         ```python
         from oodocs.presets import JournalArticleTemplate
 
@@ -141,6 +143,30 @@ class JournalArticleTemplate:
             keywords=["benchmark", "validation"],
         )
         ```
+
+        Reuse a configured template for multiple manuscripts:
+
+        ```python
+        from oodocs import Author
+        from oodocs.presets import JournalArticleTemplate
+
+        template = JournalArticleTemplate(include_contents=True, cover_page=True)
+        document = template.build(
+            "Release Evidence",
+            abstract="Validation evidence for the release.",
+            sections=[("Evaluation", ["All required checks passed."])],
+            authors=[Author("Jane Doe", affiliations=["Example Lab"])],
+        )
+        ```
+
+    Notes:
+        The template produces a normal ``Document``. Callers can still append
+        blocks, validate, or render the returned document with the standard
+        document APIs.
+
+    See Also:
+        ``ManuscriptSection`` for reusable section descriptors and
+        ``DocumentSettings`` for the settings object created by the template.
     """
 
     name: str = "Journal article"

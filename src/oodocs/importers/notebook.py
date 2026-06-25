@@ -47,6 +47,22 @@ class NotebookImportOptions:
         options = NotebookImportOptions(max_output_lines=25, exclude_tags=("skip-doc",))
         doc = from_ipynb("analysis.ipynb", options=options)
         ```
+
+        Import only narrative Markdown cells:
+
+        ```python
+        options = NotebookImportOptions(include_code=False, include_outputs=False)
+        doc = from_ipynb("analysis.ipynb", options=options, title="Narrative Summary")
+        ```
+
+    Notes:
+        Explicit keyword arguments passed to notebook import functions override
+        values from this options object. Use the object for reusable defaults
+        and per-call keywords for one-off changes.
+
+    See Also:
+        ``parse_ipynb`` for editable imported blocks and ``from_ipynb`` for a
+        renderable ``Document``.
     """
 
     include_outputs: bool = True

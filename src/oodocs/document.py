@@ -43,6 +43,31 @@ class Document:
         )
         outputs = doc.save_all("dist", formats=("docx", "html"))
         ```
+
+        Combine document settings, citations, and authored content:
+
+        ```python
+        from oodocs import CitationSource, Document, DocumentSettings, Paragraph, PageMargins, cite
+
+        source = CitationSource("Reliable APIs", key="api2024", authors=("Jane Doe",))
+        settings = DocumentSettings(page_margins=PageMargins.all(1.0, unit="in"))
+        doc = Document(
+            "Research Note",
+            Paragraph("Prior work ", cite("api2024"), " motivates the design."),
+            settings=settings,
+            citations=[source],
+        )
+        ```
+
+    Notes:
+        ``Document`` owns the top-level body, settings, and citation library.
+        Renderers consume this object directly; most user code should build
+        blocks and settings first, then pass them into ``Document``.
+
+    See Also:
+        ``DocumentSettings`` for metadata and layout configuration,
+        ``render_document`` for workflow-oriented rendering, and
+        ``from_markdown`` for importing Markdown into a document.
     """
 
     title: str

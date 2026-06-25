@@ -1002,12 +1002,36 @@ class Theme:
             invalid.
 
     Examples:
+        Configure typography and a direct paragraph default:
+
         ```python
         from oodocs import Document, DocumentSettings, Paragraph, Theme, TypographyOptions
 
         theme = Theme(TypographyOptions(body_font_name="Arial"), paragraph_alignment="left")
         document = Document("Report", Paragraph("Body"), settings=DocumentSettings(theme=theme))
         ```
+
+        Customize generated page titles and page numbers together:
+
+        ```python
+        from oodocs import Document, DocumentSettings, GeneratedPageOptions, PageNumberOptions, ReferencesPage, Theme
+
+        theme = Theme(
+            GeneratedPageOptions(references_title="Bibliography"),
+            PageNumberOptions(show_page_numbers=True, page_number_format="Page {page}"),
+        )
+        document = Document("Paper", ReferencesPage(), settings=DocumentSettings(theme=theme))
+        ```
+
+    Notes:
+        Positional option groups are merged with keyword option groups, then
+        direct keyword overrides are applied last. This lets applications keep
+        reusable presets while still overriding one or two fields per document.
+
+    See Also:
+        ``TypographyOptions``, ``CaptionOptions``, ``CitationOptions``,
+        ``GeneratedPageOptions``, ``PageNumberOptions``, ``TitleMatterOptions``,
+        and ``BlockOptions`` for grouped configuration.
     """
 
     typography: TypographyOptions

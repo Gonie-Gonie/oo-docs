@@ -66,11 +66,33 @@ class ImportResult:
         issues: Diagnostics collected while importing the source.
 
     Examples:
+        Inspect diagnostics returned by an importer:
+
         ```python
+        from oodocs import parse_markdown
+
         result = parse_markdown("# Title", diagnostics=True)
         if result.warnings():
             print(result.format_issues())
         ```
+
+        Reuse imported blocks in a document:
+
+        ```python
+        from oodocs import Document, parse_markdown
+
+        result = parse_markdown("# Title", diagnostics=True)
+        document = Document("Imported", result.blocks)
+        ```
+
+    Notes:
+        Importers return this object only when ``diagnostics=True``. Otherwise
+        they return plain block lists or documents, depending on the importer.
+
+    See Also:
+        ``ImportIssue`` for individual diagnostics, ``ImportPolicyError`` for
+        strict-policy failures, and ``parse_markdown``/``parse_ipynb`` for
+        diagnostics-producing importers.
     """
 
     blocks: tuple[Block, ...]

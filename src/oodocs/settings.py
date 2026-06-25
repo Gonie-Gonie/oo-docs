@@ -312,6 +312,8 @@ class DocumentSettings:
         theme: Rendering theme.
 
     Examples:
+        Configure page metadata and geometry:
+
         ```python
         from oodocs import Author, Document, DocumentSettings, PageMargins, PageSize, Paragraph
 
@@ -323,6 +325,25 @@ class DocumentSettings:
         )
         document = Document("Study Report", Paragraph("Findings."), settings=settings)
         ```
+
+        Add a page-positioned watermark:
+
+        ```python
+        from oodocs import Document, DocumentSettings, Paragraph, TextBox
+
+        watermark = TextBox("DRAFT", x=0.75, y=0.75, width=2.0, height=0.5, font_size=24)
+        settings = DocumentSettings(page_items=[watermark])
+        document = Document("Draft Report", Paragraph("Internal review."), settings=settings)
+        ```
+
+    Notes:
+        Length values without their own unit use ``unit`` as the default when
+        renderers resolve physical page geometry. ``page_items`` are absolute
+        overlays or decorations and are validated when settings are created.
+
+    See Also:
+        ``PageSize`` and ``PageMargins`` for page geometry, ``Theme`` for
+        renderer defaults, and ``Author``/``AuthorLayout`` for title matter.
     """
 
     metadata_author: str | None

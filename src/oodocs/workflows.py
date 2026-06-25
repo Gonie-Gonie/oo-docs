@@ -27,10 +27,28 @@ class RenderedOutputs:
         outputs: Mapping from normalized output format to written file path.
 
     Examples:
+        Render Markdown to one format and index the result by format:
+
         ```python
         rendered = convert_source("notes.md", "dist", formats=("pdf",))
         print(rendered["pdf"])
         ```
+
+        Iterate over every rendered output:
+
+        ```python
+        for output_format, path in rendered:
+            print(output_format, path)
+        ```
+
+    Notes:
+        Output format keys are normalized, so callers can use names or
+        extensions such as ``"pdf"`` or ``".pdf"`` when indexing the result.
+
+    See Also:
+        ``render_document`` for rendering an existing ``Document``,
+        ``convert_source`` for Markdown or notebook conversion, and
+        ``build_python_document`` for Python-authored reports.
     """
 
     outputs: dict[OutputFormat, Path]

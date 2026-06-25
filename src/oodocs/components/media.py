@@ -941,6 +941,8 @@ class Table(Block):
             widths do not match the expanded layout.
 
     Examples:
+        Build a table from explicit headers and rows:
+
         ```python
         from oodocs import Document, Table
 
@@ -951,6 +953,30 @@ class Table(Block):
         )
         doc = Document("Status", table)
         ```
+
+        Build a table from records and style a column:
+
+        ```python
+        from oodocs import Document, Table, TableCellStyle
+
+        table = Table.from_records(
+            [{"format": "docx", "status": "ok"}, {"format": "pdf", "status": "ok"}],
+            caption="Renderer status",
+            column_styles={1: TableCellStyle(text_color="166534", bold=True)},
+        )
+        doc = Document("Render Matrix", table)
+        ```
+
+    Notes:
+        ``headers`` can be one row, multiple header rows, or a dataframe-like
+        object when ``rows`` is omitted. Cell spans are expanded before
+        rendering, so column widths and style mappings use rendered column
+        indexes after spans are resolved.
+
+    See Also:
+        ``TableCell`` for spans and per-cell styling, ``TableStyle`` for
+        renderer-neutral table defaults, and ``from_records``/
+        ``from_dataframe`` for data-oriented constructors.
     """
 
     header_rows: list[list[TableCell]]
@@ -1571,12 +1597,34 @@ class Figure(Block):
         placement: Optional placement policy.
 
     Examples:
+        Add an image from a file path:
+
         ```python
         from oodocs import Document, Figure
 
         figure = Figure("figures/architecture.png", caption="System architecture", width=4)
         document = Document("Architecture", figure)
         ```
+
+        Add a plot-like object that supports ``savefig()``:
+
+        ```python
+        import matplotlib.pyplot as plt
+        from oodocs import Document, Figure
+
+        plot, axes = plt.subplots()
+        axes.plot([1, 2, 3], [3, 1, 4])
+        document = Document("Experiment", Figure(plot, caption="Measured values"))
+        ```
+
+    Notes:
+        Paths are passed through to renderers, while bytes and ``BytesIO`` are
+        wrapped as ``ImageData``. Plot-like objects are rendered through
+        ``savefig()`` using ``format`` and ``dpi``.
+
+    See Also:
+        ``ImageData`` for in-memory images and ``SubFigureGroup`` for grouped
+        figure layouts.
     """
 
     image_source: object

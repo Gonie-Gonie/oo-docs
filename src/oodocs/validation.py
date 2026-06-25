@@ -135,11 +135,29 @@ class ValidationResult:
         issues: Validation issues in discovery order.
 
     Examples:
+        Check whether a document can be rendered:
+
         ```python
         result = doc.validate(formats=("docx", "pdf"))
         if not result.ok:
             print(result.to_json(formats=("pdf",)))
         ```
+
+        Filter warnings for a specific output format:
+
+        ```python
+        pdf_warnings = result.warnings_for(("pdf",))
+        for issue in pdf_warnings:
+            print(issue.message)
+        ```
+
+    Notes:
+        ``ok`` only reflects error-level issues. Warnings remain available for
+        display and format-specific filtering even when validation passes.
+
+    See Also:
+        ``Document.validate`` for producing validation results and
+        ``DocumentValidationError`` for raising on error-level issues.
     """
 
     issues: tuple[ValidationIssue, ...] = ()
