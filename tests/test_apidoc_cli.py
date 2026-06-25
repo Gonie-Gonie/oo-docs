@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+
 from apidoc_samples import (
     write_custom_docstring_parser_repo,
     write_private_package,
@@ -14,7 +16,12 @@ from example_regression import (
 )
 import pytest
 
-from oodocs.apidoc import ApiBuildConfig, ApiCoverageResult, ApiPackage
+from oodocs.apidoc import (
+    ApiBuildConfig,
+    ApiCoverageResult,
+    ApiPackage,
+    docstring_parser_names,
+)
 from oodocs.cli import main
 
 
@@ -143,6 +150,99 @@ def test_apidoc_cli_builds_full_reference_bundle_from_json_config(tmp_path) -> N
     assert coverage_csv_path.read_text(encoding="utf-8").startswith(
         "severity,code,qualname,module,path,line_number,message"
     )
+
+
+def test_apidoc_cli_json_config_loads_repo_local_parser_modules(tmp_path) -> None:
+    repo = tmp_path / "json-config-repo"
+    package_dir = repo / "src" / "jsonpkg"
+    package_dir.mkdir(parents=True)
+    (repo / "pyproject.toml").write_text(
+        "\n".join(
+            [
+                "[project]",
+                'name = "jsonpkg"',
+                "",
+                "[tool.setuptools]",
+                'package-dir = {"" = "src"}',
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (repo / "json_config_parsers.py").write_text(
+        "\n".join(
+            [
+                "from oodocs.apidoc import ParsedDocstring, docstring_parser_names, register_docstring_parser",
+                "",
+                "def parse_json_config_style(text, qualname=None, module=None):",
+                "    first = (text or '').strip().splitlines()[0]",
+                '    return ParsedDocstring(summary=f"json:{first}", style="json-config-brief")',
+                "",
+                'if "json-config-brief" not in docstring_parser_names():',
+                '    register_docstring_parser("json-config-brief", parse_json_config_style)',
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (package_dir / "__init__.py").write_text(
+        "\n".join(
+            [
+                '"""JSON config package."""',
+                "",
+                '__all__ = ["run"]',
+                "",
+                "def run() -> None:",
+                '    """Run from JSON config."""',
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    output_dir = tmp_path / "json-config-api"
+    config_path = repo / "apidoc-build.json"
+    config_path.write_text(
+        json.dumps(
+            {
+                "collector": "inspect",
+                "public_policy": "__all__",
+                "docstring_style": "json-config-brief",
+                "docstring_parser_modules": ["json_config_parsers"],
+                "profile": "compact",
+                "formats": ["html"],
+                "out": str(output_dir),
+                "stem": "jsonpkg-api",
+                "sidecars": True,
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    assert "json-config-brief" not in docstring_parser_names()
+    assert main(["apidoc", "build", str(repo), "--config", str(config_path)]) == 0
+
+    html_path = output_dir / "jsonpkg-api.html"
+    api_path = output_dir / "jsonpkg-api.json"
+    coverage_path = output_dir / "jsonpkg-api-coverage.json"
+    assert html_path.exists()
+    assert api_path.exists()
+    assert coverage_path.exists()
+    assert_html_internal_links_resolve(
+        html_path,
+        required_text=("json:Run from JSON config.",),
+    )
+
+    api = ApiPackage.read_json(api_path)
+    run = api.find("jsonpkg.run")
+    coverage = ApiCoverageResult.read_json(coverage_path)
+
+    assert run is not None
+    assert run.summary == "json:Run from JSON config."
+    assert coverage.package == "jsonpkg"
+    assert coverage.object_coverage == 1.0
 
 
 def test_apidoc_cli_builds_setuptools_package_dir_repo(tmp_path) -> None:

@@ -129,6 +129,24 @@ docstring-parser-modules = ["docs_parsers"]
 python -m oodocs apidoc build . --config pyproject.toml
 ```
 
+JSON config files use the same keys, which is useful for generated build
+profiles or repository-local automation:
+
+```json
+{
+  "collector": "inspect",
+  "docstring_style": "brief",
+  "docstring_parser_modules": ["docs_parsers"],
+  "formats": ["html"],
+  "out": "artifacts/api",
+  "sidecars": true
+}
+```
+
+```powershell
+python -m oodocs apidoc build C:\work\mypkg --config C:\work\mypkg\apidoc-build.json
+```
+
 When the config is loaded from a repository path, OODocs temporarily adds the
 config directory and its `src/` child to the import path while importing
 `docstring-parser-modules`. This lets a command target another checkout without
