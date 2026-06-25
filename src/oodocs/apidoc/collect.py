@@ -11,7 +11,7 @@ from pathlib import Path
 import re
 from typing import Iterable
 
-from oodocs.apidoc.config import ApiCollectConfig, normalize_explicit_names
+from oodocs.apidoc.config import ApiCollectConfig, ApiPublicPolicy, normalize_explicit_names
 from oodocs.apidoc.docstring import ParsedDocstring, parse_docstring
 from oodocs.apidoc.model import (
     ApiDocIssue,
@@ -29,7 +29,7 @@ def collect_api(
     *,
     config: ApiCollectConfig | None = None,
     collector: str | None = None,
-    public_policy: str | None = None,
+    public_policy: str | ApiPublicPolicy | None = None,
     explicit_names: Iterable[str] | None = None,
     docstring_style: str | None = None,
     include_imported: bool | None = None,
@@ -45,7 +45,8 @@ def collect_api(
         collector: Collector backend name. ``"auto"``, ``"griffe"``, and
             ``"inspect"`` currently produce the same normalized schema, with
             source-based collection used when griffe is not installed.
-        public_policy: Public API boundary policy.
+        public_policy: Public API boundary policy name or reusable
+            ``ApiPublicPolicy`` object.
         explicit_names: Names used with ``public_policy="explicit"``.
         docstring_style: Docstring parser style.
         include_imported: Reserved for import-aware collectors.
@@ -233,14 +234,14 @@ def _collect_module_from_file(
     )
     for node in tree.body:
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-            if _is_public_name(node.name, node.name, public_names, config):
+            if _is_public_name(node.name, f"{module_name}.{node.name}", public_names, config):
                 members.append(_function_object(node, module_name, path, config=config, parent=None))
         elif isinstance(node, ast.ClassDef):
-            if _is_public_name(node.name, node.name, public_names, config):
+            if _is_public_name(node.name, f"{module_name}.{node.name}", public_names, config):
                 members.append(_class_object(node, module_name, path, config=config))
         elif isinstance(node, (ast.Assign, ast.AnnAssign)):
             for name, annotation, default in _assignment_targets(node):
-                if _is_public_name(name, name, public_names, config):
+                if _is_public_name(name, f"{module_name}.{name}", public_names, config):
                     members.append(
                         ApiObject(
                             kind="data",
@@ -305,11 +306,11 @@ def _class_object(
         if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef)):
             if child.name == "__init__":
                 continue
-            if _class_member_is_public(child.name, config):
+            if _class_member_is_public(child.name, config, f"{qualname}.{child.name}"):
                 members.append(_function_object(child, module_name, path, config=config, parent=node.name))
         elif isinstance(child, (ast.Assign, ast.AnnAssign)):
             for name, annotation, default in _assignment_targets(child):
-                if _class_member_is_public(name, config):
+                if _class_member_is_public(name, config, f"{qualname}.{name}"):
                     members.append(
                         ApiObject(
                             kind="attribute",
@@ -849,21 +850,15 @@ def _is_public_name(
     public_names: set[str] | None,
     config: ApiCollectConfig,
 ) -> bool:
-    if config.public_policy == "all":
-        return True
-    if config.public_policy == "explicit":
-        return name in config.explicit_names or qualname in config.explicit_names
-    if config.public_policy == "__all__" and public_names is not None:
-        return name in public_names or qualname in public_names
-    return not name.startswith("_")
+    return config.public_api_policy().module_name_is_public(name, qualname, public_names)
 
 
-def _class_member_is_public(name: str, config: ApiCollectConfig) -> bool:
-    if config.public_policy == "all":
-        return True
-    if config.public_policy == "explicit":
-        return name in config.explicit_names
-    return not name.startswith("_")
+def _class_member_is_public(
+    name: str,
+    config: ApiCollectConfig,
+    qualname: str | None = None,
+) -> bool:
+    return config.public_api_policy().member_name_is_public(name, qualname)
 
 
 def _visibility_for(name: str):

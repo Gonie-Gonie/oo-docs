@@ -26,3 +26,16 @@ underscore-prefixed names are excluded. Use `public_policy="all"` for internal
 audits or `public_policy="explicit"` with `explicit_names=[...]` for curated
 sets.
 
+For repeated runs against a general development repository, create an
+`ApiPublicPolicy` once and pass it to `collect_api(...)`.
+
+```python
+from oodocs.apidoc import ApiPublicPolicy, collect_api
+
+policy = ApiPublicPolicy.explicit("pkg.Widget", "pkg.Widget.render")
+api = collect_api(".", collector="griffe", public_policy=policy)
+```
+
+`ApiPublicPolicy` can be serialized with `to_dict()` and reconstructed with
+`from_dict(...)`, which keeps CI scripts and release jobs aligned with the same
+curated boundary.

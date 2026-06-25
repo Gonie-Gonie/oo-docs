@@ -233,7 +233,7 @@ def _class_from_griffe(
         target = _final_target(member)
         if target is None:
             continue
-        if not _class_member_is_public(name, config):
+        if not _class_member_is_public(name, config, f"{qualname}.{name}"):
             continue
         child = _object_from_griffe(
             target,
@@ -561,21 +561,15 @@ def _is_public_name(
     public_names: set[str] | None,
     config: ApiCollectConfig,
 ) -> bool:
-    if config.public_policy == "all":
-        return True
-    if config.public_policy == "explicit":
-        return name in config.explicit_names or qualname in config.explicit_names
-    if config.public_policy == "__all__" and public_names is not None:
-        return name in public_names or qualname in public_names
-    return not name.startswith("_")
+    return config.public_api_policy().module_name_is_public(name, qualname, public_names)
 
 
-def _class_member_is_public(name: str, config: ApiCollectConfig) -> bool:
-    if config.public_policy == "all":
-        return True
-    if config.public_policy == "explicit":
-        return name in config.explicit_names
-    return not name.startswith("_")
+def _class_member_is_public(
+    name: str,
+    config: ApiCollectConfig,
+    qualname: str | None = None,
+) -> bool:
+    return config.public_api_policy().member_name_is_public(name, qualname)
 
 
 def _visibility_for(name: str):

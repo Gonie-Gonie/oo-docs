@@ -7,6 +7,7 @@ import importlib.util
 from oodocs import Chapter, Document
 from oodocs.apidoc import (
     ApiPackage,
+    ApiPublicPolicy,
     ApiSnapshot,
     check_api_docs,
     collect_object_api,
@@ -322,6 +323,41 @@ def test_collect_api_supports_src_layout_repo_reexports_and_deep_object_lookup(
     )
     assert looked_up.kind == "method"
     assert looked_up.parameters[0].name == "path"
+
+
+def test_collect_api_accepts_reusable_public_policy_object(tmp_path: Path) -> None:
+    package_dir = tmp_path / "pkg"
+    package_dir.mkdir()
+    (package_dir / "__init__.py").write_text(
+        "\n".join(
+            [
+                '"""Policy package."""',
+                "",
+                "class Widget:",
+                '    """A widget."""',
+                "",
+                "    def _secret(self) -> str:",
+                '        """Return internal detail for curated docs."""',
+                "        return 'ok'",
+                "",
+                "def helper() -> None:",
+                '    """Not part of the curated API."""',
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    policy = ApiPublicPolicy.explicit("pkg.Widget", "pkg.Widget._secret")
+
+    api = collect_api(package_dir, public_policy=policy, collector="inspect")
+
+    assert api.metadata["public_policy"] == "explicit"
+    assert api.find("pkg.Widget") is not None
+    secret = api.find("pkg.Widget._secret")
+    assert secret is not None
+    assert secret.kind == "method"
+    assert api.find("pkg.helper") is None
+    assert ApiPublicPolicy.from_dict(policy.to_dict()) == policy
 
 
 def test_griffe_collector_matches_inspect_schema_on_src_layout_repo(

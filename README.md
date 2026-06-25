@@ -217,6 +217,8 @@ api = collect_api("oodocs", public_policy="__all__")
 # A repository checkout with a src/ layout also works. When the apidoc extra is
 # installed, collector="griffe" reads source without importing the target repo.
 # api = collect_api(".", public_policy="__all__", collector="griffe")
+# For curated public boundaries, pass an ApiPublicPolicy object instead of a
+# string and reuse it across collect/check/build steps.
 classes = api.select(kind="class", module_prefix="oodocs.components")
 functions = api.select(kind="function")
 
