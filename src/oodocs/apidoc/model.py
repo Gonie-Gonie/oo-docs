@@ -1434,37 +1434,93 @@ class ApiPackage:
         return None
 
     def modules_by_name(self) -> dict[str, ApiModule]:
-        """Return modules keyed by module name."""
+        """Return modules keyed by module name.
+
+        Returns:
+            Mapping from module name to ``ApiModule``.
+
+        Examples:
+            Render one collected module as its own API document:
+
+            ```python
+            from oodocs import Document
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            module = api.modules_by_name()["mypkg.widgets"]
+            Document("Widgets API", module.to_chapter(profile="reference")).save_html(
+                "widgets.html"
+            )
+            ```
+        """
 
         return {module.name: module for module in self.modules}
 
     def classes(self) -> list[ApiObject]:
-        """Return public classes."""
+        """Return public classes.
+
+        Returns:
+            Public class objects across collected modules.
+
+        Examples:
+            Insert class sections into a hand-authored guide:
+
+            ```python
+            from oodocs import Chapter, Document
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            doc = Document(
+                "Class Guide",
+                Chapter("Classes", *[item.to_section(level=2) for item in api.classes()]),
+            )
+            ```
+        """
 
         return self.select(kind="class")
 
     def functions(self) -> list[ApiObject]:
-        """Return public functions."""
+        """Return public functions.
+
+        Returns:
+            Public function objects across collected modules.
+        """
 
         return self.select(kind="function")
 
     def methods(self) -> list[ApiObject]:
-        """Return public methods."""
+        """Return public methods.
+
+        Returns:
+            Public method objects from collected classes.
+        """
 
         return self.select(kind="method")
 
     def attributes(self) -> list[ApiObject]:
-        """Return public attributes and data objects."""
+        """Return public attributes and data objects.
+
+        Returns:
+            Public module attributes, class attributes, and data objects.
+        """
 
         return self.select(kind=("attribute", "data"))
 
     def public_objects(self) -> list[ApiObject]:
-        """Return all public API objects."""
+        """Return all public API objects.
+
+        Returns:
+            Public objects matching the configured public API boundary.
+        """
 
         return self.select(visibility="public")
 
     def private_objects(self) -> list[ApiObject]:
-        """Return private or protected API objects."""
+        """Return private or protected API objects.
+
+        Returns:
+            Objects classified as private, protected, or internal.
+        """
 
         return [
             obj
@@ -1473,7 +1529,24 @@ class ApiPackage:
         ]
 
     def undocumented_public_objects(self) -> list[ApiObject]:
-        """Return public API objects without docstring summary or description."""
+        """Return public API objects without docstring summary or description.
+
+        Returns:
+            Public API objects whose parsed docstring has no summary or
+            description.
+
+        Examples:
+            Build a review appendix listing missing docs:
+
+            ```python
+            from oodocs import Chapter, Document
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            missing = api.undocumented_public_objects()
+            doc = Document("Doc Review", Chapter("Missing Docs", api.to_summary_table(missing)))
+            ```
+        """
 
         return self.select(visibility="public", documented=False)
 
@@ -1513,14 +1586,51 @@ class ApiPackage:
         objects: Sequence[ApiObject] | None = None,
         **kwargs,
     ):
-        """Return a package-level API summary table."""
+        """Return a package-level API summary table.
+
+        Args:
+            objects: Optional objects to include. Defaults to all public
+                objects.
+            **kwargs: Additional options forwarded to
+                ``api_objects_to_summary_table``, such as ``profile`` or
+                ``caption``.
+
+        Returns:
+            OODocs table summarizing selected API objects.
+
+        Examples:
+            Add a public function index to a release document:
+
+            ```python
+            from oodocs import Chapter, Document
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            functions = api.select(kind="function")
+            doc = Document(
+                "Release Evidence",
+                Chapter(
+                    "Function Index",
+                    api.to_summary_table(functions, profile="compact"),
+                ),
+            )
+            ```
+        """
 
         from oodocs.apidoc.blocks import api_objects_to_summary_table
 
         return api_objects_to_summary_table(objects or self.public_objects(), **kwargs)
 
     def to_modules_table(self, *, caption: str | None = None):
-        """Return a table summarizing collected modules."""
+        """Return a table summarizing collected modules.
+
+        Args:
+            caption: Optional table caption.
+
+        Returns:
+            OODocs table containing module names, object counts, and module
+            summaries.
+        """
 
         from oodocs.components.media import Table
 
@@ -1562,7 +1672,26 @@ class ApiPackage:
         )
 
     def to_coverage_table(self, **kwargs):
-        """Return documentation coverage summary as an OODocs table."""
+        """Return documentation coverage summary as an OODocs table.
+
+        Args:
+            **kwargs: Options forwarded to ``check_api_docs``, such as
+                ``fail_under`` or ``require_examples``.
+
+        Returns:
+            OODocs coverage metric table.
+
+        Examples:
+            Include coverage metrics in an evidence document:
+
+            ```python
+            from oodocs import Chapter, Document
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            doc = Document("API Evidence", Chapter("Coverage", api.to_coverage_table()))
+            ```
+        """
 
         from oodocs.apidoc.coverage import check_api_docs
 
@@ -1575,7 +1704,16 @@ class ApiPackage:
         level: int = 1,
         max_level: int | None = None,
     ) -> list[object]:
-        """Return modules as OODocs sections."""
+        """Return modules as OODocs sections.
+
+        Args:
+            profile: Presentation profile name or object.
+            level: Heading level for module sections. ``1`` returns chapters.
+            max_level: Optional deepest heading level for nested API members.
+
+        Returns:
+            OODocs section or chapter blocks for collected modules.
+        """
 
         if level == 1:
             return [
@@ -1599,7 +1737,15 @@ class ApiPackage:
         profile: object = "reference",
         max_level: int | None = None,
     ) -> list[object]:
-        """Return modules as OODocs chapters."""
+        """Return modules as OODocs chapters.
+
+        Args:
+            profile: Presentation profile name or object.
+            max_level: Optional deepest heading level for nested API members.
+
+        Returns:
+            List of OODocs chapters, one per collected module.
+        """
 
         from oodocs.apidoc.blocks import api_package_to_chapters
 
@@ -1615,7 +1761,26 @@ class ApiPackage:
         profile: object = "reference",
         max_level: int | None = None,
     ) -> list[object]:
-        """Return this package as renderer-neutral OODocs blocks."""
+        """Return this package as renderer-neutral OODocs blocks.
+
+        Args:
+            profile: Presentation profile name or object.
+            max_level: Optional deepest heading level for nested API members.
+
+        Returns:
+            OODocs blocks suitable for insertion into an existing document.
+
+        Examples:
+            Append a package API appendix to a custom document:
+
+            ```python
+            from oodocs import Document, Paragraph
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            doc = Document("Guide", Paragraph("Usage notes."), *api.to_blocks())
+            ```
+        """
 
         return self.to_chapters(profile=profile, max_level=max_level)
 
@@ -1644,6 +1809,29 @@ class ApiPackage:
 
         Returns:
             OODocs ``Document``.
+
+        Examples:
+            Render a complete API reference bundle for a general Python repo:
+
+            ```python
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".", collector="griffe", public_policy="__all__")
+            api.to_document(profile="reference", max_level=3).save_all(
+                "artifacts/api",
+                stem=f"{api.name}-api",
+            )
+            ```
+
+            Render only coverage evidence from the same collected tree:
+
+            ```python
+            evidence = api.to_document(
+                title="API Documentation Evidence",
+                include_modules=False,
+            )
+            evidence.save_docx("artifacts/api-evidence.docx")
+            ```
         """
 
         from oodocs.apidoc.render import api_package_to_document
