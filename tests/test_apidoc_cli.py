@@ -245,6 +245,185 @@ def test_apidoc_cli_json_config_loads_repo_local_parser_modules(tmp_path) -> Non
     assert coverage.object_coverage == 1.0
 
 
+def test_apidoc_cli_external_json_config_loads_target_parser_modules(tmp_path) -> None:
+    repo = tmp_path / "external-json-repo"
+    package_dir = repo / "src" / "externaljsonpkg"
+    package_dir.mkdir(parents=True)
+    (repo / "pyproject.toml").write_text(
+        "\n".join(
+            [
+                "[project]",
+                'name = "externaljsonpkg"',
+                "",
+                "[tool.setuptools]",
+                'package-dir = {"" = "src"}',
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (repo / "external_json_parsers.py").write_text(
+        "\n".join(
+            [
+                "from oodocs.apidoc import ParsedDocstring, docstring_parser_names, register_docstring_parser",
+                "",
+                "def parse_external_json_style(text, qualname=None, module=None):",
+                "    first = (text or '').strip().splitlines()[0]",
+                '    return ParsedDocstring(summary=f"target:{first}", style="external-json-brief")',
+                "",
+                'if "external-json-brief" not in docstring_parser_names():',
+                '    register_docstring_parser("external-json-brief", parse_external_json_style)',
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (package_dir / "__init__.py").write_text(
+        "\n".join(
+            [
+                '"""External JSON config package."""',
+                "",
+                '__all__ = ["run"]',
+                "",
+                "def run() -> None:",
+                '    """Run from external JSON config."""',
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    output_dir = tmp_path / "external-json-api"
+    config_path = tmp_path / "generated-apidoc-build.json"
+    config_path.write_text(
+        json.dumps(
+            {
+                "collector": "inspect",
+                "public_policy": "__all__",
+                "docstring_style": "external-json-brief",
+                "docstring_parser_modules": ["external_json_parsers"],
+                "profile": "compact",
+                "formats": ["html"],
+                "out": str(output_dir),
+                "stem": "externaljsonpkg-api",
+                "sidecars": True,
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    assert "external-json-brief" not in docstring_parser_names()
+    assert main(["apidoc", "build", str(repo), "--config", str(config_path)]) == 0
+
+    html_path = output_dir / "externaljsonpkg-api.html"
+    api = ApiPackage.read_json(output_dir / "externaljsonpkg-api.json")
+    run = api.find("externaljsonpkg.run")
+
+    assert_html_internal_links_resolve(
+        html_path,
+        required_text=("target:Run from external JSON config.",),
+    )
+    assert run is not None
+    assert run.summary == "target:Run from external JSON config."
+    assert (
+        ApiCoverageResult.read_json(
+            output_dir / "externaljsonpkg-api-coverage.json"
+        ).object_coverage
+        == 1.0
+    )
+
+
+def test_apidoc_cli_collect_external_json_config_loads_target_parser_modules(
+    tmp_path,
+) -> None:
+    repo = tmp_path / "external-json-collect-repo"
+    package_dir = repo / "src" / "collectjsonpkg"
+    package_dir.mkdir(parents=True)
+    (repo / "pyproject.toml").write_text(
+        "\n".join(
+            [
+                "[project]",
+                'name = "collectjsonpkg"',
+                "",
+                "[tool.setuptools]",
+                'package-dir = {"" = "src"}',
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (repo / "collect_json_parsers.py").write_text(
+        "\n".join(
+            [
+                "from oodocs.apidoc import ParsedDocstring, docstring_parser_names, register_docstring_parser",
+                "",
+                "def parse_collect_json_style(text, qualname=None, module=None):",
+                "    first = (text or '').strip().splitlines()[0]",
+                '    return ParsedDocstring(summary=f"collect:{first}", style="external-json-collect-brief")',
+                "",
+                'if "external-json-collect-brief" not in docstring_parser_names():',
+                '    register_docstring_parser("external-json-collect-brief", parse_collect_json_style)',
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (package_dir / "__init__.py").write_text(
+        "\n".join(
+            [
+                '"""Collect JSON config package."""',
+                "",
+                '__all__ = ["run"]',
+                "",
+                "def run() -> None:",
+                '    """Collect from external JSON config."""',
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    config_path = tmp_path / "collect-apidoc-config.json"
+    output_path = tmp_path / "collectjsonpkg-api.json"
+    config_path.write_text(
+        json.dumps(
+            {
+                "collector": "inspect",
+                "public_policy": "__all__",
+                "docstring_style": "external-json-collect-brief",
+                "docstring_parser_modules": ["collect_json_parsers"],
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    assert "external-json-collect-brief" not in docstring_parser_names()
+    assert (
+        main(
+            [
+                "apidoc",
+                "collect",
+                str(repo),
+                "--config",
+                str(config_path),
+                "--out",
+                str(output_path),
+            ]
+        )
+        == 0
+    )
+
+    api = ApiPackage.read_json(output_path)
+    run = api.find("collectjsonpkg.run")
+
+    assert run is not None
+    assert run.summary == "collect:Collect from external JSON config."
+
+
 def test_apidoc_cli_builds_setuptools_package_dir_repo(tmp_path) -> None:
     repo = write_setuptools_package_dir_repo(tmp_path)
     output_dir = tmp_path / "api"

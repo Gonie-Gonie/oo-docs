@@ -460,7 +460,8 @@ def _collect_from_args(
 ):
     _load_docstring_parser_modules_from_args(args)
     if config is None and args.config:
-        config = ApiCollectConfig.read_file(args.config)
+        with docstring_parser_import_paths(_target_from_args(args)):
+            config = ApiCollectConfig.read_file(args.config)
     return collect_api(
         args.package,
         config=config,
@@ -487,7 +488,10 @@ def _collect_from_args(
 
 def _build_config_from_args(args: argparse.Namespace) -> ApiBuildConfig:
     _load_docstring_parser_modules_from_args(args)
-    return ApiBuildConfig.read_file(args.config) if args.config else ApiBuildConfig()
+    if not args.config:
+        return ApiBuildConfig()
+    with docstring_parser_import_paths(_target_from_args(args)):
+        return ApiBuildConfig.read_file(args.config)
 
 
 def _filter_options_from_args(
@@ -502,9 +506,12 @@ def _filter_options_from_args(
 def _load_docstring_parser_modules_from_args(args: argparse.Namespace) -> None:
     modules = getattr(args, "docstring_parser_modules", None)
     if modules:
-        target = getattr(args, "package", None) or getattr(args, "path", None)
-        with docstring_parser_import_paths(target):
+        with docstring_parser_import_paths(_target_from_args(args)):
             load_docstring_parser_modules(modules)
+
+
+def _target_from_args(args: argparse.Namespace) -> object:
+    return getattr(args, "package", None) or getattr(args, "path", None)
 
 
 def _filter_api(
