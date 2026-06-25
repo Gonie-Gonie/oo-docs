@@ -394,7 +394,7 @@ def _run_diff(args: argparse.Namespace) -> int:
         stem=args.stem,
         formats=normalize_output_formats(_split_csv(args.to)),
     )
-    result.write_json(Path(args.out) / f"{args.stem}.json")
+    outputs["diff-json"] = result.write_json(Path(args.out) / f"{args.stem}.json")
     _print_outputs(outputs)
     return 0
 

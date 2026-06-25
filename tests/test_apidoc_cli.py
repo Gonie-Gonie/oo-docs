@@ -715,7 +715,7 @@ def test_apidoc_cli_check_and_snapshot_external_json_config_load_target_parsers(
     )
 
 
-def test_apidoc_cli_diff_renders_report_and_json_sidecar(tmp_path) -> None:
+def test_apidoc_cli_diff_renders_report_and_json_sidecar(tmp_path, capsys) -> None:
     base_package = tmp_path / "base" / "diffpkg"
     head_package = tmp_path / "head" / "diffpkg"
     base_package.mkdir(parents=True)
@@ -846,6 +846,7 @@ def test_apidoc_cli_diff_renders_report_and_json_sidecar(tmp_path) -> None:
     assert [obj.qualname for obj in diff.added] == ["diffpkg.added"]
     assert diff.changed_signatures[0][0].qualname == "diffpkg.run"
     assert diff.changed_docstrings[0][1].summary == "Run task with force."
+    assert f"Wrote diff-json: {diff_path}" in capsys.readouterr().out
 
 
 def test_apidoc_cli_builds_setuptools_package_dir_repo(tmp_path) -> None:
