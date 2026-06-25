@@ -131,6 +131,29 @@ def test_docstring_parsers_normalize_standard_styles() -> None:
     assert detect_docstring_style(MARKDOWN_DOCSTRING) == "markdown"
 
 
+def test_docstring_parser_backend_enriches_standard_style_metadata() -> None:
+    if importlib.util.find_spec("docstring_parser") is None:
+        return
+
+    parsed = parse_docstring(
+        """Load an object.
+
+        Args:
+            path (str, optional): Input path. Defaults to current directory.
+
+        Returns:
+            bool: Whether loading succeeded.
+        """,
+        style="google",
+    )
+
+    assert parsed.parameters[0].name == "path"
+    assert parsed.parameters[0].annotation == "str"
+    assert parsed.parameters[0].required is False
+    assert parsed.parameters[0].source == "docstring"
+    assert parsed.returns and parsed.returns.annotation == "bool"
+
+
 def test_collect_api_builds_queryable_object_tree_and_blocks(tmp_path: Path) -> None:
     package_dir = tmp_path / "samplepkg"
     package_dir.mkdir()

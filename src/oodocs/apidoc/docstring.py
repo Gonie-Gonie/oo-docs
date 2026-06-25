@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 import inspect
+import importlib.util
 import re
 from typing import Callable
 
@@ -71,6 +72,11 @@ class ParsedDocstring:
 
 
 _PARSERS: dict[str, DocstringParser] = {}
+_DOCSTRING_PARSER_STYLES = {
+    "google": "GOOGLE",
+    "numpy": "NUMPYDOC",
+    "sphinx": "REST",
+}
 _GOOGLE_SECTION_NAMES = {
     "args",
     "arguments",
@@ -222,19 +228,27 @@ def _parse_plain(text: str, qualname: str | None, module: str | None) -> ParsedD
 def _parse_google(text: str, qualname: str | None, module: str | None) -> ParsedDocstring:
     preamble, sections = _split_google_sections(text)
     summary, description = _summary_and_description(preamble)
-    parsed = ParsedDocstring(summary=summary, description=description, style="google")
+    parsed = _parse_with_docstring_parser(text, "google", qualname, module) or ParsedDocstring(
+        summary=summary,
+        description=description,
+        style="google",
+    )
+    if parsed.summary is None:
+        parsed.summary = summary
+    if parsed.description is None:
+        parsed.description = description
     for name, body in sections:
         normalized = name.lower()
-        if normalized in {"args", "arguments", "parameters"}:
+        if normalized in {"args", "arguments", "parameters"} and not parsed.parameters:
             parsed.parameters.extend(_parse_colon_items(body))
-        elif normalized in {"returns", "yields"}:
+        elif normalized in {"returns", "yields"} and parsed.returns is None:
             parsed.returns = _parse_return_section(body)
-        elif normalized == "raises":
+        elif normalized == "raises" and not parsed.raises:
             parsed.raises.extend(
                 ApiRaises(item.name, item.description)
                 for item in _parse_colon_items(body, annotation_in_name=True)
             )
-        elif normalized in {"examples", "example"}:
+        elif normalized in {"examples", "example"} and not parsed.examples:
             parsed.examples.extend(_examples_or_text(body))
         elif normalized == "see also":
             parsed.see_also.extend(_parse_see_also(body))
@@ -255,19 +269,27 @@ def _parse_google(text: str, qualname: str | None, module: str | None) -> Parsed
 def _parse_numpy(text: str, qualname: str | None, module: str | None) -> ParsedDocstring:
     preamble, sections = _split_numpy_sections(text)
     summary, description = _summary_and_description(preamble)
-    parsed = ParsedDocstring(summary=summary, description=description, style="numpy")
+    parsed = _parse_with_docstring_parser(text, "numpy", qualname, module) or ParsedDocstring(
+        summary=summary,
+        description=description,
+        style="numpy",
+    )
+    if parsed.summary is None:
+        parsed.summary = summary
+    if parsed.description is None:
+        parsed.description = description
     for name, body in sections:
         normalized = name.lower()
-        if normalized == "parameters":
+        if normalized == "parameters" and not parsed.parameters:
             parsed.parameters.extend(_parse_numpy_parameters(body))
-        elif normalized in {"returns", "yields"}:
+        elif normalized in {"returns", "yields"} and parsed.returns is None:
             parsed.returns = _parse_return_section(body)
-        elif normalized == "raises":
+        elif normalized == "raises" and not parsed.raises:
             parsed.raises.extend(
                 ApiRaises(item.name, item.description)
                 for item in _parse_numpy_parameters(body, annotation_in_name=True)
             )
-        elif normalized == "examples":
+        elif normalized == "examples" and not parsed.examples:
             parsed.examples.extend(_examples_or_text(body))
         elif normalized == "see also":
             parsed.see_also.extend(_parse_see_also(body))
@@ -285,7 +307,7 @@ def _parse_numpy(text: str, qualname: str | None, module: str | None) -> ParsedD
 def _parse_sphinx(text: str, qualname: str | None, module: str | None) -> ParsedDocstring:
     lines = text.splitlines()
     preamble_lines: list[str] = []
-    parsed = ParsedDocstring(style="sphinx")
+    parsed = _parse_with_docstring_parser(text, "sphinx", qualname, module) or ParsedDocstring(style="sphinx")
     param_map: dict[str, ApiParameter] = {}
     return_annotation: str | None = None
     i = 0
@@ -294,16 +316,20 @@ def _parse_sphinx(text: str, qualname: str | None, module: str | None) -> Parsed
         stripped = line.strip()
         if match := re.match(r"^:param\s+([A-Za-z_][\w.]*)\s*:\s*(.*)$", stripped):
             name, desc = match.groups()
-            param_map[name] = ApiParameter(name=name, description=desc or None, documented=True)
+            if not parsed.parameters:
+                param_map[name] = ApiParameter(name=name, description=desc or None, documented=True)
         elif match := re.match(r"^:type\s+([A-Za-z_][\w.]*)\s*:\s*(.*)$", stripped):
             name, annotation = match.groups()
-            param_map.setdefault(name, ApiParameter(name=name, documented=True)).annotation = annotation or None
+            if not parsed.parameters:
+                param_map.setdefault(name, ApiParameter(name=name, documented=True)).annotation = annotation or None
         elif match := re.match(r"^:returns?\s*:\s*(.*)$", stripped):
-            parsed.returns = ApiReturn(description=match.group(1) or None, documented=True)
+            if parsed.returns is None:
+                parsed.returns = ApiReturn(description=match.group(1) or None, documented=True)
         elif match := re.match(r"^:rtype\s*:\s*(.*)$", stripped):
             return_annotation = match.group(1) or None
         elif match := re.match(r"^:raises?\s+([^:]+)\s*:\s*(.*)$", stripped):
-            parsed.raises.append(ApiRaises(match.group(1).strip(), match.group(2) or None))
+            if not parsed.raises:
+                parsed.raises.append(ApiRaises(match.group(1).strip(), match.group(2) or None))
         elif stripped.startswith(".. deprecated::"):
             parsed.deprecated = True
             parsed.deprecation_message = _collect_directive_body(lines, i)
@@ -314,15 +340,17 @@ def _parse_sphinx(text: str, qualname: str | None, module: str | None) -> Parsed
         elif stripped.startswith(".. code-block::"):
             language = stripped.partition("::")[2].strip() or "text"
             code_text = _collect_directive_body(lines, i, preserve=True)
-            if code_text:
+            if code_text and not parsed.examples:
                 parsed.examples.append(ApiExample(code_text, language=language))
         elif stripped.startswith(":"):
             pass
         else:
             preamble_lines.append(line)
         i += 1
-    parsed.summary, parsed.description = _summary_and_description("\n".join(preamble_lines))
-    parsed.parameters = list(param_map.values())
+    if parsed.summary is None and parsed.description is None:
+        parsed.summary, parsed.description = _summary_and_description("\n".join(preamble_lines))
+    if not parsed.parameters:
+        parsed.parameters = list(param_map.values())
     if return_annotation:
         if parsed.returns is None:
             parsed.returns = ApiReturn(documented=True)
@@ -330,6 +358,92 @@ def _parse_sphinx(text: str, qualname: str | None, module: str | None) -> Parsed
     if not parsed.examples:
         parsed.examples.extend(extract_code_blocks_from_docstring(text))
     return parsed
+
+
+def _parse_with_docstring_parser(
+    text: str,
+    style: ApiDocstringStyleName,
+    qualname: str | None,
+    module: str | None,
+) -> ParsedDocstring | None:
+    if importlib.util.find_spec("docstring_parser") is None:
+        return None
+    try:
+        import docstring_parser
+    except Exception:
+        return None
+    style_name = _DOCSTRING_PARSER_STYLES.get(style)
+    if style_name is None:
+        return None
+    try:
+        parsed_doc = docstring_parser.parse(
+            text,
+            style=getattr(docstring_parser.Style, style_name),
+        )
+    except Exception as exc:
+        return ParsedDocstring(
+            style=style,
+            issues=[
+                ApiDocIssue(
+                    "warning",
+                    "docstring-parser-failed",
+                    f"docstring-parser could not parse this docstring: {exc}",
+                    qualname=qualname,
+                    module=module,
+                )
+            ],
+        )
+    parsed = ParsedDocstring(
+        summary=parsed_doc.short_description or None,
+        description=parsed_doc.long_description or None,
+        style=style,
+    )
+    for meta in parsed_doc.meta:
+        class_name = type(meta).__name__
+        if class_name == "DocstringParam":
+            parsed.parameters.append(
+                ApiParameter(
+                    name=str(getattr(meta, "arg_name", "") or ""),
+                    annotation=getattr(meta, "type_name", None),
+                    default=getattr(meta, "default", None),
+                    description=getattr(meta, "description", None),
+                    required=not bool(getattr(meta, "is_optional", False)),
+                    documented=True,
+                    source="docstring",
+                )
+            )
+        elif class_name == "DocstringReturns":
+            parsed.returns = ApiReturn(
+                annotation=getattr(meta, "type_name", None),
+                description=getattr(meta, "description", None),
+                documented=True,
+            )
+        elif class_name == "DocstringRaises":
+            exception = getattr(meta, "type_name", None)
+            if exception:
+                parsed.raises.append(ApiRaises(str(exception), getattr(meta, "description", None)))
+        elif class_name == "DocstringExample":
+            parsed.examples.extend(_examples_from_docstring_parser_meta(meta))
+        elif class_name == "DocstringDeprecated":
+            parsed.deprecated = True
+            parsed.deprecation_message = getattr(meta, "description", None)
+    parsed.parameters = [parameter for parameter in parsed.parameters if parameter.name]
+    if not parsed.examples:
+        parsed.examples.extend(extract_code_blocks_from_docstring(text))
+    return parsed
+
+
+def _examples_from_docstring_parser_meta(meta: object) -> list[ApiExample]:
+    snippet = getattr(meta, "snippet", None)
+    description = getattr(meta, "description", None)
+    examples: list[ApiExample] = []
+    if snippet:
+        examples.append(ApiExample(str(snippet), language="python"))
+    if description:
+        examples.extend(extract_code_blocks_from_docstring(str(description)))
+        if not examples:
+            examples.append(ApiExample(str(description), language="text"))
+    return examples
 
 
 def _parse_markdown(text: str, qualname: str | None, module: str | None) -> ParsedDocstring:

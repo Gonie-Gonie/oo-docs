@@ -49,6 +49,9 @@ repositories, and docstrings for API reference documents:
 pip install "oodocs[apidoc]"
 ```
 
+The `apidoc` extra installs `griffe` for source-based API collection and
+`docstring-parser` for standard Google, NumPy, and Sphinx docstring metadata.
+
 If you want to work from a repository checkout, run the bundled example scripts, or contribute locally:
 
 ```powershell
