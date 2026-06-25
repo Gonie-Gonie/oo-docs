@@ -404,6 +404,94 @@ def test_general_repo_sphinx_varargs_match_signature_and_render(
     assert "Keyword hook arguments." in html
 
 
+def test_general_repo_auto_parser_singular_sections_render(
+    tmp_path: Path,
+) -> None:
+    repo = tmp_path / "singularrepo"
+    package_dir = repo / "singularpkg"
+    package_dir.mkdir(parents=True)
+    (package_dir / "__init__.py").write_text(
+        "\n".join(
+            [
+                '"""Singular section package."""',
+                "",
+                "__all__ = ['load_google', 'load_markdown']",
+                "",
+                "def load_google(path: str) -> str:",
+                '    """Load data with singular Google sections.',
+                "",
+                "    Parameter:",
+                "        path (str): Input path.",
+                "",
+                "    Return:",
+                "        str: Loaded path.",
+                "",
+                "    Warning:",
+                "        Avoid user-provided paths.",
+                '    """',
+                "    return path",
+                "",
+                "def load_markdown(path: str) -> str:",
+                '    """Load data with singular Markdown headings.',
+                "",
+                "    ## Parameter",
+                "",
+                "    path (str): Input path.",
+                "",
+                "    ## Return",
+                "",
+                "    str: Loaded path.",
+                "",
+                "    ## Warning",
+                "",
+                "    Avoid user-provided paths.",
+                '    """',
+                "    return path",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    api = collect_api(
+        repo,
+        collector="inspect",
+        public_policy="__all__",
+        docstring_style=ApiDocstringParser.auto(),
+    )
+    google = api.find("singularpkg.load_google")
+    markdown = api.find("singularpkg.load_markdown")
+
+    assert google is not None
+    assert google.metadata["docstring_style"] == "google"
+    assert google.parameters[0].description == "Input path."
+    assert google.returns is not None
+    assert google.returns.description == "Loaded path."
+    assert google.warnings == ["Avoid user-provided paths."]
+    assert markdown is not None
+    assert markdown.metadata["docstring_style"] == "markdown"
+    assert markdown.parameters[0].description == "Input path."
+    assert markdown.returns is not None
+    assert markdown.returns.description == "Loaded path."
+    assert markdown.warnings == ["Avoid user-provided paths."]
+
+    document = Document(
+        "Singular Sections API",
+        Chapter(
+            "Selected API",
+            google.to_section(level=2),
+            markdown.to_section(level=2),
+        ),
+    )
+    html_path = tmp_path / "singular-sections.html"
+    document.save_html(html_path)
+
+    assert_html_internal_links_resolve(html_path)
+    html = html_path.read_text(encoding="utf-8")
+    assert "Input path." in html
+    assert "Loaded path." in html
+    assert "Avoid user-provided paths." in html
+
+
 def test_general_repo_auto_parser_object_survives_build_config_json_roundtrip(
     tmp_path: Path,
 ) -> None:

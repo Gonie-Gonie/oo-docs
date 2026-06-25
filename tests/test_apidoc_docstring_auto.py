@@ -48,6 +48,70 @@ def test_auto_docstring_parser_detects_markdown_yields_section() -> None:
     assert parsed.returns.documented
 
 
+def test_auto_docstring_parser_detects_google_singular_sections() -> None:
+    parser = ApiDocstringParser.auto()
+    docstring = """Load data.
+
+    Parameter:
+        path (str): Input path.
+
+    Return:
+        str: Loaded data.
+
+    Example:
+        ```python
+        load_data("input.json")
+        ```
+
+    Warning:
+        Avoid user-provided paths.
+    """
+
+    parsed = parse_docstring(docstring, style=parser)
+
+    assert parser.detect(docstring) == "google"
+    assert parsed.style == "google"
+    assert parsed.parameters[0].name == "path"
+    assert parsed.returns is not None
+    assert parsed.returns.annotation == "str"
+    assert parsed.examples[0].code == 'load_data("input.json")'
+    assert parsed.warnings == ["Avoid user-provided paths."]
+
+
+def test_auto_docstring_parser_detects_markdown_singular_sections() -> None:
+    parser = ApiDocstringParser.auto()
+    docstring = """Load data.
+
+    ## Parameter
+
+    path (str): Input path.
+
+    ## Return
+
+    str: Loaded data.
+
+    ## Example
+
+    ```python
+    load_data("input.json")
+    ```
+
+    ## Warning
+
+    Avoid user-provided paths.
+    """
+
+    parsed = parse_docstring(docstring, style=parser)
+
+    assert parser.detect(docstring) == "markdown"
+    assert parsed.style == "markdown"
+    assert parsed.parameters[0].name == "path"
+    assert parsed.returns is not None
+    assert parsed.returns.annotation == "str"
+    assert parsed.examples[0].code == 'load_data("input.json")'
+    assert parsed.warnings == ["Avoid user-provided paths."]
+
+
 def test_custom_docstring_parser_registry_supports_reusable_parser_objects() -> None:
     style = "auto-fixture-brief"
 

@@ -527,56 +527,81 @@ _DOCSTRING_PARSER_STYLES = {
 _GOOGLE_SECTION_NAMES = {
     "args",
     "arguments",
+    "argument",
     "parameters",
+    "parameter",
     "keyword args",
     "keyword arguments",
     "kwargs",
     "attributes",
     "attribute",
     "returns",
+    "return",
     "yields",
+    "yield",
     "raises",
+    "raise",
     "examples",
     "example",
     "see also",
     "notes",
+    "note",
     "warnings",
+    "warning",
     "renderer notes",
     "deprecated",
 }
 _MARKDOWN_DETECTION_SECTIONS = (
     "Parameters",
+    "Parameter",
     "Arguments",
+    "Argument",
     "Keyword Args",
     "Keyword Arguments",
     "Kwargs",
     "Attributes",
+    "Attribute",
     "Other Parameters",
     "Returns",
+    "Return",
     "Yields",
+    "Yield",
     "Raises",
+    "Raise",
     "Examples",
+    "Example",
     "See Also",
     "Notes",
+    "Note",
     "Warnings",
+    "Warning",
     "Renderer Notes",
     "Deprecated",
 )
 _GOOGLE_DETECTION_SECTIONS = (
     "Args",
     "Arguments",
+    "Argument",
     "Parameters",
+    "Parameter",
     "Keyword Args",
     "Keyword Arguments",
     "Kwargs",
     "Attributes",
+    "Attribute",
     "Returns",
+    "Return",
     "Yields",
+    "Yield",
     "Raises",
+    "Raise",
     "Examples",
+    "Example",
     "See Also",
     "Notes",
+    "Note",
     "Warnings",
+    "Warning",
     "Renderer Notes",
     "Deprecated",
 )
@@ -904,13 +929,22 @@ def _parse_google(text: str, qualname: str | None, module: str | None) -> Parsed
         parsed.description = description
     for name, body in sections:
         normalized = name.lower()
-        if normalized in {"args", "arguments", "parameters", "keyword args", "keyword arguments", "kwargs"}:
+        if normalized in {
+            "args",
+            "arguments",
+            "argument",
+            "parameters",
+            "parameter",
+            "keyword args",
+            "keyword arguments",
+            "kwargs",
+        }:
             _extend_missing_parameters(parsed.parameters, _parse_colon_items(body))
         elif normalized in {"attributes", "attribute"} and not parsed.attributes:
             parsed.attributes.extend(_parse_colon_items(body))
-        elif normalized in {"returns", "yields"} and parsed.returns is None:
+        elif normalized in {"returns", "return", "yields", "yield"} and parsed.returns is None:
             parsed.returns = _parse_return_section(body)
-        elif normalized == "raises" and not parsed.raises:
+        elif normalized in {"raises", "raise"} and not parsed.raises:
             parsed.raises.extend(
                 ApiRaises(item.name, item.description)
                 for item in _parse_colon_items(body, annotation_in_name=True)
@@ -919,9 +953,9 @@ def _parse_google(text: str, qualname: str | None, module: str | None) -> Parsed
             parsed.examples.extend(_examples_or_text(body))
         elif normalized == "see also":
             parsed.see_also.extend(_parse_see_also(body))
-        elif normalized == "notes":
+        elif normalized in {"notes", "note"}:
             parsed.notes.extend(_paragraphs(body))
-        elif normalized == "warnings":
+        elif normalized in {"warnings", "warning"}:
             parsed.warnings.extend(_paragraphs(body))
         elif normalized == "renderer notes":
             parsed.renderer_notes.extend(_parse_renderer_notes(body))
@@ -1289,26 +1323,28 @@ def _parse_markdown(text: str, qualname: str | None, module: str | None) -> Pars
         normalized = name.lower()
         if normalized in {
             "parameters",
+            "parameter",
             "arguments",
+            "argument",
             "keyword args",
             "keyword arguments",
             "kwargs",
             "other parameters",
         }:
             parsed.parameters.extend(_parse_markdown_parameters(body))
-        elif normalized == "attributes":
+        elif normalized in {"attributes", "attribute"}:
             parsed.attributes.extend(_parse_markdown_parameters(body))
-        elif normalized in {"returns", "yields"}:
+        elif normalized in {"returns", "return", "yields", "yield"}:
             parsed.returns = _parse_return_section(body)
-        elif normalized == "raises":
+        elif normalized in {"raises", "raise"}:
             parsed.raises.extend(_parse_markdown_raises(body))
-        elif normalized == "examples":
+        elif normalized in {"examples", "example"}:
             parsed.examples.extend(_examples_or_text(body))
         elif normalized == "see also":
             parsed.see_also.extend(_parse_see_also(body))
-        elif normalized == "notes":
+        elif normalized in {"notes", "note"}:
             parsed.notes.extend(_paragraphs(body))
-        elif normalized == "warnings":
+        elif normalized in {"warnings", "warning"}:
             parsed.warnings.extend(_paragraphs(body))
         elif normalized == "renderer notes":
             parsed.renderer_notes.extend(_parse_renderer_notes(body))

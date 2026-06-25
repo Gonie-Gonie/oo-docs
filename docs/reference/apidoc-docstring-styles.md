@@ -8,7 +8,9 @@ Supported styles:
 - `google`: `Args:`, `Arguments:`, `Parameters:`, `Keyword Args:`,
   `Keyword Arguments:`, `Kwargs:`, `Attributes:`, `Returns:`, `Yields:`,
   `Raises:`, `Examples:`, `See Also:`, `Notes:`, `Warnings:`,
-  `Renderer Notes:`, and `Deprecated:`.
+  `Renderer Notes:`, and `Deprecated:`. Singular aliases such as
+  `Parameter:`, `Return:`, `Example:`, `Note:`, and `Warning:` are also
+  accepted by automatic detection.
 - `numpy`: dashed section headings such as `Parameters`, `Other Parameters`,
   `Attributes`, `Returns`, `Yields`, `Raises`, `Examples`, `See Also`,
   `Notes`, `Warnings`, `Renderer Notes`, and `Deprecated`.
@@ -20,7 +22,9 @@ Supported styles:
   `name (type): description` lines, NumPy-like `name : type` definition
   lists, `Parameters`, `Keyword Arguments`, `Other Parameters`,
   `Returns`/`Yields`, `Raises` colon lines, exception tables, notes, warnings,
-  renderer notes, and deprecation sections.
+  renderer notes, and deprecation sections. Singular heading aliases such as
+  `## Parameter`, `## Return`, `## Example`, `## Note`, and `## Warning` are
+  also accepted by automatic detection.
 - `plain`: summary and paragraph extraction only.
 - `auto`: style detection.
 
