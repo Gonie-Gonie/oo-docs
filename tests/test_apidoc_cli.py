@@ -6,9 +6,15 @@ from apidoc_samples import (
     write_sample_package,
     write_setuptools_package_dir_repo,
 )
+from example_regression import (
+    assert_docx_structure,
+    assert_html_internal_links_resolve,
+    assert_pdf_text_and_pages,
+    assert_rendered_bundle,
+)
 import pytest
 
-from oodocs.apidoc import ApiPackage
+from oodocs.apidoc import ApiBuildConfig, ApiCoverageResult, ApiPackage
 from oodocs.cli import main
 
 
@@ -45,6 +51,98 @@ def test_apidoc_cli_builds_html_and_sidecars_for_general_repo(tmp_path) -> None:
     assert render.examples
     assert render.examples[0].syntax_ok is True
     assert render.examples[0].doctest_ok is True
+
+
+def test_apidoc_cli_builds_full_reference_bundle_from_json_config(tmp_path) -> None:
+    package_dir = write_sample_package(tmp_path)
+    output_dir = tmp_path / "reference-api"
+    config_path = tmp_path / "apidoc-build.json"
+    ApiBuildConfig.from_dict(
+        {
+            "collector": "inspect",
+            "public_policy": "__all__",
+            "docstring_style": "google",
+            "profile": "compact",
+            "formats": ["docx", "pdf", "html"],
+            "out": str(output_dir),
+            "stem": "sample-reference",
+            "sidecars": True,
+        }
+    ).write_json(config_path)
+
+    assert (
+        main(
+            [
+                "apidoc",
+                "build",
+                str(package_dir),
+                "--config",
+                str(config_path),
+            ]
+        )
+        == 0
+    )
+
+    docx_path = output_dir / "sample-reference.docx"
+    pdf_path = output_dir / "sample-reference.pdf"
+    html_path = output_dir / "sample-reference.html"
+    api_path = output_dir / "sample-reference.json"
+    coverage_json_path = output_dir / "sample-reference-coverage.json"
+    coverage_csv_path = output_dir / "sample-reference-coverage.csv"
+
+    assert_rendered_bundle(docx_path, pdf_path, html_path)
+    assert api_path.exists()
+    assert coverage_json_path.exists()
+    assert coverage_csv_path.exists()
+    assert_docx_structure(
+        docx_path,
+        required_paragraphs=(
+            "samplepkg API Reference",
+            "1 API Documentation Coverage",
+            "2 samplepkg",
+            "2.1 samplepkg.CONSTANT",
+            "2.2 samplepkg.Widget",
+            "2.3 samplepkg.make_widget",
+        ),
+        min_tables=4,
+    )
+    assert_pdf_text_and_pages(
+        pdf_path,
+        required_text=(
+            "samplepkg API Reference",
+            "samplepkg.Widget",
+            "samplepkg.make_widget",
+        ),
+        min_pages=1,
+    )
+    assert_html_internal_links_resolve(
+        html_path,
+        required_text=(
+            "samplepkg API Reference",
+            "samplepkg.Widget",
+            "samplepkg.make_widget",
+        ),
+    )
+
+    api = ApiPackage.read_json(api_path)
+    coverage = ApiCoverageResult.read_json(coverage_json_path)
+    render = api.find("samplepkg.Widget.render")
+
+    assert api.name == "samplepkg"
+    assert api.find("samplepkg.Widget") is not None
+    assert render is not None
+    assert render.examples[0].syntax_ok is True
+    assert render.examples[0].doctest_ok is True
+    assert coverage.package == "samplepkg"
+    assert coverage.public_object_count == 7
+    assert coverage.documented_object_count == 6
+    assert any(
+        issue.code == "missing-docstring" and issue.qualname == "samplepkg.CONSTANT"
+        for issue in coverage.issues
+    )
+    assert coverage_csv_path.read_text(encoding="utf-8").startswith(
+        "severity,code,qualname,module,path,line_number,message"
+    )
 
 
 def test_apidoc_cli_builds_setuptools_package_dir_repo(tmp_path) -> None:
