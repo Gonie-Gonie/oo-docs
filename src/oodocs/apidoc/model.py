@@ -911,7 +911,18 @@ class ApiObject:
 
     @property
     def documented(self) -> bool:
-        """Return whether this object has user-facing documentation."""
+        """Return whether this object has user-facing documentation.
+
+        Examples:
+            Filter collected objects to find missing summaries:
+
+            ```python
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            missing = [obj for obj in api.public_objects() if not obj.documented]
+            ```
+        """
 
         return bool(self.summary or self.description)
 
@@ -920,6 +931,16 @@ class ApiObject:
 
         Returns:
             JSON-serializable object mapping.
+
+        Examples:
+            Persist one selected object into a custom sidecar:
+
+            ```python
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            payload = api.functions()[0].to_dict()
+            ```
         """
 
         return {
@@ -957,6 +978,17 @@ class ApiObject:
 
         Returns:
             API object tree.
+
+        Examples:
+            Rehydrate one object and insert it into an OODocs document:
+
+            ```python
+            from oodocs import Chapter, Document
+            from oodocs.apidoc import ApiObject
+
+            obj = ApiObject.from_dict(saved_payload)
+            doc = Document("API", Chapter("Object", obj.to_section()))
+            ```
         """
 
         returns_data = data.get("returns")
@@ -1009,6 +1041,16 @@ class ApiObject:
 
         Returns:
             Summary text, first description sentence, or an empty string.
+
+        Examples:
+            Build a compact custom index from parsed objects:
+
+            ```python
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            rows = [(obj.qualname, obj.plain_summary()) for obj in api.public_objects()]
+            ```
         """
 
         if self.summary:
@@ -1018,34 +1060,106 @@ class ApiObject:
         return ""
 
     def display_name(self) -> str:
-        """Return the display name used in headings and tables."""
+        """Return the display name used in headings and tables.
+
+        Examples:
+            Use the same display label as generated API sections:
+
+            ```python
+            from oodocs.apidoc import ApiObject
+
+            obj = ApiObject("function", "load", "mypkg.load", "mypkg")
+            assert obj.display_name() == "mypkg.load"
+            ```
+        """
 
         return self.qualname or self.name
 
     def display_signature(self) -> str:
-        """Return callable signature text for code blocks."""
+        """Return callable signature text for code blocks.
+
+        Examples:
+            Preview the signature before rendering a code block:
+
+            ```python
+            from oodocs.apidoc import ApiObject
+
+            obj = ApiObject(
+                "function",
+                "load",
+                "mypkg.load",
+                "mypkg",
+                signature="load(path: str) -> str",
+            )
+            assert obj.display_signature() == "load(path: str) -> str"
+            ```
+        """
 
         if self.signature:
             return self.signature
         return self.display_name()
 
     def anchor_id(self) -> str:
-        """Return a stable anchor id derived from the qualname."""
+        """Return a stable anchor id derived from the qualname.
+
+        Examples:
+            Use the anchor as an internal HTML link target:
+
+            ```python
+            from oodocs.apidoc import ApiObject
+
+            obj = ApiObject("class", "Client", "mypkg.Client", "mypkg")
+            anchor = obj.anchor_id()
+            ```
+        """
 
         return _anchor_id(self.qualname)
 
     def has_parameters(self) -> bool:
-        """Return whether this object has parameter metadata."""
+        """Return whether this object has parameter metadata.
+
+        Examples:
+            Select only objects that can render parameter tables:
+
+            ```python
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            parameterized = [obj for obj in api.functions() if obj.has_parameters()]
+            ```
+        """
 
         return bool(self.parameters)
 
     def has_examples(self) -> bool:
-        """Return whether this object has parsed examples."""
+        """Return whether this object has parsed examples.
+
+        Examples:
+            Build an examples-only appendix:
+
+            ```python
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            with_examples = [obj for obj in api.public_objects() if obj.has_examples()]
+            ```
+        """
 
         return bool(self.examples)
 
     def has_members(self) -> bool:
-        """Return whether this object has child objects."""
+        """Return whether this object has child objects.
+
+        Examples:
+            Find class-like objects that have nested member documentation:
+
+            ```python
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            documented_classes = [obj for obj in api.classes() if obj.has_members()]
+            ```
+        """
 
         return bool(self.members)
 
@@ -1063,6 +1177,17 @@ class ApiObject:
 
         Yields:
             Matching child objects in source order.
+
+        Examples:
+            Iterate class methods recursively:
+
+            ```python
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            cls = api.classes()[0]
+            methods = list(cls.iter_members(kind="method", recursive=True))
+            ```
         """
 
         kinds = _normalize_kind_filter(kind)
@@ -1092,6 +1217,17 @@ class ApiObject:
 
         Returns:
             Matching objects in deterministic order.
+
+        Examples:
+            Select documented public methods from one class:
+
+            ```python
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            cls = api.classes()[0]
+            methods = cls.select(kind="method", visibility="public", documented=True)
+            ```
         """
 
         objects = list(self.iter_members(kind, recursive=recursive))
@@ -1114,6 +1250,17 @@ class ApiObject:
 
         Returns:
             Matching object, or ``None``.
+
+        Examples:
+            Look up a nested method by fully qualified name:
+
+            ```python
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            cls = api.classes()[0]
+            method = cls.find(f"{cls.qualname}.render")
+            ```
         """
 
         if qualname_or_name in {self.qualname, self.name}:
@@ -1138,6 +1285,18 @@ class ApiObject:
 
         Returns:
             Table row suitable for ``ApiPackage.to_summary_table``.
+
+        Examples:
+            Build a custom summary table row:
+
+            ```python
+            from oodocs import Table
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            obj = api.functions()[0]
+            table = Table(["Kind", "Module", "Name", "Summary"], [obj.to_summary_row()])
+            ```
         """
 
         name: object = self.display_name()
@@ -1184,6 +1343,19 @@ class ApiObject:
         Returns:
             OODocs code block, or ``None`` when the profile suppresses
             signatures or the object has no signature.
+
+        Examples:
+            Insert the generated signature block into a custom chapter:
+
+            ```python
+            from oodocs import Chapter, Document
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            obj = api.functions()[0]
+            block = obj.to_signature_block(profile="reference")
+            doc = Document("API", Chapter("Signature", block))
+            ```
         """
 
         from oodocs.apidoc.blocks import api_signature_block
@@ -1231,6 +1403,18 @@ class ApiObject:
         Returns:
             Renderer-neutral OODocs blocks. Returns an empty list when no return
             documentation should render.
+
+        Examples:
+            Add return documentation to an authored section:
+
+            ```python
+            from oodocs import Chapter, Document
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            obj = api.functions()[0]
+            doc = Document("API", Chapter("Returns", *obj.to_returns_blocks()))
+            ```
         """
 
         from oodocs.apidoc.blocks import api_returns_blocks
@@ -1246,6 +1430,19 @@ class ApiObject:
         Returns:
             OODocs table, or ``None`` when no exception documentation should
             render.
+
+        Examples:
+            Render documented exceptions as an editable table:
+
+            ```python
+            from oodocs import Chapter, Document
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            obj = api.functions()[0]
+            table = obj.to_raises_table(profile="review")
+            doc = Document("API Review", Chapter("Raises", table))
+            ```
         """
 
         from oodocs.apidoc.blocks import api_raises_table
@@ -1261,6 +1458,18 @@ class ApiObject:
 
         Returns:
             OODocs code blocks and optional captions for parsed examples.
+
+        Examples:
+            Insert parsed examples into a tutorial:
+
+            ```python
+            from oodocs import Chapter, Document
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            obj = api.functions()[0]
+            doc = Document("Tutorial", Chapter("Examples", *obj.to_examples_blocks()))
+            ```
         """
 
         from oodocs.apidoc.blocks import api_examples_blocks
@@ -1275,6 +1484,18 @@ class ApiObject:
 
         Returns:
             OODocs blocks for parsed ``See Also`` entries.
+
+        Examples:
+            Render related API references as a small appendix:
+
+            ```python
+            from oodocs import Chapter, Document
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            obj = api.functions()[0]
+            doc = Document("API", Chapter("Related", *obj.to_see_also_blocks()))
+            ```
         """
 
         from oodocs.apidoc.blocks import api_see_also_blocks
@@ -1289,6 +1510,18 @@ class ApiObject:
 
         Returns:
             OODocs paragraphs for parsed notes.
+
+        Examples:
+            Include parsed notes in a review document:
+
+            ```python
+            from oodocs import Chapter, Document
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            obj = api.functions()[0]
+            doc = Document("API Review", Chapter("Notes", *obj.to_notes_blocks()))
+            ```
         """
 
         from oodocs.apidoc.blocks import api_notes_blocks
@@ -1303,6 +1536,18 @@ class ApiObject:
 
         Returns:
             OODocs warning blocks for parsed warning notes.
+
+        Examples:
+            Surface parsed warnings in release evidence:
+
+            ```python
+            from oodocs import Chapter, Document
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            obj = api.functions()[0]
+            doc = Document("Evidence", Chapter("Warnings", *obj.to_warnings_blocks()))
+            ```
         """
 
         from oodocs.apidoc.blocks import api_warnings_blocks
@@ -1317,6 +1562,21 @@ class ApiObject:
 
         Returns:
             OODocs blocks for parsed renderer-specific notes.
+
+        Examples:
+            Include renderer notes in a compatibility report:
+
+            ```python
+            from oodocs import Chapter, Document
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            obj = api.functions()[0]
+            doc = Document(
+                "Compatibility",
+                Chapter("Renderer Notes", *obj.to_renderer_notes_blocks()),
+            )
+            ```
         """
 
         from oodocs.apidoc.blocks import api_renderer_notes_blocks
@@ -1419,6 +1679,18 @@ class ApiObject:
 
         Returns:
             OODocs box with the object summary and optional signature.
+
+        Examples:
+            Add a compact API callout to a guide chapter:
+
+            ```python
+            from oodocs import Chapter, Document
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            obj = api.functions()[0]
+            doc = Document("Guide", Chapter("Related API", obj.to_compact_box()))
+            ```
         """
 
         from oodocs.apidoc.blocks import api_object_to_compact_box
@@ -1430,6 +1702,18 @@ class ApiObject:
 
         Returns:
             ``[kind, qualname, module, location, summary]``.
+
+        Examples:
+            Build a custom API index table:
+
+            ```python
+            from oodocs import Table
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            rows = [obj.to_index_row() for obj in api.public_objects()]
+            table = Table(["Kind", "Name", "Module", "Location", "Summary"], rows)
+            ```
         """
 
         location = ""
