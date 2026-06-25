@@ -11,7 +11,11 @@ if TYPE_CHECKING:
 
 
 class Block:
-    """Base class for block-level document objects."""
+    """Base class for block-level document objects.
+
+    Attributes:
+        None: Subclasses define concrete block data and renderer behavior.
+    """
 
     def reference(
         self,

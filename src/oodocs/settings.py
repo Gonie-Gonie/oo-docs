@@ -284,12 +284,20 @@ class DocumentSettings:
         self.theme = theme or Theme()
 
     def page_width_in_inches(self) -> float:
-        """Return the resolved page width in inches."""
+        """Return the resolved page width in inches.
+
+        Returns:
+            Page width converted from the configured page unit to inches.
+        """
 
         return self.page_size.width_in_inches(self.unit)
 
     def page_height_in_inches(self) -> float:
-        """Return the resolved page height in inches."""
+        """Return the resolved page height in inches.
+
+        Returns:
+            Page height converted from the configured page unit to inches.
+        """
 
         return self.page_size.height_in_inches(self.unit)
 
@@ -308,13 +316,21 @@ class DocumentSettings:
         )
 
     def text_width_in_inches(self) -> float:
-        """Return the writable page width after horizontal margins."""
+        """Return the writable page width after horizontal margins.
+
+        Returns:
+            Non-negative writable width in inches.
+        """
 
         _, right, _, left = self.page_margin_inches()
         return max(self.page_width_in_inches() - left - right, 0)
 
     def text_height_in_inches(self) -> float:
-        """Return the writable page height after vertical margins."""
+        """Return the writable page height after vertical margins.
+
+        Returns:
+            Non-negative writable height in inches.
+        """
 
         top, _, bottom, _ = self.page_margin_inches()
         return max(self.page_height_in_inches() - top - bottom, 0)

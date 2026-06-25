@@ -126,10 +126,24 @@ DEFAULT_FOOTNOTES_XML = b"""<?xml version="1.0" encoding="UTF-8" standalone="yes
 
 
 class FootnotesPart(StoryPart):
-    """Container part for native DOCX footnotes."""
+    """Container part for native DOCX footnotes.
+
+    Attributes:
+        package: DOCX package that owns the generated footnotes part.
+    """
 
     @classmethod
     def default(cls, package: object) -> "FootnotesPart":
+        """Create a default DOCX footnotes part.
+
+        Args:
+            package: DOCX package that will own the part.
+
+        Returns:
+            Initialized footnotes part containing Word's required separator
+            entries.
+        """
+
         return cls(
             PackURI("/word/footnotes.xml"),
             CT.WML_FOOTNOTES,
@@ -138,6 +152,15 @@ class FootnotesPart(StoryPart):
         )
 
     def add_footnote_paragraph(self, footnote_id: int) -> DocxParagraph:
+        """Add an empty native footnote paragraph.
+
+        Args:
+            footnote_id: Numeric Word footnote identifier.
+
+        Returns:
+            Paragraph object that can receive footnote runs.
+        """
+
         footnote = OxmlElement("w:footnote")
         footnote.set(qn("w:id"), str(footnote_id))
         paragraph = OxmlElement("w:p")
@@ -147,10 +170,27 @@ class FootnotesPart(StoryPart):
 
 
 class DocxRenderer:
-    """Render OODocs documents into DOCX files."""
+    """Render OODocs documents into DOCX files.
+
+    The renderer exposes ``render_*`` methods so block classes and custom
+    extensions can dispatch DOCX rendering through a shared context.
+
+    Attributes:
+        _bookmark_id: Internal per-render bookmark counter.
+        _native_footnotes_part: Internal DOCX footnotes part when native
+            footnotes are emitted.
+    """
 
     def render(self, document: Document, output_path: PathLike) -> Path:
-        """Render an OODocs document to a DOCX file."""
+        """Render an OODocs document to a DOCX file.
+
+        Args:
+            document: Document to render.
+            output_path: Destination ``.docx`` path.
+
+        Returns:
+            Resolved output path that was written.
+        """
 
         path = Path(output_path)
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -217,7 +257,17 @@ class DocxRenderer:
         anchor: str | None = None,
         toc: bool = False,
     ) -> None:
-        """Render a heading into the current DOCX container."""
+        """Render a heading into the current DOCX container.
+
+        Args:
+            container: Active DOCX document, cell, or other paragraph owner.
+            title: Inline title fragments.
+            level: Heading level to render.
+            context: Current DOCX render context.
+            number_label: Optional generated heading number.
+            anchor: Optional bookmark anchor.
+            toc: Whether to append a Word table-of-contents entry.
+        """
 
         self._add_heading(
             container,
@@ -236,7 +286,13 @@ class DocxRenderer:
         block: Part,
         context: DocxRenderContext,
     ) -> None:
-        """Render a part separator page and its child blocks into DOCX."""
+        """Render a part separator page and its child blocks into DOCX.
+
+        Args:
+            container: Active DOCX document container.
+            block: Part block to render.
+            context: Current DOCX render context.
+        """
 
         self._assert_document_container(container, "Part")
         word_document = context.word_document
@@ -287,7 +343,13 @@ class DocxRenderer:
         paragraph_block: Paragraph,
         context: DocxRenderContext,
     ) -> None:
-        """Render a paragraph block into the current DOCX container."""
+        """Render a paragraph block into the current DOCX container.
+
+        Args:
+            container: Active DOCX document, cell, or other paragraph owner.
+            paragraph_block: Paragraph block to render.
+            context: Current DOCX render context.
+        """
 
         paragraph = self._add_paragraph(container)
         self._apply_paragraph_style(
@@ -314,7 +376,13 @@ class DocxRenderer:
         list_block: BulletList | NumberedList,
         context: DocxRenderContext,
     ) -> None:
-        """Render a list block into the current DOCX container."""
+        """Render a list block into the current DOCX container.
+
+        Args:
+            container: Active DOCX document, cell, or other paragraph owner.
+            list_block: Bullet or numbered list block to render.
+            context: Current DOCX render context.
+        """
 
         self._render_list(
             container,
@@ -331,7 +399,13 @@ class DocxRenderer:
         code_block: CodeBlock,
         context: DocxRenderContext,
     ) -> None:
-        """Render a code block into the current DOCX container."""
+        """Render a code block into the current DOCX container.
+
+        Args:
+            container: Active DOCX document, cell, or other paragraph owner.
+            code_block: Code block to render.
+            context: Current DOCX render context.
+        """
 
         self._render_code_block(
             container,
@@ -347,7 +421,13 @@ class DocxRenderer:
         equation: Equation,
         context: DocxRenderContext,
     ) -> None:
-        """Render a block equation into the current DOCX container."""
+        """Render a block equation into the current DOCX container.
+
+        Args:
+            container: Active DOCX document, cell, or other paragraph owner.
+            equation: Equation block to render.
+            context: Current DOCX render context.
+        """
 
         self._render_equation(
             container,
@@ -363,7 +443,13 @@ class DocxRenderer:
         block: PageBreak,
         context: DocxRenderContext,
     ) -> None:
-        """Render an explicit page break into the current DOCX container."""
+        """Render an explicit page break into the current DOCX container.
+
+        Args:
+            container: Active DOCX document, cell, or other paragraph owner.
+            block: Page break block to render.
+            context: Current DOCX render context.
+        """
 
         paragraph = self._add_paragraph(container)
         paragraph.add_run().add_break(WD_BREAK.PAGE)
@@ -374,7 +460,13 @@ class DocxRenderer:
         block: VerticalSpace,
         context: DocxRenderContext,
     ) -> None:
-        """Render a LaTeX-like vertical spacer into DOCX."""
+        """Render a LaTeX-like vertical spacer into DOCX.
+
+        Args:
+            container: Active DOCX document, cell, or other paragraph owner.
+            block: Vertical space block to render.
+            context: Current DOCX render context.
+        """
 
         paragraph = self._add_paragraph(container)
         paragraph.paragraph_format.space_before = Pt(0)
@@ -389,7 +481,13 @@ class DocxRenderer:
         block: Divider,
         context: DocxRenderContext,
     ) -> None:
-        """Render a horizontal divider into DOCX."""
+        """Render a horizontal divider into DOCX.
+
+        Args:
+            container: Active DOCX document, cell, or other paragraph owner.
+            block: Divider block to render.
+            context: Current DOCX render context.
+        """
 
         paragraph = self._add_paragraph(container)
         paragraph.alignment = ALIGNMENTS[block.alignment]
@@ -405,7 +503,13 @@ class DocxRenderer:
         box: Box,
         context: DocxRenderContext,
     ) -> None:
-        """Render a box and its child blocks into the current DOCX container."""
+        """Render a box and its child blocks into the current DOCX container.
+
+        Args:
+            container: Active DOCX document, cell, or other paragraph owner.
+            box: Box block to render.
+            context: Current DOCX render context.
+        """
 
         self._render_box(
             container,
@@ -423,7 +527,13 @@ class DocxRenderer:
         block: CountableBlock,
         context: DocxRenderContext,
     ) -> None:
-        """Render a theorem-like countable block into DOCX."""
+        """Render a theorem-like countable block into DOCX.
+
+        Args:
+            container: Active DOCX document, cell, or other paragraph owner.
+            block: Countable block to render.
+            context: Current DOCX render context.
+        """
 
         paragraph = self._add_paragraph(container)
         paragraph.paragraph_format.space_after = Pt(4)
@@ -460,7 +570,13 @@ class DocxRenderer:
         block: ColumnSpan,
         context: DocxRenderContext,
     ) -> None:
-        """Render full-width content from a multicolumn flow."""
+        """Render full-width content from a multicolumn flow.
+
+        Args:
+            container: Active DOCX document, cell, or other paragraph owner.
+            block: Column-span block to render.
+            context: Current DOCX render context.
+        """
 
         for child in block.children:
             child.render_to_docx(self, container, context)
@@ -471,7 +587,13 @@ class DocxRenderer:
         block: MultiColumn,
         context: DocxRenderContext,
     ) -> None:
-        """Render a multicolumn flow into DOCX."""
+        """Render a multicolumn flow into DOCX.
+
+        Args:
+            container: Active DOCX document container.
+            block: Multi-column block to render.
+            context: Current DOCX render context.
+        """
 
         self._render_multi_column(container, block, context)
 
@@ -481,7 +603,13 @@ class DocxRenderer:
         shape: Shape,
         context: DocxRenderContext,
     ) -> None:
-        """Render a shape either inline or as a page-positioned drawing."""
+        """Render a shape either inline or as a page-positioned drawing.
+
+        Args:
+            container: Active DOCX document, cell, or other paragraph owner.
+            shape: Shape to render.
+            context: Current DOCX render context.
+        """
 
         self._render_positioned_item(container, shape, context)
 
@@ -491,7 +619,13 @@ class DocxRenderer:
         text_box: TextBox,
         context: DocxRenderContext,
     ) -> None:
-        """Render a textbox either inline or as a page-positioned drawing."""
+        """Render a textbox either inline or as a page-positioned drawing.
+
+        Args:
+            container: Active DOCX document, cell, or other paragraph owner.
+            text_box: Text box to render.
+            context: Current DOCX render context.
+        """
 
         self._render_positioned_item(container, text_box, context)
 
@@ -501,7 +635,13 @@ class DocxRenderer:
         image_box: ImageBox,
         context: DocxRenderContext,
     ) -> None:
-        """Render an image either inline or as a page-positioned drawing."""
+        """Render an image either inline or as a page-positioned drawing.
+
+        Args:
+            container: Active DOCX document, cell, or other paragraph owner.
+            image_box: Image box to render.
+            context: Current DOCX render context.
+        """
 
         self._render_positioned_item(container, image_box, context)
 
@@ -510,7 +650,12 @@ class DocxRenderer:
         block: CommentsPage,
         context: DocxRenderContext,
     ) -> None:
-        """Render the generated comments page into the DOCX document."""
+        """Render the generated comments page into the DOCX document.
+
+        Args:
+            block: Generated comments page block.
+            context: Current DOCX render context.
+        """
 
         self._render_comments_page(
             context.word_document,
@@ -524,7 +669,12 @@ class DocxRenderer:
         block: FootnotesPage,
         context: DocxRenderContext,
     ) -> None:
-        """Render the generated footnotes page into the DOCX document."""
+        """Render the generated footnotes page into the DOCX document.
+
+        Args:
+            block: Generated footnotes page block.
+            context: Current DOCX render context.
+        """
 
         self._render_footnotes_page(
             context.word_document,
@@ -538,7 +688,12 @@ class DocxRenderer:
         block: ReferencesPage,
         context: DocxRenderContext,
     ) -> None:
-        """Render the generated references page into the DOCX document."""
+        """Render the generated references page into the DOCX document.
+
+        Args:
+            block: Generated references page block.
+            context: Current DOCX render context.
+        """
 
         self._render_references_page(
             context.word_document,
@@ -552,7 +707,12 @@ class DocxRenderer:
         block: TableOfContents,
         context: DocxRenderContext,
     ) -> None:
-        """Render the generated table of contents into the DOCX document."""
+        """Render the generated table of contents into the DOCX document.
+
+        Args:
+            block: Generated table-of-contents block.
+            context: Current DOCX render context.
+        """
 
         self._render_table_of_contents(
             context.word_document,
@@ -565,7 +725,12 @@ class DocxRenderer:
         block: TableList,
         context: DocxRenderContext,
     ) -> None:
-        """Render the generated list of tables into the DOCX document."""
+        """Render the generated list of tables into the DOCX document.
+
+        Args:
+            block: Generated table-list block.
+            context: Current DOCX render context.
+        """
 
         self._render_caption_list(
             context.word_document,
@@ -582,7 +747,12 @@ class DocxRenderer:
         block: FigureList,
         context: DocxRenderContext,
     ) -> None:
-        """Render the generated list of figures into the DOCX document."""
+        """Render the generated list of figures into the DOCX document.
+
+        Args:
+            block: Generated figure-list block.
+            context: Current DOCX render context.
+        """
 
         self._render_caption_list(
             context.word_document,
@@ -600,7 +770,13 @@ class DocxRenderer:
         table_block: Table,
         context: DocxRenderContext,
     ) -> None:
-        """Render a table block into the current DOCX container."""
+        """Render a table block into the current DOCX container.
+
+        Args:
+            container: Active DOCX document, cell, or other table owner.
+            table_block: Table block to render.
+            context: Current DOCX render context.
+        """
 
         self._render_table(
             container,
@@ -617,7 +793,13 @@ class DocxRenderer:
         figure: Figure,
         context: DocxRenderContext,
     ) -> None:
-        """Render a figure block into the current DOCX container."""
+        """Render a figure block into the current DOCX container.
+
+        Args:
+            container: Active DOCX document, cell, or other paragraph owner.
+            figure: Figure block to render.
+            context: Current DOCX render context.
+        """
 
         self._render_figure(
             container,
@@ -635,7 +817,13 @@ class DocxRenderer:
         group: SubFigureGroup,
         context: DocxRenderContext,
     ) -> None:
-        """Render a subfigure group into the current DOCX container."""
+        """Render a subfigure group into the current DOCX container.
+
+        Args:
+            container: Active DOCX document, cell, or other paragraph owner.
+            group: Subfigure group to render.
+            context: Current DOCX render context.
+        """
 
         self._render_subfigure_group(
             container,

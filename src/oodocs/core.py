@@ -46,7 +46,11 @@ VERTICAL_ALIGNMENTS = {"top", "middle", "center", "bottom"}
 
 
 class OODocsError(Exception):
-    """Base exception for errors raised by OODocs."""
+    """Base exception for errors raised by OODocs.
+
+    Args:
+        *args: Exception message arguments forwarded to ``Exception``.
+    """
 
 
 def normalize_color(value: str | None) -> str | None:

@@ -13,7 +13,19 @@ from oodocs.layout.theme import TableStyle
 
 
 def section_from_github_workflow(path: PathLike) -> Section:
-    """Create a summary section from a GitHub Actions workflow YAML file."""
+    """Create a summary section from a GitHub Actions workflow YAML file.
+
+    Args:
+        path: Workflow YAML file to read.
+
+    Returns:
+        Section containing a job summary table with runner, dependency, and
+        step-count metadata.
+
+    Raises:
+        FileNotFoundError: If ``path`` does not exist.
+        ImportError: If PyYAML is not installed.
+    """
 
     source_path = Path(path)
     workflow = _load_yaml(source_path)
@@ -21,6 +33,8 @@ def section_from_github_workflow(path: PathLike) -> Section:
     rows = []
     if isinstance(jobs, Mapping):
         for job_name, job_config in jobs.items():
+            # GitHub allows compact or non-mapping job definitions; preserve
+            # the job name and leave unavailable metadata blank.
             if isinstance(job_config, Mapping):
                 needs = job_config.get("needs", "")
                 runs_on = job_config.get("runs-on", "")

@@ -15,7 +15,15 @@ ImportPolicy = Literal["lossy", "warn", "strict"]
 
 @dataclass(frozen=True, slots=True)
 class ImportIssue:
-    """One issue reported while importing a lossy external source."""
+    """Issue reported while importing a lossy external source.
+
+    Attributes:
+        severity: Diagnostic severity for the issue.
+        code: Stable machine-readable issue code.
+        message: Human-readable diagnostic message.
+        line: Optional 1-based source line where the issue occurred.
+        source: Optional source label, such as a file path or notebook cell.
+    """
 
     severity: ImportSeverity
     code: str
@@ -24,6 +32,12 @@ class ImportIssue:
     source: str | None = None
 
     def to_dict(self) -> dict[str, object]:
+        """Return the issue as a JSON-serializable mapping.
+
+        Returns:
+            Dictionary containing severity, code, message, line, and source.
+        """
+
         return {
             "severity": self.severity,
             "code": self.code,
@@ -35,18 +49,41 @@ class ImportIssue:
 
 @dataclass(frozen=True, slots=True)
 class ImportResult:
-    """Imported blocks plus optional diagnostics."""
+    """Imported blocks plus optional diagnostics.
+
+    Attributes:
+        blocks: Imported OODocs block objects.
+        issues: Diagnostics collected while importing the source.
+    """
 
     blocks: tuple[Block, ...]
     issues: tuple[ImportIssue, ...] = ()
 
     def warnings(self) -> tuple[ImportIssue, ...]:
+        """Return warning diagnostics.
+
+        Returns:
+            Tuple of issues whose severity is ``"warning"``.
+        """
+
         return tuple(issue for issue in self.issues if issue.severity == "warning")
 
     def errors(self) -> tuple[ImportIssue, ...]:
+        """Return error diagnostics.
+
+        Returns:
+            Tuple of issues whose severity is ``"error"``.
+        """
+
         return tuple(issue for issue in self.issues if issue.severity == "error")
 
     def format_issues(self) -> str:
+        """Format diagnostics for CLI or exception output.
+
+        Returns:
+            Multi-line summary of all import diagnostics.
+        """
+
         if not self.issues:
             return "OODocs import completed with 0 issue(s)."
         lines = [f"OODocs import completed with {len(self.issues)} issue(s):"]
@@ -61,14 +98,37 @@ class ImportResult:
 
 
 class ImportPolicyError(OODocsError):
-    """Raised when strict import policy rejects a lossy conversion."""
+    """Raised when strict import policy rejects a lossy conversion.
+
+    Attributes:
+        issues: Diagnostics that caused the strict import to fail.
+    """
 
     def __init__(self, issues: Sequence[ImportIssue]) -> None:
+        """Initialize the policy error from rejected diagnostics.
+
+        Args:
+            issues: Import diagnostics that should block strict conversion.
+        """
+
         self.issues = tuple(issues)
         super().__init__(ImportResult((), self.issues).format_issues())
 
 
 def normalize_import_policy(value: str) -> ImportPolicy:
+    """Normalize and validate an import policy string.
+
+    Args:
+        value: User-supplied policy value.
+
+    Returns:
+        Normalized import policy literal.
+
+    Raises:
+        ValueError: If ``value`` is not one of ``"lossy"``, ``"warn"``, or
+            ``"strict"``.
+    """
+
     normalized = value.strip().lower()
     if normalized not in {"lossy", "warn", "strict"}:
         raise ValueError("import_policy must be 'lossy', 'warn', or 'strict'")
@@ -82,6 +142,24 @@ def resolve_import_result(
     diagnostics: bool,
     import_policy: str,
 ) -> list[Block] | ImportResult:
+    """Apply importer diagnostics policy and choose the return shape.
+
+    Args:
+        blocks: Imported block objects.
+        issues: Diagnostics collected during import.
+        diagnostics: Whether to return an ``ImportResult`` instead of blocks.
+        import_policy: Import policy controlling lossy conversions.
+
+    Returns:
+        A list of blocks when ``diagnostics`` is false, otherwise an
+        ``ImportResult`` containing blocks and diagnostics.
+
+    Raises:
+        ImportPolicyError: If ``import_policy`` is ``"strict"`` and any issue
+            was collected.
+        ValueError: If ``import_policy`` is not supported.
+    """
+
     normalized_policy = normalize_import_policy(import_policy)
     normalized_blocks = tuple(blocks)
     normalized_issues = tuple(issues)

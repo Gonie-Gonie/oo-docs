@@ -12,7 +12,16 @@ from oodocs.settings import DocumentSettings
 
 @dataclass(slots=True)
 class DocxRenderContext:
-    """Context needed while rendering blocks into DOCX."""
+    """Context needed while rendering blocks into DOCX.
+
+    Attributes:
+        theme: Resolved theme used for renderer-neutral style decisions.
+        render_index: Precomputed numbering, anchors, and lookup metadata.
+        settings: Document settings that affect page and output behavior.
+        unit: Preferred length unit for component measurements.
+        word_document: Active ``python-docx`` document object.
+        in_box: Whether the current render call is inside a styled box.
+    """
 
     theme: Theme
     render_index: RenderIndex
@@ -24,7 +33,16 @@ class DocxRenderContext:
 
 @dataclass(slots=True)
 class PdfRenderContext:
-    """Context needed while rendering blocks into PDF."""
+    """Context needed while rendering blocks into PDF.
+
+    Attributes:
+        theme: Resolved theme used for renderer-neutral style decisions.
+        render_index: Precomputed numbering, anchors, and lookup metadata.
+        settings: Document settings that affect page and output behavior.
+        unit: Preferred length unit for component measurements.
+        styles: Active ReportLab stylesheet.
+        in_box: Whether the current render call is inside a styled box.
+    """
 
     theme: Theme
     render_index: RenderIndex
@@ -36,7 +54,15 @@ class PdfRenderContext:
 
 @dataclass(slots=True)
 class HtmlRenderContext:
-    """Context needed while rendering blocks into HTML."""
+    """Context needed while rendering blocks into HTML.
+
+    Attributes:
+        theme: Resolved theme used for renderer-neutral style decisions.
+        render_index: Precomputed numbering, anchors, and lookup metadata.
+        settings: Document settings that affect page and output behavior.
+        unit: Preferred length unit for component measurements.
+        in_box: Whether the current render call is inside a styled box.
+    """
 
     theme: Theme
     render_index: RenderIndex

@@ -127,7 +127,18 @@ class CountableEntry:
 
 @dataclass(slots=True)
 class RenderIndex:
-    """Numbering and lookup information derived from a document tree."""
+    """Numbering and lookup information derived from a document tree.
+
+    Attributes:
+        tables: Indexed caption entries for tables.
+        figures: Indexed caption entries for figures and figure groups.
+        citations: Indexed citation references.
+        comments: Indexed inline comments.
+        footnotes: Indexed footnote references.
+        headings: Indexed heading entries.
+        countables: Indexed theorem-like countable blocks.
+        block_anchors: Stable anchors keyed by block identity.
+    """
 
     tables: list[CaptionEntry] = field(default_factory=list)
     figures: list[CaptionEntry] = field(default_factory=list)

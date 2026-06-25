@@ -38,7 +38,14 @@ CHECKSUM_NAME = "artifact-checksums.sha256"
 
 @dataclass(frozen=True, slots=True)
 class EvidenceBundle:
-    """Files written by ``build_release_evidence_bundle``."""
+    """Files written by ``build_release_evidence_bundle``.
+
+    Attributes:
+        output_dir: Directory containing generated evidence artifacts.
+        document_outputs: Mapping from rendered document format to output path.
+        machine_readable_files: CSV and JSON evidence files created or reused.
+        checksum_file: SHA-256 checksum file for generated artifacts.
+    """
 
     output_dir: Path
     document_outputs: dict[str, Path]
@@ -53,7 +60,24 @@ def build_release_evidence_document(
     evidence_dir: PathLike = "artifacts/evidence",
     strict: bool = True,
 ) -> Document:
-    """Build a human-readable release evidence document."""
+    """Build a human-readable release evidence document.
+
+    Args:
+        pyproject: Path to the project ``pyproject.toml`` file.
+        workflow: Optional path to a GitHub Actions workflow YAML file.
+        evidence_dir: Directory containing machine-readable evidence files.
+        strict: Whether missing optional evidence should raise an exception.
+
+    Returns:
+        Document summarizing release metadata, workflow metadata, evidence
+        tables, manifest values, and checksums.
+
+    Raises:
+        FileNotFoundError: If required evidence files are missing in strict
+            mode.
+        ImportError: If workflow parsing needs PyYAML and it is unavailable in
+            strict mode.
+    """
 
     evidence_path = Path(evidence_dir)
     sections: list[Section] = [section_from_pyproject(pyproject)]
@@ -127,7 +151,25 @@ def build_release_evidence_bundle(
     workflow: PathLike | None = ".github/workflows/release.yml",
     strict: bool = False,
 ) -> EvidenceBundle:
-    """Create machine-readable evidence files and render the evidence document."""
+    """Create machine-readable evidence files and render the evidence document.
+
+    Args:
+        output_dir: Directory where evidence artifacts and rendered documents
+            should be written.
+        pyproject: Path to the project ``pyproject.toml`` file.
+        workflow: Optional path to a GitHub Actions workflow YAML file.
+        strict: Whether missing optional inputs should raise an exception while
+            building the document.
+
+    Returns:
+        Bundle metadata containing written document, evidence, and checksum
+        paths.
+
+    Raises:
+        FileNotFoundError: If strict mode rejects missing evidence inputs.
+        ImportError: If workflow parsing needs PyYAML and it is unavailable in
+            strict mode.
+    """
 
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)

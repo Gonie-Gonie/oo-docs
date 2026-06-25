@@ -14,7 +14,14 @@ from pygments.util import ClassNotFound
 
 @dataclass(frozen=True, slots=True)
 class SyntaxToken:
-    """A syntax-highlighted text segment."""
+    """Syntax-highlighted text segment.
+
+    Attributes:
+        text: Source text for this token.
+        color: Optional hex color without a leading ``#``.
+        bold: Whether the token should render in bold.
+        italic: Whether the token should render in italics.
+    """
 
     text: str
     color: str | None = None
@@ -47,13 +54,24 @@ def _style_for_token(style: object, token_type: object) -> dict[str, object]:
 
 
 def syntax_tokens(source: str, language: str | None = None) -> list[SyntaxToken]:
-    """Return Pygments-highlighted tokens for a code block."""
+    """Return Pygments-highlighted tokens for a code block.
+
+    Args:
+        source: Code text to tokenize.
+        language: Optional Pygments lexer name. Unknown languages fall back to
+            plain text.
+
+    Returns:
+        Ordered syntax tokens preserving the source text.
+    """
 
     style = _pygments_style()
     tokens: list[SyntaxToken] = []
     for token_type, text in lex(source, _lexer(language)):
         if not text:
             continue
+        # Pygments token styles inherit from parent token classes, so climb the
+        # token hierarchy until a style entry exists.
         token_style = _style_for_token(style, token_type)
         tokens.append(
             SyntaxToken(
@@ -67,7 +85,17 @@ def syntax_tokens(source: str, language: str | None = None) -> list[SyntaxToken]
 
 
 def syntax_html(source: str, language: str | None = None) -> str:
-    """Return inline HTML spans for highlighted code inside a ``pre`` block."""
+    """Return inline HTML spans for highlighted code inside a ``pre`` block.
+
+    Args:
+        source: Code text to highlight.
+        language: Optional Pygments lexer name. Unknown languages fall back to
+            plain text.
+
+    Returns:
+        Escaped HTML containing optional inline span styles for highlighted
+        tokens.
+    """
 
     pieces: list[str] = []
     for token in syntax_tokens(source, language):
@@ -89,7 +117,16 @@ def syntax_html(source: str, language: str | None = None) -> str:
 
 
 def syntax_pdf_markup(source: str, language: str | None = None) -> str:
-    """Return ReportLab paragraph markup for highlighted code."""
+    """Return ReportLab paragraph markup for highlighted code.
+
+    Args:
+        source: Code text to highlight.
+        language: Optional Pygments lexer name. Unknown languages fall back to
+            plain text.
+
+    Returns:
+        Escaped ReportLab paragraph markup with font, bold, and italic tags.
+    """
 
     pieces: list[str] = []
     for token in syntax_tokens(source, language):

@@ -9,6 +9,16 @@ from oodocs.adapters import build_release_evidence_bundle
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    """Run the release-evidence command line entry point.
+
+    Args:
+        argv: Optional argument sequence. ``None`` reads arguments from
+            ``sys.argv``.
+
+    Returns:
+        Process exit code.
+    """
+
     parser = argparse.ArgumentParser(prog="python -m oodocs.evidence")
     subparsers = parser.add_subparsers(dest="command", required=True)
     build = subparsers.add_parser("build", help="Build release evidence files.")

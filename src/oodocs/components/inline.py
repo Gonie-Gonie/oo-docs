@@ -490,7 +490,12 @@ class Strikethrough(Text):
 
 
 class LineBreak(Text):
-    """Manual line break inside a paragraph."""
+    """Manual line break inside a paragraph.
+
+    Attributes:
+        value: Newline text emitted for plain-text extraction.
+        style: Text style inherited from ``Text``.
+    """
 
     def __init__(self) -> None:
         super().__init__(value="\n")

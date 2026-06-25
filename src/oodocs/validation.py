@@ -126,19 +126,31 @@ class ValidationResult:
 
     @property
     def errors(self) -> tuple[ValidationIssue, ...]:
-        """Return all error-level issues."""
+        """Return all error-level issues.
+
+        Returns:
+            Issues whose severity is ``"error"``.
+        """
 
         return tuple(issue for issue in self.issues if issue.severity == "error")
 
     @property
     def warnings(self) -> tuple[ValidationIssue, ...]:
-        """Return all warning-level issues."""
+        """Return all warning-level issues.
+
+        Returns:
+            Issues whose severity is ``"warning"``.
+        """
 
         return tuple(issue for issue in self.issues if issue.severity == "warning")
 
     @property
     def ok(self) -> bool:
-        """Return whether the result has no errors."""
+        """Return whether the result has no errors.
+
+        Returns:
+            ``True`` when no error-level issues exist.
+        """
 
         return not self.errors
 
@@ -331,19 +343,31 @@ class DocumentValidationError(OODocsError):
 
     @property
     def issues(self) -> tuple[ValidationIssue, ...]:
-        """Return issues associated with the blocked formats."""
+        """Return issues associated with the blocked formats.
+
+        Returns:
+            Issues matching the formats that were validated for this error.
+        """
 
         return self.result.issues_for(self.formats)
 
     @property
     def errors(self) -> tuple[ValidationIssue, ...]:
-        """Return error-level issues associated with the blocked formats."""
+        """Return error-level issues associated with the blocked formats.
+
+        Returns:
+            Error-level issues matching the blocked formats.
+        """
 
         return self.result.errors_for(self.formats)
 
     @property
     def warnings(self) -> tuple[ValidationIssue, ...]:
-        """Return warning-level issues associated with the blocked formats."""
+        """Return warning-level issues associated with the blocked formats.
+
+        Returns:
+            Warning-level issues matching the blocked formats.
+        """
 
         return self.result.warnings_for(self.formats)
 

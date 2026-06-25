@@ -13,7 +13,18 @@ from oodocs.layout.theme import TableStyle
 
 
 def section_from_pyproject(path: PathLike = "pyproject.toml") -> Section:
-    """Create a metadata section from ``pyproject.toml``."""
+    """Create a metadata section from ``pyproject.toml``.
+
+    Args:
+        path: TOML file containing Python project metadata.
+
+    Returns:
+        Section containing key project and build-system metadata.
+
+    Raises:
+        FileNotFoundError: If ``path`` does not exist.
+        tomllib.TOMLDecodeError: If the file is not valid TOML.
+    """
 
     source_path = Path(path)
     data = tomllib.loads(source_path.read_text(encoding="utf-8"))

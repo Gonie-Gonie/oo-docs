@@ -13,10 +13,23 @@ from oodocs.layout.theme import TableStyle
 
 
 def section_from_manifest(path: PathLike) -> Section:
-    """Create a section from a JSON manifest file."""
+    """Create a section from a JSON manifest file.
+
+    Args:
+        path: JSON manifest file to read.
+
+    Returns:
+        Section containing a table representation of the manifest.
+
+    Raises:
+        FileNotFoundError: If ``path`` does not exist.
+        json.JSONDecodeError: If the file is not valid JSON.
+    """
 
     source_path = Path(path)
     data = json.loads(source_path.read_text(encoding="utf-8"))
+    # Preserve the manifest shape where possible: mappings become key/value
+    # rows, sequences become record rows, and scalar values become one cell.
     if isinstance(data, dict):
         table = Table.from_mapping(
             data,

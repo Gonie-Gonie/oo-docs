@@ -16,7 +16,16 @@ from oodocs.workflows import build_python_document, convert_source, validate_sou
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    """Run the OODocs CLI."""
+    """Run the OODocs CLI.
+
+    Args:
+        argv: Optional argument sequence. ``None`` reads arguments from
+            ``sys.argv``.
+
+    Returns:
+        Process exit code. Validation failures return ``1`` and operational
+        errors return ``2``.
+    """
 
     parser = _build_parser()
     args = parser.parse_args(argv)

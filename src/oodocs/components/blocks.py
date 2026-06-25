@@ -605,7 +605,11 @@ class Equation(Block):
 
 @dataclass(slots=True)
 class PageBreak(Block):
-    """An explicit page break in the document flow."""
+    """Explicit page break in the document flow.
+
+    Attributes:
+        None: The block is a marker and carries no additional configuration.
+    """
 
     def render_to_docx(
         self,

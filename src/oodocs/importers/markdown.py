@@ -86,6 +86,26 @@ def parse_markdown(
     in generated contents pages. Pass ``heading_level_shift=1`` to import
     headings one level lower, or ``heading_level_shift=-1`` to promote them one
     level.
+
+    Args:
+        source: Markdown source text.
+        numbered: Whether imported headings should receive generated numbers.
+        toc: Whether imported headings should appear in generated contents
+            pages. ``None`` keeps each section's default.
+        heading_level_shift: Signed offset applied to Markdown heading levels.
+        base_dir: Directory used to resolve local image paths.
+        diagnostics: Whether to return ``ImportResult`` with diagnostics.
+        import_policy: Policy for diagnostics produced by lossy imports.
+        source_name: Optional source label included in diagnostics.
+
+    Returns:
+        Imported block objects, or an ``ImportResult`` when ``diagnostics`` is
+        true.
+
+    Raises:
+        ImportPolicyError: If strict import policy rejects collected issues.
+        ValueError: If shifting a heading would move it outside supported
+            section levels.
     """
 
     parser = _MarkdownParser(
@@ -131,6 +151,27 @@ def from_markdown(
     heading numbers. Pass ``toc=True`` to keep those headings in generated
     contents pages. Pass ``heading_level_shift=1`` to import headings one level
     lower, or ``heading_level_shift=-1`` to promote them one level.
+
+    Args:
+        source: Markdown source text.
+        title: Optional document title. When omitted, the first level-1 heading
+            may become the title.
+        settings: Optional document settings.
+        citations: Optional citation library, source list, or BibTeX text.
+        numbered: Whether imported headings should receive generated numbers.
+        toc: Whether imported headings should appear in generated contents
+            pages. ``None`` keeps each section's default.
+        heading_level_shift: Signed offset applied to Markdown heading levels.
+        base_dir: Directory used to resolve local image paths.
+        import_policy: Policy for diagnostics produced by lossy imports.
+
+    Returns:
+        Document populated with imported Markdown content.
+
+    Raises:
+        ImportPolicyError: If strict import policy rejects collected issues.
+        ValueError: If shifting a heading would move it outside supported
+            section levels.
     """
 
     parser = _MarkdownParser(
@@ -174,6 +215,23 @@ def parse_markdown_file(
     """Parse a Markdown file into editable OODocs blocks.
 
     Local image paths are resolved relative to the Markdown file.
+
+    Args:
+        path: Markdown file to read.
+        numbered: Whether imported headings should receive generated numbers.
+        toc: Whether imported headings should appear in generated contents
+            pages. ``None`` keeps each section's default.
+        heading_level_shift: Signed offset applied to Markdown heading levels.
+        diagnostics: Whether to return ``ImportResult`` with diagnostics.
+        import_policy: Policy for diagnostics produced by lossy imports.
+
+    Returns:
+        Imported block objects, or an ``ImportResult`` when ``diagnostics`` is
+        true.
+
+    Raises:
+        FileNotFoundError: If ``path`` does not exist.
+        ImportPolicyError: If strict import policy rejects collected issues.
     """
 
     source_path = Path(path).resolve()
@@ -204,6 +262,25 @@ def from_markdown_file(
 
     This keeps the imported body editable while resolving local assets relative
     to the source file.
+
+    Args:
+        path: Markdown file to read.
+        title: Optional document title. When omitted, the first level-1 heading
+            may become the title.
+        settings: Optional document settings.
+        citations: Optional citation library, source list, or BibTeX text.
+        numbered: Whether imported headings should receive generated numbers.
+        toc: Whether imported headings should appear in generated contents
+            pages. ``None`` keeps each section's default.
+        heading_level_shift: Signed offset applied to Markdown heading levels.
+        import_policy: Policy for diagnostics produced by lossy imports.
+
+    Returns:
+        Document populated with imported Markdown file content.
+
+    Raises:
+        FileNotFoundError: If ``path`` does not exist.
+        ImportPolicyError: If strict import policy rejects collected issues.
     """
 
     source_path = Path(path).resolve()
@@ -281,6 +358,8 @@ class _MarkdownParser:
                     index + 1,
                 )
 
+            # Block parsers return the next unread line. Trying them in
+            # Markdown precedence order avoids backtracking for ambiguous lines.
             table = self._parse_table(index)
             if table is not None:
                 block, index = table
@@ -611,6 +690,7 @@ def _build_heading_hierarchy(
                 numbered=numbered,
                 toc=toc,
             )
+            # Keep only the open ancestor path before attaching this heading.
             while stack and stack[-1][0] >= level:
                 stack.pop()
             if stack:

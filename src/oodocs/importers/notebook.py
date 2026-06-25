@@ -25,7 +25,19 @@ NotebookSource = str | OsPathLike[str] | Mapping[str, object]
 
 @dataclass(frozen=True, slots=True)
 class NotebookImportOptions:
-    """Options controlling how notebook cells and outputs are imported."""
+    """Options controlling how notebook cells and outputs are imported.
+
+    Attributes:
+        include_outputs: Whether code cell outputs should be imported.
+        include_code: Whether code cell source should be imported.
+        include_markdown: Whether Markdown cells should be imported.
+        include_raw: Whether raw cells should be imported as text code blocks.
+        code_language: Optional language override for imported code blocks.
+        exclude_tags: Notebook cell tags that should be skipped.
+        max_output_lines: Optional maximum number of text output lines.
+        image_caption: Optional format string used for image output captions.
+        include_error_outputs: Whether error outputs should be imported.
+    """
 
     include_outputs: bool = True
     include_code: bool = True
@@ -38,6 +50,12 @@ class NotebookImportOptions:
     include_error_outputs: bool = True
 
     def __post_init__(self) -> None:
+        """Validate and normalize notebook import options.
+
+        Raises:
+            ValueError: If ``max_output_lines`` is less than 1.
+        """
+
         if self.max_output_lines is not None and self.max_output_lines < 1:
             raise ValueError("NotebookImportOptions.max_output_lines must be >= 1")
         object.__setattr__(self, "exclude_tags", tuple(str(tag) for tag in self.exclude_tags))
@@ -64,6 +82,32 @@ def parse_ipynb(
     Markdown cells are parsed through ``parse_markdown(...)``. Code cells become
     ``CodeBlock`` objects. Textual cell outputs are imported as unlabeled text
     code blocks when ``include_outputs`` is true.
+
+    Args:
+        source: Notebook path, JSON text, or decoded notebook mapping.
+        options: Base import options. Explicit keyword options override this
+            object when supplied.
+        include_outputs: Optional override for output import.
+        include_code: Optional override for code cell source import.
+        include_markdown: Optional override for Markdown cell import.
+        include_raw: Optional override for raw cell import.
+        code_language: Optional language override for code blocks.
+        numbered: Whether imported Markdown headings should be numbered.
+        toc: Whether imported Markdown headings should appear in generated
+            contents pages.
+        heading_level_shift: Signed offset applied to Markdown heading levels.
+        base_dir: Directory used to resolve local Markdown image paths.
+        diagnostics: Whether to return ``ImportResult`` with diagnostics.
+        import_policy: Policy for diagnostics produced by lossy imports.
+
+    Returns:
+        Imported block objects, or an ``ImportResult`` when ``diagnostics`` is
+        true.
+
+    Raises:
+        ImportPolicyError: If strict import policy rejects collected issues.
+        TypeError: If ``source`` is not a supported notebook source.
+        ValueError: If options or shifted headings are invalid.
     """
 
     notebook = _load_notebook(source)
@@ -97,6 +141,8 @@ def parse_ipynb(
         cell_type = str(cell.get("cell_type", "")).strip().lower()
         cell_source = _join_source(cell.get("source", ""))
 
+        # Markdown cells may introduce nested sections, so imported blocks are
+        # appended through the heading stack rather than directly to root.
         if cell_type == "markdown":
             if resolved_options.include_markdown and cell_source.strip():
                 markdown_result = parse_markdown(
@@ -179,6 +225,33 @@ def from_ipynb(
     When ``title`` is not supplied, the first imported level-1 Markdown heading
     becomes the document title. If no level-1 heading is present, notebook
     metadata is checked before falling back to ``"Notebook Document"``.
+
+    Args:
+        source: Notebook path, JSON text, or decoded notebook mapping.
+        title: Optional document title.
+        settings: Optional document settings.
+        citations: Optional citation library, source list, or BibTeX text.
+        options: Base import options. Explicit keyword options override this
+            object when supplied.
+        include_outputs: Optional override for output import.
+        include_code: Optional override for code cell source import.
+        include_markdown: Optional override for Markdown cell import.
+        include_raw: Optional override for raw cell import.
+        code_language: Optional language override for code blocks.
+        numbered: Whether imported Markdown headings should be numbered.
+        toc: Whether imported Markdown headings should appear in generated
+            contents pages.
+        heading_level_shift: Signed offset applied to Markdown heading levels.
+        base_dir: Directory used to resolve local Markdown image paths.
+        import_policy: Policy for diagnostics produced by lossy imports.
+
+    Returns:
+        Document populated with imported notebook content.
+
+    Raises:
+        ImportPolicyError: If strict import policy rejects collected issues.
+        TypeError: If ``source`` is not a supported notebook source.
+        ValueError: If options or shifted headings are invalid.
     """
 
     notebook = _load_notebook(source)
@@ -428,6 +501,8 @@ def _output_blocks(
     if output_type in {"display_data", "execute_result"}:
         data = output.get("data")
         if isinstance(data, Mapping):
+            # Prefer rich Markdown when available, then image payloads, and
+            # finally text/plain so the most semantic representation survives.
             if "text/markdown" in data:
                 markdown = _join_source(data["text/markdown"])
                 if markdown.strip():

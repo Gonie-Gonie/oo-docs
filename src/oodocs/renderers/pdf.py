@@ -176,27 +176,58 @@ SYSTEM_FONT_VARIANTS = {
 
 
 class PageNumberTransition(Flowable):
-    """Invisible flowable that marks the beginning of a new page-numbering mode."""
+    """Invisible flowable that marks the beginning of a page-numbering mode.
+
+    Attributes:
+        mode: Page-numbering mode to activate after this flowable.
+    """
 
     def __init__(self, mode: str) -> None:
         super().__init__()
         self.mode = mode
 
     def wrap(self, available_width: float, available_height: float) -> tuple[float, float]:
+        """Return the zero-size flowable footprint.
+
+        Args:
+            available_width: Width available from ReportLab.
+            available_height: Height available from ReportLab.
+
+        Returns:
+            ``(0, 0)`` because the transition has no visible size.
+        """
+
         return (0, 0)
 
     def draw(self) -> None:
+        """Draw nothing for the invisible transition marker.
+
+        Returns:
+            ``None``.
+        """
+
         return None
 
 
 class FilteredTableOfContents(RLTableOfContents):
-    """ReportLab TOC flowable with optional heading-level filtering."""
+    """ReportLab TOC flowable with optional heading-level filtering.
+
+    Attributes:
+        max_level: Maximum heading level included in the generated TOC.
+    """
 
     def __init__(self, *, max_level: int | None = None, **kwargs: object) -> None:
         super().__init__(**kwargs)
         self.max_level = max_level
 
     def notify(self, kind: str, stuff: object) -> None:
+        """Receive ReportLab TOC notifications and filter by heading level.
+
+        Args:
+            kind: ReportLab notification kind.
+            stuff: Notification payload supplied by ReportLab.
+        """
+
         if kind == self._notifyKind and self.max_level is not None:
             level = stuff[0]  # type: ignore[index]
             if level > self.max_level:
@@ -205,7 +236,15 @@ class FilteredTableOfContents(RLTableOfContents):
 
 
 class CodeBlockFlowable(Flowable):
-    """Syntax-highlighted code that wraps to the available PDF width."""
+    """Syntax-highlighted code that wraps to the available PDF width.
+
+    Attributes:
+        tokens: Syntax-highlighted source tokens.
+        font_names: Font names keyed by ``(bold, italic)``.
+        font_size: Code font size in points.
+        leading: Line height in points.
+        anchor: Optional PDF bookmark anchor.
+    """
 
     def __init__(
         self,
@@ -227,12 +266,28 @@ class CodeBlockFlowable(Flowable):
         self._lines: list[list[SyntaxToken]] = []
 
     def wrap(self, available_width: float, available_height: float) -> tuple[float, float]:
+        """Measure wrapped code against the available width.
+
+        Args:
+            available_width: Width available from ReportLab.
+            available_height: Height available from ReportLab.
+
+        Returns:
+            Required ``(width, height)`` for the wrapped code block.
+        """
+
         self.width = max(available_width, self.font_size)
         self._lines = self._wrap_tokens(self.width)
         self.height = max(len(self._lines), 1) * self.leading
         return (self.width, self.height)
 
     def draw(self) -> None:
+        """Draw the wrapped highlighted code onto the ReportLab canvas.
+
+        Returns:
+            ``None``.
+        """
+
         if self.anchor:
             self.canv.bookmarkPage(self.anchor)
         y = self.height - self.font_size
@@ -301,7 +356,13 @@ class CodeBlockFlowable(Flowable):
 
 
 class PositionedItemFlowable(Flowable):
-    """ReportLab flowable for inline drawing items."""
+    """ReportLab flowable for inline drawing items.
+
+    Attributes:
+        item: Positioned item to draw inline.
+        renderer: PDF renderer responsible for drawing the item.
+        context: Current PDF render context.
+    """
 
     def __init__(
         self,
@@ -317,9 +378,25 @@ class PositionedItemFlowable(Flowable):
         self.height = length_to_inches(item.height, item.unit or context.unit) * inch
 
     def wrap(self, available_width: float, available_height: float) -> tuple[float, float]:
+        """Return the fixed inline item size.
+
+        Args:
+            available_width: Width available from ReportLab.
+            available_height: Height available from ReportLab.
+
+        Returns:
+            Required ``(width, height)`` for the item.
+        """
+
         return (self.width, self.height)
 
     def draw(self) -> None:
+        """Draw the inline positioned item onto the ReportLab canvas.
+
+        Returns:
+            ``None``.
+        """
+
         self.renderer._draw_positioned_item(
             self.canv,
             self.item,
@@ -333,7 +410,13 @@ class PositionedItemFlowable(Flowable):
 
 
 class PagePositionedItemFlowable(Flowable):
-    """Zero-size flowable that draws a page-positioned item on the current page."""
+    """Zero-size flowable that draws a page-positioned item on the current page.
+
+    Attributes:
+        box: Resolved page-positioned box to draw.
+        renderer: PDF renderer responsible for drawing the item.
+        context: Current PDF render context.
+    """
 
     def __init__(
         self,
@@ -347,9 +430,25 @@ class PagePositionedItemFlowable(Flowable):
         self.context = context
 
     def wrap(self, available_width: float, available_height: float) -> tuple[float, float]:
+        """Return the zero-size page-positioned footprint.
+
+        Args:
+            available_width: Width available from ReportLab.
+            available_height: Height available from ReportLab.
+
+        Returns:
+            ``(0, 0)`` because the item is positioned against the page.
+        """
+
         return (0, 0)
 
     def draw(self) -> None:
+        """Draw the page-positioned item onto the current ReportLab page.
+
+        Returns:
+            ``None``.
+        """
+
         settings = self.context.settings
         self.renderer._draw_positioned_item(
             self.canv,
@@ -364,13 +463,24 @@ class PagePositionedItemFlowable(Flowable):
 
 
 class OODocsPdfTemplate(SimpleDocTemplate):
-    """SimpleDocTemplate with page-number mode transitions."""
+    """SimpleDocTemplate with page-number mode transitions.
+
+    Attributes:
+        main_matter_start_page: Physical page where main-matter numbering
+            starts, or ``None`` before main matter begins.
+    """
 
     def __init__(self, *args: object, **kwargs: object) -> None:
         super().__init__(*args, **kwargs)
         self.main_matter_start_page: int | None = None
 
     def beforeDocument(self) -> None:
+        """Reset per-build page-number state before ReportLab starts.
+
+        Returns:
+            ``None``.
+        """
+
         self.main_matter_start_page = None
 
     def build(
@@ -380,6 +490,15 @@ class OODocsPdfTemplate(SimpleDocTemplate):
         onLaterPages: object = _doNothing,
         canvasmaker: object = None,
     ) -> None:
+        """Build a PDF using OODocs page templates.
+
+        Args:
+            flowables: Story flowables to render.
+            onFirstPage: Optional callback for the first page.
+            onLaterPages: Optional callback for later pages.
+            canvasmaker: Optional ReportLab canvas factory.
+        """
+
         self._calc()
         frame = Frame(
             self.leftMargin,
@@ -406,6 +525,12 @@ class OODocsPdfTemplate(SimpleDocTemplate):
             BaseDocTemplate.build(self, flowables, canvasmaker=canvasmaker)
 
     def afterFlowable(self, flowable: Flowable) -> None:
+        """Track page-number transitions and TOC entries after each flowable.
+
+        Args:
+            flowable: Flowable that ReportLab just rendered.
+        """
+
         if isinstance(flowable, PageNumberTransition) and flowable.mode == "main":
             self.main_matter_start_page = self.page + 1
             return
@@ -423,14 +548,32 @@ class OODocsPdfTemplate(SimpleDocTemplate):
 
 
 class PdfRenderer:
-    """Render OODocs documents into PDF files."""
+    """Render OODocs documents into PDF files.
+
+    The renderer exposes ``render_*`` methods so block classes and custom
+    extensions can dispatch ReportLab flowable generation through a shared
+    context.
+
+    Attributes:
+        _registered_system_fonts: Cache of registered system font variants.
+        _pending_float_flowables: Float flowables deferred until a safe flush
+            point in the story.
+    """
 
     def __init__(self) -> None:
         self._registered_system_fonts: dict[tuple[str, bool, bool], str] = {}
         self._pending_float_flowables: list[object] = []
 
     def render(self, document: Document, output_path: PathLike) -> Path:
-        """Render an OODocs document to a PDF file."""
+        """Render an OODocs document to a PDF file.
+
+        Args:
+            document: Document to render.
+            output_path: Destination ``.pdf`` path.
+
+        Returns:
+            Output path that was written.
+        """
 
         path = Path(output_path)
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -516,7 +659,16 @@ class PdfRenderer:
         block: Section,
         context: PdfRenderContext,
     ) -> RLParagraph:
-        """Build the PDF flowable used for a section heading."""
+        """Build the PDF flowable used for a section heading.
+
+        Args:
+            block: Section whose heading should be rendered.
+            context: Current PDF render context.
+
+        Returns:
+            ReportLab paragraph containing heading markup and optional TOC
+            metadata.
+        """
 
         theme = context.theme
         styles = context.styles
@@ -567,7 +719,15 @@ class PdfRenderer:
         block: Paragraph,
         context: PdfRenderContext,
     ) -> list[object]:
-        """Render a paragraph block into PDF flowables."""
+        """Render a paragraph block into PDF flowables.
+
+        Args:
+            block: Paragraph block to render.
+            context: Current PDF render context.
+
+        Returns:
+            Flowables representing the paragraph.
+        """
 
         paragraph_style = self._paragraph_style(
             block.style,
@@ -599,7 +759,15 @@ class PdfRenderer:
         block: Part,
         context: PdfRenderContext,
     ) -> list[object]:
-        """Render a part separator page and its child blocks into PDF flowables."""
+        """Render a part separator page and its child blocks into PDF flowables.
+
+        Args:
+            block: Part block to render.
+            context: Current PDF render context.
+
+        Returns:
+            Flowables representing the part separator and children.
+        """
 
         theme = context.theme
         render_index = context.render_index
@@ -660,7 +828,15 @@ class PdfRenderer:
         block: Section,
         context: PdfRenderContext,
     ) -> list[object]:
-        """Render a section heading and body, allowing float blocks to move later."""
+        """Render a section heading and body, allowing float blocks to move later.
+
+        Args:
+            block: Section block to render.
+            context: Current PDF render context.
+
+        Returns:
+            Flowables representing the heading and section body.
+        """
 
         return [self.make_section_heading(block, context)] + self._render_flow_children(
             block.children,
@@ -673,7 +849,15 @@ class PdfRenderer:
         block: BulletList | NumberedList,
         context: PdfRenderContext,
     ) -> list[object]:
-        """Render a list block into PDF flowables."""
+        """Render a list block into PDF flowables.
+
+        Args:
+            block: Bullet or numbered list block to render.
+            context: Current PDF render context.
+
+        Returns:
+            Flowables representing the list.
+        """
 
         return self._render_list(
             block,
@@ -688,7 +872,15 @@ class PdfRenderer:
         block: CodeBlock,
         context: PdfRenderContext,
     ) -> list[object]:
-        """Render a code block into PDF flowables."""
+        """Render a code block into PDF flowables.
+
+        Args:
+            block: Code block to render.
+            context: Current PDF render context.
+
+        Returns:
+            Flowables representing the code block.
+        """
 
         return self._render_code_block(
             block,
@@ -704,7 +896,15 @@ class PdfRenderer:
         block: Equation,
         context: PdfRenderContext,
     ) -> list[object]:
-        """Render a block equation into PDF flowables."""
+        """Render a block equation into PDF flowables.
+
+        Args:
+            block: Equation block to render.
+            context: Current PDF render context.
+
+        Returns:
+            Flowables representing the equation.
+        """
 
         return self._render_equation(
             block,
@@ -718,7 +918,15 @@ class PdfRenderer:
         block: OODocsPageBreak,
         context: PdfRenderContext,
     ) -> list[object]:
-        """Render an explicit page break into PDF flowables."""
+        """Render an explicit page break into PDF flowables.
+
+        Args:
+            block: Page break block to render.
+            context: Current PDF render context.
+
+        Returns:
+            Flowables containing a ReportLab page break.
+        """
 
         return [RLPageBreak()]
 
@@ -727,7 +935,15 @@ class PdfRenderer:
         block: VerticalSpace,
         context: PdfRenderContext,
     ) -> list[object]:
-        """Render a LaTeX-like vertical spacer into PDF flowables."""
+        """Render a LaTeX-like vertical spacer into PDF flowables.
+
+        Args:
+            block: Vertical space block to render.
+            context: Current PDF render context.
+
+        Returns:
+            Flowables containing a spacer.
+        """
 
         return [Spacer(1, block.height_in_points())]
 
@@ -736,7 +952,15 @@ class PdfRenderer:
         block: Divider,
         context: PdfRenderContext,
     ) -> list[object]:
-        """Render a horizontal divider into PDF flowables."""
+        """Render a horizontal divider into PDF flowables.
+
+        Args:
+            block: Divider block to render.
+            context: Current PDF render context.
+
+        Returns:
+            Flowables containing a horizontal rule.
+        """
 
         width = block.width_in_inches(context.unit)
         flowable = HRFlowable(
@@ -754,7 +978,15 @@ class PdfRenderer:
         block: Box,
         context: PdfRenderContext,
     ) -> list[object]:
-        """Render a box and its child blocks into PDF flowables."""
+        """Render a box and its child blocks into PDF flowables.
+
+        Args:
+            block: Box block to render.
+            context: Current PDF render context.
+
+        Returns:
+            Flowables representing the box and child content.
+        """
 
         return self._render_box(
             block,
@@ -770,7 +1002,15 @@ class PdfRenderer:
         block: CountableBlock,
         context: PdfRenderContext,
     ) -> list[object]:
-        """Render a theorem-like countable block into PDF flowables."""
+        """Render a theorem-like countable block into PDF flowables.
+
+        Args:
+            block: Countable block to render.
+            context: Current PDF render context.
+
+        Returns:
+            Flowables representing the countable heading and children.
+        """
 
         heading_style = self._paragraph_style(
             ParagraphStyle(space_after=4, keep_with_next=True),
@@ -802,7 +1042,15 @@ class PdfRenderer:
         block: ColumnSpan,
         context: PdfRenderContext,
     ) -> list[object]:
-        """Render full-width content from a multicolumn flow."""
+        """Render full-width content from a multicolumn flow.
+
+        Args:
+            block: Column-span block to render.
+            context: Current PDF render context.
+
+        Returns:
+            Flowables that should span all columns.
+        """
 
         return self._render_flow_children(
             block.children,
@@ -815,7 +1063,15 @@ class PdfRenderer:
         block: MultiColumn,
         context: PdfRenderContext,
     ) -> list[object]:
-        """Render a multicolumn flow into PDF flowables."""
+        """Render a multicolumn flow into PDF flowables.
+
+        Args:
+            block: Multi-column block to render.
+            context: Current PDF render context.
+
+        Returns:
+            Flowables representing grouped column content and full-width spans.
+        """
 
         if block.columns == 1:
             return self._render_flow_children(
@@ -835,6 +1091,8 @@ class PdfRenderer:
             current_group.clear()
 
         for child in block.children:
+            # Full-width children split the current column group so they can be
+            # emitted between normal multi-column runs without being squeezed.
             if block._child_spans_columns(
                 child,
                 available_width=available_width,
@@ -852,7 +1110,15 @@ class PdfRenderer:
         block: Shape,
         context: PdfRenderContext,
     ) -> list[object]:
-        """Render a shape into PDF flowables."""
+        """Render a shape into PDF flowables.
+
+        Args:
+            block: Shape to render.
+            context: Current PDF render context.
+
+        Returns:
+            Flowables representing the positioned or inline shape.
+        """
 
         return self._render_positioned_item(block, context)
 
@@ -861,7 +1127,15 @@ class PdfRenderer:
         block: TextBox,
         context: PdfRenderContext,
     ) -> list[object]:
-        """Render a textbox into PDF flowables."""
+        """Render a textbox into PDF flowables.
+
+        Args:
+            block: Text box to render.
+            context: Current PDF render context.
+
+        Returns:
+            Flowables representing the positioned or inline text box.
+        """
 
         return self._render_positioned_item(block, context)
 
@@ -870,7 +1144,15 @@ class PdfRenderer:
         block: ImageBox,
         context: PdfRenderContext,
     ) -> list[object]:
-        """Render an image box into PDF flowables."""
+        """Render an image box into PDF flowables.
+
+        Args:
+            block: Image box to render.
+            context: Current PDF render context.
+
+        Returns:
+            Flowables representing the positioned or inline image.
+        """
 
         return self._render_positioned_item(block, context)
 
@@ -879,7 +1161,15 @@ class PdfRenderer:
         block: Table,
         context: PdfRenderContext,
     ) -> list[object]:
-        """Render a table block into PDF flowables."""
+        """Render a table block into PDF flowables.
+
+        Args:
+            block: Table block to render.
+            context: Current PDF render context.
+
+        Returns:
+            Flowables representing the table and optional caption.
+        """
 
         return self._render_table(
             block,
@@ -895,7 +1185,15 @@ class PdfRenderer:
         block: Figure,
         context: PdfRenderContext,
     ) -> list[object]:
-        """Render a figure block into PDF flowables."""
+        """Render a figure block into PDF flowables.
+
+        Args:
+            block: Figure block to render.
+            context: Current PDF render context.
+
+        Returns:
+            Flowables representing the image and optional caption.
+        """
 
         return self._render_figure(
             block,
@@ -911,7 +1209,15 @@ class PdfRenderer:
         block: SubFigureGroup,
         context: PdfRenderContext,
     ) -> list[object]:
-        """Render a subfigure group into PDF flowables."""
+        """Render a subfigure group into PDF flowables.
+
+        Args:
+            block: Subfigure group to render.
+            context: Current PDF render context.
+
+        Returns:
+            Flowables representing grouped subfigures and optional caption.
+        """
 
         return self._render_subfigure_group(
             block,
@@ -927,7 +1233,15 @@ class PdfRenderer:
         block: TableList,
         context: PdfRenderContext,
     ) -> list[object]:
-        """Render the generated list of tables into PDF flowables."""
+        """Render the generated list of tables into PDF flowables.
+
+        Args:
+            block: Generated table-list block.
+            context: Current PDF render context.
+
+        Returns:
+            Flowables representing the generated list of tables.
+        """
 
         return self._render_caption_list(
             block.title,
@@ -944,7 +1258,15 @@ class PdfRenderer:
         block: FigureList,
         context: PdfRenderContext,
     ) -> list[object]:
-        """Render the generated list of figures into PDF flowables."""
+        """Render the generated list of figures into PDF flowables.
+
+        Args:
+            block: Generated figure-list block.
+            context: Current PDF render context.
+
+        Returns:
+            Flowables representing the generated list of figures.
+        """
 
         return self._render_caption_list(
             block.title,
@@ -961,7 +1283,15 @@ class PdfRenderer:
         block: CommentsPage,
         context: PdfRenderContext,
     ) -> list[object]:
-        """Render the generated comments page into PDF flowables."""
+        """Render the generated comments page into PDF flowables.
+
+        Args:
+            block: Generated comments page block.
+            context: Current PDF render context.
+
+        Returns:
+            Flowables representing the generated comments page.
+        """
 
         return self._render_comments_page(
             block.title,
@@ -975,7 +1305,15 @@ class PdfRenderer:
         block: FootnotesPage,
         context: PdfRenderContext,
     ) -> list[object]:
-        """Render the generated footnotes page into PDF flowables."""
+        """Render the generated footnotes page into PDF flowables.
+
+        Args:
+            block: Generated footnotes page block.
+            context: Current PDF render context.
+
+        Returns:
+            Flowables representing the generated footnotes page.
+        """
 
         return self._render_footnotes_page(
             block.title,
@@ -989,7 +1327,15 @@ class PdfRenderer:
         block: ReferencesPage,
         context: PdfRenderContext,
     ) -> list[object]:
-        """Render the generated references page into PDF flowables."""
+        """Render the generated references page into PDF flowables.
+
+        Args:
+            block: Generated references page block.
+            context: Current PDF render context.
+
+        Returns:
+            Flowables representing the generated references page.
+        """
 
         return self._render_references_page(
             block.title,
@@ -1003,7 +1349,15 @@ class PdfRenderer:
         block: TableOfContents,
         context: PdfRenderContext,
     ) -> list[object]:
-        """Render the generated table of contents into PDF flowables."""
+        """Render the generated table of contents into PDF flowables.
+
+        Args:
+            block: Generated table-of-contents block.
+            context: Current PDF render context.
+
+        Returns:
+            Flowables representing the generated table of contents.
+        """
 
         return self._render_table_of_contents(
             block,

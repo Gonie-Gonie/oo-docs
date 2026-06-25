@@ -72,10 +72,25 @@ from oodocs.renderers.syntax import syntax_html
 
 
 class HtmlRenderer:
-    """Render OODocs documents into standalone HTML files."""
+    """Render OODocs documents into standalone HTML files.
+
+    The renderer exposes ``render_*`` methods so block classes and custom
+    extensions can dispatch HTML rendering through a shared context.
+
+    Attributes:
+        None: The renderer is stateless between ``render`` calls.
+    """
 
     def render(self, document: Document, output_path: PathLike) -> Path:
-        """Render an OODocs document to an HTML file."""
+        """Render an OODocs document to an HTML file.
+
+        Args:
+            document: Document to render.
+            output_path: Destination ``.html`` path.
+
+        Returns:
+            Output path that was written.
+        """
 
         path = Path(output_path)
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -151,7 +166,15 @@ class HtmlRenderer:
         return path
 
     def render_paragraph(self, block: Paragraph, context: HtmlRenderContext) -> str:
-        """Render a paragraph block into HTML."""
+        """Render a paragraph block into HTML.
+
+        Args:
+            block: Paragraph block to render.
+            context: Current HTML render context.
+
+        Returns:
+            HTML fragment for the paragraph.
+        """
 
         anchor = context.render_index.block_anchor(block)
         anchor_attr = f' id="{escape(anchor)}"' if anchor else ""
@@ -166,7 +189,15 @@ class HtmlRenderer:
         )
 
     def render_part(self, block: Part, context: HtmlRenderContext) -> str:
-        """Render a part separator page and its child blocks into HTML."""
+        """Render a part separator page and its child blocks into HTML.
+
+        Args:
+            block: Part block to render.
+            context: Current HTML render context.
+
+        Returns:
+            HTML fragment for the part separator and children.
+        """
 
         number_label = context.render_index.heading_number(block) if block.numbered else None
         anchor = context.render_index.heading_anchor(block)
@@ -211,7 +242,15 @@ class HtmlRenderer:
         block: BulletList | NumberedList,
         context: HtmlRenderContext,
     ) -> str:
-        """Render a list block into HTML."""
+        """Render a list block into HTML.
+
+        Args:
+            block: Bullet or numbered list block to render.
+            context: Current HTML render context.
+
+        Returns:
+            HTML fragment for the list.
+        """
 
         return self._render_list(block, context, depth=0)
 
@@ -262,7 +301,15 @@ class HtmlRenderer:
         block: CodeBlock,
         context: HtmlRenderContext,
     ) -> str:
-        """Render a code block into HTML."""
+        """Render a code block into HTML.
+
+        Args:
+            block: Code block to render.
+            context: Current HTML render context.
+
+        Returns:
+            HTML fragment for the code block.
+        """
 
         show_label = bool(block.language and block.show_language)
         label = (
@@ -290,7 +337,15 @@ class HtmlRenderer:
         block: Equation,
         context: HtmlRenderContext,
     ) -> str:
-        """Render a block equation into HTML."""
+        """Render a block equation into HTML.
+
+        Args:
+            block: Equation block to render.
+            context: Current HTML render context.
+
+        Returns:
+            HTML fragment for the equation.
+        """
 
         line_height = block.style.leading or max(context.theme.body_font_size + 1, 12) * 1.3
         anchor = context.render_index.block_anchor(block)
@@ -314,7 +369,15 @@ class HtmlRenderer:
         block: PageBreak,
         context: HtmlRenderContext,
     ) -> str:
-        """Render an explicit page break into HTML."""
+        """Render an explicit page break into HTML.
+
+        Args:
+            block: Page break block to render.
+            context: Current HTML render context.
+
+        Returns:
+            HTML page-break marker.
+        """
 
         return '<div class="oodocs-page-break"></div>'
 
@@ -323,7 +386,15 @@ class HtmlRenderer:
         block: VerticalSpace,
         context: HtmlRenderContext,
     ) -> str:
-        """Render a LaTeX-like vertical spacer into HTML."""
+        """Render a LaTeX-like vertical spacer into HTML.
+
+        Args:
+            block: Vertical space block to render.
+            context: Current HTML render context.
+
+        Returns:
+            HTML spacer fragment.
+        """
 
         return (
             '<div class="oodocs-vertical-space" aria-hidden="true" '
@@ -335,7 +406,15 @@ class HtmlRenderer:
         block: Divider,
         context: HtmlRenderContext,
     ) -> str:
-        """Render a horizontal divider into HTML."""
+        """Render a horizontal divider into HTML.
+
+        Args:
+            block: Divider block to render.
+            context: Current HTML render context.
+
+        Returns:
+            HTML divider fragment.
+        """
 
         width = block.width_in_inches(context.unit)
         width_style = "width: 100%;" if width is None else f"width: {width:.4f}in;"
@@ -347,7 +426,15 @@ class HtmlRenderer:
         )
 
     def render_box(self, block: Box, context: HtmlRenderContext) -> str:
-        """Render a box and its children into HTML."""
+        """Render a box and its children into HTML.
+
+        Args:
+            block: Box block to render.
+            context: Current HTML render context.
+
+        Returns:
+            HTML fragment for the box and child content.
+        """
 
         self._assert_box_children_supported(block.children)
         title_html = ""
@@ -391,7 +478,15 @@ class HtmlRenderer:
         block: CountableBlock,
         context: HtmlRenderContext,
     ) -> str:
-        """Render a theorem-like countable block into HTML."""
+        """Render a theorem-like countable block into HTML.
+
+        Args:
+            block: Countable block to render.
+            context: Current HTML render context.
+
+        Returns:
+            HTML fragment for the countable block.
+        """
 
         number = context.render_index.countable_number(block)
         anchor = context.render_index.block_anchor(block)
@@ -419,7 +514,15 @@ class HtmlRenderer:
         )
 
     def render_column_span(self, block: ColumnSpan, context: HtmlRenderContext) -> str:
-        """Render full-width content from a multicolumn flow."""
+        """Render full-width content from a multicolumn flow.
+
+        Args:
+            block: Column-span block to render.
+            context: Current HTML render context.
+
+        Returns:
+            HTML fragment spanning all columns.
+        """
 
         return (
             '<div class="oodocs-column-span">'
@@ -428,7 +531,15 @@ class HtmlRenderer:
         )
 
     def render_multi_column(self, block: MultiColumn, context: HtmlRenderContext) -> str:
-        """Render a multicolumn flow into HTML."""
+        """Render a multicolumn flow into HTML.
+
+        Args:
+            block: Multi-column block to render.
+            context: Current HTML render context.
+
+        Returns:
+            HTML fragment containing grouped column content.
+        """
 
         if block.columns == 1:
             return self._render_children(block.children, context)
@@ -444,6 +555,8 @@ class HtmlRenderer:
             current_group.clear()
 
         for child in block.children:
+            # Full-width children split the current column group so they can
+            # occupy the full page width between ordinary multi-column runs.
             if block._child_spans_columns(
                 child,
                 available_width=available_width,
@@ -464,22 +577,54 @@ class HtmlRenderer:
         return '<section class="oodocs-multi-column-layout">' + "".join(parts) + "</section>"
 
     def render_shape(self, block: Shape, context: HtmlRenderContext) -> str:
-        """Render a shape into HTML."""
+        """Render a shape into HTML.
+
+        Args:
+            block: Shape to render.
+            context: Current HTML render context.
+
+        Returns:
+            HTML fragment for the positioned or inline shape.
+        """
 
         return self._positioned_item_html(self._inline_or_page_box(block, context), context)
 
     def render_text_box(self, block: TextBox, context: HtmlRenderContext) -> str:
-        """Render a textbox into HTML."""
+        """Render a textbox into HTML.
+
+        Args:
+            block: Text box to render.
+            context: Current HTML render context.
+
+        Returns:
+            HTML fragment for the positioned or inline text box.
+        """
 
         return self._positioned_item_html(self._inline_or_page_box(block, context), context)
 
     def render_image_box(self, block: ImageBox, context: HtmlRenderContext) -> str:
-        """Render an image box into HTML."""
+        """Render an image box into HTML.
+
+        Args:
+            block: Image box to render.
+            context: Current HTML render context.
+
+        Returns:
+            HTML fragment for the positioned or inline image.
+        """
 
         return self._positioned_item_html(self._inline_or_page_box(block, context), context)
 
     def render_section(self, block: Section, context: HtmlRenderContext) -> str:
-        """Render a titled section and its children into HTML."""
+        """Render a titled section and its children into HTML.
+
+        Args:
+            block: Section block to render.
+            context: Current HTML render context.
+
+        Returns:
+            HTML fragment for the heading and child blocks.
+        """
 
         heading_tag = self._heading_tag(block.level)
         number_label = context.render_index.heading_number(block) if block.numbered else None
@@ -511,7 +656,15 @@ class HtmlRenderer:
         )
 
     def render_table(self, block: Table, context: HtmlRenderContext) -> str:
-        """Render a table block into HTML."""
+        """Render a table block into HTML.
+
+        Args:
+            block: Table block to render.
+            context: Current HTML render context.
+
+        Returns:
+            HTML fragment for the table wrapper, caption, and table element.
+        """
 
         layout = build_table_layout(block.header_rows, block.rows)
         split_table = block.resolved_split()
@@ -574,7 +727,15 @@ class HtmlRenderer:
         return table_html
 
     def render_figure(self, block: Figure, context: HtmlRenderContext) -> str:
-        """Render a figure block into HTML."""
+        """Render a figure block into HTML.
+
+        Args:
+            block: Figure block to render.
+            context: Current HTML render context.
+
+        Returns:
+            HTML fragment for the figure and optional caption.
+        """
 
         placement = block.resolved_placement()
         image_style = ""
@@ -623,7 +784,15 @@ class HtmlRenderer:
         )
 
     def render_subfigure_group(self, block: SubFigureGroup, context: HtmlRenderContext) -> str:
-        """Render a subfigure group into HTML."""
+        """Render a subfigure group into HTML.
+
+        Args:
+            block: Subfigure group to render.
+            context: Current HTML render context.
+
+        Returns:
+            HTML fragment for the grouped subfigures and optional caption.
+        """
 
         placement = block.resolved_placement()
         caption_html = (
@@ -712,7 +881,15 @@ class HtmlRenderer:
         block: TableList,
         context: HtmlRenderContext,
     ) -> str:
-        """Render the generated list of tables into HTML."""
+        """Render the generated list of tables into HTML.
+
+        Args:
+            block: Generated table-list block.
+            context: Current HTML render context.
+
+        Returns:
+            HTML fragment for the generated list of tables.
+        """
 
         return self._render_caption_list(
             title=block.title,
@@ -728,7 +905,15 @@ class HtmlRenderer:
         block: FigureList,
         context: HtmlRenderContext,
     ) -> str:
-        """Render the generated list of figures into HTML."""
+        """Render the generated list of figures into HTML.
+
+        Args:
+            block: Generated figure-list block.
+            context: Current HTML render context.
+
+        Returns:
+            HTML fragment for the generated list of figures.
+        """
 
         return self._render_caption_list(
             title=block.title,
@@ -744,7 +929,15 @@ class HtmlRenderer:
         block: CommentsPage,
         context: HtmlRenderContext,
     ) -> str:
-        """Render the generated comments page into HTML."""
+        """Render the generated comments page into HTML.
+
+        Args:
+            block: Generated comments page block.
+            context: Current HTML render context.
+
+        Returns:
+            HTML fragment for the generated comments page.
+        """
 
         entries = "".join(
             (
@@ -771,7 +964,15 @@ class HtmlRenderer:
         block: FootnotesPage,
         context: HtmlRenderContext,
     ) -> str:
-        """Render the generated footnotes page into HTML."""
+        """Render the generated footnotes page into HTML.
+
+        Args:
+            block: Generated footnotes page block.
+            context: Current HTML render context.
+
+        Returns:
+            HTML fragment for the generated footnotes page.
+        """
 
         entries = "".join(
             (
@@ -798,7 +999,15 @@ class HtmlRenderer:
         block: ReferencesPage,
         context: HtmlRenderContext,
     ) -> str:
-        """Render the generated references page into HTML."""
+        """Render the generated references page into HTML.
+
+        Args:
+            block: Generated references page block.
+            context: Current HTML render context.
+
+        Returns:
+            HTML fragment for the generated references page.
+        """
 
         entries = "".join(
             (
@@ -833,7 +1042,15 @@ class HtmlRenderer:
         block: TableOfContents,
         context: HtmlRenderContext,
     ) -> str:
-        """Render the generated table of contents into HTML."""
+        """Render the generated table of contents into HTML.
+
+        Args:
+            block: Generated table-of-contents block.
+            context: Current HTML render context.
+
+        Returns:
+            HTML fragment for the generated table of contents.
+        """
 
         entries = "".join(
             self._toc_entry_html(block, entry, context)
