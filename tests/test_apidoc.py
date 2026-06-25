@@ -343,7 +343,9 @@ def test_collect_api_builds_queryable_object_tree_and_blocks(tmp_path: Path) -> 
     assert review_notes
     assert "Review note[?]" in review_notes[0].plain_text()
     assert ApiDocProfile.from_dict(ApiDocProfile.review().to_dict()).include_review_notes
-    assert isinstance(functions[0].to_parameter_table(), Table)
+    parameter_table = functions[0].to_parameter_table()
+    assert isinstance(parameter_table, Table)
+    assert parameter_table.resolved_split(default_threshold=999_999)
     assert functions[0].notes == ["Use this helper when API docs need a factory example."]
     assert functions[0].warnings == ["Do not pass user-facing secrets as names."]
     assert any("Use this helper" in block.plain_text() for block in functions[0].to_notes_blocks())
@@ -357,7 +359,9 @@ def test_collect_api_builds_queryable_object_tree_and_blocks(tmp_path: Path) -> 
     )
     assert "Do not pass" in warning_text
     assert ApiObject.from_dict(functions[0].to_dict()).warnings == functions[0].warnings
-    assert isinstance(api.to_summary_table(functions), Table)
+    summary_table = api.to_summary_table(functions)
+    assert isinstance(summary_table, Table)
+    assert summary_table.resolved_split(default_threshold=999_999)
     website_table = api.to_summary_table(classes, profile="website")
     website_name = website_table.rows[0][2].content.content[0]
     assert isinstance(website_name, Hyperlink)

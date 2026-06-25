@@ -170,7 +170,7 @@ def api_parameter_table(
     columns = resolved.parameter_columns
     headers = [_column_header(column) for column in columns]
     rows = [parameter.to_table_cell_values(columns) for parameter in obj.parameters]
-    return Table(headers, rows, caption=caption)
+    return Table(headers, rows, caption=caption, split=True)
 
 
 def api_returns_blocks(
@@ -207,6 +207,7 @@ def api_raises_table(
         ["Exception", "Description"],
         [[item.exception, item.description or ""] for item in obj.raises],
         caption=caption,
+        split=True,
     )
 
 
@@ -245,7 +246,14 @@ def api_see_also_blocks(
         [item.label, item.target or "", item.kind or "", item.description or ""]
         for item in obj.see_also
     ]
-    return [Table(["Label", "Target", "Kind", "Description"], rows, caption="See also")]
+    return [
+        Table(
+            ["Label", "Target", "Kind", "Description"],
+            rows,
+            caption="See also",
+            split=True,
+        )
+    ]
 
 
 def api_notes_blocks(
@@ -303,6 +311,7 @@ def api_renderer_notes_table(
         ["Format", "Severity", "Message"],
         [[note.format or "all", note.severity, note.message] for note in notes],
         caption=caption,
+        split=True,
     )
 
 
@@ -463,7 +472,7 @@ def api_objects_to_summary_table(
         obj.to_summary_row(include_module=include_module, link_name=resolved.name == "website")
         for obj in objects
     ]
-    return Table(headers, rows, caption=caption)
+    return Table(headers, rows, caption=caption, split=True)
 
 
 def api_module_to_blocks(
@@ -503,6 +512,7 @@ def api_module_to_blocks(
                     for note in module.renderer_notes
                 ],
                 caption="Renderer notes",
+                split=True,
             )
         )
     if module.members:

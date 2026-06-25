@@ -168,7 +168,7 @@ class ApiCoverageResult:
             ["Doctest-valid examples", str(self.doctest_ok_example_count)],
             ["Issues", str(len(self.issues))],
         ]
-        return Table(["Metric", "Value"], rows, caption=caption)
+        return Table(["Metric", "Value"], rows, caption=caption, split=True)
 
     def to_section(self) -> Chapter:
         """Return coverage as an OODocs chapter."""
@@ -180,6 +180,7 @@ class ApiCoverageResult:
                     ["Severity", "Code", "Object", "Module", "Location", "Message"],
                     [issue.to_row() for issue in self.issues],
                     caption="API documentation issues",
+                    split=True,
                 )
             )
         else:

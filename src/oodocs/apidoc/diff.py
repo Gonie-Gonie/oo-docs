@@ -138,7 +138,7 @@ class ApiDiffResult:
             ["Deprecated", str(len(self.deprecated))],
             ["Coverage delta", str(self.coverage_delta.get("object_coverage_delta", ""))],
         ]
-        return Table(["Metric", "Count"], rows, caption="API diff summary")
+        return Table(["Metric", "Count"], rows, caption="API diff summary", split=True)
 
     def to_sections(self) -> list[Chapter]:
         """Return detailed diff sections."""
@@ -422,6 +422,7 @@ def _objects_table(objects: list[ApiObject]) -> Table:
     return Table(
         ["Kind", "Name", "Summary"],
         [[obj.kind, obj.qualname, obj.plain_summary()] for obj in objects],
+        split=True,
     )
 
 
@@ -429,6 +430,7 @@ def _pairs_table(pairs: list[tuple[ApiObject, ApiObject]], field_name: str) -> T
     return Table(
         ["Object", f"Base {field_name}", f"Head {field_name}"],
         [[base.qualname, _field(base, field_name), _field(head, field_name)] for base, head in pairs],
+        split=True,
     )
 
 

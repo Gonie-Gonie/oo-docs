@@ -1480,7 +1480,7 @@ class ApiPackage:
             [module.name, str(len(module.members)), module.summary or ""]
             for module in self.modules
         ]
-        return Table(["Module", "Objects", "Summary"], rows, caption=caption)
+        return Table(["Module", "Objects", "Summary"], rows, caption=caption, split=True)
 
     def to_issue_table(
         self,
@@ -1510,6 +1510,7 @@ class ApiPackage:
                 )
             ],
             caption=caption,
+            split=True,
         )
 
     def to_coverage_table(self, **kwargs):

@@ -2524,14 +2524,14 @@ class DocxRenderer:
             for column_index, width in enumerate(column_widths):
                 table.columns[column_index].width = Inches(width)
 
+        table_cells = [row.cells for row in table.rows]
         for cell_placement in layout.placements:
-            start_cell = table.cell(cell_placement.row, cell_placement.column)
+            start_cell = table_cells[cell_placement.row][cell_placement.column]
             target_cell = start_cell
             if cell_placement.cell.colspan > 1 or cell_placement.cell.rowspan > 1:
-                end_cell = table.cell(
-                    cell_placement.row + cell_placement.cell.rowspan - 1,
-                    cell_placement.column + cell_placement.cell.colspan - 1,
-                )
+                end_cell = table_cells[
+                    cell_placement.row + cell_placement.cell.rowspan - 1
+                ][cell_placement.column + cell_placement.cell.colspan - 1]
                 target_cell = start_cell.merge(end_cell)
 
             paragraph = target_cell.paragraphs[0]
