@@ -1219,6 +1219,100 @@ class ApiPackage:
             )
         return selected
 
+    def filtered(
+        self,
+        *,
+        kind: str | Iterable[str] | None = None,
+        module: str | None = None,
+        module_prefix: str | None = None,
+        visibility: str | None = "public",
+        documented: bool | None = None,
+        deprecated: bool | None = None,
+        recursive: bool = True,
+    ) -> ApiPackage:
+        """Return a package containing only matching API objects.
+
+        Args:
+            kind: Optional kind or kinds to include.
+            module: Optional exact module name.
+            module_prefix: Optional module prefix.
+            visibility: Optional visibility to include. Defaults to public.
+            documented: Optional documentation-state filter.
+            deprecated: Optional deprecation-state filter.
+            recursive: Whether to include nested members.
+
+        Returns:
+            New package with filtered module members and matching issues.
+
+        Examples:
+            Build a coverage gate for only public classes in one package area:
+
+            ```python
+            from oodocs.apidoc import check_api_docs, collect_api
+
+            api = collect_api(".")
+            coverage = check_api_docs(
+                api.filtered(kind="class", module_prefix="mypkg.widgets")
+            )
+            ```
+        """
+
+        selected = self.select(
+            kind=kind,
+            module=module,
+            module_prefix=module_prefix,
+            visibility=visibility,
+            documented=documented,
+            deprecated=deprecated,
+            recursive=recursive,
+        )
+        selected = _drop_descendants_of_selected_objects(selected)
+        modules_by_name = self.modules_by_name()
+        grouped: dict[str, list[ApiObject]] = {}
+        selected_qualnames: set[str] = set()
+        for obj in selected:
+            grouped.setdefault(obj.module, []).append(ApiObject.from_dict(obj.to_dict()))
+            selected_qualnames.add(obj.qualname)
+            selected_qualnames.update(member.qualname for member in obj.iter_members(recursive=True))
+        filtered_modules: list[ApiModule] = []
+        for module_name in sorted(grouped):
+            source_module = modules_by_name.get(module_name)
+            filtered_modules.append(
+                ApiModule(
+                    name=module_name,
+                    members=sorted(grouped[module_name], key=lambda obj: (obj.line_number or 0, obj.name)),
+                    summary=source_module.summary if source_module else None,
+                    description=source_module.description if source_module else None,
+                    source_path=source_module.source_path if source_module else None,
+                    line_number=source_module.line_number if source_module else None,
+                    end_line_number=source_module.end_line_number if source_module else None,
+                    metadata=dict(source_module.metadata) if source_module else {},
+                )
+            )
+        included_modules = set(grouped)
+        filtered_issues = [
+            issue
+            for issue in self.issues
+            if _issue_matches_filtered_package(issue, selected_qualnames, included_modules)
+        ]
+        metadata = dict(self.metadata)
+        metadata["filters"] = {
+            "kind": sorted(_normalize_kind_filter(kind) or []),
+            "module": module,
+            "module_prefix": module_prefix,
+            "visibility": visibility,
+            "documented": documented,
+            "deprecated": deprecated,
+            "recursive": recursive,
+        }
+        return ApiPackage(
+            self.name,
+            version=self.version,
+            modules=filtered_modules,
+            issues=filtered_issues,
+            metadata=metadata,
+        )
+
     def find(self, qualname_or_name: str) -> ApiObject | ApiModule | None:
         """Find a module or object by qualname or local name."""
 
@@ -1396,6 +1490,31 @@ def _normalize_kind_filter(kind: str | Iterable[str] | None) -> set[str] | None:
     if isinstance(kind, str):
         return {kind}
     return set(kind)
+
+
+def _drop_descendants_of_selected_objects(objects: Sequence[ApiObject]) -> list[ApiObject]:
+    kept: list[ApiObject] = []
+    parent_prefixes: list[str] = []
+    for obj in sorted(objects, key=lambda item: (item.qualname.count("."), item.qualname)):
+        if any(obj.qualname.startswith(prefix) for prefix in parent_prefixes):
+            continue
+        kept.append(obj)
+        if obj.has_members():
+            parent_prefixes.append(f"{obj.qualname}.")
+    return kept
+
+
+def _issue_matches_filtered_package(
+    issue: ApiDocIssue,
+    selected_qualnames: set[str],
+    included_modules: set[str],
+) -> bool:
+    if issue.qualname:
+        return issue.qualname in selected_qualnames or any(
+            qualname.startswith(f"{issue.qualname}.")
+            for qualname in selected_qualnames
+        )
+    return bool(issue.module and issue.module in included_modules)
 
 
 def _matches_object(

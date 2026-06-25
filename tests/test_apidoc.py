@@ -270,6 +270,9 @@ def test_collect_api_builds_queryable_object_tree_and_blocks(tmp_path: Path) -> 
     assert isinstance(classes[0].to_section(level=2, profile="compact"), Section)
     assert isinstance(functions[0].to_parameter_table(), Table)
     assert isinstance(api.to_summary_table(functions), Table)
+    filtered = api.filtered(kind="class", module_prefix="samplepkg")
+    assert [obj.qualname for obj in filtered.public_objects() if obj.kind == "class"] == ["samplepkg.Widget"]
+    assert filtered.metadata["filters"]["kind"] == ["class"]
 
     document = Document(
         "Demo",
@@ -574,3 +577,56 @@ def test_apidoc_cli_collect_check_build_snapshot_and_diff(tmp_path: Path, capsys
 
     captured = capsys.readouterr()
     assert "Wrote api-json" in captured.out
+
+
+def test_apidoc_cli_filters_check_and_snapshot(tmp_path: Path) -> None:
+    package_dir = tmp_path / "filterpkg"
+    package_dir.mkdir()
+    (package_dir / "__init__.py").write_text('"""Filtered package."""\n', encoding="utf-8")
+    (package_dir / "core.py").write_text(
+        "def run(path: str) -> str:\n"
+        '    """Run a task.\n\n'
+        "    Args:\n"
+        "        path: Input path.\n"
+        "    Returns:\n"
+        "        str: Input path.\n"
+        '    """\n'
+        "    return path\n",
+        encoding="utf-8",
+    )
+    (package_dir / "legacy.py").write_text(
+        "class Legacy:\n"
+        "    pass\n",
+        encoding="utf-8",
+    )
+    snapshot_json = tmp_path / "filtered-snapshot.json"
+
+    assert main(
+        [
+            "apidoc",
+            "check",
+            str(package_dir),
+            "--kind",
+            "function",
+            "--module-prefix",
+            "filterpkg.core",
+            "--fail-under",
+            "1.0",
+        ]
+    ) == 0
+    assert main(
+        [
+            "apidoc",
+            "snapshot",
+            str(package_dir),
+            "--kind",
+            "function",
+            "--module-prefix",
+            "filterpkg.core",
+            "--out",
+            str(snapshot_json),
+        ]
+    ) == 0
+
+    snapshot = json.loads(snapshot_json.read_text(encoding="utf-8"))
+    assert list(snapshot["objects"]) == ["filterpkg.core.run"]

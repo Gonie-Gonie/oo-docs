@@ -21,7 +21,12 @@ CLI equivalent:
 python -m oodocs apidoc check oodocs --collector griffe --public-policy __all__ --fail-under 0.90
 ```
 
+For larger repositories, gate only the API area currently under review:
+
+```powershell
+python -m oodocs apidoc check . --collector griffe --kind class --module-prefix mypkg.widgets --fail-under 0.95
+```
+
 Coverage issues include missing summaries, missing parameter docs, extra
 parameter docs, missing return docs, example syntax errors, and missing
 deprecation guidance.
-

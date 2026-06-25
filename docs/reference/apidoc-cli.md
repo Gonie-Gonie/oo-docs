@@ -14,6 +14,12 @@ Check documentation coverage:
 python -m oodocs apidoc check oodocs --collector griffe --public-policy __all__ --fail-under 0.90
 ```
 
+Filter coverage to selected object kinds or module prefixes:
+
+```powershell
+python -m oodocs apidoc check oodocs --kind class --module-prefix oodocs.components --fail-under 0.95
+```
+
 Build rendered API documents:
 
 ```powershell
@@ -30,9 +36,10 @@ Snapshot and diff:
 
 ```powershell
 python -m oodocs apidoc snapshot oodocs --out artifacts/api-snapshot.json
+python -m oodocs apidoc snapshot oodocs --kind function --module-prefix oodocs.adapters --out artifacts/api-functions.json
 python -m oodocs apidoc diff --base artifacts/api-base.json --head artifacts/api-snapshot.json --out artifacts/api-diff
 ```
 
 Common collection options are `--collector`, `--public-policy`,
-`--explicit-name`, and `--docstring-style`.
-
+`--explicit-name`, and `--docstring-style`. `check`, `build`, and `snapshot`
+also accept `--kind` and `--module-prefix` filters.

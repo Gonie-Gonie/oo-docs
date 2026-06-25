@@ -9,6 +9,7 @@ from typing import Sequence
 from oodocs.apidoc.collect import collect_api
 from oodocs.apidoc.coverage import check_api_docs
 from oodocs.apidoc.diff import ApiSnapshot, diff_api
+from oodocs.apidoc.model import ApiObject, ApiPackage
 from oodocs.compatibility import normalize_output_formats
 from oodocs.components.blocks import Chapter
 from oodocs.document import Document
@@ -47,6 +48,7 @@ def _build_parser() -> argparse.ArgumentParser:
     check.add_argument("--fail-under", type=float, help="Minimum documented-object ratio.")
     check.add_argument("--require-examples", action="store_true", help="Require examples for public API objects.")
     check.add_argument("--require-renderer-notes", action="store_true", help="Require renderer notes for public API objects.")
+    _add_filter_options(check)
     _add_collect_options(check)
     check.set_defaults(func=_run_check)
 
@@ -56,14 +58,14 @@ def _build_parser() -> argparse.ArgumentParser:
     build.add_argument("--to", default="docx,pdf,html", help="Comma-separated output formats.")
     build.add_argument("--stem", help="Output file stem.")
     build.add_argument("--profile", default="reference", help="Presentation profile.")
-    build.add_argument("--kind", action="append", help="Filter object kind; may be repeated.")
-    build.add_argument("--module-prefix", help="Filter module prefix.")
+    _add_filter_options(build)
     _add_collect_options(build)
     build.set_defaults(func=_run_build)
 
     snapshot = subparsers.add_parser("snapshot", help="Write a public API snapshot JSON.")
     snapshot.add_argument("package", help="Package/module name, Python file, or package directory.")
     snapshot.add_argument("--out", required=True, help="Output snapshot JSON path.")
+    _add_filter_options(snapshot)
     _add_collect_options(snapshot)
     snapshot.set_defaults(func=_run_snapshot)
 
@@ -104,6 +106,11 @@ def _add_collect_options(parser: argparse.ArgumentParser) -> None:
     )
 
 
+def _add_filter_options(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--kind", action="append", help="Filter object kind; may be repeated.")
+    parser.add_argument("--module-prefix", help="Filter module prefix.")
+
+
 def _run_collect(args: argparse.Namespace) -> int:
     api = _collect_from_args(args)
     api.write_json(args.out)
@@ -112,7 +119,7 @@ def _run_collect(args: argparse.Namespace) -> int:
 
 
 def _run_check(args: argparse.Namespace) -> int:
-    api = _collect_from_args(args)
+    api = _filter_from_args(_collect_from_args(args), args)
     result = check_api_docs(
         api,
         fail_under=args.fail_under,
@@ -134,11 +141,9 @@ def _run_check(args: argparse.Namespace) -> int:
 def _run_build(args: argparse.Namespace) -> int:
     api = _collect_from_args(args)
     formats = normalize_output_formats(_split_csv(args.to))
-    if args.kind or args.module_prefix:
-        selected = api.select(
-            kind=tuple(args.kind) if args.kind else None,
-            module_prefix=args.module_prefix,
-        )
+    if _has_filters(args):
+        filtered = _filter_from_args(api, args)
+        selected = _top_level_objects(filtered)
         document = Document(
             f"{api.name} API Reference",
             Chapter(
@@ -159,7 +164,7 @@ def _run_build(args: argparse.Namespace) -> int:
 
 
 def _run_snapshot(args: argparse.Namespace) -> int:
-    api = _collect_from_args(args)
+    api = _filter_from_args(_collect_from_args(args), args)
     ApiSnapshot.from_package(api).write_json(args.out)
     print(f"Wrote api-snapshot: {Path(args.out)}")
     return 0
@@ -188,6 +193,23 @@ def _collect_from_args(args: argparse.Namespace):
         explicit_names=args.explicit_names,
         docstring_style=args.docstring_style,
     )
+
+
+def _filter_from_args(api: ApiPackage, args: argparse.Namespace) -> ApiPackage:
+    if not _has_filters(args):
+        return api
+    return api.filtered(
+        kind=tuple(args.kind) if args.kind else None,
+        module_prefix=args.module_prefix,
+    )
+
+
+def _has_filters(args: argparse.Namespace) -> bool:
+    return bool(getattr(args, "kind", None) or getattr(args, "module_prefix", None))
+
+
+def _top_level_objects(api: ApiPackage) -> list[ApiObject]:
+    return [member for module in api.modules for member in module.members]
 
 
 def _split_csv(value: str) -> tuple[str, ...]:
