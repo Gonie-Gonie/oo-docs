@@ -48,9 +48,6 @@ VERTICAL_ALIGNMENTS = {"top", "middle", "center", "bottom"}
 class OODocsError(Exception):
     """Base exception for errors raised by OODocs.
 
-    Args:
-        *args: Exception message arguments forwarded to ``Exception``.
-
     Examples:
         ```python
         from oodocs import OODocsError

@@ -212,6 +212,11 @@ class PageNumberTransition(Flowable):
 class FilteredTableOfContents(RLTableOfContents):
     """ReportLab TOC flowable with optional heading-level filtering.
 
+    Args:
+        max_level: Maximum heading level included in the generated TOC.
+        **kwargs: Additional ReportLab table-of-contents options forwarded to
+            ``RLTableOfContents``.
+
     Attributes:
         max_level: Maximum heading level included in the generated TOC.
     """
@@ -464,6 +469,10 @@ class PagePositionedItemFlowable(Flowable):
 
 class OODocsPdfTemplate(SimpleDocTemplate):
     """SimpleDocTemplate with page-number mode transitions.
+
+    Args:
+        *args: Positional arguments forwarded to ``SimpleDocTemplate``.
+        **kwargs: Keyword arguments forwarded to ``SimpleDocTemplate``.
 
     Attributes:
         main_matter_start_page: Physical page where main-matter numbering
