@@ -55,3 +55,29 @@ def test_markdown_docstring_parses_raises_table() -> None:
         ("ValueError", "If the path is empty."),
         ("RuntimeError", "If loading fails."),
     ]
+
+
+def test_markdown_docstring_parses_keyword_argument_sections() -> None:
+    parsed = parse_docstring(
+        """
+        Load a widget.
+
+        ## Parameters
+
+        | Name | Type | Description |
+        | --- | --- | --- |
+        | path | str | Input path. |
+
+        ## Keyword Arguments
+
+        - `retries` (int): Retry count.
+        - `timeout` (float): Timeout in seconds.
+        """,
+        style="markdown",
+    )
+
+    assert [(item.name, item.annotation, item.description) for item in parsed.parameters] == [
+        ("path", "str", "Input path."),
+        ("retries", "int", "Retry count."),
+        ("timeout", "float", "Timeout in seconds."),
+    ]

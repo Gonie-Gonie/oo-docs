@@ -55,6 +55,59 @@ def test_numpy_fallback_parser_extracts_raises_sections(monkeypatch) -> None:
     ]
 
 
+def test_numpy_parser_merges_other_parameters() -> None:
+    parsed = parse_docstring(
+        """
+        Load data.
+
+        Parameters
+        ----------
+        path : str
+            Input path.
+
+        Other Parameters
+        ----------------
+        retries : int
+            Retry count.
+        timeout : float
+            Timeout in seconds.
+        """,
+        style="numpy",
+    )
+
+    assert [(item.name, item.annotation, item.description) for item in parsed.parameters] == [
+        ("path", "str", "Input path."),
+        ("retries", "int", "Retry count."),
+        ("timeout", "float", "Timeout in seconds."),
+    ]
+
+
+def test_numpy_fallback_parser_merges_other_parameters(monkeypatch) -> None:
+    monkeypatch.setattr(docstring_module.importlib.util, "find_spec", lambda name: None)
+
+    parsed = parse_docstring(
+        """
+        Load data.
+
+        Parameters
+        ----------
+        path : str
+            Input path.
+
+        Other Parameters
+        ----------------
+        retries : int
+            Retry count.
+        """,
+        style="numpy",
+    )
+
+    assert [(item.name, item.annotation, item.description) for item in parsed.parameters] == [
+        ("path", "str", "Input path."),
+        ("retries", "int", "Retry count."),
+    ]
+
+
 def test_numpy_fallback_parser_preserves_return_values(monkeypatch) -> None:
     monkeypatch.setattr(docstring_module.importlib.util, "find_spec", lambda name: None)
 

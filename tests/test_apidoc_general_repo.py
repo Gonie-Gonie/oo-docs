@@ -217,6 +217,115 @@ def test_general_repo_sphinx_seealso_directives_compose_into_reference(
     assert "open_widget receives a stable related API entry." in html
 
 
+def test_general_repo_auto_parser_extended_parameter_sections_render(
+    tmp_path: Path,
+) -> None:
+    repo = tmp_path / "kwrepo"
+    package_dir = repo / "kwpkg"
+    package_dir.mkdir(parents=True)
+    (package_dir / "__init__.py").write_text(
+        "\n".join(
+            [
+                '"""Keyword parameter package."""',
+                "",
+                "__all__ = ['load_google', 'load_numpy', 'load_markdown']",
+                "",
+                "def load_google(path: str, *, retries: int = 0) -> str:",
+                '    """Load via Google-style sections.',
+                "",
+                "    Args:",
+                "        path (str): Input path.",
+                "",
+                "    Keyword Args:",
+                "        retries (int): Retry count.",
+                "",
+                "    Returns:",
+                "        str: Loaded path.",
+                '    """',
+                "    return path",
+                "",
+                "def load_numpy(path: str, *, timeout: float = 1.0) -> str:",
+                '    """Load via NumPy-style sections.',
+                "",
+                "    Parameters",
+                "    ----------",
+                "    path : str",
+                "        Input path.",
+                "",
+                "    Other Parameters",
+                "    ----------------",
+                "    timeout : float",
+                "        Timeout in seconds.",
+                "",
+                "    Returns",
+                "    -------",
+                "    str",
+                "        Loaded path.",
+                '    """',
+                "    return path",
+                "",
+                "def load_markdown(path: str, *, verbose: bool = False) -> str:",
+                '    """Load via Markdown-style sections.',
+                "",
+                "    ## Parameters",
+                "",
+                "    | Name | Type | Description |",
+                "    | --- | --- | --- |",
+                "    | path | str | Input path. |",
+                "",
+                "    ## Keyword Arguments",
+                "",
+                "    - `verbose` (bool): Whether to print progress.",
+                "",
+                "    ## Returns",
+                "",
+                "    str: Loaded path.",
+                '    """',
+                "    return path",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    api = collect_api(
+        repo,
+        collector="inspect",
+        public_policy="__all__",
+        docstring_style=ApiDocstringParser.auto(),
+    )
+    google = api.find("kwpkg.load_google")
+    numpy = api.find("kwpkg.load_numpy")
+    markdown = api.find("kwpkg.load_markdown")
+
+    assert google is not None
+    assert google.metadata["docstring_style"] == "google"
+    assert [item.name for item in google.parameters] == ["path", "retries"]
+    assert numpy is not None
+    assert numpy.metadata["docstring_style"] == "numpy"
+    assert [item.name for item in numpy.parameters] == ["path", "timeout"]
+    assert markdown is not None
+    assert markdown.metadata["docstring_style"] == "markdown"
+    assert [item.name for item in markdown.parameters] == ["path", "verbose"]
+
+    document = Document(
+        "Keyword Parameter API",
+        Chapter(
+            "Selected API",
+            google.to_section(level=2),
+            numpy.to_section(level=2),
+            markdown.to_section(level=2),
+        ),
+    )
+    html_path = tmp_path / "keyword-parameters.html"
+    document.save_html(html_path)
+
+    assert_html_internal_links_resolve(html_path)
+    html = html_path.read_text(encoding="utf-8")
+    assert "Retry count." in html
+    assert "Timeout in seconds." in html
+    assert "Whether to print progress." in html
+
+
 def test_general_repo_auto_parser_object_survives_build_config_json_roundtrip(
     tmp_path: Path,
 ) -> None:

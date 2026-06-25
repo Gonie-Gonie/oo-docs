@@ -5,16 +5,20 @@ schema.
 
 Supported styles:
 
-- `google`: `Args:`, `Attributes:`, `Returns:`, `Yields:`, `Raises:`,
-  `Examples:`, `See Also:`, `Notes:`, `Warnings:`, `Renderer Notes:`, and
-  `Deprecated:`.
-- `numpy`: dashed section headings such as `Parameters`, `Returns`, `Yields`,
-  `Raises`, `Notes`, `Warnings`, `Renderer Notes`, and `Deprecated`.
+- `google`: `Args:`, `Arguments:`, `Parameters:`, `Keyword Args:`,
+  `Keyword Arguments:`, `Kwargs:`, `Attributes:`, `Returns:`, `Yields:`,
+  `Raises:`, `Examples:`, `See Also:`, `Notes:`, `Warnings:`,
+  `Renderer Notes:`, and `Deprecated:`.
+- `numpy`: dashed section headings such as `Parameters`, `Other Parameters`,
+  `Attributes`, `Returns`, `Yields`, `Raises`, `Examples`, `See Also`,
+  `Notes`, `Warnings`, `Renderer Notes`, and `Deprecated`.
 - `sphinx`: `:param:`, `:type:`, `:returns:`, `:rtype:`, `:yields:`,
-  `:ytype:`, directives, and code blocks.
-- `markdown`: Markdown headings, parameter tables, `Returns`/`Yields`,
-  `Raises` colon lines, exception tables, notes, warnings, renderer notes, and
-  deprecation sections.
+  `:ytype:`, `.. seealso::`, `.. admonition:: Renderer Notes`, directives,
+  and code blocks.
+- `markdown`: Markdown headings, parameter tables, `Parameters`,
+  `Keyword Arguments`, `Other Parameters`, `Returns`/`Yields`, `Raises` colon
+  lines, exception tables, notes, warnings, renderer notes, and deprecation
+  sections.
 - `plain`: summary and paragraph extraction only.
 - `auto`: style detection.
 
@@ -26,6 +30,9 @@ parsed = parse_docstring(
 
     Args:
         path (str): File path.
+
+    Keyword Args:
+        retries (int): Retry count.
 
     Attributes:
         cache_key (str): Stable cache key used by generated indexes.
@@ -43,7 +50,61 @@ parsed = parse_docstring(
 )
 
 assert parsed.parameters[0].name == "path"
+assert parsed.parameters[1].name == "retries"
 assert parsed.attributes[0].name == "cache_key"
+```
+
+NumPy `Other Parameters` sections are merged into the same normalized
+`ApiParameter` list as `Parameters`, so keyword-only arguments render in the
+same parameter table:
+
+```python
+from oodocs.apidoc import parse_docstring
+
+parsed = parse_docstring(
+    """Load data.
+
+    Parameters
+    ----------
+    path : str
+        File path.
+
+    Other Parameters
+    ----------------
+    timeout : float
+        Timeout in seconds.
+    """,
+    style="numpy",
+)
+
+assert [parameter.name for parameter in parsed.parameters] == ["path", "timeout"]
+```
+
+Sphinx `.. seealso::` and renderer-note admonitions are normalized into
+sections that render in reference profiles:
+
+```python
+from oodocs.apidoc import parse_docstring
+
+parsed = parse_docstring(
+    """Load data.
+
+    :returns: Loaded object.
+    :rtype: object
+
+    .. seealso::
+
+        :func:`open_data`: Open the source file.
+
+    .. admonition:: Renderer Notes
+
+        HTML: :func:`open_data` receives a stable anchor.
+    """,
+    style="sphinx",
+)
+
+assert parsed.see_also[0].label == "open_data"
+assert parsed.renderer_notes[0].format == "html"
 ```
 
 `ParsedDocstring.to_dict()` and `ParsedDocstring.from_dict(...)` preserve the

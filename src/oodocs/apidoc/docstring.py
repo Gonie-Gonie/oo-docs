@@ -528,6 +528,9 @@ _GOOGLE_SECTION_NAMES = {
     "args",
     "arguments",
     "parameters",
+    "keyword args",
+    "keyword arguments",
+    "kwargs",
     "attributes",
     "attribute",
     "returns",
@@ -543,7 +546,12 @@ _GOOGLE_SECTION_NAMES = {
 }
 _MARKDOWN_DETECTION_SECTIONS = (
     "Parameters",
+    "Arguments",
+    "Keyword Args",
+    "Keyword Arguments",
+    "Kwargs",
     "Attributes",
+    "Other Parameters",
     "Returns",
     "Yields",
     "Raises",
@@ -558,6 +566,9 @@ _GOOGLE_DETECTION_SECTIONS = (
     "Args",
     "Arguments",
     "Parameters",
+    "Keyword Args",
+    "Keyword Arguments",
+    "Kwargs",
     "Attributes",
     "Returns",
     "Yields",
@@ -893,8 +904,8 @@ def _parse_google(text: str, qualname: str | None, module: str | None) -> Parsed
         parsed.description = description
     for name, body in sections:
         normalized = name.lower()
-        if normalized in {"args", "arguments", "parameters"} and not parsed.parameters:
-            parsed.parameters.extend(_parse_colon_items(body))
+        if normalized in {"args", "arguments", "parameters", "keyword args", "keyword arguments", "kwargs"}:
+            _extend_missing_parameters(parsed.parameters, _parse_colon_items(body))
         elif normalized in {"attributes", "attribute"} and not parsed.attributes:
             parsed.attributes.extend(_parse_colon_items(body))
         elif normalized in {"returns", "yields"} and parsed.returns is None:
@@ -936,8 +947,8 @@ def _parse_numpy(text: str, qualname: str | None, module: str | None) -> ParsedD
         parsed.description = description
     for name, body in sections:
         normalized = name.lower()
-        if normalized == "parameters" and not parsed.parameters:
-            parsed.parameters.extend(_parse_numpy_parameters(body))
+        if normalized in {"parameters", "other parameters"}:
+            _extend_missing_parameters(parsed.parameters, _parse_numpy_parameters(body))
         elif normalized == "attributes" and not parsed.attributes:
             parsed.attributes.extend(_parse_numpy_parameters(body))
         elif normalized in {"returns", "yields"} and parsed.returns is None:
@@ -1237,7 +1248,14 @@ def _parse_markdown(text: str, qualname: str | None, module: str | None) -> Pars
     parsed = ParsedDocstring(summary=summary, description=description, style="markdown")
     for name, body in sections:
         normalized = name.lower()
-        if normalized == "parameters":
+        if normalized in {
+            "parameters",
+            "arguments",
+            "keyword args",
+            "keyword arguments",
+            "kwargs",
+            "other parameters",
+        }:
             parsed.parameters.extend(_parse_markdown_parameters(body))
         elif normalized == "attributes":
             parsed.attributes.extend(_parse_markdown_parameters(body))
@@ -1327,6 +1345,17 @@ def _split_markdown_sections(text: str) -> tuple[str, list[tuple[str, str]]]:
     if current_name is not None:
         sections.append((current_name, current_lines))
     return "\n".join(preamble), [(name, inspect.cleandoc("\n".join(body))) for name, body in sections]
+
+
+def _extend_missing_parameters(
+    target: list[ApiParameter],
+    items: Iterable[ApiParameter],
+) -> None:
+    existing = {item.name for item in target}
+    for item in items:
+        if item.name not in existing:
+            target.append(item)
+            existing.add(item.name)
 
 
 def _parse_colon_items(
