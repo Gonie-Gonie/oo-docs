@@ -25,6 +25,12 @@ from apidoc_samples import (
     write_setuptools_package_dir_repo,
     write_setuptools_py_module_repo,
 )
+from example_regression import (
+    assert_docx_structure,
+    assert_html_internal_links_resolve,
+    assert_pdf_text_and_pages,
+    assert_rendered_bundle,
+)
 from oodocs.apidoc import ApiDocstringParser, collect_api, docstring_parser_names
 
 
@@ -105,6 +111,39 @@ def test_griffe_collector_uses_auto_parser_object_on_mixed_repo(tmp_path) -> Non
     assert stream.metadata["docstring_style"] == "markdown"
     assert stream.returns is not None
     assert stream.returns.description == "Endpoint update payload."
+
+    document = api.to_document(profile="compact", max_level=3)
+    outputs = document.save_all(
+        tmp_path / "griffe-mixed-rendered",
+        stem="mixedpkg-griffe-api",
+        formats=("docx", "pdf", "html"),
+    )
+
+    assert_rendered_bundle(outputs["docx"], outputs["pdf"], outputs["html"])
+    assert document.validate(formats=("docx", "pdf", "html")).ok
+    assert_docx_structure(
+        outputs["docx"],
+        required_paragraphs=(
+            "mixedpkg API Reference",
+            "1 API Documentation Coverage",
+            "2 mixedpkg",
+            "3 mixedpkg.core",
+        ),
+        min_tables=6,
+    )
+    assert_pdf_text_and_pages(
+        outputs["pdf"],
+        required_text=(
+            "mixedpkg API Reference",
+            "mixedpkg.core.Client",
+            "Base endpoint URL.",
+        ),
+        min_pages=1,
+    )
+    assert_html_internal_links_resolve(
+        outputs["html"],
+        required_text=("mixedpkg.core.Client", "Base endpoint URL."),
+    )
 
 
 def test_griffe_collector_uses_repo_local_custom_docstring_parser(tmp_path) -> None:
