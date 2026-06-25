@@ -225,6 +225,19 @@ class ApiDocstringParser:
 
         Returns:
             Parser object configured with ``style="google"``.
+
+        Examples:
+            Parse a Google-style docstring directly, then use the same parser
+            for repository collection:
+
+            ```python
+            from oodocs.apidoc import ApiDocstringParser, collect_api
+
+            parser = ApiDocstringParser.google()
+            parsed = parser.parse("Load.\\n\\nArgs:\\n    path: Input path.")
+            assert parsed.parameters[0].name == "path"
+            api = collect_api(".", docstring_style=parser)
+            ```
         """
 
         return cls("google")
@@ -235,6 +248,24 @@ class ApiDocstringParser:
 
         Returns:
             Parser object configured with ``style="numpy"``.
+
+        Examples:
+            Use NumPy-style parsing for a scientific package:
+
+            ```python
+            from oodocs.apidoc import ApiDocstringParser, collect_api
+
+            parser = ApiDocstringParser.numpy()
+            parsed = parser.parse(
+                "Load data.\\n\\n"
+                "Parameters\\n"
+                "----------\\n"
+                "path : str\\n"
+                "    Input path.",
+            )
+            assert parsed.parameters[0].annotation == "str"
+            api = collect_api(".", docstring_style=parser)
+            ```
         """
 
         return cls("numpy")
@@ -245,6 +276,19 @@ class ApiDocstringParser:
 
         Returns:
             Parser object configured with ``style="sphinx"``.
+
+        Examples:
+            Parse reST field lists before rendering an API object:
+
+            ```python
+            from oodocs.apidoc import ApiDocstringParser
+
+            parser = ApiDocstringParser.sphinx()
+            parsed = parser.parse(
+                "Load data.\\n\\n:param path: Input path.\\n:type path: str",
+            )
+            assert parsed.parameters[0].description == "Input path."
+            ```
         """
 
         return cls("sphinx")
@@ -255,6 +299,21 @@ class ApiDocstringParser:
 
         Returns:
             Parser object configured with ``style="markdown"``.
+
+        Examples:
+            Parse Markdown-section docstrings in a repository-local convention:
+
+            ```python
+            from oodocs.apidoc import ApiDocstringParser, collect_api
+
+            parser = ApiDocstringParser.markdown()
+            parsed = parser.parse(
+                "Load data.\\n\\n## Parameters\\n\\n| Name | Type | Description |\\n"
+                "| --- | --- | --- |\\n| path | str | Input path. |",
+            )
+            assert parsed.parameters[0].annotation == "str"
+            api = collect_api(".", docstring_style=parser)
+            ```
         """
 
         return cls("markdown")
@@ -265,6 +324,18 @@ class ApiDocstringParser:
 
         Returns:
             Parser object configured with ``style="plain"``.
+
+        Examples:
+            Use plain parsing when a legacy package only has prose docstrings:
+
+            ```python
+            from oodocs.apidoc import ApiDocstringParser, collect_api
+
+            parser = ApiDocstringParser.plain()
+            parsed = parser.parse("Load data.\\n\\nAdditional details.")
+            assert parsed.description == "Additional details."
+            api = collect_api(".", docstring_style=parser)
+            ```
         """
 
         return cls("plain")
@@ -309,6 +380,17 @@ class ApiDocstringParser:
 
         Returns:
             Parser object.
+
+        Examples:
+            Restore a parser policy from an API sidecar or config payload:
+
+            ```python
+            from oodocs.apidoc import ApiDocstringParser
+
+            parser = ApiDocstringParser.from_dict({"style": "auto"})
+            parsed = parser.parse("Summary.\\n\\nArgs:\\n    path: Input path.")
+            assert parsed.style == "google"
+            ```
         """
 
         return cls(str(data.get("style", "auto")))
@@ -618,6 +700,19 @@ def detect_docstring_style(text: str | None) -> ApiDocstringStyleName:
 
     Returns:
         Detected style name.
+
+    Examples:
+        Preview automatic parser dispatch before collecting a repository:
+
+        ```python
+        from oodocs.apidoc import collect_api, detect_docstring_style
+
+        style = detect_docstring_style(
+            "Load.\\n\\nArgs:\\n    path: Input path.",
+        )
+        assert style == "google"
+        api = collect_api(".", docstring_style="auto")
+        ```
     """
 
     cleaned = inspect.cleandoc(text or "")
