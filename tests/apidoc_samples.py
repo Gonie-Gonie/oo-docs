@@ -471,6 +471,27 @@ def write_single_file_module(tmp_path: Path) -> Path:
     return module_path
 
 
+def write_setuptools_py_module_repo(tmp_path: Path) -> Path:
+    repo = tmp_path / "single-module-repo"
+    source_root = repo / "src"
+    source_root.mkdir(parents=True)
+    (repo / "pyproject.toml").write_text(
+        dedent(
+            '''\
+            [project]
+            name = "singlemod"
+
+            [tool.setuptools]
+            package-dir = {"" = "src"}
+            py-modules = ["singlemod"]
+            '''
+        ),
+        encoding="utf-8",
+    )
+    write_single_file_module(source_root)
+    return repo
+
+
 def write_custom_docstring_parser_repo(tmp_path: Path) -> Path:
     repo = tmp_path / "custom-parser-repo"
     package_dir = repo / "src" / "briefpkg"

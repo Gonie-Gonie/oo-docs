@@ -24,7 +24,8 @@ python examples/api_objects_example/main.py . --config pyproject.toml
 public boundary, docstring parser modules, object filters, profile, formats,
 and max-level settings as `python -m oodocs apidoc build`. JSON config files
 can live outside the target checkout; the example still adds the target root
-and `src/` directory while loading repository-local parser modules.
+and configured source roots such as `src/`, `package-dir`, or
+`packages.find.where` entries while loading repository-local parser modules.
 
 Run it against an installed package or importable module:
 

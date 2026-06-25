@@ -2,9 +2,10 @@
 
 Collectors normalize Python source metadata into the same `ApiPackage` schema.
 Targets may be importable package/module names, one Python file, a package
-directory, a `src/` layout package, or a `src/` layout namespace package that
-omits `__init__.py`. Repository roots that use setuptools custom source roots
-are also supported through
+directory, a `src/` layout package, a `src/` layout namespace package that
+omits `__init__.py`, or a repository root that publishes direct module files
+through `[tool.setuptools] py-modules`. Repository roots that use setuptools
+custom source roots are also supported through
 `[tool.setuptools] package-dir = {"" = "lib"}` or
 `[tool.setuptools.packages.find] where = ["lib"]`.
 
@@ -21,6 +22,26 @@ from oodocs.apidoc import collect_api
 
 api = collect_api(".", collector="inspect", public_policy="__all__")
 assert api.find("samplepkg.run") is not None
+```
+
+For a single-module project, pass the repository root. OODocs uses the declared
+source root and keeps the public module name stable in rendered anchors and JSON
+sidecars:
+
+```toml
+[project]
+name = "reporting"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+py-modules = ["reporting"]
+```
+
+```python
+from oodocs.apidoc import collect_api
+
+api = collect_api(".", collector="inspect", public_policy="__all__")
+assert api.find("reporting.build_report") is not None
 ```
 
 For a standalone module file, pass the file path directly. The file stem becomes

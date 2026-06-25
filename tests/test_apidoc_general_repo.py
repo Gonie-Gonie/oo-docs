@@ -7,6 +7,7 @@ from pathlib import Path
 from apidoc_samples import (
     write_custom_docstring_parser_repo,
     write_mixed_docstring_repo,
+    write_setuptools_py_module_repo,
     write_single_file_module,
 )
 from example_regression import (
@@ -429,6 +430,92 @@ def test_general_python_file_module_targets_build_reference_and_example(
     assert example_html.exists()
     assert example_api_json.exists()
     assert "singlemod.Client" in example_html.read_text(encoding="utf-8")
+    assert_html_internal_links_resolve(example_html)
+    assert ApiPackage.read_json(example_api_json).find("singlemod.stream") is not None
+
+
+def test_general_py_modules_repo_targets_build_reference_and_example(
+    tmp_path: Path,
+) -> None:
+    repo = write_setuptools_py_module_repo(tmp_path)
+    output_dir = tmp_path / "single-module-repo-cli"
+    example_output = tmp_path / "single-module-repo-example"
+    example = _load_api_objects_example()
+
+    api = collect_api(
+        repo,
+        collector="inspect",
+        public_policy="__all__",
+        docstring_style=ApiDocstringParser.auto(),
+    )
+    coverage = check_api_docs(api, fail_under=1.0)
+
+    assert api.name == "singlemod"
+    assert [module.name for module in api.modules] == ["singlemod"]
+    assert api.find("singlemod.Client.connect") is not None
+    assert api.find("singlemod.connect") is not None
+    assert api.find("singlemod.stream") is not None
+    assert api.find("src.singlemod.Client") is None
+    assert coverage.object_coverage == 1.0
+
+    assert (
+        main(
+            [
+                "build",
+                str(repo),
+                "--collector",
+                "inspect",
+                "--public-policy",
+                "__all__",
+                "--docstring-style",
+                "auto",
+                "--out",
+                str(output_dir),
+                "--to",
+                "html",
+                "--sidecars",
+            ]
+        )
+        == 0
+    )
+    html_path = output_dir / "singlemod-api.html"
+    api_path = output_dir / "singlemod-api.json"
+    coverage_path = output_dir / "singlemod-api-coverage.json"
+
+    assert html_path.exists()
+    assert api_path.exists()
+    assert coverage_path.exists()
+    html = html_path.read_text(encoding="utf-8")
+    assert "singlemod.Client" in html
+    assert "src.singlemod" not in html
+    assert_html_internal_links_resolve(html_path)
+    assert ApiPackage.read_json(api_path).find("singlemod.Client.connect") is not None
+    assert ApiCoverageResult.read_json(coverage_path).object_coverage == 1.0
+
+    example.main(
+        [
+            str(repo),
+            "--collector",
+            "inspect",
+            "--public-policy",
+            "__all__",
+            "--docstring-style",
+            "auto",
+            "--to",
+            "html",
+            "--out",
+            str(example_output),
+            "--quiet",
+        ]
+    )
+    example_html = example_output / "oodocs-full-api-reference.html"
+    example_api_json = example_output / "oodocs-api-objects.json"
+
+    assert example_html.exists()
+    assert example_api_json.exists()
+    rendered_example = example_html.read_text(encoding="utf-8")
+    assert "singlemod.Client" in rendered_example
+    assert "src.singlemod" not in rendered_example
     assert_html_internal_links_resolve(example_html)
     assert ApiPackage.read_json(example_api_json).find("singlemod.stream") is not None
 

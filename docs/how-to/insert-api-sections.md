@@ -37,7 +37,9 @@ parameters, returns, examples, see-also entries, and source locations.
 For a `src/` layout repository, run the script from the repository root and pass
 `.`. OODocs resolves the package root from the checkout and from
 `[tool.setuptools] package-dir` or `[tool.setuptools.packages.find]` settings
-when they exist.
+when they exist. Single-module projects that declare
+`[tool.setuptools] py-modules` are also collected from the repository root, so
+`src/reporting.py` renders as `reporting`, not `src.reporting`.
 
 For a standalone module, pass the `.py` file path directly. The file stem is
 used as the module name for lookup and anchors:

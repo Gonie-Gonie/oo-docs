@@ -1359,20 +1359,47 @@ def _resolve_source_files(package: str | PathLike) -> tuple[Path, str, list[Path
             return resolved.parent, resolved.name, files
 
         project_name = _project_name_from_pyproject(resolved) or resolved.name
+        py_modules = _py_modules_from_pyproject(resolved)
         for source_root in _project_source_roots(resolved):
             if (source_root / "__init__.py").exists():
                 files = _python_files_under(source_root)
                 return source_root.parent, source_root.name, sorted(files)
             package_dirs = _package_dirs(source_root)
-            if package_dirs:
-                files = [file_path for package_dir in package_dirs for file_path in _python_files_under(package_dir)]
-                package_name = package_dirs[0].name if len(package_dirs) == 1 else project_name
-                return source_root, package_name, sorted(files)
             namespace_dirs = _namespace_package_dirs(source_root)
-            if namespace_dirs:
-                files = [file_path for package_dir in namespace_dirs for file_path in _python_files_under(package_dir)]
-                package_name = namespace_dirs[0].name if len(namespace_dirs) == 1 else project_name
+            module_files = _module_files_for_source_root(
+                source_root,
+                py_modules=py_modules,
+                include_implicit=not package_dirs and not namespace_dirs,
+            )
+            if package_dirs:
+                files = [
+                    file_path
+                    for package_dir in package_dirs
+                    for file_path in _python_files_under(package_dir)
+                ]
+                package_name = (
+                    package_dirs[0].name
+                    if len(package_dirs) == 1 and not module_files
+                    else project_name
+                )
+                files.extend(module_files)
                 return source_root, package_name, sorted(files)
+            if namespace_dirs:
+                files = [
+                    file_path
+                    for package_dir in namespace_dirs
+                    for file_path in _python_files_under(package_dir)
+                ]
+                package_name = (
+                    namespace_dirs[0].name
+                    if len(namespace_dirs) == 1 and not module_files
+                    else project_name
+                )
+                files.extend(module_files)
+                return source_root, package_name, sorted(files)
+            if module_files:
+                package_name = module_files[0].stem if len(module_files) == 1 else project_name
+                return source_root, package_name, sorted(module_files)
 
         package_dirs = _package_dirs(resolved)
         if package_dirs:
@@ -1407,6 +1434,8 @@ def _module_name_for_file(path: Path, *, root: Path, package_name: str) -> str:
     if not parts:
         return package_name
     if parts and parts[0] == package_name:
+        return ".".join(parts)
+    if len(parts) == 1 and path.parent.resolve() == root.resolve():
         return ".".join(parts)
     if parts and (root / parts[0] / "__init__.py").exists():
         return ".".join(parts)
@@ -1452,6 +1481,28 @@ def _namespace_package_dirs(source_root: Path) -> list[Path]:
     )
 
 
+def _module_files_for_source_root(
+    source_root: Path,
+    *,
+    py_modules: Sequence[str],
+    include_implicit: bool,
+) -> list[Path]:
+    if py_modules:
+        files: list[Path] = []
+        for module in py_modules:
+            module_path = source_root.joinpath(*module.split(".")).with_suffix(".py")
+            if module_path.is_file():
+                files.append(module_path)
+        return sorted(files)
+    if not include_implicit:
+        return []
+    return sorted(
+        path
+        for path in source_root.glob("*.py")
+        if path.name != "__init__.py" and not path.name.startswith(".")
+    )
+
+
 def _is_namespace_source_dir(path: Path) -> bool:
     return (
         path.is_dir()
@@ -1472,6 +1523,22 @@ def _project_name_from_pyproject(directory: Path) -> str | None:
         if isinstance(name, str):
             return name.replace("-", "_") or None
     return None
+
+
+def _py_modules_from_pyproject(directory: Path) -> tuple[str, ...]:
+    data = _pyproject_data(directory)
+    if not data:
+        return ()
+    tool = data.get("tool")
+    setuptools = tool.get("setuptools") if isinstance(tool, dict) else None
+    if not isinstance(setuptools, dict):
+        return ()
+    value = setuptools.get("py-modules", setuptools.get("py_modules"))
+    if isinstance(value, str):
+        return (value.strip(),) if value.strip() else ()
+    if isinstance(value, Sequence):
+        return tuple(str(item).strip() for item in value if str(item).strip())
+    return ()
 
 
 def _pyproject_data(directory: Path) -> dict[str, object] | None:
