@@ -295,7 +295,7 @@ What they show:
 - `journal_paper_example` shows a longer manuscript-style workflow with article-style sections, unnumbered abstract/highlights/acknowledgements, CSV-backed tables, and matplotlib figures inserted directly from Python objects
 - `native_benchmark_report` shows a compact Python-native workflow where a script generates an in-memory workload, benchmarks several callables, turns structured result objects into tables and prose, and exports one report bundle
 - `release_notes_digest` collects `release-notes/*.md`, sorts semantic versions from filenames, imports the Markdown bodies, and builds a release-note document with a version-management table and runbook
-- `api_objects_example` collects the OODocs API, inserts selected API object sections and summary tables into a document, and writes JSON/CSV sidecars for release evidence
+- `api_objects_example` collects the OODocs API, renders a full package API reference as HTML, inserts selected API object sections and summary tables into a separate composable document, and writes JSON/CSV sidecars for release evidence
 
 By default they write outputs under:
 
@@ -312,6 +312,7 @@ The main exported filenames are:
 - `artifacts/native-benchmark-report/native-python-benchmark.pdf`
 - `artifacts/release-notes/oodocs-release-notes.pdf`
 - `artifacts/api-objects-example/oodocs-api-objects.pdf`
+- `artifacts/api-objects-example/oodocs-full-api-reference.html`
 
 ## Project Layout
 

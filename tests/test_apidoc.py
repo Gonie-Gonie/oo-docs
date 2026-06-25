@@ -11,6 +11,7 @@ from oodocs.apidoc import (
     ApiDiffResult,
     ApiDocProfile,
     ApiDocstringParser,
+    ApiExample,
     ApiObject,
     ApiPackage,
     ApiPublicPolicy,
@@ -361,6 +362,17 @@ def test_api_doc_profiles_wrap_long_signature_blocks() -> None:
         ") -> dict[str, object]",
     ]
     assert ApiDocProfile.from_dict(ApiDocProfile.compact().to_dict()).max_signature_width == 88
+
+
+def test_api_examples_escape_xml_incompatible_control_chars(tmp_path: Path) -> None:
+    example = ApiExample('fragment = math(r"\x07lpha + \x08eta")')
+    block = example.to_block()
+
+    assert "\\x07" in block.code
+    assert "\\x08" in block.code
+    assert "\x07" not in block.code
+    assert "\x08" not in block.code
+    Document("Example", Chapter("Snippet", block)).save_docx(tmp_path / "example.docx")
 
 
 def test_collect_api_exposes_docstring_parser_issues_in_issue_table(tmp_path: Path) -> None:
@@ -825,3 +837,55 @@ def test_apidoc_cli_filters_check_and_snapshot(tmp_path: Path) -> None:
     html = (build_dir / "filterpkg-api.html").read_text(encoding="utf-8")
     assert 'href="#filterpkg-core-run"' in html
     assert 'id="filterpkg-core-run"' in html
+
+
+def test_api_objects_example_builds_full_reference_and_composable_document(
+    tmp_path: Path,
+) -> None:
+    module_path = (
+        Path(__file__).resolve().parents[1]
+        / "examples"
+        / "api_objects_example"
+        / "main.py"
+    )
+    spec = importlib.util.spec_from_file_location("api_objects_example_main", module_path)
+    assert spec is not None
+    assert spec.loader is not None
+    example = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(example)
+
+    package_dir = tmp_path / "examplepkg"
+    package_dir.mkdir()
+    (package_dir / "__init__.py").write_text(
+        "class Widget:\n"
+        '    """A documented widget."""\n'
+        "\n"
+        "def run(path: str) -> str:\n"
+        '    """Run a task.\n\n'
+        "    Args:\n"
+        "        path: Input path.\n"
+        "    Returns:\n"
+        "        str: Input path.\n"
+        '    """\n'
+        "    return path\n",
+        encoding="utf-8",
+    )
+
+    api = collect_api(package_dir, public_policy="underscore")
+    coverage = check_api_docs(api)
+    full_reference = example.build_full_package_document(api)
+    composition = example.build_document(api, coverage)
+    full_html = tmp_path / "full-reference.html"
+
+    full_reference.save_html(full_html)
+
+    assert full_reference.validate(formats=("html",)).ok
+    assert composition.validate(formats=("html",)).ok
+    html = full_html.read_text(encoding="utf-8")
+    assert "examplepkg.Widget" in html
+    assert "examplepkg.run" in html
+    assert any(
+        getattr(child.title[0], "value", "") == "Selected Classes"
+        for child in composition.body.children
+        if hasattr(child, "title")
+    )

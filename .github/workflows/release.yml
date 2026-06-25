@@ -103,6 +103,7 @@ jobs:
             artifacts/journal-paper/oodocs-development-philosophy.pdf
             artifacts/release-notes/oodocs-release-notes.pdf
             artifacts/api-objects-example/oodocs-api-objects.pdf
+            artifacts/api-objects-example/oodocs-full-api-reference.html
             artifacts/evidence/oodocs-evidence-report.pdf
           body_path: ${{ steps.release_notes.outputs.path }}
 
@@ -116,6 +117,7 @@ jobs:
             artifacts/journal-paper/oodocs-development-philosophy.pdf
             artifacts/release-notes/oodocs-release-notes.pdf
             artifacts/api-objects-example/oodocs-api-objects.pdf
+            artifacts/api-objects-example/oodocs-full-api-reference.html
             artifacts/evidence/oodocs-evidence-report.pdf
           generate_release_notes: true
 

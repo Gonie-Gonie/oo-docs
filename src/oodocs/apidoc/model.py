@@ -331,12 +331,13 @@ class ApiExample:
         """Return this example as a code block.
 
         Returns:
-            ``oodocs.CodeBlock`` using the example language and code.
+            ``oodocs.CodeBlock`` using the example language and code, with
+            XML-incompatible control characters escaped for renderer safety.
         """
 
         from oodocs.components.blocks import CodeBlock
 
-        return CodeBlock(self.code, language=self.language or "text")
+        return CodeBlock(_xml_safe_text(self.code), language=self.language or "text")
 
 
 @dataclass(slots=True)
@@ -1617,6 +1618,19 @@ def _first_sentence(value: str) -> str:
 def _normalize_issue_code(value: str) -> str:
     normalized = re.sub(r"[^a-zA-Z0-9]+", "-", value.strip().lower()).strip("-")
     return normalized or "api-doc-issue"
+
+
+def _xml_safe_text(value: str) -> str:
+    chars: list[str] = []
+    for char in value:
+        codepoint = ord(char)
+        if char in {"\t", "\n", "\r"}:
+            chars.append(char)
+        elif codepoint < 32 or 0x7F <= codepoint <= 0x9F:
+            chars.append(f"\\x{codepoint:02x}")
+        else:
+            chars.append(char)
+    return "".join(chars)
 
 
 def _jsonable_metadata(metadata: dict[str, object]) -> dict[str, object]:
