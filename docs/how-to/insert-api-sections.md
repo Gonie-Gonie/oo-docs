@@ -162,6 +162,7 @@ doc = Document(
         client_api.to_section(level=2, profile="manual"),
     ),
 )
+doc.save_all("artifacts/client-api", stem="client-api", formats=("docx", "pdf", "html"))
 ```
 
 ## Insert One Module
@@ -184,6 +185,7 @@ doc = Document(
     "HTTP Adapter API",
     module.to_chapter(profile="manual"),
 )
+doc.save_all("artifacts/http-adapter-api", stem="http-adapter-api", formats=("docx", "pdf", "html"))
 ```
 
 For already importable modules, omit `target`:

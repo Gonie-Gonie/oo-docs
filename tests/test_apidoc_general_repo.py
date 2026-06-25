@@ -159,14 +159,52 @@ def test_general_repo_facades_select_module_and_object_from_target_path(
     module_outputs = module_document.save_all(
         tmp_path / "module-facade",
         stem="mixed-core",
-        formats=("html",),
+        formats=("docx", "pdf", "html"),
     )
     object_outputs = object_document.save_all(
         tmp_path / "object-facade",
         stem="mixed-connect",
-        formats=("html",),
+        formats=("docx", "pdf", "html"),
     )
 
+    assert_rendered_bundle(
+        module_outputs["docx"],
+        module_outputs["pdf"],
+        module_outputs["html"],
+    )
+    assert_rendered_bundle(
+        object_outputs["docx"],
+        object_outputs["pdf"],
+        object_outputs["html"],
+    )
+    assert_docx_structure(
+        module_outputs["docx"],
+        required_paragraphs=(
+            "Mixed Core Module API",
+            "1 mixedpkg.core",
+            "1.1 mixedpkg.core.Client",
+        ),
+        min_tables=2,
+    )
+    assert_docx_structure(
+        object_outputs["docx"],
+        required_paragraphs=(
+            "Mixed Connect API",
+            "1 Focused Method",
+            "1.1 mixedpkg.core.Client.connect",
+        ),
+        min_tables=1,
+    )
+    assert_pdf_text_and_pages(
+        module_outputs["pdf"],
+        required_text=("mixedpkg.core.Client", "Timeout in seconds."),
+        min_pages=1,
+    )
+    assert_pdf_text_and_pages(
+        object_outputs["pdf"],
+        required_text=("mixedpkg.core.Client.connect", "Timeout in seconds."),
+        min_pages=1,
+    )
     assert_html_internal_links_resolve(
         module_outputs["html"],
         required_text=("mixedpkg.core.Client", "Timeout in seconds."),
