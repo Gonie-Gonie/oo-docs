@@ -1038,10 +1038,7 @@ def api_module_to_blocks(
         blocks.append(
             Table(
                 ["Format", "Severity", "Message"],
-                [
-                    [note.format or "all", note.severity, note.message]
-                    for note in module.renderer_notes
-                ],
+                [note.to_row() for note in module.renderer_notes],
                 caption="Renderer notes",
                 split=True,
             )
