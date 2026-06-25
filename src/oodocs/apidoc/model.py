@@ -1062,6 +1062,10 @@ class ApiObject:
     def display_name(self) -> str:
         """Return the display name used in headings and tables.
 
+        Returns:
+            Fully qualified name when available, otherwise the local object
+            name.
+
         Examples:
             Use the same display label as generated API sections:
 
@@ -1077,6 +1081,9 @@ class ApiObject:
 
     def display_signature(self) -> str:
         """Return callable signature text for code blocks.
+
+        Returns:
+            Explicit signature text when collected, otherwise the display name.
 
         Examples:
             Preview the signature before rendering a code block:
@@ -1102,6 +1109,9 @@ class ApiObject:
     def anchor_id(self) -> str:
         """Return a stable anchor id derived from the qualname.
 
+        Returns:
+            HTML-safe anchor id for the object.
+
         Examples:
             Use the anchor as an internal HTML link target:
 
@@ -1117,6 +1127,9 @@ class ApiObject:
 
     def has_parameters(self) -> bool:
         """Return whether this object has parameter metadata.
+
+        Returns:
+            Whether ``parameters`` contains at least one item.
 
         Examples:
             Select only objects that can render parameter tables:
@@ -1134,6 +1147,9 @@ class ApiObject:
     def has_examples(self) -> bool:
         """Return whether this object has parsed examples.
 
+        Returns:
+            Whether ``examples`` contains at least one item.
+
         Examples:
             Build an examples-only appendix:
 
@@ -1149,6 +1165,9 @@ class ApiObject:
 
     def has_members(self) -> bool:
         """Return whether this object has child objects.
+
+        Returns:
+            Whether ``members`` contains at least one child object.
 
         Examples:
             Find class-like objects that have nested member documentation:
