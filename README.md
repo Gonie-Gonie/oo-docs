@@ -211,8 +211,9 @@ from oodocs import Chapter, Document, Paragraph
 from oodocs.apidoc import collect_api
 
 api = collect_api("oodocs", public_policy="__all__")
-# A repository checkout with a src/ layout also works:
-# api = collect_api(".", public_policy="__all__")
+# A repository checkout with a src/ layout also works. When the apidoc extra is
+# installed, collector="griffe" reads source without importing the target repo.
+# api = collect_api(".", public_policy="__all__", collector="griffe")
 classes = api.select(kind="class", module_prefix="oodocs.components")
 functions = api.select(kind="function")
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import importlib.util
 
 from oodocs import Chapter, Document
 from oodocs.apidoc import (
@@ -287,6 +288,85 @@ def test_collect_api_supports_src_layout_repo_reexports_and_deep_object_lookup(
     )
     assert looked_up.kind == "method"
     assert looked_up.parameters[0].name == "path"
+
+
+def test_griffe_collector_matches_inspect_schema_on_src_layout_repo(
+    tmp_path: Path,
+) -> None:
+    if importlib.util.find_spec("griffe") is None:
+        return
+    repo = tmp_path / "repo"
+    package_dir = repo / "src" / "pkg"
+    package_dir.mkdir(parents=True)
+    (repo / "pyproject.toml").write_text("[project]\nname = \"pkg\"\n", encoding="utf-8")
+    (package_dir / "__init__.py").write_text(
+        "\n".join(
+            [
+                '"""Package docs."""',
+                "from .core import Widget, make_widget",
+                "__all__ = ['Widget', 'make_widget']",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (package_dir / "core.py").write_text(
+        "\n".join(
+            [
+                '"""Core docs."""',
+                "",
+                "class Widget:",
+                '    """A widget.',
+                "",
+                "    Args:",
+                "        name: Widget name.",
+                '    """',
+                "    label: str",
+                "    def __init__(self, name: str = 'demo') -> None:",
+                "        self.name = name",
+                "",
+                "    @property",
+                "    def title(self) -> str:",
+                '        """Widget title."""',
+                "        return self.name",
+                "",
+                "    def render(self, path: str) -> str:",
+                '        """Render the widget.',
+                "",
+                "        Args:",
+                "            path: Output path.",
+                "        Returns:",
+                "            str: Rendered path.",
+                '        """',
+                "        return path",
+                "",
+                "def make_widget(name: str) -> Widget:",
+                '    """Create a widget.',
+                "",
+                "    Args:",
+                "        name: Widget name.",
+                "    Returns:",
+                "        Widget: Created widget.",
+                '    """',
+                "    return Widget(name)",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    inspect_api = collect_api(repo, public_policy="__all__", collector="inspect")
+    griffe_api = collect_api(repo, public_policy="__all__", collector="griffe")
+
+    assert griffe_api.metadata["collector"] == "griffe"
+    assert len(griffe_api.public_objects()) >= len(inspect_api.public_objects())
+    assert griffe_api.find("pkg.Widget") is not None
+    assert griffe_api.find("pkg.core.Widget.render") is not None
+    property_obj = griffe_api.find("pkg.core.Widget.title")
+    assert property_obj is not None
+    assert getattr(property_obj, "kind") == "property"
+    method = griffe_api.find("pkg.core.Widget.render")
+    assert method is not None
+    assert method.parameters[0].name == "path"
+    assert method.returns and method.returns.annotation == "str"
 
 
 def test_api_coverage_and_diff_detect_doc_changes(tmp_path: Path) -> None:
