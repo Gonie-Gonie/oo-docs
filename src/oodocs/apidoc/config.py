@@ -660,6 +660,57 @@ class ApiBuildConfig:
         )
         return output_path
 
+    def to_toml_section(self) -> str:
+        """Return this build config as a ``[tool.oodocs.apidoc]`` TOML section.
+
+        Returns:
+            TOML text containing collection and build options.
+
+        Examples:
+            Generate a repository-local config block:
+
+            ```python
+            from oodocs.apidoc import ApiBuildConfig
+
+            text = ApiBuildConfig(profile="website", output_formats=("html",)).to_toml_section()
+            ```
+        """
+
+        lines = ["[tool.oodocs.apidoc]"]
+        for key, value in self.to_dict().items():
+            if value is None or value == []:
+                continue
+            lines.append(f"{key.replace('_', '-')} = {_toml_value(value)}")
+        return "\n".join(lines) + "\n"
+
+    def write_pyproject(self, path: PathLike = "pyproject.toml") -> Path:
+        """Append this config to a ``pyproject.toml`` file.
+
+        Args:
+            path: Project root directory or ``pyproject.toml`` path.
+
+        Returns:
+            Written ``pyproject.toml`` path.
+
+        Raises:
+            ValueError: If the file already contains ``[tool.oodocs.apidoc]``.
+        """
+
+        pyproject_path = _pyproject_path(path)
+        pyproject_path.parent.mkdir(parents=True, exist_ok=True)
+        if pyproject_path.exists():
+            existing = pyproject_path.read_text(encoding="utf-8-sig")
+            if _has_apidoc_section(existing):
+                raise ValueError("pyproject.toml already contains [tool.oodocs.apidoc]")
+            separator = "\n\n" if existing.strip() else ""
+            pyproject_path.write_text(
+                existing.rstrip() + separator + self.to_toml_section(),
+                encoding="utf-8",
+            )
+        else:
+            pyproject_path.write_text(self.to_toml_section(), encoding="utf-8")
+        return pyproject_path
+
 
 def normalize_explicit_names(names: Sequence[str] | None) -> tuple[str, ...]:
     """Normalize explicit public API names.
@@ -713,6 +764,24 @@ def _optional_int(value: object) -> int | None:
     if value is None:
         return None
     return int(value)
+
+
+def _toml_value(value: object) -> str:
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, int):
+        return str(value)
+    if isinstance(value, (list, tuple)):
+        return "[" + ", ".join(_toml_value(item) for item in value) + "]"
+    return json.dumps(str(value))
+
+
+def _has_apidoc_section(text: str) -> bool:
+    return any(
+        line.strip() == "[tool.oodocs.apidoc]"
+        for line in text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    )
 
 
 def _pyproject_path(path: PathLike) -> Path:

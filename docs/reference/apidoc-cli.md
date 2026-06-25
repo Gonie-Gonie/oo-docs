@@ -2,6 +2,13 @@
 
 All commands are available under `oodocs apidoc` or `python -m oodocs apidoc`.
 
+Create repository-local apidoc settings:
+
+```powershell
+python -m oodocs apidoc init . --collector griffe --public-policy __all__ --profile website --to html --out-dir artifacts/api
+python -m oodocs apidoc build . --config pyproject.toml
+```
+
 Collect an API tree:
 
 ```powershell
@@ -94,4 +101,6 @@ collected, while `check`, `build`, and `snapshot` also accept `--kind` and
 `--profile`, `--to`, `--stem`, `--max-level`, `--out`, and `--sidecars`.
 When those build options are omitted, `build` can read `profile`, `formats`,
 `stem`, `max-level`, `out`/`output-dir`, `sidecars`, `kind`, and
-`module-prefix` from `[tool.oodocs.apidoc]`.
+`module-prefix` from `[tool.oodocs.apidoc]`. `init` writes the same section to
+`pyproject.toml` by default, or writes a standalone JSON config when the target
+path ends in `.json` or `--format json` is passed.

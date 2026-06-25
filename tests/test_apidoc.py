@@ -1146,6 +1146,72 @@ def test_apidoc_cli_collect_check_build_snapshot_and_diff(tmp_path: Path, capsys
     assert "Wrote coverage-csv" in captured.out
 
 
+def test_apidoc_cli_init_writes_config_for_general_repo(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    package_dir = repo / "src" / "initpkg"
+    package_dir.mkdir(parents=True)
+    (repo / "pyproject.toml").write_text(
+        "[project]\nname = \"initpkg\"\n",
+        encoding="utf-8",
+    )
+    (package_dir / "__init__.py").write_text(
+        '"""Init package."""\nfrom .core import run\n__all__ = ["run"]\n',
+        encoding="utf-8",
+    )
+    (package_dir / "core.py").write_text(
+        "def run(path: str) -> str:\n"
+        '    """Run a configured build.\n\n'
+        "    Args:\n"
+        "        path: Input path.\n"
+        "    Returns:\n"
+        "        str: Input path.\n"
+        '    """\n'
+        "    return path\n",
+        encoding="utf-8",
+    )
+    build_dir = tmp_path / "init-build"
+
+    assert main(
+        [
+            "apidoc",
+            "init",
+            str(repo),
+            "--collector",
+            "inspect",
+            "--public-policy",
+            "__all__",
+            "--profile",
+            "website",
+            "--to",
+            "html",
+            "--out-dir",
+            str(build_dir),
+            "--kind",
+            "function",
+            "--module-prefix",
+            "initpkg.core",
+        ]
+    ) == 0
+
+    config = ApiBuildConfig.from_pyproject(repo)
+    assert config.collection.collector == "inspect"
+    assert config.profile == "website"
+    assert config.output_formats == ("html",)
+    assert config.output_dir == str(build_dir)
+    assert config.sidecars
+    assert config.kind == ("function",)
+
+    assert main(["apidoc", "build", str(repo), "--config", str(repo / "pyproject.toml")]) == 0
+    assert (build_dir / "initpkg-api.html").exists()
+    assert (build_dir / "initpkg-api.json").exists()
+    built_api = json.loads((build_dir / "initpkg-api.json").read_text(encoding="utf-8"))
+    assert built_api["modules"][0]["members"][0]["qualname"] == "initpkg.core.run"
+
+    json_config = tmp_path / "apidoc-build.json"
+    assert main(["apidoc", "init", str(json_config), "--format", "json", "--to", "html"]) == 0
+    assert ApiBuildConfig.read_json(json_config).output_formats == ("html",)
+
+
 def test_apidoc_cli_filters_check_and_snapshot(tmp_path: Path) -> None:
     package_dir = tmp_path / "filterpkg"
     package_dir.mkdir()

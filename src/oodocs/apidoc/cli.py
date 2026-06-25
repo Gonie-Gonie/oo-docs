@@ -38,6 +38,30 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
+    init = subparsers.add_parser("init", help="Create an apidoc config for a Python repository.")
+    init.add_argument(
+        "path",
+        nargs="?",
+        default=".",
+        help="Project root, pyproject.toml path, or JSON config path.",
+    )
+    init.add_argument(
+        "--format",
+        choices=("auto", "pyproject", "json"),
+        default="auto",
+        help="Config file format. Defaults to pyproject for directories/TOML paths and JSON for .json paths.",
+    )
+    init.add_argument("--out-dir", default="artifacts/api", help="Default rendered API output directory.")
+    init.add_argument("--to", default="docx,pdf,html", help="Default comma-separated output formats.")
+    init.add_argument("--stem", help="Default output file stem.")
+    init.add_argument("--profile", default="reference", help="Default presentation profile.")
+    init.add_argument("--sidecars", action="store_true", default=True, help="Write sidecars by default.")
+    init.add_argument("--no-sidecars", action="store_false", dest="sidecars", help="Disable sidecars by default.")
+    init.add_argument("--max-level", type=int, help="Default deepest nested API heading level.")
+    _add_filter_options(init)
+    _add_collect_options(init, include_config=False)
+    init.set_defaults(func=_run_init)
+
     collect = subparsers.add_parser("collect", help="Collect API objects to JSON.")
     collect.add_argument("package", help="Package/module name, Python file, or package directory.")
     collect.add_argument("--out", required=True, help="Output API object JSON path.")
@@ -91,11 +115,12 @@ def _build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _add_collect_options(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument(
-        "--config",
-        help="Collection config JSON or pyproject.toml with [tool.oodocs.apidoc].",
-    )
+def _add_collect_options(parser: argparse.ArgumentParser, *, include_config: bool = True) -> None:
+    if include_config:
+        parser.add_argument(
+            "--config",
+            help="Collection config JSON or pyproject.toml with [tool.oodocs.apidoc].",
+        )
     parser.add_argument(
         "--collector",
         choices=("auto", "inspect", "griffe"),
@@ -146,6 +171,37 @@ def _add_collect_options(parser: argparse.ArgumentParser) -> None:
 def _add_filter_options(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--kind", action="append", help="Filter object kind; may be repeated.")
     parser.add_argument("--module-prefix", help="Filter module prefix.")
+
+
+def _run_init(args: argparse.Namespace) -> int:
+    collection = ApiCollectConfig.from_kwargs(
+        collector=args.collector,
+        public_policy=args.public_policy,
+        explicit_names=args.explicit_names,
+        docstring_style=args.docstring_style,
+        include_imported=args.include_imported,
+        include_inherited=args.include_inherited,
+        module_include_patterns=args.module_include_patterns,
+        module_exclude_patterns=args.module_exclude_patterns,
+    )
+    config = ApiBuildConfig(
+        collection=collection,
+        profile=args.profile,
+        output_formats=_split_csv(args.to),
+        stem=args.stem,
+        max_level=args.max_level,
+        sidecars=args.sidecars,
+        output_dir=args.out_dir,
+        kind=tuple(args.kind) if args.kind else (),
+        module_prefix=args.module_prefix,
+    )
+    output_format = _config_output_format(args.path, args.format)
+    if output_format == "json":
+        output_path = config.write_json(args.path)
+    else:
+        output_path = config.write_pyproject(args.path)
+    print(f"Wrote apidoc-config: {output_path}")
+    return 0
 
 
 def _run_collect(args: argparse.Namespace) -> int:
@@ -302,6 +358,13 @@ def _top_level_objects(api: ApiPackage) -> list[ApiObject]:
 
 def _split_csv(value: str) -> tuple[str, ...]:
     return tuple(piece.strip() for piece in value.split(",") if piece.strip())
+
+
+def _config_output_format(path: str | Path, requested: str) -> str:
+    if requested != "auto":
+        return requested
+    target = Path(path)
+    return "json" if target.suffix.lower() == ".json" else "pyproject"
 
 
 def _print_outputs(outputs: dict[object, Path]) -> None:

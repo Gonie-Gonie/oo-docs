@@ -69,6 +69,14 @@ build = ApiBuildConfig.from_pyproject(".")
 api = collect_api(".", config=build.collection)
 ```
 
+To create that config from Python instead of the CLI:
+
+```python
+from oodocs.apidoc import ApiBuildConfig
+
+ApiBuildConfig(profile="website", output_formats=("html",), sidecars=True).write_pyproject(".")
+```
+
 ```powershell
 python -m oodocs apidoc build . --config pyproject.toml --out artifacts/api
 ```
