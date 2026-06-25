@@ -39,7 +39,25 @@ class ApiSnapshot:
 
     @classmethod
     def from_package(cls, api: ApiPackage) -> ApiSnapshot:
-        """Create a snapshot from a package object."""
+        """Create a snapshot from a package object.
+
+        Args:
+            api: Collected API package.
+
+        Returns:
+            Snapshot containing deterministic serialized public objects keyed
+            by fully qualified name.
+
+        Examples:
+            Persist a baseline snapshot during a release job:
+
+            ```python
+            from oodocs.apidoc import ApiSnapshot, collect_api
+
+            api = collect_api(".", public_policy="__all__")
+            ApiSnapshot.from_package(api).write_json("artifacts/api-base.json")
+            ```
+        """
 
         return cls(
             api.name,
@@ -48,13 +66,24 @@ class ApiSnapshot:
         )
 
     def to_dict(self) -> dict[str, object]:
-        """Return deterministic serialized data."""
+        """Return deterministic serialized data.
+
+        Returns:
+            JSON-serializable snapshot mapping.
+        """
 
         return {"name": self.name, "version": self.version, "objects": self.objects}
 
     @classmethod
     def from_dict(cls, data: dict[str, object]) -> ApiSnapshot:
-        """Reconstruct a snapshot from serialized data."""
+        """Reconstruct a snapshot from serialized data.
+
+        Args:
+            data: Mapping produced by ``to_dict``.
+
+        Returns:
+            Snapshot object.
+        """
 
         return cls(
             name=str(data["name"]),
@@ -63,7 +92,14 @@ class ApiSnapshot:
         )
 
     def write_json(self, path: PathLike) -> Path:
-        """Write snapshot JSON."""
+        """Write snapshot JSON.
+
+        Args:
+            path: Output JSON path.
+
+        Returns:
+            Written path.
+        """
 
         output_path = Path(path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -75,7 +111,18 @@ class ApiSnapshot:
 
     @classmethod
     def read_json(cls, path: PathLike) -> ApiSnapshot:
-        """Read snapshot JSON."""
+        """Read snapshot JSON.
+
+        Args:
+            path: Snapshot JSON path.
+
+        Returns:
+            Snapshot object.
+
+        Raises:
+            FileNotFoundError: If the snapshot path does not exist.
+            json.JSONDecodeError: If the snapshot is not valid JSON.
+        """
 
         return cls.from_dict(json.loads(Path(path).read_text(encoding="utf-8")))
 
@@ -125,7 +172,25 @@ class ApiDiffResult:
     coverage_delta: dict[str, object]
 
     def to_summary_table(self) -> Table:
-        """Return a compact diff summary table."""
+        """Return a compact diff summary table.
+
+        Returns:
+            OODocs table with counts for added, removed, changed, deprecated,
+            and coverage-delta categories.
+
+        Examples:
+            Insert a high-level API change summary into release notes:
+
+            ```python
+            from oodocs import Chapter, Document
+            from oodocs.apidoc import ApiSnapshot, diff_api
+
+            base = ApiSnapshot.read_json("artifacts/api-base.json")
+            head = ApiSnapshot.read_json("artifacts/api-head.json")
+            diff = diff_api(base, head)
+            doc = Document("Release Notes", Chapter("API Changes", diff.to_summary_table()))
+            ```
+        """
 
         rows = [
             ["Added", str(len(self.added))],
@@ -182,7 +247,12 @@ class ApiDiffResult:
         return Table(["Metric", "Value"], rows, caption="API coverage delta", split=True)
 
     def to_sections(self) -> list[Chapter]:
-        """Return detailed diff sections."""
+        """Return detailed diff sections.
+
+        Returns:
+            Chapters for coverage movement and each non-empty change category.
+            The result can be appended to a larger OODocs document.
+        """
 
         sections: list[Chapter] = [Chapter("Coverage Delta", self.to_coverage_delta_table())]
         for title, objects in (
@@ -215,7 +285,30 @@ class ApiDiffResult:
         return sections
 
     def to_document(self, *, title: str | None = None) -> Document:
-        """Return this diff as an OODocs document."""
+        """Return this diff as an OODocs document.
+
+        Args:
+            title: Optional document title. Defaults to ``"API Diff"``.
+
+        Returns:
+            Renderable OODocs document containing a summary chapter plus the
+            detailed diff sections.
+
+        Examples:
+            Render a standalone API change bundle:
+
+            ```python
+            from oodocs.apidoc import ApiSnapshot, diff_api
+
+            base = ApiSnapshot.read_json("artifacts/api-base.json")
+            head = ApiSnapshot.read_json("artifacts/api-head.json")
+            diff = diff_api(base, head)
+            diff.to_document(title="Public API Changes").save_all(
+                "artifacts/api-diff",
+                stem="api-diff",
+            )
+            ```
+        """
 
         return Document(
             title or "API Diff",
@@ -228,7 +321,12 @@ class ApiDiffResult:
         )
 
     def to_dict(self) -> dict[str, object]:
-        """Return deterministic serialized data."""
+        """Return deterministic serialized data.
+
+        Returns:
+            JSON-serializable diff mapping containing changed objects and
+            coverage deltas.
+        """
 
         return {
             "base_name": self.base_name,
@@ -316,7 +414,26 @@ class ApiDiffResult:
         )
 
     def write_json(self, path: PathLike) -> Path:
-        """Write diff sidecar JSON."""
+        """Write diff sidecar JSON.
+
+        Args:
+            path: Output JSON path.
+
+        Returns:
+            Written path.
+
+        Examples:
+            Store a diff sidecar beside rendered outputs:
+
+            ```python
+            from oodocs.apidoc import ApiSnapshot, diff_api
+
+            base = ApiSnapshot.read_json("artifacts/api-base.json")
+            head = ApiSnapshot.read_json("artifacts/api-head.json")
+            diff = diff_api(base, head)
+            diff.write_json("artifacts/api-diff/api-diff.json")
+            ```
+        """
 
         output_path = Path(path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -362,11 +479,37 @@ def diff_api(
     """Compare two API packages or snapshots.
 
     Args:
-        base: Base package or snapshot.
-        head: Head package or snapshot.
+        base: Base API package or persisted snapshot.
+        head: Head API package or persisted snapshot.
 
     Returns:
-        API diff result.
+        API diff result containing added/removed objects, signature/default
+        changes, annotation changes, docstring changes, deprecated objects, and
+        coverage deltas.
+
+    Examples:
+        Compare two live package collections and render the result:
+
+        ```python
+        from oodocs.apidoc import collect_api, diff_api
+
+        base = collect_api("path/to/base/src/mypkg")
+        head = collect_api("path/to/head/src/mypkg")
+        diff = diff_api(base, head)
+        diff.to_document().save_all("artifacts/api-diff")
+        ```
+
+        Compare persisted snapshots when the target package should not be
+        imported during the reporting job:
+
+        ```python
+        from oodocs.apidoc import ApiSnapshot, diff_api
+
+        diff = diff_api(
+            ApiSnapshot.read_json("artifacts/api-base.json"),
+            ApiSnapshot.read_json("artifacts/api-head.json"),
+        )
+        ```
     """
 
     base_snapshot = ApiSnapshot.from_package(base) if isinstance(base, ApiPackage) else base
