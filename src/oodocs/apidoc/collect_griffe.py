@@ -290,7 +290,10 @@ def _class_from_griffe(
         line_number=getattr(obj, "lineno", None),
     )
     members: list[ApiObject] = []
-    for name, member in _members(obj).items():
+    for name, member, inherited_from in _class_member_entries(
+        obj,
+        include_inherited=config.include_inherited,
+    ):
         if name == "__init__" or not config.include_inherited and _is_inherited(member, obj):
             continue
         target = _final_target(member)
@@ -306,6 +309,8 @@ def _class_from_griffe(
             parent_class=local_name,
         )
         if child is not None:
+            if inherited_from:
+                child.metadata["inherited_from"] = inherited_from
             members.append(child)
     from oodocs.apidoc.collect import _class_attribute_docs, _merge_attribute_docs
 
@@ -567,6 +572,36 @@ def _members(obj: object) -> dict[str, object]:
     return dict(getattr(obj, "members", {}) or {})
 
 
+def _class_member_entries(
+    obj: object,
+    *,
+    include_inherited: bool,
+) -> Iterable[tuple[str, object, str | None]]:
+    seen: set[str] = set()
+    for name, member in _members(obj).items():
+        seen.add(name)
+        yield name, member, _inherited_from(member, obj) if _is_inherited(member, obj) else None
+    if not include_inherited:
+        return
+    for base in _class_mro(obj):
+        for name, member in _members(base).items():
+            if name in seen:
+                continue
+            seen.add(name)
+            inherited_from = _object_path(_final_target(member)) or _object_path(member)
+            yield name, member, inherited_from
+
+
+def _class_mro(obj: object) -> list[object]:
+    value = getattr(obj, "mro", None)
+    if not callable(value):
+        return []
+    try:
+        return list(value())
+    except Exception:
+        return []
+
+
 def _final_target(obj: object) -> object | None:
     if getattr(obj, "is_alias", False):
         try:
@@ -667,6 +702,19 @@ def _is_inherited(member: object, owner: object) -> bool:
     member_path = str(getattr(member, "path", ""))
     owner_path = str(getattr(owner, "path", ""))
     return bool(member_path and owner_path and not member_path.startswith(f"{owner_path}."))
+
+
+def _inherited_from(member: object, owner: object) -> str | None:
+    if not _is_inherited(member, owner):
+        return None
+    return _object_path(_final_target(member)) or _object_path(member)
+
+
+def _object_path(obj: object | None) -> str | None:
+    if obj is None:
+        return None
+    value = getattr(obj, "path", None)
+    return str(value) if value else None
 
 
 def _has_deprecation_decorator(names: Iterable[str | None]) -> bool:

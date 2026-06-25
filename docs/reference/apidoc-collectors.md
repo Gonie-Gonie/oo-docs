@@ -156,3 +156,17 @@ api = collect_api(
     include_imported=True,
 )
 ```
+
+Use `include_inherited=True` when class references should include inherited
+methods, properties, or attributes. Griffe-backed collection walks the class
+MRO and records the original member qualname in `metadata["inherited_from"]` so
+rendered references can distinguish local API from inherited API.
+
+```python
+api = collect_api(
+    ".",
+    collector="griffe",
+    public_policy="underscore",
+    include_inherited=True,
+)
+```
