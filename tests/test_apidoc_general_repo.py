@@ -32,6 +32,8 @@ from oodocs.apidoc import (
     api_package_to_document,
     check_api_docs,
     collect_api,
+    collect_module_api,
+    collect_object_api,
     docstring_parser_import_paths,
 )
 from oodocs.apidoc.cli import main
@@ -108,6 +110,62 @@ def test_general_repo_auto_parser_objects_compose_into_document(tmp_path) -> Non
     assert "mixedpkg.Client" in html
     assert "Timeout in seconds." in html
     assert "Object coverage" in html
+
+
+def test_general_repo_facades_select_module_and_object_from_target_path(
+    tmp_path: Path,
+) -> None:
+    repo = write_mixed_docstring_repo(tmp_path)
+    kwargs = {
+        "collector": "inspect",
+        "public_policy": "__all__",
+        "docstring_style": ApiDocstringParser.auto(),
+    }
+
+    module = collect_module_api("mixedpkg.core", target=repo, **kwargs)
+    method = collect_object_api("mixedpkg.core.Client.connect", target=repo, **kwargs)
+    reexported_class = collect_object_api("mixedpkg.Client", target=repo, **kwargs)
+
+    assert module.name == "mixedpkg.core"
+    assert module.find("mixedpkg.core.Client.connect") is not None
+    assert method.kind == "method"
+    assert method.parameters[0].name == "timeout"
+    assert method.parameters[0].description == "Timeout in seconds."
+    assert reexported_class.kind == "class"
+    assert reexported_class.qualname == "mixedpkg.Client"
+
+    module_document = Document(
+        "Mixed Core Module API",
+        module.to_chapter(profile="manual", max_level=3),
+    )
+    object_document = Document(
+        "Mixed Connect API",
+        Chapter(
+            "Focused Method",
+            Paragraph("This section is selected from the repository API tree."),
+            method.to_section(level=2, profile="manual"),
+        ),
+    )
+
+    module_outputs = module_document.save_all(
+        tmp_path / "module-facade",
+        stem="mixed-core",
+        formats=("html",),
+    )
+    object_outputs = object_document.save_all(
+        tmp_path / "object-facade",
+        stem="mixed-connect",
+        formats=("html",),
+    )
+
+    assert_html_internal_links_resolve(
+        module_outputs["html"],
+        required_text=("mixedpkg.core.Client", "Timeout in seconds."),
+    )
+    assert_html_internal_links_resolve(
+        object_outputs["html"],
+        required_text=("mixedpkg.core.Client.connect", "Timeout in seconds."),
+    )
 
 
 def test_general_repo_render_helpers_compose_selected_api(tmp_path) -> None:

@@ -138,12 +138,35 @@ doc = Document(
 )
 ```
 
+For repository checkouts that should not depend on import path setup, pass the
+checkout as `target` and select the fully qualified object from the collected
+API tree.
+
+```python
+from oodocs import Chapter, Document, Paragraph
+from oodocs.apidoc import collect_object_api
+
+client_api = collect_object_api(
+    "mypkg.client.Client",
+    target=".",
+    public_policy="__all__",
+)
+
+doc = Document(
+    "Client API Notes",
+    Chapter(
+        "Client",
+        Paragraph("This section is generated from the current checkout."),
+        client_api.to_section(level=2, profile="manual"),
+    ),
+)
+```
+
 ## Insert One Module
 
-Use `collect_module_api(...)` when the target module is importable, such as
-inside a repository checkout whose `src/` directory is on `PYTHONPATH`. For a
-checkout path that should not depend on import resolution, collect the
-repository with `collect_api(".")` and use `api.find(...)` or `api.select(...)`.
+Use `collect_module_api(...)` when a guide or appendix needs one module instead
+of the whole package. Pass `target` for a repository checkout, package
+directory, or Python file that should be collected before module selection.
 
 ```python
 from oodocs import Document
@@ -151,13 +174,23 @@ from oodocs.apidoc import collect_module_api
 
 module = collect_module_api(
     "mypkg.adapters.http",
-    collector="inspect",
+    target=".",
     public_policy="underscore",
 )
 
 doc = Document(
     "HTTP Adapter API",
     module.to_chapter(profile="manual"),
+)
+```
+
+For already importable modules, omit `target`:
+
+```python
+module = collect_module_api(
+    "mypkg.adapters.http",
+    collector="inspect",
+    public_policy="underscore",
 )
 ```
 

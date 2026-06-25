@@ -239,13 +239,18 @@ def collect_api(
 def collect_module_api(
     module: str | PathLike,
     *,
+    target: str | PathLike | None = None,
     config: ApiCollectConfig | None = None,
     **kwargs: object,
 ) -> ApiModule:
     """Collect one module into an ``ApiModule``.
 
     Args:
-        module: Importable module name or Python file.
+        module: Importable module name, Python file, or module name to find
+            inside ``target``.
+        target: Optional package, Python file, package directory, or
+            repository checkout to collect before selecting ``module``. Use
+            this when the target checkout is not importable on ``PYTHONPATH``.
         config: Optional base config.
         **kwargs: Config overrides accepted by ``collect_api``.
 
@@ -253,10 +258,29 @@ def collect_module_api(
         Collected module metadata.
 
     Raises:
+        LookupError: If ``target`` is supplied and the named module is not in
+            the collected target.
         ValueError: If the input expands to zero or more than one collected
-            module.
+            module when ``target`` is omitted.
 
     Examples:
+        Collect one module from a repository checkout and render it as a
+        standalone reference document:
+
+        ```python
+        from oodocs import Document
+        from oodocs.apidoc import collect_module_api
+
+        module = collect_module_api(
+            "mypkg.adapters.http",
+            target=".",
+            public_policy="__all__",
+        )
+        Document("HTTP Adapter API", module.to_chapter(profile="manual")).save_html(
+            "artifacts/http-adapter-api.html",
+        )
+        ```
+
         Collect a single module and embed it in a larger document:
 
         ```python
@@ -271,6 +295,13 @@ def collect_module_api(
         ```
     """
 
+    if target is not None:
+        api = collect_api(target, config=config, **kwargs)
+        found = api.find(str(module))
+        if isinstance(found, ApiModule):
+            return found
+        raise LookupError(f"API module not found in target: {module}")
+
     api = collect_api(module, config=config, **kwargs)
     if len(api.modules) != 1:
         raise ValueError(f"Expected one module, collected {len(api.modules)} modules")
@@ -280,6 +311,7 @@ def collect_module_api(
 def collect_object_api(
     obj_or_qualname: object,
     *,
+    target: str | PathLike | None = None,
     config: ApiCollectConfig | None = None,
     **kwargs: object,
 ) -> ApiObject:
@@ -288,6 +320,10 @@ def collect_object_api(
     Args:
         obj_or_qualname: Fully qualified object name or an importable Python
             class, function, method, or property object.
+        target: Optional package, Python file, package directory, or
+            repository checkout to collect before selecting the object. Use
+            this for repository-local API references that should not depend on
+            import path setup.
         config: Optional base config.
         **kwargs: Config overrides accepted by ``collect_api``.
 
@@ -297,9 +333,32 @@ def collect_object_api(
     Raises:
         TypeError: If a live object does not expose importable module and
             qualname metadata.
-        LookupError: If the object cannot be found.
+        LookupError: If the object cannot be found in the selected module
+            candidates or target.
 
     Examples:
+        Collect one object from a repository checkout and insert it into an
+        authored guide:
+
+        ```python
+        from oodocs import Chapter, Document, Paragraph
+        from oodocs.apidoc import collect_object_api
+
+        obj = collect_object_api(
+            "mypkg.client.Client.connect",
+            target=".",
+            public_policy="__all__",
+        )
+        doc = Document(
+            "Client Integration Guide",
+            Chapter(
+                "Connection API",
+                Paragraph("The following section is generated from source."),
+                obj.to_section(level=2, profile="manual"),
+            ),
+        )
+        ```
+
         Collect one object when an API guide needs a focused reference panel:
 
         ```python
@@ -325,6 +384,13 @@ def collect_object_api(
     """
 
     qualname, preferred_module = _object_lookup_target(obj_or_qualname)
+    if target is not None:
+        api = collect_api(target, config=config, **kwargs)
+        found = api.find(qualname)
+        if isinstance(found, ApiObject):
+            return found
+        raise LookupError(f"API object not found in target: {qualname}")
+
     errors: list[Exception] = []
     module_candidates = _candidate_module_prefixes(qualname)
     if preferred_module is not None:
