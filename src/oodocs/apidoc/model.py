@@ -364,6 +364,68 @@ class ApiReturn:
             documented=bool(data.get("documented", False)),
         )
 
+    def to_row(
+        self,
+        columns: Sequence[str] = ("type", "description", "documented"),
+    ) -> list[object]:
+        """Return this return value as a table row.
+
+        Args:
+            columns: Column names to include. Supported values are
+                ``"type"``, ``"description"``, and ``"documented"``.
+
+        Returns:
+            List of table cell values.
+
+        Examples:
+            Place return metadata in a custom evidence table:
+
+            ```python
+            from oodocs import Table
+            from oodocs.apidoc import ApiReturn
+
+            returns = ApiReturn("bool", "Whether validation passed.", documented=True)
+            table = Table(["Type", "Description"], [returns.to_row(("type", "description"))])
+            ```
+        """
+
+        values = {
+            "type": _display_annotation(self.annotation),
+            "description": self.description or "",
+            "documented": _display_bool(self.documented),
+        }
+        return [values[column] for column in columns]
+
+    def to_paragraph(self):
+        """Return this return value as a compact paragraph.
+
+        Returns:
+            ``oodocs.Paragraph`` describing the return type and description.
+
+        Examples:
+            Insert return metadata without rendering a full API section:
+
+            ```python
+            from oodocs import Chapter, Document
+            from oodocs.apidoc import ApiReturn
+
+            returns = ApiReturn("str", "Rendered path.", documented=True)
+            doc = Document("API Notes", Chapter("Returns", returns.to_paragraph()))
+            ```
+        """
+
+        from oodocs.components.blocks import Paragraph
+        from oodocs.components.inline import code
+
+        pieces: list[object] = ["Returns"]
+        if self.annotation:
+            pieces.extend([" ", code(_display_annotation(self.annotation))])
+        if self.description:
+            pieces.extend([": ", self.description])
+        if not self.annotation and not self.description:
+            pieces.append(" undocumented value.")
+        return Paragraph(*pieces)
+
 
 @dataclass(slots=True)
 class ApiRaises:
@@ -437,6 +499,63 @@ class ApiRaises:
             exception=str(data["exception"]),
             description=_optional_str(data.get("description")),
         )
+
+    def to_row(
+        self,
+        columns: Sequence[str] = ("exception", "description"),
+    ) -> list[object]:
+        """Return this exception metadata as a table row.
+
+        Args:
+            columns: Column names to include. Supported values are
+                ``"exception"`` and ``"description"``.
+
+        Returns:
+            List of table cell values.
+
+        Examples:
+            Build an editable raises table for a review document:
+
+            ```python
+            from oodocs import Table
+            from oodocs.apidoc import ApiRaises
+
+            item = ApiRaises("ValueError", "If the path is empty.")
+            table = Table(["Exception", "Description"], [item.to_row()])
+            ```
+        """
+
+        values = {
+            "exception": self.exception,
+            "description": self.description or "",
+        }
+        return [values[column] for column in columns]
+
+    def to_paragraph(self):
+        """Return this exception metadata as a compact paragraph.
+
+        Returns:
+            ``oodocs.Paragraph`` with the exception name and description.
+
+        Examples:
+            Insert one exception note in an authored chapter:
+
+            ```python
+            from oodocs import Chapter, Document
+            from oodocs.apidoc import ApiRaises
+
+            raises = ApiRaises("RuntimeError", "When rendering fails.")
+            doc = Document("API Notes", Chapter("Raises", raises.to_paragraph()))
+            ```
+        """
+
+        from oodocs.components.blocks import Paragraph
+        from oodocs.components.inline import code
+
+        pieces: list[object] = [code(self.exception)]
+        if self.description:
+            pieces.extend([": ", self.description])
+        return Paragraph(*pieces)
 
 
 @dataclass(slots=True)
@@ -551,6 +670,69 @@ class ApiExample:
 
         return CodeBlock(_xml_safe_text(self.code), language=self.language or "text")
 
+    def to_row(
+        self,
+        columns: Sequence[str] = ("language", "caption", "source", "syntax_ok", "doctest_ok"),
+    ) -> list[object]:
+        """Return this example metadata as a table row.
+
+        Args:
+            columns: Column names to include. Supported values are
+                ``"language"``, ``"caption"``, ``"source"``, ``"syntax_ok"``,
+                and ``"doctest_ok"``.
+
+        Returns:
+            List of table cell values.
+
+        Examples:
+            Build an example quality table beside rendered snippets:
+
+            ```python
+            from oodocs import Table
+            from oodocs.apidoc import ApiExample
+
+            example = ApiExample("print('ok')", syntax_ok=True)
+            table = Table(["Language", "Syntax"], [example.to_row(("language", "syntax_ok"))])
+            ```
+        """
+
+        values = {
+            "language": self.language or "",
+            "caption": self.caption or "",
+            "source": self.source or "",
+            "syntax_ok": _display_bool(self.syntax_ok),
+            "doctest_ok": _display_bool(self.doctest_ok),
+        }
+        return [values[column] for column in columns]
+
+    def to_paragraph(self):
+        """Return this example metadata as a compact paragraph.
+
+        Returns:
+            ``oodocs.Paragraph`` summarizing the example language and caption.
+
+        Examples:
+            Add an example caption before the code block:
+
+            ```python
+            from oodocs import Chapter, Document
+            from oodocs.apidoc import ApiExample
+
+            example = ApiExample("print('ok')", caption="Minimal use")
+            doc = Document("Examples", Chapter("Quickstart", example.to_paragraph(), example.to_block()))
+            ```
+        """
+
+        from oodocs.components.blocks import Paragraph
+        from oodocs.components.inline import code
+
+        pieces: list[object] = [code(self.language or "text"), " example"]
+        if self.caption:
+            pieces.extend([": ", self.caption])
+        if self.source:
+            pieces.extend([" (", self.source, ")"])
+        return Paragraph(*pieces)
+
 
 @dataclass(slots=True)
 class ApiSeeAlso:
@@ -637,6 +819,67 @@ class ApiSeeAlso:
             kind=_optional_str(data.get("kind")),
         )
 
+    def to_row(
+        self,
+        columns: Sequence[str] = ("label", "target", "kind", "description"),
+    ) -> list[object]:
+        """Return this related API entry as a table row.
+
+        Args:
+            columns: Column names to include. Supported values are
+                ``"label"``, ``"target"``, ``"kind"``, and ``"description"``.
+
+        Returns:
+            List of table cell values.
+
+        Examples:
+            Create a related-API table for a guide:
+
+            ```python
+            from oodocs import Table
+            from oodocs.apidoc import ApiSeeAlso
+
+            related = ApiSeeAlso("save", target="mypkg.save", kind="function")
+            table = Table(["Label", "Target", "Kind"], [related.to_row(("label", "target", "kind"))])
+            ```
+        """
+
+        values = {
+            "label": self.label,
+            "target": self.target or "",
+            "kind": self.kind or "",
+            "description": self.description or "",
+        }
+        return [values[column] for column in columns]
+
+    def to_paragraph(self):
+        """Return this related API entry as a compact paragraph.
+
+        Returns:
+            ``oodocs.Paragraph`` describing the related API target.
+
+        Examples:
+            Insert one related API entry in a hand-authored note:
+
+            ```python
+            from oodocs import Chapter, Document
+            from oodocs.apidoc import ApiSeeAlso
+
+            item = ApiSeeAlso("save", target="mypkg.save", description="Writes output.")
+            doc = Document("Related API", Chapter("See Also", item.to_paragraph()))
+            ```
+        """
+
+        from oodocs.components.blocks import Paragraph
+        from oodocs.components.inline import code
+
+        pieces: list[object] = [code(self.target or self.label)]
+        if self.target and self.label != self.target:
+            pieces.extend([" (", self.label, ")"])
+        if self.description:
+            pieces.extend([": ", self.description])
+        return Paragraph(*pieces)
+
 
 @dataclass(slots=True)
 class ApiRendererNote:
@@ -717,6 +960,67 @@ class ApiRendererNote:
             format=data.get("format"),  # type: ignore[arg-type]
             message=str(data["message"]),
             severity=str(data.get("severity", "info")),  # type: ignore[arg-type]
+        )
+
+    def to_row(
+        self,
+        columns: Sequence[str] = ("format", "severity", "message"),
+    ) -> list[object]:
+        """Return this renderer note as a table row.
+
+        Args:
+            columns: Column names to include. Supported values are
+                ``"format"``, ``"severity"``, and ``"message"``.
+
+        Returns:
+            List of table cell values.
+
+        Examples:
+            Build a renderer-compatibility notes table:
+
+            ```python
+            from oodocs import Table
+            from oodocs.apidoc import ApiRendererNote
+
+            note = ApiRendererNote("pdf", "Long signatures may wrap.", "warning")
+            table = Table(["Format", "Severity", "Message"], [note.to_row()])
+            ```
+        """
+
+        values = {
+            "format": self.format or "all",
+            "severity": self.severity,
+            "message": self.message,
+        }
+        return [values[column] for column in columns]
+
+    def to_paragraph(self):
+        """Return this renderer note as a compact paragraph.
+
+        Returns:
+            ``oodocs.Paragraph`` describing the output-format guidance.
+
+        Examples:
+            Insert renderer guidance beside an API excerpt:
+
+            ```python
+            from oodocs import Chapter, Document
+            from oodocs.apidoc import ApiRendererNote
+
+            note = ApiRendererNote("html", "Adds stable anchors.")
+            doc = Document("Renderer Notes", Chapter("HTML", note.to_paragraph()))
+            ```
+        """
+
+        from oodocs.components.blocks import Paragraph
+        from oodocs.components.inline import code
+
+        return Paragraph(
+            code(self.format or "all"),
+            " ",
+            self.severity,
+            ": ",
+            self.message,
         )
 
 
@@ -3311,6 +3615,18 @@ def _optional_bool(value: object) -> bool | None:
     if value is None:
         return None
     return bool(value)
+
+
+def _display_annotation(value: str | None) -> str:
+    if value in {None, "", str(_empty)}:
+        return ""
+    return str(value).replace("typing.", "")
+
+
+def _display_bool(value: bool | None) -> str:
+    if value is None:
+        return ""
+    return "yes" if value else "no"
 
 
 def _optional_int(value: object) -> int | None:

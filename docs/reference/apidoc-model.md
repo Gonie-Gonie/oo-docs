@@ -40,6 +40,28 @@ can be inserted directly with `obj.to_notes_blocks()` or
 `obj.to_warnings_blocks()` when a document wants those sections outside the
 full `obj.to_section(...)` rendering.
 
+Leaf metadata objects are composable too. `ApiReturn`, `ApiRaises`,
+`ApiExample`, `ApiSeeAlso`, and `ApiRendererNote` expose row helpers for custom
+tables, and paragraph/block helpers for inserting a single parsed item into a
+hand-authored chapter without rendering the whole `ApiObject`.
+
+```python
+from oodocs import Chapter, Document, Table
+from oodocs.apidoc import collect_api
+
+api = collect_api(".")
+obj = api.functions()[0]
+rows = [item.to_row() for item in obj.raises]
+doc = Document(
+    "API Review",
+    Chapter(
+        "Raises",
+        Table(["Exception", "Description"], rows),
+        *(example.to_block() for example in obj.examples),
+    ),
+)
+```
+
 Module docstring notes, warnings, and renderer notes are preserved on
 `ApiModule` as well. `module.to_blocks(...)` and `module.to_chapter(...)` render
 them before the module API summary table so overview-level guidance is not lost

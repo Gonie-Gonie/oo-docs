@@ -387,7 +387,7 @@ def api_raises_table(
         return None
     return Table(
         ["Exception", "Description"],
-        [[item.exception, item.description or ""] for item in obj.raises],
+        [item.to_row() for item in obj.raises],
         caption=caption,
         split=True,
     )
@@ -466,10 +466,7 @@ def api_see_also_blocks(
     resolved = resolve_profile(profile)
     if not resolved.include_see_also or not obj.see_also:
         return []
-    rows = [
-        [item.label, item.target or "", item.kind or "", item.description or ""]
-        for item in obj.see_also
-    ]
+    rows = [item.to_row() for item in obj.see_also]
     return [
         Table(
             ["Label", "Target", "Kind", "Description"],
@@ -598,7 +595,7 @@ def api_renderer_notes_table(
         return None
     return Table(
         ["Format", "Severity", "Message"],
-        [[note.format or "all", note.severity, note.message] for note in notes],
+        [note.to_row() for note in notes],
         caption=caption,
         split=True,
     )
