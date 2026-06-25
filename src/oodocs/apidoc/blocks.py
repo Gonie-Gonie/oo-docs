@@ -447,7 +447,7 @@ def api_see_also_blocks(
         profile: Presentation profile.
 
     Returns:
-        Related API table blocks, or an empty list.
+        Related API table or guide-style box blocks, or an empty list.
 
     Examples:
         Add related API references to a custom section:
@@ -466,6 +466,15 @@ def api_see_also_blocks(
     resolved = resolve_profile(profile)
     if not resolved.include_see_also or not obj.see_also:
         return []
+    if resolved.name == "manual":
+        return [
+            Box(
+                *(item.to_paragraph() for item in obj.see_also),
+                title="See also",
+                border_color="93C5FD",
+                background_color="EFF6FF",
+            )
+        ]
     rows = [item.to_row() for item in obj.see_also]
     return [
         Table(

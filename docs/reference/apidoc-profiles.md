@@ -9,7 +9,8 @@ not change collection or parsing.
 - `compact`: summary-first layout with shorter tables, warning blocks, and
   fewer examples.
 - `manual`: guide-friendly sections that fit into authored documents, including
-  parsed notes and warnings.
+  parsed notes and warnings. See-also entries render as a compact box so
+  related API notes read like prose inside a surrounding guide.
 - `evidence`: coverage and issue oriented output.
 - `review`: editable DOCX-friendly structure with generated review-note
   comments for each rendered API object.
