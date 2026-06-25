@@ -210,6 +210,23 @@ def test_inspect_collector_uses_pyproject_import_names_package(tmp_path) -> None
     assert api.find("straypkg.leak") is None
 
 
+def test_inspect_collector_uses_import_names_with_configured_source_root(
+    tmp_path,
+) -> None:
+    repo = write_import_names_package_repo(tmp_path, source_root="lib")
+
+    api = collect_api(repo, collector="inspect", public_policy="__all__")
+
+    assert api.name == "importnamedpkg"
+    assert [module.name for module in api.modules] == [
+        "importnamedpkg",
+        "importnamedpkg.core",
+    ]
+    assert api.find("importnamedpkg.run") is not None
+    assert api.find("lib.importnamedpkg.run") is None
+    assert api.find("straypkg.leak") is None
+
+
 def test_inspect_collector_uses_pyproject_import_names_module_file(tmp_path) -> None:
     repo = write_import_names_module_file_repo(tmp_path)
 

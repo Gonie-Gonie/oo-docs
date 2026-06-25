@@ -705,12 +705,18 @@ def write_import_names_package_repo(
     repo_name: str = "import-names-repo",
     package_name: str = "importnamedpkg",
     project_name: str = "published-import-name-project",
+    source_root: str = "src",
 ) -> Path:
     repo = tmp_path / repo_name
-    package_dir = repo / "src" / package_name
-    stray_dir = repo / "src" / "straypkg"
+    package_dir = repo / source_root / package_name
+    stray_dir = repo / source_root / "straypkg"
     package_dir.mkdir(parents=True)
     stray_dir.mkdir(parents=True)
+    setuptools_section = (
+        f'\n[tool.setuptools]\npackage-dir = {{"" = "{source_root}"}}\n'
+        if source_root != "src"
+        else ""
+    )
     (repo / "pyproject.toml").write_text(
         dedent(
             f'''\
@@ -722,6 +728,7 @@ def write_import_names_package_repo(
             name = "{project_name}"
             version = "0.1.0"
             import-names = ["{package_name}"]
+            {setuptools_section}
             '''
         ),
         encoding="utf-8",

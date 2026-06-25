@@ -758,7 +758,7 @@ def test_general_flit_package_repo_builds_complete_reference(
 def test_general_import_names_package_repo_builds_complete_reference(
     tmp_path: Path,
 ) -> None:
-    repo = write_import_names_package_repo(tmp_path)
+    repo = write_import_names_package_repo(tmp_path, source_root="lib")
     output_dir = tmp_path / "import-names-output"
 
     api = collect_api(
@@ -771,6 +771,7 @@ def test_general_import_names_package_repo_builds_complete_reference(
 
     assert api.name == "importnamedpkg"
     assert api.find("importnamedpkg.run") is not None
+    assert api.find("lib.importnamedpkg.run") is None
     assert api.find("straypkg.leak") is None
     assert coverage.object_coverage == 1.0
 
@@ -807,6 +808,7 @@ def test_general_import_names_package_repo_builds_complete_reference(
     assert_html_internal_links_resolve(html_path)
     rendered_api = ApiPackage.read_json(api_path)
     assert rendered_api.find("importnamedpkg.run") is not None
+    assert rendered_api.find("lib.importnamedpkg.run") is None
     assert rendered_api.find("straypkg.leak") is None
     assert ApiCoverageResult.read_json(coverage_path).object_coverage == 1.0
 

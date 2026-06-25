@@ -1615,7 +1615,7 @@ def _flit_source_files_from_pyproject(
     if not import_names:
         return None
 
-    for source_root in (directory / "src", directory):
+    for source_root in _import_name_source_roots(directory):
         files: list[Path] = []
         for import_name in import_names:
             files.extend(_files_for_import_name(source_root, import_name))
@@ -1677,7 +1677,7 @@ def _declared_import_source_files_from_pyproject(
     if not import_names:
         return directory.resolve(), project_name, []
 
-    for source_root in (directory / "src", directory):
+    for source_root in _import_name_source_roots(directory):
         files: list[Path] = []
         for import_name in import_names:
             files.extend(_files_for_import_name(source_root, import_name))
@@ -1700,6 +1700,23 @@ def _declared_project_import_names(project: object) -> tuple[str, ...] | None:
     if not found:
         return None
     return tuple(dict.fromkeys(names))
+
+
+def _import_name_source_roots(directory: Path) -> list[Path]:
+    roots = [
+        *_project_source_roots(directory),
+        directory / "src",
+        directory,
+    ]
+    normalized: list[Path] = []
+    seen: set[Path] = set()
+    for root in roots:
+        resolved = root.resolve()
+        if resolved in seen or not resolved.is_dir():
+            continue
+        normalized.append(resolved)
+        seen.add(resolved)
+    return normalized
 
 
 def _flit_import_names_from_value(value: object) -> list[str]:
