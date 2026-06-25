@@ -501,6 +501,38 @@ def test_collect_api_builds_queryable_object_tree_and_blocks(tmp_path: Path) -> 
     assert f'id="{method_anchor}"' not in limited_module_html_text
 
 
+def test_api_package_document_preserves_coverage_issue_details(tmp_path: Path) -> None:
+    package_dir = tmp_path / "coveragepkg"
+    package_dir.mkdir()
+    (package_dir / "__init__.py").write_text(
+        "def undocumented(path: str) -> str:\n"
+        "    return path\n",
+        encoding="utf-8",
+    )
+
+    api = collect_api(package_dir, public_policy="underscore", collector="inspect")
+    document = api.to_document(include_coverage=True, include_modules=False)
+    coverage_chapter = document.body.children[1]
+    issue_tables = [
+        child
+        for child in coverage_chapter.children
+        if isinstance(child, Table)
+        and child.caption is not None
+        and child.caption.plain_text() == "API documentation issues"
+    ]
+
+    assert coverage_chapter.plain_title() == "API Documentation Coverage"
+    assert issue_tables
+    issue_codes = [row[1].content.plain_text() for row in issue_tables[0].rows]
+    assert "missing-docstring" in issue_codes
+
+    html_path = tmp_path / "coverage-reference.html"
+    document.save_html(html_path)
+    html = html_path.read_text(encoding="utf-8")
+    assert "API documentation issues" in html
+    assert "missing-docstring" in html
+
+
 def test_api_doc_profiles_wrap_long_signature_blocks() -> None:
     obj = ApiObject(
         kind="function",

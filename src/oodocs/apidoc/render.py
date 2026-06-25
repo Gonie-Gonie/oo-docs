@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Sequence
 
 from oodocs.apidoc.blocks import api_objects_to_chapter, api_objects_to_summary_table as _api_objects_to_summary_table
-from oodocs.apidoc.coverage import ApiCoverageResult
+from oodocs.apidoc.coverage import ApiCoverageResult, check_api_docs
 from oodocs.apidoc.diff import ApiDiffResult
 from oodocs.apidoc.model import ApiObject, ApiPackage
 from oodocs.apidoc.styles import ApiDocProfile
@@ -80,7 +80,7 @@ def api_package_to_document(
         TableOfContents(title="API Contents", max_level=max_level)
     ]
     if include_coverage:
-        children.append(api_coverage_to_chapter(api.to_coverage_table()))
+        children.append(api_coverage_to_chapter(check_api_docs(api)))
     if include_modules:
         children.extend(api.to_chapters(profile=profile, max_level=max_level))
     return Document(
