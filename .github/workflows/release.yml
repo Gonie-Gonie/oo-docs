@@ -60,7 +60,13 @@ jobs:
         run: python -m pytest
 
       - name: Check API documentation coverage
-        run: python -m oodocs apidoc check oodocs --collector griffe --public-policy __all__ --fail-under 0.90
+        run: |
+          python -m oodocs apidoc check oodocs \
+            --collector griffe \
+            --public-policy __all__ \
+            --fail-under 0.90 \
+            --out-json artifacts/api-objects-example/oodocs-api-coverage.json \
+            --out-csv artifacts/api-objects-example/oodocs-api-coverage.csv
 
       - name: Build distributions
         run: python -m build
@@ -103,6 +109,9 @@ jobs:
             artifacts/journal-paper/oodocs-development-philosophy.pdf
             artifacts/release-notes/oodocs-release-notes.pdf
             artifacts/api-objects-example/oodocs-api-objects.pdf
+            artifacts/api-objects-example/oodocs-api-objects.json
+            artifacts/api-objects-example/oodocs-api-coverage.json
+            artifacts/api-objects-example/oodocs-api-coverage.csv
             artifacts/api-objects-example/oodocs-full-api-reference.docx
             artifacts/api-objects-example/oodocs-full-api-reference.pdf
             artifacts/api-objects-example/oodocs-full-api-reference.html
@@ -119,6 +128,9 @@ jobs:
             artifacts/journal-paper/oodocs-development-philosophy.pdf
             artifacts/release-notes/oodocs-release-notes.pdf
             artifacts/api-objects-example/oodocs-api-objects.pdf
+            artifacts/api-objects-example/oodocs-api-objects.json
+            artifacts/api-objects-example/oodocs-api-coverage.json
+            artifacts/api-objects-example/oodocs-api-coverage.csv
             artifacts/api-objects-example/oodocs-full-api-reference.docx
             artifacts/api-objects-example/oodocs-full-api-reference.pdf
             artifacts/api-objects-example/oodocs-full-api-reference.html

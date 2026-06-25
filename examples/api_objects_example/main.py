@@ -11,6 +11,7 @@ from oodocs.apidoc import ApiCoverageResult, ApiPackage, check_api_docs, collect
 ARTIFACT_DIR = Path("artifacts/api-objects-example")
 FULL_REFERENCE_STEM = "oodocs-full-api-reference"
 COMPOSITION_STEM = "oodocs-api-objects"
+COVERAGE_STEM = "oodocs-api-coverage"
 
 
 def collect_oodocs_api() -> ApiPackage:
@@ -85,6 +86,44 @@ def build_document(
     )
 
 
+def write_sidecars(
+    api: ApiPackage,
+    coverage: ApiCoverageResult,
+    output_dir: str | Path = ARTIFACT_DIR,
+) -> dict[str, Path]:
+    """Write API object and coverage sidecars for release evidence.
+
+    Args:
+        api: API package object tree to serialize.
+        coverage: Coverage result for the same API tree.
+        output_dir: Directory that receives the sidecar files.
+
+    Returns:
+        Mapping with ``api_json``, ``coverage_json``, and ``coverage_csv``
+        output paths.
+
+    Examples:
+        Build a small evidence bundle beside rendered API documents:
+
+        ```python
+        from oodocs.apidoc import check_api_docs, collect_api
+        from examples.api_objects_example.main import write_sidecars
+
+        api = collect_api("oodocs", public_policy="__all__")
+        coverage = check_api_docs(api, fail_under=0.90)
+        sidecars = write_sidecars(api, coverage, "artifacts/api-objects-example")
+        ```
+    """
+
+    sidecar_dir = Path(output_dir)
+    sidecar_dir.mkdir(parents=True, exist_ok=True)
+    return {
+        "api_json": api.write_json(sidecar_dir / f"{COMPOSITION_STEM}.json"),
+        "coverage_json": coverage.write_json(sidecar_dir / f"{COVERAGE_STEM}.json"),
+        "coverage_csv": coverage.write_csv(sidecar_dir / f"{COVERAGE_STEM}.csv"),
+    }
+
+
 def main() -> None:
     """Render the API object example and sidecars."""
 
@@ -96,8 +135,7 @@ def main() -> None:
 
     full_reference.save_all(ARTIFACT_DIR, stem=FULL_REFERENCE_STEM)
     document.save_all(ARTIFACT_DIR, stem=COMPOSITION_STEM)
-    api.write_json(ARTIFACT_DIR / f"{COMPOSITION_STEM}.json")
-    coverage.write_csv(ARTIFACT_DIR / "oodocs-api-coverage.csv")
+    write_sidecars(api, coverage, ARTIFACT_DIR)
 
 
 if __name__ == "__main__":

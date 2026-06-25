@@ -1483,6 +1483,14 @@ def test_api_objects_example_builds_full_reference_and_composable_document(
     assert all(path.exists() for path in outputs.values())
     assert full_reference.validate(formats=("docx", "pdf", "html")).ok
     assert composition.validate(formats=("html",)).ok
+    sidecars = example.write_sidecars(api, coverage, tmp_path / "sidecars")
+    assert set(sidecars) == {"api_json", "coverage_json", "coverage_csv"}
+    assert all(path.exists() for path in sidecars.values())
+    assert ApiPackage.read_json(sidecars["api_json"]).name == "examplepkg"
+    assert ApiCoverageResult.read_json(sidecars["coverage_json"]).package == "examplepkg"
+    assert sidecars["coverage_csv"].read_text(encoding="utf-8").startswith(
+        "severity,code,qualname,module,path,line_number,message"
+    )
     html = outputs["html"].read_text(encoding="utf-8")
     assert "examplepkg.Widget" in html
     assert "examplepkg.run" in html

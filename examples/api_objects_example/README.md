@@ -8,7 +8,8 @@ This example shows the composable API-documentation workflow:
 3. render a hand-composed `oodocs-api-objects` document that inserts selected
    class sections, a function summary table, and coverage evidence into an
    ordinary OODocs document
-4. write deterministic JSON and CSV sidecars for release evidence
+4. write deterministic API JSON plus coverage JSON/CSV sidecars for release
+   evidence
 
 Run it from the repository root:
 
@@ -19,4 +20,5 @@ python examples/api_objects_example/main.py
 The script writes rendered files under `artifacts/api-objects-example`.
 Both the full package reference and the selected composition document are saved
 as DOCX, PDF, and HTML so the generated API documentation can be reviewed,
-published, or attached to release evidence directly.
+published, or attached to release evidence directly. The sidecars use the
+`oodocs-api-objects.json` and `oodocs-api-coverage.{json,csv}` filenames.
