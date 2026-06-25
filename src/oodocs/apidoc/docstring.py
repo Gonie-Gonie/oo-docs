@@ -866,10 +866,7 @@ def _parse_numpy(text: str, qualname: str | None, module: str | None) -> ParsedD
         elif normalized in {"returns", "yields"} and parsed.returns is None:
             parsed.returns = _parse_return_section(body)
         elif normalized == "raises" and not parsed.raises:
-            parsed.raises.extend(
-                ApiRaises(item.name, item.description)
-                for item in _parse_numpy_parameters(body, annotation_in_name=True)
-            )
+            parsed.raises.extend(_parse_numpy_raises(body))
         elif normalized == "examples" and not parsed.examples:
             parsed.examples.extend(_examples_or_text(body))
         elif normalized == "see also":
@@ -1233,6 +1230,26 @@ def _parse_numpy_parameters(
                 documented=True,
                 source="docstring",
             )
+            items.append(current)
+        elif current is not None:
+            current.description = _join_text(current.description, line.strip())
+    return items
+
+
+def _parse_numpy_raises(text: str) -> list[ApiRaises]:
+    items: list[ApiRaises] = []
+    current: ApiRaises | None = None
+    for raw_line in text.splitlines():
+        line = raw_line.rstrip()
+        if not line.strip():
+            continue
+        match = re.match(
+            r"^([A-Za-z_][\w.]*(?:\s*,\s*[A-Za-z_][\w.]*)*)(?:\s*:\s*(.*))?$",
+            line,
+        )
+        if match and not raw_line.startswith((" ", "\t")):
+            exception, description = match.groups()
+            current = ApiRaises(exception.strip(), description or None)
             items.append(current)
         elif current is not None:
             current.description = _join_text(current.description, line.strip())

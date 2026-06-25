@@ -9,7 +9,7 @@ Supported styles:
   `Examples:`, `See Also:`, `Notes:`, `Warnings:`, `Renderer Notes:`, and
   `Deprecated:`.
 - `numpy`: dashed section headings such as `Parameters`, `Returns`, `Yields`,
-  `Notes`, `Warnings`, `Renderer Notes`, and `Deprecated`.
+  `Raises`, `Notes`, `Warnings`, `Renderer Notes`, and `Deprecated`.
 - `sphinx`: `:param:`, `:type:`, `:returns:`, `:rtype:`, `:yields:`,
   `:ytype:`, directives, and code blocks.
 - `markdown`: Markdown headings, parameter tables, `Returns`/`Yields`,

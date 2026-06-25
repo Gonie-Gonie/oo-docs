@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import inspect
 
+import oodocs.apidoc.docstring as docstring_module
 from oodocs.apidoc import parse_docstring
 from tests.fixtures.apidoc_docstrings import numpy as fixture
 
@@ -27,3 +28,28 @@ def test_numpy_docstring_fixture_extracts_shared_fields() -> None:
     assert method.parameters[0].name == "path"
     assert property_doc.returns is not None
     assert dataclass_doc.attributes[0].name == "identifier"
+
+
+def test_numpy_fallback_parser_extracts_raises_sections(monkeypatch) -> None:
+    monkeypatch.setattr(docstring_module.importlib.util, "find_spec", lambda name: None)
+
+    parsed = parse_docstring(
+        """
+        Load data.
+
+        Raises
+        ------
+        ValueError
+            If the path is empty.
+        RuntimeError : If loading fails.
+        TypeError, OSError
+            If input types or filesystem state are invalid.
+        """,
+        style="numpy",
+    )
+
+    assert [(item.exception, item.description) for item in parsed.raises] == [
+        ("ValueError", "If the path is empty."),
+        ("RuntimeError", "If loading fails."),
+        ("TypeError, OSError", "If input types or filesystem state are invalid."),
+    ]
