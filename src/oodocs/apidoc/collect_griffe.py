@@ -235,12 +235,22 @@ def _class_from_griffe(
 ) -> ApiObject:
     qualname = f"{module_name}.{local_name}"
     parsed = _parse_object_docstring(obj, qualname=qualname, module=module_name, config=config)
+    init_parsed = None
+    if not parsed.parameters:
+        init_member = _final_target(_members(obj).get("__init__"))
+        if init_member is not None:
+            init_parsed = _parse_object_docstring(
+                init_member,
+                qualname=f"{qualname}.__init__",
+                module=module_name,
+                config=config,
+            )
     signature_parameters = []
     if config.class_signature_from_init:
         signature_parameters = _parameters_from_griffe(getattr(obj, "parameters", ()), drop_first=True)
     parameters, extra_issues = _merge_parameters(
         signature_parameters,
-        parsed.parameters,
+        parsed.parameters or (init_parsed.parameters if init_parsed else []),
         qualname=qualname,
         module=module_name,
         path=_object_filepath(obj),
@@ -296,7 +306,14 @@ def _class_from_griffe(
         metadata={
             "decorators": [name for name in decorators if name],
             "docstring_style": parsed.style,
-            "issues": [issue.to_dict() for issue in [*parsed.issues, *extra_issues]],
+            "issues": [
+                issue.to_dict()
+                for issue in [
+                    *parsed.issues,
+                    *(init_parsed.issues if init_parsed else []),
+                    *extra_issues,
+                ]
+            ],
         },
     )
 

@@ -920,8 +920,8 @@ def test_griffe_collector_matches_inspect_schema_on_src_layout_repo(
         "\n".join(
             [
                 '"""Package docs."""',
-                "from .core import Widget, make_widget",
-                "__all__ = ['Widget', 'make_widget']",
+                "from .core import ConstructorOnly, Widget, make_widget",
+                "__all__ = ['ConstructorOnly', 'Widget', 'make_widget']",
             ]
         ),
         encoding="utf-8",
@@ -958,6 +958,17 @@ def test_griffe_collector_matches_inspect_schema_on_src_layout_repo(
                 '        """',
                 "        return path",
                 "",
+                "class ConstructorOnly:",
+                '    """A constructor-documented class."""',
+                "",
+                "    def __init__(self, path: str) -> None:",
+                '        """Create from a path.',
+                "",
+                "        Args:",
+                "            path: Input path.",
+                '        """',
+                "        self.path = path",
+                "",
                 "def make_widget(name: str) -> Widget:",
                 '    """Create a widget.',
                 "",
@@ -985,6 +996,11 @@ def test_griffe_collector_matches_inspect_schema_on_src_layout_repo(
     label_obj = griffe_api.find("pkg.core.Widget.label")
     assert label_obj is not None
     assert label_obj.summary == "User-facing label."
+    constructor_only = griffe_api.find("pkg.core.ConstructorOnly")
+    assert constructor_only is not None
+    assert constructor_only.parameters[0].name == "path"
+    assert constructor_only.parameters[0].description == "Input path."
+    assert constructor_only.parameters[0].documented
     method = griffe_api.find("pkg.core.Widget.render")
     assert method is not None
     assert method.parameters[0].name == "path"
@@ -1244,10 +1260,20 @@ def test_apidoc_cli_init_writes_config_for_general_repo(tmp_path: Path) -> None:
         encoding="utf-8",
     )
     (package_dir / "__init__.py").write_text(
-        '"""Init package."""\nfrom .core import run\n__all__ = ["run"]\n',
+        '"""Init package."""\nfrom .core import Widget, run\n__all__ = ["Widget", "run"]\n',
         encoding="utf-8",
     )
     (package_dir / "core.py").write_text(
+        "class Widget:\n"
+        '    """A configured widget."""\n'
+        "\n"
+        "    def __init__(self, name: str) -> None:\n"
+        '        """Create a widget.\n\n'
+        "        Args:\n"
+        "            name: Widget name.\n"
+        '        """\n'
+        "        self.name = name\n"
+        "\n"
         "def run(path: str) -> str:\n"
         '    """Run a configured build.\n\n'
         "    Args:\n"
@@ -1275,6 +1301,7 @@ def test_apidoc_cli_init_writes_config_for_general_repo(tmp_path: Path) -> None:
             "html",
             "--out-dir",
             str(build_dir),
+            "--no-class-signature-from-init",
             "--kind",
             "function",
             "--module-prefix",
@@ -1289,6 +1316,27 @@ def test_apidoc_cli_init_writes_config_for_general_repo(tmp_path: Path) -> None:
     assert config.output_dir == str(build_dir)
     assert config.sidecars
     assert config.kind == ("function",)
+    assert not config.collection.class_signature_from_init
+
+    signature_json = tmp_path / "initpkg-signatures.json"
+    assert main(
+        [
+            "apidoc",
+            "collect",
+            str(repo),
+            "--collector",
+            "inspect",
+            "--public-policy",
+            "__all__",
+            "--no-class-signature-from-init",
+            "--out",
+            str(signature_json),
+        ]
+    ) == 0
+    signature_api = ApiPackage.read_json(signature_json)
+    widget = signature_api.find("initpkg.core.Widget")
+    assert widget is not None
+    assert widget.signature == "initpkg.core.Widget"
 
     assert main(["apidoc", "build", str(repo), "--config", str(repo / "pyproject.toml")]) == 0
     assert (build_dir / "initpkg-api.html").exists()

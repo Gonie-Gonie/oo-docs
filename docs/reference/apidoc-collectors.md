@@ -16,6 +16,13 @@ Sphinx `.. deprecated::`, when class/function decorators are named
 `warnings.warn(..., DeprecationWarning)`. Warning messages are preserved as
 `ApiObject.deprecation_message` when they are literal strings.
 
+Class signatures use `__init__` parameters by default. When a class docstring
+does not document those parameters directly, both source and griffe collection
+can use the `__init__` docstring's parameter section as the class constructor
+parameter documentation. Disable that behavior with
+`class-signature-from-init = false` in config or
+`--no-class-signature-from-init` on the CLI.
+
 ```python
 from oodocs.apidoc import collect_api
 
@@ -56,6 +63,7 @@ sidecar generation.
 collector = "griffe"
 public-policy = "__all__"
 docstring-style = "auto"
+class-signature-from-init = true
 module-exclude-patterns = ["mypkg.tests*"]
 profile = "website"
 formats = ["html"]

@@ -111,8 +111,9 @@ docstring changes, deprecated objects, and coverage deltas.
 
 Common collection options are `--collector`, `--public-policy`,
 `--explicit-name`, `--docstring-style`, `--docstring-parser-module`,
-`--include-imported`, `--config`, `--include-inherited`, `--module-include`,
-and `--module-exclude`.
+`--include-imported`, `--config`, `--include-inherited`,
+`--class-signature-from-init`, `--no-class-signature-from-init`,
+`--module-include`, and `--module-exclude`.
 Module include/exclude patterns are applied before module contents are
 collected, while `check`, `build`, and `snapshot` also accept `--kind` and
 `--module-prefix` object filters after collection. `check` also accepts

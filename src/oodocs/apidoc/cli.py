@@ -163,6 +163,18 @@ def _add_collect_options(parser: argparse.ArgumentParser, *, include_config: boo
         help="Include inherited class members when the collector can resolve them.",
     )
     parser.add_argument(
+        "--class-signature-from-init",
+        action="store_true",
+        default=None,
+        help="Build class signatures from __init__ parameters.",
+    )
+    parser.add_argument(
+        "--no-class-signature-from-init",
+        action="store_false",
+        dest="class_signature_from_init",
+        help="Render class signatures without __init__ parameters.",
+    )
+    parser.add_argument(
         "--module-include",
         action="append",
         dest="module_include_patterns",
@@ -190,6 +202,7 @@ def _run_init(args: argparse.Namespace) -> int:
         docstring_parser_modules=args.docstring_parser_modules,
         include_imported=args.include_imported,
         include_inherited=args.include_inherited,
+        class_signature_from_init=args.class_signature_from_init,
         module_include_patterns=args.module_include_patterns,
         module_exclude_patterns=args.module_exclude_patterns,
     )
@@ -345,6 +358,7 @@ def _collect_from_args(
         docstring_parser_modules=args.docstring_parser_modules,
         include_imported=args.include_imported,
         include_inherited=args.include_inherited,
+        class_signature_from_init=args.class_signature_from_init,
         module_include_patterns=args.module_include_patterns,
         module_exclude_patterns=args.module_exclude_patterns,
     )
