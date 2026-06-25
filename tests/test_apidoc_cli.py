@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib.util
 import json
 
 from apidoc_samples import (
@@ -60,6 +61,86 @@ def test_apidoc_cli_builds_html_and_sidecars_for_general_repo(tmp_path) -> None:
     assert render.examples
     assert render.examples[0].syntax_ok is True
     assert render.examples[0].doctest_ok is True
+
+
+def test_apidoc_cli_auto_collector_builds_full_bundle_for_general_repo(
+    tmp_path,
+) -> None:
+    package_dir = write_sample_package(tmp_path)
+    output_dir = tmp_path / "auto-api"
+
+    assert (
+        main(
+            [
+                "apidoc",
+                "build",
+                str(package_dir),
+                "--collector",
+                "auto",
+                "--public-policy",
+                "__all__",
+                "--profile",
+                "compact",
+                "--out",
+                str(output_dir),
+                "--to",
+                "docx,pdf,html",
+                "--sidecars",
+            ]
+        )
+        == 0
+    )
+
+    docx_path = output_dir / "samplepkg-api.docx"
+    pdf_path = output_dir / "samplepkg-api.pdf"
+    html_path = output_dir / "samplepkg-api.html"
+    api_path = output_dir / "samplepkg-api.json"
+    coverage_path = output_dir / "samplepkg-api-coverage.json"
+
+    assert_rendered_bundle(docx_path, pdf_path, html_path)
+    assert api_path.exists()
+    assert coverage_path.exists()
+    assert_docx_structure(
+        docx_path,
+        required_paragraphs=(
+            "samplepkg API Reference",
+            "1 API Documentation Coverage",
+            "2 samplepkg",
+            "2.2 samplepkg.Widget",
+            "2.3 samplepkg.make_widget",
+        ),
+        min_tables=4,
+    )
+    assert_pdf_text_and_pages(
+        pdf_path,
+        required_text=(
+            "samplepkg API Reference",
+            "samplepkg.Widget",
+            "samplepkg.make_widget",
+        ),
+        min_pages=1,
+    )
+    assert_html_internal_links_resolve(
+        html_path,
+        required_text=(
+            "samplepkg API Reference",
+            "samplepkg.Widget",
+            "samplepkg.make_widget",
+        ),
+    )
+
+    api = ApiPackage.read_json(api_path)
+    coverage = ApiCoverageResult.read_json(coverage_path)
+    render = api.find("samplepkg.Widget.render")
+
+    assert api.metadata["collector"] in {"griffe", "inspect"}
+    if importlib.util.find_spec("griffe") is not None:
+        assert api.metadata["collector"] == "griffe"
+    assert api.find("samplepkg.Widget") is not None
+    assert render is not None
+    assert render.examples
+    assert coverage.package == "samplepkg"
+    assert coverage.public_object_count >= 1
 
 
 def test_apidoc_cli_builds_full_reference_bundle_from_json_config(tmp_path) -> None:
