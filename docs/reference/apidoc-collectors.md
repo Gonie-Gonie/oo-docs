@@ -58,3 +58,18 @@ api = collect_api(
     module_exclude_patterns=("mypkg.tests*", "mypkg._experimental"),
 )
 ```
+
+Use `include_imported=True` when a package intentionally exposes imported
+objects as part of its public boundary. Internal re-exports are resolved to the
+collected target object when possible. External imports that source collection
+cannot inspect safely are still represented as public `data` objects with
+`metadata["imported_from"]`.
+
+```python
+api = collect_api(
+    ".",
+    collector="inspect",
+    public_policy="__all__",
+    include_imported=True,
+)
+```

@@ -512,11 +512,22 @@ def test_collect_api_accepts_reusable_public_policy_object(tmp_path: Path) -> No
                 "def helper() -> None:",
                 '    """Not part of the curated API."""',
                 "",
+                "from .core import Extra",
+                "",
             ]
         ),
         encoding="utf-8",
     )
-    policy = ApiPublicPolicy.explicit("pkg.Widget", "pkg.Widget._secret")
+    (package_dir / "core.py").write_text(
+        "\n".join(
+            [
+                "class Extra:",
+                '    """A target object included without its package alias."""',
+            ]
+        ),
+        encoding="utf-8",
+    )
+    policy = ApiPublicPolicy.explicit("pkg.Widget", "pkg.Widget._secret", "pkg.core.Extra")
 
     api = collect_api(package_dir, public_policy=policy, collector="inspect")
 
@@ -525,8 +536,79 @@ def test_collect_api_accepts_reusable_public_policy_object(tmp_path: Path) -> No
     secret = api.find("pkg.Widget._secret")
     assert secret is not None
     assert secret.kind == "method"
+    assert api.find("pkg.core.Extra") is not None
+    assert api.find("pkg.Extra") is None
     assert api.find("pkg.helper") is None
     assert ApiPublicPolicy.from_dict(policy.to_dict()) == policy
+
+
+def test_source_collector_can_include_external_import_aliases(tmp_path: Path) -> None:
+    package_dir = tmp_path / "importpkg"
+    package_dir.mkdir()
+    (package_dir / "__init__.py").write_text(
+        "\n".join(
+            [
+                '"""Import boundary package."""',
+                "from pathlib import Path",
+                "import json as json_module",
+                "from .core import Widget",
+                "",
+                "__all__ = ['Path', 'json_module', 'Widget']",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (package_dir / "core.py").write_text(
+        "\n".join(
+            [
+                "class Widget:",
+                '    """A documented widget."""',
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    default_api = collect_api(package_dir, public_policy="__all__", collector="inspect")
+    imported_api = collect_api(
+        package_dir,
+        public_policy="__all__",
+        collector="inspect",
+        include_imported=True,
+    )
+
+    assert default_api.find("importpkg.Widget") is not None
+    assert default_api.find("importpkg.Path") is None
+    assert default_api.find("importpkg.json_module") is None
+
+    widget = imported_api.find("importpkg.Widget")
+    path_alias = imported_api.find("importpkg.Path")
+    json_alias = imported_api.find("importpkg.json_module")
+
+    assert widget is not None
+    assert widget.kind == "class"
+    assert widget.metadata["reexported_from"] == "importpkg.core.Widget"
+    assert path_alias is not None
+    assert path_alias.kind == "data"
+    assert path_alias.metadata["imported"] is True
+    assert path_alias.metadata["imported_from"] == "pathlib.Path"
+    assert json_alias is not None
+    assert json_alias.metadata["imported_from"] == "json"
+
+    cli_json = tmp_path / "imported-api.json"
+    assert main(
+        [
+            "apidoc",
+            "collect",
+            str(package_dir),
+            "--collector",
+            "inspect",
+            "--include-imported",
+            "--out",
+            str(cli_json),
+        ]
+    ) == 0
+    cli_api = ApiPackage.read_json(cli_json)
+    assert cli_api.find("importpkg.Path") is not None
 
 
 def test_collect_api_filters_modules_before_collection(tmp_path: Path) -> None:

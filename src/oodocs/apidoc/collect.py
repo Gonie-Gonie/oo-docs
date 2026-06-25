@@ -56,8 +56,11 @@ def collect_api(
         explicit_names: Names used with ``public_policy="explicit"``.
         docstring_style: Docstring parser style name or reusable
             ``ApiDocstringParser`` object.
-        include_imported: Reserved for import-aware collectors.
-        include_inherited: Reserved for import-aware collectors.
+        include_imported: Whether imported public aliases should be included.
+            Source collection records unresolved external imports as ``data``
+            objects; griffe can resolve richer imported targets when available.
+        include_inherited: Whether import-aware collectors should include
+            inherited class members when available.
         class_signature_from_init: Whether class signatures use ``__init__``.
         module_include_patterns: Optional glob-style module names to include
             before collection.
@@ -216,6 +219,7 @@ def _collect_package_source(
         modules.append(module)
         issues.extend(_module_issues(module))
     _add_reexported_objects(modules)
+    _add_imported_objects(modules, include_imported=config.include_imported)
     return ApiPackage(
         package_name,
         version=_package_version(package_name),
@@ -254,7 +258,8 @@ def _collect_module_from_file(
         end_line_number=getattr(tree, "end_lineno", None),
         metadata={
             "__all__": sorted(public_names) if public_names is not None else None,
-            "reexports": _module_reexports(tree, module_name, public_names),
+            "imports": _module_imports(tree, module_name, public_names, config),
+            "reexports": _module_reexports(tree, module_name, public_names, config),
         },
     )
     for node in tree.body:
@@ -754,6 +759,7 @@ def _module_reexports(
     tree: ast.Module,
     module_name: str,
     public_names: set[str] | None,
+    config: ApiCollectConfig,
 ) -> list[dict[str, str]]:
     reexports: list[dict[str, str]] = []
     for node in tree.body:
@@ -766,9 +772,7 @@ def _module_reexports(
             if alias.name == "*":
                 continue
             local_name = alias.asname or alias.name
-            if public_names is not None and local_name not in public_names:
-                continue
-            if public_names is None and local_name.startswith("_"):
+            if not _is_public_name(local_name, f"{module_name}.{local_name}", public_names, config):
                 continue
             reexports.append(
                 {
@@ -781,8 +785,51 @@ def _module_reexports(
     return reexports
 
 
+def _module_imports(
+    tree: ast.Module,
+    module_name: str,
+    public_names: set[str] | None,
+    config: ApiCollectConfig,
+) -> list[dict[str, object]]:
+    imports: list[dict[str, object]] = []
+    for node in tree.body:
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                local_name = alias.asname or alias.name.split(".", 1)[0]
+                if not _is_public_name(local_name, f"{module_name}.{local_name}", public_names, config):
+                    continue
+                imports.append(
+                    {
+                        "name": local_name,
+                        "target_module": alias.name,
+                        "target_name": None,
+                        "target_qualname": alias.name,
+                        "line_number": getattr(node, "lineno", None),
+                    }
+                )
+        elif isinstance(node, ast.ImportFrom):
+            target_module = _resolve_import_from_module(module_name, node.module, node.level)
+            if target_module is None:
+                continue
+            for alias in node.names:
+                if alias.name == "*":
+                    continue
+                local_name = alias.asname or alias.name
+                if not _is_public_name(local_name, f"{module_name}.{local_name}", public_names, config):
+                    continue
+                imports.append(
+                    {
+                        "name": local_name,
+                        "target_module": target_module,
+                        "target_name": alias.name,
+                        "target_qualname": f"{target_module}.{alias.name}",
+                        "line_number": getattr(node, "lineno", None),
+                    }
+                )
+    return imports
+
+
 def _add_reexported_objects(modules: list[ApiModule]) -> None:
-    module_map = {module.name: module for module in modules}
     object_map = {
         obj.qualname: obj
         for module in modules
@@ -802,6 +849,45 @@ def _add_reexported_objects(modules: list[ApiModule]) -> None:
             module.members.append(alias)
             existing_names.add(local_name)
             object_map[alias.qualname] = alias
+        module.members.sort(key=lambda obj: (obj.line_number or 0, obj.name))
+
+
+def _add_imported_objects(
+    modules: list[ApiModule],
+    *,
+    include_imported: bool,
+) -> None:
+    if not include_imported:
+        return
+    for module in modules:
+        existing_names = {member.name for member in module.members}
+        for item in module.metadata.get("imports", []):
+            if not isinstance(item, dict):
+                continue
+            local_name = str(item.get("name", ""))
+            target_qualname = str(item.get("target_qualname", ""))
+            if not local_name or local_name in existing_names:
+                continue
+            line_number = item.get("line_number")
+            module.members.append(
+                ApiObject(
+                    kind="data",
+                    name=local_name,
+                    qualname=f"{module.name}.{local_name}",
+                    module=module.name,
+                    visibility=_visibility_for(local_name),
+                    signature=local_name,
+                    source_path=module.source_path,
+                    line_number=line_number if isinstance(line_number, int) else None,
+                    metadata={
+                        "imported": True,
+                        "imported_from": target_qualname,
+                        "target_module": item.get("target_module"),
+                        "target_name": item.get("target_name"),
+                    },
+                )
+            )
+            existing_names.add(local_name)
         module.members.sort(key=lambda obj: (obj.line_number or 0, obj.name))
 
 

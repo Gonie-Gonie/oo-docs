@@ -172,8 +172,11 @@ class ApiCollectConfig:
         public_policy: Public API boundary policy.
         explicit_names: Names included when ``public_policy="explicit"``.
         docstring_style: Docstring parser style.
-        include_imported: Whether imported objects may be included.
-        include_inherited: Whether inherited class members may be included.
+        include_imported: Whether imported public aliases may be included.
+            Source collection records unresolved external imports as ``data``
+            objects, while griffe may resolve richer imported targets.
+        include_inherited: Whether inherited class members may be included by
+            collectors that can resolve them.
         class_signature_from_init: Whether class signatures use ``__init__``.
         module_include_patterns: Optional glob-style module names to include.
         module_exclude_patterns: Optional glob-style module names to exclude.

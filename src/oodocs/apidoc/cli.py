@@ -105,6 +105,16 @@ def _add_collect_options(parser: argparse.ArgumentParser) -> None:
         help="Docstring parser style.",
     )
     parser.add_argument(
+        "--include-imported",
+        action="store_true",
+        help="Include public imported aliases when the collector can represent them.",
+    )
+    parser.add_argument(
+        "--include-inherited",
+        action="store_true",
+        help="Include inherited class members when the collector can resolve them.",
+    )
+    parser.add_argument(
         "--module-include",
         action="append",
         dest="module_include_patterns",
@@ -208,6 +218,8 @@ def _collect_from_args(args: argparse.Namespace):
         public_policy=args.public_policy,
         explicit_names=args.explicit_names,
         docstring_style=args.docstring_style,
+        include_imported=args.include_imported,
+        include_inherited=args.include_inherited,
         module_include_patterns=args.module_include_patterns,
         module_exclude_patterns=args.module_exclude_patterns,
     )
