@@ -107,6 +107,39 @@ def test_sphinx_parser_degrades_inline_rest_markup_to_plain_text() -> None:
     assert parsed.warnings == ["Avoid mutable defaults."]
 
 
+def test_sphinx_parser_extracts_seealso_and_renderer_admonitions() -> None:
+    parsed = parse_docstring(
+        """
+        Load a widget.
+
+        :returns: Loaded widget.
+        :rtype: :class:`widgets.Widget`
+
+        .. seealso::
+
+            :func:`load_widget`: Load one widget from disk.
+            :class:`~widgets.Widget`
+                Runtime widget object.
+
+        .. admonition:: Renderer Notes
+
+            PDF: Wide signatures may wrap.
+            HTML: :func:`load_widget` receives a stable anchor.
+        """,
+        style="sphinx",
+    )
+
+    assert [item.label for item in parsed.see_also] == ["load_widget", "Widget"]
+    assert [item.description for item in parsed.see_also] == [
+        "Load one widget from disk.",
+        "Runtime widget object.",
+    ]
+    assert parsed.renderer_notes[0].format == "pdf"
+    assert parsed.renderer_notes[0].message == "Wide signatures may wrap."
+    assert parsed.renderer_notes[1].format == "html"
+    assert parsed.renderer_notes[1].message == "load_widget receives a stable anchor."
+
+
 def test_sphinx_fallback_parser_degrades_inline_rest_markup_to_plain_text(monkeypatch) -> None:
     monkeypatch.setattr(docstring_module.importlib.util, "find_spec", lambda name: None)
 
@@ -130,3 +163,38 @@ def test_sphinx_fallback_parser_degrades_inline_rest_markup_to_plain_text(monkey
     assert parsed.returns.annotation == "str"
     assert parsed.returns.description == "A widget label with markup."
     assert parsed.raises[0].description == "If path is blank."
+
+
+def test_sphinx_fallback_parser_extracts_seealso_and_renderer_admonitions(monkeypatch) -> None:
+    monkeypatch.setattr(docstring_module.importlib.util, "find_spec", lambda name: None)
+
+    parsed = parse_docstring(
+        """
+        Load a widget.
+
+        :returns: Loaded widget.
+        :rtype: :class:`widgets.Widget`
+
+        .. seealso::
+
+            :func:`load_widget`: Load one widget from disk.
+            :class:`~widgets.Widget`
+                Runtime widget object.
+
+        .. admonition:: Renderer Notes
+
+            PDF: Wide signatures may wrap.
+            HTML: :func:`load_widget` receives a stable anchor.
+        """,
+        style="sphinx",
+    )
+
+    assert [item.label for item in parsed.see_also] == ["load_widget", "Widget"]
+    assert [item.description for item in parsed.see_also] == [
+        "Load one widget from disk.",
+        "Runtime widget object.",
+    ]
+    assert parsed.renderer_notes[0].format == "pdf"
+    assert parsed.renderer_notes[0].message == "Wide signatures may wrap."
+    assert parsed.renderer_notes[1].format == "html"
+    assert parsed.renderer_notes[1].message == "load_widget receives a stable anchor."

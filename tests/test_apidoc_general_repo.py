@@ -145,6 +145,78 @@ def test_general_repo_auto_parser_objects_compose_into_document(tmp_path) -> Non
     assert "Object coverage" in html
 
 
+def test_general_repo_sphinx_seealso_directives_compose_into_reference(
+    tmp_path: Path,
+) -> None:
+    repo = tmp_path / "sphinxrepo"
+    package_dir = repo / "sphinxpkg"
+    package_dir.mkdir(parents=True)
+    (package_dir / "__init__.py").write_text(
+        "\n".join(
+            [
+                '"""Sphinx-style package."""',
+                "",
+                "__all__ = ['load_widget', 'open_widget']",
+                "",
+                "def open_widget(path: str) -> str:",
+                '    """Open a widget.',
+                "",
+                "    :param path: Input path.",
+                "    :type path: str",
+                "    :returns: Opened widget name.",
+                "    :rtype: str",
+                '    """',
+                "    return path",
+                "",
+                "def load_widget(path: str) -> str:",
+                '    """Load a widget.',
+                "",
+                "    :param path: Input path.",
+                "    :type path: str",
+                "    :returns: Loaded widget name.",
+                "    :rtype: str",
+                "",
+                "    .. seealso::",
+                "",
+                "        :func:`open_widget`: Open a widget without loading metadata.",
+                "",
+                "    .. admonition:: Renderer Notes",
+                "",
+                "        HTML: :func:`open_widget` receives a stable related API entry.",
+                '    """',
+                "    return open_widget(path)",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    api = collect_api(
+        repo,
+        collector="inspect",
+        public_policy="__all__",
+        docstring_style=ApiDocstringParser.auto(),
+    )
+    obj = api.find("sphinxpkg.load_widget")
+    assert obj is not None
+    assert obj.metadata["docstring_style"] == "sphinx"
+    assert obj.see_also[0].label == "open_widget"
+    assert obj.see_also[0].description == "Open a widget without loading metadata."
+    assert obj.renderer_notes[0].format == "html"
+    assert obj.renderer_notes[0].message == "open_widget receives a stable related API entry."
+
+    document = Document(
+        "Sphinx API",
+        Chapter("Selected API", obj.to_section(level=2, profile="reference")),
+    )
+    html_path = tmp_path / "sphinx-api.html"
+    document.save_html(html_path)
+
+    assert_html_internal_links_resolve(html_path)
+    html = html_path.read_text(encoding="utf-8")
+    assert "Open a widget without loading metadata." in html
+    assert "open_widget receives a stable related API entry." in html
+
+
 def test_general_repo_auto_parser_object_survives_build_config_json_roundtrip(
     tmp_path: Path,
 ) -> None:

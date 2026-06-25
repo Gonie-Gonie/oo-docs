@@ -1043,6 +1043,23 @@ def _parse_sphinx(text: str, qualname: str | None, module: str | None) -> Parsed
         elif stripped.startswith(".. note::"):
             parsed.notes.append(_collect_directive_body(lines, i))
             i = _skip_sphinx_body(lines, i) - 1
+        elif stripped.startswith(".. seealso::"):
+            body = _plain_sphinx_text(_collect_directive_body(lines, i)) or ""
+            parsed.see_also.extend(_parse_see_also(body))
+            i = _skip_sphinx_body(lines, i) - 1
+        elif match := re.match(r"^\.\. admonition::\s*(.*)$", stripped):
+            title = _plain_sphinx_text(match.group(1)) or ""
+            body = _collect_directive_body(lines, i)
+            normalized_title = title.lower()
+            if normalized_title == "renderer notes":
+                parsed.renderer_notes.extend(_parse_renderer_notes(body))
+            elif normalized_title == "see also":
+                parsed.see_also.extend(_parse_see_also(_plain_sphinx_text(body) or ""))
+            elif normalized_title in {"note", "notes"}:
+                parsed.notes.extend(_paragraphs(body))
+            elif normalized_title in {"warning", "warnings"}:
+                parsed.warnings.extend(_paragraphs(body))
+            i = _skip_sphinx_body(lines, i) - 1
         elif stripped.startswith(".. code-block::"):
             language = stripped.partition("::")[2].strip() or "text"
             code_text = _collect_directive_body(lines, i, preserve=True)
@@ -1542,15 +1559,22 @@ def _parse_return_section(text: str) -> ApiReturn:
 
 def _parse_see_also(text: str) -> list[ApiSeeAlso]:
     items: list[ApiSeeAlso] = []
-    for line in text.splitlines():
-        stripped = line.strip().lstrip("-*").strip()
+    current: ApiSeeAlso | None = None
+    for raw_line in text.splitlines():
+        if current is not None and raw_line.startswith((" ", "\t")) and raw_line.strip():
+            current.description = _join_text(current.description, raw_line.strip())
+            continue
+        stripped = raw_line.strip().lstrip("-*").strip()
         if not stripped:
             continue
         if ":" in stripped:
             label, description = stripped.split(":", 1)
-            items.append(ApiSeeAlso(label.strip("` "), target=label.strip("` "), description=description.strip()))
+            label = label.strip("` ")
+            current = ApiSeeAlso(label, target=label, description=description.strip() or None)
         else:
-            items.append(ApiSeeAlso(stripped.strip("` "), target=stripped.strip("` ")))
+            label = stripped.strip("` ")
+            current = ApiSeeAlso(label, target=label)
+        items.append(current)
     return items
 
 
