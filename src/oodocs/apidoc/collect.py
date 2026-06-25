@@ -705,6 +705,29 @@ def _class_object(
                             metadata={"default": default} if default is not None else {},
                         )
                     )
+    if config.include_attributes and init_node is not None:
+        existing_names = {member.name for member in members}
+        for name, annotation, default, line_number, end_line_number in _instance_attribute_targets(init_node):
+            if name in existing_names or not _class_member_is_public(name, config, f"{qualname}.{name}"):
+                continue
+            metadata: dict[str, object] = {"instance_attribute": True}
+            if default is not None:
+                metadata["default"] = default
+            members.append(
+                ApiObject(
+                    kind="attribute",
+                    name=name,
+                    qualname=f"{qualname}.{name}",
+                    module=module_name,
+                    visibility=_visibility_for(name),
+                    signature=f"{name}: {annotation}" if annotation else name,
+                    source_path=str(path),
+                    line_number=line_number,
+                    end_line_number=end_line_number,
+                    metadata=metadata,
+                )
+            )
+            existing_names.add(name)
     members = _merge_attribute_docs(members, _class_attribute_docs(parsed))
     decorators = {_decorator_name(decorator) for decorator in node.decorator_list}
     deprecated = parsed.deprecated or bool(decorators & _DEPRECATION_DECORATORS)
@@ -811,6 +834,42 @@ def _source_base_name(node: ast.expr) -> str | None:
         return node.id
     if isinstance(node, ast.Attribute):
         return node.attr
+    return None
+
+
+def _instance_attribute_targets(
+    node: ast.FunctionDef | ast.AsyncFunctionDef,
+) -> list[tuple[str, str | None, str | None, int | None, int | None]]:
+    attributes: dict[str, tuple[str, str | None, str | None, int | None, int | None]] = {}
+    for child in ast.walk(node):
+        if isinstance(child, ast.Assign):
+            for target in child.targets:
+                name = _self_attribute_name(target)
+                if name and name not in attributes:
+                    attributes[name] = (
+                        name,
+                        None,
+                        _unparse(child.value),
+                        getattr(child, "lineno", None),
+                        getattr(child, "end_lineno", None),
+                    )
+        elif isinstance(child, ast.AnnAssign):
+            name = _self_attribute_name(child.target)
+            if name and name not in attributes:
+                attributes[name] = (
+                    name,
+                    _unparse(child.annotation) if child.annotation else None,
+                    _unparse(child.value) if child.value else None,
+                    getattr(child, "lineno", None),
+                    getattr(child, "end_lineno", None),
+                )
+    return list(attributes.values())
+
+
+def _self_attribute_name(node: ast.expr) -> str | None:
+    if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name):
+        if node.value.id in {"self", "cls"}:
+            return node.attr
     return None
 
 

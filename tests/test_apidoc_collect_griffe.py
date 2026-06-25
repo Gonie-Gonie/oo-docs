@@ -8,6 +8,23 @@ from apidoc_samples import collect_sample_api
 from oodocs.apidoc import collect_api
 
 
+def test_inspect_and_griffe_collect_same_sample_public_objects(tmp_path) -> None:
+    if importlib.util.find_spec("griffe") is None:
+        pytest.skip("griffe is not installed")
+
+    inspect_root = tmp_path / "inspect"
+    griffe_root = tmp_path / "griffe"
+    inspect_root.mkdir()
+    griffe_root.mkdir()
+
+    inspect_api = collect_sample_api(inspect_root, collector="inspect")
+    griffe_api = collect_sample_api(griffe_root, collector="griffe")
+    inspect_names = sorted(obj.qualname for obj in inspect_api.iter_objects(recursive=True))
+    griffe_names = sorted(obj.qualname for obj in griffe_api.iter_objects(recursive=True))
+
+    assert inspect_names == griffe_names
+
+
 def test_griffe_collector_collects_general_package_tree(tmp_path) -> None:
     if importlib.util.find_spec("griffe") is None:
         pytest.skip("griffe is not installed")

@@ -9,6 +9,7 @@ def test_inspect_collector_collects_general_package_tree(tmp_path) -> None:
 
     assert api.metadata["collector"] == "inspect"
     assert api.find("samplepkg.Widget") is not None
+    assert api.find("samplepkg.Widget.name") is not None
     assert api.find("samplepkg.make_widget") is not None
     assert api.classes()
     assert api.functions()
@@ -27,6 +28,7 @@ def test_inspect_collector_can_exclude_member_kinds(tmp_path) -> None:
     assert api.find("samplepkg.make_widget") is not None
     assert api.find("samplepkg.CONSTANT") is None
     assert api.find("samplepkg.Widget.label") is None
+    assert api.find("samplepkg.Widget.name") is None
     assert api.find("samplepkg.Widget.title") is None
     assert api.find("samplepkg.Widget.render") is None
 

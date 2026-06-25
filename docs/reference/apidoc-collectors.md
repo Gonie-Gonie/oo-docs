@@ -5,10 +5,11 @@ Repository paths may point at a package directory, a `src/` layout package, or
 a `src/` layout namespace package that omits `__init__.py`.
 
 - `collector="griffe"` uses griffe when installed. It captures module data,
-  aliases, properties, class attributes, and line metadata without importing the
-  target package.
+  aliases, properties, class attributes, public `__init__` instance
+  attributes, and line metadata without importing the target package.
 - `collector="inspect"` uses the source-compatible collector and avoids runtime
-  imports.
+  imports while normalizing the same object kinds when they can be inferred from
+  source.
 - `collector="auto"` tries griffe first and records a fallback issue if source
   collection is used.
 
