@@ -81,3 +81,13 @@ tag_regex = "^v(?P<version>\\d+\\.\\d+\\.\\d+)$"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.oodocs.apidoc]
+collector = "griffe"
+public-policy = "__all__"
+docstring-style = "auto"
+profile = "compact"
+formats = ["docx", "pdf", "html"]
+out = "artifacts/api"
+stem = "oodocs-api"
+sidecars = true

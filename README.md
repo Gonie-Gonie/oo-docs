@@ -291,6 +291,13 @@ Run them directly from the repository checkout:
 .\.venv\Scripts\python.exe .\examples\api_objects_example\main.py
 ```
 
+The full package API reference can also be rendered directly from the
+repository-local `apidoc` config:
+
+```powershell
+.\.venv\Scripts\python.exe -m oodocs apidoc build . --config pyproject.toml
+```
+
 Direct example scripts print slow major render steps. Imported build functions stay quiet by default; pass `verbose=True` when you want the same progress messages.
 
 What they show:
