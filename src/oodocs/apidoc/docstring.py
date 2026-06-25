@@ -541,6 +541,7 @@ _MARKDOWN_DETECTION_SECTIONS = (
     "Parameters",
     "Attributes",
     "Returns",
+    "Yields",
     "Raises",
     "Examples",
     "See Also",

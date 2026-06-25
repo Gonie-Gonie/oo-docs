@@ -287,9 +287,9 @@ def write_mixed_docstring_repo(tmp_path: Path) -> Path:
             '''\
             """Mixed docstring package."""
 
-            from .core import Client, connect
+            from .core import Client, connect, stream
 
-            __all__ = ["Client", "connect"]
+            __all__ = ["Client", "connect", "stream"]
             '''
         ),
         encoding="utf-8",
@@ -336,6 +336,20 @@ def write_mixed_docstring_repo(tmp_path: Path) -> Path:
                 """
 
                 return Client(endpoint)
+
+            def stream(endpoint: str):
+                """Stream updates from an endpoint.
+
+                ## Parameters
+
+                - `endpoint` (`str`): Base endpoint URL.
+
+                ## Yields
+
+                str: Endpoint update payload.
+                """
+
+                yield endpoint
             '''
         ),
         encoding="utf-8",

@@ -48,6 +48,7 @@ def test_general_repo_auto_parser_objects_compose_into_document(tmp_path) -> Non
     client = api.find("mixedpkg.Client")
     method = api.find("mixedpkg.Client.connect")
     function = api.find("mixedpkg.connect")
+    stream = api.find("mixedpkg.stream")
     coverage = check_api_docs(api, fail_under=1.0)
 
     assert api.name == "mixedpkg"
@@ -59,6 +60,11 @@ def test_general_repo_auto_parser_objects_compose_into_document(tmp_path) -> Non
     assert method.returns.description == "Whether the connection succeeded."
     assert function is not None
     assert function.metadata["docstring_style"] == "google"
+    assert stream is not None
+    assert stream.metadata["docstring_style"] == "markdown"
+    assert stream.returns is not None
+    assert stream.returns.annotation == "str"
+    assert stream.returns.description == "Endpoint update payload."
     assert coverage.object_coverage == 1.0
 
     document = Document(

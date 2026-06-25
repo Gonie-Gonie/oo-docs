@@ -16,3 +16,22 @@ def test_auto_docstring_parser_detects_fixture_styles() -> None:
     assert detect_docstring_style(inspect.getdoc(plain.load_widget)) == "plain"
     assert parser.detect(inspect.getdoc(google.load_widget)) == "google"
     assert parse_docstring(inspect.getdoc(google.load_widget), style=parser).style == "google"
+
+
+def test_auto_docstring_parser_detects_markdown_yields_section() -> None:
+    parser = ApiDocstringParser.auto()
+    docstring = """Iterate values.
+
+    ## Yields
+
+    str: Next value.
+    """
+
+    parsed = parse_docstring(docstring, style=parser)
+
+    assert parser.detect(docstring) == "markdown"
+    assert parsed.style == "markdown"
+    assert parsed.returns is not None
+    assert parsed.returns.annotation == "str"
+    assert parsed.returns.description == "Next value."
+    assert parsed.returns.documented
