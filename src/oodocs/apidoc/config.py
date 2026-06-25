@@ -24,6 +24,8 @@ _COLLECT_CONFIG_KEYS = {
     "include_inherited",
     "module_exclude_patterns",
     "module_include_patterns",
+    "object_exclude_patterns",
+    "object_include_patterns",
     "public_api_policy",
     "public_policy",
 }
@@ -299,12 +301,20 @@ class ApiCollectConfig:
         class_signature_from_init: Whether class signatures use ``__init__``.
         module_include_patterns: Optional glob-style module names to include.
         module_exclude_patterns: Optional glob-style module names to exclude.
+        object_include_patterns: Optional glob-style object name or qualname
+            patterns to include after collection.
+        object_exclude_patterns: Optional glob-style object name or qualname
+            patterns to exclude after collection.
 
     Examples:
         ```python
         from oodocs.apidoc import ApiCollectConfig, collect_api
 
-        config = ApiCollectConfig(public_policy="__all__", docstring_style="auto")
+        config = ApiCollectConfig(
+            public_policy="__all__",
+            docstring_style="auto",
+            object_exclude_patterns=("render_to_pdf", "render_to_html"),
+        )
         api = collect_api("oodocs", config=config)
         ```
     """
@@ -319,6 +329,8 @@ class ApiCollectConfig:
     class_signature_from_init: bool = True
     module_include_patterns: tuple[str, ...] = field(default_factory=tuple)
     module_exclude_patterns: tuple[str, ...] = field(default_factory=tuple)
+    object_include_patterns: tuple[str, ...] = field(default_factory=tuple)
+    object_exclude_patterns: tuple[str, ...] = field(default_factory=tuple)
 
     def __post_init__(self) -> None:
         policy = ApiPublicPolicy.from_value(
@@ -394,6 +406,8 @@ class ApiCollectConfig:
             "docstring_parser_modules",
             "module_include_patterns",
             "module_exclude_patterns",
+            "object_include_patterns",
+            "object_exclude_patterns",
         ):
             if field_name in values and not isinstance(values[field_name], tuple):
                 values[field_name] = tuple(values[field_name])  # type: ignore[arg-type]
@@ -583,6 +597,8 @@ class ApiCollectConfig:
             "class_signature_from_init": self.class_signature_from_init,
             "module_include_patterns": list(self.module_include_patterns),
             "module_exclude_patterns": list(self.module_exclude_patterns),
+            "object_include_patterns": list(self.object_include_patterns),
+            "object_exclude_patterns": list(self.object_exclude_patterns),
         }
 
     def write_json(self, path: PathLike) -> Path:

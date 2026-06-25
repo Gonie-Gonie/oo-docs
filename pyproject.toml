@@ -86,6 +86,7 @@ testpaths = ["tests"]
 collector = "griffe"
 public-policy = "__all__"
 docstring-style = "auto"
+object-exclude-patterns = ["render_to_docx", "render_to_pdf", "render_to_html"]
 profile = "compact"
 formats = ["docx", "pdf", "html"]
 out = "artifacts/api"

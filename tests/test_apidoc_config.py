@@ -10,6 +10,7 @@ def test_apidoc_config_roundtrip_supports_general_repo_policy(tmp_path) -> None:
             public_policy=ApiPublicPolicy.explicit("samplepkg.Widget"),
             docstring_style=ApiDocstringParser.google(),
             module_exclude_patterns=("samplepkg.tests*",),
+            object_exclude_patterns=("*.render_to_pdf", "*.render_to_html"),
         ),
         profile="website",
         output_formats=("html",),
@@ -23,4 +24,8 @@ def test_apidoc_config_roundtrip_supports_general_repo_policy(tmp_path) -> None:
     assert readback.collection.public_policy == "explicit"
     assert readback.collection.explicit_names == ("samplepkg.Widget",)
     assert readback.collection.docstring_style == "google"
+    assert readback.collection.object_exclude_patterns == (
+        "*.render_to_pdf",
+        "*.render_to_html",
+    )
     assert readback.output_formats == ("html",)

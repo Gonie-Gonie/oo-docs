@@ -67,6 +67,7 @@ public-policy = "__all__"
 docstring-style = "auto"
 class-signature-from-init = true
 module-exclude-patterns = ["mypkg.tests*"]
+object-exclude-patterns = ["render_to_docx", "render_to_pdf", "render_to_html"]
 profile = "website"
 formats = ["html"]
 sidecars = true
@@ -111,6 +112,19 @@ api = collect_api(
     collector="griffe",
     module_include_patterns=("mypkg.*",),
     module_exclude_patterns=("mypkg.tests*", "mypkg._experimental"),
+)
+```
+
+Use `object_include_patterns` and `object_exclude_patterns` when the repository
+has public names that should not appear in user-facing API docs. These filters
+run after collection and match either fully qualified object names or local
+object names.
+
+```python
+api = collect_api(
+    ".",
+    collector="griffe",
+    object_exclude_patterns=("render_to_pdf", "render_to_html"),
 )
 ```
 

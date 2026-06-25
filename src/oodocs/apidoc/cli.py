@@ -206,6 +206,18 @@ def _add_collect_options(parser: argparse.ArgumentParser, *, include_config: boo
         dest="module_exclude_patterns",
         help="Glob-style module name pattern to exclude during collection.",
     )
+    parser.add_argument(
+        "--object-include",
+        action="append",
+        dest="object_include_patterns",
+        help="Glob-style object name or qualname pattern to include after collection.",
+    )
+    parser.add_argument(
+        "--object-exclude",
+        action="append",
+        dest="object_exclude_patterns",
+        help="Glob-style object name or qualname pattern to exclude after collection.",
+    )
 
 
 def _add_filter_options(parser: argparse.ArgumentParser) -> None:
@@ -225,6 +237,8 @@ def _run_init(args: argparse.Namespace) -> int:
         class_signature_from_init=args.class_signature_from_init,
         module_include_patterns=args.module_include_patterns,
         module_exclude_patterns=args.module_exclude_patterns,
+        object_include_patterns=args.object_include_patterns,
+        object_exclude_patterns=args.object_exclude_patterns,
     )
     config = ApiBuildConfig(
         collection=collection,
@@ -381,6 +395,8 @@ def _collect_from_args(
         class_signature_from_init=args.class_signature_from_init,
         module_include_patterns=args.module_include_patterns,
         module_exclude_patterns=args.module_exclude_patterns,
+        object_include_patterns=args.object_include_patterns,
+        object_exclude_patterns=args.object_exclude_patterns,
     )
 
 

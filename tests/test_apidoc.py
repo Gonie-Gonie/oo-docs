@@ -918,16 +918,18 @@ def test_collect_api_filters_modules_before_collection(tmp_path: Path) -> None:
     config = ApiCollectConfig.from_kwargs(
         module_include_patterns=("filtermods.*",),
         module_exclude_patterns=("filtermods.tests", "filtermods.experimental"),
+        object_exclude_patterns=("filtermods.core.run",),
     )
 
     api = collect_api(package_dir, config=config, public_policy="underscore", collector="inspect")
 
     assert api.metadata["file_count"] == 1
-    assert [module.name for module in api.modules] == ["filtermods.core"]
-    assert api.find("filtermods.core.run") is not None
+    assert api.modules == []
+    assert api.find("filtermods.core.run") is None
     assert api.find("filtermods.experimental.preview") is None
     assert api.find("filtermods.tests.helper") is None
     assert config.to_dict()["module_include_patterns"] == ["filtermods.*"]
+    assert config.to_dict()["object_exclude_patterns"] == ["filtermods.core.run"]
     assert ApiCollectConfig.from_dict(config.to_dict()) == config
     config_path = tmp_path / "apidoc-config.json"
     config.write_json(config_path)
@@ -942,6 +944,7 @@ def test_collect_api_filters_modules_before_collection(tmp_path: Path) -> None:
                 'docstring-style = "auto"',
                 'module-include-patterns = ["filtermods.*"]',
                 'module-exclude-patterns = ["filtermods.tests", "filtermods.experimental"]',
+                'object-exclude-patterns = ["filtermods.core.run"]',
                 'profile = "website"',
                 'formats = ["html"]',
                 "sidecars = true",
@@ -959,6 +962,7 @@ def test_collect_api_filters_modules_before_collection(tmp_path: Path) -> None:
         "filtermods.tests",
         "filtermods.experimental",
     )
+    assert pyproject_config.object_exclude_patterns == ("filtermods.core.run",)
     assert ApiCollectConfig.read_file(pyproject_path) == pyproject_config
     pyproject_build_config = ApiBuildConfig.from_pyproject(tmp_path)
     assert pyproject_build_config.collection == pyproject_config
@@ -978,9 +982,20 @@ def test_collect_api_filters_modules_before_collection(tmp_path: Path) -> None:
             collector="griffe",
             module_include_patterns=("filtermods.*",),
             module_exclude_patterns=("filtermods.tests", "filtermods.experimental"),
+            object_exclude_patterns=("filtermods.core.run",),
         )
         assert griffe_api.metadata["file_count"] == 1
-        assert [module.name for module in griffe_api.modules] == ["filtermods.core"]
+        assert griffe_api.modules == []
+
+    include_api = collect_api(
+        package_dir,
+        public_policy="underscore",
+        collector="inspect",
+        object_include_patterns=("filtermods.core.run",),
+    )
+    assert [module.name for module in include_api.modules] == ["filtermods.core"]
+    assert include_api.find("filtermods.core.run") is not None
+    assert include_api.find("filtermods.experimental.preview") is None
 
 
 def test_collect_api_accepts_utf8_bom_pyproject_and_sources(tmp_path: Path) -> None:
@@ -1537,6 +1552,7 @@ def test_apidoc_cli_filters_check_and_snapshot(tmp_path: Path) -> None:
         public_policy="underscore",
         module_include_patterns=("filterpkg.core",),
         module_exclude_patterns=("filterpkg.legacy",),
+        object_exclude_patterns=("*.Worker.process",),
     ).write_json(config_path)
     pyproject_config_path.write_text(
         "\n".join(
@@ -1546,6 +1562,7 @@ def test_apidoc_cli_filters_check_and_snapshot(tmp_path: Path) -> None:
                 'public-policy = "underscore"',
                 'module-include-patterns = ["filterpkg.core"]',
                 'module-exclude-patterns = ["filterpkg.legacy"]',
+                'object-exclude-patterns = ["*.Worker.process"]',
                 'profile = "website"',
                 'formats = ["html"]',
                 f'out = "{configured_build_dir.as_posix()}"',
@@ -1597,12 +1614,15 @@ def test_apidoc_cli_filters_check_and_snapshot(tmp_path: Path) -> None:
             "filterpkg.core",
             "--module-exclude",
             "filterpkg.legacy",
+            "--object-exclude",
+            "*.Worker.process",
             "--out",
             str(collected_json),
         ]
     ) == 0
     collected = json.loads(collected_json.read_text(encoding="utf-8"))
     assert [module["name"] for module in collected["modules"]] == ["filterpkg.core"]
+    assert collected["modules"][0]["members"][0]["members"] == []
 
     assert main(
         [
@@ -1618,6 +1638,7 @@ def test_apidoc_cli_filters_check_and_snapshot(tmp_path: Path) -> None:
     configured = json.loads(config_json.read_text(encoding="utf-8"))
     assert [module["name"] for module in configured["modules"]] == ["filterpkg.core"]
     assert configured["metadata"]["collector"] == "inspect"
+    assert configured["modules"][0]["members"][0]["members"] == []
 
     assert main(
         [
@@ -1633,6 +1654,7 @@ def test_apidoc_cli_filters_check_and_snapshot(tmp_path: Path) -> None:
     pyproject_configured = json.loads(pyproject_config_json.read_text(encoding="utf-8"))
     assert [module["name"] for module in pyproject_configured["modules"]] == ["filterpkg.core"]
     assert pyproject_configured["metadata"]["collector"] == "inspect"
+    assert pyproject_configured["modules"][0]["members"][0]["members"] == []
 
     assert main(
         [

@@ -67,6 +67,7 @@ The same build defaults can live in `pyproject.toml`:
 collector = "griffe"
 public-policy = "__all__"
 docstring-style = "auto"
+object-exclude-patterns = ["render_to_docx", "render_to_pdf", "render_to_html"]
 profile = "website"
 formats = ["html"]
 out = "artifacts/api"
@@ -102,6 +103,14 @@ Filtered builds apply the selected profile to both the summary table and the
 rendered object sections. For example, `--profile website` produces summary
 table links that point at the generated object section anchors.
 
+Object include/exclude filters are applied after collection and match either a
+fully qualified name or the local object name:
+
+```powershell
+python -m oodocs apidoc build . --object-exclude render_to_pdf --object-exclude render_to_html --out artifacts/api
+python -m oodocs apidoc collect . --object-include mypkg.Client --out artifacts/client-api.json
+```
+
 Snapshot and diff:
 
 ```powershell
@@ -118,9 +127,12 @@ Common collection options are `--collector`, `--public-policy`,
 `--explicit-name`, `--docstring-style`, `--docstring-parser-module`,
 `--include-imported`, `--config`, `--include-inherited`,
 `--class-signature-from-init`, `--no-class-signature-from-init`,
-`--module-include`, and `--module-exclude`.
+`--module-include`, `--module-exclude`, `--object-include`, and
+`--object-exclude`.
 Module include/exclude patterns are applied before module contents are
-collected, while `check`, `build`, and `snapshot` also accept `--kind` and
+collected. Object include/exclude patterns are applied after collection and can
+remove public-but-internal hooks such as renderer adapters from the generated
+tree. `check`, `build`, and `snapshot` also accept `--kind` and
 `--module-prefix` object filters after collection. `check` also accepts
 `--fail-under`, `--require-examples`, `--require-renderer-notes`, `--out-json`,
 and `--out-csv`. `build` also accepts `--profile`, `--to`, `--stem`,

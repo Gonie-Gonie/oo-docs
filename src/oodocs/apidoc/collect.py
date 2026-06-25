@@ -58,6 +58,8 @@ def collect_api(
     class_signature_from_init: bool | None = None,
     module_include_patterns: Iterable[str] | None = None,
     module_exclude_patterns: Iterable[str] | None = None,
+    object_include_patterns: Iterable[str] | None = None,
+    object_exclude_patterns: Iterable[str] | None = None,
 ) -> ApiPackage:
     """Collect a package or repository into an ``ApiPackage`` tree.
 
@@ -85,6 +87,10 @@ def collect_api(
             before collection.
         module_exclude_patterns: Optional glob-style module names to exclude
             before collection.
+        object_include_patterns: Optional glob-style object name or qualname
+            patterns to include after collection.
+        object_exclude_patterns: Optional glob-style object name or qualname
+            patterns to exclude after collection.
 
     Returns:
         Collected API package.
@@ -101,6 +107,7 @@ def collect_api(
             ".",
             public_policy="__all__",
             module_exclude_patterns=("mypkg.tests*",),
+            object_exclude_patterns=("render_to_pdf", "render_to_html"),
         )
         classes = api.select(kind="class", module_prefix="mypkg")
 
@@ -144,6 +151,12 @@ def collect_api(
         "module_exclude_patterns": tuple(module_exclude_patterns)
         if module_exclude_patterns is not None
         else None,
+        "object_include_patterns": tuple(object_include_patterns)
+        if object_include_patterns is not None
+        else None,
+        "object_exclude_patterns": tuple(object_exclude_patterns)
+        if object_exclude_patterns is not None
+        else None,
     }
     if explicit_names is not None:
         config_kwargs["explicit_names"] = normalize_explicit_names(explicit_names)
@@ -151,26 +164,27 @@ def collect_api(
     if resolved.collector == "inspect":
         from oodocs.apidoc.collect_inspect import collect_package_inspect
 
-        return collect_package_inspect(package, config=resolved)
-    if resolved.collector == "griffe":
+        api = collect_package_inspect(package, config=resolved)
+    elif resolved.collector == "griffe":
         from oodocs.apidoc.collect_griffe import collect_package_griffe
 
-        return collect_package_griffe(package, config=resolved)
-    try:
-        from oodocs.apidoc.collect_griffe import collect_package_griffe
+        api = collect_package_griffe(package, config=resolved)
+    else:
+        try:
+            from oodocs.apidoc.collect_griffe import collect_package_griffe
 
-        return collect_package_griffe(package, config=resolved)
-    except Exception as exc:  # pragma: no cover - fallback path is environment-sensitive.
-        fallback_config = replace(resolved, collector="inspect")
-        api = _collect_package_source(package, config=fallback_config)
-        api.issues.append(
-            ApiDocIssue(
-                "info",
-                "collector-auto-fallback",
-                f"Fell back to inspect-compatible source collection: {exc}",
+            api = collect_package_griffe(package, config=resolved)
+        except Exception as exc:  # pragma: no cover - fallback path is environment-sensitive.
+            fallback_config = replace(resolved, collector="inspect")
+            api = _collect_package_source(package, config=fallback_config)
+            api.issues.append(
+                ApiDocIssue(
+                    "info",
+                    "collector-auto-fallback",
+                    f"Fell back to inspect-compatible source collection: {exc}",
+                )
             )
-        )
-        return api
+    return _filter_collected_objects(api, config=resolved)
 
 
 def collect_module_api(
@@ -311,6 +325,121 @@ def _collect_package_source(
             "source_root": str(root),
         },
     )
+
+
+def _filter_collected_objects(api: ApiPackage, *, config: ApiCollectConfig) -> ApiPackage:
+    """Apply object include/exclude filters after collection."""
+
+    if not config.object_include_patterns and not config.object_exclude_patterns:
+        return api
+
+    modules: list[ApiModule] = []
+    selected_qualnames: set[str] = set()
+    for module in api.modules:
+        members = [
+            filtered
+            for member in module.members
+            if (
+                filtered := _filter_object_tree(
+                    member,
+                    config=config,
+                    include_ancestor=False,
+                )
+            )
+            is not None
+        ]
+        if not members:
+            continue
+        for member in members:
+            selected_qualnames.add(member.qualname)
+            selected_qualnames.update(child.qualname for child in member.iter_members(recursive=True))
+        modules.append(
+            ApiModule(
+                name=module.name,
+                members=members,
+                summary=module.summary,
+                description=module.description,
+                notes=list(module.notes),
+                warnings=list(module.warnings),
+                renderer_notes=list(module.renderer_notes),
+                source_path=module.source_path,
+                line_number=module.line_number,
+                end_line_number=module.end_line_number,
+                metadata=dict(module.metadata),
+            )
+        )
+
+    included_modules = {module.name for module in modules}
+    metadata = dict(api.metadata)
+    metadata["object_filters"] = {
+        "include": list(config.object_include_patterns),
+        "exclude": list(config.object_exclude_patterns),
+    }
+    return ApiPackage(
+        api.name,
+        version=api.version,
+        modules=modules,
+        issues=[
+            issue
+            for issue in api.issues
+            if _issue_matches_object_filters(issue, selected_qualnames, included_modules)
+        ],
+        metadata=metadata,
+    )
+
+
+def _filter_object_tree(
+    obj: ApiObject,
+    *,
+    config: ApiCollectConfig,
+    include_ancestor: bool,
+) -> ApiObject | None:
+    if _matches_any_object_pattern(obj, config.object_exclude_patterns):
+        return None
+
+    include_match = (
+        not config.object_include_patterns
+        or _matches_any_object_pattern(obj, config.object_include_patterns)
+    )
+    include_descendants = include_ancestor or include_match
+    members = [
+        filtered
+        for member in obj.members
+        if (
+            filtered := _filter_object_tree(
+                member,
+                config=config,
+                include_ancestor=include_descendants,
+            )
+        )
+        is not None
+    ]
+    if not include_descendants and not members:
+        return None
+
+    clone = ApiObject.from_dict(obj.to_dict())
+    clone.members = members
+    return clone
+
+
+def _matches_any_object_pattern(obj: ApiObject, patterns: tuple[str, ...]) -> bool:
+    return any(
+        fnmatch.fnmatchcase(obj.qualname, pattern)
+        or fnmatch.fnmatchcase(obj.name, pattern)
+        for pattern in patterns
+    )
+
+
+def _issue_matches_object_filters(
+    issue: ApiDocIssue,
+    selected_qualnames: set[str],
+    included_modules: set[str],
+) -> bool:
+    if issue.qualname:
+        return issue.qualname in selected_qualnames
+    if issue.module:
+        return issue.module in included_modules
+    return True
 
 
 def _collect_module_from_file(
