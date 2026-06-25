@@ -44,6 +44,9 @@ class ApiDocProfile:
         review_note_initials: Optional initials for generated inline comments.
         max_signature_width: Optional maximum line width for rendered
             signature code blocks.
+        max_signature_lines: Optional maximum number of rendered signature
+            lines. Long signatures are truncated with an ellipsis after
+            wrapping.
         signature_wrap_indent: Indentation used for wrapped signature
             parameters.
 
@@ -82,6 +85,7 @@ class ApiDocProfile:
     review_note_author: str | None = None
     review_note_initials: str | None = None
     max_signature_width: int | None = None
+    max_signature_lines: int | None = None
     signature_wrap_indent: str = "    "
 
     @classmethod
@@ -113,6 +117,7 @@ class ApiDocProfile:
             name="compact",
             include_member_sections=False,
             max_signature_width=88,
+            max_signature_lines=24,
             max_description_chars=180,
             max_examples=1,
             parameter_columns=("name", "type", "description"),
@@ -146,6 +151,7 @@ class ApiDocProfile:
             include_renderer_notes=True,
             include_member_sections=False,
             max_signature_width=88,
+            max_signature_lines=20,
             max_description_chars=120,
             parameter_columns=("name", "type", "description"),
         )
@@ -211,6 +217,7 @@ class ApiDocProfile:
             "review_note_author": self.review_note_author,
             "review_note_initials": self.review_note_initials,
             "max_signature_width": self.max_signature_width,
+            "max_signature_lines": self.max_signature_lines,
             "signature_wrap_indent": self.signature_wrap_indent,
         }
 

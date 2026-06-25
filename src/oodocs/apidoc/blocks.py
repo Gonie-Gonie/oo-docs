@@ -115,6 +115,7 @@ def api_signature_block(
         width=resolved.max_signature_width,
         indent=resolved.signature_wrap_indent,
     )
+    signature = _truncate_lines(signature, resolved.max_signature_lines)
     return CodeBlock(signature, language="python")
 
 
@@ -488,6 +489,15 @@ def _truncate(value: str, limit: int | None) -> str:
     if limit is None or len(value) <= limit:
         return value
     return value[: max(0, limit - 3)].rstrip() + "..."
+
+
+def _truncate_lines(value: str, limit: int | None) -> str:
+    if limit is None:
+        return value
+    lines = value.splitlines()
+    if len(lines) <= limit:
+        return value
+    return "\n".join([*lines[: max(0, limit - 1)], "..."])
 
 
 def _wrap_signature(signature: str, *, width: int | None, indent: str) -> str:

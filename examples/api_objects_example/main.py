@@ -94,7 +94,7 @@ def main() -> None:
     full_reference = build_full_package_document(api)
     document = build_document(api, coverage)
 
-    full_reference.save_html(ARTIFACT_DIR / f"{FULL_REFERENCE_STEM}.html")
+    full_reference.save_all(ARTIFACT_DIR, stem=FULL_REFERENCE_STEM)
     document.save_all(ARTIFACT_DIR, stem=COMPOSITION_STEM)
     api.write_json(ARTIFACT_DIR / f"{COMPOSITION_STEM}.json")
     coverage.write_csv(ARTIFACT_DIR / "oodocs-api-coverage.csv")

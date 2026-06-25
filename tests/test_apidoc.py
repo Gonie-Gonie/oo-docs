@@ -362,6 +362,19 @@ def test_api_doc_profiles_wrap_long_signature_blocks() -> None:
         ") -> dict[str, object]",
     ]
     assert ApiDocProfile.from_dict(ApiDocProfile.compact().to_dict()).max_signature_width == 88
+    assert ApiDocProfile.from_dict(ApiDocProfile.compact().to_dict()).max_signature_lines == 24
+
+    long_signature = ApiObject(
+        kind="function",
+        name="many",
+        qualname="pkg.many",
+        module="pkg",
+        signature="pkg.many(" + ", ".join(f"value_{index}: str" for index in range(40)) + ")",
+    )
+    truncated = long_signature.to_signature_block(profile=ApiDocProfile.compact())
+    assert truncated is not None
+    assert len(truncated.code.splitlines()) == 24
+    assert truncated.code.splitlines()[-1] == "..."
 
 
 def test_api_examples_escape_xml_incompatible_control_chars(tmp_path: Path) -> None:
@@ -997,13 +1010,14 @@ def test_api_objects_example_builds_full_reference_and_composable_document(
     coverage = check_api_docs(api)
     full_reference = example.build_full_package_document(api)
     composition = example.build_document(api, coverage)
-    full_html = tmp_path / "full-reference.html"
 
-    full_reference.save_html(full_html)
+    outputs = full_reference.save_all(tmp_path, stem="full-reference")
 
-    assert full_reference.validate(formats=("html",)).ok
+    assert set(outputs) == {"docx", "pdf", "html"}
+    assert all(path.exists() for path in outputs.values())
+    assert full_reference.validate(formats=("docx", "pdf", "html")).ok
     assert composition.validate(formats=("html",)).ok
-    html = full_html.read_text(encoding="utf-8")
+    html = outputs["html"].read_text(encoding="utf-8")
     assert "examplepkg.Widget" in html
     assert "examplepkg.run" in html
     assert any(
