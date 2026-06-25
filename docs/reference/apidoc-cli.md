@@ -92,6 +92,15 @@ docstring-style = "brief"
 docstring-parser-modules = ["mypkg.docs_parsers"]
 ```
 
+The same parser hook can be supplied directly on the command line. When the
+target is a repository path, `apidoc` temporarily adds that repository root,
+its `src/` directory when present, and the package parent to Python's import
+path while loading parser modules:
+
+```powershell
+python -m oodocs apidoc build . --docstring-parser-module docs_parsers --docstring-style brief --out artifacts/api
+```
+
 Limit nested API heading depth for larger repositories:
 
 ```powershell

@@ -1,6 +1,11 @@
 from __future__ import annotations
 
-from apidoc_samples import write_private_package, write_sample_package, write_setuptools_package_dir_repo
+from apidoc_samples import (
+    write_custom_docstring_parser_repo,
+    write_private_package,
+    write_sample_package,
+    write_setuptools_package_dir_repo,
+)
 import pytest
 
 from oodocs.apidoc import ApiPackage
@@ -239,3 +244,40 @@ def test_apidoc_cli_can_include_private_objects(tmp_path) -> None:
     assert helper.visibility == "protected"
     assert debug is not None
     assert debug.visibility == "protected"
+
+
+def test_apidoc_cli_loads_repo_local_docstring_parser_module_option(
+    tmp_path,
+) -> None:
+    repo = write_custom_docstring_parser_repo(tmp_path)
+    output_path = tmp_path / "briefpkg-api.json"
+
+    assert (
+        main(
+            [
+                "apidoc",
+                "collect",
+                str(repo),
+                "--collector",
+                "inspect",
+                "--public-policy",
+                "__all__",
+                "--docstring-parser-module",
+                "example_brief_parsers",
+                "--docstring-style",
+                "example-brief",
+                "--out",
+                str(output_path),
+            ]
+        )
+        == 0
+    )
+
+    api = ApiPackage.read_json(output_path)
+    runner = api.find("briefpkg.Runner")
+    function = api.find("briefpkg.run")
+
+    assert runner is not None
+    assert runner.summary == "brief:Runner class."
+    assert function is not None
+    assert function.summary == "brief:Run custom command."
