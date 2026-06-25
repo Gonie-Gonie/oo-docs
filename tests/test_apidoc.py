@@ -637,6 +637,10 @@ def test_collect_api_exposes_docstring_parser_issues_in_issue_table(tmp_path: Pa
         row[1].content.plain_text() == "docstring-style-mismatch"
         for row in issue_table.rows
     )
+    function = api.find("stylepkg.load")
+    assert function is not None
+    assert function.to_issue_rows() == function.to_doc_issue_rows()
+    assert any(row[1] == "docstring-style-mismatch" for row in function.to_issue_rows())
 
 
 def test_collect_api_supports_src_layout_repo_reexports_and_deep_object_lookup(

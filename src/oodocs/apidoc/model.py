@@ -1095,6 +1095,17 @@ class ApiObject:
         Returns:
             Rows converted from parser or merge diagnostics stored in
             ``metadata["issues"]``.
+
+        Examples:
+            Add object-local parser diagnostics to a review table:
+
+            ```python
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".", docstring_style="google")
+            obj = api.functions()[0]
+            issue_rows = obj.to_doc_issue_rows()
+            ```
         """
 
         rows: list[list[object]] = []
@@ -1102,6 +1113,49 @@ class ApiObject:
             if isinstance(item, dict):
                 rows.append(ApiDocIssue.from_dict(item).to_row())
         return rows
+
+    def to_issue_rows(self) -> list[list[object]]:
+        """Return object-local diagnostics as stable issue table rows.
+
+        This is the public, checklist-aligned alias for
+        ``to_doc_issue_rows()``. It preserves the same row shape used by
+        ``ApiPackage.to_issue_table(...)`` and coverage CSV sidecars.
+
+        Returns:
+            Rows converted from parser or collection diagnostics stored in this
+            object's metadata.
+
+        Examples:
+            Insert object-local parser issues into a custom evidence document:
+
+            ```python
+            from oodocs import Chapter, Document, Table
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".", docstring_style="google")
+            obj = api.functions()[0]
+            rows = obj.to_issue_rows()
+            doc = Document(
+                "API Evidence",
+                Chapter(
+                    "Parser Issues",
+                    Table(
+                        [
+                            "Severity",
+                            "Code",
+                            "Object",
+                            "Module",
+                            "Location",
+                            "Message",
+                        ],
+                        rows,
+                    ),
+                ),
+            )
+            ```
+        """
+
+        return self.to_doc_issue_rows()
 
 
 @dataclass(slots=True)
