@@ -19,6 +19,16 @@ def table_from_records(records: Sequence[object], **kwargs: object) -> Table:
 
     Returns:
         Table built from the supplied records.
+
+    Examples:
+        ```python
+        from oodocs.adapters import table_from_records
+
+        table = table_from_records(
+            [{"name": "docx", "status": "passed"}],
+            caption="Renderer status",
+        )
+        ```
     """
 
     return Table.from_records(records, **kwargs)
@@ -36,6 +46,13 @@ def table_from_csv(path: PathLike, **kwargs: object) -> Table:
 
     Raises:
         FileNotFoundError: If ``path`` does not exist.
+
+    Examples:
+        ```python
+        from oodocs.adapters import table_from_csv
+
+        table = table_from_csv("artifacts/evidence/results.csv")
+        ```
     """
 
     return Table.from_csv(path, **kwargs)
@@ -53,6 +70,13 @@ def table_from_tsv(path: PathLike, **kwargs: object) -> Table:
 
     Raises:
         FileNotFoundError: If ``path`` does not exist.
+
+    Examples:
+        ```python
+        from oodocs.adapters import table_from_tsv
+
+        table = table_from_tsv("data/summary.tsv", caption="Summary rows")
+        ```
     """
 
     return Table.from_tsv(path, **kwargs)

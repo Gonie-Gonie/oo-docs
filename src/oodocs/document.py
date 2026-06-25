@@ -30,6 +30,19 @@ class Document:
             rendering settings.
         citations: Bibliography metadata supplied as a library, a sequence of
             ``CitationSource`` objects, or BibTeX text.
+
+    Examples:
+        Build a small document and write multiple formats:
+
+        ```python
+        from oodocs import Chapter, Document, Paragraph
+
+        doc = Document(
+            "Quarterly Review",
+            Chapter("Summary", Paragraph("Revenue grew 12%.")),
+        )
+        outputs = doc.save_all("dist", formats=("docx", "html"))
+        ```
     """
 
     title: str
@@ -61,6 +74,15 @@ class Document:
 
         Returns:
             This document, enabling fluent construction.
+
+        Examples:
+            ```python
+            from oodocs import Chapter, Document, Paragraph
+
+            doc = Document("Plan").add(
+                Chapter("Scope", Paragraph("Ship the first milestone."))
+            )
+            ```
         """
 
         self.body.add(*children)
@@ -74,6 +96,15 @@ class Document:
 
         Returns:
             This document, enabling fluent construction.
+
+        Examples:
+            ```python
+            from oodocs import Document, Paragraph
+
+            doc = Document("Log").extend(
+                [Paragraph("Started."), Paragraph("Finished.")]
+            )
+            ```
         """
 
         self.body.extend(children)
@@ -107,6 +138,14 @@ class Document:
 
         Returns:
             A document built from the Markdown source.
+
+        Examples:
+            ```python
+            from oodocs import Document
+
+            doc = Document.from_markdown("# Overview\n\nImported content.")
+            doc.save_html("overview.html")
+            ```
         """
 
         from oodocs.importers.markdown import from_markdown
@@ -147,6 +186,13 @@ class Document:
 
         Returns:
             A document built from the Markdown file.
+
+        Examples:
+            ```python
+            from oodocs import Document
+
+            doc = Document.from_markdown_file("README.md", title="Project Notes")
+            ```
         """
 
         from oodocs.importers.markdown import from_markdown_file
@@ -202,6 +248,16 @@ class Document:
 
         Returns:
             A document built from the notebook.
+
+        Examples:
+            ```python
+            from oodocs import Document, NotebookImportOptions
+
+            doc = Document.from_ipynb(
+                "analysis.ipynb",
+                options=NotebookImportOptions(max_output_lines=20),
+            )
+            ```
         """
 
         from oodocs.importers.notebook import from_ipynb
@@ -232,6 +288,11 @@ class Document:
 
         Returns:
             A ``(front_matter, main_matter)`` tuple.
+
+        Notes:
+            Renderers use this split to separate cover/front matter from the
+            numbered body when page numbering or cover-page behavior requires
+            different sections.
         """
 
         for index, child in enumerate(self.body.children):
@@ -260,6 +321,13 @@ class Document:
         Raises:
             DocumentValidationError: If ``raise_on_error`` is true and the
                 document has blocking errors for the requested formats.
+
+        Examples:
+            ```python
+            result = doc.validate(formats=("pdf", "html"))
+            if not result.ok:
+                print(result.format_table())
+            ```
         """
 
         from oodocs.validation import validate_document
@@ -286,6 +354,11 @@ class Document:
 
         Returns:
             The written output path.
+
+        Examples:
+            ```python
+            doc.save_docx("report.docx")
+            ```
         """
 
         if validate:
@@ -304,6 +377,11 @@ class Document:
 
         Returns:
             The written output path.
+
+        Examples:
+            ```python
+            doc.save_pdf("report.pdf")
+            ```
         """
 
         if validate:
@@ -322,6 +400,11 @@ class Document:
 
         Returns:
             The written output path.
+
+        Examples:
+            ```python
+            doc.save_html("report.html")
+            ```
         """
 
         if validate:
@@ -347,6 +430,12 @@ class Document:
 
         Raises:
             ValueError: If the extension is not a supported output format.
+
+        Examples:
+            ```python
+            doc.save("report.pdf")
+            doc.save("report.html")
+            ```
         """
 
         output_format = normalize_output_format(Path(path).suffix)
@@ -381,6 +470,12 @@ class Document:
 
         Returns:
             A mapping from normalized format name to the written path.
+
+        Examples:
+            ```python
+            outputs = doc.save_all("dist", stem="release-notes")
+            print(outputs["pdf"])
+            ```
         """
 
         directory = Path(output_dir)

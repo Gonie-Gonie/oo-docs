@@ -25,6 +25,12 @@ class RenderedOutputs:
 
     Attributes:
         outputs: Mapping from normalized output format to written file path.
+
+    Examples:
+        ```python
+        rendered = convert_source("notes.md", "dist", formats=("pdf",))
+        print(rendered["pdf"])
+        ```
     """
 
     outputs: dict[OutputFormat, Path]
@@ -81,6 +87,13 @@ def load_document(
     Raises:
         ValueError: If the source type is unsupported or the source does not
             expose a document.
+
+    Examples:
+        ```python
+        from oodocs.workflows import load_document
+
+        doc = load_document("report.md", title="Imported Report")
+        ```
     """
 
     source_path = Path(source)
@@ -121,6 +134,15 @@ def load_python_document(
         ValueError: If no document is exposed by the module.
         AttributeError: If an explicit factory name is missing.
         TypeError: If the selected candidate is not a document.
+
+    Examples:
+        Load a module-level ``document`` variable or explicit factory:
+
+        ```python
+        from oodocs.workflows import load_python_document
+
+        doc = load_python_document("reports/monthly.py", factory="build")
+        ```
     """
 
     source_path = Path(source).resolve()
@@ -161,6 +183,19 @@ def render_document(
 
     Returns:
         Paths written by the render workflow.
+
+    Examples:
+        ```python
+        from oodocs import Document, Paragraph
+        from oodocs.workflows import render_document
+
+        rendered = render_document(
+            Document("Memo", Paragraph("Ready.")),
+            "dist",
+            stem="memo",
+            formats=("html",),
+        )
+        ```
     """
 
     output_path = Path(output_dir)
@@ -202,6 +237,13 @@ def build_python_document(
 
     Returns:
         Paths written by the build workflow.
+
+    Examples:
+        ```python
+        from oodocs.workflows import build_python_document
+
+        outputs = build_python_document("reports/monthly.py", "dist", formats=("pdf",))
+        ```
     """
 
     source_path = Path(source).resolve()
@@ -243,6 +285,13 @@ def convert_source(
 
     Returns:
         Paths written by the conversion workflow.
+
+    Examples:
+        ```python
+        from oodocs.workflows import convert_source
+
+        outputs = convert_source("notes.md", "dist", formats=("docx", "html"))
+        ```
     """
 
     source_path = Path(source)
@@ -280,6 +329,14 @@ def validate_source(
 
     Returns:
         Validation issues for the loaded source document.
+
+    Examples:
+        ```python
+        from oodocs.workflows import validate_source
+
+        result = validate_source("notes.md", formats=("pdf",))
+        assert result.ok_for(("pdf",))
+        ```
     """
 
     source_path = Path(source)

@@ -24,6 +24,17 @@ def section_from_manifest(path: PathLike) -> Section:
     Raises:
         FileNotFoundError: If ``path`` does not exist.
         json.JSONDecodeError: If the file is not valid JSON.
+
+    Examples:
+        ```python
+        from oodocs import Document
+        from oodocs.adapters import section_from_manifest
+
+        doc = Document(
+            "Build Manifest",
+            section_from_manifest("artifacts/evidence/reproducibility-manifest.json"),
+        )
+        ```
     """
 
     source_path = Path(path)

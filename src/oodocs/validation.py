@@ -71,6 +71,19 @@ class ValidationIssue:
         message: Human-readable explanation.
         path: Dotted path to the document node that triggered the issue.
         formats: Output formats affected by this issue.
+
+    Examples:
+        ```python
+        from oodocs.validation import ValidationIssue
+
+        issue = ValidationIssue(
+            "warning",
+            "custom-warning",
+            "Something should be reviewed.",
+            formats=("html",),
+        )
+        assert issue.applies_to(("html",))
+        ```
     """
 
     severity: ValidationSeverity
@@ -120,6 +133,13 @@ class ValidationResult:
 
     Attributes:
         issues: Validation issues in discovery order.
+
+    Examples:
+        ```python
+        result = doc.validate(formats=("docx", "pdf"))
+        if not result.ok:
+            print(result.to_json(formats=("pdf",)))
+        ```
     """
 
     issues: tuple[ValidationIssue, ...] = ()
@@ -323,6 +343,16 @@ class DocumentValidationError(OODocsError):
     Args:
         result: Validation result or raw validation issues.
         formats: Output formats whose errors should block rendering.
+
+    Examples:
+        ```python
+        from oodocs.validation import DocumentValidationError
+
+        try:
+            doc.validate(raise_on_error=True, formats=("pdf",))
+        except DocumentValidationError as exc:
+            print(exc.errors)
+        ```
     """
 
     result: ValidationResult
@@ -391,6 +421,14 @@ def validate_document(
     Raises:
         DocumentValidationError: If ``raise_on_error`` is true and the document
             has blocking errors for the requested formats.
+
+    Examples:
+        ```python
+        from oodocs.validation import validate_document
+
+        result = validate_document(doc, formats=("html",))
+        print(result.format_table())
+        ```
     """
 
     result = ValidationResult(tuple(_ValidationContext(document).validate()))

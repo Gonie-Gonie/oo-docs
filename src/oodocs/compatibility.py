@@ -23,6 +23,12 @@ class CompatibilityNote:
         code: Stable validation code.
         message: User-facing compatibility message.
         formats: Output formats affected by the note.
+
+    Examples:
+        ```python
+        note = compatibility_note("html-toc-page-numbers")
+        print(note.formats)
+        ```
     """
 
     code: str
@@ -53,6 +59,12 @@ def compatibility_note(code: str) -> CompatibilityNote:
 
     Raises:
         KeyError: If ``code`` is unknown.
+
+    Examples:
+        ```python
+        note = compatibility_note("html-toc-page-numbers")
+        assert note.formats == ("html",)
+        ```
     """
 
     try:
@@ -72,6 +84,12 @@ def normalize_output_format(value: str) -> OutputFormat:
 
     Raises:
         ValueError: If ``value`` is not a supported output format.
+
+    Examples:
+        ```python
+        normalize_output_format(".htm")
+        # "html"
+        ```
     """
 
     normalized = value.lower().strip().removeprefix(".")
@@ -98,6 +116,12 @@ def normalize_output_formats(
 
     Raises:
         ValueError: If any value is not a supported output format.
+
+    Examples:
+        ```python
+        normalize_output_formats([".pdf", "html", "pdf"])
+        # ("pdf", "html")
+        ```
     """
 
     if values is None:
@@ -122,6 +146,12 @@ def format_output_formats(formats: Iterable[OutputFormat]) -> str:
 
     Returns:
         ``"All"``, ``"None"``, or a slash-separated list of format labels.
+
+    Examples:
+        ```python
+        format_output_formats(("pdf", "html"))
+        # "PDF/HTML"
+        ```
     """
 
     normalized = normalize_output_formats(formats)

@@ -106,6 +106,18 @@ def parse_markdown(
         ImportPolicyError: If strict import policy rejects collected issues.
         ValueError: If shifting a heading would move it outside supported
             section levels.
+
+    Examples:
+        Parse editable blocks and inspect lossy-import diagnostics:
+
+        ```python
+        from oodocs.importers.markdown import parse_markdown
+        from oodocs.importers.results import ImportResult
+
+        result = parse_markdown("# Intro\n\nRaw <span>HTML</span>", diagnostics=True)
+        assert isinstance(result, ImportResult)
+        print(result.format_issues())
+        ```
     """
 
     parser = _MarkdownParser(
@@ -172,6 +184,16 @@ def from_markdown(
         ImportPolicyError: If strict import policy rejects collected issues.
         ValueError: If shifting a heading would move it outside supported
             section levels.
+
+    Examples:
+        Convert Markdown directly to a renderable document:
+
+        ```python
+        from oodocs.importers.markdown import from_markdown
+
+        doc = from_markdown("# Release Notes\n\n- Added importer diagnostics.")
+        doc.save("release-notes.html")
+        ```
     """
 
     parser = _MarkdownParser(
@@ -232,6 +254,13 @@ def parse_markdown_file(
     Raises:
         FileNotFoundError: If ``path`` does not exist.
         ImportPolicyError: If strict import policy rejects collected issues.
+
+    Examples:
+        ```python
+        from oodocs.importers.markdown import parse_markdown_file
+
+        blocks = parse_markdown_file("docs/overview.md", numbered=False)
+        ```
     """
 
     source_path = Path(path).resolve()
@@ -281,6 +310,13 @@ def from_markdown_file(
     Raises:
         FileNotFoundError: If ``path`` does not exist.
         ImportPolicyError: If strict import policy rejects collected issues.
+
+    Examples:
+        ```python
+        from oodocs.importers.markdown import from_markdown_file
+
+        doc = from_markdown_file("docs/overview.md", toc=True)
+        ```
     """
 
     source_path = Path(path).resolve()

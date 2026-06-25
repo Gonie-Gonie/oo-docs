@@ -25,6 +25,15 @@ def section_from_github_workflow(path: PathLike) -> Section:
     Raises:
         FileNotFoundError: If ``path`` does not exist.
         ImportError: If PyYAML is not installed.
+
+    Examples:
+        ```python
+        from oodocs import Document
+        from oodocs.adapters import section_from_github_workflow
+
+        section = section_from_github_workflow(".github/workflows/release.yml")
+        doc = Document("Release Workflow", section)
+        ```
     """
 
     source_path = Path(path)

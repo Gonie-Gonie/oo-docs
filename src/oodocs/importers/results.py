@@ -23,6 +23,16 @@ class ImportIssue:
         message: Human-readable diagnostic message.
         line: Optional 1-based source line where the issue occurred.
         source: Optional source label, such as a file path or notebook cell.
+
+    Examples:
+        ```python
+        issue = ImportIssue(
+            "warning",
+            "raw-html-unsupported",
+            "Raw HTML was imported as plain text.",
+            line=4,
+        )
+        ```
     """
 
     severity: ImportSeverity
@@ -54,6 +64,13 @@ class ImportResult:
     Attributes:
         blocks: Imported OODocs block objects.
         issues: Diagnostics collected while importing the source.
+
+    Examples:
+        ```python
+        result = parse_markdown("# Title", diagnostics=True)
+        if result.warnings():
+            print(result.format_issues())
+        ```
     """
 
     blocks: tuple[Block, ...]
@@ -127,6 +144,12 @@ def normalize_import_policy(value: str) -> ImportPolicy:
     Raises:
         ValueError: If ``value`` is not one of ``"lossy"``, ``"warn"``, or
             ``"strict"``.
+
+    Examples:
+        ```python
+        normalize_import_policy(" STRICT ")
+        # "strict"
+        ```
     """
 
     normalized = value.strip().lower()

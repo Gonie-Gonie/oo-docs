@@ -65,6 +65,12 @@ def normalize_color(value: str | None) -> str | None:
 
     Raises:
         ValueError: If the supplied value is not a six-digit hex color.
+
+    Examples:
+        ```python
+        normalize_color("#1f77b4")
+        # "1F77B4"
+        ```
     """
 
     if value is None:
@@ -87,6 +93,12 @@ def normalize_length_unit(value: str) -> str:
 
     Raises:
         ValueError: If ``value`` is not a supported length unit.
+
+    Examples:
+        ```python
+        normalize_length_unit("CM")
+        # "cm"
+        ```
     """
 
     normalized = value.strip().lower()
@@ -107,6 +119,12 @@ def length_to_inches(value: float, unit: str) -> float:
 
     Raises:
         ValueError: If ``unit`` is not supported.
+
+    Examples:
+        ```python
+        length_to_inches(2.54, "cm")
+        # 1.0
+        ```
     """
 
     return float(value) * UNIT_TO_INCHES[normalize_length_unit(unit)]
@@ -124,6 +142,12 @@ def inches_to_length(value: float, unit: str) -> float:
 
     Raises:
         ValueError: If ``unit`` is not supported.
+
+    Examples:
+        ```python
+        inches_to_length(1, "cm")
+        # 2.54
+        ```
     """
 
     return float(value) / UNIT_TO_INCHES[normalize_length_unit(unit)]
@@ -140,6 +164,12 @@ def normalize_counter_format(value: str) -> str:
 
     Raises:
         ValueError: If ``value`` is not a supported counter format.
+
+    Examples:
+        ```python
+        normalize_counter_format("Upper-Roman")
+        # "upper-roman"
+        ```
     """
 
     normalized = value.strip().lower()
@@ -159,6 +189,12 @@ def normalize_text_alignment(value: str) -> str:
 
     Raises:
         ValueError: If ``value`` is not a supported horizontal alignment.
+
+    Examples:
+        ```python
+        normalize_text_alignment("Center")
+        # "center"
+        ```
     """
 
     normalized = value.strip().lower()
@@ -179,6 +215,12 @@ def normalize_vertical_alignment(value: str) -> str:
 
     Raises:
         ValueError: If ``value`` is not a supported vertical alignment.
+
+    Examples:
+        ```python
+        normalize_vertical_alignment("center")
+        # "middle"
+        ```
     """
 
     normalized = value.strip().lower()
@@ -244,6 +286,14 @@ def format_counter_value(value: int, counter_format: str, *, bullet: str = "\u20
     Raises:
         ValueError: If ``counter_format`` is unsupported, or if an alphabetic
             or roman counter receives a value smaller than one.
+
+    Examples:
+        ```python
+        format_counter_value(4, "upper-roman")
+        # "IV"
+        format_counter_value(27, "lower-alpha")
+        # "aa"
+        ```
     """
 
     normalized = normalize_counter_format(counter_format)

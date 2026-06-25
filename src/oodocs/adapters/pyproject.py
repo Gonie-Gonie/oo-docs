@@ -24,6 +24,14 @@ def section_from_pyproject(path: PathLike = "pyproject.toml") -> Section:
     Raises:
         FileNotFoundError: If ``path`` does not exist.
         tomllib.TOMLDecodeError: If the file is not valid TOML.
+
+    Examples:
+        ```python
+        from oodocs import Document
+        from oodocs.adapters import section_from_pyproject
+
+        doc = Document("Package Metadata", section_from_pyproject())
+        ```
     """
 
     source_path = Path(path)

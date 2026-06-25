@@ -37,6 +37,16 @@ class NotebookImportOptions:
         max_output_lines: Optional maximum number of text output lines.
         image_caption: Optional format string used for image output captions.
         include_error_outputs: Whether error outputs should be imported.
+
+    Examples:
+        Limit noisy notebook outputs while keeping code and Markdown cells:
+
+        ```python
+        from oodocs import NotebookImportOptions, from_ipynb
+
+        options = NotebookImportOptions(max_output_lines=25, exclude_tags=("skip-doc",))
+        doc = from_ipynb("analysis.ipynb", options=options)
+        ```
     """
 
     include_outputs: bool = True
@@ -108,6 +118,17 @@ def parse_ipynb(
         ImportPolicyError: If strict import policy rejects collected issues.
         TypeError: If ``source`` is not a supported notebook source.
         ValueError: If options or shifted headings are invalid.
+
+    Examples:
+        Parse notebook blocks and collect diagnostics:
+
+        ```python
+        from oodocs.importers.notebook import parse_ipynb
+        from oodocs.importers.results import ImportResult
+
+        result = parse_ipynb("analysis.ipynb", diagnostics=True, include_outputs=False)
+        assert isinstance(result, ImportResult)
+        ```
     """
 
     notebook = _load_notebook(source)
@@ -252,6 +273,18 @@ def from_ipynb(
         ImportPolicyError: If strict import policy rejects collected issues.
         TypeError: If ``source`` is not a supported notebook source.
         ValueError: If options or shifted headings are invalid.
+
+    Examples:
+        ```python
+        from oodocs import NotebookImportOptions, from_ipynb
+
+        doc = from_ipynb(
+            "analysis.ipynb",
+            title="Analysis Report",
+            options=NotebookImportOptions(image_caption="Output {output_index}"),
+        )
+        doc.save_all("dist", formats=("pdf", "html"))
+        ```
     """
 
     notebook = _load_notebook(source)

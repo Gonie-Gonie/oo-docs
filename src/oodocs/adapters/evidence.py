@@ -45,6 +45,12 @@ class EvidenceBundle:
         document_outputs: Mapping from rendered document format to output path.
         machine_readable_files: CSV and JSON evidence files created or reused.
         checksum_file: SHA-256 checksum file for generated artifacts.
+
+    Examples:
+        ```python
+        bundle = build_release_evidence_bundle("artifacts/evidence")
+        print(bundle.document_outputs["pdf"])
+        ```
     """
 
     output_dir: Path
@@ -77,6 +83,14 @@ def build_release_evidence_document(
             mode.
         ImportError: If workflow parsing needs PyYAML and it is unavailable in
             strict mode.
+
+    Examples:
+        ```python
+        from oodocs.adapters import build_release_evidence_document
+
+        doc = build_release_evidence_document(strict=False)
+        doc.save_html("artifacts/evidence/report.html")
+        ```
     """
 
     evidence_path = Path(evidence_dir)
@@ -169,6 +183,14 @@ def build_release_evidence_bundle(
         FileNotFoundError: If strict mode rejects missing evidence inputs.
         ImportError: If workflow parsing needs PyYAML and it is unavailable in
             strict mode.
+
+    Examples:
+        ```python
+        from oodocs.adapters import build_release_evidence_bundle
+
+        bundle = build_release_evidence_bundle("artifacts/evidence", strict=False)
+        print(bundle.checksum_file)
+        ```
     """
 
     output_path = Path(output_dir)
