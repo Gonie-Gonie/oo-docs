@@ -115,6 +115,28 @@ class ApiDocProfile:
         Returns:
             Profile that truncates long descriptions, renders at most one
             example, and skips nested member detail sections.
+
+        Examples:
+            Use compact rendering for a release evidence appendix:
+
+            ```python
+            from oodocs import Chapter, Document
+            from oodocs.apidoc import collect_api
+            from oodocs.apidoc.styles import ApiDocProfile
+
+            api = collect_api(".")
+            functions = api.functions()
+            doc = Document(
+                "Release Evidence",
+                Chapter(
+                    "Function Summary",
+                    api.to_summary_table(
+                        functions,
+                        profile=ApiDocProfile.compact(),
+                    ),
+                ),
+            )
+            ```
         """
 
         return cls(
@@ -135,6 +157,28 @@ class ApiDocProfile:
         Returns:
             Profile that keeps examples and see-also content prominent while
             remaining suitable for insertion into an existing chapter.
+
+        Examples:
+            Insert selected API objects into a hand-authored guide:
+
+            ```python
+            from oodocs import Chapter, Document
+            from oodocs.apidoc import collect_api
+            from oodocs.apidoc.styles import ApiDocProfile
+
+            api = collect_api(".")
+            classes = api.select(kind="class", module_prefix="mypkg.widgets")
+            doc = Document(
+                "Widget Guide",
+                Chapter(
+                    "Reference Notes",
+                    *[
+                        item.to_section(level=2, profile=ApiDocProfile.manual())
+                        for item in classes
+                    ],
+                ),
+            )
+            ```
         """
 
         return cls(name="manual", include_source=False)
@@ -146,6 +190,27 @@ class ApiDocProfile:
         Returns:
             Profile that emphasizes source locations and summary tables while
             suppressing long prose and examples.
+
+        Examples:
+            Render a concise API appendix for release review:
+
+            ```python
+            from oodocs import Chapter, Document
+            from oodocs.apidoc import collect_api
+            from oodocs.apidoc.styles import ApiDocProfile
+
+            api = collect_api(".")
+            doc = Document(
+                "API Evidence",
+                Chapter(
+                    "Public API",
+                    *api.to_sections(
+                        profile=ApiDocProfile.evidence(),
+                        max_level=2,
+                    ),
+                ),
+            )
+            ```
         """
 
         return cls(
@@ -169,6 +234,18 @@ class ApiDocProfile:
 
         Returns:
             Profile that prefers editable tables and plain block structure.
+
+        Examples:
+            Build a DOCX-oriented API review copy:
+
+            ```python
+            from oodocs.apidoc import collect_api
+            from oodocs.apidoc.styles import ApiDocProfile
+
+            api = collect_api(".")
+            document = api.to_document(profile=ApiDocProfile.review())
+            document.save_docx("artifacts/api-review.docx")
+            ```
         """
 
         return cls(
@@ -191,6 +268,18 @@ class ApiDocProfile:
         Returns:
             Profile that preserves headings, anchors, source locations, and
             navigation-friendly member summaries.
+
+        Examples:
+            Render a reference tree with stable HTML anchors:
+
+            ```python
+            from oodocs.apidoc import collect_api
+            from oodocs.apidoc.styles import ApiDocProfile
+
+            api = collect_api(".")
+            document = api.to_document(profile=ApiDocProfile.website())
+            document.save_html("artifacts/api/index.html")
+            ```
         """
 
         return cls(name="website")
@@ -200,6 +289,15 @@ class ApiDocProfile:
 
         Returns:
             Dictionary containing every profile option.
+
+        Examples:
+            Store a custom profile beside an API sidecar:
+
+            ```python
+            from oodocs.apidoc.styles import ApiDocProfile
+
+            payload = ApiDocProfile.compact().to_dict()
+            ```
         """
 
         return {
@@ -239,6 +337,19 @@ class ApiDocProfile:
 
         Returns:
             Reconstructed profile object.
+
+        Examples:
+            Reuse a profile loaded from repository-local settings:
+
+            ```python
+            from oodocs.apidoc.styles import ApiDocProfile
+
+            profile = ApiDocProfile.from_dict({
+                "name": "compact",
+                "include_member_sections": False,
+                "parameter_columns": ["name", "type", "description"],
+            })
+            ```
         """
 
         values = dict(data)
@@ -294,6 +405,18 @@ def resolve_profile(profile: str | ApiDocProfile = "reference") -> ApiDocProfile
 
     Raises:
         ValueError: If a profile name is unknown.
+
+    Examples:
+        Normalize user input before passing a profile into rendering helpers:
+
+        ```python
+        from oodocs.apidoc import collect_api
+        from oodocs.apidoc.styles import resolve_profile
+
+        api = collect_api(".")
+        profile = resolve_profile("compact")
+        table = api.to_summary_table(profile=profile)
+        ```
     """
 
     if isinstance(profile, ApiDocProfile):
@@ -311,6 +434,15 @@ def profile_names() -> tuple[str, ...]:
 
     Returns:
         Sorted profile name tuple.
+
+    Examples:
+        Check whether a plugin registered a custom profile:
+
+        ```python
+        from oodocs.apidoc.styles import profile_names
+
+        assert "reference" in profile_names()
+        ```
     """
 
     return tuple(sorted(_PROFILES))
@@ -327,6 +459,20 @@ def normalize_parameter_columns(columns: Sequence[str]) -> tuple[str, ...]:
 
     Raises:
         ValueError: If an unsupported column is requested.
+
+    Examples:
+        Validate columns before building a custom profile:
+
+        ```python
+        from oodocs.apidoc.styles import ApiDocProfile, normalize_parameter_columns
+
+        profile = ApiDocProfile(
+            name="compact",
+            parameter_columns=normalize_parameter_columns(
+                ("name", "type", "description"),
+            ),
+        )
+        ```
     """
 
     allowed = {"name", "type", "default", "required", "description", "source"}
