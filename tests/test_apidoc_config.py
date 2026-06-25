@@ -4,6 +4,7 @@ import json
 
 import pytest
 
+from apidoc_samples import write_setuptools_find_repo
 from oodocs.apidoc import (
     ApiBuildConfig,
     ApiCollectConfig,
@@ -213,3 +214,62 @@ def test_apidoc_build_config_read_file_accepts_target_for_parser_modules(tmp_pat
     assert build.output_formats == ("html",)
     assert run is not None
     assert run.summary == "target-build:Run through target-aware build config."
+
+
+def test_apidoc_build_config_read_file_uses_setuptools_find_target_import_roots(tmp_path) -> None:
+    repo = write_setuptools_find_repo(
+        tmp_path,
+        repo_name="find-target-build-config-repo",
+        package_name="findtargetpkg",
+    )
+    parser_path = repo / "lib" / "findtargetpkg" / "docs_parsers.py"
+    parser_path.write_text(
+        "\n".join(
+            [
+                "from oodocs.apidoc import ParsedDocstring, docstring_parser_names, register_docstring_parser",
+                "",
+                "def parse_find_target_style(text, qualname=None, module=None):",
+                "    lines = (text or '').strip().splitlines()",
+                "    first = lines[0] if lines else ''",
+                "    summary = f'find-target:{first}' if first else None",
+                '    return ParsedDocstring(summary=summary, style="find-target-brief")',
+                "",
+                'if "find-target-brief" not in docstring_parser_names():',
+                '    register_docstring_parser("find-target-brief", parse_find_target_style)',
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    config_path = tmp_path / "external-find-build-config.json"
+    config_path.write_text(
+        json.dumps(
+            {
+                "collector": "inspect",
+                "public_policy": "__all__",
+                "docstring_style": "find-target-brief",
+                "docstring_parser_modules": ["findtargetpkg.docs_parsers"],
+                "profile": "compact",
+                "formats": ["html"],
+                "module_exclude_patterns": ["*.docs_parsers"],
+                "sidecars": True,
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    assert "find-target-brief" not in docstring_parser_names()
+    with pytest.raises(ImportError):
+        ApiBuildConfig.read_file(config_path)
+
+    build = ApiBuildConfig.read_file(config_path, target=repo)
+    api = build.collect(repo)
+    document = build.to_document(repo)
+    run = api.find("findtargetpkg.run")
+
+    assert document.validate(formats=("html",)).ok
+    assert run is not None
+    assert run.summary == "find-target:Run from a find-layout repository."

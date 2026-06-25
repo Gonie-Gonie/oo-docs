@@ -148,12 +148,14 @@ python -m oodocs apidoc build C:\work\mypkg --config C:\work\mypkg\apidoc-build.
 ```
 
 When the config is loaded from a repository path, OODocs temporarily adds the
-config directory and its `src/` child to the import path while importing
-`docstring-parser-modules`. CLI commands also add the target repository root,
-its `src/` child, and the target parent while reading the config, so generated
-JSON config files can live outside the target checkout and still load
-repository-local parser modules. This lets a command target another checkout
-without changing into it first:
+config directory and its configured source roots to the import path while
+importing `docstring-parser-modules`. Source roots include `src/`,
+`[tool.setuptools] package-dir`, and `[tool.setuptools.packages.find] where`
+entries. CLI commands also add the target repository root, those target source
+roots, and the target parent while reading the config, so generated JSON config
+files can live outside the target checkout and still load repository-local
+parser modules. This lets a command target another checkout without changing
+into it first:
 
 ```powershell
 python -m oodocs apidoc build C:\work\mypkg --config C:\work\mypkg\pyproject.toml --out C:\work\mypkg\artifacts\api

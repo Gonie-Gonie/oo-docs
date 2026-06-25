@@ -11,6 +11,7 @@ from apidoc_samples import (
     write_overload_package,
     write_private_package,
     write_sample_package,
+    write_setuptools_find_repo,
     write_setuptools_package_dir_repo,
 )
 from oodocs.apidoc import ApiDocstringParser, collect_api, docstring_parser_names
@@ -264,6 +265,21 @@ def test_griffe_collector_uses_pyproject_setuptools_package_dir(tmp_path) -> Non
     assert api.find("samplepkg.run") is not None
     assert api.find("samplepkg.core.run") is not None
     assert api.find("lib.samplepkg.run") is None
+
+
+def test_griffe_collector_uses_pyproject_setuptools_find_where(tmp_path) -> None:
+    if importlib.util.find_spec("griffe") is None:
+        pytest.skip("griffe is not installed")
+
+    repo = write_setuptools_find_repo(tmp_path)
+
+    api = collect_api(repo, collector="griffe", public_policy="__all__")
+
+    assert api.metadata["collector"] == "griffe"
+    assert [module.name for module in api.modules] == ["findpkg", "findpkg.core"]
+    assert api.find("findpkg.run") is not None
+    assert api.find("findpkg.core.run") is not None
+    assert api.find("lib.findpkg.run") is None
 
 
 def test_griffe_collector_records_load_failure_fallback_issue(

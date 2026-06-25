@@ -14,7 +14,7 @@ import json
 from pathlib import Path
 import sys
 import tomllib
-from typing import TYPE_CHECKING, Literal, Mapping, Sequence
+from typing import TYPE_CHECKING, Iterable, Literal, Mapping, Sequence
 
 from oodocs.compatibility import normalize_output_formats
 from oodocs.core import PathLike
@@ -1552,13 +1552,90 @@ def _optional_int(value: object) -> int | None:
     return int(value)
 
 
+def _project_source_roots(directory: Path) -> list[Path]:
+    """Return existing source roots declared by a project directory.
+
+    Args:
+        directory: Project root that may contain ``pyproject.toml``.
+
+    Returns:
+        Existing source roots from setuptools ``package-dir`` mappings,
+        ``packages.find.where`` settings, and the conventional ``src/`` layout.
+    """
+
+    roots: list[Path] = []
+    data = _project_pyproject_data(directory)
+    if data:
+        tool = data.get("tool")
+        setuptools = tool.get("setuptools") if isinstance(tool, Mapping) else None
+        if isinstance(setuptools, Mapping):
+            package_dir = setuptools.get("package-dir")
+            if isinstance(package_dir, Mapping):
+                default_root = package_dir.get("")
+                if isinstance(default_root, str):
+                    roots.append(directory / default_root)
+                for value in package_dir.values():
+                    if isinstance(value, str):
+                        roots.append(directory / value)
+
+            packages = setuptools.get("packages")
+            find = packages.get("find") if isinstance(packages, Mapping) else None
+            where = find.get("where") if isinstance(find, Mapping) else None
+            if isinstance(where, str):
+                roots.append(directory / where)
+            elif isinstance(where, Sequence) and not isinstance(where, (str, bytes, bytearray)):
+                roots.extend(directory / item for item in where if isinstance(item, str))
+
+    roots.append(directory / "src")
+    return _existing_unique_paths(roots)
+
+
+def _project_import_roots(directory: Path) -> list[Path]:
+    """Return import roots for project-local extension modules.
+
+    Args:
+        directory: Project root or config directory.
+
+    Returns:
+        Existing directories that should be temporarily added to ``sys.path``
+        while loading repository-local docstring parser modules.
+    """
+
+    roots: list[Path] = [directory]
+    for source_root in _project_source_roots(directory):
+        roots.append(source_root)
+        if (source_root / "__init__.py").exists():
+            roots.append(source_root.parent)
+    return _existing_unique_paths(roots)
+
+
+def _project_pyproject_data(directory: Path) -> dict[str, object] | None:
+    path = directory / "pyproject.toml"
+    if not path.exists():
+        return None
+    try:
+        data = tomllib.loads(path.read_text(encoding="utf-8-sig"))
+    except (OSError, tomllib.TOMLDecodeError):
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def _existing_unique_paths(paths: Iterable[Path]) -> list[Path]:
+    normalized: list[Path] = []
+    seen: set[Path] = set()
+    for path in paths:
+        resolved = path.resolve()
+        if resolved in seen or not resolved.is_dir():
+            continue
+        normalized.append(resolved)
+        seen.add(resolved)
+    return normalized
+
+
 @contextmanager
 def _config_import_paths(path: Path):
     base = path.parent.resolve()
-    roots = [base]
-    src_root = base / "src"
-    if src_root.is_dir():
-        roots.append(src_root.resolve())
+    roots = _project_import_roots(base)
 
     added: list[str] = []
     for root in reversed([str(item) for item in roots]):

@@ -257,6 +257,53 @@ def write_setuptools_package_dir_repo(
     return repo
 
 
+def write_setuptools_find_repo(
+    tmp_path: Path,
+    *,
+    repo_name: str = "find-repo",
+    package_name: str = "findpkg",
+    source_root: str = "lib",
+) -> Path:
+    repo = tmp_path / repo_name
+    package_dir = repo / source_root / package_name
+    package_dir.mkdir(parents=True)
+    (repo / "pyproject.toml").write_text(
+        dedent(
+            f'''\
+            [project]
+            name = "{package_name.replace("_", "-")}"
+
+            [tool.setuptools.packages.find]
+            where = ["{source_root}"]
+            '''
+        ),
+        encoding="utf-8",
+    )
+    (package_dir / "__init__.py").write_text(
+        '"""Find package."""\nfrom .core import run\n__all__ = ["run"]\n',
+        encoding="utf-8",
+    )
+    (package_dir / "core.py").write_text(
+        dedent(
+            '''\
+            def run(path: str) -> str:
+                """Run from a find-layout repository.
+
+                Args:
+                    path: Input path.
+
+                Returns:
+                    str: Input path.
+                """
+
+                return path
+            '''
+        ),
+        encoding="utf-8",
+    )
+    return repo
+
+
 def write_mixed_docstring_repo(tmp_path: Path) -> Path:
     repo = tmp_path / "mixed-repo"
     package_dir = repo / "src" / "mixedpkg"

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from apidoc_samples import (
     collect_sample_api,
+    write_setuptools_find_repo,
     write_setuptools_package_dir_repo,
     write_dataclass_package,
     write_overload_package,
@@ -74,6 +75,17 @@ def test_inspect_collector_uses_pyproject_setuptools_package_dir(tmp_path) -> No
     assert api.find("samplepkg.run") is not None
     assert api.find("samplepkg.core.run") is not None
     assert api.find("lib.samplepkg.run") is None
+
+
+def test_inspect_collector_uses_pyproject_setuptools_find_where(tmp_path) -> None:
+    repo = write_setuptools_find_repo(tmp_path)
+
+    api = collect_api(repo, collector="inspect", public_policy="__all__")
+
+    assert [module.name for module in api.modules] == ["findpkg", "findpkg.core"]
+    assert api.find("findpkg.run") is not None
+    assert api.find("findpkg.core.run") is not None
+    assert api.find("lib.findpkg.run") is None
 
 
 def test_inspect_collector_uses_explicit_setuptools_package_mapping(tmp_path) -> None:

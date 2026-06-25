@@ -13,7 +13,12 @@ import re
 import tomllib
 from typing import Iterable, Sequence
 
-from oodocs.apidoc.config import ApiCollectConfig, ApiPublicPolicy, normalize_explicit_names
+from oodocs.apidoc.config import (
+    ApiCollectConfig,
+    ApiPublicPolicy,
+    _project_source_roots,
+    normalize_explicit_names,
+)
 from oodocs.apidoc.docstring import (
     ApiDocstringParser,
     ParsedDocstring,
@@ -1354,7 +1359,7 @@ def _resolve_source_files(package: str | PathLike) -> tuple[Path, str, list[Path
             return resolved.parent, resolved.name, files
 
         project_name = _project_name_from_pyproject(resolved) or resolved.name
-        for source_root in _source_roots_for_project(resolved):
+        for source_root in _project_source_roots(resolved):
             if (source_root / "__init__.py").exists():
                 files = _python_files_under(source_root)
                 return source_root.parent, source_root.name, sorted(files)
@@ -1467,40 +1472,6 @@ def _project_name_from_pyproject(directory: Path) -> str | None:
         if isinstance(name, str):
             return name.replace("-", "_") or None
     return None
-
-
-def _source_roots_for_project(directory: Path) -> list[Path]:
-    roots: list[Path] = []
-    data = _pyproject_data(directory)
-    if data:
-        tool = data.get("tool")
-        setuptools = tool.get("setuptools") if isinstance(tool, dict) else None
-        if isinstance(setuptools, dict):
-            package_dir = setuptools.get("package-dir")
-            if isinstance(package_dir, dict):
-                default_root = package_dir.get("")
-                if isinstance(default_root, str):
-                    roots.append(directory / default_root)
-                for value in package_dir.values():
-                    if isinstance(value, str):
-                        roots.append(directory / value)
-            packages = setuptools.get("packages")
-            find = packages.get("find") if isinstance(packages, dict) else None
-            where = find.get("where") if isinstance(find, dict) else None
-            if isinstance(where, str):
-                roots.append(directory / where)
-            elif isinstance(where, list):
-                roots.extend(directory / item for item in where if isinstance(item, str))
-    roots.append(directory / "src")
-    normalized: list[Path] = []
-    seen: set[Path] = set()
-    for root in roots:
-        resolved = root.resolve()
-        if resolved in seen or not resolved.is_dir():
-            continue
-        normalized.append(resolved)
-        seen.add(resolved)
-    return normalized
 
 
 def _pyproject_data(directory: Path) -> dict[str, object] | None:

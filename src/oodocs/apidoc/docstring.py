@@ -17,6 +17,7 @@ import re
 import sys
 from typing import Callable, Iterable, Mapping
 
+from oodocs.apidoc.config import _project_import_roots
 from oodocs.apidoc.model import (
     ApiDocIssue,
     ApiDocstringStyleName,
@@ -778,10 +779,7 @@ def _candidate_import_roots(target: object) -> list[Path]:
     if resolved.is_file():
         return [resolved.parent]
 
-    roots = [resolved]
-    src_root = resolved / "src"
-    if src_root.is_dir():
-        roots.append(src_root.resolve())
+    roots = _project_import_roots(resolved)
     parent = resolved.parent
     if parent != resolved:
         roots.append(parent)
