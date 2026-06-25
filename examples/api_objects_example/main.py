@@ -8,6 +8,8 @@ from typing import Sequence
 
 from oodocs import Chapter, Document, Paragraph
 from oodocs.apidoc import (
+    ApiBuildConfig,
+    ApiCollectConfig,
     ApiCoverageResult,
     ApiDocstringParser,
     ApiPackage,
@@ -30,8 +32,9 @@ def _log(message: str, *, verbose: bool) -> None:
 def collect_target_api(
     target: str | Path = "oodocs",
     *,
-    public_policy: str = "__all__",
-    collector: str = "auto",
+    config: ApiCollectConfig | None = None,
+    public_policy: str | None = None,
+    collector: str | None = None,
     docstring_style: str | ApiDocstringParser | None = None,
 ) -> ApiPackage:
     """Collect any Python package, module, file, or repository target.
@@ -39,11 +42,15 @@ def collect_target_api(
     Args:
         target: Importable package/module name, Python file, package directory,
             or repository checkout to document.
-        public_policy: Public boundary passed to ``collect_api``.
-        collector: Collector backend passed to ``collect_api``.
+        config: Optional collection config loaded from a repository config file.
+        public_policy: Public boundary passed to ``collect_api``. Defaults to
+            ``"__all__"`` when ``config`` is omitted.
+        collector: Collector backend passed to ``collect_api``. Defaults to
+            ``"auto"`` when ``config`` is omitted.
         docstring_style: Docstring parser style or reusable parser object.
-            Defaults to ``ApiDocstringParser.auto()`` so mixed Google, NumPy,
-            Sphinx, Markdown, and plain docstrings can be normalized together.
+            Defaults to ``ApiDocstringParser.auto()`` when ``config`` is
+            omitted so mixed Google, NumPy, Sphinx, Markdown, and plain
+            docstrings can be normalized together.
 
     Returns:
         Collected API package object tree that can be queried, serialized, or
@@ -63,14 +70,32 @@ def collect_target_api(
         )
         document = api.to_document(profile="compact")
         ```
+
+        Reuse a repository-local config so the example and release workflow
+        render the same public boundary:
+
+        ```python
+        from examples.api_objects_example.main import collect_target_api
+        from oodocs.apidoc import ApiBuildConfig
+
+        build = ApiBuildConfig.from_pyproject(".")
+        api = collect_target_api(".", config=build.collection)
+        ```
     """
 
-    parser = docstring_style or ApiDocstringParser.auto()
+    effective_public_policy = public_policy
+    effective_collector = collector
+    effective_docstring_style: str | ApiDocstringParser | None = docstring_style
+    if config is None:
+        effective_public_policy = effective_public_policy or "__all__"
+        effective_collector = effective_collector or "auto"
+        effective_docstring_style = effective_docstring_style or ApiDocstringParser.auto()
     return collect_api(
         target,
-        public_policy=public_policy,
-        collector=collector,
-        docstring_style=parser,
+        config=config,
+        public_policy=effective_public_policy,
+        collector=effective_collector,
+        docstring_style=effective_docstring_style,
     )
 
 
@@ -99,6 +124,8 @@ def build_full_package_document(
     api: ApiPackage | None = None,
     *,
     title: str | None = None,
+    profile: str = "compact",
+    max_level: int | None = None,
 ) -> Document:
     """Build a full package API reference document.
 
@@ -107,6 +134,8 @@ def build_full_package_document(
             package is collected from the current environment.
         title: Optional document title. Defaults to ``"{api.name} API
             Reference"``.
+        profile: API presentation profile used for object sections.
+        max_level: Optional deepest heading level to render.
 
     Returns:
         Full package reference document built through ``ApiPackage.to_document``.
@@ -121,7 +150,7 @@ def build_full_package_document(
         )
 
         api = collect_oodocs_api()
-        document = build_full_package_document(api)
+        document = build_full_package_document(api, profile="compact", max_level=3)
         document.save_all(
             "artifacts/api-objects-example",
             stem="oodocs-full-api-reference",
@@ -132,9 +161,10 @@ def build_full_package_document(
     api = api or collect_oodocs_api()
     return api.to_document(
         title=title or f"{api.name} API Reference",
-        profile="compact",
+        profile=profile,
         include_coverage=True,
         include_modules=True,
+        max_level=max_level,
     )
 
 
@@ -237,9 +267,12 @@ def render_api_objects_example(
     output_dir: str | Path = ARTIFACT_DIR,
     *,
     target: str | Path = "oodocs",
-    public_policy: str = "__all__",
-    collector: str = "auto",
+    config: ApiBuildConfig | ApiCollectConfig | None = None,
+    public_policy: str | None = None,
+    collector: str | None = None,
     docstring_style: str | ApiDocstringParser | None = None,
+    profile: str | None = None,
+    max_level: int | None = None,
     formats: Sequence[str] | None = None,
     verbose: bool = False,
 ) -> dict[str, Path]:
@@ -252,12 +285,18 @@ def render_api_objects_example(
         output_dir: Directory that receives rendered documents and sidecars.
         target: Importable package/module name, Python file, package directory,
             or repository checkout collected when ``api`` is omitted.
+        config: Optional build or collection config. Build configs provide the
+            collection settings plus default profile, formats, and max level.
         public_policy: Public boundary used when collecting ``target``.
         collector: Collector backend used when collecting ``target``.
         docstring_style: Docstring parser style or reusable parser object used
             when collecting ``target``.
+        profile: Optional presentation profile for the full package reference.
+            Defaults to the build config profile or ``"compact"``.
+        max_level: Optional deepest heading level to render in the full package
+            reference.
         formats: Optional subset of formats passed to ``Document.save_all``.
-            Defaults to all supported formats.
+            Defaults to build config formats or all supported formats.
         verbose: Whether to print major collection and rendering steps.
 
     Returns:
@@ -270,11 +309,12 @@ def render_api_objects_example(
 
         ```python
         from examples.api_objects_example.main import render_api_objects_example
+        from oodocs.apidoc import ApiBuildConfig
 
         outputs = render_api_objects_example(
             target=".",
             output_dir="artifacts/api-objects-example",
-            docstring_style="auto",
+            config=ApiBuildConfig.from_pyproject("."),
             verbose=True,
         )
         full_reference_html = outputs["full_reference_html"]
@@ -284,10 +324,28 @@ def render_api_objects_example(
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
 
+    build_config: ApiBuildConfig | None = None
+    collect_config: ApiCollectConfig | None = None
+    if isinstance(config, ApiBuildConfig):
+        build_config = config
+        collect_config = config.collection
+    elif isinstance(config, ApiCollectConfig):
+        collect_config = config
+
+    effective_profile = profile or (build_config.profile if build_config else "compact")
+    if max_level is not None:
+        effective_max_level = max_level
+    elif build_config is not None:
+        effective_max_level = build_config.max_level
+    else:
+        effective_max_level = None
+    effective_formats = formats or (build_config.output_formats if build_config else None)
+
     if api is None:
         _log(f"Collecting API objects from {target!s}...", verbose=verbose)
         api = collect_target_api(
             target,
+            config=collect_config,
             public_policy=public_policy,
             collector=collector,
             docstring_style=docstring_style,
@@ -297,11 +355,15 @@ def render_api_objects_example(
         coverage = check_api_docs(api)
 
     save_kwargs: dict[str, object] = {"verbose": verbose}
-    if formats is not None:
-        save_kwargs["formats"] = tuple(formats)
+    if effective_formats is not None:
+        save_kwargs["formats"] = tuple(effective_formats)
 
     _log("Building full package API reference...", verbose=verbose)
-    full_reference = build_full_package_document(api)
+    full_reference = build_full_package_document(
+        api,
+        profile=effective_profile,
+        max_level=effective_max_level,
+    )
     _log("Rendering full package API reference...", verbose=verbose)
     full_outputs = full_reference.save_all(
         output_path,
@@ -351,18 +413,19 @@ def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         help="Output directory for rendered documents and sidecars.",
     )
     parser.add_argument(
+        "--config",
+        help="Optional apidoc build config JSON, pyproject.toml, or project root.",
+    )
+    parser.add_argument(
         "--collector",
-        default="auto",
         help="Collector backend passed to collect_api, such as auto, griffe, or inspect.",
     )
     parser.add_argument(
         "--public-policy",
-        default="__all__",
         help="Public API policy passed to collect_api.",
     )
     parser.add_argument(
         "--docstring-style",
-        default="auto",
         help="Docstring style or parser name passed to collect_api.",
     )
     parser.add_argument(
@@ -396,9 +459,11 @@ def main(argv: Sequence[str] | None = None) -> None:
     """
 
     args = _parse_args(argv)
+    build_config = ApiBuildConfig.read_file(args.config) if args.config else None
     outputs = render_api_objects_example(
         output_dir=args.out,
         target=args.target,
+        config=build_config,
         public_policy=args.public_policy,
         collector=args.collector,
         docstring_style=args.docstring_style,

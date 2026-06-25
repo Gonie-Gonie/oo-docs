@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from example_regression import assert_html_internal_links_resolve
 from oodocs import Chapter, Document
 from oodocs.apidoc import (
     ApiBuildConfig,
@@ -2041,6 +2042,7 @@ def test_api_objects_example_builds_full_reference_and_composable_document(
     html = outputs["html"].read_text(encoding="utf-8")
     assert "examplepkg.Widget" in html
     assert "examplepkg.run" in html
+    assert_html_internal_links_resolve(outputs["html"])
     assert any(
         getattr(child.title[0], "value", "") == "Selected Classes"
         for child in composition.body.children
@@ -2072,3 +2074,4 @@ def test_api_objects_example_builds_full_reference_and_composable_document(
     )
     assert "examplepkg API Reference" in cli_html
     assert "examplepkg.Widget" in cli_html
+    assert_html_internal_links_resolve(cli_output / "oodocs-full-api-reference.html")

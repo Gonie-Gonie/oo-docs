@@ -16,8 +16,13 @@ package, module, file, or repository target:
 Run it against the current repository:
 
 ```powershell
-python examples/api_objects_example/main.py . --public-policy __all__
+python examples/api_objects_example/main.py . --config pyproject.toml
 ```
+
+`--config` accepts a project root, `pyproject.toml`, or JSON config produced by
+`oodocs apidoc init`. When supplied, the example reuses the same collector,
+public boundary, object filters, profile, formats, and max-level settings as
+`python -m oodocs apidoc build`.
 
 Run it against an installed package or importable module:
 

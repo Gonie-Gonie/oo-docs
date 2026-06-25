@@ -288,7 +288,7 @@ Run them directly from the repository checkout:
 .\.venv\Scripts\python.exe .\examples\journal_paper_example\main.py
 .\.venv\Scripts\python.exe .\examples\native_benchmark_report\main.py
 .\.venv\Scripts\python.exe .\examples\release_notes_digest\main.py
-.\.venv\Scripts\python.exe .\examples\api_objects_example\main.py
+.\.venv\Scripts\python.exe .\examples\api_objects_example\main.py . --config pyproject.toml
 ```
 
 The full package API reference can also be rendered directly from the

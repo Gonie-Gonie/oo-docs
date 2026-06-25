@@ -4,6 +4,7 @@ import importlib.util
 from pathlib import Path
 
 from apidoc_samples import write_mixed_docstring_repo
+from example_regression import assert_html_internal_links_resolve
 from oodocs import Chapter, Document, Paragraph
 from oodocs.apidoc import (
     ApiBuildConfig,
@@ -159,6 +160,7 @@ def test_general_repo_package_render_helper_builds_complete_reference(tmp_path) 
     assert "API Documentation Coverage" in html
     assert "mixedpkg.Client" in html
     assert "mixedpkg.connect" in html
+    assert_html_internal_links_resolve(outputs["html"])
 
 
 def test_general_repo_api_objects_example_cli_targets_repo_path(tmp_path) -> None:
@@ -204,6 +206,7 @@ def test_general_repo_api_objects_example_cli_targets_repo_path(tmp_path) -> Non
     assert "mixedpkg API Reference" in html
     assert "mixedpkg.Client" in html
     assert "mixedpkg.connect" in html
+    assert_html_internal_links_resolve(full_reference)
 
 
 def test_general_repo_pyproject_auto_parser_builds_cli_bundle(tmp_path) -> None:
@@ -211,6 +214,8 @@ def test_general_repo_pyproject_auto_parser_builds_cli_bundle(tmp_path) -> None:
     build_config = ApiBuildConfig.from_pyproject(repo)
     parser = build_config.collection.docstring_parser()
     output_dir = tmp_path / "bundle"
+    example_output_dir = tmp_path / "example-config-bundle"
+    example = _load_api_objects_example()
 
     assert parser == ApiDocstringParser.auto()
     assert parser.detect("Parameters\n----------\ntimeout : float\n    Timeout.") == "numpy"
@@ -246,9 +251,37 @@ def test_general_repo_pyproject_auto_parser_builds_cli_bundle(tmp_path) -> None:
     html = html_path.read_text(encoding="utf-8")
     assert "mixedpkg.Client" in html
     assert "Timeout in seconds." in html
+    assert_html_internal_links_resolve(html_path)
 
     rendered_api = ApiPackage.read_json(api_path)
     rendered_method = rendered_api.find("mixedpkg.Client.connect")
     assert rendered_method is not None
     assert rendered_method.metadata["docstring_style"] == "numpy"
     assert ApiCoverageResult.read_json(coverage_path).object_coverage == 1.0
+
+    example.main(
+        [
+            str(repo),
+            "--config",
+            str(repo / "pyproject.toml"),
+            "--out",
+            str(example_output_dir),
+            "--quiet",
+        ]
+    )
+
+    example_html = example_output_dir / "oodocs-full-api-reference.html"
+    example_api_path = example_output_dir / "oodocs-api-objects.json"
+    example_coverage_path = example_output_dir / "oodocs-api-coverage.json"
+    assert example_html.exists()
+    assert example_api_path.exists()
+    assert example_coverage_path.exists()
+    assert not (example_output_dir / "oodocs-full-api-reference.docx").exists()
+    assert not (example_output_dir / "oodocs-full-api-reference.pdf").exists()
+    assert_html_internal_links_resolve(example_html)
+
+    example_api = ApiPackage.read_json(example_api_path)
+    example_method = example_api.find("mixedpkg.Client.connect")
+    assert example_method is not None
+    assert example_method.metadata["docstring_style"] == "numpy"
+    assert ApiCoverageResult.read_json(example_coverage_path).object_coverage == 1.0
