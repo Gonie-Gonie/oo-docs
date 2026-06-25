@@ -516,6 +516,57 @@ def test_collect_api_accepts_reusable_public_policy_object(tmp_path: Path) -> No
     assert ApiPublicPolicy.from_dict(policy.to_dict()) == policy
 
 
+def test_collect_api_filters_modules_before_collection(tmp_path: Path) -> None:
+    package_dir = tmp_path / "filtermods"
+    package_dir.mkdir()
+    (package_dir / "__init__.py").write_text('"""Filter mods."""\n', encoding="utf-8")
+    (package_dir / "core.py").write_text(
+        '"""Core module."""\n'
+        "\n"
+        "def run() -> None:\n"
+        '    """Run the core workflow."""\n',
+        encoding="utf-8",
+    )
+    (package_dir / "experimental.py").write_text(
+        '"""Experimental module."""\n'
+        "\n"
+        "def preview() -> None:\n"
+        '    """Preview an experimental workflow."""\n',
+        encoding="utf-8",
+    )
+    (package_dir / "tests.py").write_text(
+        '"""Test helper module."""\n'
+        "\n"
+        "def helper() -> None:\n"
+        '    """Help tests."""\n',
+        encoding="utf-8",
+    )
+    config = ApiCollectConfig.from_kwargs(
+        module_include_patterns=("filtermods.*",),
+        module_exclude_patterns=("filtermods.tests", "filtermods.experimental"),
+    )
+
+    api = collect_api(package_dir, config=config, public_policy="underscore", collector="inspect")
+
+    assert api.metadata["file_count"] == 1
+    assert [module.name for module in api.modules] == ["filtermods.core"]
+    assert api.find("filtermods.core.run") is not None
+    assert api.find("filtermods.experimental.preview") is None
+    assert api.find("filtermods.tests.helper") is None
+    assert config.to_dict()["module_include_patterns"] == ["filtermods.*"]
+
+    if importlib.util.find_spec("griffe") is not None:
+        griffe_api = collect_api(
+            package_dir,
+            public_policy="underscore",
+            collector="griffe",
+            module_include_patterns=("filtermods.*",),
+            module_exclude_patterns=("filtermods.tests", "filtermods.experimental"),
+        )
+        assert griffe_api.metadata["file_count"] == 1
+        assert [module.name for module in griffe_api.modules] == ["filtermods.core"]
+
+
 def test_griffe_collector_matches_inspect_schema_on_src_layout_repo(
     tmp_path: Path,
 ) -> None:
@@ -870,6 +921,23 @@ def test_apidoc_cli_filters_check_and_snapshot(tmp_path: Path) -> None:
 
     snapshot = json.loads(snapshot_json.read_text(encoding="utf-8"))
     assert list(snapshot["objects"]) == ["filterpkg.core.run"]
+
+    collected_json = tmp_path / "module-filtered-api.json"
+    assert main(
+        [
+            "apidoc",
+            "collect",
+            str(package_dir),
+            "--module-include",
+            "filterpkg.core",
+            "--module-exclude",
+            "filterpkg.legacy",
+            "--out",
+            str(collected_json),
+        ]
+    ) == 0
+    collected = json.loads(collected_json.read_text(encoding="utf-8"))
+    assert [module["name"] for module in collected["modules"]] == ["filterpkg.core"]
 
     assert main(
         [

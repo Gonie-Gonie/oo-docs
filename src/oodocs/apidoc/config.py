@@ -175,6 +175,8 @@ class ApiCollectConfig:
         include_imported: Whether imported objects may be included.
         include_inherited: Whether inherited class members may be included.
         class_signature_from_init: Whether class signatures use ``__init__``.
+        module_include_patterns: Optional glob-style module names to include.
+        module_exclude_patterns: Optional glob-style module names to exclude.
 
     Examples:
         ```python
@@ -192,6 +194,8 @@ class ApiCollectConfig:
     include_imported: bool = False
     include_inherited: bool = False
     class_signature_from_init: bool = True
+    module_include_patterns: tuple[str, ...] = field(default_factory=tuple)
+    module_exclude_patterns: tuple[str, ...] = field(default_factory=tuple)
 
     def __post_init__(self) -> None:
         policy = ApiPublicPolicy.from_value(
@@ -242,8 +246,13 @@ class ApiCollectConfig:
             values["docstring_style"] = ApiDocstringParser.from_value(
                 values["docstring_style"],  # type: ignore[arg-type]
             ).style
-        if "explicit_names" in values and not isinstance(values["explicit_names"], tuple):
-            values["explicit_names"] = tuple(values["explicit_names"])  # type: ignore[arg-type]
+        for field_name in (
+            "explicit_names",
+            "module_include_patterns",
+            "module_exclude_patterns",
+        ):
+            if field_name in values and not isinstance(values[field_name], tuple):
+                values[field_name] = tuple(values[field_name])  # type: ignore[arg-type]
         resolved = cls(**values)  # type: ignore[arg-type]
         resolved.validate()
         return resolved
@@ -289,6 +298,8 @@ class ApiCollectConfig:
             "include_imported": self.include_imported,
             "include_inherited": self.include_inherited,
             "class_signature_from_init": self.class_signature_from_init,
+            "module_include_patterns": list(self.module_include_patterns),
+            "module_exclude_patterns": list(self.module_exclude_patterns),
         }
 
 

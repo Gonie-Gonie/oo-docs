@@ -45,3 +45,16 @@ api = collect_api(".", collector="griffe", public_policy=policy)
 `ApiPublicPolicy` can be serialized with `to_dict()` and reconstructed with
 `from_dict(...)`, which keeps CI scripts and release jobs aligned with the same
 curated boundary.
+
+Use `module_include_patterns` and `module_exclude_patterns` to narrow collection
+before parsing module contents. Patterns match fully qualified module names with
+standard glob syntax.
+
+```python
+api = collect_api(
+    ".",
+    collector="griffe",
+    module_include_patterns=("mypkg.*",),
+    module_exclude_patterns=("mypkg.tests*", "mypkg._experimental"),
+)
+```

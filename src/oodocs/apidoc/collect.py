@@ -5,6 +5,7 @@ from __future__ import annotations
 import ast
 from dataclasses import replace
 import copy
+import fnmatch
 import importlib.metadata
 import importlib.util
 from pathlib import Path
@@ -38,6 +39,8 @@ def collect_api(
     include_imported: bool | None = None,
     include_inherited: bool | None = None,
     class_signature_from_init: bool | None = None,
+    module_include_patterns: Iterable[str] | None = None,
+    module_exclude_patterns: Iterable[str] | None = None,
 ) -> ApiPackage:
     """Collect a package or repository into an ``ApiPackage`` tree.
 
@@ -56,6 +59,10 @@ def collect_api(
         include_imported: Reserved for import-aware collectors.
         include_inherited: Reserved for import-aware collectors.
         class_signature_from_init: Whether class signatures use ``__init__``.
+        module_include_patterns: Optional glob-style module names to include
+            before collection.
+        module_exclude_patterns: Optional glob-style module names to exclude
+            before collection.
 
     Returns:
         Collected API package.
@@ -81,6 +88,12 @@ def collect_api(
         "include_imported": include_imported,
         "include_inherited": include_inherited,
         "class_signature_from_init": class_signature_from_init,
+        "module_include_patterns": tuple(module_include_patterns)
+        if module_include_patterns is not None
+        else None,
+        "module_exclude_patterns": tuple(module_exclude_patterns)
+        if module_exclude_patterns is not None
+        else None,
     }
     if explicit_names is not None:
         config_kwargs["explicit_names"] = normalize_explicit_names(explicit_names)
@@ -176,8 +189,16 @@ def _collect_package_source(
     root, package_name, files = _resolve_source_files(package)
     issues: list[ApiDocIssue] = []
     modules: list[ApiModule] = []
-    for file_path in files:
-        module_name = _module_name_for_file(file_path, root=root, package_name=package_name)
+    module_files = [
+        (file_path, _module_name_for_file(file_path, root=root, package_name=package_name))
+        for file_path in files
+    ]
+    included_module_files = [
+        (file_path, module_name)
+        for file_path, module_name in module_files
+        if _module_is_included(module_name, config)
+    ]
+    for file_path, module_name in included_module_files:
         try:
             module = _collect_module_from_file(file_path, module_name, config=config)
         except SyntaxError as exc:
@@ -202,7 +223,7 @@ def _collect_package_source(
         issues=issues,
         metadata={
             "collector": config.collector,
-            "file_count": len(files),
+            "file_count": len(included_module_files),
             "public_policy": config.public_policy,
             "source_root": str(root),
         },
@@ -656,6 +677,14 @@ def _module_name_for_file(path: Path, *, root: Path, package_name: str) -> str:
     if not package_name:
         return ".".join(parts)
     return ".".join([package_name, *parts]) if package_name not in parts[:1] else ".".join(parts)
+
+
+def _module_is_included(module_name: str, config: ApiCollectConfig) -> bool:
+    includes = config.module_include_patterns
+    excludes = config.module_exclude_patterns
+    if includes and not any(fnmatch.fnmatchcase(module_name, pattern) for pattern in includes):
+        return False
+    return not any(fnmatch.fnmatchcase(module_name, pattern) for pattern in excludes)
 
 
 def _python_files_under(directory: Path) -> list[Path]:

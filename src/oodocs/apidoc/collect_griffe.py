@@ -56,6 +56,7 @@ def collect_package_griffe(
         )
 
     from oodocs.apidoc.collect import (
+        _module_is_included,
         _module_name_for_file,
         _package_version,
         _resolve_source_files,
@@ -85,6 +86,8 @@ def collect_package_griffe(
         if filepath is None:
             continue
         module_name = _module_name_for_file(filepath, root=root, package_name=package_name)
+        if not _module_is_included(module_name, resolved):
+            continue
         module = _module_from_griffe(module_obj, module_name, config=resolved)
         modules.append(module)
         issues.extend(_module_issues(module))
@@ -92,6 +95,8 @@ def collect_package_griffe(
     collected_names = {module.name for module in modules}
     for file_path in files:
         module_name = _module_name_for_file(file_path, root=root, package_name=package_name)
+        if not _module_is_included(module_name, resolved):
+            continue
         if module_name not in collected_names:
             issues.append(
                 ApiDocIssue(
@@ -110,7 +115,14 @@ def collect_package_griffe(
         issues=issues,
         metadata={
             "collector": "griffe",
-            "file_count": len(files),
+            "file_count": sum(
+                1
+                for file_path in files
+                if _module_is_included(
+                    _module_name_for_file(file_path, root=root, package_name=package_name),
+                    resolved,
+                )
+            ),
             "public_policy": resolved.public_policy,
             "source_root": str(root),
         },

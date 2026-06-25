@@ -104,6 +104,18 @@ def _add_collect_options(parser: argparse.ArgumentParser) -> None:
         default="auto",
         help="Docstring parser style.",
     )
+    parser.add_argument(
+        "--module-include",
+        action="append",
+        dest="module_include_patterns",
+        help="Glob-style module name pattern to include during collection.",
+    )
+    parser.add_argument(
+        "--module-exclude",
+        action="append",
+        dest="module_exclude_patterns",
+        help="Glob-style module name pattern to exclude during collection.",
+    )
 
 
 def _add_filter_options(parser: argparse.ArgumentParser) -> None:
@@ -196,6 +208,8 @@ def _collect_from_args(args: argparse.Namespace):
         public_policy=args.public_policy,
         explicit_names=args.explicit_names,
         docstring_style=args.docstring_style,
+        module_include_patterns=args.module_include_patterns,
+        module_exclude_patterns=args.module_exclude_patterns,
     )
 
 

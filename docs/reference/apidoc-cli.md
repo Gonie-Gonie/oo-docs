@@ -49,5 +49,7 @@ value changes, parameter annotation changes, return annotation changes,
 docstring changes, deprecated objects, and coverage deltas.
 
 Common collection options are `--collector`, `--public-policy`,
-`--explicit-name`, and `--docstring-style`. `check`, `build`, and `snapshot`
-also accept `--kind` and `--module-prefix` filters.
+`--explicit-name`, `--docstring-style`, `--module-include`, and
+`--module-exclude`. Module include/exclude patterns are applied before module
+contents are collected, while `check`, `build`, and `snapshot` also accept
+`--kind` and `--module-prefix` object filters after collection.
