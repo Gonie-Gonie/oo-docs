@@ -8,8 +8,8 @@ package, module, file, or repository target:
 2. render a full package API reference as DOCX, PDF, and HTML artifacts named
    `oodocs-full-api-reference`
 3. render a hand-composed `oodocs-api-objects` document that inserts selected
-   class sections, a function summary table, and coverage evidence into an
-   ordinary OODocs document
+   class sections, one focused module chapter, a function summary table, and
+   coverage evidence into an ordinary OODocs document
 4. write deterministic API JSON plus coverage JSON/CSV sidecars for release
    evidence
 

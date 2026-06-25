@@ -2048,6 +2048,11 @@ def test_api_objects_example_builds_full_reference_and_composable_document(
         for child in composition.body.children
         if hasattr(child, "title")
     )
+    assert any(
+        getattr(child.title[0], "value", "") == "Focused Module: examplepkg"
+        for child in composition.body.children
+        if hasattr(child, "title")
+    )
 
     cli_output = tmp_path / "cli-bundle"
     example.main(
@@ -2072,6 +2077,11 @@ def test_api_objects_example_builds_full_reference_and_composable_document(
     cli_html = (cli_output / "oodocs-full-api-reference.html").read_text(
         encoding="utf-8"
     )
+    composition_html = (cli_output / "oodocs-api-objects.html").read_text(
+        encoding="utf-8"
+    )
     assert "examplepkg API Reference" in cli_html
+    assert "Focused Module: examplepkg" in composition_html
+    assert "examplepkg.run" in composition_html
     assert "examplepkg.Widget" in cli_html
     assert_html_internal_links_resolve(cli_output / "oodocs-full-api-reference.html")

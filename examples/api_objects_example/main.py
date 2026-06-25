@@ -179,8 +179,8 @@ def build_document(
         coverage: Optional pre-computed coverage result for ``api``.
 
     Returns:
-        OODocs document that combines selected API object sections, a function
-        summary table, and coverage evidence.
+        OODocs document that combines selected API object sections, a focused
+        module chapter, a function summary table, and coverage evidence.
 
     Examples:
         Build a composable document from the same parsed API object tree:
@@ -202,24 +202,53 @@ def build_document(
     if not classes:
         classes = api.select(kind="class")[:3]
     functions = api.select(kind="function")[:10]
+    focused_module = _focused_module_for_example(api)
 
-    return Document(
-        "OODocs API Object Composition",
+    chapters = [
         Chapter(
             "Selected Classes",
             Paragraph("These sections are regular OODocs blocks created from ApiObject instances."),
             *[obj.to_section(level=2, profile="compact") for obj in classes],
         ),
-        Chapter(
-            "Function Summary",
-            Paragraph("The summary table can be inserted into release notes or evidence documents."),
-            api.to_summary_table(functions, caption="Selected public functions."),
+    ]
+    if focused_module is not None:
+        chapters.append(
+            focused_module.to_chapter(
+                title=f"Focused Module: {focused_module.name}",
+                profile="manual",
+                max_level=3,
+            )
+        )
+    chapters.extend(
+        [
+            Chapter(
+                "Function Summary",
+                Paragraph("The summary table can be inserted into release notes or evidence documents."),
+                api.to_summary_table(functions, caption="Selected public functions."),
+            ),
+            Chapter(
+                "Coverage Summary",
+                Paragraph("Detailed coverage issues are written to the CSV sidecar."),
+                coverage.to_table(),
+            ),
+        ]
+    )
+    return Document("OODocs API Object Composition", *chapters)
+
+
+def _focused_module_for_example(api: ApiPackage):
+    """Return a representative module for the composable example."""
+
+    modules_with_objects = [module for module in api.modules if list(module.iter_objects())]
+    if not modules_with_objects:
+        return None
+    return next(
+        (
+            module
+            for module in modules_with_objects
+            if module.name.endswith(".core") or module.name.endswith(".components")
         ),
-        Chapter(
-            "Coverage Summary",
-            Paragraph("Detailed coverage issues are written to the CSV sidecar."),
-            coverage.to_table(),
-        ),
+        modules_with_objects[0],
     )
 
 

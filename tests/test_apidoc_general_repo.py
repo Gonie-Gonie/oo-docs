@@ -302,10 +302,14 @@ def test_general_repo_api_objects_example_cli_targets_repo_path(tmp_path) -> Non
     assert ApiCoverageResult.read_json(coverage_json).object_coverage == 1.0
 
     html = full_reference.read_text(encoding="utf-8")
+    composition_html = composition.read_text(encoding="utf-8")
     assert "mixedpkg API Reference" in html
     assert "mixedpkg.Client" in html
     assert "mixedpkg.connect" in html
+    assert "Focused Module: mixedpkg.core" in composition_html
+    assert "mixedpkg.core.Client.connect" in composition_html
     assert_html_internal_links_resolve(full_reference)
+    assert_html_internal_links_resolve(composition)
 
 
 def test_general_repo_pyproject_auto_parser_builds_cli_bundle(tmp_path) -> None:
