@@ -21,9 +21,9 @@ doc = Document(
         ),
     ),
 )
+doc.save_all("artifacts/function-index", stem="function-index", formats=("docx", "pdf", "html"))
 ```
 
 `ApiModule.to_summary_table(...)` and `ApiPackage.to_summary_table(...)` accept
 an explicit object sequence. Pass the subset you already filtered so the table
 matches the surrounding document.
-

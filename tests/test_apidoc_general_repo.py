@@ -247,15 +247,39 @@ def test_general_repo_render_helpers_compose_selected_api(tmp_path) -> None:
     outputs = document.save_all(
         tmp_path / "helper-rendered",
         stem="mixed-helper-api",
-        formats=("html",),
+        formats=("docx", "pdf", "html"),
     )
     html = outputs["html"].read_text(encoding="utf-8")
 
-    assert document.validate(formats=("html",)).ok
+    assert_rendered_bundle(outputs["docx"], outputs["pdf"], outputs["html"])
+    assert document.validate(formats=("docx", "pdf", "html")).ok
+    assert_docx_structure(
+        outputs["docx"],
+        required_paragraphs=(
+            "Mixed Package API Helper Notes",
+            "1 Client Classes",
+            "1.1 mixedpkg.Client",
+            "2 Function Summary",
+            "3 API Documentation Coverage",
+        ),
+        min_tables=5,
+    )
+    assert_pdf_text_and_pages(
+        outputs["pdf"],
+        required_text=(
+            "Mixed Package API Helper Notes",
+            "Client Classes",
+            "mixedpkg.Client",
+            "Mixed package functions.",
+            "API Documentation Coverage",
+        ),
+        min_pages=1,
+    )
     assert "Client Classes" in html
     assert "mixedpkg.Client" in html
     assert "Mixed package functions." in html
     assert "API Documentation Coverage" in html
+    assert_html_internal_links_resolve(outputs["html"])
 
 
 def test_general_repo_package_render_helper_builds_complete_reference(tmp_path) -> None:
