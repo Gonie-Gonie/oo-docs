@@ -164,6 +164,11 @@ api = collect_api(
     docstring_style=ApiDocstringParser.auto(),
 )
 assert api.find("reporting.build_report") is not None
+api.to_document(profile="reference").save_all(
+    "artifacts/api",
+    stem="reporting-api",
+    formats=("docx", "pdf", "html"),
+)
 ```
 
 - `collector="griffe"` uses griffe when installed. It captures module data,

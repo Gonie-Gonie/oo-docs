@@ -463,15 +463,39 @@ def test_general_python_file_module_targets_build_reference_and_example(
                 "--out",
                 str(cli_output),
                 "--to",
-                "html",
+                "docx,pdf,html",
                 "--sidecars",
             ]
         )
         == 0
     )
+    cli_docx = cli_output / "singlemod-api.docx"
+    cli_pdf = cli_output / "singlemod-api.pdf"
     cli_html = cli_output / "singlemod-api.html"
     cli_api_json = cli_output / "singlemod-api.json"
     cli_coverage_json = cli_output / "singlemod-api-coverage.json"
+    assert_rendered_bundle(cli_docx, cli_pdf, cli_html)
+    assert_docx_structure(
+        cli_docx,
+        required_paragraphs=(
+            "singlemod API Reference",
+            "1 API Documentation Coverage",
+            "2 singlemod",
+            "2.1 singlemod.Client",
+            "2.2 singlemod.connect",
+        ),
+        min_tables=6,
+    )
+    assert_pdf_text_and_pages(
+        cli_pdf,
+        required_text=(
+            "singlemod API Reference",
+            "API Documentation Coverage",
+            "singlemod.Client",
+            "singlemod.connect",
+        ),
+        min_pages=1,
+    )
     assert cli_html.exists()
     assert cli_api_json.exists()
     assert cli_coverage_json.exists()
