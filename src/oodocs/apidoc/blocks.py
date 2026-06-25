@@ -588,7 +588,35 @@ def api_objects_to_chapter(
     level: int = 2,
     max_level: int | None = None,
 ):
-    """Build a chapter from selected API objects."""
+    """Build a chapter from selected API objects.
+
+    Args:
+        title: Chapter title.
+        objects: API objects to render as child sections.
+        profile: Presentation profile name or ``ApiDocProfile``.
+        level: Heading level used for each object section.
+        max_level: Optional deepest heading level for nested member sections.
+
+    Returns:
+        OODocs chapter containing one section per selected API object.
+
+    Examples:
+        Insert selected classes into a larger hand-authored guide:
+
+        ```python
+        from oodocs import Document, Paragraph
+        from oodocs.apidoc import collect_api, api_objects_to_chapter
+
+        api = collect_api("mypkg")
+        chapter = api_objects_to_chapter(
+            "Widget API",
+            api.select(kind="class", module_prefix="mypkg.widgets"),
+            profile="manual",
+            max_level=3,
+        )
+        guide = Document("Widget Guide", Paragraph("Overview text."), chapter)
+        ```
+    """
 
     from oodocs.components.blocks import Chapter
 

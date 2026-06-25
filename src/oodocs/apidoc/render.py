@@ -28,19 +28,49 @@ def api_package_to_document(
     """Build a complete OODocs document from an API package.
 
     Args:
-        api: API package object.
-        title: Optional document title.
-        profile: Presentation profile.
-        settings: Optional document settings.
-        citations: Optional citation library.
-        include_coverage: Whether to include a coverage overview chapter.
-        include_modules: Whether to include module chapters.
+        api: Collected API package object tree.
+        title: Optional document title. Defaults to ``"{api.name} API
+            Reference"``.
+        profile: Presentation profile name or ``ApiDocProfile`` object.
+        settings: Optional ``DocumentSettings`` passed to ``Document``.
+        citations: Optional citation library passed to ``Document``.
+        include_coverage: Whether to include a documentation coverage overview
+            chapter before module chapters.
+        include_modules: Whether to include per-module chapters and object
+            sections.
         max_level: Optional deepest heading level to render and include in the
             table of contents.
 
     Returns:
         OODocs document ready for ``save_docx``, ``save_pdf``, ``save_html``,
         or ``save_all``.
+
+    Raises:
+        ValueError: If ``max_level`` is less than ``1``.
+
+    Examples:
+        Render a complete package reference bundle from a general Python
+        repository:
+
+        ```python
+        from oodocs.apidoc import collect_api, api_package_to_document
+
+        api = collect_api(".", collector="griffe", public_policy="__all__")
+        document = api_package_to_document(api, profile="compact", max_level=3)
+        document.save_all("artifacts/api", stem=f"{api.name}-api")
+        ```
+
+        Embed only the coverage chapter into a separate release document by
+        disabling module chapters:
+
+        ```python
+        evidence = api_package_to_document(
+            api,
+            title="API Documentation Evidence",
+            include_modules=False,
+        )
+        evidence.save_html("artifacts/api-evidence.html")
+        ```
     """
 
     if max_level is not None and max_level < 1:
@@ -67,7 +97,35 @@ def api_objects_to_summary_table(
     profile: str | ApiDocProfile = "compact",
     caption: str | None = None,
 ):
-    """Return a summary table for selected API objects."""
+    """Return a summary table for selected API objects.
+
+    Args:
+        objects: API objects to include as rows.
+        profile: Presentation profile name or ``ApiDocProfile``. The website
+            profile renders object names as links to object section anchors.
+        caption: Optional table caption.
+
+    Returns:
+        OODocs table that can be inserted into any ``Chapter`` or ``Section``.
+
+    Examples:
+        Add a compact function index to an authored document:
+
+        ```python
+        from oodocs import Chapter, Document
+        from oodocs.apidoc import collect_api, api_objects_to_summary_table
+
+        api = collect_api("mypkg")
+        functions = api.select(kind="function")
+        doc = Document(
+            "Release Notes",
+            Chapter(
+                "Public Function Index",
+                api_objects_to_summary_table(functions, profile="compact"),
+            ),
+        )
+        ```
+    """
 
     return _api_objects_to_summary_table(objects, profile=profile, caption=caption)
 
@@ -76,10 +134,23 @@ def api_coverage_to_chapter(coverage: object) -> Chapter:
     """Return a coverage chapter from a coverage result or table.
 
     Args:
-        coverage: ``ApiCoverageResult`` or an OODocs table.
+        coverage: ``ApiCoverageResult`` or an already-built OODocs table.
 
     Returns:
-        Coverage chapter.
+        Chapter containing coverage metrics and issue rows when available.
+
+    Examples:
+        Insert coverage evidence into a release report:
+
+        ```python
+        from oodocs import Document
+        from oodocs.apidoc import check_api_docs, collect_api, api_coverage_to_chapter
+
+        api = collect_api("mypkg")
+        coverage = check_api_docs(api, fail_under=0.90)
+        report = Document("Release Evidence", api_coverage_to_chapter(coverage))
+        report.save_docx("artifacts/release-evidence.docx")
+        ```
     """
 
     if isinstance(coverage, ApiCoverageResult):
@@ -91,10 +162,25 @@ def api_diff_to_chapter(diff: ApiDiffResult) -> Chapter:
     """Return an API diff chapter.
 
     Args:
-        diff: API diff result.
+        diff: API diff result produced by ``diff_api``.
 
     Returns:
-        Chapter containing diff summary and details.
+        Chapter containing the diff summary table and detailed change sections.
+
+    Examples:
+        Build a rendered change report from two snapshot sidecars:
+
+        ```python
+        from oodocs import Document
+        from oodocs.apidoc import ApiSnapshot, api_diff_to_chapter, diff_api
+
+        base = ApiSnapshot.read_json("artifacts/api-base.json")
+        head = ApiSnapshot.read_json("artifacts/api-head.json")
+        diff = diff_api(base, head)
+        Document("Public API Changes", api_diff_to_chapter(diff)).save_all(
+            "artifacts/api-diff"
+        )
+        ```
     """
 
     return Chapter(
