@@ -21,6 +21,7 @@ from oodocs.apidoc import (
     ApiSnapshot,
     ParsedDocstring,
     check_api_docs,
+    collect_module_api,
     collect_object_api,
     collect_api,
     detect_docstring_style,
@@ -850,6 +851,15 @@ def test_collect_api_supports_src_layout_repo_reexports_and_deep_object_lookup(
     assert [obj.qualname for obj in api.select(kind="class", module="widgetlib")] == [
         "widgetlib.Widget"
     ]
+
+    core_module = collect_module_api(
+        "widgetlib.core",
+        public_policy="underscore",
+        collector="inspect",
+    )
+    assert core_module.name == "widgetlib.core"
+    assert core_module.find("widgetlib.core.Widget.render") is not None
+    assert Document("Core API", core_module.to_chapter(profile="manual")).validate().ok
 
     looked_up = collect_object_api(
         "widgetlib.core.Widget.render",

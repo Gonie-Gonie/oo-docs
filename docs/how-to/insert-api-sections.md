@@ -63,6 +63,29 @@ doc = Document(
 `ApiObject.to_section(...)` returns a normal OODocs `Section`, so it can be
 mixed with handwritten paragraphs, tables, figures, and generated pages.
 
+## Insert One Module
+
+Use `collect_module_api(...)` when the target module is importable, such as
+inside a repository checkout whose `src/` directory is on `PYTHONPATH`. For a
+checkout path that should not depend on import resolution, collect the
+repository with `collect_api(".")` and use `api.find(...)` or `api.select(...)`.
+
+```python
+from oodocs import Document
+from oodocs.apidoc import collect_module_api
+
+module = collect_module_api(
+    "mypkg.adapters.http",
+    collector="inspect",
+    public_policy="underscore",
+)
+
+doc = Document(
+    "HTTP Adapter API",
+    module.to_chapter(profile="manual"),
+)
+```
+
 ## Insert A Summary Table
 
 When release notes or design docs need an index instead of detailed sections,

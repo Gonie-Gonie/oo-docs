@@ -1351,6 +1351,9 @@ def _resolve_source_files(package: str | PathLike) -> tuple[Path, str, list[Path
     if spec.origin is None:
         raise ModuleNotFoundError(f"Python module has no source file: {package}")
     source = Path(spec.origin).resolve()
+    package_parts = str(package).split(".")
+    if len(package_parts) > 1 and len(source.parents) >= len(package_parts):
+        return source.parents[len(package_parts) - 1], package_parts[0], [source]
     return source.parent, str(package), [source]
 
 
