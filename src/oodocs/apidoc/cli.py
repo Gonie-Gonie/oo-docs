@@ -148,7 +148,11 @@ def _run_build(args: argparse.Namespace) -> int:
             f"{api.name} API Reference",
             Chapter(
                 "Selected API",
-                api.to_summary_table(selected, caption="Selected public API objects"),
+                api.to_summary_table(
+                    selected,
+                    caption="Selected public API objects",
+                    profile=args.profile,
+                ),
                 *[obj.to_section(level=2, profile=args.profile) for obj in selected],
             ),
         )

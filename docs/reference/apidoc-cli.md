@@ -32,6 +32,10 @@ Filter build output:
 python -m oodocs apidoc build oodocs --kind class --kind function --module-prefix oodocs.components --profile compact --out artifacts/api
 ```
 
+Filtered builds apply the selected profile to both the summary table and the
+rendered object sections. For example, `--profile website` produces summary
+table links that point at the generated object section anchors.
+
 Snapshot and diff:
 
 ```powershell

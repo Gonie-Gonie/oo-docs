@@ -773,6 +773,7 @@ def test_apidoc_cli_filters_check_and_snapshot(tmp_path: Path) -> None:
         encoding="utf-8",
     )
     snapshot_json = tmp_path / "filtered-snapshot.json"
+    build_dir = tmp_path / "filtered-build"
 
     assert main(
         [
@@ -803,3 +804,24 @@ def test_apidoc_cli_filters_check_and_snapshot(tmp_path: Path) -> None:
 
     snapshot = json.loads(snapshot_json.read_text(encoding="utf-8"))
     assert list(snapshot["objects"]) == ["filterpkg.core.run"]
+
+    assert main(
+        [
+            "apidoc",
+            "build",
+            str(package_dir),
+            "--kind",
+            "function",
+            "--module-prefix",
+            "filterpkg.core",
+            "--profile",
+            "website",
+            "--out",
+            str(build_dir),
+            "--to",
+            "html",
+        ]
+    ) == 0
+    html = (build_dir / "filterpkg-api.html").read_text(encoding="utf-8")
+    assert 'href="#filterpkg-core-run"' in html
+    assert 'id="filterpkg-core-run"' in html
