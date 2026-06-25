@@ -86,6 +86,19 @@ class ApiPublicPolicy:
 
         Returns:
             Normalized public policy object.
+
+        Examples:
+            Normalize a value accepted by ``collect_api(...)`` before sharing
+            it across multiple collections:
+
+            ```python
+            from oodocs.apidoc import ApiPublicPolicy, collect_api
+
+            policy = ApiPublicPolicy.from_value(
+                {"name": "explicit", "explicit_names": ["mypkg.load"]},
+            )
+            api = collect_api(".", public_policy=policy)
+            ```
         """
 
         if isinstance(value, cls):
@@ -111,6 +124,16 @@ class ApiPublicPolicy:
 
         Returns:
             Explicit public policy.
+
+        Examples:
+            Collect only a curated public surface from a repository:
+
+            ```python
+            from oodocs.apidoc import ApiPublicPolicy, collect_api
+
+            policy = ApiPublicPolicy.explicit("mypkg.Client", "mypkg.connect")
+            api = collect_api(".", public_policy=policy)
+            ```
         """
 
         return cls("explicit", normalize_explicit_names(names))
@@ -124,6 +147,18 @@ class ApiPublicPolicy:
 
         Returns:
             Public policy object.
+
+        Examples:
+            Rehydrate a policy stored in a JSON config sidecar:
+
+            ```python
+            from oodocs.apidoc import ApiPublicPolicy
+
+            policy = ApiPublicPolicy.from_dict({
+                "name": "__all__",
+                "explicit_names": [],
+            })
+            ```
         """
 
         data = _normalize_config_mapping(data)
@@ -133,7 +168,20 @@ class ApiPublicPolicy:
         )
 
     def to_dict(self) -> dict[str, object]:
-        """Return deterministic serialized policy data."""
+        """Return deterministic serialized policy data.
+
+        Returns:
+            JSON-serializable public policy mapping.
+
+        Examples:
+            Store a public policy beside a custom API sidecar:
+
+            ```python
+            from oodocs.apidoc import ApiPublicPolicy
+
+            payload = ApiPublicPolicy.explicit("mypkg.Client").to_dict()
+            ```
+        """
 
         return {
             "name": self.name,
@@ -145,6 +193,16 @@ class ApiPublicPolicy:
 
         Raises:
             ValueError: If the strategy or explicit names are invalid.
+
+        Examples:
+            Validate a user-provided policy before collection:
+
+            ```python
+            from oodocs.apidoc import ApiPublicPolicy
+
+            policy = ApiPublicPolicy("__all__")
+            policy.validate()
+            ```
         """
 
         if self.name not in {"__all__", "underscore", "all", "explicit"}:
@@ -168,6 +226,20 @@ class ApiPublicPolicy:
 
         Returns:
             Whether the object is part of the public API boundary.
+
+        Examples:
+            Apply ``__all__`` semantics while inspecting module members:
+
+            ```python
+            from oodocs.apidoc import ApiPublicPolicy
+
+            policy = ApiPublicPolicy("__all__")
+            assert policy.module_name_is_public(
+                "Client",
+                "mypkg.Client",
+                {"Client"},
+            )
+            ```
         """
 
         if self.name == "all":
@@ -187,6 +259,17 @@ class ApiPublicPolicy:
 
         Returns:
             Whether the member should be collected as public.
+
+        Examples:
+            Check whether a class method belongs in generated API docs:
+
+            ```python
+            from oodocs.apidoc import ApiPublicPolicy
+
+            policy = ApiPublicPolicy("underscore")
+            assert policy.member_name_is_public("render")
+            assert not policy.member_name_is_public("_render_internal")
+            ```
         """
 
         if self.name == "all":
@@ -272,6 +355,21 @@ class ApiCollectConfig:
 
         Returns:
             Validated configuration.
+
+        Examples:
+            Start from repository defaults and override a small part for one
+            CI job:
+
+            ```python
+            from oodocs.apidoc import ApiCollectConfig, collect_api
+
+            base = ApiCollectConfig.from_pyproject(".")
+            config = ApiCollectConfig.from_kwargs(
+                base,
+                module_exclude_patterns=("mypkg.tests*", "mypkg.experimental*"),
+            )
+            api = collect_api(".", config=config)
+            ```
         """
 
         values = config.to_dict() if config is not None else {}
@@ -380,6 +478,19 @@ class ApiCollectConfig:
 
         Raises:
             ValueError: If an option is unsupported or incomplete.
+
+        Examples:
+            Validate config assembled from a UI or script before collecting:
+
+            ```python
+            from oodocs.apidoc import ApiCollectConfig
+
+            config = ApiCollectConfig(
+                public_policy="__all__",
+                docstring_style="auto",
+            )
+            config.validate()
+            ```
         """
 
         if self.collector not in {"auto", "inspect", "griffe"}:
@@ -394,19 +505,72 @@ class ApiCollectConfig:
             raise ValueError("docstring_style is not supported")
 
     def docstring_parser(self):
-        """Return this config's reusable docstring parser object."""
+        """Return this config's reusable docstring parser object.
+
+        Returns:
+            ``ApiDocstringParser`` configured from ``docstring_style``.
+
+        Examples:
+            Reuse the same parser for a quick standalone parse:
+
+            ```python
+            from oodocs.apidoc import ApiCollectConfig
+
+            config = ApiCollectConfig(docstring_style="google")
+            parsed = config.docstring_parser().parse(
+                "Load data.\\n\\nArgs:\\n    path: Input path.",
+            )
+            ```
+        """
 
         from oodocs.apidoc.docstring import ApiDocstringParser
 
         return ApiDocstringParser(self.docstring_style)
 
     def public_api_policy(self) -> ApiPublicPolicy:
-        """Return this config's reusable public API policy object."""
+        """Return this config's reusable public API policy object.
+
+        Returns:
+            ``ApiPublicPolicy`` built from ``public_policy`` and
+            ``explicit_names``.
+
+        Examples:
+            Inspect the resolved public boundary used by collection:
+
+            ```python
+            from oodocs.apidoc import ApiCollectConfig
+
+            config = ApiCollectConfig(
+                public_policy="explicit",
+                explicit_names=("mypkg.run",),
+            )
+            policy = config.public_api_policy()
+            assert policy.module_name_is_public("run", "mypkg.run", None)
+            ```
+        """
 
         return ApiPublicPolicy(self.public_policy, self.explicit_names)
 
     def to_dict(self) -> dict[str, object]:
-        """Return this config as JSON-serializable data."""
+        """Return this config as JSON-serializable data.
+
+        Returns:
+            Deterministic mapping suitable for JSON sidecars or
+            ``ApiCollectConfig.from_dict(...)``.
+
+        Examples:
+            Store a collection policy in a custom project manifest:
+
+            ```python
+            from oodocs.apidoc import ApiCollectConfig
+
+            payload = ApiCollectConfig(
+                collector="griffe",
+                public_policy="__all__",
+                docstring_style="auto",
+            ).to_dict()
+            ```
+        """
 
         return {
             "collector": self.collector,
@@ -570,6 +734,27 @@ class ApiBuildConfig:
 
         Returns:
             Validated build configuration.
+
+        Examples:
+            Build a config object from a deployment manifest and use it to
+            render a package reference:
+
+            ```python
+            from oodocs.apidoc import ApiBuildConfig, collect_api
+
+            build = ApiBuildConfig.from_dict({
+                "collector": "griffe",
+                "public_policy": "__all__",
+                "profile": "reference",
+                "formats": ["docx", "html"],
+                "out": "artifacts/api",
+            })
+            api = collect_api(".", config=build.collection)
+            api.to_document(profile=build.profile).save_all(
+                build.output_dir or "artifacts/api",
+                formats=build.output_formats,
+            )
+            ```
         """
 
         normalized = _normalize_config_mapping(data)
@@ -600,6 +785,26 @@ class ApiBuildConfig:
 
         Returns:
             Build configuration from ``[tool.oodocs.apidoc]``.
+
+        Raises:
+            FileNotFoundError: If the pyproject file does not exist.
+            KeyError: If ``[tool.oodocs.apidoc]`` is missing.
+            tomllib.TOMLDecodeError: If the pyproject file is invalid TOML.
+
+        Examples:
+            Reuse the same build defaults that ``oodocs apidoc build`` reads:
+
+            ```python
+            from oodocs.apidoc import ApiBuildConfig, collect_api
+
+            build = ApiBuildConfig.from_pyproject(".")
+            api = collect_api(".", config=build.collection)
+            api.to_document(profile=build.profile).save_all(
+                build.output_dir or "artifacts/api",
+                stem=build.stem,
+                formats=build.output_formats,
+            )
+            ```
         """
 
         pyproject_path = _pyproject_path(path)
@@ -614,13 +819,45 @@ class ApiBuildConfig:
 
     @classmethod
     def read_json(cls, path: PathLike) -> ApiBuildConfig:
-        """Read a build config JSON sidecar."""
+        """Read a build config JSON sidecar.
+
+        Args:
+            path: JSON sidecar path.
+
+        Returns:
+            Validated build configuration.
+
+        Examples:
+            Load a build config written by ``ApiBuildConfig.write_json(...)``:
+
+            ```python
+            from oodocs.apidoc import ApiBuildConfig
+
+            build = ApiBuildConfig.read_json("apidoc-build.json")
+            ```
+        """
 
         return cls.from_dict(json.loads(Path(path).read_text(encoding="utf-8")))
 
     @classmethod
     def read_file(cls, path: PathLike) -> ApiBuildConfig:
-        """Read a build config from JSON or ``pyproject.toml``."""
+        """Read a build config from JSON or ``pyproject.toml``.
+
+        Args:
+            path: JSON sidecar, project root directory, or TOML file path.
+
+        Returns:
+            Validated build configuration.
+
+        Examples:
+            Let scripts accept either ``pyproject.toml`` or JSON config paths:
+
+            ```python
+            from oodocs.apidoc import ApiBuildConfig
+
+            build = ApiBuildConfig.read_file("pyproject.toml")
+            ```
+        """
 
         config_path = Path(path)
         if config_path.is_dir() or config_path.suffix.lower() == ".toml":
@@ -632,6 +869,19 @@ class ApiBuildConfig:
 
         Raises:
             ValueError: If profile, formats, or heading depth are invalid.
+
+        Examples:
+            Validate build defaults before writing them into a repository:
+
+            ```python
+            from oodocs.apidoc import ApiBuildConfig
+
+            build = ApiBuildConfig(
+                profile="website",
+                output_formats=("html",),
+            )
+            build.validate()
+            ```
         """
 
         from oodocs.apidoc.styles import resolve_profile
@@ -643,7 +893,24 @@ class ApiBuildConfig:
             raise ValueError("output_formats must include at least one format")
 
     def to_dict(self) -> dict[str, object]:
-        """Return this build config as JSON-serializable data."""
+        """Return this build config as JSON-serializable data.
+
+        Returns:
+            Deterministic mapping containing both collection and build options.
+
+        Examples:
+            Generate config data for a custom repository setup wizard:
+
+            ```python
+            from oodocs.apidoc import ApiBuildConfig
+
+            payload = ApiBuildConfig(
+                profile="website",
+                output_formats=("html",),
+                output_dir="artifacts/api",
+            ).to_dict()
+            ```
+        """
 
         values = self.collection.to_dict()
         values.update(
@@ -661,7 +928,28 @@ class ApiBuildConfig:
         return values
 
     def write_json(self, path: PathLike) -> Path:
-        """Write this build config as deterministic JSON."""
+        """Write this build config as deterministic JSON.
+
+        Args:
+            path: Output JSON path.
+
+        Returns:
+            Written path.
+
+        Examples:
+            Write build defaults for a repository-local automation script:
+
+            ```python
+            from oodocs.apidoc import ApiBuildConfig
+
+            build = ApiBuildConfig(
+                profile="reference",
+                output_dir="artifacts/api",
+                sidecars=True,
+            )
+            build.write_json("apidoc-build.json")
+            ```
+        """
 
         output_path = Path(path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -705,6 +993,21 @@ class ApiBuildConfig:
 
         Raises:
             ValueError: If the file already contains ``[tool.oodocs.apidoc]``.
+
+        Examples:
+            Initialize a Python repository so CLI and Python calls share the
+            same defaults:
+
+            ```python
+            from oodocs.apidoc import ApiBuildConfig
+
+            ApiBuildConfig(
+                profile="website",
+                output_formats=("html",),
+                output_dir="artifacts/api",
+                sidecars=True,
+            ).write_pyproject(".")
+            ```
         """
 
         pyproject_path = _pyproject_path(path)
@@ -731,6 +1034,20 @@ def normalize_explicit_names(names: Sequence[str] | None) -> tuple[str, ...]:
 
     Returns:
         Deduplicated tuple preserving sorted deterministic order.
+
+    Examples:
+        Normalize explicit names before creating a public policy:
+
+        ```python
+        from oodocs.apidoc.config import normalize_explicit_names
+
+        names = normalize_explicit_names([
+            "mypkg.Client",
+            "mypkg.Client",
+            " run ",
+        ])
+        assert names == ("mypkg.Client", "run")
+        ```
     """
 
     return tuple(sorted({name.strip() for name in names or () if name.strip()}))
