@@ -22,6 +22,7 @@ from oodocs.apidoc import (
     ApiCoverageResult,
     ApiDocstringParser,
     ApiPackage,
+    ApiSnapshot,
     api_coverage_to_chapter,
     api_objects_to_chapter,
     api_objects_to_summary_table,
@@ -607,6 +608,8 @@ def test_build_config_save_all_targets_repo_with_parser_modules(
     build = ApiBuildConfig.read_file(config_path, target=repo)
     api = build.collect(repo)
     coverage = build.check_docs(repo, fail_under=1.0)
+    snapshot = build.snapshot(repo)
+    snapshot_path = build.write_snapshot(repo, tmp_path / "brief-snapshot.json")
     document = build.to_document(repo)
     outputs = build.save_all(repo)
     run = api.find("briefpkg.run")
@@ -615,6 +618,10 @@ def test_build_config_save_all_targets_repo_with_parser_modules(
     assert run is not None
     assert run.summary == "brief:Run custom command."
     assert coverage.object_coverage == 1.0
+    assert snapshot.objects["briefpkg.run"]["summary"] == "brief:Run custom command."
+    assert ApiSnapshot.read_json(snapshot_path).objects["briefpkg.run"]["summary"] == (
+        "brief:Run custom command."
+    )
     assert document.validate(formats=("html",)).ok
     assert outputs["html"] == output_dir / "briefpkg-api.html"
     assert outputs["api-json"] == output_dir / "briefpkg-api.json"

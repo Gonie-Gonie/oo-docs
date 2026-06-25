@@ -21,6 +21,7 @@ from oodocs.core import PathLike
 
 if TYPE_CHECKING:
     from oodocs.apidoc.coverage import ApiCoverageResult
+    from oodocs.apidoc.diff import ApiSnapshot
     from oodocs.apidoc.model import ApiPackage
     from oodocs.document import Document
 
@@ -1121,6 +1122,59 @@ class ApiBuildConfig:
             require_examples=require_examples,
             require_renderer_notes=require_renderer_notes,
         )
+
+    def snapshot(self, target: str | PathLike) -> ApiSnapshot:
+        """Collect a target and return a public API snapshot.
+
+        Args:
+            target: Importable package/module name, Python file, package
+                directory, or repository root.
+
+        Returns:
+            Deterministic ``ApiSnapshot`` built from the collected and
+            build-filtered API package.
+
+        Examples:
+            Create a filtered snapshot using the same config as API reference
+            builds:
+
+            ```python
+            from oodocs.apidoc import ApiBuildConfig, diff_api
+
+            build = ApiBuildConfig.from_pyproject(".")
+            base = build.snapshot(".")
+            head = build.snapshot(".")
+            diff = diff_api(base, head)
+            ```
+        """
+
+        from oodocs.apidoc.diff import ApiSnapshot
+
+        return ApiSnapshot.from_package(self.collect(target))
+
+    def write_snapshot(self, target: str | PathLike, path: PathLike) -> Path:
+        """Collect a target and write a public API snapshot sidecar.
+
+        Args:
+            target: Importable package/module name, Python file, package
+                directory, or repository root.
+            path: Output snapshot JSON path.
+
+        Returns:
+            Written snapshot path.
+
+        Examples:
+            Persist a release snapshot for later diffing:
+
+            ```python
+            from oodocs.apidoc import ApiBuildConfig
+
+            build = ApiBuildConfig.from_pyproject(".")
+            snapshot_path = build.write_snapshot(".", "artifacts/api-head.json")
+            ```
+        """
+
+        return self.snapshot(target).write_json(path)
 
     def save_all(
         self,

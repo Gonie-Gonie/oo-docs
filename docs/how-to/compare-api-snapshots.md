@@ -18,7 +18,10 @@ python -m oodocs apidoc snapshot . --kind function --module-prefix mypkg.adapter
 Python usage gives direct access to the diff object:
 
 ```python
-from oodocs.apidoc import ApiSnapshot, diff_api
+from oodocs.apidoc import ApiBuildConfig, ApiSnapshot, diff_api
+
+build = ApiBuildConfig.from_pyproject(".")
+build.write_snapshot(".", "artifacts/api-head.json")
 
 base = ApiSnapshot.read_json("artifacts/api-base.json")
 head = ApiSnapshot.read_json("artifacts/api-head.json")

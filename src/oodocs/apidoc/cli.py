@@ -379,8 +379,7 @@ def _run_build(args: argparse.Namespace) -> int:
 
 def _run_snapshot(args: argparse.Namespace) -> int:
     build_config = _effective_build_config_from_args(args)
-    api = build_config.collect(args.package)
-    ApiSnapshot.from_package(api).write_json(args.out)
+    build_config.write_snapshot(args.package, args.out)
     print(f"Wrote api-snapshot: {Path(args.out)}")
     return 0
 
