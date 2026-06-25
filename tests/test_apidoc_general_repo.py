@@ -8,7 +8,12 @@ from apidoc_samples import (
     write_mixed_docstring_repo,
     write_single_file_module,
 )
-from example_regression import assert_html_internal_links_resolve
+from example_regression import (
+    assert_docx_structure,
+    assert_html_internal_links_resolve,
+    assert_pdf_text_and_pages,
+    assert_rendered_bundle,
+)
 from oodocs import Chapter, Document, Paragraph
 from oodocs.apidoc import (
     ApiBuildConfig,
@@ -154,11 +159,33 @@ def test_general_repo_package_render_helper_builds_complete_reference(tmp_path) 
     outputs = document.save_all(
         tmp_path / "package-rendered",
         stem="mixedpkg-api",
-        formats=("html",),
+        formats=("docx", "pdf", "html"),
     )
     html = outputs["html"].read_text(encoding="utf-8")
 
-    assert document.validate(formats=("html",)).ok
+    assert_rendered_bundle(outputs["docx"], outputs["pdf"], outputs["html"])
+    assert document.validate(formats=("docx", "pdf", "html")).ok
+    assert_docx_structure(
+        outputs["docx"],
+        required_paragraphs=(
+            "mixedpkg API Reference",
+            "1 API Documentation Coverage",
+            "2 mixedpkg",
+            "2.1 mixedpkg.Client",
+            "2.2 mixedpkg.connect",
+        ),
+        min_tables=6,
+    )
+    assert_pdf_text_and_pages(
+        outputs["pdf"],
+        required_text=(
+            "mixedpkg API Reference",
+            "API Documentation Coverage",
+            "mixedpkg.Client",
+            "mixedpkg.connect",
+        ),
+        min_pages=1,
+    )
     assert "mixedpkg API Reference" in html
     assert "API Contents" in html
     assert "API Documentation Coverage" in html
