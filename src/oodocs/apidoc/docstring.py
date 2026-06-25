@@ -1226,8 +1226,8 @@ def _parse_markdown_parameters(
             items.append(
                 ApiParameter(
                     name=name,
-                    annotation=None if annotation_in_name else annotation,
-                    description=description or None,
+                    annotation=None if annotation_in_name else _plain_code_text(annotation),
+                    description=_plain_code_text(description) or None,
                     documented=True,
                     source="docstring",
                 )
@@ -1244,15 +1244,15 @@ def _parse_markdown_parameter_table(
     if len(lines) < 3:
         return []
     headers = [cell.strip().lower() for cell in lines[0].strip("|").split("|")]
-    if "name" not in headers:
+    if "name" not in headers and "parameter" not in headers:
         return []
     items: list[ApiParameter] = []
     for row in lines[2:]:
-        cells = [cell.strip().strip("`") for cell in row.strip("|").split("|")]
+        cells = [_plain_code_text(cell) for cell in row.strip("|").split("|")]
         values = {header: cells[index] if index < len(cells) else "" for index, header in enumerate(headers)}
         items.append(
             ApiParameter(
-                name=values.get("name", ""),
+                name=values.get("name", "") or values.get("parameter", ""),
                 annotation=None if annotation_in_name else values.get("type") or values.get("annotation") or None,
                 description=values.get("description") or None,
                 documented=True,
@@ -1260,6 +1260,15 @@ def _parse_markdown_parameter_table(
             )
         )
     return [item for item in items if item.name]
+
+
+def _plain_code_text(value: str | None) -> str | None:
+    if value is None:
+        return None
+    text = value.strip()
+    if not text:
+        return None
+    return re.sub(r"`([^`]+)`", r"\1", text)
 
 
 def _parse_return_section(text: str) -> ApiReturn:

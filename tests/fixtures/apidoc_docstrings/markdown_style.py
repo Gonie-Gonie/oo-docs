@@ -8,9 +8,9 @@ def load_widget(path: str) -> bool:
 
     ## Parameters
 
-    | Name | Type | Description |
+    | Parameter | Type | Description |
     | --- | --- | --- |
-    | path | str | Input path. |
+    | path | str | Input `path`. |
 
     ## Returns
 
@@ -47,7 +47,7 @@ class Widget:
 
     ## Parameters
 
-    - `name` (`str`): Widget name.
+    - `name` (`str`): Widget `name` value.
 
     ## Attributes
 
@@ -77,7 +77,7 @@ class Widget:
 
         ## Parameters
 
-        - `path` (`str`): Output path.
+        - `path` (`str`): Output `path`.
 
         ## Returns
 
@@ -93,7 +93,7 @@ class WidgetRecord:
 
     ## Attributes
 
-    - `identifier` (`str`): Stable record id.
+    - `identifier` (`str`): Stable `record id`.
     """
 
     identifier: str

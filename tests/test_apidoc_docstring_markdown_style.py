@@ -15,12 +15,20 @@ def test_markdown_docstring_fixture_extracts_shared_fields() -> None:
 
     assert function.style == "markdown"
     assert function.parameters[0].name == "path"
+    assert function.parameters[0].annotation == "str"
+    assert function.parameters[0].description == "Input path."
     assert function.returns is not None
     assert function.examples
     assert function.notes
     assert function.renderer_notes[0].format == "html"
     assert class_doc.parameters[0].name == "name"
+    assert class_doc.parameters[0].annotation == "str"
+    assert class_doc.parameters[0].description == "Widget name value."
     assert class_doc.attributes[0].name == "label"
     assert method.parameters[0].name == "path"
+    assert method.parameters[0].annotation == "str"
+    assert method.parameters[0].description == "Output path."
     assert property_doc.returns is not None
     assert dataclass_doc.attributes[0].name == "identifier"
+    assert dataclass_doc.attributes[0].annotation == "str"
+    assert dataclass_doc.attributes[0].description == "Stable record id."
