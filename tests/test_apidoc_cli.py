@@ -20,6 +20,7 @@ from oodocs.apidoc import (
     ApiBuildConfig,
     ApiCoverageResult,
     ApiPackage,
+    ApiSnapshot,
     docstring_parser_names,
 )
 from oodocs.cli import main
@@ -516,6 +517,120 @@ def test_apidoc_cli_collect_external_json_config_loads_target_parser_modules(
 
     assert run is not None
     assert run.summary == "collect:Collect from external JSON config."
+
+
+def test_apidoc_cli_check_and_snapshot_external_json_config_load_target_parsers(
+    tmp_path,
+) -> None:
+    repo = tmp_path / "external-json-release-repo"
+    package_dir = repo / "src" / "releasejsonpkg"
+    package_dir.mkdir(parents=True)
+    (repo / "pyproject.toml").write_text(
+        "\n".join(
+            [
+                "[project]",
+                'name = "releasejsonpkg"',
+                "",
+                "[tool.setuptools]",
+                'package-dir = {"" = "src"}',
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (repo / "release_json_parsers.py").write_text(
+        "\n".join(
+            [
+                "from oodocs.apidoc import ParsedDocstring, docstring_parser_names, register_docstring_parser",
+                "",
+                "def parse_release_json_style(text, qualname=None, module=None):",
+                "    first = (text or '').strip().splitlines()[0]",
+                '    return ParsedDocstring(summary=f"release:{first}", style="release-json-brief")',
+                "",
+                'if "release-json-brief" not in docstring_parser_names():',
+                '    register_docstring_parser("release-json-brief", parse_release_json_style)',
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (package_dir / "__init__.py").write_text(
+        "\n".join(
+            [
+                '"""Release JSON config package."""',
+                "",
+                '__all__ = ["run"]',
+                "",
+                "def run() -> None:",
+                '    """Run through release commands."""',
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    config_path = tmp_path / "release-apidoc-config.json"
+    coverage_json = tmp_path / "release-coverage.json"
+    coverage_csv = tmp_path / "release-coverage.csv"
+    snapshot_json = tmp_path / "release-snapshot.json"
+    config_path.write_text(
+        json.dumps(
+            {
+                "collector": "inspect",
+                "public_policy": "__all__",
+                "docstring_style": "release-json-brief",
+                "docstring_parser_modules": ["release_json_parsers"],
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    assert "release-json-brief" not in docstring_parser_names()
+    assert (
+        main(
+            [
+                "apidoc",
+                "check",
+                str(repo),
+                "--config",
+                str(config_path),
+                "--out-json",
+                str(coverage_json),
+                "--out-csv",
+                str(coverage_csv),
+            ]
+        )
+        == 0
+    )
+    assert (
+        main(
+            [
+                "apidoc",
+                "snapshot",
+                str(repo),
+                "--config",
+                str(config_path),
+                "--out",
+                str(snapshot_json),
+            ]
+        )
+        == 0
+    )
+
+    coverage = ApiCoverageResult.read_json(coverage_json)
+    snapshot = ApiSnapshot.read_json(snapshot_json)
+
+    assert coverage.package == "releasejsonpkg"
+    assert coverage.object_coverage == 1.0
+    assert coverage_csv.read_text(encoding="utf-8").startswith(
+        "severity,code,qualname,module,path,line_number,message"
+    )
+    assert snapshot.name == "releasejsonpkg"
+    assert snapshot.objects["releasejsonpkg.run"]["summary"] == (
+        "release:Run through release commands."
+    )
 
 
 def test_apidoc_cli_builds_setuptools_package_dir_repo(tmp_path) -> None:
