@@ -20,6 +20,7 @@ from oodocs.compatibility import normalize_output_formats
 from oodocs.core import PathLike
 
 if TYPE_CHECKING:
+    from oodocs.apidoc.coverage import ApiCoverageResult
     from oodocs.apidoc.model import ApiPackage
     from oodocs.document import Document
 
@@ -1073,6 +1074,52 @@ class ApiBuildConfig:
             title=title,
             settings=settings,
             citations=citations,
+        )
+
+    def check_docs(
+        self,
+        target: str | PathLike,
+        *,
+        fail_under: float | None = None,
+        require_examples: bool = False,
+        require_renderer_notes: bool = False,
+    ) -> ApiCoverageResult:
+        """Collect a target and check API documentation coverage.
+
+        Args:
+            target: Importable package/module name, Python file, package
+                directory, or repository root.
+            fail_under: Optional minimum documented-object ratio. When the
+                coverage is below this value, the result contains an error
+                issue.
+            require_examples: Whether public API objects must include examples.
+            require_renderer_notes: Whether public API objects must include
+                renderer notes.
+
+        Returns:
+            ``ApiCoverageResult`` for the collected and build-filtered API
+            package.
+
+        Examples:
+            Run the same filtered coverage check that the CLI uses, but from a
+            release script:
+
+            ```python
+            from oodocs.apidoc import ApiBuildConfig
+
+            build = ApiBuildConfig.from_pyproject(".")
+            coverage = build.check_docs(".", fail_under=0.90)
+            coverage.write_json("artifacts/api/coverage.json")
+            ```
+        """
+
+        from oodocs.apidoc.coverage import check_api_docs
+
+        return check_api_docs(
+            self.collect(target),
+            fail_under=fail_under,
+            require_examples=require_examples,
+            require_renderer_notes=require_renderer_notes,
         )
 
     def save_all(

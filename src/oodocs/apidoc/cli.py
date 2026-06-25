@@ -346,15 +346,14 @@ def _run_collect(args: argparse.Namespace) -> int:
 
 def _run_check(args: argparse.Namespace) -> int:
     build_config = _effective_build_config_from_args(args)
-    api = build_config.collect(args.package)
-    result = check_api_docs(
-        api,
+    result = build_config.check_docs(
+        args.package,
         fail_under=args.fail_under,
         require_examples=args.require_examples,
         require_renderer_notes=args.require_renderer_notes,
     )
     print(
-        f"{api.name}: {result.documented_object_count}/{result.public_object_count} "
+        f"{result.package}: {result.documented_object_count}/{result.public_object_count} "
         f"public objects documented ({result.object_coverage:.1%})"
     )
     if args.out_json:
@@ -365,7 +364,7 @@ def _run_check(args: argparse.Namespace) -> int:
         print(f"Wrote coverage-csv: {args.out_csv}")
     if result.issues:
         for issue in result.issues[:20]:
-            print(f"- {issue.severity.upper()} {issue.code}: {issue.qualname or issue.module or api.name} - {issue.message}")
+            print(f"- {issue.severity.upper()} {issue.code}: {issue.qualname or issue.module or result.package} - {issue.message}")
         if len(result.issues) > 20:
             print(f"... {len(result.issues) - 20} more issue(s)")
     return 1 if any(issue.severity == "error" for issue in result.issues) else 0

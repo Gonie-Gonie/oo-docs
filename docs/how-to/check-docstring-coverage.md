@@ -1,7 +1,20 @@
 # Check Docstring Coverage
 
-Use `check_api_docs(...)` from Python when coverage evidence should be inserted
-into a document, or use the CLI when CI should enforce a minimum ratio.
+Use `ApiBuildConfig.check_docs(...)` when a repository stores apidoc settings
+in `pyproject.toml` or a JSON sidecar:
+
+```python
+from oodocs.apidoc import ApiBuildConfig
+
+build = ApiBuildConfig.from_pyproject(".")
+coverage = build.check_docs(".", fail_under=0.90)
+coverage.write_json("artifacts/api-coverage.json")
+coverage.write_csv("artifacts/api-coverage.csv")
+```
+
+Use `check_api_docs(...)` directly when coverage evidence should be inserted
+into an already collected API object tree, or use the CLI when CI should
+enforce a minimum ratio.
 
 ```python
 from oodocs import Chapter, Document

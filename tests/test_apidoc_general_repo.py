@@ -606,6 +606,7 @@ def test_build_config_save_all_targets_repo_with_parser_modules(
 
     build = ApiBuildConfig.read_file(config_path, target=repo)
     api = build.collect(repo)
+    coverage = build.check_docs(repo, fail_under=1.0)
     document = build.to_document(repo)
     outputs = build.save_all(repo)
     run = api.find("briefpkg.run")
@@ -613,6 +614,7 @@ def test_build_config_save_all_targets_repo_with_parser_modules(
     assert build.collection.docstring_parser().style == "example-brief"
     assert run is not None
     assert run.summary == "brief:Run custom command."
+    assert coverage.object_coverage == 1.0
     assert document.validate(formats=("html",)).ok
     assert outputs["html"] == output_dir / "briefpkg-api.html"
     assert outputs["api-json"] == output_dir / "briefpkg-api.json"
@@ -626,7 +628,7 @@ def test_build_config_save_all_targets_repo_with_parser_modules(
     saved_run = saved_api.find("briefpkg.run")
     assert saved_run is not None
     assert saved_run.summary == "brief:Run custom command."
-    assert ApiCoverageResult.read_json(outputs["coverage-json"]).object_coverage == 1.0
+    assert ApiCoverageResult.read_json(outputs["coverage-json"]).object_coverage == coverage.object_coverage
 
 
 def test_collect_api_loads_repo_local_docstring_parser_modules(
