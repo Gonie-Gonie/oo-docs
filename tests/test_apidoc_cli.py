@@ -75,3 +75,36 @@ def test_apidoc_cli_passes_fallback_collector_to_collection(
         issue.severity == "error" and issue.code == "griffe-load-failed"
         for issue in api.issues
     )
+
+
+def test_apidoc_cli_can_exclude_member_kinds(tmp_path) -> None:
+    package_dir = write_sample_package(tmp_path)
+    output_path = tmp_path / "samplepkg-api.json"
+
+    assert (
+        main(
+            [
+                "apidoc",
+                "collect",
+                str(package_dir),
+                "--collector",
+                "inspect",
+                "--public-policy",
+                "__all__",
+                "--no-attributes",
+                "--no-properties",
+                "--no-methods",
+                "--out",
+                str(output_path),
+            ]
+        )
+        == 0
+    )
+
+    api = ApiPackage.read_json(output_path)
+    assert api.find("samplepkg.Widget") is not None
+    assert api.find("samplepkg.make_widget") is not None
+    assert api.find("samplepkg.CONSTANT") is None
+    assert api.find("samplepkg.Widget.label") is None
+    assert api.find("samplepkg.Widget.title") is None
+    assert api.find("samplepkg.Widget.render") is None

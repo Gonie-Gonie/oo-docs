@@ -19,6 +19,26 @@ def test_griffe_collector_collects_general_package_tree(tmp_path) -> None:
     assert api.find("samplepkg.make_widget") is not None
 
 
+def test_griffe_collector_can_exclude_member_kinds(tmp_path) -> None:
+    if importlib.util.find_spec("griffe") is None:
+        pytest.skip("griffe is not installed")
+
+    api = collect_sample_api(
+        tmp_path,
+        collector="griffe",
+        include_attributes=False,
+        include_properties=False,
+        include_methods=False,
+    )
+
+    assert api.find("samplepkg.Widget") is not None
+    assert api.find("samplepkg.make_widget") is not None
+    assert api.find("samplepkg.CONSTANT") is None
+    assert api.find("samplepkg.Widget.label") is None
+    assert api.find("samplepkg.Widget.title") is None
+    assert api.find("samplepkg.Widget.render") is None
+
+
 def test_griffe_collector_can_include_inherited_members(tmp_path) -> None:
     if importlib.util.find_spec("griffe") is None:
         pytest.skip("griffe is not installed")

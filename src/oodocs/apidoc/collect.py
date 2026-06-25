@@ -56,6 +56,9 @@ def collect_api(
     docstring_parser_modules: Iterable[str] | None = None,
     include_imported: bool | None = None,
     include_inherited: bool | None = None,
+    include_attributes: bool | None = None,
+    include_properties: bool | None = None,
+    include_methods: bool | None = None,
     class_signature_from_init: bool | None = None,
     module_include_patterns: Iterable[str] | None = None,
     module_exclude_patterns: Iterable[str] | None = None,
@@ -86,6 +89,10 @@ def collect_api(
             objects; griffe can resolve richer imported targets when available.
         include_inherited: Whether import-aware collectors should include
             inherited class members when available.
+        include_attributes: Whether module data and class attributes should be
+            included.
+        include_properties: Whether class properties should be included.
+        include_methods: Whether class methods should be included.
         class_signature_from_init: Whether class signatures use ``__init__``.
         module_include_patterns: Optional glob-style module names to include
             before collection.
@@ -149,6 +156,9 @@ def collect_api(
         else None,
         "include_imported": include_imported,
         "include_inherited": include_inherited,
+        "include_attributes": include_attributes,
+        "include_properties": include_properties,
+        "include_methods": include_methods,
         "class_signature_from_init": class_signature_from_init,
         "module_include_patterns": tuple(module_include_patterns)
         if module_include_patterns is not None
@@ -482,6 +492,16 @@ def _matches_any_object_pattern(obj: ApiObject, patterns: tuple[str, ...]) -> bo
     )
 
 
+def _object_kind_enabled(kind: str, config: ApiCollectConfig) -> bool:
+    if kind in {"attribute", "data"}:
+        return config.include_attributes
+    if kind == "property":
+        return config.include_properties
+    if kind == "method":
+        return config.include_methods
+    return True
+
+
 def _issue_matches_object_filters(
     issue: ApiDocIssue,
     selected_qualnames: set[str],
@@ -541,7 +561,7 @@ def _collect_module_from_file(
         elif isinstance(node, ast.ClassDef):
             if _is_public_name(node.name, f"{module_name}.{node.name}", public_names, config):
                 members.append(class_objects[node.name])
-        elif isinstance(node, (ast.Assign, ast.AnnAssign)):
+        elif config.include_attributes and isinstance(node, (ast.Assign, ast.AnnAssign)):
             for name, annotation, default in _assignment_targets(node):
                 if _is_public_name(name, f"{module_name}.{name}", public_names, config):
                     members.append(
@@ -565,6 +585,7 @@ def _collect_module_from_file(
             members,
             class_nodes=class_nodes,
             class_objects=class_objects,
+            config=config,
         )
     module.members = sorted(
         _merge_attribute_docs(members, parsed_module.attributes),
@@ -614,9 +635,15 @@ def _class_object(
         if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef)):
             if child.name == "__init__":
                 continue
+            decorators = {_decorator_name(decorator) for decorator in child.decorator_list}
+            if "property" in decorators:
+                if not config.include_properties:
+                    continue
+            elif not config.include_methods:
+                continue
             if _class_member_is_public(child.name, config, f"{qualname}.{child.name}"):
                 members.append(_function_object(child, module_name, path, config=config, parent=node.name))
-        elif isinstance(child, (ast.Assign, ast.AnnAssign)):
+        elif config.include_attributes and isinstance(child, (ast.Assign, ast.AnnAssign)):
             for name, annotation, default in _assignment_targets(child):
                 if _class_member_is_public(name, config, f"{qualname}.{name}"):
                     members.append(
@@ -673,6 +700,7 @@ def _add_source_inherited_members(
     *,
     class_nodes: dict[str, ast.ClassDef],
     class_objects: dict[str, ApiObject],
+    config: ApiCollectConfig,
 ) -> None:
     for class_obj in members:
         if class_obj.kind != "class":
@@ -688,7 +716,7 @@ def _add_source_inherited_members(
             class_objects=class_objects,
             visited=set(),
         ):
-            if member.name in existing:
+            if member.name in existing or not _object_kind_enabled(member.kind, config):
                 continue
             clone = _inherited_member_alias(member, class_obj.qualname)
             inherited.append(clone)

@@ -10,6 +10,9 @@ def test_apidoc_config_roundtrip_supports_general_repo_policy(tmp_path) -> None:
             fallback_collector="none",
             public_policy=ApiPublicPolicy.explicit("samplepkg.Widget"),
             docstring_style=ApiDocstringParser.google(),
+            include_attributes=False,
+            include_properties=False,
+            include_methods=False,
             module_exclude_patterns=("samplepkg.tests*",),
             object_exclude_patterns=("*.render_to_pdf", "*.render_to_html"),
         ),
@@ -26,6 +29,9 @@ def test_apidoc_config_roundtrip_supports_general_repo_policy(tmp_path) -> None:
     assert readback.collection.fallback_collector == "none"
     assert readback.collection.explicit_names == ("samplepkg.Widget",)
     assert readback.collection.docstring_style == "google"
+    assert readback.collection.include_attributes is False
+    assert readback.collection.include_properties is False
+    assert readback.collection.include_methods is False
     assert readback.collection.object_exclude_patterns == (
         "*.render_to_pdf",
         "*.render_to_html",

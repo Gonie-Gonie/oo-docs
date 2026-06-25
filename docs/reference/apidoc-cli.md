@@ -68,6 +68,9 @@ collector = "griffe"
 public-policy = "__all__"
 docstring-style = "auto"
 object-exclude-patterns = ["render_to_docx", "render_to_pdf", "render_to_html"]
+include-attributes = true
+include-properties = true
+include-methods = true
 profile = "website"
 formats = ["html"]
 out = "artifacts/api"
@@ -111,6 +114,14 @@ python -m oodocs apidoc build . --object-exclude render_to_pdf --object-exclude 
 python -m oodocs apidoc collect . --object-include mypkg.Client --out artifacts/client-api.json
 ```
 
+Member kind switches are applied during collection. They are useful when a
+reference should keep modules, classes, and functions but omit selected nested
+member kinds:
+
+```powershell
+python -m oodocs apidoc build . --no-attributes --no-properties --no-methods --out artifacts/api
+```
+
 Snapshot and diff:
 
 ```powershell
@@ -126,7 +137,9 @@ docstring changes, deprecated objects, and coverage deltas.
 Common collection options are `--collector`, `--public-policy`,
 `--fallback-collector`, `--explicit-name`, `--docstring-style`,
 `--docstring-parser-module`, `--include-imported`, `--config`,
-`--include-inherited`, `--class-signature-from-init`,
+`--include-inherited`, `--include-attributes`, `--no-attributes`,
+`--include-properties`, `--no-properties`, `--include-methods`,
+`--no-methods`, `--class-signature-from-init`,
 `--no-class-signature-from-init`, `--module-include`, `--module-exclude`,
 `--object-include`, and `--object-exclude`.
 Module include/exclude patterns are applied before module contents are

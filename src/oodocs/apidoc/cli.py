@@ -188,6 +188,45 @@ def _add_collect_options(parser: argparse.ArgumentParser, *, include_config: boo
         help="Include inherited class members when the collector can resolve them.",
     )
     parser.add_argument(
+        "--include-attributes",
+        action="store_true",
+        default=None,
+        help="Include module data and class attributes in the collected API tree.",
+    )
+    parser.add_argument(
+        "--no-attributes",
+        action="store_false",
+        dest="include_attributes",
+        default=None,
+        help="Exclude module data and class attributes from the collected API tree.",
+    )
+    parser.add_argument(
+        "--include-properties",
+        action="store_true",
+        default=None,
+        help="Include class properties in the collected API tree.",
+    )
+    parser.add_argument(
+        "--no-properties",
+        action="store_false",
+        dest="include_properties",
+        default=None,
+        help="Exclude class properties from the collected API tree.",
+    )
+    parser.add_argument(
+        "--include-methods",
+        action="store_true",
+        default=None,
+        help="Include class methods in the collected API tree.",
+    )
+    parser.add_argument(
+        "--no-methods",
+        action="store_false",
+        dest="include_methods",
+        default=None,
+        help="Exclude class methods from the collected API tree.",
+    )
+    parser.add_argument(
         "--class-signature-from-init",
         action="store_true",
         default=None,
@@ -240,6 +279,9 @@ def _run_init(args: argparse.Namespace) -> int:
         docstring_parser_modules=args.docstring_parser_modules,
         include_imported=args.include_imported,
         include_inherited=args.include_inherited,
+        include_attributes=args.include_attributes,
+        include_properties=args.include_properties,
+        include_methods=args.include_methods,
         class_signature_from_init=args.class_signature_from_init,
         module_include_patterns=args.module_include_patterns,
         module_exclude_patterns=args.module_exclude_patterns,
@@ -399,6 +441,9 @@ def _collect_from_args(
         docstring_parser_modules=args.docstring_parser_modules,
         include_imported=args.include_imported,
         include_inherited=args.include_inherited,
+        include_attributes=args.include_attributes,
+        include_properties=args.include_properties,
+        include_methods=args.include_methods,
         class_signature_from_init=args.class_signature_from_init,
         module_include_patterns=args.module_include_patterns,
         module_exclude_patterns=args.module_exclude_patterns,

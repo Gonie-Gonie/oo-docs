@@ -171,3 +171,20 @@ api = collect_api(
     include_inherited=True,
 )
 ```
+
+Use `include_attributes`, `include_properties`, and `include_methods` to control
+which class and module member kinds appear in the collected tree before any
+rendering profile runs. This is useful when a public package reference should
+list classes and factory functions but omit implementation-oriented constants,
+properties, or methods from the generated document.
+
+```python
+api = collect_api(
+    ".",
+    collector="griffe",
+    public_policy="__all__",
+    include_attributes=False,
+    include_properties=False,
+    include_methods=False,
+)
+```
