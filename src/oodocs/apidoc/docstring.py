@@ -896,50 +896,79 @@ def _parse_sphinx(text: str, qualname: str | None, module: str | None) -> Parsed
     while i < len(lines):
         line = lines[i]
         stripped = line.strip()
-        if match := re.match(r"^:param\s+([A-Za-z_][\w.]*)\s*:\s*(.*)$", stripped):
-            name, desc = match.groups()
+        if match := re.match(
+            r"^:param\s+(?:(?P<type>[^:\s]+)\s+)?(?P<name>[A-Za-z_][\w.]*)\s*:\s*(?P<body>.*)$",
+            stripped,
+        ):
+            name = match.group("name")
+            desc, next_index = _collect_sphinx_field_body(lines, i, match.group("body"))
             if not parsed.parameters:
-                param_map[name] = ApiParameter(name=name, description=desc or None, documented=True)
+                param_map[name] = ApiParameter(
+                    name=name,
+                    annotation=match.group("type"),
+                    description=desc,
+                    documented=True,
+                )
+            i = next_index - 1
         elif match := re.match(r"^:type\s+([A-Za-z_][\w.]*)\s*:\s*(.*)$", stripped):
             name, annotation = match.groups()
+            annotation, next_index = _collect_sphinx_field_body(lines, i, annotation)
             if not parsed.parameters:
-                param_map.setdefault(name, ApiParameter(name=name, documented=True)).annotation = annotation or None
-        elif match := re.match(r"^:(?:ivar|var|cvar)\s+([A-Za-z_][\w.]*)\s*:\s*(.*)$", stripped):
-            name, desc = match.groups()
+                param_map.setdefault(name, ApiParameter(name=name, documented=True)).annotation = annotation
+            i = next_index - 1
+        elif match := re.match(
+            r"^:(?:ivar|var|cvar)\s+(?:(?P<type>[^:\s]+)\s+)?(?P<name>[A-Za-z_][\w.]*)\s*:\s*(?P<body>.*)$",
+            stripped,
+        ):
+            name = match.group("name")
+            desc, next_index = _collect_sphinx_field_body(lines, i, match.group("body"))
             if not parsed.attributes:
                 attr_map[name] = ApiParameter(
                     name=name,
-                    description=desc or None,
+                    annotation=match.group("type"),
+                    description=desc,
                     documented=True,
                     source="docstring",
                 )
+            i = next_index - 1
         elif match := re.match(r"^:vartype\s+([A-Za-z_][\w.]*)\s*:\s*(.*)$", stripped):
             name, annotation = match.groups()
+            annotation, next_index = _collect_sphinx_field_body(lines, i, annotation)
             if not parsed.attributes:
                 attr_map.setdefault(
                     name,
                     ApiParameter(name=name, documented=True, source="docstring"),
-                ).annotation = annotation or None
+                ).annotation = annotation
+            i = next_index - 1
         elif match := re.match(r"^:(?:returns?|yields?)\s*:\s*(.*)$", stripped):
+            description, next_index = _collect_sphinx_field_body(lines, i, match.group(1))
             if parsed.returns is None:
-                parsed.returns = ApiReturn(description=match.group(1) or None, documented=True)
+                parsed.returns = ApiReturn(description=description, documented=True)
+            i = next_index - 1
         elif match := re.match(r"^:(?:rtype|ytype|yieldtype)\s*:\s*(.*)$", stripped):
-            return_annotation = match.group(1) or None
+            return_annotation, next_index = _collect_sphinx_field_body(lines, i, match.group(1))
+            i = next_index - 1
         elif match := re.match(r"^:raises?\s+([^:]+)\s*:\s*(.*)$", stripped):
+            description, next_index = _collect_sphinx_field_body(lines, i, match.group(2))
             if not parsed.raises:
-                parsed.raises.append(ApiRaises(match.group(1).strip(), match.group(2) or None))
+                parsed.raises.append(ApiRaises(match.group(1).strip(), description))
+            i = next_index - 1
         elif stripped.startswith(".. deprecated::"):
             parsed.deprecated = True
             parsed.deprecation_message = _collect_directive_body(lines, i)
+            i = _skip_sphinx_body(lines, i) - 1
         elif stripped.startswith(".. warning::"):
             parsed.warnings.append(_collect_directive_body(lines, i))
+            i = _skip_sphinx_body(lines, i) - 1
         elif stripped.startswith(".. note::"):
             parsed.notes.append(_collect_directive_body(lines, i))
+            i = _skip_sphinx_body(lines, i) - 1
         elif stripped.startswith(".. code-block::"):
             language = stripped.partition("::")[2].strip() or "text"
             code_text = _collect_directive_body(lines, i, preserve=True)
             if code_text and not parsed.examples:
                 parsed.examples.append(ApiExample(code_text, language=language))
+            i = _skip_sphinx_body(lines, i) - 1
         elif stripped.startswith(":"):
             pass
         else:
@@ -1344,6 +1373,27 @@ def _join_text(left: str | None, right: str | None) -> str | None:
     return " ".join(pieces) if pieces else None
 
 
+def _collect_sphinx_field_body(
+    lines: list[str],
+    start: int,
+    first_line: str,
+) -> tuple[str | None, int]:
+    body = [first_line.strip()] if first_line.strip() else []
+    index = start + 1
+    while index < len(lines):
+        line = lines[index]
+        stripped = line.strip()
+        if stripped.startswith((":", ".. ")) and not line.startswith((" ", "\t")):
+            break
+        if line.startswith((" ", "\t")) or not stripped:
+            if stripped:
+                body.append(stripped)
+            index += 1
+            continue
+        break
+    return (" ".join(body) if body else None), index
+
+
 def _collect_directive_body(
     lines: list[str],
     start: int,
@@ -1352,7 +1402,7 @@ def _collect_directive_body(
 ) -> str:
     body: list[str] = []
     for line in lines[start + 1 :]:
-        if line.strip().startswith((":",".. ")) and not line.startswith((" ", "\t")):
+        if line.strip().startswith((":", ".. ")) and not line.startswith((" ", "\t")):
             break
         if line.startswith((" ", "\t")) or not line.strip():
             body.append(line)
@@ -1360,6 +1410,19 @@ def _collect_directive_body(
             break
     text = "\n".join(body)
     return inspect.cleandoc(text) if not preserve else inspect.cleandoc(text)
+
+
+def _skip_sphinx_body(lines: list[str], start: int) -> int:
+    index = start + 1
+    while index < len(lines):
+        line = lines[index]
+        if line.strip().startswith((":",".. ")) and not line.startswith((" ", "\t")):
+            break
+        if line.startswith((" ", "\t")) or not line.strip():
+            index += 1
+            continue
+        break
+    return index
 
 
 _PARSERS.update(
