@@ -7,6 +7,7 @@ import pytest
 from apidoc_samples import (
     write_flit_package_repo,
     write_hatch_package_repo,
+    write_import_names_package_repo,
     write_pdm_package_dir_repo,
     write_setuptools_find_repo,
 )
@@ -455,4 +456,66 @@ def test_apidoc_build_config_read_file_uses_flit_target_import_roots(tmp_path) -
     assert document.validate(formats=("html",)).ok
     assert run is not None
     assert run.summary == "flit-target:Run from a Flit-layout repository."
+    assert api.find("straypkg.leak") is None
+
+
+def test_apidoc_build_config_read_file_uses_import_names_target_import_roots(
+    tmp_path,
+) -> None:
+    repo = write_import_names_package_repo(
+        tmp_path,
+        repo_name="import-names-target-build-config-repo",
+        package_name="importnamestargetpkg",
+    )
+    parser_path = repo / "src" / "importnamestargetpkg" / "docs_parsers.py"
+    parser_path.write_text(
+        "\n".join(
+            [
+                "from oodocs.apidoc import ParsedDocstring, docstring_parser_names, register_docstring_parser",
+                "",
+                "def parse_import_names_target_style(text, qualname=None, module=None):",
+                "    lines = (text or '').strip().splitlines()",
+                "    first = lines[0] if lines else ''",
+                "    summary = f'import-names-target:{first}' if first else None",
+                '    return ParsedDocstring(summary=summary, style="import-names-target-brief")',
+                "",
+                'if "import-names-target-brief" not in docstring_parser_names():',
+                '    register_docstring_parser("import-names-target-brief", parse_import_names_target_style)',
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    config_path = tmp_path / "external-import-names-build-config.json"
+    config_path.write_text(
+        json.dumps(
+            {
+                "collector": "inspect",
+                "public_policy": "__all__",
+                "docstring_style": "import-names-target-brief",
+                "docstring_parser_modules": ["importnamestargetpkg.docs_parsers"],
+                "profile": "compact",
+                "formats": ["html"],
+                "module_exclude_patterns": ["*.docs_parsers"],
+                "sidecars": True,
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    assert "import-names-target-brief" not in docstring_parser_names()
+    with pytest.raises(ImportError):
+        ApiBuildConfig.read_file(config_path)
+
+    build = ApiBuildConfig.read_file(config_path, target=repo)
+    api = build.collect(repo)
+    document = build.to_document(repo)
+    run = api.find("importnamestargetpkg.run")
+
+    assert document.validate(formats=("html",)).ok
+    assert run is not None
+    assert run.summary == "import-names-target:Run from a declared import-name repository."
     assert api.find("straypkg.leak") is None

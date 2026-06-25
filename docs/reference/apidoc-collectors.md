@@ -12,6 +12,9 @@ custom source roots are also supported through
 `[tool.pdm.build] package-dir`/`includes` settings.
 Multiple hatch `packages` entries are grouped under their common source roots,
 so one repository reference can include several top-level packages.
+When `[project] import-names` or `import-namespaces` is present, OODocs uses
+those packaging-standard import names to find the published modules and avoids
+including unrelated helper packages from the checkout.
 Flit projects are resolved by import name: the default import name is the
 `[project] name` with hyphens translated to underscores, and
 `[tool.flit.module] name` is honored when the distribution and import names
@@ -51,6 +54,22 @@ from oodocs.apidoc import collect_api
 
 api = collect_api(".", collector="griffe", public_policy="__all__")
 assert api.find("samplepkg.run") is not None
+```
+
+For backend-independent import metadata, declare the import names directly in
+`[project]`:
+
+```toml
+[project]
+name = "published-name"
+import-names = ["import_name"]
+```
+
+```python
+from oodocs.apidoc import collect_api
+
+api = collect_api(".", collector="griffe", public_policy="__all__")
+assert api.find("import_name.run") is not None
 ```
 
 Flit projects that publish a different import name can also be targeted by the

@@ -152,7 +152,8 @@ config directory and its configured source roots to the import path while
 importing `docstring-parser-modules`. Source roots include `src/`,
 `[tool.setuptools] package-dir`, and `[tool.setuptools.packages.find] where`
 entries, plus hatch wheel package paths, Poetry package entries, PDM
-build source roots, and Flit import-name source roots. CLI
+build source roots, `[project] import-names`, and Flit import-name source
+roots. CLI
 commands also add the target repository root, those target source roots, and
 the target parent while reading the config, so generated JSON config files can
 live outside the target checkout and still load repository-local parser

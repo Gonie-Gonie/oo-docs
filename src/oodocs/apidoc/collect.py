@@ -1425,6 +1425,12 @@ def _resolve_source_files(package: str | PathLike) -> tuple[Path, str, list[Path
             return resolved.parent, resolved.name, files
 
         project_name = _project_name_from_pyproject(resolved) or resolved.name
+        declared_target = _declared_import_source_files_from_pyproject(
+            resolved,
+            project_name=project_name,
+        )
+        if declared_target is not None:
+            return declared_target
         flit_target = _flit_source_files_from_pyproject(
             resolved,
             project_name=project_name,
@@ -1612,7 +1618,7 @@ def _flit_source_files_from_pyproject(
     for source_root in (directory / "src", directory):
         files: list[Path] = []
         for import_name in import_names:
-            files.extend(_flit_files_for_import_name(source_root, import_name))
+            files.extend(_files_for_import_name(source_root, import_name))
         if files:
             package_name = import_names[0] if len(import_names) == 1 else project_name
             return source_root.resolve(), package_name, sorted(dict.fromkeys(files))
@@ -1656,6 +1662,46 @@ def _flit_import_names(
     return tuple(dict.fromkeys(names))
 
 
+def _declared_import_source_files_from_pyproject(
+    directory: Path,
+    *,
+    project_name: str,
+) -> tuple[Path, str, list[Path]] | None:
+    data = _pyproject_data(directory)
+    if not data:
+        return None
+    project = data.get("project")
+    import_names = _declared_project_import_names(project)
+    if import_names is None:
+        return None
+    if not import_names:
+        return directory.resolve(), project_name, []
+
+    for source_root in (directory / "src", directory):
+        files: list[Path] = []
+        for import_name in import_names:
+            files.extend(_files_for_import_name(source_root, import_name))
+        if files:
+            package_name = import_names[0] if len(import_names) == 1 else project_name
+            return source_root.resolve(), package_name, sorted(dict.fromkeys(files))
+    return directory.resolve(), project_name, []
+
+
+def _declared_project_import_names(project: object) -> tuple[str, ...] | None:
+    if not isinstance(project, dict):
+        return None
+    found = False
+    names: list[str] = []
+    for key in ("import-names", "import_names", "import-namespaces", "import_namespaces"):
+        if key not in project:
+            continue
+        found = True
+        names.extend(_flit_import_names_from_value(project.get(key)))
+    if not found:
+        return None
+    return tuple(dict.fromkeys(names))
+
+
 def _flit_import_names_from_value(value: object) -> list[str]:
     names = _module_names_from_value(value)
     return [
@@ -1665,7 +1711,7 @@ def _flit_import_names_from_value(value: object) -> list[str]:
     ]
 
 
-def _flit_files_for_import_name(source_root: Path, import_name: str) -> list[Path]:
+def _files_for_import_name(source_root: Path, import_name: str) -> list[Path]:
     package_path = source_root.joinpath(*import_name.split("."))
     module_path = package_path.with_suffix(".py")
     if module_path.is_file():

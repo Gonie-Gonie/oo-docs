@@ -8,6 +8,7 @@ from apidoc_samples import (
     write_custom_docstring_parser_repo,
     write_flit_package_repo,
     write_hatch_multi_package_repo,
+    write_import_names_package_repo,
     write_mixed_docstring_repo,
     write_pdm_package_dir_repo,
     write_setuptools_py_module_repo,
@@ -750,6 +751,62 @@ def test_general_flit_package_repo_builds_complete_reference(
     rendered_api = ApiPackage.read_json(api_path)
     assert rendered_api.find("flitpkg.run") is not None
     assert rendered_api.find("flitpkg.core.Runner.run") is not None
+    assert rendered_api.find("straypkg.leak") is None
+    assert ApiCoverageResult.read_json(coverage_path).object_coverage == 1.0
+
+
+def test_general_import_names_package_repo_builds_complete_reference(
+    tmp_path: Path,
+) -> None:
+    repo = write_import_names_package_repo(tmp_path)
+    output_dir = tmp_path / "import-names-output"
+
+    api = collect_api(
+        repo,
+        collector="inspect",
+        public_policy="__all__",
+        docstring_style=ApiDocstringParser.auto(),
+    )
+    coverage = check_api_docs(api, fail_under=1.0)
+
+    assert api.name == "importnamedpkg"
+    assert api.find("importnamedpkg.run") is not None
+    assert api.find("straypkg.leak") is None
+    assert coverage.object_coverage == 1.0
+
+    assert (
+        main(
+            [
+                "build",
+                str(repo),
+                "--collector",
+                "inspect",
+                "--public-policy",
+                "__all__",
+                "--docstring-style",
+                "auto",
+                "--out",
+                str(output_dir),
+                "--to",
+                "html",
+                "--sidecars",
+            ]
+        )
+        == 0
+    )
+    html_path = output_dir / "importnamedpkg-api.html"
+    api_path = output_dir / "importnamedpkg-api.json"
+    coverage_path = output_dir / "importnamedpkg-api-coverage.json"
+
+    assert html_path.exists()
+    assert api_path.exists()
+    assert coverage_path.exists()
+    html = html_path.read_text(encoding="utf-8")
+    assert "importnamedpkg.run" in html
+    assert "straypkg" not in html
+    assert_html_internal_links_resolve(html_path)
+    rendered_api = ApiPackage.read_json(api_path)
+    assert rendered_api.find("importnamedpkg.run") is not None
     assert rendered_api.find("straypkg.leak") is None
     assert ApiCoverageResult.read_json(coverage_path).object_coverage == 1.0
 

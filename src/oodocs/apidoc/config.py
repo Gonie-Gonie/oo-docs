@@ -1565,8 +1565,8 @@ def _project_source_roots(directory: Path) -> list[Path]:
     Returns:
         Existing source roots from setuptools ``package-dir`` mappings,
         ``packages.find.where`` settings, hatch wheel package settings, Poetry
-        package entries, PDM build settings, Flit import-name source roots, and
-        the conventional ``src/`` layout.
+        package entries, PDM build settings, ``[project] import-names``, Flit
+        import-name source roots, and the conventional ``src/`` layout.
     """
 
     roots: list[Path] = []
@@ -1594,6 +1594,7 @@ def _project_source_roots(directory: Path) -> list[Path]:
         roots.extend(_hatch_source_roots(directory, tool))
         roots.extend(_poetry_source_roots(directory, tool))
         roots.extend(_pdm_source_roots(directory, tool))
+        roots.extend(_declared_import_source_roots(directory, data))
         roots.extend(_flit_source_roots(directory, data))
 
     roots.append(directory / "src")
@@ -1713,6 +1714,38 @@ def _flit_source_roots(directory: Path, data: Mapping[str, object]) -> list[Path
             if source.with_suffix(".py").is_file() or source.is_dir():
                 roots.append(source_root)
     return roots
+
+
+def _declared_import_source_roots(
+    directory: Path,
+    data: Mapping[str, object],
+) -> list[Path]:
+    project = data.get("project")
+    import_names = _declared_project_import_names(project)
+    if import_names is None:
+        return []
+    roots: list[Path] = []
+    for source_root in (directory / "src", directory):
+        for import_name in import_names:
+            source = source_root.joinpath(*import_name.split("."))
+            if source.with_suffix(".py").is_file() or source.is_dir():
+                roots.append(source_root)
+    return roots
+
+
+def _declared_project_import_names(project: object) -> tuple[str, ...] | None:
+    if not isinstance(project, Mapping):
+        return None
+    found = False
+    names: list[str] = []
+    for key in ("import-names", "import_names", "import-namespaces", "import_namespaces"):
+        if key not in project:
+            continue
+        found = True
+        names.extend(_flit_import_names_from_value(project.get(key)))
+    if not found:
+        return None
+    return tuple(dict.fromkeys(names))
 
 
 def _is_flit_project(data: Mapping[str, object]) -> bool:

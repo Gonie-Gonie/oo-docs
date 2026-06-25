@@ -699,6 +699,112 @@ def write_flit_module_file_repo(
     return repo
 
 
+def write_import_names_package_repo(
+    tmp_path: Path,
+    *,
+    repo_name: str = "import-names-repo",
+    package_name: str = "importnamedpkg",
+    project_name: str = "published-import-name-project",
+) -> Path:
+    repo = tmp_path / repo_name
+    package_dir = repo / "src" / package_name
+    stray_dir = repo / "src" / "straypkg"
+    package_dir.mkdir(parents=True)
+    stray_dir.mkdir(parents=True)
+    (repo / "pyproject.toml").write_text(
+        dedent(
+            f'''\
+            [build-system]
+            requires = ["setuptools>=77"]
+            build-backend = "setuptools.build_meta"
+
+            [project]
+            name = "{project_name}"
+            version = "0.1.0"
+            import-names = ["{package_name}"]
+            '''
+        ),
+        encoding="utf-8",
+    )
+    (package_dir / "__init__.py").write_text(
+        '"""Import-name package."""\nfrom .core import run\n__all__ = ["run"]\n',
+        encoding="utf-8",
+    )
+    (package_dir / "core.py").write_text(
+        dedent(
+            '''\
+            def run(path: str) -> str:
+                """Run from a declared import-name repository.
+
+                Args:
+                    path: Input path.
+
+                Returns:
+                    str: Input path.
+                """
+
+                return path
+            '''
+        ),
+        encoding="utf-8",
+    )
+    (stray_dir / "__init__.py").write_text(
+        '"""Stray package that import-names should not expose."""\n__all__ = ["leak"]\n\ndef leak() -> None:\n    """Should not be collected."""\n',
+        encoding="utf-8",
+    )
+    return repo
+
+
+def write_import_names_module_file_repo(
+    tmp_path: Path,
+    *,
+    repo_name: str = "import-names-module-repo",
+    module_name: str = "importnamedrunner",
+) -> Path:
+    repo = tmp_path / repo_name
+    repo.mkdir()
+    (repo / "pyproject.toml").write_text(
+        dedent(
+            f'''\
+            [build-system]
+            requires = ["setuptools>=77"]
+            build-backend = "setuptools.build_meta"
+
+            [project]
+            name = "published-module-project"
+            version = "0.1.0"
+            import-names = ["{module_name}"]
+            '''
+        ),
+        encoding="utf-8",
+    )
+    (repo / f"{module_name}.py").write_text(
+        dedent(
+            '''\
+            __all__ = ["run"]
+
+            def run(path: str) -> str:
+                """Run from a declared import-name module.
+
+                Args:
+                    path: Input path.
+
+                Returns:
+                    str: Input path.
+                """
+
+                return path
+            '''
+        ),
+        encoding="utf-8",
+    )
+    (repo / "helper.py").write_text(
+        '"""Helper module that import-names should not expose."""\n__all__ = ["leak"]\n\ndef leak() -> None:\n    """Should not be collected."""\n',
+        encoding="utf-8",
+    )
+    return repo
+
+
 def write_mixed_docstring_repo(tmp_path: Path) -> Path:
     repo = tmp_path / "mixed-repo"
     package_dir = repo / "src" / "mixedpkg"
