@@ -19,6 +19,7 @@ import pytest
 from oodocs.apidoc import (
     ApiBuildConfig,
     ApiCoverageResult,
+    ApiDiffResult,
     ApiPackage,
     ApiSnapshot,
     docstring_parser_names,
@@ -631,6 +632,116 @@ def test_apidoc_cli_check_and_snapshot_external_json_config_load_target_parsers(
     assert snapshot.objects["releasejsonpkg.run"]["summary"] == (
         "release:Run through release commands."
     )
+
+
+def test_apidoc_cli_diff_renders_report_and_json_sidecar(tmp_path) -> None:
+    base_package = tmp_path / "base" / "diffpkg"
+    head_package = tmp_path / "head" / "diffpkg"
+    base_package.mkdir(parents=True)
+    head_package.mkdir(parents=True)
+    base_snapshot = tmp_path / "api-base.json"
+    head_snapshot = tmp_path / "api-head.json"
+    output_dir = tmp_path / "api-diff"
+
+    (base_package / "__init__.py").write_text(
+        "\n".join(
+            [
+                "def run(path: str) -> str:",
+                '    """Run task."""',
+                "    return path",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (head_package / "__init__.py").write_text(
+        "\n".join(
+            [
+                "def run(path: str, force: bool = False) -> str:",
+                '    """Run task with force."""',
+                "    return path",
+                "",
+                "def added() -> None:",
+                '    """Added function."""',
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    assert (
+        main(
+            [
+                "apidoc",
+                "snapshot",
+                str(base_package),
+                "--collector",
+                "inspect",
+                "--public-policy",
+                "underscore",
+                "--out",
+                str(base_snapshot),
+            ]
+        )
+        == 0
+    )
+    assert (
+        main(
+            [
+                "apidoc",
+                "snapshot",
+                str(head_package),
+                "--collector",
+                "inspect",
+                "--public-policy",
+                "underscore",
+                "--out",
+                str(head_snapshot),
+            ]
+        )
+        == 0
+    )
+    assert (
+        main(
+            [
+                "apidoc",
+                "diff",
+                "--base",
+                str(base_snapshot),
+                "--head",
+                str(head_snapshot),
+                "--out",
+                str(output_dir),
+                "--to",
+                "html",
+                "--stem",
+                "public-api-diff",
+            ]
+        )
+        == 0
+    )
+
+    html_path = output_dir / "public-api-diff.html"
+    diff_path = output_dir / "public-api-diff.json"
+
+    assert html_path.exists()
+    assert diff_path.exists()
+    assert_html_internal_links_resolve(
+        html_path,
+        required_text=(
+            "API Diff",
+            "diffpkg -> diffpkg",
+            "Added API",
+            "Changed Signatures",
+            "diffpkg.added",
+            "diffpkg.run",
+        ),
+    )
+
+    diff = ApiDiffResult.read_json(diff_path)
+    assert [obj.qualname for obj in diff.added] == ["diffpkg.added"]
+    assert diff.changed_signatures[0][0].qualname == "diffpkg.run"
+    assert diff.changed_docstrings[0][1].summary == "Run task with force."
 
 
 def test_apidoc_cli_builds_setuptools_package_dir_repo(tmp_path) -> None:
