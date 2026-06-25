@@ -16,10 +16,11 @@ Supported styles:
   `:kwtype:`, `:returns:`, `:rtype:`, `:yields:`, `:ytype:`,
   `.. seealso::`, `.. admonition:: Renderer Notes`, directives, and code
   blocks.
-- `markdown`: Markdown headings, parameter tables, `Parameters`,
-  `Keyword Arguments`, `Other Parameters`, `Returns`/`Yields`, `Raises` colon
-  lines, exception tables, notes, warnings, renderer notes, and deprecation
-  sections.
+- `markdown`: Markdown headings, parameter tables, bullet lists, plain
+  `name (type): description` lines, NumPy-like `name : type` definition
+  lists, `Parameters`, `Keyword Arguments`, `Other Parameters`,
+  `Returns`/`Yields`, `Raises` colon lines, exception tables, notes, warnings,
+  renderer notes, and deprecation sections.
 - `plain`: summary and paragraph extraction only.
 - `auto`: style detection.
 
@@ -76,6 +77,29 @@ parsed = parse_docstring(
         Timeout in seconds.
     """,
     style="numpy",
+)
+
+assert [parameter.name for parameter in parsed.parameters] == ["path", "timeout"]
+```
+
+Markdown parameter sections can use tables, bullet lists, or plain lines:
+
+```python
+from oodocs.apidoc import parse_docstring
+
+parsed = parse_docstring(
+    """Load data.
+
+    ## Parameters
+
+    path (str): File path.
+
+    ## Other Parameters
+
+    timeout : float
+        Timeout in seconds.
+    """,
+    style="markdown",
 )
 
 assert [parameter.name for parameter in parsed.parameters] == ["path", "timeout"]

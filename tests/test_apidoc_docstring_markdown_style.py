@@ -81,3 +81,39 @@ def test_markdown_docstring_parses_keyword_argument_sections() -> None:
         ("retries", "int", "Retry count."),
         ("timeout", "float", "Timeout in seconds."),
     ]
+
+
+def test_markdown_docstring_parses_plain_parameter_sections() -> None:
+    parsed = parse_docstring(
+        """
+        Load a widget.
+
+        ## Parameters
+
+        path (str): Input path.
+            Relative paths are resolved from the repository root.
+        retries (int): Retry count.
+
+        ## Other Parameters
+
+        timeout : float
+            Timeout in seconds.
+
+        ## Keyword Arguments
+
+        - `verbose` (bool): Whether to print progress.
+          The value is only used by CLI callers.
+        """,
+        style="markdown",
+    )
+
+    assert [(item.name, item.annotation, item.description) for item in parsed.parameters] == [
+        (
+            "path",
+            "str",
+            "Input path. Relative paths are resolved from the repository root.",
+        ),
+        ("retries", "int", "Retry count."),
+        ("timeout", "float", "Timeout in seconds."),
+        ("verbose", "bool", "Whether to print progress. The value is only used by CLI callers."),
+    ]

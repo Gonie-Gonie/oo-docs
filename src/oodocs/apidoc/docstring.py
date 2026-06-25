@@ -1535,20 +1535,31 @@ def _parse_markdown_parameters(
     if table_items:
         return table_items
     items: list[ApiParameter] = []
+    current: ApiParameter | None = None
     for line in text.splitlines():
         match = re.match(r"^\s*[-*]\s+`?([*]{0,2}[A-Za-z_][\w.]*)`?(?:\s*\(([^)]*)\))?\s*:\s*(.*)$", line)
         if match:
             name, annotation, description = match.groups()
-            items.append(
-                ApiParameter(
-                    name=name,
-                    annotation=None if annotation_in_name else _plain_code_text(annotation),
-                    description=_plain_code_text(description) or None,
-                    documented=True,
-                    source="docstring",
-                )
+            current = ApiParameter(
+                name=name,
+                annotation=None if annotation_in_name else _plain_code_text(annotation),
+                description=_plain_code_text(description) or None,
+                documented=True,
+                source="docstring",
             )
-    return items
+            items.append(current)
+        elif current is not None and line.startswith((" ", "\t")) and line.strip():
+            current.description = _join_text(current.description, _plain_code_text(line) or line.strip())
+    if items:
+        return items
+    if re.search(r"(?m)^[A-Za-z_][\w.]*\s+:\s*", text):
+        items = _parse_numpy_parameters(text, annotation_in_name=annotation_in_name)
+        if items:
+            return items
+    items = _parse_colon_items(text, annotation_in_name=annotation_in_name)
+    if items:
+        return items
+    return _parse_numpy_parameters(text, annotation_in_name=annotation_in_name)
 
 
 def _parse_markdown_raises(text: str) -> list[ApiRaises]:

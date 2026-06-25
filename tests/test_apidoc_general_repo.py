@@ -276,18 +276,21 @@ def test_general_repo_auto_parser_extended_parameter_sections_render(
                 '    """',
                 "    return path",
                 "",
-                "def load_markdown(path: str, *, verbose: bool = False) -> str:",
+                "def load_markdown(path: str, *, verbose: bool = False, dry_run: bool = False) -> str:",
                 '    """Load via Markdown-style sections.',
                 "",
                 "    ## Parameters",
                 "",
-                "    | Name | Type | Description |",
-                "    | --- | --- | --- |",
-                "    | path | str | Input path. |",
+                "    path (str): Input path.",
                 "",
                 "    ## Keyword Arguments",
                 "",
-                "    - `verbose` (bool): Whether to print progress.",
+                "    verbose (bool): Whether to print progress.",
+                "",
+                "    ## Other Parameters",
+                "",
+                "    dry_run : bool",
+                "        Whether to skip side effects.",
                 "",
                 "    ## Returns",
                 "",
@@ -321,7 +324,7 @@ def test_general_repo_auto_parser_extended_parameter_sections_render(
     assert [item.name for item in sphinx.parameters] == ["path", "cache"]
     assert markdown is not None
     assert markdown.metadata["docstring_style"] == "markdown"
-    assert [item.name for item in markdown.parameters] == ["path", "verbose"]
+    assert [item.name for item in markdown.parameters] == ["path", "verbose", "dry_run"]
 
     document = Document(
         "Keyword Parameter API",
@@ -342,6 +345,7 @@ def test_general_repo_auto_parser_extended_parameter_sections_render(
     assert "Timeout in seconds." in html
     assert "Whether to use cached data." in html
     assert "Whether to print progress." in html
+    assert "Whether to skip side effects." in html
 
 
 def test_general_repo_auto_parser_object_survives_build_config_json_roundtrip(
