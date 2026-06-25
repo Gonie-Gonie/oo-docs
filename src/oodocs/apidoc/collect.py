@@ -14,7 +14,12 @@ import tomllib
 from typing import Iterable, Sequence
 
 from oodocs.apidoc.config import ApiCollectConfig, ApiPublicPolicy, normalize_explicit_names
-from oodocs.apidoc.docstring import ApiDocstringParser, ParsedDocstring, parse_docstring
+from oodocs.apidoc.docstring import (
+    ApiDocstringParser,
+    ParsedDocstring,
+    docstring_parser_import_paths,
+    parse_docstring,
+)
 from oodocs.apidoc.model import (
     ApiDocIssue,
     ApiModule,
@@ -184,7 +189,8 @@ def collect_api(
     }
     if explicit_names is not None:
         config_kwargs["explicit_names"] = normalize_explicit_names(explicit_names)
-    resolved = ApiCollectConfig.from_kwargs(config, **config_kwargs)
+    with docstring_parser_import_paths(package):
+        resolved = ApiCollectConfig.from_kwargs(config, **config_kwargs)
     if resolved.collector == "inspect":
         from oodocs.apidoc.collect_inspect import collect_package_inspect
 

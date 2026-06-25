@@ -138,6 +138,19 @@ changing into it first:
 python -m oodocs apidoc build C:\work\mypkg --config C:\work\mypkg\pyproject.toml --out C:\work\mypkg\artifacts\api
 ```
 
+The Python API uses the same target-local import path policy when
+`docstring_parser_modules` is passed directly:
+
+```python
+from oodocs.apidoc import collect_api
+
+api = collect_api(
+    r"C:\work\mypkg",
+    docstring_parser_modules=("docs_parsers",),
+    docstring_style="brief",
+)
+```
+
 The same hook can be supplied directly to one command:
 
 ```powershell

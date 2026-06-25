@@ -474,3 +474,24 @@ def test_api_objects_example_config_loads_repo_docstring_parser_modules(
     assert "brief:Runner class." in html
     assert "brief:Run custom command." in html
     assert_html_internal_links_resolve(full_reference)
+
+
+def test_collect_api_loads_repo_local_docstring_parser_modules(
+    tmp_path: Path,
+) -> None:
+    repo = write_custom_docstring_parser_repo(tmp_path)
+
+    api = collect_api(
+        repo,
+        collector="inspect",
+        public_policy="__all__",
+        docstring_parser_modules=("example_brief_parsers",),
+        docstring_style="example-brief",
+    )
+    runner = api.find("briefpkg.Runner")
+    run = api.find("briefpkg.run")
+
+    assert runner is not None
+    assert runner.summary == "brief:Runner class."
+    assert run is not None
+    assert run.summary == "brief:Run custom command."

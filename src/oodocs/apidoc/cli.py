@@ -3,16 +3,17 @@
 from __future__ import annotations
 
 import argparse
-from contextlib import contextmanager
 from pathlib import Path
-import sys
 from typing import Sequence
 
 from oodocs.apidoc.collect import collect_api
 from oodocs.apidoc.config import ApiBuildConfig, ApiCollectConfig
 from oodocs.apidoc.coverage import check_api_docs
 from oodocs.apidoc.diff import ApiSnapshot, diff_api
-from oodocs.apidoc.docstring import load_docstring_parser_modules
+from oodocs.apidoc.docstring import (
+    docstring_parser_import_paths,
+    load_docstring_parser_modules,
+)
 from oodocs.apidoc.model import ApiObject, ApiPackage
 from oodocs.compatibility import normalize_output_formats
 from oodocs.components.blocks import Chapter
@@ -501,55 +502,9 @@ def _filter_options_from_args(
 def _load_docstring_parser_modules_from_args(args: argparse.Namespace) -> None:
     modules = getattr(args, "docstring_parser_modules", None)
     if modules:
-        with _docstring_parser_import_paths(args):
+        target = getattr(args, "package", None) or getattr(args, "path", None)
+        with docstring_parser_import_paths(target):
             load_docstring_parser_modules(modules)
-
-
-@contextmanager
-def _docstring_parser_import_paths(args: argparse.Namespace):
-    target = getattr(args, "package", None) or getattr(args, "path", None)
-    roots = _candidate_import_roots(target)
-    added: list[str] = []
-    for root in reversed([str(path) for path in roots]):
-        if root not in sys.path:
-            sys.path.insert(0, root)
-            added.append(root)
-    try:
-        yield
-    finally:
-        for root in added:
-            try:
-                sys.path.remove(root)
-            except ValueError:  # pragma: no cover - defensive against user mutation.
-                pass
-
-
-def _candidate_import_roots(target: object) -> list[Path]:
-    if target is None:
-        return []
-    path = Path(str(target))
-    if not path.exists():
-        return []
-    resolved = path.resolve()
-    if resolved.is_file():
-        return [resolved.parent]
-
-    roots = [resolved]
-    src_root = resolved / "src"
-    if src_root.is_dir():
-        roots.append(src_root.resolve())
-    parent = resolved.parent
-    if parent != resolved:
-        roots.append(parent)
-
-    unique: list[Path] = []
-    seen: set[str] = set()
-    for root in roots:
-        key = str(root)
-        if key not in seen:
-            unique.append(root)
-            seen.add(key)
-    return unique
 
 
 def _filter_api(

@@ -7,11 +7,14 @@ Attributes:
 
 from __future__ import annotations
 
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 import inspect
 import importlib
 import importlib.util
+from pathlib import Path
 import re
+import sys
 from typing import Callable, Iterable, Mapping
 
 from oodocs.apidoc.model import (
@@ -703,6 +706,48 @@ def load_docstring_parser_modules(modules: Iterable[str] | None) -> tuple[str, .
     return normalized
 
 
+@contextmanager
+def docstring_parser_import_paths(target: object):
+    """Temporarily add target-local import roots for parser hook modules.
+
+    Args:
+        target: Repository path, package directory, Python file, or importable
+            module/package name used by an apidoc command.
+
+    Yields:
+        ``None`` while the candidate import roots are present in ``sys.path``.
+
+    Examples:
+        Load a parser module that lives next to a target repository without
+        changing the current working directory:
+
+        ```python
+        from oodocs.apidoc.docstring import (
+            docstring_parser_import_paths,
+            load_docstring_parser_modules,
+        )
+
+        with docstring_parser_import_paths("path/to/repo"):
+            load_docstring_parser_modules(["docs_parsers"])
+        ```
+    """
+
+    roots = _candidate_import_roots(target)
+    added: list[str] = []
+    for root in reversed([str(path) for path in roots]):
+        if root not in sys.path:
+            sys.path.insert(0, root)
+            added.append(root)
+    try:
+        yield
+    finally:
+        for root in added:
+            try:
+                sys.path.remove(root)
+            except ValueError:  # pragma: no cover - defensive against user mutation.
+                pass
+
+
 def docstring_parser_names() -> tuple[str, ...]:
     """Return registered explicit parser style names.
 
@@ -721,6 +766,34 @@ def docstring_parser_names() -> tuple[str, ...]:
     """
 
     return tuple(sorted(_PARSERS))
+
+
+def _candidate_import_roots(target: object) -> list[Path]:
+    if target is None:
+        return []
+    path = Path(str(target))
+    if not path.exists():
+        return []
+    resolved = path.resolve()
+    if resolved.is_file():
+        return [resolved.parent]
+
+    roots = [resolved]
+    src_root = resolved / "src"
+    if src_root.is_dir():
+        roots.append(src_root.resolve())
+    parent = resolved.parent
+    if parent != resolved:
+        roots.append(parent)
+
+    unique: list[Path] = []
+    seen: set[str] = set()
+    for root in roots:
+        key = str(root)
+        if key not in seen:
+            unique.append(root)
+            seen.add(key)
+    return unique
 
 
 def is_docstring_style_supported(style: str | ApiDocstringParser) -> bool:
@@ -1540,6 +1613,7 @@ __all__ = [
     "DocstringParser",
     "ParsedDocstring",
     "detect_docstring_style",
+    "docstring_parser_import_paths",
     "docstring_parser_names",
     "is_docstring_style_supported",
     "load_docstring_parser_modules",
