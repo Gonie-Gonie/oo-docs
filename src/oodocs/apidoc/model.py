@@ -1808,6 +1808,18 @@ class ApiModule:
         line_number: Optional module docstring line.
         end_line_number: Optional final source line.
         metadata: Extensible deterministic metadata.
+
+    Examples:
+        Add one collected module to a hand-authored API reference:
+
+        ```python
+        from oodocs import Document
+        from oodocs.apidoc import collect_api
+
+        api = collect_api(".")
+        module = api.modules_by_name()["mypkg.widgets"]
+        doc = Document("Widget API", module.to_chapter(profile="reference"))
+        ```
     """
 
     name: str
@@ -1824,18 +1836,74 @@ class ApiModule:
 
     @property
     def objects(self) -> list[ApiObject]:
-        """Return module-level API objects."""
+        """Return module-level API objects.
+
+        Returns:
+            The module's top-level API objects.
+
+        Examples:
+            Build a compact module summary from top-level objects only:
+
+            ```python
+            from oodocs import Chapter, Document
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            module = api.modules_by_name()["mypkg.widgets"]
+            doc = Document("Module Summary", Chapter("Objects", module.to_summary_table(module.objects)))
+            ```
+        """
 
         return self.members
 
     @property
     def qualname(self) -> str:
-        """Return the module qualname."""
+        """Return the module qualname.
+
+        Returns:
+            Fully qualified module name.
+
+        Examples:
+            Use module qualnames as stable generated chapter titles:
+
+            ```python
+            from oodocs import Document
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            chapters = [
+                module.to_chapter(title=module.qualname)
+                for module in api
+            ]
+            doc = Document("API Reference", *chapters)
+            ```
+        """
 
         return self.name
 
     def to_dict(self) -> dict[str, object]:
-        """Return deterministic serialized data."""
+        """Return deterministic serialized data.
+
+        Returns:
+            JSON-compatible module payload containing members, module
+            docstring metadata, source locations, and renderer metadata.
+
+        Examples:
+            Store one module payload inside a custom review artifact:
+
+            ```python
+            import json
+            from pathlib import Path
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            module = api.modules_by_name()["mypkg.widgets"]
+            Path("build/widgets-api.json").write_text(
+                json.dumps(module.to_dict(), indent=2),
+                encoding="utf-8",
+            )
+            ```
+        """
 
         return {
             "name": self.name,
@@ -1853,7 +1921,29 @@ class ApiModule:
 
     @classmethod
     def from_dict(cls, data: dict[str, object]) -> ApiModule:
-        """Reconstruct a module from serialized data."""
+        """Reconstruct a module from serialized data.
+
+        Args:
+            data: Payload previously returned by ``to_dict``.
+
+        Returns:
+            Reconstructed module metadata object.
+
+        Examples:
+            Load a cached module payload and render it without recollecting
+            source files:
+
+            ```python
+            import json
+            from pathlib import Path
+            from oodocs import Document
+            from oodocs.apidoc.model import ApiModule
+
+            payload = json.loads(Path("build/widgets-api.json").read_text())
+            module = ApiModule.from_dict(payload)
+            doc = Document("Widget API", module.to_chapter())
+            ```
+        """
 
         return cls(
             name=str(data["name"]),
@@ -1876,22 +1966,95 @@ class ApiModule:
         )
 
     def classes(self) -> list[ApiObject]:
-        """Return module-level classes."""
+        """Return module-level classes.
+
+        Returns:
+            Public and private top-level class objects in this module,
+            according to the collected module data.
+
+        Examples:
+            Render only class reference sections for a single module:
+
+            ```python
+            from oodocs import Chapter, Document
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            module = api.modules_by_name()["mypkg.widgets"]
+            doc = Document(
+                "Widget Classes",
+                Chapter("Classes", *[cls.to_section(level=2) for cls in module.classes()]),
+            )
+            ```
+        """
 
         return self.select(kind="class", recursive=False)
 
     def functions(self) -> list[ApiObject]:
-        """Return module-level functions."""
+        """Return module-level functions.
+
+        Returns:
+            Top-level function objects in this module.
+
+        Examples:
+            Put module functions into a quick function index:
+
+            ```python
+            from oodocs import Chapter, Document
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            module = api.modules_by_name()["mypkg.widgets"]
+            functions = module.functions()
+            doc = Document("Widget Functions", Chapter("Index", module.to_summary_table(functions)))
+            ```
+        """
 
         return self.select(kind="function", recursive=False)
 
     def attributes(self) -> list[ApiObject]:
-        """Return module-level attributes and data objects."""
+        """Return module-level attributes and data objects.
+
+        Returns:
+            Top-level attributes and data objects in this module.
+
+        Examples:
+            Document constants separately from functions and classes:
+
+            ```python
+            from oodocs import Chapter, Document
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            module = api.modules_by_name()["mypkg.settings"]
+            doc = Document(
+                "Settings API",
+                Chapter("Constants", module.to_summary_table(module.attributes())),
+            )
+            ```
+        """
 
         return self.select(kind=("attribute", "data"), recursive=False)
 
     def properties(self) -> list[ApiObject]:
-        """Return properties from module classes."""
+        """Return properties from module classes.
+
+        Returns:
+            Property objects collected from classes in this module.
+
+        Examples:
+            Add an appendix of computed attributes for one module:
+
+            ```python
+            from oodocs import Chapter, Document
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            module = api.modules_by_name()["mypkg.widgets"]
+            properties = module.properties()
+            doc = Document("Widget Properties", Chapter("Properties", module.to_summary_table(properties)))
+            ```
+        """
 
         return self.select(kind="property", recursive=True)
 
@@ -1906,6 +2069,25 @@ class ApiModule:
         Args:
             kind: Optional kind or kinds to include.
             recursive: Whether to include nested members.
+
+        Yields:
+            Matching objects in source order.
+
+        Examples:
+            Generate sections for every class and method in one module:
+
+            ```python
+            from oodocs import Chapter, Document
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            module = api.modules_by_name()["mypkg.widgets"]
+            sections = [
+                obj.to_section(level=2)
+                for obj in module.iter_objects(kind=("class", "method"))
+            ]
+            doc = Document("Widget API", Chapter("Objects", *sections))
+            ```
         """
 
         kinds = _normalize_kind_filter(kind)
@@ -1924,7 +2106,31 @@ class ApiModule:
         deprecated: bool | None = None,
         recursive: bool = True,
     ) -> list[ApiObject]:
-        """Return filtered module objects."""
+        """Return filtered module objects.
+
+        Args:
+            kind: Optional kind or kinds to include.
+            visibility: Optional visibility classification to include.
+            documented: Optional documentation-state filter.
+            deprecated: Optional deprecation-state filter.
+            recursive: Whether to include nested members.
+
+        Returns:
+            Objects that match all supplied filters.
+
+        Examples:
+            Build a focused public class table for one module:
+
+            ```python
+            from oodocs import Chapter, Document
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            module = api.modules_by_name()["mypkg.widgets"]
+            public_classes = module.select(kind="class", visibility="public")
+            doc = Document("Widget Classes", Chapter("Summary", module.to_summary_table(public_classes)))
+            ```
+        """
 
         return [
             obj
@@ -1938,7 +2144,29 @@ class ApiModule:
         ]
 
     def find(self, qualname_or_name: str) -> ApiObject | None:
-        """Find an object by qualname or name."""
+        """Find an object by qualname or name.
+
+        Args:
+            qualname_or_name: Fully qualified object name or local object name.
+
+        Returns:
+            Matching API object, or ``None`` when no object matches. Passing
+            this module's name returns ``None`` because the receiver already
+            represents the module.
+
+        Examples:
+            Find a class before inserting just that class into a document:
+
+            ```python
+            from oodocs import Document
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            module = api.modules_by_name()["mypkg.widgets"]
+            widget = module.find("Widget")
+            doc = Document("Widget", widget.to_section(level=1)) if widget else None
+            ```
+        """
 
         if qualname_or_name == self.name:
             return None
@@ -1948,7 +2176,33 @@ class ApiModule:
         return None
 
     def to_summary_table(self, objects: Sequence[ApiObject] | None = None, **kwargs):
-        """Return a summary table for module objects."""
+        """Return a summary table for module objects.
+
+        Args:
+            objects: Optional objects to summarize. Defaults to all recursive
+                objects in this module.
+            **kwargs: Additional options forwarded to
+                ``api_objects_to_summary_table``.
+
+        Returns:
+            OODocs table summarizing the selected module objects.
+
+        Examples:
+            Add a module object index before detailed sections:
+
+            ```python
+            from oodocs import Chapter, Document
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            module = api.modules_by_name()["mypkg.widgets"]
+            doc = Document(
+                "Widget API",
+                Chapter("Index", module.to_summary_table(caption="Widget symbols")),
+                module.to_chapter(),
+            )
+            ```
+        """
 
         from oodocs.apidoc.blocks import api_objects_to_summary_table
 
@@ -1961,7 +2215,31 @@ class ApiModule:
         level: int = 2,
         max_level: int | None = None,
     ) -> list[object]:
-        """Return module objects as OODocs sections."""
+        """Return module objects as OODocs sections.
+
+        Args:
+            profile: Presentation profile name or object.
+            level: Heading level for top-level module members.
+            max_level: Optional deepest heading level for nested API members.
+
+        Returns:
+            OODocs sections for this module's top-level members.
+
+        Examples:
+            Embed module member sections inside a larger chapter:
+
+            ```python
+            from oodocs import Chapter, Document, Paragraph
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            module = api.modules_by_name()["mypkg.widgets"]
+            doc = Document(
+                "Developer Guide",
+                Chapter("Widget API", Paragraph("Public widget surface."), *module.to_sections(level=2)),
+            )
+            ```
+        """
 
         return [
             obj.to_section(level=level, profile=profile, max_level=max_level)
@@ -1975,7 +2253,28 @@ class ApiModule:
         title: str | None = None,
         max_level: int | None = None,
     ):
-        """Return this module as an OODocs chapter."""
+        """Return this module as an OODocs chapter.
+
+        Args:
+            profile: Presentation profile name or object.
+            title: Optional chapter title. Defaults to the module name.
+            max_level: Optional deepest heading level for nested API members.
+
+        Returns:
+            OODocs chapter representing this module.
+
+        Examples:
+            Render a standalone document for a single collected module:
+
+            ```python
+            from oodocs import Document
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            module = api.modules_by_name()["mypkg.widgets"]
+            doc = Document("Widget Module", module.to_chapter(title="mypkg.widgets"))
+            ```
+        """
 
         from oodocs.apidoc.blocks import api_module_to_chapter
 
@@ -1993,7 +2292,29 @@ class ApiModule:
         level: int = 2,
         max_level: int | None = None,
     ) -> list[object]:
-        """Return this module as renderer-neutral blocks."""
+        """Return this module as renderer-neutral blocks.
+
+        Args:
+            profile: Presentation profile name or object.
+            level: Heading level for the module title or top-level members.
+            max_level: Optional deepest heading level for nested API members.
+
+        Returns:
+            Renderer-neutral OODocs blocks for insertion into an existing
+            document.
+
+        Examples:
+            Append generated module reference blocks after narrative content:
+
+            ```python
+            from oodocs import Document, Paragraph
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            module = api.modules_by_name()["mypkg.widgets"]
+            doc = Document("Widget Guide", Paragraph("Usage notes."), *module.to_blocks(level=2))
+            ```
+        """
 
         from oodocs.apidoc.blocks import api_module_to_blocks
 
@@ -2025,7 +2346,20 @@ class ApiPackage:
 
         api = collect_api("oodocs", public_policy="__all__")
         functions = api.select(kind="function")
-        doc = Document("Function API", Chapter("Summary", api.to_summary_table(functions)))
+        doc = Document(
+            "Function API",
+            Chapter("Summary", api.to_summary_table(functions)),
+        )
+        ```
+
+        Persist the collected API sidecar for a later documentation build:
+
+        ```python
+        from oodocs.apidoc import ApiPackage, collect_api
+
+        collect_api(".").write_json("build/api.json")
+        api = ApiPackage.read_json("build/api.json")
+        doc = api.to_document("API Reference")
         ```
     """
 
@@ -2041,7 +2375,28 @@ class ApiPackage:
         return iter(self.modules)
 
     def to_dict(self) -> dict[str, object]:
-        """Return deterministic serialized data."""
+        """Return deterministic serialized data.
+
+        Returns:
+            JSON-compatible package payload containing modules, collected
+            issues, version metadata, and extensible metadata.
+
+        Examples:
+            Embed API metadata in a build artifact alongside rendered docs:
+
+            ```python
+            import json
+            from pathlib import Path
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            Path("build/api-package.json").write_text(
+                json.dumps(api.to_dict(), indent=2, sort_keys=True),
+                encoding="utf-8",
+            )
+            doc = api.to_document("API Reference")
+            ```
+        """
 
         return {
             "name": self.name,
@@ -2053,7 +2408,27 @@ class ApiPackage:
 
     @classmethod
     def from_dict(cls, data: dict[str, object]) -> ApiPackage:
-        """Reconstruct a package from serialized data."""
+        """Reconstruct a package from serialized data.
+
+        Args:
+            data: Payload previously returned by ``to_dict``.
+
+        Returns:
+            Reconstructed API package object.
+
+        Examples:
+            Rebuild a package object from a CI-generated payload and render it:
+
+            ```python
+            import json
+            from pathlib import Path
+            from oodocs.apidoc import ApiPackage
+
+            payload = json.loads(Path("build/api-package.json").read_text())
+            api = ApiPackage.from_dict(payload)
+            doc = api.to_document("API Reference", include_coverage=True)
+            ```
+        """
 
         return cls(
             name=str(data["name"]),
@@ -2077,6 +2452,17 @@ class ApiPackage:
 
         Returns:
             Written path.
+
+        Examples:
+            Save a sidecar next to generated API reference outputs:
+
+            ```python
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".", collector="griffe")
+            sidecar_path = api.write_json("build/api/objects.json")
+            doc = api.to_document("API Reference")
+            ```
         """
 
         output_path = Path(path)
@@ -2096,6 +2482,16 @@ class ApiPackage:
 
         Returns:
             API package object.
+
+        Examples:
+            Render API reference from a previously collected sidecar:
+
+            ```python
+            from oodocs.apidoc import ApiPackage
+
+            api = ApiPackage.read_json("build/api/objects.json")
+            doc = api.to_document("API Reference", profile="reference")
+            ```
         """
 
         return cls.from_dict(json.loads(Path(path).read_text(encoding="utf-8")))
@@ -2114,6 +2510,18 @@ class ApiPackage:
 
         Yields:
             Matching objects in module and source order.
+
+        Examples:
+            Build an index from every collected public class and method:
+
+            ```python
+            from oodocs import Chapter, Document
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            objects = list(api.iter_objects(kind=("class", "method")))
+            doc = Document("API Index", Chapter("Objects", api.to_summary_table(objects)))
+            ```
         """
 
         for module in self.modules:
@@ -2143,6 +2551,22 @@ class ApiPackage:
 
         Returns:
             Matching API objects.
+
+        Examples:
+            Render a focused reference for one package namespace:
+
+            ```python
+            from oodocs import Chapter, Document
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            widgets = api.select(
+                kind=("class", "function"),
+                module_prefix="mypkg.widgets",
+                visibility="public",
+            )
+            doc = Document("Widget API", Chapter("Summary", api.to_summary_table(widgets)))
+            ```
         """
 
         selected: list[ApiObject] = []
@@ -2260,7 +2684,27 @@ class ApiPackage:
         )
 
     def find(self, qualname_or_name: str) -> ApiObject | ApiModule | None:
-        """Find a module or object by qualname or local name."""
+        """Find a module or object by qualname or local name.
+
+        Args:
+            qualname_or_name: Fully qualified module/object name or local
+                object name.
+
+        Returns:
+            Matching module or API object, or ``None`` when no item matches.
+
+        Examples:
+            Locate one object and render only its reference section:
+
+            ```python
+            from oodocs import Document
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            item = api.find("mypkg.widgets.Widget")
+            doc = Document("Widget", item.to_section(level=1)) if item else None
+            ```
+        """
 
         for module in self.modules:
             if module.name == qualname_or_name:
@@ -2320,6 +2764,20 @@ class ApiPackage:
 
         Returns:
             Public function objects across collected modules.
+
+        Examples:
+            Add a public function summary to a package reference:
+
+            ```python
+            from oodocs import Chapter, Document
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            doc = Document(
+                "Function Reference",
+                Chapter("Functions", api.to_summary_table(api.functions())),
+            )
+            ```
         """
 
         return self.select(kind="function")
@@ -2329,6 +2787,18 @@ class ApiPackage:
 
         Returns:
             Public method objects from collected classes.
+
+        Examples:
+            Review method-level documentation coverage in a generated appendix:
+
+            ```python
+            from oodocs import Chapter, Document
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            methods = api.methods()
+            doc = Document("Method API", Chapter("Methods", api.to_summary_table(methods)))
+            ```
         """
 
         return self.select(kind="method")
@@ -2338,6 +2808,20 @@ class ApiPackage:
 
         Returns:
             Public module attributes, class attributes, and data objects.
+
+        Examples:
+            Render constants and data objects as a separate reference chapter:
+
+            ```python
+            from oodocs import Chapter, Document
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            doc = Document(
+                "Data API",
+                Chapter("Attributes", api.to_summary_table(api.attributes())),
+            )
+            ```
         """
 
         return self.select(kind=("attribute", "data"))
@@ -2347,6 +2831,20 @@ class ApiPackage:
 
         Returns:
             Public objects matching the configured public API boundary.
+
+        Examples:
+            Create the default public API index for a documentation bundle:
+
+            ```python
+            from oodocs import Chapter, Document
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".", public_policy="__all__")
+            doc = Document(
+                "Public API",
+                Chapter("Index", api.to_summary_table(api.public_objects())),
+            )
+            ```
         """
 
         return self.select(visibility="public")
@@ -2356,6 +2854,18 @@ class ApiPackage:
 
         Returns:
             Objects classified as private, protected, or internal.
+
+        Examples:
+            Build an internal review report without publishing private details:
+
+            ```python
+            from oodocs import Chapter, Document
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            private_api = api.private_objects()
+            doc = Document("Internal API Review", Chapter("Private Objects", api.to_summary_table(private_api)))
+            ```
         """
 
         return [
@@ -2466,6 +2976,21 @@ class ApiPackage:
         Returns:
             OODocs table containing module names, object counts, and module
             summaries.
+
+        Examples:
+            Start a package reference with a module inventory:
+
+            ```python
+            from oodocs import Chapter, Document
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            doc = Document(
+                "API Reference",
+                Chapter("Modules", api.to_modules_table(caption="Collected modules")),
+                *api.to_chapters(),
+            )
+            ```
         """
 
         from oodocs.components.media import Table
@@ -2491,6 +3016,20 @@ class ApiPackage:
 
         Returns:
             OODocs table with package and object-level diagnostics.
+
+        Examples:
+            Include parser and coverage diagnostics in an evidence document:
+
+            ```python
+            from oodocs import Chapter, Document
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".", docstring_style="google")
+            doc = Document(
+                "API Evidence",
+                Chapter("Diagnostics", api.to_issue_table(caption="API issues")),
+            )
+            ```
         """
 
         from oodocs.components.media import Table
@@ -2549,6 +3088,20 @@ class ApiPackage:
 
         Returns:
             OODocs section or chapter blocks for collected modules.
+
+        Examples:
+            Compose package API sections inside a custom guide chapter:
+
+            ```python
+            from oodocs import Chapter, Document, Paragraph
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            doc = Document(
+                "Developer Guide",
+                Chapter("API", Paragraph("Generated reference."), *api.to_sections(level=2)),
+            )
+            ```
         """
 
         if level == 1:
@@ -2581,6 +3134,17 @@ class ApiPackage:
 
         Returns:
             List of OODocs chapters, one per collected module.
+
+        Examples:
+            Render each collected module as a top-level document chapter:
+
+            ```python
+            from oodocs import Document
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            doc = Document("API Reference", *api.to_chapters(max_level=3))
+            ```
         """
 
         from oodocs.apidoc.blocks import api_package_to_chapters
