@@ -42,6 +42,10 @@ class ApiDocProfile:
         review_note_author: Optional author label for generated inline
             comments.
         review_note_initials: Optional initials for generated inline comments.
+        max_signature_width: Optional maximum line width for rendered
+            signature code blocks.
+        signature_wrap_indent: Indentation used for wrapped signature
+            parameters.
 
     Examples:
         Use a compact profile when embedding API notes into a larger document:
@@ -77,6 +81,8 @@ class ApiDocProfile:
     review_note_text: str | None = None
     review_note_author: str | None = None
     review_note_initials: str | None = None
+    max_signature_width: int | None = None
+    signature_wrap_indent: str = "    "
 
     @classmethod
     def reference(cls) -> ApiDocProfile:
@@ -106,6 +112,7 @@ class ApiDocProfile:
         return cls(
             name="compact",
             include_member_sections=False,
+            max_signature_width=88,
             max_description_chars=180,
             max_examples=1,
             parameter_columns=("name", "type", "description"),
@@ -138,6 +145,7 @@ class ApiDocProfile:
             include_see_also=False,
             include_renderer_notes=True,
             include_member_sections=False,
+            max_signature_width=88,
             max_description_chars=120,
             parameter_columns=("name", "type", "description"),
         )
@@ -160,6 +168,7 @@ class ApiDocProfile:
             ),
             review_note_author="OODocs",
             review_note_initials="API",
+            max_signature_width=88,
         )
 
     @classmethod
@@ -201,6 +210,8 @@ class ApiDocProfile:
             "review_note_text": self.review_note_text,
             "review_note_author": self.review_note_author,
             "review_note_initials": self.review_note_initials,
+            "max_signature_width": self.max_signature_width,
+            "signature_wrap_indent": self.signature_wrap_indent,
         }
 
     @classmethod

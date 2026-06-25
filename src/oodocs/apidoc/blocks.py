@@ -110,7 +110,12 @@ def api_signature_block(
     resolved = resolve_profile(profile)
     if not resolved.include_signature or not obj.signature:
         return None
-    return CodeBlock(obj.display_signature(), language="python")
+    signature = _wrap_signature(
+        obj.display_signature(),
+        width=resolved.max_signature_width,
+        indent=resolved.signature_wrap_indent,
+    )
+    return CodeBlock(signature, language="python")
 
 
 def api_description_blocks(
@@ -483,6 +488,68 @@ def _truncate(value: str, limit: int | None) -> str:
     if limit is None or len(value) <= limit:
         return value
     return value[: max(0, limit - 3)].rstrip() + "..."
+
+
+def _wrap_signature(signature: str, *, width: int | None, indent: str) -> str:
+    if width is None or width <= 0:
+        return signature
+    return "\n".join(
+        _wrap_signature_line(line, width=width, indent=indent)
+        for line in signature.splitlines()
+    )
+
+
+def _wrap_signature_line(line: str, *, width: int, indent: str) -> str:
+    if len(line) <= width:
+        return line
+    leading = line[: len(line) - len(line.lstrip())]
+    body = line[len(leading) :]
+    open_index = body.find("(")
+    close_index = body.rfind(")")
+    if open_index < 0 or close_index <= open_index:
+        return line
+
+    prefix = body[: open_index + 1]
+    inner = body[open_index + 1 : close_index]
+    suffix = body[close_index:]
+    parts = _split_signature_parameters(inner)
+    if len(parts) <= 1:
+        return line
+
+    wrapped = [f"{leading}{prefix}"]
+    for index, part in enumerate(parts):
+        comma = "," if index < len(parts) - 1 else ""
+        wrapped.append(f"{leading}{indent}{part.strip()}{comma}")
+    wrapped.append(f"{leading}{suffix}")
+    return "\n".join(wrapped)
+
+
+def _split_signature_parameters(value: str) -> list[str]:
+    parts: list[str] = []
+    start = 0
+    depth = 0
+    quote: str | None = None
+    escape = False
+    for index, char in enumerate(value):
+        if quote:
+            if escape:
+                escape = False
+            elif char == "\\":
+                escape = True
+            elif char == quote:
+                quote = None
+            continue
+        if char in {"'", '"'}:
+            quote = char
+        elif char in "([{":
+            depth += 1
+        elif char in ")]}" and depth > 0:
+            depth -= 1
+        elif char == "," and depth == 0:
+            parts.append(value[start:index])
+            start = index + 1
+    parts.append(value[start:])
+    return [part for part in parts if part.strip()]
 
 
 __all__ = [

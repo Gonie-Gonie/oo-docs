@@ -11,6 +11,7 @@ from oodocs.apidoc import (
     ApiDiffResult,
     ApiDocProfile,
     ApiDocstringParser,
+    ApiObject,
     ApiPackage,
     ApiPublicPolicy,
     ApiSnapshot,
@@ -331,6 +332,35 @@ def test_collect_api_builds_queryable_object_tree_and_blocks(tmp_path: Path) -> 
     sidecar = tmp_path / "api.json"
     api.write_json(sidecar)
     assert ApiPackage.read_json(sidecar).find("samplepkg.Widget") is not None
+
+
+def test_api_doc_profiles_wrap_long_signature_blocks() -> None:
+    obj = ApiObject(
+        kind="function",
+        name="build_report",
+        qualname="pkg.build_report",
+        module="pkg",
+        signature=(
+            "pkg.build_report(path: str, *, retries: int = 3, "
+            "metadata: dict[str, object] | None = None) -> dict[str, object]"
+        ),
+    )
+
+    reference = obj.to_signature_block(profile="reference")
+    compact = obj.to_signature_block(profile=ApiDocProfile.compact())
+
+    assert reference is not None
+    assert compact is not None
+    assert "\n" not in reference.code
+    assert compact.code.splitlines() == [
+        "pkg.build_report(",
+        "    path: str,",
+        "    *,",
+        "    retries: int = 3,",
+        "    metadata: dict[str, object] | None = None",
+        ") -> dict[str, object]",
+    ]
+    assert ApiDocProfile.from_dict(ApiDocProfile.compact().to_dict()).max_signature_width == 88
 
 
 def test_collect_api_exposes_docstring_parser_issues_in_issue_table(tmp_path: Path) -> None:

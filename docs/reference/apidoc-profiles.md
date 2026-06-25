@@ -31,6 +31,12 @@ doc = Document(
 The same `Document` can still be saved as DOCX, PDF, or HTML through the normal
 OODocs renderers.
 
+`compact`, `evidence`, and `review` profiles wrap long signature code blocks at
+top-level parameter commas by default. This keeps the generated OODocs block
+tree suitable for narrow DOCX/PDF pages before any renderer-specific output is
+created. The `parameter_columns` option controls table width in the same
+renderer-neutral way.
+
 Custom profiles can enable the same review workflow:
 
 ```python
@@ -41,5 +47,7 @@ profile = replace(
     ApiDocProfile.compact(),
     include_review_notes=True,
     review_note_text="Check whether this object needs a richer example.",
+    max_signature_width=72,
+    signature_wrap_indent="  ",
 )
 ```
