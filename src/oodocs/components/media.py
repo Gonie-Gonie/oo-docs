@@ -34,7 +34,15 @@ DEFAULT_LONG_TABLE_ROW_THRESHOLD = 12
 
 @dataclass(frozen=True, slots=True, init=False)
 class ImageData:
-    """In-memory image bytes usable anywhere a figure image source is accepted."""
+    """In-memory image bytes usable anywhere a figure image source is accepted.
+
+    Args:
+        data: Image bytes or a ``BytesIO`` object.
+        format: Image format name or extension.
+
+    Raises:
+        ValueError: If image data or format is empty.
+    """
 
     data: bytes
     format: str
@@ -62,13 +70,26 @@ class ImageData:
 
         Renderers already understand ``savefig``-compatible sources for plots;
         this adapter lets imported notebook images reuse that same path.
+
+        Args:
+            target: File-like object with ``write(bytes)``.
+            **_: Ignored compatibility keyword arguments.
         """
 
         target.write(self.data)
 
 
 def coerce_image_source(source: PathLike | object) -> object:
-    """Normalize path-like or in-memory image inputs for media components."""
+    """Normalize path-like or in-memory image inputs for media components.
+
+    Args:
+        source: Filesystem path, bytes-like object, ``BytesIO``, ``ImageData``,
+            or plot-like object.
+
+    Returns:
+        ``Path`` for path-like input, ``ImageData`` for bytes input, or the
+        original object for plot-like sources.
+    """
 
     if isinstance(source, ImageData):
         return source
@@ -86,7 +107,20 @@ def image_source_to_buffer(
     dpi: int | None = None,
     usage: str = "image rendering",
 ) -> BytesIO:
-    """Render an in-memory or plot-like image source into a byte buffer."""
+    """Render an in-memory or plot-like image source into a byte buffer.
+
+    Args:
+        source: ``ImageData`` or object with ``savefig``.
+        image_format: Output image format for ``savefig`` sources.
+        dpi: Optional image DPI for ``savefig`` sources.
+        usage: Human-readable usage included in error messages.
+
+    Returns:
+        Byte buffer positioned at the beginning.
+
+    Raises:
+        TypeError: If ``source`` cannot be rendered to image bytes.
+    """
 
     if isinstance(source, ImageData):
         return BytesIO(source.data)
@@ -108,7 +142,20 @@ def image_source_to_bytes(
     dpi: int | None = None,
     usage: str = "image rendering",
 ) -> bytes:
-    """Return raw image bytes from an in-memory or plot-like image source."""
+    """Return raw image bytes from an in-memory or plot-like image source.
+
+    Args:
+        source: ``ImageData`` or object with ``savefig``.
+        image_format: Output image format for ``savefig`` sources.
+        dpi: Optional image DPI for ``savefig`` sources.
+        usage: Human-readable usage included in error messages.
+
+    Returns:
+        Raw image bytes.
+
+    Raises:
+        TypeError: If ``source`` cannot be rendered to image bytes.
+    """
 
     if isinstance(source, ImageData):
         return source.data
@@ -121,7 +168,17 @@ def image_source_to_bytes(
 
 
 def normalize_media_placement(value: str | None) -> MediaPlacement:
-    """Normalize advanced table/figure placement options."""
+    """Normalize advanced table and figure placement options.
+
+    Args:
+        value: Placement name or shorthand. ``None`` resolves to ``"auto"``.
+
+    Returns:
+        Normalized placement value.
+
+    Raises:
+        ValueError: If the placement is unsupported.
+    """
 
     if value is None:
         return "auto"
@@ -147,7 +204,17 @@ def normalize_media_placement(value: str | None) -> MediaPlacement:
 
 
 def normalize_table_split(value: TableSplit) -> TableSplit:
-    """Normalize table splitting policy."""
+    """Normalize table splitting policy.
+
+    Args:
+        value: ``True``, ``False``, or ``"auto"``.
+
+    Returns:
+        The normalized table split policy.
+
+    Raises:
+        ValueError: If the value is unsupported.
+    """
 
     if isinstance(value, bool):
         return value
@@ -158,7 +225,16 @@ def normalize_table_split(value: TableSplit) -> TableSplit:
 
 @dataclass(slots=True)
 class TableCellStyle:
-    """Cell-level table styling that can be applied to cells, rows, or columns."""
+    """Cell-level table styling that can be applied to cells, rows, or columns.
+
+    Attributes:
+        background_color: Optional background color as a hex string.
+        text_color: Optional text color as a hex string.
+        bold: Optional bold override.
+        italic: Optional italic override.
+        horizontal_alignment: Optional horizontal alignment override.
+        vertical_alignment: Optional vertical alignment override.
+    """
 
     background_color: str | None = None
     text_color: str | None = None
@@ -182,7 +258,14 @@ class TableCellStyle:
         )
 
     def merged(self, *others: TableCellStyle | None) -> TableCellStyle:
-        """Return a new style with later non-``None`` values overriding earlier ones."""
+        """Return a new style with later non-``None`` values overriding earlier ones.
+
+        Args:
+            *others: Styles to overlay from left to right.
+
+        Returns:
+            New merged table cell style.
+        """
 
         merged = TableCellStyle(
             background_color=self.background_color,
@@ -209,7 +292,11 @@ class TableCellStyle:
         return merged
 
     def text_style(self) -> TextStyle:
-        """Return the inline text defaults represented by this cell style."""
+        """Return the inline text defaults represented by this cell style.
+
+        Returns:
+            Text style containing text color, bold, and italic values.
+        """
 
         return TextStyle(
             color=self.text_color,
@@ -222,7 +309,17 @@ TableCellStyleInput = TableCellStyle | Mapping[str, object]
 
 
 def coerce_table_cell_style(value: TableCellStyleInput) -> TableCellStyle:
-    """Normalize a table cell style object or mapping."""
+    """Normalize a table cell style object or mapping.
+
+    Args:
+        value: Existing style or mapping of ``TableCellStyle`` fields.
+
+    Returns:
+        A table cell style.
+
+    Raises:
+        TypeError: If ``value`` cannot be converted.
+    """
 
     if isinstance(value, TableCellStyle):
         return value
@@ -252,7 +349,23 @@ def _style_overrides(
 
 @dataclass(slots=True, init=False)
 class TableCell:
-    """A single table cell with optional row or column spanning."""
+    """A single table cell with optional row or column spanning.
+
+    Args:
+        value: Cell content.
+        colspan: Number of columns this cell spans.
+        rowspan: Number of rows this cell spans.
+        style: Base cell style.
+        background_color: Optional background color override.
+        text_color: Optional text color override.
+        bold: Optional bold override.
+        italic: Optional italic override.
+        horizontal_alignment: Optional horizontal alignment override.
+        vertical_alignment: Optional vertical alignment override.
+
+    Raises:
+        ValueError: If ``colspan`` or ``rowspan`` is less than one.
+    """
 
     content: Paragraph
     colspan: int
@@ -307,7 +420,14 @@ TableCellInput = TableCell | CellInput
 
 
 def coerce_table_cell(value: TableCellInput) -> TableCell:
-    """Normalize supported cell inputs into a ``TableCell`` instance."""
+    """Normalize supported cell inputs into a table cell.
+
+    Args:
+        value: Existing table cell or cell content.
+
+    Returns:
+        Table cell instance.
+    """
 
     if isinstance(value, TableCell):
         return value
@@ -387,6 +507,9 @@ def _build_column_header_rows(column_values: list[tuple[str, ...]]) -> list[list
             if label == "":
                 column_index += 1
                 continue
+            # Adjacent labels only merge when every parent level matches; this
+            # preserves MultiIndex boundaries while still producing compact
+            # spanning headers.
             colspan = 1
             while (
                 column_index + colspan < len(column_values)
@@ -470,7 +593,15 @@ def _dataframe_header_rows(dataframe: object, *, include_index: bool) -> list[li
 
 @dataclass(slots=True)
 class TablePlacement:
-    """A positioned cell inside a rectangular table layout."""
+    """A positioned cell inside a rectangular table layout.
+
+    Attributes:
+        row: Zero-based rendered row index.
+        column: Zero-based rendered column index.
+        cell: Cell rendered at the position.
+        header: Whether the placement belongs to a header row.
+        body_row_index: Zero-based body row index when this is a body cell.
+    """
 
     row: int
     column: int
@@ -481,7 +612,14 @@ class TablePlacement:
 
 @dataclass(slots=True)
 class TableLayout:
-    """Expanded rectangular table layout used by renderers."""
+    """Expanded rectangular table layout used by renderers.
+
+    Attributes:
+        row_count: Total rendered rows, including header rows.
+        column_count: Total rendered columns after spans are expanded.
+        header_row_count: Number of leading header rows.
+        placements: Positioned cells that begin at each rendered grid location.
+    """
 
     row_count: int
     column_count: int
@@ -493,7 +631,18 @@ def build_table_layout(
     header_rows: Sequence[Sequence[TableCell]],
     body_rows: Sequence[Sequence[TableCell]],
 ) -> TableLayout:
-    """Expand spanned cells into positioned placements for renderer output."""
+    """Expand spanned cells into positioned placements for renderer output.
+
+    Args:
+        header_rows: Header rows containing table cells.
+        body_rows: Body rows containing table cells.
+
+    Returns:
+        Expanded rectangular layout used by renderers.
+
+    Raises:
+        ValueError: If row or column spans overlap.
+    """
 
     all_rows = [(True, row, None) for row in header_rows] + [
         (False, row, body_row_index)
@@ -512,6 +661,8 @@ def build_table_layout(
         rowspans_from_current: dict[int, int] = {}
         column_index = 0
         for cell in row_cells:
+            # Skip grid slots still occupied by rowspans from previous rows
+            # before assigning the next authored cell.
             while active_rowspans.get(column_index, 0) > 0:
                 column_index += 1
             placements.append(
@@ -653,7 +804,46 @@ def _record_value(
 
 @dataclass(slots=True, init=False)
 class Table(Block):
-    """A table supporting explicit spans and dataframe-like inputs."""
+    """A table supporting explicit spans and dataframe-like inputs.
+
+    Args:
+        headers: Header cells, header rows, or a dataframe-like object when
+            ``rows`` is omitted.
+        rows: Body rows. Required unless ``headers`` is dataframe-like.
+        caption: Optional table caption.
+        column_widths: Optional widths for the expanded rendered columns.
+        unit: Unit for ``column_widths``.
+        identifier: Optional stable identifier for references or renderer use.
+        style: Base table style.
+        header_background_color: Optional header background color override.
+        header_text_color: Optional header text color override.
+        border_color: Optional border color override.
+        body_background_color: Optional body background color override.
+        alternate_row_background_color: Optional alternating row background.
+        cell_horizontal_alignment: Optional body cell horizontal alignment.
+        cell_vertical_alignment: Optional body cell vertical alignment.
+        header_horizontal_alignment: Optional header horizontal alignment.
+        header_vertical_alignment: Optional header vertical alignment.
+        cell_padding: Optional padding override for all sides.
+        cell_padding_top: Optional top padding override.
+        cell_padding_right: Optional right padding override.
+        cell_padding_bottom: Optional bottom padding override.
+        cell_padding_left: Optional left padding override.
+        border_width: Optional border width override.
+        repeat_header_rows: Whether fixed-page renderers repeat headers.
+        include_index: Whether dataframe-like input includes index columns.
+        split: Whether renderers may split the table across pages.
+        placement: Optional placement policy.
+        long_table_threshold: Row-count threshold for automatic splitting.
+        row_styles: Optional body-row styles keyed by zero-based row index.
+        column_styles: Optional column styles keyed by zero-based column index.
+        header_row_styles: Optional header-row styles keyed by zero-based row
+            index.
+
+    Raises:
+        ValueError: If rows are missing, thresholds are invalid, or column
+            widths do not match the expanded layout.
+    """
 
     header_rows: list[list[TableCell]]
     rows: list[list[TableCell]]
@@ -764,22 +954,42 @@ class Table(Block):
 
     @property
     def headers(self) -> list[TableCell]:
-        """Return the first header row for compatibility with older code."""
+        """Return the first header row for compatibility with older code.
+
+        Returns:
+            The first header row.
+        """
 
         return self.header_rows[0]
 
     def layout(self) -> TableLayout:
-        """Return the renderer-facing table layout."""
+        """Return the renderer-facing table layout.
+
+        Returns:
+            Expanded rectangular table layout.
+        """
 
         return build_table_layout(self.header_rows, self.rows)
 
     def row_count(self) -> int:
-        """Return the total rendered row count, including headers."""
+        """Return the total rendered row count, including headers.
+
+        Returns:
+            Header row count plus body row count.
+        """
 
         return len(self.header_rows) + len(self.rows)
 
     def resolved_split(self, default_threshold: int = DEFAULT_LONG_TABLE_ROW_THRESHOLD) -> bool:
-        """Return whether renderers should allow this table to split across pages."""
+        """Return whether renderers should allow this table to split across pages.
+
+        Args:
+            default_threshold: Row-count threshold used when this table has no
+                explicit threshold.
+
+        Returns:
+            ``True`` when the table should split.
+        """
 
         if self.split is True:
             return True
@@ -787,7 +997,15 @@ class Table(Block):
         return self.row_count() > threshold
 
     def resolved_placement(self, default_threshold: int = DEFAULT_LONG_TABLE_ROW_THRESHOLD) -> MediaPlacement:
-        """Return the effective placement after split/long-table rules."""
+        """Return the effective placement after split and long-table rules.
+
+        Args:
+            default_threshold: Row-count threshold used when this table has no
+                explicit threshold.
+
+        Returns:
+            Effective media placement.
+        """
 
         if self.split is True or self.resolved_split(default_threshold):
             return "here"
@@ -796,7 +1014,14 @@ class Table(Block):
         return self.placement
 
     def effective_cell_style(self, placement: TablePlacement) -> TableCellStyle:
-        """Return the resolved style for a rendered cell placement."""
+        """Return the resolved style for a rendered cell placement.
+
+        Args:
+            placement: Expanded cell placement to style.
+
+        Returns:
+            Merged style from table, column, row, and cell layers.
+        """
 
         row_style = (
             self.header_row_styles.get(placement.row)
@@ -837,7 +1062,14 @@ class Table(Block):
         )
 
     def column_widths_in_inches(self, default_unit: str) -> list[float] | None:
-        """Return column widths converted through the table or document unit."""
+        """Return column widths converted through the table or document unit.
+
+        Args:
+            default_unit: Unit to use when the table has no explicit unit.
+
+        Returns:
+            Column widths in inches, or ``None`` when widths are automatic.
+        """
 
         if self.column_widths is None:
             return None
@@ -878,7 +1110,26 @@ class Table(Block):
         column_styles: Mapping[int, TableCellStyleInput] | None = None,
         header_row_styles: Mapping[int, TableCellStyleInput] | None = None,
     ) -> Table:
-        """Create a table directly from a dataframe-like object."""
+        """Create a table directly from a dataframe-like object.
+
+        Args:
+            dataframe: Object with dataframe-like columns and rows.
+            caption: Optional table caption.
+            column_widths: Optional widths for expanded rendered columns.
+            unit: Unit for ``column_widths``.
+            identifier: Optional stable identifier.
+            style: Base table style.
+            include_index: Whether to include dataframe index columns.
+            split: Whether renderers may split the table across pages.
+            placement: Optional placement policy.
+            long_table_threshold: Row-count threshold for automatic splitting.
+            row_styles: Optional body-row styles.
+            column_styles: Optional column styles.
+            header_row_styles: Optional header-row styles.
+
+        Returns:
+            Table built from the dataframe-like object.
+        """
 
         return cls(
             dataframe,
@@ -924,10 +1175,30 @@ class Table(Block):
         strict: bool = False,
         **table_kwargs: object,
     ) -> Table:
-        """Create a table from mappings, dataclasses, or sequence records."""
+        """Create a table from mappings, dataclasses, or sequence records.
+
+        Args:
+            records: Source records.
+            columns: Column keys or sequence indexes to extract.
+            headers: Optional visible header cells.
+            formatters: Optional per-column callable or format-spec strings.
+            missing: Value used when a record is missing a column and
+                ``strict`` is false.
+            strict: Whether missing columns raise errors.
+            **table_kwargs: Additional arguments forwarded to ``Table``.
+
+        Returns:
+            Table built from record data.
+
+        Raises:
+            ValueError: If columns cannot be inferred or headers do not match.
+            TypeError: If a record type is unsupported.
+        """
 
         record_list = list(records)
         if columns is None:
+            # Prefer mapping keys when available; sequence records need explicit
+            # headers so column indexes can be inferred unambiguously.
             if not record_list:
                 raise ValueError("columns is required when records is empty")
             first_mapping = _record_mapping(record_list[0])
@@ -982,7 +1253,22 @@ class Table(Block):
         value_formatter: Callable[[object], object] | str | None = None,
         **table_kwargs: object,
     ) -> Table:
-        """Create a two-column table from a mapping."""
+        """Create a two-column table from a mapping.
+
+        Args:
+            mapping: Source key/value pairs.
+            key_header: Header for the key column.
+            value_header: Header for the value column.
+            key_formatter: Callable or format-spec string for keys.
+            value_formatter: Callable or format-spec string for values.
+            **table_kwargs: Additional arguments forwarded to ``Table``.
+
+        Returns:
+            Two-column table.
+
+        Raises:
+            ValueError: If ``mapping`` is empty.
+        """
 
         if not mapping:
             raise ValueError("mapping must not be empty")
@@ -1013,7 +1299,22 @@ class Table(Block):
         delimiter: str = ",",
         **table_kwargs: object,
     ) -> Table:
-        """Create a table from a CSV file."""
+        """Create a table from a CSV file.
+
+        Args:
+            path: CSV file path.
+            headers: ``True`` to use the first row, ``False`` to generate
+                generic headers, or explicit header cells.
+            encoding: File encoding.
+            delimiter: CSV delimiter.
+            **table_kwargs: Additional arguments forwarded to ``Table``.
+
+        Returns:
+            Table built from the CSV rows.
+
+        Raises:
+            ValueError: If the file has no rows.
+        """
 
         with Path(path).open("r", encoding=encoding, newline="") as handle:
             matrix = list(csv.reader(handle, delimiter=delimiter))
@@ -1041,7 +1342,18 @@ class Table(Block):
         encoding: str = "utf-8-sig",
         **table_kwargs: object,
     ) -> Table:
-        """Create a table from a TSV file."""
+        """Create a table from a TSV file.
+
+        Args:
+            path: TSV file path.
+            headers: ``True`` to use the first row, ``False`` to generate
+                generic headers, or explicit header cells.
+            encoding: File encoding.
+            **table_kwargs: Additional arguments forwarded to ``Table``.
+
+        Returns:
+            Table built from the TSV rows.
+        """
 
         return cls.from_csv(
             path,
@@ -1057,6 +1369,14 @@ class Table(Block):
         container: object,
         context: DocxRenderContext,
     ) -> None:
+        """Render this table into a DOCX container.
+
+        Args:
+            renderer: DOCX renderer instance.
+            container: Target python-docx container.
+            context: Shared DOCX render context.
+        """
+
         renderer.render_table(container, self, context)
 
     def render_to_pdf(
@@ -1064,6 +1384,12 @@ class Table(Block):
         renderer: object,
         context: PdfRenderContext,
     ) -> list[object]:
+        """Render this table into PDF flowables.
+
+        Returns:
+            ReportLab flowables for this table.
+        """
+
         return renderer.render_table(self, context)
 
     def render_to_html(
@@ -1071,12 +1397,30 @@ class Table(Block):
         renderer: object,
         context: HtmlRenderContext,
     ) -> str:
+        """Render this table into HTML markup.
+
+        Returns:
+            HTML markup for this table.
+        """
+
         return renderer.render_table(self, context)
 
 
 @dataclass(slots=True, init=False)
 class Figure(Block):
-    """An image block backed by a path or ``savefig()``-compatible object."""
+    """An image block backed by a path or ``savefig()``-compatible object.
+
+    Args:
+        image_source: Path, image bytes, ``ImageData``, or plot-like object.
+        caption: Optional figure caption.
+        width: Optional rendered width.
+        height: Optional rendered height.
+        identifier: Optional stable identifier.
+        unit: Unit for width and height.
+        format: Image format for plot-like sources.
+        dpi: Optional image DPI for plot-like sources.
+        placement: Optional placement policy.
+    """
 
     image_source: object
     caption: Paragraph | None
@@ -1123,7 +1467,16 @@ class Figure(Block):
         format: str = "png",
         **figure_kwargs: object,
     ) -> Figure:
-        """Create a figure from in-memory image bytes."""
+        """Create a figure from in-memory image bytes.
+
+        Args:
+            data: Image bytes.
+            format: Image format name or extension.
+            **figure_kwargs: Additional arguments forwarded to ``Figure``.
+
+        Returns:
+            Figure using in-memory image bytes.
+        """
 
         return cls(ImageData(data, format=format), format=format, **figure_kwargs)
 
@@ -1135,7 +1488,19 @@ class Figure(Block):
         format: str = "png",
         **figure_kwargs: object,
     ) -> Figure:
-        """Create a figure from a readable or ``getvalue``-compatible buffer."""
+        """Create a figure from a readable or ``getvalue``-compatible buffer.
+
+        Args:
+            buffer: Object providing ``getvalue()`` or ``read()``.
+            format: Image format name or extension.
+            **figure_kwargs: Additional arguments forwarded to ``Figure``.
+
+        Returns:
+            Figure using the buffer's image bytes.
+
+        Raises:
+            TypeError: If ``buffer`` does not provide ``getvalue`` or ``read``.
+        """
 
         if hasattr(buffer, "getvalue"):
             data = buffer.getvalue()
@@ -1146,21 +1511,39 @@ class Figure(Block):
         return cls.from_bytes(data, format=format, **figure_kwargs)
 
     def width_in_inches(self, default_unit: str) -> float | None:
-        """Return figure width converted through the figure or document unit."""
+        """Return figure width converted through the figure or document unit.
+
+        Args:
+            default_unit: Unit to use when the figure has no explicit unit.
+
+        Returns:
+            Width in inches, or ``None`` for automatic sizing.
+        """
 
         if self.width is None:
             return None
         return length_to_inches(self.width, self.unit or default_unit)
 
     def height_in_inches(self, default_unit: str) -> float | None:
-        """Return figure height converted through the figure or document unit."""
+        """Return figure height converted through the figure or document unit.
+
+        Args:
+            default_unit: Unit to use when the figure has no explicit unit.
+
+        Returns:
+            Height in inches, or ``None`` for automatic sizing.
+        """
 
         if self.height is None:
             return None
         return length_to_inches(self.height, self.unit or default_unit)
 
     def resolved_placement(self) -> MediaPlacement:
-        """Return the effective placement for this figure."""
+        """Return the effective placement for this figure.
+
+        Returns:
+            Effective media placement.
+        """
 
         if self.placement == "auto":
             return "float"
@@ -1172,6 +1555,14 @@ class Figure(Block):
         container: object,
         context: DocxRenderContext,
     ) -> None:
+        """Render this figure into a DOCX container.
+
+        Args:
+            renderer: DOCX renderer instance.
+            container: Target python-docx container.
+            context: Shared DOCX render context.
+        """
+
         renderer.render_figure(container, self, context)
 
     def render_to_pdf(
@@ -1179,6 +1570,12 @@ class Figure(Block):
         renderer: object,
         context: PdfRenderContext,
     ) -> list[object]:
+        """Render this figure into PDF flowables.
+
+        Returns:
+            ReportLab flowables for this figure.
+        """
+
         return renderer.render_figure(self, context)
 
     def render_to_html(
@@ -1186,12 +1583,30 @@ class Figure(Block):
         renderer: object,
         context: HtmlRenderContext,
     ) -> str:
+        """Render this figure into HTML markup.
+
+        Returns:
+            HTML markup for this figure.
+        """
+
         return renderer.render_figure(self, context)
 
 
 @dataclass(slots=True, init=False)
 class SubFigure:
-    """A child image inside a numbered subfigure group."""
+    """A child image inside a numbered subfigure group.
+
+    Args:
+        image_source: Path, image bytes, ``ImageData``, or plot-like object.
+        caption: Optional subfigure caption.
+        width: Optional rendered width.
+        height: Optional rendered height.
+        identifier: Optional stable identifier.
+        unit: Unit for width and height.
+        format: Image format for plot-like sources.
+        dpi: Optional image DPI for plot-like sources.
+        label: Optional explicit subfigure label.
+    """
 
     image_source: object
     caption: Paragraph | None
@@ -1231,14 +1646,28 @@ class SubFigure:
         self.label = label
 
     def width_in_inches(self, default_unit: str) -> float | None:
-        """Return subfigure width converted through the subfigure or document unit."""
+        """Return subfigure width converted through the subfigure or document unit.
+
+        Args:
+            default_unit: Unit to use when the subfigure has no explicit unit.
+
+        Returns:
+            Width in inches, or ``None`` for automatic sizing.
+        """
 
         if self.width is None:
             return None
         return length_to_inches(self.width, self.unit or default_unit)
 
     def height_in_inches(self, default_unit: str) -> float | None:
-        """Return subfigure height converted through the subfigure or document unit."""
+        """Return subfigure height converted through the subfigure or document unit.
+
+        Args:
+            default_unit: Unit to use when the subfigure has no explicit unit.
+
+        Returns:
+            Height in inches, or ``None`` for automatic sizing.
+        """
 
         if self.height is None:
             return None
@@ -1248,7 +1677,14 @@ class SubFigure:
         self,
         *label: InlineInput,
     ) -> BlockReference:
-        """Create an explicit inline reference to this subfigure."""
+        """Create an explicit inline reference to this subfigure.
+
+        Args:
+            *label: Optional inline label override.
+
+        Returns:
+            Inline reference targeting this subfigure.
+        """
 
         from oodocs.components.inline import reference
 
@@ -1257,7 +1693,21 @@ class SubFigure:
 
 @dataclass(slots=True, init=False)
 class SubFigureGroup(Block):
-    """A numbered figure composed of labeled child figures."""
+    """A numbered figure composed of labeled child figures.
+
+    Args:
+        *subfigures: Child subfigures.
+        caption: Optional group caption.
+        columns: Number of columns in the subfigure grid.
+        column_gap: Gap between columns in ``unit``.
+        unit: Unit for ``column_gap``.
+        identifier: Optional stable identifier.
+        placement: Optional placement policy.
+        label_format: Format string containing ``"{label}"``.
+
+    Raises:
+        ValueError: If no subfigures are provided or layout values are invalid.
+    """
 
     subfigures: list[SubFigure]
     caption: Paragraph | None
@@ -1297,18 +1747,36 @@ class SubFigureGroup(Block):
         self.label_format = label_format
 
     def label_for_index(self, index: int) -> str:
-        """Return the raw subfigure label for a zero-based child index."""
+        """Return the raw subfigure label for a zero-based child index.
+
+        Args:
+            index: Zero-based child index.
+
+        Returns:
+            Explicit label or generated lower-alpha label.
+        """
 
         subfigure = self.subfigures[index]
         return subfigure.label or format_counter_value(index + 1, "lower-alpha")
 
     def formatted_label_for_index(self, index: int) -> str:
-        """Return the display label for a zero-based child index."""
+        """Return the display label for a zero-based child index.
+
+        Args:
+            index: Zero-based child index.
+
+        Returns:
+            Label formatted with ``label_format``.
+        """
 
         return self.label_format.format(label=self.label_for_index(index))
 
     def resolved_placement(self) -> MediaPlacement:
-        """Return the effective placement for this figure group."""
+        """Return the effective placement for this figure group.
+
+        Returns:
+            Effective media placement.
+        """
 
         if self.placement == "auto":
             return "float"
@@ -1320,6 +1788,14 @@ class SubFigureGroup(Block):
         container: object,
         context: DocxRenderContext,
     ) -> None:
+        """Render this subfigure group into a DOCX container.
+
+        Args:
+            renderer: DOCX renderer instance.
+            container: Target python-docx container.
+            context: Shared DOCX render context.
+        """
+
         renderer.render_subfigure_group(container, self, context)
 
     def render_to_pdf(
@@ -1327,6 +1803,12 @@ class SubFigureGroup(Block):
         renderer: object,
         context: PdfRenderContext,
     ) -> list[object]:
+        """Render this subfigure group into PDF flowables.
+
+        Returns:
+            ReportLab flowables for this subfigure group.
+        """
+
         return renderer.render_subfigure_group(self, context)
 
     def render_to_html(
@@ -1334,6 +1816,12 @@ class SubFigureGroup(Block):
         renderer: object,
         context: HtmlRenderContext,
     ) -> str:
+        """Render this subfigure group into HTML markup.
+
+        Returns:
+            HTML markup for this subfigure group.
+        """
+
         return renderer.render_subfigure_group(self, context)
 
 

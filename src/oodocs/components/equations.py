@@ -109,7 +109,15 @@ DELIMITER_COMMANDS = {"left", "right"}
 
 @dataclass(slots=True)
 class EquationSegment:
-    """Text fragment plus a vertical alignment hint."""
+    """Text fragment plus a vertical alignment hint.
+
+    Attributes:
+        text: Text rendered for this segment.
+        vertical_align: One of ``BASELINE``, ``SUPERSCRIPT``, or ``SUBSCRIPT``.
+
+    Raises:
+        ValueError: If ``vertical_align`` is unsupported.
+    """
 
     text: str
     vertical_align: str = BASELINE
@@ -120,14 +128,28 @@ class EquationSegment:
 
 
 def parse_latex_segments(source: str) -> list[EquationSegment]:
-    """Parse a lightweight LaTeX-like expression into styled text segments."""
+    """Parse a lightweight LaTeX-like expression into styled text segments.
+
+    Args:
+        source: LaTeX-like source text.
+
+    Returns:
+        Adjacent text segments merged by vertical alignment.
+    """
 
     parser = _EquationParser(source)
     return _merge_adjacent(parser.parse())
 
 
 def equation_plain_text(source: str) -> str:
-    """Return a readable plain-text form of a LaTeX-like expression."""
+    """Return a readable plain-text form of a LaTeX-like expression.
+
+    Args:
+        source: LaTeX-like source text.
+
+    Returns:
+        Plain-text approximation of the expression.
+    """
 
     return "".join(segment.text for segment in parse_latex_segments(source))
 
@@ -157,6 +179,9 @@ class _EquationParser:
             if char in "^_":
                 self.position += 1
                 aligned = SUPERSCRIPT if char == "^" else SUBSCRIPT
+                # Superscript and subscript bind to the next token only,
+                # mirroring TeX's behavior for grouped or single-character
+                # tokens.
                 segments.extend(_apply_vertical_alignment(self._read_token(), aligned))
                 continue
             segments.append(EquationSegment(char))
@@ -184,6 +209,8 @@ class _EquationParser:
         if command in {"frac", "dfrac", "tfrac"}:
             numerator = self._read_token()
             denominator = self._read_token()
+            # Render fractions as a readable inline ratio because downstream
+            # renderers consume text segments rather than full math layout.
             return (
                 [EquationSegment("(")]
                 + numerator

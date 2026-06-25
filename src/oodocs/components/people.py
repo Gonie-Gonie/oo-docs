@@ -10,7 +10,19 @@ from oodocs.components.inline import Hyperlink, Text
 
 @dataclass(slots=True)
 class Affiliation:
-    """Structured affiliation metadata for an author."""
+    """Structured affiliation metadata for an author.
+
+    Attributes:
+        label: Preformatted affiliation label. When set, it overrides the
+            structured fields.
+        department: Department or lab name.
+        organization: Institution or company name.
+        city: Optional city.
+        country: Optional country.
+
+    Raises:
+        ValueError: If every field is empty.
+    """
 
     label: str | None = None
     department: str | None = None
@@ -31,7 +43,11 @@ class Affiliation:
             raise ValueError("Affiliation requires at least one populated field")
 
     def formatted(self) -> str:
-        """Return a single-line affiliation label."""
+        """Return a single-line affiliation label.
+
+        Returns:
+            Preformatted label or comma-separated structured fields.
+        """
 
         if self.label is not None:
             return self.label
@@ -52,7 +68,19 @@ AffiliationInput = Affiliation | str
 
 @dataclass(slots=True)
 class AuthorLayout:
-    """Configurable title-matter layout for structured author metadata."""
+    """Configurable title-matter layout for structured author metadata.
+
+    Attributes:
+        mode: Layout mode, either ``"journal"`` or ``"stacked"``.
+        show_affiliations: Whether to show affiliation lines.
+        show_details: Whether to show email, ORCID, position, and note details.
+        name_separator: Separator between author names in journal mode.
+        affiliation_label_format: Format string for affiliation markers.
+        corresponding_marker: Marker appended to corresponding authors.
+
+    Raises:
+        ValueError: If the mode or affiliation label format is unsupported.
+    """
 
     mode: str = "journal"
     show_affiliations: bool = True
@@ -72,7 +100,15 @@ class AuthorLayout:
 
 @dataclass(slots=True, frozen=True)
 class AuthorTitleLine:
-    """A typed title-matter line derived from a structured author."""
+    """A typed title-matter line derived from a structured author.
+
+    Attributes:
+        kind: Line kind: ``"name"``, ``"affiliation"``, or ``"detail"``.
+        fragments: Inline fragments rendered for the line.
+
+    Raises:
+        ValueError: If ``kind`` is unsupported or no fragments are supplied.
+    """
 
     kind: str
     fragments: tuple[Text, ...]
@@ -86,7 +122,18 @@ class AuthorTitleLine:
 
 @dataclass(slots=True, init=False)
 class Author:
-    """Structured author metadata for title matter and document metadata."""
+    """Structured author metadata for title matter and document metadata.
+
+    Args:
+        name: Author display name.
+        affiliations: Optional affiliations as ``Affiliation`` objects or
+            simple labels.
+        email: Optional email address.
+        position: Optional position or role.
+        corresponding: Whether this is a corresponding author.
+        orcid: Optional ORCID identifier or URL.
+        note: Optional author note.
+    """
 
     name: str
     affiliations: tuple[Affiliation, ...]
@@ -119,7 +166,11 @@ class Author:
         self.note = note
 
     def display_name(self) -> str:
-        """Return the visible author label."""
+        """Return the visible author label.
+
+        Returns:
+            Author display name.
+        """
 
         return self.name
 
@@ -130,7 +181,16 @@ class Author:
         show_affiliations: bool = True,
         show_details: bool = True,
     ) -> tuple[AuthorTitleLine, ...]:
-        """Return renderer-ready title-matter lines for this author."""
+        """Return renderer-ready title-matter lines for this author.
+
+        Args:
+            corresponding_marker: Marker appended to corresponding authors.
+            show_affiliations: Whether to include affiliation lines.
+            show_details: Whether to include detail lines.
+
+        Returns:
+            Title lines for this author.
+        """
 
         lines: list[AuthorTitleLine] = [
             AuthorTitleLine(
@@ -152,14 +212,25 @@ class Author:
         return tuple(lines)
 
     def display_name_with_marker(self, marker: str = "*") -> str:
-        """Return the visible author label with the corresponding marker when needed."""
+        """Return the visible author label with the corresponding marker when needed.
+
+        Args:
+            marker: Marker appended for corresponding authors.
+
+        Returns:
+            Display name with marker when applicable.
+        """
 
         if self.corresponding and marker:
             return f"{self.name}{marker}"
         return self.name
 
     def detail_fragments(self) -> list[Text] | None:
-        """Return supplemental detail fragments for title matter."""
+        """Return supplemental detail fragments for title matter.
+
+        Returns:
+            Detail fragments, or ``None`` when no details are configured.
+        """
 
         fragments: list[Text] = []
 
@@ -193,7 +264,14 @@ AuthorInput = Author | str
 
 
 def coerce_authors(values: Sequence[AuthorInput] | None) -> tuple[Author, ...]:
-    """Normalize simple author inputs into structured authors."""
+    """Normalize simple author inputs into structured authors.
+
+    Args:
+        values: Author objects, strings, or ``None``.
+
+    Returns:
+        Tuple of structured author objects.
+    """
 
     if values is None:
         return ()
@@ -204,7 +282,14 @@ def coerce_authors(values: Sequence[AuthorInput] | None) -> tuple[Author, ...]:
 
 
 def coerce_author_layout(value: AuthorLayout | None) -> AuthorLayout:
-    """Normalize document author-layout configuration."""
+    """Normalize document author-layout configuration.
+
+    Args:
+        value: Author layout or ``None``.
+
+    Returns:
+        Supplied layout or the default layout.
+    """
 
     return value if value is not None else AuthorLayout()
 

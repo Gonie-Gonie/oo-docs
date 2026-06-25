@@ -37,7 +37,18 @@ _REFERENCE_FORMAT_ALIASES = {
 
 
 def normalize_citation_format(value: str) -> str:
-    """Return the canonical name for an inline citation format."""
+    """Return the canonical name for an inline citation format.
+
+    Args:
+        value: Citation format name or alias.
+
+    Returns:
+        Canonical citation format.
+
+    Raises:
+        TypeError: If ``value`` is not a string.
+        ValueError: If the format is unsupported.
+    """
 
     if not isinstance(value, str):
         raise TypeError("citation_format must be a string")
@@ -51,7 +62,18 @@ def normalize_citation_format(value: str) -> str:
 
 
 def normalize_reference_format(value: str) -> str:
-    """Return the canonical name for a bibliography entry format."""
+    """Return the canonical name for a bibliography entry format.
+
+    Args:
+        value: Reference format name or alias.
+
+    Returns:
+        Canonical reference format.
+
+    Raises:
+        TypeError: If ``value`` is not a string.
+        ValueError: If the format is unsupported.
+    """
 
     if not isinstance(value, str):
         raise TypeError("reference_format must be a string")
@@ -69,7 +91,16 @@ def format_citation_label(
     number: int,
     citation_format: str,
 ) -> str:
-    """Format the visible inline citation label for a cited source."""
+    """Format the visible inline citation label for a cited source.
+
+    Args:
+        source: Citation source being cited.
+        number: Assigned citation number.
+        citation_format: Citation format name or alias.
+
+    Returns:
+        Visible inline citation label.
+    """
 
     resolved_format = normalize_citation_format(citation_format)
     if resolved_format == "numeric":
@@ -89,7 +120,16 @@ def reference_entry_marker(
     citation_format: str,
     reference_format: str,
 ) -> str:
-    """Return the visible marker prefix for a references-page entry."""
+    """Return the visible marker prefix for a references-page entry.
+
+    Args:
+        number: Assigned reference number.
+        citation_format: Active inline citation format.
+        reference_format: Active bibliography entry format.
+
+    Returns:
+        Marker prefix, or an empty string for unnumbered references.
+    """
 
     resolved_citation_format = normalize_citation_format(citation_format)
     resolved_reference_format = normalize_reference_format(reference_format)
@@ -100,7 +140,18 @@ def reference_entry_marker(
 
 @dataclass(slots=True, init=False)
 class CitationSource:
-    """Structured bibliography metadata for a single reference entry."""
+    """Structured bibliography metadata for a single reference entry.
+
+    Args:
+        title: Reference title.
+        key: Optional citation key.
+        authors: Author names.
+        organization: Optional organization author.
+        publisher: Optional publisher, journal, or venue.
+        year: Optional publication year.
+        url: Optional URL.
+        note: Optional note.
+    """
 
     title: str
     key: str | None
@@ -133,12 +184,27 @@ class CitationSource:
         self.note = note
 
     def format_reference(self, reference_format: str = "plain") -> str:
-        """Format the entry as a plain bibliography string."""
+        """Format the entry as a plain bibliography string.
+
+        Args:
+            reference_format: Reference format name or alias.
+
+        Returns:
+            Formatted reference string.
+        """
 
         return _format_reference_text(self, reference_format)
 
     def reference_fragments(self, reference_format: str = "plain") -> list[Text]:
-        """Return renderer-friendly inline fragments for a reference entry."""
+        """Return renderer-friendly inline fragments for a reference entry.
+
+        Args:
+            reference_format: Reference format name or alias.
+
+        Returns:
+            Inline fragments, with the URL turned into a hyperlink when present
+            in the formatted reference.
+        """
 
         from oodocs.components.inline import Hyperlink, Text
 
@@ -156,7 +222,14 @@ class CitationSource:
         return fragments
 
     def cite(self, *, style: TextStyle | None = None) -> Citation:
-        """Create an inline citation that points to this source."""
+        """Create an inline citation that points to this source.
+
+        Args:
+            style: Optional inline style.
+
+        Returns:
+            Inline citation fragment.
+        """
 
         from oodocs.components.inline import Citation
 
@@ -165,7 +238,11 @@ class CitationSource:
 
 @dataclass(slots=True)
 class CitationLibrary:
-    """Registry of bibliography entries addressable by citation key."""
+    """Registry of bibliography entries addressable by citation key.
+
+    Args:
+        entries: Optional citation sources to register.
+    """
 
     entries: dict[str, CitationSource] = field(default_factory=dict)
 
@@ -176,7 +253,14 @@ class CitationLibrary:
                 self.add(entry)
 
     def add(self, entry: CitationSource) -> None:
-        """Register a citation source under its key."""
+        """Register a citation source under its key.
+
+        Args:
+            entry: Citation source to register.
+
+        Raises:
+            OODocsError: If the entry has no key or duplicates an existing key.
+        """
 
         if not entry.key:
             raise OODocsError(
@@ -187,14 +271,32 @@ class CitationLibrary:
         self.entries[entry.key] = entry
 
     def resolve(self, key: str) -> CitationSource:
-        """Resolve a registered citation key to a source entry."""
+        """Resolve a registered citation key to a source entry.
+
+        Args:
+            key: Citation key.
+
+        Returns:
+            Registered citation source.
+
+        Raises:
+            OODocsError: If the key is unknown.
+        """
 
         if key not in self.entries:
             raise OODocsError(f"Unknown citation key: {key!r}")
         return self.entries[key]
 
     def cite(self, key: str, *, style: TextStyle | None = None) -> Citation:
-        """Create an inline citation from a registered citation key."""
+        """Create an inline citation from a registered citation key.
+
+        Args:
+            key: Citation key.
+            style: Optional inline style.
+
+        Returns:
+            Inline citation fragment.
+        """
 
         from oodocs.components.inline import Citation
 
@@ -202,7 +304,14 @@ class CitationLibrary:
 
     @classmethod
     def from_bibtex(cls, source: str) -> CitationLibrary:
-        """Parse BibTeX text into a citation library."""
+        """Parse BibTeX text into a citation library.
+
+        Args:
+            source: BibTeX source text.
+
+        Returns:
+            Citation library containing parsed entries.
+        """
 
         entries: list[CitationSource] = []
         for key, fields in _parse_bibtex_entries(source):
@@ -234,7 +343,15 @@ class CitationLibrary:
 def coerce_citation_library(
     value: CitationLibrary | Sequence[CitationSource] | str | None,
 ) -> CitationLibrary:
-    """Normalize any supported citation input into a ``CitationLibrary``."""
+    """Normalize any supported citation input into a citation library.
+
+    Args:
+        value: Existing library, citation sources, BibTeX source text, or
+            ``None``.
+
+    Returns:
+        Citation library instance.
+    """
 
     if value is None:
         return CitationLibrary()
@@ -465,6 +582,8 @@ def _parse_bibtex_entries(source: str) -> list[tuple[str, dict[str, str]]]:
         body_start = entry_start + match.group(0).rfind("{") + 1
         depth = 1
         position = body_start
+        # Track brace depth so commas and closing braces inside field values do
+        # not prematurely terminate the entry body.
         while position < len(source) and depth > 0:
             char = source[position]
             if char == "{":
@@ -510,6 +629,8 @@ def _split_bibtex_fields(source: str) -> list[str]:
         elif char == "}":
             depth = max(depth - 1, 0)
 
+        # Top-level commas separate fields; commas inside braced values remain
+        # part of the current field.
         if char == "," and depth == 0:
             part = "".join(current).strip()
             if part:

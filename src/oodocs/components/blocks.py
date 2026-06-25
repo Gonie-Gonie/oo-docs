@@ -37,7 +37,26 @@ THEOREM_COUNTER = "theorem"
 
 @dataclass(slots=True, init=False)
 class Paragraph(Block):
-    """A paragraph built from inline fragments."""
+    """A paragraph built from inline fragments.
+
+    Args:
+        *content: Inline fragments or strings to include in the paragraph.
+        style: Base paragraph style.
+        alignment: Optional text alignment override.
+        space_before: Optional spacing before the paragraph.
+        space_after: Optional spacing after the paragraph.
+        leading: Optional line spacing.
+        left_indent: Optional left indent.
+        right_indent: Optional right indent.
+        first_line_indent: Optional first-line indent.
+        keep_together: Whether renderers should keep the paragraph on one page.
+        keep_with_next: Whether renderers should keep this paragraph with the
+            following block.
+        page_break_before: Whether renderers should start a new page before the
+            paragraph.
+        widow_control: Whether renderers should avoid widowed lines.
+        unit: Unit for length overrides.
+    """
 
     content: list[Text]
     style: ParagraphStyle
@@ -77,7 +96,11 @@ class Paragraph(Block):
         )
 
     def plain_text(self) -> str:
-        """Return the paragraph content without styling metadata."""
+        """Return the paragraph content without styling metadata.
+
+        Returns:
+            Concatenated plain text for all inline fragments.
+        """
 
         return "".join(fragment.plain_text() for fragment in self.content)
 
@@ -87,6 +110,14 @@ class Paragraph(Block):
         container: object,
         context: DocxRenderContext,
     ) -> None:
+        """Render this paragraph into a DOCX container.
+
+        Args:
+            renderer: DOCX renderer instance.
+            container: Target python-docx container.
+            context: Shared DOCX render context.
+        """
+
         renderer.render_paragraph(container, self, context)
 
     def render_to_pdf(
@@ -94,6 +125,16 @@ class Paragraph(Block):
         renderer: object,
         context: PdfRenderContext,
     ) -> list[object]:
+        """Render this paragraph into PDF flowables.
+
+        Args:
+            renderer: PDF renderer instance.
+            context: Shared PDF render context.
+
+        Returns:
+            ReportLab flowables for this paragraph.
+        """
+
         return renderer.render_paragraph(self, context)
 
     def render_to_html(
@@ -101,6 +142,16 @@ class Paragraph(Block):
         renderer: object,
         context: HtmlRenderContext,
     ) -> str:
+        """Render this paragraph into HTML markup.
+
+        Args:
+            renderer: HTML renderer instance.
+            context: Shared HTML render context.
+
+        Returns:
+            HTML markup for this paragraph.
+        """
+
         return renderer.render_paragraph(self, context)
 
 
@@ -108,7 +159,14 @@ ListInput = Paragraph | InlineInput
 
 
 def coerce_list_item(value: ListInput) -> Paragraph:
-    """Normalize a list item into a ``Paragraph`` instance."""
+    """Normalize a list item into a paragraph.
+
+    Args:
+        value: Existing paragraph or inline paragraph content.
+
+    Returns:
+        A paragraph suitable for use as a list item.
+    """
 
     if isinstance(value, Paragraph):
         return value
@@ -117,7 +175,24 @@ def coerce_list_item(value: ListInput) -> Paragraph:
 
 @dataclass(slots=True, init=False)
 class ListBlock(Block):
-    """Shared implementation for bullet and ordered lists."""
+    """Shared implementation for bullet and ordered lists.
+
+    Args:
+        *items: Paragraphs or inline values used as list items.
+        ordered: Whether the list should use ordered markers.
+        style: Base list style.
+        marker_format: Optional marker format override.
+        bullet: Optional bullet glyph override.
+        prefix: Optional marker prefix.
+        suffix: Optional marker suffix.
+        start: Optional first ordered-list counter value.
+        indent: Optional list indent.
+        marker_gap: Optional gap between marker and item text.
+        item_children: Optional nested lists for each list item.
+
+    Raises:
+        ValueError: If ``item_children`` does not match the number of items.
+    """
 
     items: list[Paragraph]
     item_children: list[list["ListBlock"]]
@@ -164,6 +239,14 @@ class ListBlock(Block):
         container: object,
         context: DocxRenderContext,
     ) -> None:
+        """Render this list into a DOCX container.
+
+        Args:
+            renderer: DOCX renderer instance.
+            container: Target python-docx container.
+            context: Shared DOCX render context.
+        """
+
         renderer.render_list(container, self, context)
 
     def render_to_pdf(
@@ -171,6 +254,16 @@ class ListBlock(Block):
         renderer: object,
         context: PdfRenderContext,
     ) -> list[object]:
+        """Render this list into PDF flowables.
+
+        Args:
+            renderer: PDF renderer instance.
+            context: Shared PDF render context.
+
+        Returns:
+            ReportLab flowables for this list.
+        """
+
         return renderer.render_list(self, context)
 
     def render_to_html(
@@ -178,11 +271,34 @@ class ListBlock(Block):
         renderer: object,
         context: HtmlRenderContext,
     ) -> str:
+        """Render this list into HTML markup.
+
+        Args:
+            renderer: HTML renderer instance.
+            context: Shared HTML render context.
+
+        Returns:
+            HTML markup for this list.
+        """
+
         return renderer.render_list(self, context)
 
 
 class BulletList(ListBlock):
-    """An unordered list of paragraph items."""
+    """An unordered list of paragraph items.
+
+    Args:
+        *items: Paragraphs or inline values used as list items.
+        style: Base list style.
+        marker_format: Optional marker format override.
+        bullet: Optional bullet glyph override.
+        prefix: Optional marker prefix.
+        suffix: Optional marker suffix.
+        start: Optional first counter value when a renderer uses counters.
+        indent: Optional list indent.
+        marker_gap: Optional gap between marker and item text.
+        item_children: Optional nested lists for each list item.
+    """
 
     def __init__(
         self,
@@ -213,7 +329,20 @@ class BulletList(ListBlock):
 
 
 class NumberedList(ListBlock):
-    """An ordered list of paragraph items."""
+    """An ordered list of paragraph items.
+
+    Args:
+        *items: Paragraphs or inline values used as list items.
+        style: Base list style.
+        marker_format: Optional marker format override.
+        bullet: Optional bullet glyph override.
+        prefix: Optional marker prefix.
+        suffix: Optional marker suffix.
+        start: Optional first ordered-list counter value.
+        indent: Optional list indent.
+        marker_gap: Optional gap between marker and item text.
+        item_children: Optional nested lists for each list item.
+    """
 
     def __init__(
         self,
@@ -245,7 +374,30 @@ class NumberedList(ListBlock):
 
 @dataclass(slots=True, init=False)
 class CodeBlock(Block):
-    """A preformatted code snippet."""
+    """A preformatted code snippet.
+
+    Args:
+        code: Source code text.
+        language: Optional lexer or language label.
+        show_language: Whether to render the language label.
+        language_position: Where to place the language label.
+        style: Base paragraph style for the code block.
+        alignment: Optional alignment override.
+        space_before: Optional spacing before the block.
+        space_after: Optional spacing after the block.
+        leading: Optional line spacing.
+        left_indent: Optional left indent.
+        right_indent: Optional right indent.
+        first_line_indent: Optional first-line indent.
+        keep_together: Whether renderers should keep the block on one page.
+        keep_with_next: Whether renderers should keep this block with the next.
+        page_break_before: Whether renderers should start a new page first.
+        widow_control: Whether renderers should avoid widowed lines.
+        unit: Unit for length overrides.
+
+    Raises:
+        ValueError: If ``language_position`` is not supported.
+    """
 
     code: str
     language: str | None
@@ -302,6 +454,14 @@ class CodeBlock(Block):
         container: object,
         context: DocxRenderContext,
     ) -> None:
+        """Render this code block into a DOCX container.
+
+        Args:
+            renderer: DOCX renderer instance.
+            container: Target python-docx container.
+            context: Shared DOCX render context.
+        """
+
         renderer.render_code_block(container, self, context)
 
     def render_to_pdf(
@@ -309,6 +469,12 @@ class CodeBlock(Block):
         renderer: object,
         context: PdfRenderContext,
     ) -> list[object]:
+        """Render this code block into PDF flowables.
+
+        Returns:
+            ReportLab flowables for this code block.
+        """
+
         return renderer.render_code_block(self, context)
 
     def render_to_html(
@@ -316,12 +482,36 @@ class CodeBlock(Block):
         renderer: object,
         context: HtmlRenderContext,
     ) -> str:
+        """Render this code block into HTML markup.
+
+        Returns:
+            HTML markup for this code block.
+        """
+
         return renderer.render_code_block(self, context)
 
 
 @dataclass(slots=True, init=False)
 class Equation(Block):
-    """A centered block equation written in lightweight LaTeX syntax."""
+    """A centered block equation written in lightweight LaTeX syntax.
+
+    Args:
+        expression: LaTeX-like equation source.
+        style: Base paragraph style.
+        alignment: Optional alignment override.
+        space_before: Optional spacing before the equation.
+        space_after: Optional spacing after the equation.
+        leading: Optional line spacing.
+        left_indent: Optional left indent.
+        right_indent: Optional right indent.
+        first_line_indent: Optional first-line indent.
+        keep_together: Whether renderers should keep the equation on one page.
+        keep_with_next: Whether renderers should keep this equation with the
+            following block.
+        page_break_before: Whether renderers should start a new page first.
+        widow_control: Whether renderers should avoid widowed lines.
+        unit: Unit for length overrides.
+    """
 
     expression: str
     style: ParagraphStyle
@@ -362,7 +552,11 @@ class Equation(Block):
         )
 
     def plain_text(self) -> str:
-        """Return a readable plain-text equation approximation."""
+        """Return a readable plain-text equation approximation.
+
+        Returns:
+            Plain-text approximation of the equation source.
+        """
 
         return equation_plain_text(self.expression)
 
@@ -372,6 +566,14 @@ class Equation(Block):
         container: object,
         context: DocxRenderContext,
     ) -> None:
+        """Render this equation into a DOCX container.
+
+        Args:
+            renderer: DOCX renderer instance.
+            container: Target python-docx container.
+            context: Shared DOCX render context.
+        """
+
         renderer.render_equation(container, self, context)
 
     def render_to_pdf(
@@ -379,6 +581,12 @@ class Equation(Block):
         renderer: object,
         context: PdfRenderContext,
     ) -> list[object]:
+        """Render this equation into PDF flowables.
+
+        Returns:
+            ReportLab flowables for this equation.
+        """
+
         return renderer.render_equation(self, context)
 
     def render_to_html(
@@ -386,6 +594,12 @@ class Equation(Block):
         renderer: object,
         context: HtmlRenderContext,
     ) -> str:
+        """Render this equation into HTML markup.
+
+        Returns:
+            HTML markup for this equation.
+        """
+
         return renderer.render_equation(self, context)
 
 
@@ -399,6 +613,14 @@ class PageBreak(Block):
         container: object,
         context: DocxRenderContext,
     ) -> None:
+        """Render this page break into a DOCX container.
+
+        Args:
+            renderer: DOCX renderer instance.
+            container: Target python-docx container.
+            context: Shared DOCX render context.
+        """
+
         renderer.render_page_break(container, self, context)
 
     def render_to_pdf(
@@ -406,6 +628,12 @@ class PageBreak(Block):
         renderer: object,
         context: PdfRenderContext,
     ) -> list[object]:
+        """Render this page break into PDF flowables.
+
+        Returns:
+            ReportLab flowables for this page break.
+        """
+
         return renderer.render_page_break(self, context)
 
     def render_to_html(
@@ -413,12 +641,26 @@ class PageBreak(Block):
         renderer: object,
         context: HtmlRenderContext,
     ) -> str:
+        """Render this page break into HTML markup.
+
+        Returns:
+            HTML markup for this page break.
+        """
+
         return renderer.render_page_break(self, context)
 
 
 @dataclass(slots=True, init=False)
 class VerticalSpace(Block):
-    """A vertical spacer in the document flow."""
+    """A vertical spacer in the document flow.
+
+    Args:
+        height: Spacer height in ``unit``.
+        unit: Length unit for ``height``.
+
+    Raises:
+        ValueError: If ``height`` is negative.
+    """
 
     height: float
     unit: str
@@ -430,7 +672,11 @@ class VerticalSpace(Block):
         self.unit = normalize_length_unit(unit)
 
     def height_in_points(self) -> float:
-        """Return the spacer height in typographic points."""
+        """Return the spacer height in typographic points.
+
+        Returns:
+            The spacer height converted to points.
+        """
 
         return length_to_inches(self.height, self.unit) * 72.0
 
@@ -440,6 +686,14 @@ class VerticalSpace(Block):
         container: object,
         context: DocxRenderContext,
     ) -> None:
+        """Render this spacer into a DOCX container.
+
+        Args:
+            renderer: DOCX renderer instance.
+            container: Target python-docx container.
+            context: Shared DOCX render context.
+        """
+
         renderer.render_vertical_space(container, self, context)
 
     def render_to_pdf(
@@ -447,6 +701,12 @@ class VerticalSpace(Block):
         renderer: object,
         context: PdfRenderContext,
     ) -> list[object]:
+        """Render this spacer into PDF flowables.
+
+        Returns:
+            ReportLab flowables for this spacer.
+        """
+
         return renderer.render_vertical_space(self, context)
 
     def render_to_html(
@@ -454,12 +714,31 @@ class VerticalSpace(Block):
         renderer: object,
         context: HtmlRenderContext,
     ) -> str:
+        """Render this spacer into HTML markup.
+
+        Returns:
+            HTML markup for this spacer.
+        """
+
         return renderer.render_vertical_space(self, context)
 
 
 @dataclass(slots=True, init=False)
 class Divider(Block):
-    """A horizontal divider similar to Notion's separator block."""
+    """A horizontal divider similar to Notion's separator block.
+
+    Args:
+        color: Divider line color as a hex string.
+        thickness: Divider thickness.
+        space_before: Spacing before the divider.
+        space_after: Spacing after the divider.
+        width: Optional divider width. Defaults to full available width.
+        alignment: Divider alignment when ``width`` is set.
+        unit: Unit for thickness, spacing, and width values.
+
+    Raises:
+        ValueError: If dimensions or alignment are invalid.
+    """
 
     color: str
     thickness: float
@@ -500,7 +779,14 @@ class Divider(Block):
         self.unit = normalize_length_unit(unit) if unit is not None else None
 
     def width_in_inches(self, default_unit: str) -> float | None:
-        """Return the optional rule width in inches."""
+        """Return the optional rule width in inches.
+
+        Args:
+            default_unit: Unit to use when the divider has no explicit unit.
+
+        Returns:
+            Divider width in inches, or ``None`` for full available width.
+        """
 
         if self.width is None:
             return None
@@ -512,6 +798,14 @@ class Divider(Block):
         container: object,
         context: DocxRenderContext,
     ) -> None:
+        """Render this divider into a DOCX container.
+
+        Args:
+            renderer: DOCX renderer instance.
+            container: Target python-docx container.
+            context: Shared DOCX render context.
+        """
+
         renderer.render_divider(container, self, context)
 
     def render_to_pdf(
@@ -519,6 +813,12 @@ class Divider(Block):
         renderer: object,
         context: PdfRenderContext,
     ) -> list[object]:
+        """Render this divider into PDF flowables.
+
+        Returns:
+            ReportLab flowables for this divider.
+        """
+
         return renderer.render_divider(self, context)
 
     def render_to_html(
@@ -526,12 +826,22 @@ class Divider(Block):
         renderer: object,
         context: HtmlRenderContext,
     ) -> str:
+        """Render this divider into HTML markup.
+
+        Returns:
+            HTML markup for this divider.
+        """
+
         return renderer.render_divider(self, context)
 
 
 @dataclass(slots=True, init=False)
 class ColumnSpan(Block):
-    """Full-width content inside a ``MultiColumn`` block."""
+    """Full-width content inside a ``MultiColumn`` block.
+
+    Args:
+        *children: Block content that should span every column.
+    """
 
     children: list[Block]
 
@@ -539,13 +849,27 @@ class ColumnSpan(Block):
         self.children = coerce_blocks(children)
 
     def add(self, *children: BlockInput) -> ColumnSpan:
-        """Append full-width children and return this column span."""
+        """Append full-width children.
+
+        Args:
+            *children: Block content to append.
+
+        Returns:
+            This column span, enabling fluent construction.
+        """
 
         self.children.extend(coerce_blocks(children))
         return self
 
     def extend(self, children: Iterable[BlockInput]) -> ColumnSpan:
-        """Append an iterable of full-width children."""
+        """Append an iterable of full-width children.
+
+        Args:
+            children: Block content to append.
+
+        Returns:
+            This column span, enabling fluent construction.
+        """
 
         self.children.extend(coerce_blocks(children))
         return self
@@ -556,6 +880,14 @@ class ColumnSpan(Block):
         container: object,
         context: DocxRenderContext,
     ) -> None:
+        """Render this column span into a DOCX container.
+
+        Args:
+            renderer: DOCX renderer instance.
+            container: Target python-docx container.
+            context: Shared DOCX render context.
+        """
+
         renderer.render_column_span(container, self, context)
 
     def render_to_pdf(
@@ -563,6 +895,12 @@ class ColumnSpan(Block):
         renderer: object,
         context: PdfRenderContext,
     ) -> list[object]:
+        """Render this column span into PDF flowables.
+
+        Returns:
+            ReportLab flowables for this column span.
+        """
+
         return renderer.render_column_span(self, context)
 
     def render_to_html(
@@ -570,12 +908,31 @@ class ColumnSpan(Block):
         renderer: object,
         context: HtmlRenderContext,
     ) -> str:
+        """Render this column span into HTML markup.
+
+        Returns:
+            HTML markup for this column span.
+        """
+
         return renderer.render_column_span(self, context)
 
 
 @dataclass(slots=True, init=False)
 class MultiColumn(Block):
-    """A document flow container rendered across multiple columns."""
+    """A document flow container rendered across multiple columns.
+
+    Args:
+        *children: Block content for the column flow.
+        columns: Number of columns.
+        column_gap: Gap between columns in ``unit``.
+        unit: Unit for ``column_gap``. Defaults to the document unit.
+        span_wide_media: Whether wide tables and figures should span all
+            columns automatically.
+
+    Raises:
+        ValueError: If ``columns`` is less than one or ``column_gap`` is
+            negative.
+    """
 
     children: list[Block]
     columns: int
@@ -602,24 +959,53 @@ class MultiColumn(Block):
         self.span_wide_media = bool(span_wide_media)
 
     def add(self, *children: BlockInput) -> MultiColumn:
-        """Append children using constructor-compatible coercion."""
+        """Append children using constructor-compatible coercion.
+
+        Args:
+            *children: Block content to append.
+
+        Returns:
+            This multi-column block, enabling fluent construction.
+        """
 
         self.children.extend(coerce_blocks(children))
         return self
 
     def extend(self, children: Iterable[BlockInput]) -> MultiColumn:
-        """Append an iterable of children."""
+        """Append an iterable of children.
+
+        Args:
+            children: Block content to append.
+
+        Returns:
+            This multi-column block, enabling fluent construction.
+        """
 
         self.children.extend(coerce_blocks(children))
         return self
 
     def column_gap_in_inches(self, default_unit: str) -> float:
-        """Return the gap between columns in inches."""
+        """Return the gap between columns in inches.
+
+        Args:
+            default_unit: Unit to use when this block has no explicit unit.
+
+        Returns:
+            Column gap converted to inches.
+        """
 
         return length_to_inches(self.column_gap, self.unit or default_unit)
 
     def column_width_in_inches(self, available_width: float, default_unit: str) -> float:
-        """Return the width available to a single column in inches."""
+        """Return the width available to a single column in inches.
+
+        Args:
+            available_width: Total available width in inches.
+            default_unit: Unit to use when this block has no explicit unit.
+
+        Returns:
+            Width available to one column in inches.
+        """
 
         if self.columns <= 1:
             return max(available_width, 0)
@@ -654,6 +1040,8 @@ class MultiColumn(Block):
             widths = [subfigure.width_in_inches(default_unit) for subfigure in row]
             if any(width is None for width in widths):
                 return True
+            # Only the first visual row determines whether the group can fit in
+            # a column, matching how renderers lay out subfigure grids.
             group_gap = length_to_inches(child.column_gap, child.unit or default_unit)
             group_width = sum(width for width in widths if width is not None)
             group_width += group_gap * max(len(row) - 1, 0)
@@ -666,6 +1054,14 @@ class MultiColumn(Block):
         container: object,
         context: DocxRenderContext,
     ) -> None:
+        """Render this multi-column block into a DOCX container.
+
+        Args:
+            renderer: DOCX renderer instance.
+            container: Target python-docx container.
+            context: Shared DOCX render context.
+        """
+
         renderer.render_multi_column(container, self, context)
 
     def render_to_pdf(
@@ -673,6 +1069,12 @@ class MultiColumn(Block):
         renderer: object,
         context: PdfRenderContext,
     ) -> list[object]:
+        """Render this multi-column block into PDF flowables.
+
+        Returns:
+            ReportLab flowables for this multi-column block.
+        """
+
         return renderer.render_multi_column(self, context)
 
     def render_to_html(
@@ -680,12 +1082,26 @@ class MultiColumn(Block):
         renderer: object,
         context: HtmlRenderContext,
     ) -> str:
+        """Render this multi-column block into HTML markup.
+
+        Returns:
+            HTML markup for this multi-column block.
+        """
+
         return renderer.render_multi_column(self, context)
 
 
 @dataclass(slots=True, init=False)
 class Part(Block):
-    """Top-level document division rendered on its own separator page."""
+    """Top-level document division rendered on its own separator page.
+
+    Args:
+        title: Part title inline content.
+        *children: Child block content.
+        numbered: Whether the part should be numbered.
+        toc: Whether the part should appear in generated tables of contents.
+            Defaults to ``numbered``.
+    """
 
     title: list[Text]
     children: list[Block]
@@ -707,19 +1123,37 @@ class Part(Block):
         self.level = 0
 
     def add(self, *children: BlockInput) -> Part:
-        """Append child blocks and return this part."""
+        """Append child blocks.
+
+        Args:
+            *children: Block content to append.
+
+        Returns:
+            This part, enabling fluent construction.
+        """
 
         self.children.extend(coerce_blocks(children))
         return self
 
     def extend(self, children: Iterable[BlockInput]) -> Part:
-        """Append an iterable of child blocks."""
+        """Append an iterable of child blocks.
+
+        Args:
+            children: Block content to append.
+
+        Returns:
+            This part, enabling fluent construction.
+        """
 
         self.children.extend(coerce_blocks(children))
         return self
 
     def plain_title(self) -> str:
-        """Return the title without styling metadata."""
+        """Return the title without styling metadata.
+
+        Returns:
+            Concatenated plain text for the title fragments.
+        """
 
         return "".join(fragment.plain_text() for fragment in self.title)
 
@@ -729,6 +1163,14 @@ class Part(Block):
         container: object,
         context: DocxRenderContext,
     ) -> None:
+        """Render this part into a DOCX container.
+
+        Args:
+            renderer: DOCX renderer instance.
+            container: Target python-docx container.
+            context: Shared DOCX render context.
+        """
+
         renderer.render_part(container, self, context)
 
     def render_to_pdf(
@@ -736,6 +1178,12 @@ class Part(Block):
         renderer: object,
         context: PdfRenderContext,
     ) -> list[object]:
+        """Render this part into PDF flowables.
+
+        Returns:
+            ReportLab flowables for this part.
+        """
+
         return renderer.render_part(self, context)
 
     def render_to_html(
@@ -743,12 +1191,38 @@ class Part(Block):
         renderer: object,
         context: HtmlRenderContext,
     ) -> str:
+        """Render this part into HTML markup.
+
+        Returns:
+            HTML markup for this part.
+        """
+
         return renderer.render_part(self, context)
 
 
 @dataclass(slots=True, init=False)
 class Box(Block):
-    """Bordered container for grouped block content."""
+    """Bordered container for grouped block content.
+
+    Args:
+        *children: Child block content.
+        title: Optional box title.
+        style: Base box style.
+        border_color: Optional border color override.
+        background_color: Optional body background color override.
+        title_background_color: Optional title band background override.
+        title_text_color: Optional title text color override.
+        border_width: Optional border width override.
+        padding: Optional padding override for all sides.
+        padding_top: Optional top padding override.
+        padding_right: Optional right padding override.
+        padding_bottom: Optional bottom padding override.
+        padding_left: Optional left padding override.
+        space_after: Optional spacing after the box.
+        width: Optional preferred box width.
+        unit: Unit for length overrides.
+        alignment: Optional horizontal alignment.
+    """
 
     children: list[Block]
     title: list[Text] | None
@@ -795,13 +1269,27 @@ class Box(Block):
         )
 
     def add(self, *children: BlockInput) -> Box:
-        """Append boxed content and return this box."""
+        """Append boxed content.
+
+        Args:
+            *children: Block content to append.
+
+        Returns:
+            This box, enabling fluent construction.
+        """
 
         self.children.extend(coerce_blocks(children))
         return self
 
     def extend(self, children: Iterable[BlockInput]) -> Box:
-        """Append an iterable of boxed content."""
+        """Append an iterable of boxed content.
+
+        Args:
+            children: Block content to append.
+
+        Returns:
+            This box, enabling fluent construction.
+        """
 
         self.children.extend(coerce_blocks(children))
         return self
@@ -812,6 +1300,14 @@ class Box(Block):
         container: object,
         context: DocxRenderContext,
     ) -> None:
+        """Render this box into a DOCX container.
+
+        Args:
+            renderer: DOCX renderer instance.
+            container: Target python-docx container.
+            context: Shared DOCX render context.
+        """
+
         renderer.render_box(container, self, context)
 
     def render_to_pdf(
@@ -819,6 +1315,12 @@ class Box(Block):
         renderer: object,
         context: PdfRenderContext,
     ) -> list[object]:
+        """Render this box into PDF flowables.
+
+        Returns:
+            ReportLab flowables for this box.
+        """
+
         return renderer.render_box(self, context)
 
     def render_to_html(
@@ -826,12 +1328,33 @@ class Box(Block):
         renderer: object,
         context: HtmlRenderContext,
     ) -> str:
+        """Render this box into HTML markup.
+
+        Returns:
+            HTML markup for this box.
+        """
+
         return renderer.render_box(self, context)
 
 
 @dataclass(slots=True, init=False)
 class CountableBlock(Block):
-    """A theorem-like block with document-wide numbering."""
+    """A theorem-like block with document-wide numbering.
+
+    Args:
+        kind: Visible block kind, such as ``"Theorem"``.
+        *children: Child block content.
+        title: Optional block title.
+        numbered: Whether the block participates in numbering.
+        counter: Counter namespace. Blocks with the same counter share a
+            sequence.
+        reference_label: Label prefix used by automatic inline references.
+        label_suffix: Punctuation appended to heading labels.
+
+    Raises:
+        TypeError: If ``label_suffix`` is not a string.
+        ValueError: If kind, counter, or reference label values are invalid.
+    """
 
     kind: str
     children: list[Block]
@@ -876,26 +1399,54 @@ class CountableBlock(Block):
         self.label_suffix = label_suffix
 
     def add(self, *children: BlockInput) -> CountableBlock:
-        """Append child blocks and return this countable block."""
+        """Append child blocks.
+
+        Args:
+            *children: Block content to append.
+
+        Returns:
+            This countable block, enabling fluent construction.
+        """
 
         self.children.extend(coerce_blocks(children))
         return self
 
     def extend(self, children: Iterable[BlockInput]) -> CountableBlock:
-        """Append an iterable of child blocks."""
+        """Append an iterable of child blocks.
+
+        Args:
+            children: Block content to append.
+
+        Returns:
+            This countable block, enabling fluent construction.
+        """
 
         self.children.extend(coerce_blocks(children))
         return self
 
     def heading_label(self, number: int | None) -> str:
-        """Return the visible heading label, including punctuation."""
+        """Return the visible heading label, including punctuation.
+
+        Args:
+            number: Assigned number, or ``None`` for unnumbered display.
+
+        Returns:
+            Display label for the block heading.
+        """
 
         if self.numbered and number is not None:
             return f"{self.kind} {number}{self.label_suffix}"
         return f"{self.kind}{self.label_suffix}"
 
     def reference_text(self, number: int) -> str:
-        """Return the default inline reference label."""
+        """Return the default inline reference label.
+
+        Args:
+            number: Assigned block number.
+
+        Returns:
+            Inline reference text for this block.
+        """
 
         return f"{self.reference_label} {number}"
 
@@ -905,6 +1456,14 @@ class CountableBlock(Block):
         container: object,
         context: DocxRenderContext,
     ) -> None:
+        """Render this countable block into a DOCX container.
+
+        Args:
+            renderer: DOCX renderer instance.
+            container: Target python-docx container.
+            context: Shared DOCX render context.
+        """
+
         renderer.render_countable_block(container, self, context)
 
     def render_to_pdf(
@@ -912,6 +1471,12 @@ class CountableBlock(Block):
         renderer: object,
         context: PdfRenderContext,
     ) -> list[object]:
+        """Render this countable block into PDF flowables.
+
+        Returns:
+            ReportLab flowables for this countable block.
+        """
+
         return renderer.render_countable_block(self, context)
 
     def render_to_html(
@@ -919,6 +1484,12 @@ class CountableBlock(Block):
         renderer: object,
         context: HtmlRenderContext,
     ) -> str:
+        """Render this countable block into HTML markup.
+
+        Returns:
+            HTML markup for this countable block.
+        """
+
         return renderer.render_countable_block(self, context)
 
 
@@ -930,7 +1501,21 @@ def countable_kind(
     reference_label: str | None = None,
     label_suffix: str = ".",
 ) -> type[CountableBlock]:
-    """Create a reusable theorem-like block class without manual subclassing."""
+    """Create a reusable theorem-like block class.
+
+    Args:
+        kind: Visible block kind for the generated class.
+        counter: Default counter namespace for generated instances.
+        numbered: Default numbering behavior.
+        reference_label: Default automatic reference label prefix.
+        label_suffix: Default punctuation appended to heading labels.
+
+    Returns:
+        A ``CountableBlock`` subclass preconfigured with the supplied defaults.
+
+    Raises:
+        ValueError: If ``kind`` is empty.
+    """
 
     normalized_kind = str(kind).strip()
     if not normalized_kind:
@@ -987,7 +1572,19 @@ Conjecture = countable_kind("Conjecture", counter=THEOREM_COUNTER)
 
 @dataclass(slots=True, init=False)
 class Section(Block):
-    """A titled section containing nested blocks."""
+    """A titled section containing nested blocks.
+
+    Args:
+        title: Section title inline content.
+        *children: Child block content.
+        level: Heading level from 1 through 6.
+        numbered: Whether the heading should be numbered.
+        toc: Whether the section should appear in generated tables of contents.
+            Defaults to ``numbered``.
+
+    Raises:
+        ValueError: If ``level`` is less than one.
+    """
 
     title: list[Text]
     children: list[Block]
@@ -1012,19 +1609,37 @@ class Section(Block):
         self.toc = numbered if toc is None else bool(toc)
 
     def add(self, *children: BlockInput) -> Section:
-        """Append child blocks and return this section."""
+        """Append child blocks.
+
+        Args:
+            *children: Block content to append.
+
+        Returns:
+            This section, enabling fluent construction.
+        """
 
         self.children.extend(coerce_blocks(children))
         return self
 
     def extend(self, children: Iterable[BlockInput]) -> Section:
-        """Append an iterable of child blocks."""
+        """Append an iterable of child blocks.
+
+        Args:
+            children: Block content to append.
+
+        Returns:
+            This section, enabling fluent construction.
+        """
 
         self.children.extend(coerce_blocks(children))
         return self
 
     def plain_title(self) -> str:
-        """Return the title without styling metadata."""
+        """Return the title without styling metadata.
+
+        Returns:
+            Concatenated plain text for the title fragments.
+        """
 
         return "".join(fragment.plain_text() for fragment in self.title)
 
@@ -1034,6 +1649,14 @@ class Section(Block):
         container: object,
         context: DocxRenderContext,
     ) -> None:
+        """Render this section and its children into a DOCX container.
+
+        Args:
+            renderer: DOCX renderer instance.
+            container: Target python-docx container.
+            context: Shared DOCX render context.
+        """
+
         renderer.add_heading(
             container,
             self.title,
@@ -1055,6 +1678,12 @@ class Section(Block):
         renderer: object,
         context: PdfRenderContext,
     ) -> list[object]:
+        """Render this section and its children into PDF flowables.
+
+        Returns:
+            ReportLab flowables for this section subtree.
+        """
+
         return renderer.render_section(self, context)
 
     def render_to_html(
@@ -1062,11 +1691,24 @@ class Section(Block):
         renderer: object,
         context: HtmlRenderContext,
     ) -> str:
+        """Render this section and its children into HTML markup.
+
+        Returns:
+            HTML markup for this section subtree.
+        """
+
         return renderer.render_section(self, context)
 
 
 class Chapter(Section):
-    """First-level document division."""
+    """First-level document division.
+
+    Args:
+        title: Chapter title inline content.
+        *children: Child block content.
+        numbered: Whether the chapter should be numbered.
+        toc: Whether the chapter should appear in generated tables of contents.
+    """
 
     def __init__(
         self,
@@ -1079,7 +1721,15 @@ class Chapter(Section):
 
 
 class Subsection(Section):
-    """Third-level document division."""
+    """Third-level document division.
+
+    Args:
+        title: Subsection title inline content.
+        *children: Child block content.
+        numbered: Whether the subsection should be numbered.
+        toc: Whether the subsection should appear in generated tables of
+            contents.
+    """
 
     def __init__(
         self,
@@ -1092,7 +1742,15 @@ class Subsection(Section):
 
 
 class Subsubsection(Section):
-    """Fourth-level document division."""
+    """Fourth-level document division.
+
+    Args:
+        title: Subsubsection title inline content.
+        *children: Child block content.
+        numbered: Whether the subsubsection should be numbered.
+        toc: Whether the subsubsection should appear in generated tables of
+            contents.
+    """
 
     def __init__(
         self,
@@ -1113,7 +1771,24 @@ def section_for_level(
     min_level: int = MIN_SECTION_LEVEL,
     max_level: int = MAX_SECTION_LEVEL,
 ) -> Section:
-    """Create the section-like object that best matches a heading level."""
+    """Create the section-like object that best matches a heading level.
+
+    Args:
+        title: Section title inline content.
+        *children: Child block content.
+        level: Desired heading level.
+        numbered: Whether the section should be numbered.
+        toc: Whether the section should appear in generated tables of contents.
+        min_level: Lowest accepted heading level.
+        max_level: Highest accepted heading level.
+
+    Returns:
+        ``Chapter``, ``Subsection``, ``Subsubsection``, or ``Section`` based on
+        ``level``.
+
+    Raises:
+        ValueError: If ``level`` is outside the allowed range.
+    """
 
     _validate_section_level(level, min_level=min_level, max_level=max_level)
     if level == 1:
@@ -1137,6 +1812,18 @@ def shift_heading_levels(
     Paragraphs and non-heading blocks are returned unchanged. Section-like
     blocks are rebuilt at their new levels, and nested section children are
     shifted recursively.
+
+    Args:
+        blocks: Blocks to shift.
+        delta: Heading-level offset to apply.
+        min_level: Lowest accepted heading level after shifting.
+        max_level: Highest accepted heading level after shifting.
+
+    Returns:
+        New block list with shifted section levels where applicable.
+
+    Raises:
+        ValueError: If a shifted heading level is outside the allowed range.
     """
 
     return [
@@ -1157,7 +1844,21 @@ def shift_heading_level(
     min_level: int = MIN_SECTION_LEVEL,
     max_level: int = MAX_SECTION_LEVEL,
 ) -> Block:
-    """Return one block with section heading levels shifted by ``delta``."""
+    """Return one block with section heading levels shifted by ``delta``.
+
+    Args:
+        block: Block to shift.
+        delta: Heading-level offset to apply.
+        min_level: Lowest accepted heading level after shifting.
+        max_level: Highest accepted heading level after shifting.
+
+    Returns:
+        The original block when it is not a section, otherwise a rebuilt
+        section-like block with shifted descendants.
+
+    Raises:
+        ValueError: If a shifted heading level is outside the allowed range.
+    """
 
     if not isinstance(block, Section):
         return block
@@ -1202,7 +1903,14 @@ CellInput = Paragraph | InlineInput
 
 
 def coerce_cell(value: CellInput) -> Paragraph:
-    """Normalize table or figure caption content into a ``Paragraph``."""
+    """Normalize table or figure caption content into a paragraph.
+
+    Args:
+        value: Existing paragraph or inline paragraph content.
+
+    Returns:
+        A paragraph suitable for a table cell or caption.
+    """
 
     if isinstance(value, Paragraph):
         return value

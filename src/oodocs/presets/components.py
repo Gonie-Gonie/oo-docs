@@ -42,7 +42,18 @@ _CALLOUT_VARIANTS: dict[str, dict[str, str]] = {
 
 
 class CalloutBox(Box):
-    """A titled box preset for notes, warnings, and reviewer-facing callouts."""
+    """A titled box preset for notes, warnings, and reviewer-facing callouts.
+
+    Args:
+        *children: Box content.
+        title: Optional callout title. Defaults to the variant title.
+        variant: Visual variant name.
+        style: Optional base box style.
+        **style_overrides: Additional arguments forwarded to ``Box``.
+
+    Raises:
+        ValueError: If ``variant`` is unsupported.
+    """
 
     def __init__(
         self,
@@ -67,7 +78,14 @@ class CalloutBox(Box):
 
 
 class CompactTable(Table):
-    """A denser table preset with smaller padding and subdued borders."""
+    """A denser table preset with smaller padding and subdued borders.
+
+    Args:
+        headers: Header cells, header rows, or a dataframe-like object.
+        rows: Body rows. Required unless ``headers`` is dataframe-like.
+        style: Optional base table style.
+        **table_options: Additional arguments forwarded to ``Table``.
+    """
 
     def __init__(
         self,
@@ -91,7 +109,15 @@ class CompactTable(Table):
 
 
 class KeyValueTable(CompactTable):
-    """A two-column table preset for metadata, settings, and option lists."""
+    """A two-column table preset for metadata, settings, and option lists.
+
+    Args:
+        items: Mapping or key/value pair sequence.
+        headers: Two column headers.
+        caption: Optional table caption.
+        style: Optional base table style.
+        **table_options: Additional arguments forwarded to ``CompactTable``.
+    """
 
     def __init__(
         self,
@@ -114,7 +140,23 @@ class KeyValueTable(CompactTable):
 
 
 class Nomenclature(Box):
-    """A boxed symbol list with no internal table rules."""
+    """A boxed symbol list with no internal table rules.
+
+    Args:
+        entries: Sequence of ``(symbol, meaning)`` or
+            ``(symbol, meaning, unit)`` tuples.
+        double_column: Whether to split entries into two side-by-side groups.
+        title: Optional box title.
+        headers: Header labels for symbol, meaning, and unit columns.
+        border_color: Box border color.
+        border_width: Box border width.
+        padding: Box padding.
+        table_style: Optional style for the internal table.
+        **box_options: Additional arguments forwarded to ``Box``.
+
+    Raises:
+        ValueError: If an entry does not have two or three values.
+    """
 
     def __init__(
         self,
@@ -207,13 +249,31 @@ def option_table(
     caption: CellInput | None = None,
     **table_options: object,
 ) -> KeyValueTable:
-    """Return a compact two-column table for documenting user-facing options."""
+    """Return a compact two-column table for documenting user-facing options.
+
+    Args:
+        rows: Mapping or option/value pair sequence.
+        caption: Optional table caption.
+        **table_options: Additional arguments forwarded to ``KeyValueTable``.
+
+    Returns:
+        Key/value table with option-oriented headers.
+    """
 
     return KeyValueTable(rows, headers=("Option", "Default or meaning"), caption=caption, **table_options)
 
 
 def note_box(*children: BlockInput, title: CellInput | None = None, **style_options: object) -> CalloutBox:
-    """Return an info callout box using the same options as ``CalloutBox``."""
+    """Return an info callout box.
+
+    Args:
+        *children: Box content.
+        title: Optional callout title.
+        **style_options: Additional arguments forwarded to ``CalloutBox``.
+
+    Returns:
+        Info variant callout box.
+    """
 
     return CalloutBox(*children, title=title, variant="info", **style_options)
 

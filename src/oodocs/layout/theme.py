@@ -41,7 +41,15 @@ def paragraph_style_with_overrides(
     style: ParagraphStyle | None,
     **overrides: object | None,
 ) -> ParagraphStyle:
-    """Return a paragraph style with direct keyword overrides applied."""
+    """Return a paragraph style with direct keyword overrides applied.
+
+    Args:
+        style: Base paragraph style or ``None``.
+        **overrides: Paragraph style fields to override when not ``None``.
+
+    Returns:
+        Existing style, copied style, or a new style with overrides applied.
+    """
 
     return _style_with_overrides(style, ParagraphStyle, overrides)  # type: ignore[return-value]
 
@@ -50,7 +58,15 @@ def box_style_with_overrides(
     style: BoxStyle | None,
     **overrides: object | None,
 ) -> BoxStyle:
-    """Return a box style with direct keyword overrides applied."""
+    """Return a box style with direct keyword overrides applied.
+
+    Args:
+        style: Base box style or ``None``.
+        **overrides: Box style fields to override when not ``None``.
+
+    Returns:
+        Existing style, copied style, or a new style with overrides applied.
+    """
 
     return _style_with_overrides(style, BoxStyle, overrides)  # type: ignore[return-value]
 
@@ -59,7 +75,15 @@ def table_style_with_overrides(
     style: TableStyle | None,
     **overrides: object | None,
 ) -> TableStyle:
-    """Return a table style with direct keyword overrides applied."""
+    """Return a table style with direct keyword overrides applied.
+
+    Args:
+        style: Base table style or ``None``.
+        **overrides: Table style fields to override when not ``None``.
+
+    Returns:
+        Existing style, copied style, or a new style with overrides applied.
+    """
 
     return _style_with_overrides(style, TableStyle, overrides)  # type: ignore[return-value]
 
@@ -70,7 +94,16 @@ def list_style_with_overrides(
     ordered: bool,
     **overrides: object | None,
 ) -> ListStyle | None:
-    """Return a concrete list style when direct list keyword overrides are used."""
+    """Return a concrete list style when direct list keyword overrides are used.
+
+    Args:
+        style: Base list style or ``None``.
+        ordered: Whether the target list is ordered.
+        **overrides: List style fields to override when not ``None``.
+
+    Returns:
+        ``None`` when no style is needed, otherwise a concrete list style.
+    """
 
     values = {name: value for name, value in overrides.items() if value is not None}
     if style is None and not values:
@@ -90,6 +123,20 @@ class TextStyle:
     """Inline text styling overrides.
 
     Each field is optional so styles can be layered and merged.
+
+    Attributes:
+        font_name: Optional font family.
+        font_size: Optional font size.
+        color: Optional text color as a hex string.
+        highlight_color: Optional highlight color as a hex string.
+        bold: Optional bold override.
+        italic: Optional italic override.
+        underline: Optional underline override.
+        strikethrough: Optional strikethrough override.
+        small_caps: Optional small-caps override.
+        all_caps: Optional all-caps override.
+        subscript: Optional subscript override.
+        superscript: Optional superscript override.
     """
 
     font_name: str | None = None
@@ -112,7 +159,17 @@ class TextStyle:
             raise ValueError("TextStyle cannot set both subscript and superscript")
 
     def merged(self, *others: TextStyle | None) -> TextStyle:
-        """Return a new style with later values overriding earlier ones."""
+        """Return a new style with later values overriding earlier ones.
+
+        Args:
+            *others: Styles to overlay from left to right.
+
+        Returns:
+            New merged text style.
+
+        Raises:
+            ValueError: If the merged style sets both subscript and superscript.
+        """
 
         merged = TextStyle(
             font_name=self.font_name,
@@ -155,7 +212,22 @@ class TextStyle:
 
 @dataclass(slots=True)
 class ParagraphStyle:
-    """Block-level paragraph spacing and alignment settings."""
+    """Block-level paragraph spacing and alignment settings.
+
+    Attributes:
+        alignment: Optional text alignment.
+        space_before: Optional spacing before the paragraph.
+        space_after: Optional spacing after the paragraph.
+        leading: Optional line spacing.
+        left_indent: Optional left indent.
+        right_indent: Optional right indent.
+        first_line_indent: Optional first-line indent.
+        keep_together: Optional keep-together flag.
+        keep_with_next: Optional keep-with-next flag.
+        page_break_before: Optional page-break-before flag.
+        widow_control: Optional widow-control flag.
+        unit: Unit for length values.
+    """
 
     alignment: str | None = None
     space_before: float | None = None
@@ -204,7 +276,27 @@ class ParagraphStyle:
         widow_control: bool | None = None,
         unit: str | None = None,
     ) -> ParagraphStyle:
-        """Create a hanging-indent paragraph style."""
+        """Create a hanging-indent paragraph style.
+
+        Args:
+            left: Left indent.
+            by: Hanging amount. Defaults to ``left``.
+            alignment: Optional text alignment.
+            space_before: Optional spacing before the paragraph.
+            space_after: Optional spacing after the paragraph.
+            leading: Optional line spacing.
+            keep_together: Optional keep-together flag.
+            keep_with_next: Optional keep-with-next flag.
+            page_break_before: Optional page-break-before flag.
+            widow_control: Optional widow-control flag.
+            unit: Unit for length values.
+
+        Returns:
+            Paragraph style with a negative first-line indent.
+
+        Raises:
+            ValueError: If ``by`` is negative.
+        """
 
         hanging_by = left if by is None else by
         if hanging_by < 0:
@@ -224,12 +316,39 @@ class ParagraphStyle:
         )
 
     def left_indent_in_inches(self, default_unit: str) -> float | None:
+        """Return left indent in inches.
+
+        Args:
+            default_unit: Unit to use when this style has no explicit unit.
+
+        Returns:
+            Left indent in inches, or ``None``.
+        """
+
         return self._indent_in_inches(self.left_indent, default_unit)
 
     def right_indent_in_inches(self, default_unit: str) -> float | None:
+        """Return right indent in inches.
+
+        Args:
+            default_unit: Unit to use when this style has no explicit unit.
+
+        Returns:
+            Right indent in inches, or ``None``.
+        """
+
         return self._indent_in_inches(self.right_indent, default_unit)
 
     def first_line_indent_in_inches(self, default_unit: str) -> float | None:
+        """Return first-line indent in inches.
+
+        Args:
+            default_unit: Unit to use when this style has no explicit unit.
+
+        Returns:
+            First-line indent in inches, or ``None``.
+        """
+
         return self._indent_in_inches(self.first_line_indent, default_unit)
 
     def _indent_in_inches(self, value: float | None, default_unit: str) -> float | None:
@@ -240,7 +359,15 @@ class ParagraphStyle:
 
 @dataclass(slots=True)
 class HeadingNumbering:
-    """Configurable hierarchical numbering for authored headings."""
+    """Configurable hierarchical numbering for authored headings.
+
+    Attributes:
+        enabled: Whether heading numbering is enabled.
+        formats: Counter formats for successive heading levels.
+        separator: Separator between level counters.
+        prefix: Prefix before the full label.
+        suffix: Suffix after the full label.
+    """
 
     enabled: bool = True
     formats: tuple[str, ...] = ("decimal", "decimal", "decimal", "decimal")
@@ -254,7 +381,15 @@ class HeadingNumbering:
             raise ValueError("HeadingNumbering.formats must not be empty")
 
     def format_label(self, counters: Sequence[int]) -> str | None:
-        """Render a heading label such as ``1.2.3`` from nested counters."""
+        """Render a heading label such as ``1.2.3`` from nested counters.
+
+        Args:
+            counters: Counter values from top-level heading through current
+                heading.
+
+        Returns:
+            Formatted heading label, or ``None`` when numbering is disabled.
+        """
 
         if not self.enabled:
             return None
@@ -268,7 +403,17 @@ class HeadingNumbering:
 
 @dataclass(slots=True)
 class ListStyle:
-    """Marker formatting for bullet and ordered lists."""
+    """Marker formatting for bullet and ordered lists.
+
+    Attributes:
+        marker_format: Counter format for markers.
+        bullet: Bullet glyph when ``marker_format`` is ``"bullet"``.
+        prefix: Marker prefix.
+        suffix: Marker suffix.
+        start: First counter value for ordered markers.
+        indent: List indent in inches.
+        marker_gap: Gap between marker and item text in inches.
+    """
 
     marker_format: str = "decimal"
     bullet: str = "\u2022"
@@ -288,7 +433,14 @@ class ListStyle:
             raise ValueError("ListStyle.marker_gap must be >= 0")
 
     def marker_for(self, index: int) -> str:
-        """Return the rendered marker for a zero-based list item index."""
+        """Return the rendered marker for a zero-based list item index.
+
+        Args:
+            index: Zero-based list item index.
+
+        Returns:
+            Rendered marker string.
+        """
 
         if self.marker_format == "none":
             return ""
@@ -342,7 +494,11 @@ class BoxStyle:
             raise ValueError(f"Unsupported BoxStyle alignment: {self.alignment!r}")
 
     def resolved_padding(self) -> tuple[float, float, float, float]:
-        """Return top, right, bottom, and left padding in points."""
+        """Return top, right, bottom, and left padding in points.
+
+        Returns:
+            ``(top, right, bottom, left)`` padding values.
+        """
 
         return (
             self.padding if self.padding_top is None else self.padding_top,
@@ -415,7 +571,11 @@ class TableStyle:
 
     @classmethod
     def plain(cls) -> TableStyle:
-        """Create a minimally styled table preset."""
+        """Create a minimally styled table preset.
+
+        Returns:
+            Plain table style.
+        """
 
         return cls(
             header_background_color="FFFFFF",
@@ -426,7 +586,11 @@ class TableStyle:
 
     @classmethod
     def compact(cls) -> TableStyle:
-        """Create a dense preset for compact data tables."""
+        """Create a dense preset for compact data tables.
+
+        Returns:
+            Compact table style.
+        """
 
         return cls(
             header_background_color="F1F4F8",
@@ -439,7 +603,11 @@ class TableStyle:
 
     @classmethod
     def evidence(cls) -> TableStyle:
-        """Create a preset for release evidence and audit tables."""
+        """Create a preset for release evidence and audit tables.
+
+        Returns:
+            Evidence-oriented table style.
+        """
 
         return cls(
             header_background_color="E7EEF7",
@@ -452,7 +620,11 @@ class TableStyle:
         )
 
     def resolved_cell_padding(self) -> tuple[float, float, float, float]:
-        """Return top, right, bottom, and left cell padding in points."""
+        """Return top, right, bottom, and left cell padding in points.
+
+        Returns:
+            ``(top, right, bottom, left)`` cell padding values.
+        """
 
         return (
             self.cell_padding if self.cell_padding_top is None else self.cell_padding_top,
@@ -556,7 +728,28 @@ class BlockOptions:
 
 @dataclass(slots=True, init=False)
 class Theme:
-    """Document-wide renderer defaults."""
+    """Document-wide renderer defaults.
+
+    Args:
+        *options: Optional grouped option objects. Supported types are
+            ``TypographyOptions``, ``CaptionOptions``, ``CitationOptions``,
+            ``GeneratedPageOptions``, ``PageNumberOptions``,
+            ``TitleMatterOptions``, and ``BlockOptions``.
+        typography: Optional typography option group.
+        captions: Optional caption option group.
+        citation_options: Optional citation option group.
+        generated_pages: Optional generated-page option group.
+        page_numbers: Optional page-number option group.
+        title_matter: Optional title-matter option group.
+        blocks: Optional block option group.
+        **direct_options: Individual theme field overrides. Direct options take
+            precedence over grouped option values.
+
+    Raises:
+        TypeError: If a positional option is not a supported option group.
+        ValueError: If alignment, format, numbering, or color values are
+            invalid.
+    """
 
     typography: TypographyOptions
     captions: CaptionOptions
@@ -924,13 +1117,27 @@ class Theme:
         )
 
     def heading_size(self, level: int) -> float:
-        """Return the configured font size for a heading level."""
+        """Return the configured font size for a heading level.
+
+        Args:
+            level: One-based heading level.
+
+        Returns:
+            Font size for the nearest configured level.
+        """
 
         index = min(max(level - 1, 0), len(self.heading_sizes) - 1)
         return self.heading_sizes[index]
 
     def heading_emphasis(self, level: int) -> tuple[bool, bool]:
-        """Return ``(bold, italic)`` emphasis for the given heading level."""
+        """Return heading emphasis for a heading level.
+
+        Args:
+            level: One-based heading level.
+
+        Returns:
+            ``(bold, italic)`` emphasis flags.
+        """
 
         emphasis = (
             (True, False),
@@ -942,37 +1149,71 @@ class Theme:
         return emphasis[index]
 
     def heading_alignment(self, level: int) -> str:
-        """Return the alignment to use for the given heading level."""
+        """Return the alignment to use for the given heading level.
+
+        Args:
+            level: One-based heading level.
+
+        Returns:
+            Heading alignment.
+        """
 
         return "left"
 
     def resolve_paragraph_alignment(self, style: ParagraphStyle) -> str:
-        """Return a paragraph style's alignment or the document-wide default."""
+        """Return a paragraph style's alignment or the document-wide default.
+
+        Args:
+            style: Paragraph style to resolve.
+
+        Returns:
+            Effective paragraph alignment.
+        """
 
         return style.alignment or self.paragraph_alignment
 
     def table_caption_label_text(self) -> str:
-        """Return the label used in table captions and generated table lists."""
+        """Return the label used in table captions and generated table lists.
+
+        Returns:
+            Effective table caption label.
+        """
 
         return self.table_caption_label or self.table_label
 
     def figure_caption_label_text(self) -> str:
-        """Return the label used in figure captions and generated figure lists."""
+        """Return the label used in figure captions and generated figure lists.
+
+        Returns:
+            Effective figure caption label.
+        """
 
         return self.figure_caption_label or self.figure_label
 
     def table_reference_label_text(self) -> str:
-        """Return the label used for inline table references."""
+        """Return the label used for inline table references.
+
+        Returns:
+            Effective table reference label.
+        """
 
         return self.table_reference_label or self.table_label
 
     def figure_reference_label_text(self) -> str:
-        """Return the label used for inline figure and subfigure references."""
+        """Return the label used for inline figure and subfigure references.
+
+        Returns:
+            Effective figure reference label.
+        """
 
         return self.figure_reference_label or self.figure_label
 
     def caption_size(self) -> float:
-        """Return the effective caption font size."""
+        """Return the effective caption font size.
+
+        Returns:
+            Caption font size, falling back to body font size.
+        """
 
         return self.body_font_size if self.caption_font_size is None else self.caption_font_size
 
@@ -982,7 +1223,15 @@ class Theme:
         *,
         front_matter: bool = False,
     ) -> str:
-        """Render the footer page number string for a page."""
+        """Render the footer page number string for a page.
+
+        Args:
+            page_number: One-based logical page number.
+            front_matter: Whether to use front-matter numbering format.
+
+        Returns:
+            Formatted page number text.
+        """
 
         marker_format = (
             self.front_matter_page_number_format
@@ -993,12 +1242,28 @@ class Theme:
         return self.page_number_format.format(page=page_label)
 
     def format_heading_label(self, counters: Sequence[int]) -> str | None:
-        """Render a heading numbering label for nested section counters."""
+        """Render a heading numbering label for nested section counters.
+
+        Args:
+            counters: Counter values from top-level heading through current
+                heading.
+
+        Returns:
+            Formatted heading label, or ``None`` when numbering is disabled.
+        """
 
         return self.heading_numbering.format_label(counters)
 
     def format_part_label(self, value: int) -> str | None:
-        """Render a part label such as ``Part I`` from an independent counter."""
+        """Render a part label such as ``Part I`` from an independent counter.
+
+        Args:
+            value: Part counter value.
+
+        Returns:
+            Formatted part label, or ``None`` when heading numbering is
+            disabled.
+        """
 
         if not self.heading_numbering.enabled:
             return None
@@ -1006,7 +1271,14 @@ class Theme:
         return f"{self.part_label} {marker}".strip()
 
     def list_style(self, *, ordered: bool) -> ListStyle:
-        """Return the default style for bullet or ordered lists."""
+        """Return the default style for bullet or ordered lists.
+
+        Args:
+            ordered: Whether to return the ordered-list style.
+
+        Returns:
+            Default list style for the requested list kind.
+        """
 
         return self.numbered_list_style if ordered else self.bullet_list_style
 

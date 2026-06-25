@@ -14,7 +14,16 @@ if TYPE_CHECKING:
 
 @dataclass(slots=True)
 class TocLevelStyle:
-    """Optional display overrides for a table-of-contents level."""
+    """Optional display overrides for a table-of-contents level.
+
+    Attributes:
+        indent: Optional level indent.
+        space_before: Optional spacing before entries at this level.
+        space_after: Optional spacing after entries at this level.
+        font_size_delta: Optional font-size delta from the base TOC style.
+        bold: Optional bold override.
+        italic: Optional italic override.
+    """
 
     indent: float | None = None
     space_before: float | None = None
@@ -28,6 +37,18 @@ TocLevelStyleInput = TocLevelStyle | Mapping[str, object]
 
 
 def coerce_toc_level_style(value: TocLevelStyleInput) -> TocLevelStyle:
+    """Normalize a table-of-contents level style.
+
+    Args:
+        value: Existing style or mapping of ``TocLevelStyle`` fields.
+
+    Returns:
+        A table-of-contents level style.
+
+    Raises:
+        TypeError: If ``value`` cannot be converted.
+    """
+
     if isinstance(value, TocLevelStyle):
         return value
     if isinstance(value, Mapping):
@@ -37,7 +58,12 @@ def coerce_toc_level_style(value: TocLevelStyleInput) -> TocLevelStyle:
 
 @dataclass(slots=True, init=False)
 class TableList(Block):
-    """Generated list of captioned tables."""
+    """Generated list of captioned tables.
+
+    Args:
+        title: Optional page title. Renderers use their default title when
+            omitted.
+    """
 
     title: list[Text] | None
 
@@ -50,6 +76,14 @@ class TableList(Block):
         container: object,
         context: DocxRenderContext,
     ) -> None:
+        """Render this table list into a DOCX container.
+
+        Args:
+            renderer: DOCX renderer instance.
+            container: Target python-docx container.
+            context: Shared DOCX render context.
+        """
+
         renderer.render_table_list(self, context)
 
     def render_to_pdf(
@@ -57,6 +91,12 @@ class TableList(Block):
         renderer: object,
         context: PdfRenderContext,
     ) -> list[object]:
+        """Render this table list into PDF flowables.
+
+        Returns:
+            ReportLab flowables for the generated table list.
+        """
+
         return renderer.render_table_list(self, context)
 
     def render_to_html(
@@ -64,12 +104,23 @@ class TableList(Block):
         renderer: object,
         context: HtmlRenderContext,
     ) -> str:
+        """Render this table list into HTML markup.
+
+        Returns:
+            HTML markup for the generated table list.
+        """
+
         return renderer.render_table_list(self, context)
 
 
 @dataclass(slots=True, init=False)
 class FigureList(Block):
-    """Generated list of captioned figures."""
+    """Generated list of captioned figures.
+
+    Args:
+        title: Optional page title. Renderers use their default title when
+            omitted.
+    """
 
     title: list[Text] | None
 
@@ -82,6 +133,14 @@ class FigureList(Block):
         container: object,
         context: DocxRenderContext,
     ) -> None:
+        """Render this figure list into a DOCX container.
+
+        Args:
+            renderer: DOCX renderer instance.
+            container: Target python-docx container.
+            context: Shared DOCX render context.
+        """
+
         renderer.render_figure_list(self, context)
 
     def render_to_pdf(
@@ -89,6 +148,12 @@ class FigureList(Block):
         renderer: object,
         context: PdfRenderContext,
     ) -> list[object]:
+        """Render this figure list into PDF flowables.
+
+        Returns:
+            ReportLab flowables for the generated figure list.
+        """
+
         return renderer.render_figure_list(self, context)
 
     def render_to_html(
@@ -96,12 +161,23 @@ class FigureList(Block):
         renderer: object,
         context: HtmlRenderContext,
     ) -> str:
+        """Render this figure list into HTML markup.
+
+        Returns:
+            HTML markup for the generated figure list.
+        """
+
         return renderer.render_figure_list(self, context)
 
 
 @dataclass(slots=True, init=False)
 class ReferencesPage(Block):
-    """Generated reference list for cited bibliography entries."""
+    """Generated reference list for cited bibliography entries.
+
+    Args:
+        title: Optional page title. Renderers use their default title when
+            omitted.
+    """
 
     title: list[Text] | None
 
@@ -114,6 +190,14 @@ class ReferencesPage(Block):
         container: object,
         context: DocxRenderContext,
     ) -> None:
+        """Render this references page into a DOCX container.
+
+        Args:
+            renderer: DOCX renderer instance.
+            container: Target python-docx container.
+            context: Shared DOCX render context.
+        """
+
         renderer.render_references_page(self, context)
 
     def render_to_pdf(
@@ -121,6 +205,12 @@ class ReferencesPage(Block):
         renderer: object,
         context: PdfRenderContext,
     ) -> list[object]:
+        """Render this references page into PDF flowables.
+
+        Returns:
+            ReportLab flowables for the generated references page.
+        """
+
         return renderer.render_references_page(self, context)
 
     def render_to_html(
@@ -128,12 +218,23 @@ class ReferencesPage(Block):
         renderer: object,
         context: HtmlRenderContext,
     ) -> str:
+        """Render this references page into HTML markup.
+
+        Returns:
+            HTML markup for the generated references page.
+        """
+
         return renderer.render_references_page(self, context)
 
 
 @dataclass(slots=True, init=False)
 class CommentsPage(Block):
-    """Generated page listing numbered inline comments."""
+    """Generated page listing numbered inline comments.
+
+    Args:
+        title: Optional page title. Renderers use their default title when
+            omitted.
+    """
 
     title: list[Text] | None
 
@@ -146,6 +247,14 @@ class CommentsPage(Block):
         container: object,
         context: DocxRenderContext,
     ) -> None:
+        """Render this comments page into a DOCX container.
+
+        Args:
+            renderer: DOCX renderer instance.
+            container: Target python-docx container.
+            context: Shared DOCX render context.
+        """
+
         renderer.render_comments_page(self, context)
 
     def render_to_pdf(
@@ -153,6 +262,12 @@ class CommentsPage(Block):
         renderer: object,
         context: PdfRenderContext,
     ) -> list[object]:
+        """Render this comments page into PDF flowables.
+
+        Returns:
+            ReportLab flowables for the generated comments page.
+        """
+
         return renderer.render_comments_page(self, context)
 
     def render_to_html(
@@ -160,12 +275,23 @@ class CommentsPage(Block):
         renderer: object,
         context: HtmlRenderContext,
     ) -> str:
+        """Render this comments page into HTML markup.
+
+        Returns:
+            HTML markup for the generated comments page.
+        """
+
         return renderer.render_comments_page(self, context)
 
 
 @dataclass(slots=True, init=False)
 class FootnotesPage(Block):
-    """Generated page listing numbered portable footnotes."""
+    """Generated page listing numbered portable footnotes.
+
+    Args:
+        title: Optional page title. Renderers use their default title when
+            omitted.
+    """
 
     title: list[Text] | None
 
@@ -178,6 +304,14 @@ class FootnotesPage(Block):
         container: object,
         context: DocxRenderContext,
     ) -> None:
+        """Render this footnotes page into a DOCX container.
+
+        Args:
+            renderer: DOCX renderer instance.
+            container: Target python-docx container.
+            context: Shared DOCX render context.
+        """
+
         renderer.render_footnotes_page(self, context)
 
     def render_to_pdf(
@@ -185,6 +319,12 @@ class FootnotesPage(Block):
         renderer: object,
         context: PdfRenderContext,
     ) -> list[object]:
+        """Render this footnotes page into PDF flowables.
+
+        Returns:
+            ReportLab flowables for the generated footnotes page.
+        """
+
         return renderer.render_footnotes_page(self, context)
 
     def render_to_html(
@@ -192,12 +332,32 @@ class FootnotesPage(Block):
         renderer: object,
         context: HtmlRenderContext,
     ) -> str:
+        """Render this footnotes page into HTML markup.
+
+        Returns:
+            HTML markup for the generated footnotes page.
+        """
+
         return renderer.render_footnotes_page(self, context)
 
 
 @dataclass(slots=True, init=False)
 class TableOfContents(Block):
-    """Generated outline of authored headings."""
+    """Generated outline of authored headings.
+
+    Args:
+        title: Optional page title. Renderers use their default title when
+            omitted.
+        show_page_numbers: Whether fixed-page renderers should display page
+            numbers.
+        leader: Leader character between heading text and page number.
+        max_level: Highest heading level to include. ``None`` includes all
+            levels.
+        level_styles: Optional display overrides keyed by heading level.
+
+    Raises:
+        ValueError: If ``max_level`` is negative.
+    """
 
     title: list[Text] | None
     show_page_numbers: bool
@@ -226,9 +386,27 @@ class TableOfContents(Block):
         }
 
     def includes_level(self, level: int) -> bool:
+        """Return whether a heading level is included.
+
+        Args:
+            level: Heading level to test.
+
+        Returns:
+            ``True`` when the heading should be listed.
+        """
+
         return self.max_level is None or level <= self.max_level
 
     def style_for_level(self, level: int) -> TocLevelStyle:
+        """Return display overrides for a heading level.
+
+        Args:
+            level: Heading level to look up.
+
+        Returns:
+            Configured style or a default empty style.
+        """
+
         return self.level_styles.get(level, TocLevelStyle())
 
     def render_to_docx(
@@ -237,6 +415,14 @@ class TableOfContents(Block):
         container: object,
         context: DocxRenderContext,
     ) -> None:
+        """Render this table of contents into a DOCX container.
+
+        Args:
+            renderer: DOCX renderer instance.
+            container: Target python-docx container.
+            context: Shared DOCX render context.
+        """
+
         renderer.render_table_of_contents(self, context)
 
     def render_to_pdf(
@@ -244,6 +430,12 @@ class TableOfContents(Block):
         renderer: object,
         context: PdfRenderContext,
     ) -> list[object]:
+        """Render this table of contents into PDF flowables.
+
+        Returns:
+            ReportLab flowables for the table of contents.
+        """
+
         return renderer.render_table_of_contents(self, context)
 
     def render_to_html(
@@ -251,6 +443,12 @@ class TableOfContents(Block):
         renderer: object,
         context: HtmlRenderContext,
     ) -> str:
+        """Render this table of contents into HTML markup.
+
+        Returns:
+            HTML markup for the table of contents.
+        """
+
         return renderer.render_table_of_contents(self, context)
 
 

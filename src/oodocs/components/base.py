@@ -17,7 +17,15 @@ class Block:
         self,
         *label: InlineInput,
     ) -> BlockReference:
-        """Create an explicit inline reference to this block."""
+        """Create an explicit inline reference to this block.
+
+        Args:
+            *label: Optional inline content to use instead of the automatic
+                reference label.
+
+        Returns:
+            An inline block reference targeting this block.
+        """
 
         from oodocs.components.inline import reference
 
@@ -29,7 +37,16 @@ class Block:
         container: object,
         context: DocxRenderContext,
     ) -> None:
-        """Render the block into a DOCX container."""
+        """Render the block into a DOCX container.
+
+        Args:
+            renderer: DOCX renderer instance.
+            container: Target python-docx container.
+            context: Shared DOCX render context.
+
+        Raises:
+            NotImplementedError: Always raised by the base implementation.
+        """
 
         raise NotImplementedError
 
@@ -38,7 +55,18 @@ class Block:
         renderer: object,
         context: PdfRenderContext,
     ) -> list[object]:
-        """Render the block into one or more PDF flowables."""
+        """Render the block into one or more PDF flowables.
+
+        Args:
+            renderer: PDF renderer instance.
+            context: Shared PDF render context.
+
+        Returns:
+            ReportLab flowables for this block.
+
+        Raises:
+            NotImplementedError: Always raised by the base implementation.
+        """
 
         raise NotImplementedError
 
@@ -47,7 +75,18 @@ class Block:
         renderer: object,
         context: HtmlRenderContext,
     ) -> str:
-        """Render the block into HTML markup."""
+        """Render the block into HTML markup.
+
+        Args:
+            renderer: HTML renderer instance.
+            context: Shared HTML render context.
+
+        Returns:
+            HTML markup for this block.
+
+        Raises:
+            NotImplementedError: Always raised by the base implementation.
+        """
 
         raise NotImplementedError
 
@@ -56,7 +95,17 @@ BlockInput = Block | str | Sequence["BlockInput"] | None
 
 
 def coerce_blocks(values: Iterable[BlockInput]) -> list[Block]:
-    """Normalize supported block inputs into block objects."""
+    """Normalize supported block inputs into block objects.
+
+    Args:
+        values: Block instances, strings, nested block sequences, or ``None``.
+
+    Returns:
+        A flat list of block objects.
+
+    Raises:
+        TypeError: If a value cannot be converted to a block.
+    """
 
     from oodocs.components.blocks import Paragraph
 
@@ -79,7 +128,11 @@ def coerce_blocks(values: Iterable[BlockInput]) -> list[Block]:
 
 @dataclass(slots=True, init=False)
 class Body(Block):
-    """Top-level block container used by ``Document``."""
+    """Top-level block container used by ``Document``.
+
+    Args:
+        *children: Initial block content using ``coerce_blocks`` rules.
+    """
 
     children: list[Block]
 
@@ -87,13 +140,27 @@ class Body(Block):
         self.children = coerce_blocks(children)
 
     def add(self, *children: BlockInput) -> Body:
-        """Append children using the same coercion rules as the constructor."""
+        """Append children using the same coercion rules as the constructor.
+
+        Args:
+            *children: Block content to append.
+
+        Returns:
+            This body, enabling fluent construction.
+        """
 
         self.children.extend(coerce_blocks(children))
         return self
 
     def extend(self, children: Iterable[BlockInput]) -> Body:
-        """Append an iterable of children and return this body."""
+        """Append an iterable of children.
+
+        Args:
+            children: Block content to append.
+
+        Returns:
+            This body, enabling fluent construction.
+        """
 
         self.children.extend(coerce_blocks(children))
         return self
@@ -104,6 +171,14 @@ class Body(Block):
         container: object,
         context: DocxRenderContext,
     ) -> None:
+        """Render all children into a DOCX container.
+
+        Args:
+            renderer: DOCX renderer instance.
+            container: Target python-docx container.
+            context: Shared DOCX render context.
+        """
+
         for child in self.children:
             child.render_to_docx(renderer, container, context)
 
@@ -112,6 +187,16 @@ class Body(Block):
         renderer: object,
         context: PdfRenderContext,
     ) -> list[object]:
+        """Render all children into PDF flowables.
+
+        Args:
+            renderer: PDF renderer instance.
+            context: Shared PDF render context.
+
+        Returns:
+            A flattened list of child flowables.
+        """
+
         story: list[object] = []
         for child in self.children:
             story.extend(child.render_to_pdf(renderer, context))
@@ -122,6 +207,16 @@ class Body(Block):
         renderer: object,
         context: HtmlRenderContext,
     ) -> str:
+        """Render all children into HTML markup.
+
+        Args:
+            renderer: HTML renderer instance.
+            context: Shared HTML render context.
+
+        Returns:
+            Concatenated child HTML.
+        """
+
         return "".join(child.render_to_html(renderer, context) for child in self.children)
 
 

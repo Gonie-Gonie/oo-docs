@@ -23,7 +23,15 @@ ImageFit = Literal["contain", "stretch"]
 
 @dataclass(frozen=True, slots=True)
 class PositionedBox:
-    """Resolved page-relative box in inches."""
+    """Resolved page-relative box in inches.
+
+    Attributes:
+        item: Original positioned item.
+        x: Page-relative x coordinate in inches.
+        y: Page-relative y coordinate in inches.
+        width: Width in inches.
+        height: Height in inches.
+    """
 
     item: PositionedItem
     x: float
@@ -48,6 +56,23 @@ class TextBox(Block):
     Absolute coordinates are measured from the selected anchor's top-left
     corner. Built-in anchors are ``"page"`` and ``"margin"``; any other anchor
     name refers to a named ``Shape``.
+
+    Args:
+        *content: Inline text content.
+        x: X coordinate in ``unit`` from the anchor origin.
+        y: Y coordinate in ``unit`` from the anchor origin.
+        width: Box width in ``unit``.
+        height: Box height in ``unit``.
+        anchor: Built-in anchor or named shape anchor.
+        placement: ``"absolute"`` for page items or ``"inline"`` in content.
+        align: Horizontal text alignment.
+        valign: Vertical text alignment.
+        font_size: Optional font size override.
+        unit: Unit for coordinates and dimensions.
+        z_index: Stacking order for page-positioned rendering.
+
+    Raises:
+        ValueError: If placement, alignment, or dimensions are invalid.
     """
 
     content: list[Text]
@@ -100,7 +125,11 @@ class TextBox(Block):
         self.z_index = z_index
 
     def plain_text(self) -> str:
-        """Return the textbox content without styling metadata."""
+        """Return the textbox content without styling metadata.
+
+        Returns:
+            Concatenated plain text for the textbox content.
+        """
 
         return "".join(fragment.plain_text() for fragment in self.content)
 
@@ -110,6 +139,14 @@ class TextBox(Block):
         container: object,
         context: DocxRenderContext,
     ) -> None:
+        """Render this text box into a DOCX container.
+
+        Args:
+            renderer: DOCX renderer instance.
+            container: Target python-docx container.
+            context: Shared DOCX render context.
+        """
+
         renderer.render_text_box(container, self, context)
 
     def render_to_pdf(
@@ -117,6 +154,12 @@ class TextBox(Block):
         renderer: object,
         context: PdfRenderContext,
     ) -> list[object]:
+        """Render this text box into PDF flowables.
+
+        Returns:
+            ReportLab flowables for this text box.
+        """
+
         return renderer.render_text_box(self, context)
 
     def render_to_html(
@@ -124,12 +167,37 @@ class TextBox(Block):
         renderer: object,
         context: HtmlRenderContext,
     ) -> str:
+        """Render this text box into HTML markup.
+
+        Returns:
+            HTML markup for this text box.
+        """
+
         return renderer.render_text_box(self, context)
 
 
 @dataclass(slots=True, init=False)
 class Shape(Block):
-    """A basic positioned or inline shape."""
+    """A basic positioned or inline shape.
+
+    Args:
+        kind: Shape kind.
+        x: X coordinate in ``unit`` from the anchor origin.
+        y: Y coordinate in ``unit`` from the anchor origin.
+        width: Shape width in ``unit``.
+        height: Shape height in ``unit``.
+        anchor: Built-in anchor or named shape anchor.
+        placement: ``"absolute"`` for page items or ``"inline"`` in content.
+        name: Optional anchor name other items can target.
+        stroke_color: Optional stroke color as a hex string.
+        fill_color: Optional fill color as a hex string.
+        stroke_width: Stroke width.
+        unit: Unit for coordinates and dimensions.
+        z_index: Stacking order for page-positioned rendering.
+
+    Raises:
+        ValueError: If kind, placement, dimensions, or name are invalid.
+    """
 
     kind: ShapeKind
     x: float
@@ -188,14 +256,47 @@ class Shape(Block):
 
     @classmethod
     def rect(cls, *, width: float, height: float, **kwargs: object) -> Shape:
+        """Create a rectangle shape.
+
+        Args:
+            width: Rectangle width.
+            height: Rectangle height.
+            **kwargs: Additional arguments forwarded to ``Shape``.
+
+        Returns:
+            Rectangle shape.
+        """
+
         return cls("rect", width=width, height=height, **kwargs)
 
     @classmethod
     def ellipse(cls, *, width: float, height: float, **kwargs: object) -> Shape:
+        """Create an ellipse shape.
+
+        Args:
+            width: Ellipse bounding-box width.
+            height: Ellipse bounding-box height.
+            **kwargs: Additional arguments forwarded to ``Shape``.
+
+        Returns:
+            Ellipse shape.
+        """
+
         return cls("ellipse", width=width, height=height, **kwargs)
 
     @classmethod
     def line(cls, *, width: float, height: float, **kwargs: object) -> Shape:
+        """Create a line shape.
+
+        Args:
+            width: Horizontal line delta.
+            height: Vertical line delta.
+            **kwargs: Additional arguments forwarded to ``Shape``.
+
+        Returns:
+            Line shape.
+        """
+
         return cls("line", width=width, height=height, **kwargs)
 
     def render_to_docx(
@@ -204,6 +305,14 @@ class Shape(Block):
         container: object,
         context: DocxRenderContext,
     ) -> None:
+        """Render this shape into a DOCX container.
+
+        Args:
+            renderer: DOCX renderer instance.
+            container: Target python-docx container.
+            context: Shared DOCX render context.
+        """
+
         renderer.render_shape(container, self, context)
 
     def render_to_pdf(
@@ -211,6 +320,12 @@ class Shape(Block):
         renderer: object,
         context: PdfRenderContext,
     ) -> list[object]:
+        """Render this shape into PDF flowables.
+
+        Returns:
+            ReportLab flowables for this shape.
+        """
+
         return renderer.render_shape(self, context)
 
     def render_to_html(
@@ -218,17 +333,45 @@ class Shape(Block):
         renderer: object,
         context: HtmlRenderContext,
     ) -> str:
+        """Render this shape into HTML markup.
+
+        Returns:
+            HTML markup for this shape.
+        """
+
         return renderer.render_shape(self, context)
 
     def plain_text(self) -> str:
-        """Return the inline text contribution for the shape."""
+        """Return the inline text contribution for the shape.
+
+        Returns:
+            Empty string because shapes have no text content.
+        """
 
         return ""
 
 
 @dataclass(slots=True, init=False)
 class ImageBox(Block):
-    """A positioned or inline image."""
+    """A positioned or inline image.
+
+    Args:
+        image_source: Path, bytes, ``ImageData``, or plot-like object.
+        x: X coordinate in ``unit`` from the anchor origin.
+        y: Y coordinate in ``unit`` from the anchor origin.
+        width: Image box width in ``unit``.
+        height: Image box height in ``unit``.
+        anchor: Built-in anchor or named shape anchor.
+        placement: ``"absolute"`` for page items or ``"inline"`` in content.
+        fit: Whether to contain the image or stretch it to the box.
+        format: Image format for plot-like sources.
+        dpi: Optional image DPI for plot-like sources.
+        unit: Unit for coordinates and dimensions.
+        z_index: Stacking order for page-positioned rendering.
+
+    Raises:
+        ValueError: If placement, dimensions, or fit are invalid.
+    """
 
     image_source: object
     x: float
@@ -288,6 +431,14 @@ class ImageBox(Block):
         container: object,
         context: DocxRenderContext,
     ) -> None:
+        """Render this image box into a DOCX container.
+
+        Args:
+            renderer: DOCX renderer instance.
+            container: Target python-docx container.
+            context: Shared DOCX render context.
+        """
+
         renderer.render_image_box(container, self, context)
 
     def render_to_pdf(
@@ -295,6 +446,12 @@ class ImageBox(Block):
         renderer: object,
         context: PdfRenderContext,
     ) -> list[object]:
+        """Render this image box into PDF flowables.
+
+        Returns:
+            ReportLab flowables for this image box.
+        """
+
         return renderer.render_image_box(self, context)
 
     def render_to_html(
@@ -302,10 +459,20 @@ class ImageBox(Block):
         renderer: object,
         context: HtmlRenderContext,
     ) -> str:
+        """Render this image box into HTML markup.
+
+        Returns:
+            HTML markup for this image box.
+        """
+
         return renderer.render_image_box(self, context)
 
     def plain_text(self) -> str:
-        """Return the inline text contribution for the image."""
+        """Return the inline text contribution for the image.
+
+        Returns:
+            Empty string because image boxes have no text content.
+        """
 
         return ""
 
@@ -314,7 +481,18 @@ PositionedItem = TextBox | Shape | ImageBox
 
 
 def coerce_positioned_items(values: Iterable[PositionedItem] | None) -> tuple[PositionedItem, ...]:
-    """Validate a sequence of page-positioned drawing items."""
+    """Validate page-positioned drawing items.
+
+    Args:
+        values: Positioned items or ``None``.
+
+    Returns:
+        Tuple of validated absolute-positioned items.
+
+    Raises:
+        TypeError: If an item type is unsupported.
+        ValueError: If an item is inline or references an unknown anchor.
+    """
 
     if values is None:
         return ()
@@ -333,7 +511,19 @@ def resolve_positioned_boxes(
     settings: DocumentSettings,
     default_unit: str,
 ) -> list[PositionedBox]:
-    """Resolve item coordinates to page-relative inches."""
+    """Resolve item coordinates to page-relative inches.
+
+    Args:
+        items: Positioned items to resolve.
+        settings: Document settings containing page and margin geometry.
+        default_unit: Unit to use for items without explicit units.
+
+    Returns:
+        Resolved boxes sorted by stacking order.
+
+    Raises:
+        ValueError: If anchors are unknown, duplicated, or cyclic.
+    """
 
     item_list = tuple(items)
     _validate_shape_anchors(item_list)
@@ -354,6 +544,8 @@ def resolve_positioned_boxes(
         resolving.add(index)
         item = item_list[index]
         if item.anchor in shape_indexes:
+            # Shape anchors can depend on earlier or later items, so resolution
+            # is recursive with cycle detection instead of a single pass.
             target = resolve_index(shape_indexes[item.anchor])
             origin = (target.x, target.y)
         else:

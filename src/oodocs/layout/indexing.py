@@ -37,7 +37,13 @@ from oodocs.layout.theme import Theme
 
 @dataclass(slots=True)
 class CitationReferenceEntry:
-    """A cited bibliography entry with its assigned reference number."""
+    """A cited bibliography entry with its assigned reference number.
+
+    Attributes:
+        number: Assigned citation number.
+        source: Cited bibliography source.
+        anchor: Anchor used by renderers for links.
+    """
 
     number: int
     source: CitationSource
@@ -46,7 +52,12 @@ class CitationReferenceEntry:
 
 @dataclass(slots=True)
 class CommentReferenceEntry:
-    """A numbered inline comment encountered during indexing."""
+    """A numbered inline comment encountered during indexing.
+
+    Attributes:
+        number: Assigned comment number.
+        comment: Inline comment fragment.
+    """
 
     number: int
     comment: Comment
@@ -54,7 +65,12 @@ class CommentReferenceEntry:
 
 @dataclass(slots=True)
 class FootnoteReferenceEntry:
-    """A numbered portable footnote encountered during indexing."""
+    """A numbered portable footnote encountered during indexing.
+
+    Attributes:
+        number: Assigned footnote number.
+        footnote: Inline footnote fragment.
+    """
 
     number: int
     footnote: Footnote
@@ -62,7 +78,14 @@ class FootnoteReferenceEntry:
 
 @dataclass(slots=True)
 class HeadingEntry:
-    """A heading included in the generated table of contents."""
+    """A heading included in the generated table of contents.
+
+    Attributes:
+        level: Heading level.
+        title: Heading title fragments.
+        number: Optional rendered heading number.
+        anchor: Optional heading anchor.
+    """
 
     level: int
     title: list[Text]
@@ -72,7 +95,13 @@ class HeadingEntry:
 
 @dataclass(slots=True)
 class CaptionEntry:
-    """A numbered caption entry for a table or figure block."""
+    """A numbered caption entry for a table or figure block.
+
+    Attributes:
+        number: Assigned caption number.
+        block: Captioned table or figure block.
+        anchor: Anchor used by renderers for links.
+    """
 
     number: int
     block: Table | Figure | SubFigureGroup
@@ -81,7 +110,14 @@ class CaptionEntry:
 
 @dataclass(slots=True)
 class CountableEntry:
-    """A numbered theorem-like block entry."""
+    """A numbered theorem-like block entry.
+
+    Attributes:
+        number: Assigned counter value.
+        block: Countable block.
+        counter: Counter namespace.
+        anchor: Anchor used by renderers for links.
+    """
 
     number: int
     block: CountableBlock
@@ -118,22 +154,53 @@ class RenderIndex:
     block_anchors: dict[int, str] = field(default_factory=dict)
 
     def table_number(self, table: Table) -> int | None:
-        """Return the assigned table number for a captioned table."""
+        """Return the assigned table number for a captioned table.
+
+        Args:
+            table: Table to look up.
+
+        Returns:
+            Assigned table number, or ``None`` when uncaptioned.
+        """
 
         return self.table_numbers.get(id(table))
 
     def figure_number(self, figure: Figure | SubFigure | SubFigureGroup) -> int | None:
-        """Return the assigned figure number for a captioned figure."""
+        """Return the assigned figure number for a captioned figure.
+
+        Args:
+            figure: Figure, subfigure, or subfigure group to look up.
+
+        Returns:
+            Assigned figure number, or ``None`` when uncaptioned.
+        """
 
         return self.figure_numbers.get(id(figure))
 
     def subfigure_label(self, subfigure: SubFigure) -> str | None:
-        """Return the assigned label for a subfigure inside a numbered group."""
+        """Return the assigned label for a subfigure inside a numbered group.
+
+        Args:
+            subfigure: Subfigure to look up.
+
+        Returns:
+            Assigned subfigure label, or ``None`` when unanchored.
+        """
 
         return self.subfigure_labels.get(id(subfigure))
 
     def citation_number(self, target: CitationSource | str) -> int:
-        """Return the assigned citation number for a source or key."""
+        """Return the assigned citation number for a source or key.
+
+        Args:
+            target: Citation source object or key.
+
+        Returns:
+            Assigned citation number.
+
+        Raises:
+            OODocsError: If the target was not indexed.
+        """
 
         if isinstance(target, CitationSource):
             if target.key is not None and target.key in self.citation_numbers:
@@ -147,7 +214,17 @@ class RenderIndex:
         return self.citation_numbers[target]
 
     def citation_entry(self, target: CitationSource | str) -> CitationReferenceEntry:
-        """Return the indexed citation entry for a source or key."""
+        """Return the indexed citation entry for a source or key.
+
+        Args:
+            target: Citation source object or key.
+
+        Returns:
+            Indexed citation entry.
+
+        Raises:
+            OODocsError: If the target was not indexed.
+        """
 
         number = self.citation_number(target)
         try:
@@ -162,26 +239,60 @@ class RenderIndex:
         raise OODocsError(f"Unknown citation number: {number!r}")
 
     def comment_number(self, target: Comment) -> int:
-        """Return the assigned inline comment number."""
+        """Return the assigned inline comment number.
+
+        Args:
+            target: Comment fragment to look up.
+
+        Returns:
+            Assigned comment number.
+
+        Raises:
+            OODocsError: If the target was not indexed.
+        """
 
         if id(target) not in self.comment_numbers:
             raise OODocsError(f"Unknown comment target: {target.value!r}")
         return self.comment_numbers[id(target)]
 
     def footnote_number(self, target: Footnote) -> int:
-        """Return the assigned footnote number."""
+        """Return the assigned footnote number.
+
+        Args:
+            target: Footnote fragment to look up.
+
+        Returns:
+            Assigned footnote number.
+
+        Raises:
+            OODocsError: If the target was not indexed.
+        """
 
         if id(target) not in self.footnote_numbers:
             raise OODocsError(f"Unknown footnote target: {target.value!r}")
         return self.footnote_numbers[id(target)]
 
     def heading_number(self, target: object) -> str | None:
-        """Return the numbering label assigned to a section heading."""
+        """Return the numbering label assigned to a section heading.
+
+        Args:
+            target: Heading block to look up.
+
+        Returns:
+            Heading number label, or ``None`` when unnumbered.
+        """
 
         return self.heading_numbers.get(id(target))
 
     def table_anchor(self, table: Table) -> str | None:
-        """Return the bookmark name for a captioned table."""
+        """Return the bookmark name for a captioned table.
+
+        Args:
+            table: Table to look up.
+
+        Returns:
+            Table anchor, or ``None`` when uncaptioned.
+        """
 
         number = self.table_number(table)
         if number is None:
@@ -189,7 +300,14 @@ class RenderIndex:
         return f"table_{number}"
 
     def figure_anchor(self, figure: Figure | SubFigure | SubFigureGroup) -> str | None:
-        """Return the bookmark name for a captioned figure."""
+        """Return the bookmark name for a captioned figure.
+
+        Args:
+            figure: Figure, subfigure, or subfigure group to look up.
+
+        Returns:
+            Figure anchor, or ``None`` when uncaptioned.
+        """
 
         number = self.figure_number(figure)
         if number is None:
@@ -201,48 +319,114 @@ class RenderIndex:
         return f"figure_{number}"
 
     def citation_anchor(self, target: CitationSource | str) -> str:
-        """Return the bookmark name for a cited reference entry."""
+        """Return the bookmark name for a cited reference entry.
+
+        Args:
+            target: Citation source object or key.
+
+        Returns:
+            Citation anchor.
+
+        Raises:
+            OODocsError: If the target was not indexed.
+        """
 
         return f"citation_{self.citation_number(target)}"
 
     def heading_anchor(self, target: object) -> str | None:
-        """Return the bookmark name for a numbered heading."""
+        """Return the bookmark name for a numbered heading.
+
+        Args:
+            target: Heading block to look up.
+
+        Returns:
+            Heading anchor, or ``None`` when unanchored.
+        """
 
         return self.heading_anchors.get(id(target))
 
     def paragraph_number(self, target: Paragraph) -> int | None:
-        """Return the assigned paragraph reference number."""
+        """Return the assigned paragraph reference number.
+
+        Args:
+            target: Paragraph to look up.
+
+        Returns:
+            Assigned paragraph number, or ``None``.
+        """
 
         return self.paragraph_numbers.get(id(target))
 
     def equation_number(self, target: Equation) -> int | None:
-        """Return the assigned equation reference number."""
+        """Return the assigned equation reference number.
+
+        Args:
+            target: Equation to look up.
+
+        Returns:
+            Assigned equation number, or ``None``.
+        """
 
         return self.equation_numbers.get(id(target))
 
     def code_block_number(self, target: CodeBlock) -> int | None:
-        """Return the assigned code block reference number."""
+        """Return the assigned code block reference number.
+
+        Args:
+            target: Code block to look up.
+
+        Returns:
+            Assigned code block number, or ``None``.
+        """
 
         return self.code_block_numbers.get(id(target))
 
     def box_number(self, target: Box) -> int | None:
-        """Return the assigned box reference number."""
+        """Return the assigned box reference number.
+
+        Args:
+            target: Box to look up.
+
+        Returns:
+            Assigned box number, or ``None``.
+        """
 
         return self.box_numbers.get(id(target))
 
     def countable_number(self, target: CountableBlock) -> int | None:
-        """Return the assigned number for a theorem-like block."""
+        """Return the assigned number for a theorem-like block.
+
+        Args:
+            target: Countable block to look up.
+
+        Returns:
+            Assigned countable number, or ``None``.
+        """
 
         return self.countable_numbers.get(id(target))
 
     def block_anchor(self, target: object) -> str | None:
-        """Return the bookmark name for a generically anchored block."""
+        """Return the bookmark name for a generically anchored block.
+
+        Args:
+            target: Block object to look up.
+
+        Returns:
+            Block anchor, or ``None`` when no generic anchor was assigned.
+        """
 
         return self.block_anchors.get(id(target))
 
 
 def build_render_index(document: Document) -> RenderIndex:
-    """Scan a document tree and assign render-time numbering."""
+    """Scan a document tree and assign render-time numbering.
+
+    Args:
+        document: Document to index.
+
+    Returns:
+        Render index containing numbering, anchors, and generated-page entries.
+    """
 
     render_index = RenderIndex()
     _index_blocks(
@@ -263,6 +447,8 @@ def _advance_heading_counters(counters: list[int], level: int) -> list[int]:
         if counters[index] == 0:
             counters[index] = 1
     counters[level - 1] += 1
+    # Truncate deeper counters after moving to a shallower heading so sibling
+    # numbering restarts correctly.
     del counters[level:]
     return counters
 
@@ -346,6 +532,8 @@ def _index_blocks(
             if block.title is not None:
                 _index_inlines(block.title, render_index, citations)
             if block.numbered and block.counter is not None and id(block) not in render_index.countable_numbers:
+                # Countable blocks use named counter namespaces so theorem-like
+                # families can share or separate numbering sequences.
                 number = render_index.countable_counters.get(block.counter, 0) + 1
                 render_index.countable_counters[block.counter] = number
                 render_index.countable_numbers[id(block)] = number

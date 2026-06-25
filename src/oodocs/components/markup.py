@@ -40,6 +40,14 @@ def markup(
     - `` `code` ``
     - ``[label](https://example.com)`` links
     - ``<https://example.com>`` and bare URL autolinks
+
+    Args:
+        source: Markup source text.
+        style: Base style applied to parsed fragments.
+        references: Optional reference-style link targets keyed by label.
+
+    Returns:
+        Parsed inline fragments.
     """
 
     base_style = style or TextStyle()
@@ -166,6 +174,8 @@ def _parse_markup(
         bare_match = _BARE_LINK_RE.search(source, cursor)
         if bare_match is not None:
             next_positions.append(bare_match.start())
+        # Jump directly to the next special marker instead of appending one
+        # character at a time; this keeps ordinary text runs compact.
         next_marker = min(next_positions, default=length)
         if next_marker == cursor:
             next_marker = cursor + 1
@@ -251,6 +261,8 @@ def _parse_markdown_link(
         if not target:
             return None
         if image:
+            # Inline image syntax degrades to alt text because image placement
+            # is represented by block media components elsewhere.
             return Text(label, style=base_style), destination_end + 1
         return (
             Hyperlink.external(

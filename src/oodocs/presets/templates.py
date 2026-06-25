@@ -70,7 +70,14 @@ def _default_journal_theme() -> Theme:
 
 @dataclass(slots=True)
 class ManuscriptSection:
-    """A lightweight section descriptor accepted by article templates."""
+    """A lightweight section descriptor accepted by article templates.
+
+    Attributes:
+        title: Section title inline content.
+        children: Section child blocks.
+        level: Heading level.
+        numbered: Whether the section should be numbered.
+    """
 
     title: InlineInput
     children: Sequence[BlockInput] = ()
@@ -78,7 +85,11 @@ class ManuscriptSection:
     numbered: bool = True
 
     def to_section(self) -> Section:
-        """Return a concrete ``Section`` block."""
+        """Return a concrete section block.
+
+        Returns:
+            ``Section`` built from this descriptor.
+        """
 
         return Section(
             self.title,
@@ -93,7 +104,18 @@ ArticleSectionInput = Section | ManuscriptSection | tuple[InlineInput, Sequence[
 
 @dataclass(slots=True)
 class JournalArticleTemplate:
-    """Build a journal-style manuscript from content-oriented inputs."""
+    """Build a journal-style manuscript from content-oriented inputs.
+
+    Attributes:
+        name: Template display name.
+        theme: Document theme used by generated documents.
+        page_size: Default page size.
+        page_margins: Default page margins.
+        author_layout: Default author title-matter layout.
+        include_contents: Whether to include a table of contents by default.
+        include_references: Whether to include a references page by default.
+        cover_page: Whether to render title matter on a cover page by default.
+    """
 
     name: str = "Journal article"
     theme: Theme = field(default_factory=_default_journal_theme)
@@ -121,7 +143,26 @@ class JournalArticleTemplate:
         include_references: bool | None = None,
         cover_page: bool | None = None,
     ) -> Document:
-        """Build a ``Document`` from manuscript-shaped inputs."""
+        """Build a document from manuscript-shaped inputs.
+
+        Args:
+            title: Document title.
+            abstract: Optional abstract content.
+            sections: Authored manuscript sections.
+            authors: Optional document authors.
+            keywords: Optional keyword list.
+            subtitle: Optional subtitle inline content.
+            acknowledgements: Optional acknowledgements content.
+            data_availability: Optional data availability statement content.
+            summary: Optional metadata summary. Defaults to ``title``.
+            citations: Optional citation library, citation sources, or BibTeX.
+            include_contents: Override for table-of-contents inclusion.
+            include_references: Override for references-page inclusion.
+            cover_page: Override for cover-page title matter.
+
+        Returns:
+            Built document.
+        """
 
         include_contents_value = self.include_contents if include_contents is None else include_contents
         include_references_value = self.include_references if include_references is None else include_references
