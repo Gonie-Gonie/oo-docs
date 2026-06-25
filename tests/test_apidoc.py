@@ -1260,8 +1260,27 @@ def test_apidoc_cli_collect_check_build_snapshot_and_diff(tmp_path: Path, capsys
     assert coverage_csv.read_text(encoding="utf-8").startswith(
         "severity,code,qualname,module,path,line_number,message"
     )
-    assert main(["apidoc", "build", str(package_dir), "--out", str(build_dir), "--to", "html", "--sidecars"]) == 0
-    assert any(path.suffix == ".html" for path in build_dir.iterdir())
+    assert (
+        main(
+            [
+                "apidoc",
+                "build",
+                str(package_dir),
+                "--out",
+                str(build_dir),
+                "--to",
+                "docx,pdf,html",
+                "--sidecars",
+            ]
+        )
+        == 0
+    )
+    assert (build_dir / "clipkg-api.docx").exists()
+    assert (build_dir / "clipkg-api.pdf").exists()
+    assert (build_dir / "clipkg-api.html").exists()
+    build_html = (build_dir / "clipkg-api.html").read_text(encoding="utf-8")
+    assert "clipkg API Reference" in build_html
+    assert "clipkg.run" in build_html
     assert (build_dir / "clipkg-api.json").exists()
     assert (build_dir / "clipkg-api-coverage.json").exists()
     assert (build_dir / "clipkg-api-coverage.csv").exists()

@@ -49,6 +49,11 @@ Build rendered API documents:
 python -m oodocs apidoc build oodocs --profile reference --out artifacts/api --to docx,pdf,html
 ```
 
+Without `--kind` or `--module-prefix`, `build` renders a complete package API
+reference through `ApiPackage.to_document(...)`. The resulting document contains
+an API contents section, coverage overview, module summaries, object sections,
+and any sidecars requested for later review or release evidence.
+
 Write API object and coverage sidecars beside the rendered bundle:
 
 ```powershell
