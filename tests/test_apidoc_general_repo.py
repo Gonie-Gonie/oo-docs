@@ -112,9 +112,33 @@ def test_general_repo_auto_parser_objects_compose_into_document(tmp_path) -> Non
     outputs = document.save_all(
         tmp_path / "rendered",
         stem="mixed-api",
-        formats=("html",),
+        formats=("docx", "pdf", "html"),
     )
 
+    assert_rendered_bundle(outputs["docx"], outputs["pdf"], outputs["html"])
+    assert document.validate(formats=("docx", "pdf", "html")).ok
+    assert_docx_structure(
+        outputs["docx"],
+        required_paragraphs=(
+            "Mixed Package API Notes",
+            "1 Selected API",
+            "1.1 mixedpkg.Client",
+            "2 Function Index",
+            "3 Coverage",
+        ),
+        min_tables=4,
+    )
+    assert_pdf_text_and_pages(
+        outputs["pdf"],
+        required_text=(
+            "Mixed Package API Notes",
+            "mixedpkg.Client",
+            "Timeout in seconds.",
+            "Object coverage",
+        ),
+        min_pages=1,
+    )
+    assert_html_internal_links_resolve(outputs["html"])
     html = outputs["html"].read_text(encoding="utf-8")
     assert "mixedpkg.Client" in html
     assert "Timeout in seconds." in html

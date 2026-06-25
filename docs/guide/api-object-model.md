@@ -36,6 +36,12 @@ doc = Document(
     "Selected Component API",
     Chapter("Classes", *[obj.to_section(level=2, profile="manual") for obj in classes[:3]]),
 )
+
+doc.save_all(
+    "artifacts/component-api",
+    stem="component-api",
+    formats=("docx", "pdf", "html"),
+)
 ```
 
 `ApiObject` stores normalized docstring sections: summary, description,
