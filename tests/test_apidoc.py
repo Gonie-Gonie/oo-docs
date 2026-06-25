@@ -420,6 +420,14 @@ def test_collect_api_builds_queryable_object_tree_and_blocks(tmp_path: Path) -> 
     assert "Module warnings are rendered in module chapters." in module_blocks_html_text
     assert "Module renderer notes are visible in references." in module_blocks_html_text
 
+    limited_module_doc = Document("Limited Module API", module.to_chapter(max_level=2))
+    limited_module_html = tmp_path / "limited-module-api.html"
+    limited_module_doc.save_html(limited_module_html)
+    limited_module_html_text = limited_module_html.read_text(encoding="utf-8")
+    method_anchor = classes[0].select(kind="method")[0].anchor_id()
+    assert f'id="{classes[0].anchor_id()}"' in limited_module_html_text
+    assert f'id="{method_anchor}"' not in limited_module_html_text
+
 
 def test_api_doc_profiles_wrap_long_signature_blocks() -> None:
     obj = ApiObject(
@@ -1055,6 +1063,18 @@ def test_apidoc_cli_filters_check_and_snapshot(tmp_path: Path) -> None:
     package_dir.mkdir()
     (package_dir / "__init__.py").write_text('"""Filtered package."""\n', encoding="utf-8")
     (package_dir / "core.py").write_text(
+        "class Worker:\n"
+        '    """Run API work."""\n'
+        "\n"
+        "    def process(self, path: str) -> str:\n"
+        '        """Process a path.\n\n'
+        "        Args:\n"
+        "            path: Input path.\n"
+        "        Returns:\n"
+        "            str: Input path.\n"
+        '        """\n'
+        "        return path\n"
+        "\n"
         "def run(path: str) -> str:\n"
         '    """Run a task.\n\n'
         "    Args:\n"
@@ -1072,6 +1092,7 @@ def test_apidoc_cli_filters_check_and_snapshot(tmp_path: Path) -> None:
     )
     snapshot_json = tmp_path / "filtered-snapshot.json"
     build_dir = tmp_path / "filtered-build"
+    max_level_build_dir = tmp_path / "max-level-build"
 
     assert main(
         [
@@ -1140,6 +1161,25 @@ def test_apidoc_cli_filters_check_and_snapshot(tmp_path: Path) -> None:
     html = (build_dir / "filterpkg-api.html").read_text(encoding="utf-8")
     assert 'href="#filterpkg-core-run"' in html
     assert 'id="filterpkg-core-run"' in html
+
+    assert main(
+        [
+            "apidoc",
+            "build",
+            str(package_dir),
+            "--profile",
+            "website",
+            "--max-level",
+            "2",
+            "--out",
+            str(max_level_build_dir),
+            "--to",
+            "html",
+        ]
+    ) == 0
+    max_level_html = (max_level_build_dir / "filterpkg-api.html").read_text(encoding="utf-8")
+    assert 'id="filterpkg-core-worker"' in max_level_html
+    assert 'id="filterpkg-core-worker-process"' not in max_level_html
 
 
 def test_api_objects_example_builds_full_reference_and_composable_document(

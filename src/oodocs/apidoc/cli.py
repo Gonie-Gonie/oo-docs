@@ -58,6 +58,11 @@ def _build_parser() -> argparse.ArgumentParser:
     build.add_argument("--to", default="docx,pdf,html", help="Comma-separated output formats.")
     build.add_argument("--stem", help="Output file stem.")
     build.add_argument("--profile", default="reference", help="Presentation profile.")
+    build.add_argument(
+        "--max-level",
+        type=int,
+        help="Deepest heading level to render for nested API sections.",
+    )
     _add_filter_options(build)
     _add_collect_options(build)
     build.set_defaults(func=_run_build)
@@ -175,11 +180,18 @@ def _run_build(args: argparse.Namespace) -> int:
                     caption="Selected public API objects",
                     profile=args.profile,
                 ),
-                *[obj.to_section(level=2, profile=args.profile) for obj in selected],
+                *[
+                    obj.to_section(
+                        level=2,
+                        profile=args.profile,
+                        max_level=args.max_level,
+                    )
+                    for obj in selected
+                ],
             ),
         )
     else:
-        document = api.to_document(profile=args.profile)
+        document = api.to_document(profile=args.profile, max_level=args.max_level)
     outputs = document.save_all(
         args.out,
         stem=args.stem or f"{api.name.replace('.', '-')}-api",

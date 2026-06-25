@@ -388,10 +388,12 @@ def api_object_to_blocks(
     *,
     profile: str | ApiDocProfile = "reference",
     level: int = 2,
+    max_level: int | None = None,
 ) -> list[Block]:
     """Convert one API object into renderer-neutral blocks."""
 
     resolved = resolve_profile(profile)
+    max_level = _normalize_max_level(max_level)
     blocks: list[Block] = []
 
     if signature := api_signature_block(obj, resolved):
@@ -414,10 +416,16 @@ def api_object_to_blocks(
     if review_note := api_review_note_paragraph(obj, resolved):
         blocks.append(review_note)
 
-    if resolved.include_member_sections:
+    if resolved.include_member_sections and _can_render_child_sections(level, max_level):
         child_level = min(level + 1, 6)
         for member in obj.members:
-            blocks.append(member.to_section(level=child_level, profile=resolved))
+            blocks.append(
+                member.to_section(
+                    level=child_level,
+                    profile=resolved,
+                    max_level=max_level,
+                )
+            )
     return blocks
 
 
@@ -427,13 +435,19 @@ def api_object_to_section(
     profile: str | ApiDocProfile = "reference",
     level: int = 2,
     title: str | None = None,
+    max_level: int | None = None,
 ) -> Section:
     """Convert one API object into an OODocs section."""
 
     heading = title or obj.display_name()
     section = section_for_level(
         heading,
-        *api_object_to_blocks(obj, profile=profile, level=level),
+        *api_object_to_blocks(
+            obj,
+            profile=profile,
+            level=level,
+            max_level=max_level,
+        ),
         level=level,
         anchor=obj.anchor_id(),
     )
@@ -480,10 +494,12 @@ def api_module_to_blocks(
     *,
     profile: str | ApiDocProfile = "reference",
     level: int = 2,
+    max_level: int | None = None,
 ) -> list[Block]:
     """Convert a module into renderer-neutral blocks."""
 
     resolved = resolve_profile(profile)
+    max_level = _normalize_max_level(max_level)
     blocks: list[Block] = []
     if module.summary:
         blocks.append(Paragraph(module.summary))
@@ -517,7 +533,14 @@ def api_module_to_blocks(
         )
     if module.members:
         blocks.append(module.to_summary_table(caption="Module API", profile=resolved))
-    blocks.extend(module.to_sections(profile=resolved, level=level))
+    if max_level is None or level <= max_level:
+        blocks.extend(
+            module.to_sections(
+                profile=resolved,
+                level=level,
+                max_level=max_level,
+            )
+        )
     return blocks
 
 
@@ -526,6 +549,7 @@ def api_module_to_chapter(
     *,
     profile: str | ApiDocProfile = "reference",
     title: str | None = None,
+    max_level: int | None = None,
 ):
     """Convert a module into an OODocs chapter."""
 
@@ -533,19 +557,27 @@ def api_module_to_chapter(
 
     return Chapter(
         title or module.name,
-        *api_module_to_blocks(module, profile=profile, level=2),
+        *api_module_to_blocks(
+            module,
+            profile=profile,
+            level=2,
+            max_level=max_level,
+        ),
     )
-
 
 
 def api_package_to_chapters(
     package: ApiPackage,
     *,
     profile: str | ApiDocProfile = "reference",
+    max_level: int | None = None,
 ) -> list[object]:
     """Convert package modules into OODocs chapters."""
 
-    return [module.to_chapter(profile=profile) for module in package.modules]
+    return [
+        module.to_chapter(profile=profile, max_level=max_level)
+        for module in package.modules
+    ]
 
 
 def api_objects_to_chapter(
@@ -554,12 +586,36 @@ def api_objects_to_chapter(
     *,
     profile: str | ApiDocProfile = "manual",
     level: int = 2,
+    max_level: int | None = None,
 ):
     """Build a chapter from selected API objects."""
 
     from oodocs.components.blocks import Chapter
 
-    return Chapter(title, *[obj.to_section(level=level, profile=profile) for obj in objects])
+    return Chapter(
+        title,
+        *[
+            obj.to_section(
+                level=level,
+                profile=profile,
+                max_level=max_level,
+            )
+            for obj in objects
+        ],
+    )
+
+
+def _normalize_max_level(max_level: int | None) -> int | None:
+    if max_level is None:
+        return None
+    max_level = int(max_level)
+    if max_level < 1:
+        raise ValueError("max_level must be >= 1")
+    return max_level
+
+
+def _can_render_child_sections(level: int, max_level: int | None) -> bool:
+    return max_level is None or level < max_level
 
 
 def _column_header(column: str) -> str:

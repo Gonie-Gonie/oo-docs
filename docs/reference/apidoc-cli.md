@@ -26,6 +26,12 @@ Build rendered API documents:
 python -m oodocs apidoc build oodocs --profile reference --out artifacts/api --to docx,pdf,html
 ```
 
+Limit nested API heading depth for larger repositories:
+
+```powershell
+python -m oodocs apidoc build oodocs --profile reference --max-level 2 --out artifacts/api --to html
+```
+
 Filter build output:
 
 ```powershell
@@ -53,4 +59,6 @@ Common collection options are `--collector`, `--public-policy`,
 `--include-inherited`, `--module-include`, and `--module-exclude`.
 Module include/exclude patterns are applied before module contents are
 collected, while `check`, `build`, and `snapshot` also accept `--kind` and
-`--module-prefix` object filters after collection.
+`--module-prefix` object filters after collection. `build` also accepts
+`--max-level` to cap nested API section depth and the generated table of
+contents.

@@ -46,5 +46,10 @@ them before the module API summary table so overview-level guidance is not lost
 when a repository uses module docstrings as reference introductions or embeds a
 module reference inside a larger hand-authored document.
 
+Use `max_level` when a large repository should render a shallower reference.
+For example, `api.to_document(profile="reference", max_level=2)` renders module
+chapters and top-level object sections while keeping deeper class members in
+summary tables instead of expanding them as their own headings.
+
 Use `api.iter_issues()` or `api.to_issue_table()` when parser diagnostics stored
 on individual API objects should appear beside package-level collection issues.

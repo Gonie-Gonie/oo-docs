@@ -875,12 +875,15 @@ class ApiObject:
         *,
         profile: object = "reference",
         level: int = 2,
+        max_level: int | None = None,
     ) -> list[object]:
         """Return OODocs blocks representing this object.
 
         Args:
             profile: Presentation profile name or object.
             level: Heading level used for nested member sections.
+            max_level: Optional deepest heading level to render for nested
+                member sections.
 
         Returns:
             Renderer-neutral OODocs block list.
@@ -888,7 +891,12 @@ class ApiObject:
 
         from oodocs.apidoc.blocks import api_object_to_blocks
 
-        return api_object_to_blocks(self, profile=profile, level=level)
+        return api_object_to_blocks(
+            self,
+            profile=profile,
+            level=level,
+            max_level=max_level,
+        )
 
     def to_section(
         self,
@@ -896,6 +904,7 @@ class ApiObject:
         level: int = 2,
         profile: object = "reference",
         title: str | None = None,
+        max_level: int | None = None,
     ):
         """Return this object as a section.
 
@@ -903,6 +912,8 @@ class ApiObject:
             level: Section heading level.
             profile: Presentation profile name or object.
             title: Optional heading override.
+            max_level: Optional deepest heading level to render for nested
+                member sections.
 
         Returns:
             OODocs ``Section``/``Chapter`` appropriate for ``level``.
@@ -910,7 +921,13 @@ class ApiObject:
 
         from oodocs.apidoc.blocks import api_object_to_section
 
-        return api_object_to_section(self, level=level, profile=profile, title=title)
+        return api_object_to_section(
+            self,
+            level=level,
+            profile=profile,
+            title=title,
+            max_level=max_level,
+        )
 
     def to_compact_box(self, profile: object = "compact"):
         """Return this object as a compact OODocs box."""
@@ -1101,24 +1118,55 @@ class ApiModule:
 
         return api_objects_to_summary_table(objects or list(self.iter_objects()), **kwargs)
 
-    def to_sections(self, *, profile: object = "reference", level: int = 2) -> list[object]:
+    def to_sections(
+        self,
+        *,
+        profile: object = "reference",
+        level: int = 2,
+        max_level: int | None = None,
+    ) -> list[object]:
         """Return module objects as OODocs sections."""
 
-        return [obj.to_section(level=level, profile=profile) for obj in self.members]
+        return [
+            obj.to_section(level=level, profile=profile, max_level=max_level)
+            for obj in self.members
+        ]
 
-    def to_chapter(self, *, profile: object = "reference", title: str | None = None):
+    def to_chapter(
+        self,
+        *,
+        profile: object = "reference",
+        title: str | None = None,
+        max_level: int | None = None,
+    ):
         """Return this module as an OODocs chapter."""
 
         from oodocs.apidoc.blocks import api_module_to_chapter
 
-        return api_module_to_chapter(self, profile=profile, title=title)
+        return api_module_to_chapter(
+            self,
+            profile=profile,
+            title=title,
+            max_level=max_level,
+        )
 
-    def to_blocks(self, *, profile: object = "reference", level: int = 2) -> list[object]:
+    def to_blocks(
+        self,
+        *,
+        profile: object = "reference",
+        level: int = 2,
+        max_level: int | None = None,
+    ) -> list[object]:
         """Return this module as renderer-neutral blocks."""
 
         from oodocs.apidoc.blocks import api_module_to_blocks
 
-        return api_module_to_blocks(self, profile=profile, level=level)
+        return api_module_to_blocks(
+            self,
+            profile=profile,
+            level=level,
+            max_level=max_level,
+        )
 
 
 @dataclass(slots=True)
@@ -1520,27 +1568,56 @@ class ApiPackage:
 
         return check_api_docs(self, **kwargs).to_table()
 
-    def to_sections(self, *, profile: object = "reference", level: int = 1) -> list[object]:
+    def to_sections(
+        self,
+        *,
+        profile: object = "reference",
+        level: int = 1,
+        max_level: int | None = None,
+    ) -> list[object]:
         """Return modules as OODocs sections."""
 
         if level == 1:
-            return [module.to_chapter(profile=profile) for module in self.modules]
+            return [
+                module.to_chapter(profile=profile, max_level=max_level)
+                for module in self.modules
+            ]
         sections: list[object] = []
         for module in self.modules:
-            sections.extend(module.to_sections(profile=profile, level=level))
+            sections.extend(
+                module.to_sections(
+                    profile=profile,
+                    level=level,
+                    max_level=max_level,
+                )
+            )
         return sections
 
-    def to_chapters(self, *, profile: object = "reference") -> list[object]:
+    def to_chapters(
+        self,
+        *,
+        profile: object = "reference",
+        max_level: int | None = None,
+    ) -> list[object]:
         """Return modules as OODocs chapters."""
 
         from oodocs.apidoc.blocks import api_package_to_chapters
 
-        return api_package_to_chapters(self, profile=profile)
+        return api_package_to_chapters(
+            self,
+            profile=profile,
+            max_level=max_level,
+        )
 
-    def to_blocks(self, *, profile: object = "reference") -> list[object]:
+    def to_blocks(
+        self,
+        *,
+        profile: object = "reference",
+        max_level: int | None = None,
+    ) -> list[object]:
         """Return this package as renderer-neutral OODocs blocks."""
 
-        return self.to_chapters(profile=profile)
+        return self.to_chapters(profile=profile, max_level=max_level)
 
     def to_document(
         self,
@@ -1551,6 +1628,7 @@ class ApiPackage:
         citations: object | None = None,
         include_coverage: bool = True,
         include_modules: bool = True,
+        max_level: int | None = None,
     ):
         """Return this package as a complete OODocs document.
 
@@ -1561,6 +1639,8 @@ class ApiPackage:
             citations: Optional citation library.
             include_coverage: Whether to include a coverage overview chapter.
             include_modules: Whether to include module chapters.
+            max_level: Optional deepest heading level to render and include
+                in the table of contents.
 
         Returns:
             OODocs ``Document``.
@@ -1576,6 +1656,7 @@ class ApiPackage:
             citations=citations,
             include_coverage=include_coverage,
             include_modules=include_modules,
+            max_level=max_level,
         )
 
 

@@ -23,6 +23,7 @@ def api_package_to_document(
     citations: object | None = None,
     include_coverage: bool = True,
     include_modules: bool = True,
+    max_level: int | None = None,
 ) -> Document:
     """Build a complete OODocs document from an API package.
 
@@ -34,17 +35,24 @@ def api_package_to_document(
         citations: Optional citation library.
         include_coverage: Whether to include a coverage overview chapter.
         include_modules: Whether to include module chapters.
+        max_level: Optional deepest heading level to render and include in the
+            table of contents.
 
     Returns:
         OODocs document ready for ``save_docx``, ``save_pdf``, ``save_html``,
         or ``save_all``.
     """
 
-    children: list[object] = [TableOfContents(title="API Contents")]
+    if max_level is not None and max_level < 1:
+        raise ValueError("max_level must be >= 1")
+
+    children: list[object] = [
+        TableOfContents(title="API Contents", max_level=max_level)
+    ]
     if include_coverage:
         children.append(api_coverage_to_chapter(api.to_coverage_table()))
     if include_modules:
-        children.extend(api.to_chapters(profile=profile))
+        children.extend(api.to_chapters(profile=profile, max_level=max_level))
     return Document(
         title or f"{api.name} API Reference",
         *children,
