@@ -10,6 +10,7 @@ def test_apidoc_query_helpers_filter_find_and_group(tmp_path) -> None:
     assert api.find("samplepkg.Widget") is not None
     assert api.find("samplepkg.Widget.render") is not None
     assert [obj.name for obj in api.select(kind="function")] == ["make_widget"]
+    assert [obj.qualname for obj in api.properties()] == ["samplepkg.Widget.title"]
 
     filtered = api.filtered(kind="class", module_prefix="samplepkg")
     assert filtered.find("samplepkg.Widget") is not None

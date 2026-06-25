@@ -2826,6 +2826,30 @@ class ApiPackage:
 
         return self.select(kind=("attribute", "data"))
 
+    def properties(self) -> list[ApiObject]:
+        """Return public properties.
+
+        Returns:
+            Public property objects from collected classes.
+
+        Examples:
+            Build a computed-attribute appendix across the whole package:
+
+            ```python
+            from oodocs import Chapter, Document
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            properties = api.properties()
+            doc = Document(
+                "Property API",
+                Chapter("Properties", api.to_summary_table(properties)),
+            )
+            ```
+        """
+
+        return self.select(kind="property")
+
     def public_objects(self) -> list[ApiObject]:
         """Return all public API objects.
 
