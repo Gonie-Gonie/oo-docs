@@ -551,8 +551,13 @@ class BoxStyle:
         title_text_color: Optional title text color.
         border_width: Border width in points.
         padding: Default inner padding in points.
+        padding_top: Optional top padding override in points.
+        padding_right: Optional right padding override in points.
+        padding_bottom: Optional bottom padding override in points.
+        padding_left: Optional left padding override in points.
         space_after: Space after the box in points.
         width: Optional box width in ``unit``.
+        unit: Unit for ``width`` when a physical width is set.
         alignment: Optional horizontal alignment override.
 
     Examples:
@@ -630,6 +635,10 @@ class TableStyle:
         header_horizontal_alignment: Optional header cell horizontal alignment.
         header_vertical_alignment: Optional header cell vertical alignment.
         cell_padding: Default cell padding in points.
+        cell_padding_top: Optional top cell padding override in points.
+        cell_padding_right: Optional right cell padding override in points.
+        cell_padding_bottom: Optional bottom cell padding override in points.
+        cell_padding_left: Optional left cell padding override in points.
         border_width: Border width in points.
         repeat_header_rows: Whether renderers should repeat header rows.
 
@@ -1028,8 +1037,64 @@ class Theme:
         page_numbers: Optional page-number option group.
         title_matter: Optional title-matter option group.
         blocks: Optional block option group.
-        **direct_options: Individual theme field overrides. Direct options take
-            precedence over grouped option values.
+
+    Attributes:
+        typography: Resolved typography option group.
+        captions: Resolved caption option group.
+        citation_options: Resolved citation option group.
+        generated_pages: Resolved generated-page option group.
+        page_numbers: Resolved page-number option group.
+        title_matter: Resolved title-matter option group.
+        blocks: Resolved block option group.
+        page_background_color: Hex page background color.
+        body_font_name: Default proportional font name.
+        monospace_font_name: Default monospace font name.
+        title_font_size: Title font size in points.
+        body_font_size: Body font size in points.
+        paragraph_alignment: Default paragraph alignment.
+        paragraph_title_style: Default style for paragraph titles.
+        heading_sizes: Heading font sizes by level.
+        caption_font_size: Optional caption font size override.
+        caption_alignment: Caption paragraph alignment.
+        table_alignment: Default table alignment.
+        figure_alignment: Default figure alignment.
+        box_alignment: Default box alignment.
+        table_caption_position: Table caption position.
+        figure_caption_position: Figure caption position.
+        table_label: Default table label text.
+        figure_label: Default figure label text.
+        part_label: Label used for numbered part pages.
+        part_number_format: Counter format used for parts.
+        table_caption_label: Optional table caption label override.
+        figure_caption_label: Optional figure caption label override.
+        table_reference_label: Optional table reference label override.
+        figure_reference_label: Optional figure reference label override.
+        citation_format: Inline citation style identifier.
+        reference_format: Reference list style identifier.
+        list_of_tables_title: Default title for generated table lists.
+        list_of_figures_title: Default title for generated figure lists.
+        comments_title: Default title for generated comments pages.
+        footnotes_title: Default title for generated footnotes pages.
+        references_title: Default title for generated references pages.
+        contents_title: Default title for generated contents pages.
+        generated_section_level: Heading level used by generated pages.
+        generated_page_breaks: Whether generated pages start on new pages.
+        footnote_placement: Native or generated-page footnote placement.
+        auto_footnotes_page: Whether missing footnote pages are auto-rendered.
+        show_page_numbers: Whether renderers should emit footer page numbers.
+        page_number_alignment: Footer page-number alignment.
+        page_number_format: Main page number format string.
+        front_matter_page_number_format: Front-matter numbering style.
+        main_matter_page_number_format: Main-matter numbering style.
+        page_number_font_size: Footer page-number font size in points.
+        title_alignment: Title alignment.
+        subtitle_alignment: Subtitle alignment.
+        author_alignment: Author line alignment.
+        affiliation_alignment: Affiliation line alignment.
+        author_detail_alignment: Author detail line alignment.
+        heading_numbering: Heading numbering configuration.
+        bullet_list_style: Default bullet list style.
+        numbered_list_style: Default numbered list style.
 
     Raises:
         TypeError: If a positional option is not a supported option group.
@@ -1062,6 +1127,7 @@ class Theme:
         Positional option groups are merged with keyword option groups, then
         direct keyword overrides are applied last. This lets applications keep
         reusable presets while still overriding one or two fields per document.
+        Direct keyword overrides use the field names listed in ``Attributes``.
 
     See Also:
         ``TypographyOptions``, ``CaptionOptions``, ``CitationOptions``,

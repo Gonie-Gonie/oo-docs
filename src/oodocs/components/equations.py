@@ -1,4 +1,15 @@
-"""Helpers for lightweight LaTeX-style equation rendering."""
+"""Helpers for lightweight LaTeX-style equation rendering.
+
+Attributes:
+    BASELINE: Baseline vertical alignment token.
+    SUPERSCRIPT: Superscript vertical alignment token.
+    SUBSCRIPT: Subscript vertical alignment token.
+    VERTICAL_ALIGNMENTS: Supported vertical alignment tokens.
+    LATEX_SYMBOLS: Mapping of lightweight LaTeX command names to plain text.
+    GROUP_COMMANDS: LaTeX commands whose braced content is rendered directly.
+    DELIMITER_COMMANDS: LaTeX delimiter commands skipped by the lightweight
+        parser.
+"""
 
 from __future__ import annotations
 

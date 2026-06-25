@@ -426,6 +426,15 @@ class TableCell:
         horizontal_alignment: Optional horizontal alignment override.
         vertical_alignment: Optional vertical alignment override.
 
+    Attributes:
+        content: Cell content normalized to a paragraph.
+        colspan: Number of rendered columns this cell spans.
+        rowspan: Number of rendered rows this cell spans.
+        background_color: Resolved cell background color.
+        horizontal_alignment: Resolved horizontal alignment.
+        vertical_alignment: Resolved vertical alignment.
+        style: Resolved cell style after overrides are merged.
+
     Raises:
         ValueError: If ``colspan`` or ``rowspan`` is less than one.
 
@@ -936,6 +945,22 @@ class Table(Block):
         header_row_styles: Optional header-row styles keyed by zero-based row
             index.
 
+    Attributes:
+        header_rows: Normalized header rows.
+        rows: Normalized body rows.
+        caption: Optional normalized caption paragraph.
+        column_widths: Optional expanded column widths.
+        unit: Unit for column widths.
+        identifier: Stable identifier for references or renderer use.
+        style: Resolved table style after overrides are merged.
+        include_index: Whether dataframe-like input includes index columns.
+        split: Effective split policy.
+        placement: Effective media placement policy.
+        long_table_threshold: Optional row-count threshold for splitting.
+        row_styles: Resolved body-row style mapping.
+        column_styles: Resolved column style mapping.
+        header_row_styles: Resolved header-row style mapping.
+
     Raises:
         ValueError: If rows are missing, thresholds are invalid, or column
             widths do not match the expanded layout.
@@ -1253,6 +1278,22 @@ class Table(Block):
             unit: Unit for ``column_widths``.
             identifier: Optional stable identifier.
             style: Base table style.
+            header_background_color: Optional header background color override.
+            header_text_color: Optional header text color override.
+            border_color: Optional border color override.
+            body_background_color: Optional body background color override.
+            alternate_row_background_color: Optional alternating row background.
+            cell_horizontal_alignment: Optional body cell horizontal alignment.
+            cell_vertical_alignment: Optional body cell vertical alignment.
+            header_horizontal_alignment: Optional header horizontal alignment.
+            header_vertical_alignment: Optional header vertical alignment.
+            cell_padding: Optional padding override for all sides.
+            cell_padding_top: Optional top padding override.
+            cell_padding_right: Optional right padding override.
+            cell_padding_bottom: Optional bottom padding override.
+            cell_padding_left: Optional left padding override.
+            border_width: Optional border width override.
+            repeat_header_rows: Whether fixed-page renderers repeat headers.
             include_index: Whether to include dataframe index columns.
             split: Whether renderers may split the table across pages.
             placement: Optional placement policy.

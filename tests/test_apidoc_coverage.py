@@ -5,7 +5,15 @@ from textwrap import dedent
 import pytest
 
 from apidoc_samples import write_undocumented_package
-from oodocs.apidoc import collect_api
+from oodocs.apidoc import (
+    ApiExample,
+    ApiModule,
+    ApiObject,
+    ApiPackage,
+    ApiParameter,
+    ApiReturn,
+    collect_api,
+)
 from oodocs.apidoc.coverage import ApiCoverageResult, check_api_docs
 from oodocs.components.media import Table
 
@@ -63,3 +71,73 @@ def test_apidoc_coverage_uses_dataclass_attribute_docs_for_constructor_parameter
         if issue.qualname == "datapkg.Settings"
         and issue.code == "missing-parameter-doc"
     ]
+
+
+def test_apidoc_coverage_reports_quality_gate_issues(tmp_path) -> None:
+    api = ApiPackage(
+        "qualitypkg",
+        modules=[
+            ApiModule(
+                "qualitypkg",
+                members=[
+                    ApiObject(
+                        kind="function",
+                        name="bad_example",
+                        qualname="qualitypkg.bad_example",
+                        module="qualitypkg",
+                        summary="Run a bad example.",
+                        signature="(value: str) -> str",
+                        parameters=[ApiParameter("value", "str")],
+                        returns=ApiReturn("str"),
+                        examples=[
+                            ApiExample("if True print('bad')", language="python"),
+                            ApiExample(">>>print('bad')", language="pycon"),
+                        ],
+                        deprecated=True,
+                    ),
+                    ApiObject(
+                        kind="function",
+                        name="without_example",
+                        qualname="qualitypkg.without_example",
+                        module="qualitypkg",
+                        summary="Run without an example.",
+                    ),
+                ],
+            )
+        ],
+    )
+
+    coverage = check_api_docs(
+        api,
+        fail_under=1.0,
+        require_examples=True,
+        require_renderer_notes=True,
+    )
+    issue_codes = {issue.code for issue in coverage.issues}
+
+    assert coverage.public_object_count == 2
+    assert coverage.documented_object_count == 2
+    assert coverage.parameter_count == 1
+    assert coverage.missing_parameter_doc_count == 1
+    assert coverage.return_annotation_count == 1
+    assert coverage.documented_return_count == 0
+    assert coverage.example_count == 2
+    assert coverage.syntax_checked_example_count == 2
+    assert coverage.syntax_ok_example_count == 1
+    assert coverage.doctest_checked_example_count == 1
+    assert coverage.doctest_ok_example_count == 0
+    assert {
+        "doctest-failed",
+        "example-syntax-error",
+        "missing-deprecation-guidance",
+        "missing-examples",
+        "missing-parameter-doc",
+        "missing-renderer-notes",
+        "missing-return-doc",
+    } <= issue_codes
+
+    csv_path = coverage.write_csv(tmp_path / "coverage.csv")
+    csv_text = csv_path.read_text(encoding="utf-8")
+
+    assert "doctest-failed" in csv_text
+    assert "missing-renderer-notes" in csv_text

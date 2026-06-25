@@ -183,11 +183,26 @@ class RenderIndex:
     Attributes:
         tables: Indexed caption entries for tables.
         figures: Indexed caption entries for figures and figure groups.
+        table_numbers: Table numbers keyed by table identity.
+        figure_numbers: Figure numbers keyed by figure identity.
+        subfigure_labels: Subfigure labels keyed by subfigure identity.
         citations: Indexed citation references.
+        citation_numbers: Citation numbers keyed by citation key.
+        citation_source_numbers: Citation numbers keyed by source identity.
         comments: Indexed inline comments.
+        comment_numbers: Comment numbers keyed by comment identity.
         footnotes: Indexed footnote references.
+        footnote_numbers: Footnote numbers keyed by footnote identity.
         headings: Indexed heading entries.
+        heading_numbers: Heading numbers keyed by heading identity.
+        heading_anchors: Heading anchors keyed by heading identity.
+        paragraph_numbers: Paragraph numbers keyed by paragraph identity.
+        equation_numbers: Equation numbers keyed by equation identity.
+        code_block_numbers: Code-block numbers keyed by code block identity.
+        box_numbers: Box numbers keyed by box identity.
         countables: Indexed theorem-like countable blocks.
+        countable_numbers: Countable block numbers keyed by block identity.
+        countable_counters: Latest counter value keyed by countable kind.
         block_anchors: Stable anchors keyed by block identity.
 
     Examples:
