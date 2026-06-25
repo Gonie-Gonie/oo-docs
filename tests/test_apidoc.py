@@ -1341,6 +1341,8 @@ def test_apidoc_cli_filters_check_and_snapshot(tmp_path: Path) -> None:
     config_json = tmp_path / "configured-api.json"
     pyproject_config_path = tmp_path / "pyproject.toml"
     pyproject_config_json = tmp_path / "pyproject-configured-api.json"
+    pyproject_coverage_json = tmp_path / "pyproject-filtered-coverage.json"
+    pyproject_snapshot_json = tmp_path / "pyproject-filtered-snapshot.json"
     ApiCollectConfig(
         collector="inspect",
         public_policy="underscore",
@@ -1442,6 +1444,35 @@ def test_apidoc_cli_filters_check_and_snapshot(tmp_path: Path) -> None:
     pyproject_configured = json.loads(pyproject_config_json.read_text(encoding="utf-8"))
     assert [module["name"] for module in pyproject_configured["modules"]] == ["filterpkg.core"]
     assert pyproject_configured["metadata"]["collector"] == "inspect"
+
+    assert main(
+        [
+            "apidoc",
+            "check",
+            str(package_dir),
+            "--config",
+            str(pyproject_config_path),
+            "--fail-under",
+            "1.0",
+            "--out-json",
+            str(pyproject_coverage_json),
+        ]
+    ) == 0
+    assert ApiCoverageResult.read_json(pyproject_coverage_json).public_object_count == 1
+
+    assert main(
+        [
+            "apidoc",
+            "snapshot",
+            str(package_dir),
+            "--config",
+            str(pyproject_config_path),
+            "--out",
+            str(pyproject_snapshot_json),
+        ]
+    ) == 0
+    pyproject_snapshot = json.loads(pyproject_snapshot_json.read_text(encoding="utf-8"))
+    assert list(pyproject_snapshot["objects"]) == ["filterpkg.core.run"]
 
     assert main(
         [

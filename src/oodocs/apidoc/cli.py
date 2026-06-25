@@ -221,7 +221,13 @@ def _run_collect(args: argparse.Namespace) -> int:
 
 
 def _run_check(args: argparse.Namespace) -> int:
-    api = _filter_from_args(_collect_from_args(args), args)
+    build_config = _build_config_from_args(args)
+    kind, module_prefix = _filter_options_from_args(args, build_config)
+    api = _filter_api(
+        _collect_from_args(args, config=build_config.collection),
+        kind=kind,
+        module_prefix=module_prefix,
+    )
     result = check_api_docs(
         api,
         fail_under=args.fail_under,
@@ -247,11 +253,9 @@ def _run_check(args: argparse.Namespace) -> int:
 
 
 def _run_build(args: argparse.Namespace) -> int:
-    _load_docstring_parser_modules_from_args(args)
-    build_config = ApiBuildConfig.read_file(args.config) if args.config else ApiBuildConfig()
+    build_config = _build_config_from_args(args)
     api = _collect_from_args(args, config=build_config.collection)
-    kind = tuple(args.kind) if args.kind else build_config.kind or None
-    module_prefix = args.module_prefix or build_config.module_prefix
+    kind, module_prefix = _filter_options_from_args(args, build_config)
     rendered_api = _filter_api(api, kind=kind, module_prefix=module_prefix)
     profile = args.profile or build_config.profile
     formats = normalize_output_formats(_split_csv(args.to) if args.to else build_config.output_formats)
@@ -296,7 +300,13 @@ def _run_build(args: argparse.Namespace) -> int:
 
 
 def _run_snapshot(args: argparse.Namespace) -> int:
-    api = _filter_from_args(_collect_from_args(args), args)
+    build_config = _build_config_from_args(args)
+    kind, module_prefix = _filter_options_from_args(args, build_config)
+    api = _filter_api(
+        _collect_from_args(args, config=build_config.collection),
+        kind=kind,
+        module_prefix=module_prefix,
+    )
     ApiSnapshot.from_package(api).write_json(args.out)
     print(f"Wrote api-snapshot: {Path(args.out)}")
     return 0
@@ -340,18 +350,24 @@ def _collect_from_args(
     )
 
 
+def _build_config_from_args(args: argparse.Namespace) -> ApiBuildConfig:
+    _load_docstring_parser_modules_from_args(args)
+    return ApiBuildConfig.read_file(args.config) if args.config else ApiBuildConfig()
+
+
+def _filter_options_from_args(
+    args: argparse.Namespace,
+    build_config: ApiBuildConfig,
+) -> tuple[tuple[str, ...] | None, str | None]:
+    kind = tuple(args.kind) if args.kind else build_config.kind or None
+    module_prefix = args.module_prefix or build_config.module_prefix
+    return kind, module_prefix
+
+
 def _load_docstring_parser_modules_from_args(args: argparse.Namespace) -> None:
     modules = getattr(args, "docstring_parser_modules", None)
     if modules:
         load_docstring_parser_modules(modules)
-
-
-def _filter_from_args(api: ApiPackage, args: argparse.Namespace) -> ApiPackage:
-    return _filter_api(
-        api,
-        kind=tuple(args.kind) if args.kind else None,
-        module_prefix=args.module_prefix,
-    )
 
 
 def _filter_api(

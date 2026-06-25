@@ -120,9 +120,11 @@ collected, while `check`, `build`, and `snapshot` also accept `--kind` and
 and `--out-csv`. `build` also accepts `--profile`, `--to`, `--stem`,
 `--max-level`, `--out`, and `--sidecars`.
 When those build options are omitted, `build` can read `profile`, `formats`,
-`stem`, `max-level`, `out`/`output-dir`, `sidecars`, `kind`, and
-`module-prefix` from `[tool.oodocs.apidoc]`. Custom parser modules can be
-stored as `docstring-parser-modules = ["mypkg.docs_parsers"]` or supplied with
+`stem`, `max-level`, `out`/`output-dir`, and `sidecars` from
+`[tool.oodocs.apidoc]`. The `kind` and `module-prefix` settings in the same
+section are object filters shared by `check`, `snapshot`, and `build`, with
+explicit CLI flags taking precedence. Custom parser modules can be stored as
+`docstring-parser-modules = ["mypkg.docs_parsers"]` or supplied with
 `--docstring-parser-module`. `init` writes the same section to `pyproject.toml`
 by default, or writes a standalone JSON config when the target path ends in
 `.json` or `--format json` is passed.

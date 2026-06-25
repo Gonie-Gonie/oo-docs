@@ -48,6 +48,14 @@ For larger repositories, gate only the API area currently under review:
 python -m oodocs apidoc check . --collector griffe --kind class --module-prefix mypkg.widgets --fail-under 0.95
 ```
 
+The same `kind` and `module-prefix` filters may be stored in
+`[tool.oodocs.apidoc]`, where they are reused by `check`, `snapshot`, and
+`build`:
+
+```powershell
+python -m oodocs apidoc check . --config pyproject.toml --fail-under 0.95
+```
+
 Coverage issues include missing summaries, missing parameter docs, extra
 parameter docs, missing return docs, example syntax errors, doctest parse
 failures, and missing deprecation guidance. The coverage table also records
