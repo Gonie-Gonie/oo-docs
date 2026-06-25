@@ -17,6 +17,7 @@ from example_regression import (
 from oodocs import Chapter, Document, Paragraph
 from oodocs.apidoc import (
     ApiBuildConfig,
+    ApiCollectConfig,
     ApiCoverageResult,
     ApiDocstringParser,
     ApiPackage,
@@ -26,6 +27,7 @@ from oodocs.apidoc import (
     api_package_to_document,
     check_api_docs,
     collect_api,
+    docstring_parser_import_paths,
 )
 from oodocs.apidoc.cli import main
 
@@ -493,5 +495,25 @@ def test_collect_api_loads_repo_local_docstring_parser_modules(
 
     assert runner is not None
     assert runner.summary == "brief:Runner class."
+    assert run is not None
+    assert run.summary == "brief:Run custom command."
+
+
+def test_collect_api_accepts_config_with_repo_local_parser_modules(
+    tmp_path: Path,
+) -> None:
+    repo = write_custom_docstring_parser_repo(tmp_path)
+
+    with docstring_parser_import_paths(repo):
+        config = ApiCollectConfig(
+            collector="inspect",
+            public_policy="__all__",
+            docstring_parser_modules=("example_brief_parsers",),
+            docstring_style="example-brief",
+        )
+
+    api = collect_api(repo, config=config)
+    run = api.find("briefpkg.run")
+
     assert run is not None
     assert run.summary == "brief:Run custom command."

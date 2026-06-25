@@ -151,6 +151,23 @@ api = collect_api(
 )
 ```
 
+When you need to construct an `ApiCollectConfig` object yourself before calling
+`collect_api(...)`, wrap that construction with `docstring_parser_import_paths`
+so repo-local parser modules are importable while the config validates:
+
+```python
+from oodocs.apidoc import ApiCollectConfig, collect_api, docstring_parser_import_paths
+
+repo = r"C:\work\mypkg"
+with docstring_parser_import_paths(repo):
+    config = ApiCollectConfig(
+        docstring_parser_modules=("docs_parsers",),
+        docstring_style="brief",
+    )
+
+api = collect_api(repo, config=config)
+```
+
 The same hook can be supplied directly to one command:
 
 ```powershell
