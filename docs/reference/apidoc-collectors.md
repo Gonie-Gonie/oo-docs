@@ -9,6 +9,8 @@ custom source roots are also supported through
 `[tool.setuptools] package-dir = {"" = "lib"}` or
 `[tool.setuptools.packages.find] where = ["lib"]`, hatch wheel
 `packages`/`only-include` settings, and Poetry `packages` entries.
+Multiple hatch `packages` entries are grouped under their common source roots,
+so one repository reference can include several top-level packages.
 
 ```toml
 [project]

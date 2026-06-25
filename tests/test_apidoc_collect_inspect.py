@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from apidoc_samples import (
     collect_sample_api,
+    write_hatch_multi_package_repo,
     write_hatch_package_repo,
     write_poetry_package_repo,
     write_setuptools_find_repo,
@@ -111,6 +112,22 @@ def test_inspect_collector_uses_pyproject_hatch_packages(tmp_path) -> None:
     assert api.find("hatchpkg.run") is not None
     assert api.find("hatchpkg.core.run") is not None
     assert api.find("lib.hatchpkg.run") is None
+
+
+def test_inspect_collector_uses_pyproject_hatch_multi_packages(tmp_path) -> None:
+    repo = write_hatch_multi_package_repo(tmp_path)
+
+    api = collect_api(repo, collector="inspect", public_policy="__all__")
+
+    assert [module.name for module in api.modules] == [
+        "alpha",
+        "alpha.core",
+        "beta",
+        "beta.core",
+    ]
+    assert api.find("alpha.run") is not None
+    assert api.find("beta.run") is not None
+    assert api.find("lib.alpha.run") is None
 
 
 def test_inspect_collector_uses_pyproject_poetry_packages(tmp_path) -> None:

@@ -7,7 +7,7 @@ import copy
 from dataclasses import replace
 from pathlib import Path
 import textwrap
-from typing import Iterable
+from typing import Callable, Iterable
 
 from oodocs.apidoc.config import ApiCollectConfig
 from oodocs.apidoc.docstring import ParsedDocstring, parse_docstring
@@ -88,13 +88,22 @@ def collect_package_griffe(
     resolved = replace(config, collector="griffe")
     try:
         root, package_name, files = _resolve_source_files(package)
-        loaded = griffe.load(
-            package_name,
-            search_paths=[str(root)],
-            submodules=True,
-            docstring_parser=_griffe_docstring_parser(config),
-            allow_inspection=False,
+        load_names = _griffe_load_names(
+            files,
+            root=root,
+            package_name=package_name,
+            module_name_for_file=_module_name_for_file,
         )
+        loaded_targets = [
+            griffe.load(
+                load_name,
+                search_paths=[str(root)],
+                submodules=True,
+                docstring_parser=_griffe_docstring_parser(config),
+                allow_inspection=False,
+            )
+            for load_name in load_names
+        ]
     except Exception as exc:
         return _fallback_collect(
             package,
@@ -105,16 +114,17 @@ def collect_package_griffe(
 
     modules: list[ApiModule] = []
     issues: list[ApiDocIssue] = []
-    for module_obj in _iter_griffe_modules(loaded):
-        filepath = _object_filepath(module_obj)
-        if filepath is None:
-            continue
-        module_name = _module_name_for_file(filepath, root=root, package_name=package_name)
-        if not _module_is_included(module_name, resolved):
-            continue
-        module = _module_from_griffe(module_obj, module_name, config=resolved)
-        modules.append(module)
-        issues.extend(_module_issues(module))
+    for loaded in loaded_targets:
+        for module_obj in _iter_griffe_modules(loaded):
+            filepath = _object_filepath(module_obj)
+            if filepath is None:
+                continue
+            module_name = _module_name_for_file(filepath, root=root, package_name=package_name)
+            if not _module_is_included(module_name, resolved):
+                continue
+            module = _module_from_griffe(module_obj, module_name, config=resolved)
+            modules.append(module)
+            issues.extend(_module_issues(module))
 
     _merge_reexported_object_docs(modules)
 
@@ -153,6 +163,29 @@ def collect_package_griffe(
             "source_root": str(root),
         },
     )
+
+
+def _griffe_load_names(
+    files: list[Path],
+    *,
+    root: Path,
+    package_name: str,
+    module_name_for_file: Callable[..., str],
+) -> list[str]:
+    module_names = [
+        module_name_for_file(file_path, root=root, package_name=package_name)
+        for file_path in files
+    ]
+    top_level_names = sorted(
+        {
+            module_name.split(".", 1)[0]
+            for module_name in module_names
+            if module_name
+        }
+    )
+    if package_name in top_level_names or not top_level_names:
+        return [package_name]
+    return top_level_names
 
 
 def _fallback_collect(

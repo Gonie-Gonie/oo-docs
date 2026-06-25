@@ -6,6 +6,7 @@ from pathlib import Path
 
 from apidoc_samples import (
     write_custom_docstring_parser_repo,
+    write_hatch_multi_package_repo,
     write_mixed_docstring_repo,
     write_setuptools_py_module_repo,
     write_single_file_module,
@@ -518,6 +519,64 @@ def test_general_py_modules_repo_targets_build_reference_and_example(
     assert "src.singlemod" not in rendered_example
     assert_html_internal_links_resolve(example_html)
     assert ApiPackage.read_json(example_api_json).find("singlemod.stream") is not None
+
+
+def test_general_hatch_multi_package_repo_builds_complete_reference(
+    tmp_path: Path,
+) -> None:
+    repo = write_hatch_multi_package_repo(tmp_path)
+    output_dir = tmp_path / "multi-hatch-output"
+
+    api = collect_api(
+        repo,
+        collector="inspect",
+        public_policy="__all__",
+        docstring_style=ApiDocstringParser.auto(),
+    )
+    coverage = check_api_docs(api, fail_under=1.0)
+
+    assert api.name == "multi_hatch_project"
+    assert api.find("alpha.run") is not None
+    assert api.find("beta.run") is not None
+    assert api.find("lib.alpha.run") is None
+    assert coverage.object_coverage == 1.0
+
+    assert (
+        main(
+            [
+                "build",
+                str(repo),
+                "--collector",
+                "inspect",
+                "--public-policy",
+                "__all__",
+                "--docstring-style",
+                "auto",
+                "--out",
+                str(output_dir),
+                "--to",
+                "html",
+                "--sidecars",
+            ]
+        )
+        == 0
+    )
+    html_path = output_dir / "multi_hatch_project-api.html"
+    api_path = output_dir / "multi_hatch_project-api.json"
+    coverage_path = output_dir / "multi_hatch_project-api-coverage.json"
+
+    assert html_path.exists()
+    assert api_path.exists()
+    assert coverage_path.exists()
+    html = html_path.read_text(encoding="utf-8")
+    assert "alpha.run" in html
+    assert "beta.run" in html
+    assert "lib.alpha" not in html
+    assert_html_internal_links_resolve(html_path)
+    rendered_api = ApiPackage.read_json(api_path)
+    assert rendered_api.find("alpha.run") is not None
+    assert rendered_api.find("beta.run") is not None
+    assert ApiCoverageResult.read_json(coverage_path).object_coverage == 1.0
 
 
 def test_api_objects_example_config_loads_repo_docstring_parser_modules(

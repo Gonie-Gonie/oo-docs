@@ -355,6 +355,50 @@ def write_hatch_package_repo(
     return repo
 
 
+def write_hatch_multi_package_repo(tmp_path: Path) -> Path:
+    repo = tmp_path / "multi-hatch-repo"
+    package_names = ("alpha", "beta")
+    for package_name in package_names:
+        package_dir = repo / "lib" / package_name
+        package_dir.mkdir(parents=True)
+        (package_dir / "__init__.py").write_text(
+            f'"""{package_name.title()} package."""\nfrom .core import run\n__all__ = ["run"]\n',
+            encoding="utf-8",
+        )
+        (package_dir / "core.py").write_text(
+            dedent(
+                f'''\
+                def run() -> str:
+                    """Run {package_name}.
+
+                    Returns:
+                        str: Package name.
+                    """
+
+                    return "{package_name}"
+                '''
+            ),
+            encoding="utf-8",
+        )
+    (repo / "pyproject.toml").write_text(
+        dedent(
+            '''\
+            [build-system]
+            requires = ["hatchling"]
+            build-backend = "hatchling.build"
+
+            [project]
+            name = "multi-hatch-project"
+
+            [tool.hatch.build.targets.wheel]
+            packages = ["lib/alpha", "lib/beta"]
+            '''
+        ),
+        encoding="utf-8",
+    )
+    return repo
+
+
 def write_poetry_package_repo(
     tmp_path: Path,
     *,

@@ -6,6 +6,7 @@ import pytest
 
 from apidoc_samples import (
     collect_sample_api,
+    write_hatch_multi_package_repo,
     write_hatch_package_repo,
     write_mixed_docstring_repo,
     write_poetry_package_repo,
@@ -313,6 +314,26 @@ def test_griffe_collector_uses_pyproject_hatch_packages(tmp_path) -> None:
     assert api.find("hatchpkg.run") is not None
     assert api.find("hatchpkg.core.run") is not None
     assert api.find("lib.hatchpkg.run") is None
+
+
+def test_griffe_collector_uses_pyproject_hatch_multi_packages(tmp_path) -> None:
+    if importlib.util.find_spec("griffe") is None:
+        pytest.skip("griffe is not installed")
+
+    repo = write_hatch_multi_package_repo(tmp_path)
+
+    api = collect_api(repo, collector="griffe", public_policy="__all__")
+
+    assert api.metadata["collector"] == "griffe"
+    assert [module.name for module in api.modules] == [
+        "alpha",
+        "alpha.core",
+        "beta",
+        "beta.core",
+    ]
+    assert api.find("alpha.run") is not None
+    assert api.find("beta.run") is not None
+    assert api.find("lib.alpha.run") is None
 
 
 def test_griffe_collector_uses_pyproject_poetry_packages(tmp_path) -> None:

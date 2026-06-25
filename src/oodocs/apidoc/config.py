@@ -1637,7 +1637,8 @@ def _hatch_source_roots(directory: Path, tool: object) -> list[Path]:
     if not isinstance(wheel, Mapping):
         return []
     roots: list[Path] = []
-    for key in ("packages", "only-include", "sources"):
+    roots.extend((directory / value).parent for value in _path_strings(wheel.get("packages")))
+    for key in ("only-include", "sources"):
         roots.extend(directory / value for value in _path_strings(wheel.get(key)))
     return roots
 
