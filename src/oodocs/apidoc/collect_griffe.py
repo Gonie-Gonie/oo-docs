@@ -566,6 +566,8 @@ def _kind(obj: object) -> str:
 
 def _object_filepath(obj: object) -> Path | None:
     value = getattr(obj, "filepath", None)
+    if isinstance(value, (list, tuple, set)):
+        value = next(iter(value), None)
     if value is None:
         return None
     return Path(value)

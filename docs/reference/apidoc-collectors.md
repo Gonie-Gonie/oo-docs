@@ -1,6 +1,8 @@
 # apidoc Collectors
 
 Collectors normalize Python source metadata into the same `ApiPackage` schema.
+Repository paths may point at a package directory, a `src/` layout package, or
+a `src/` layout namespace package that omits `__init__.py`.
 
 - `collector="griffe"` uses griffe when installed. It captures module data,
   aliases, properties, class attributes, and line metadata without importing the

@@ -26,6 +26,22 @@ from oodocs.core import PathLike
 
 
 _DEPRECATION_DECORATORS = {"deprecated", "deprecate", "deprecated_alias"}
+_IGNORED_SOURCE_PARTS = {
+    ".git",
+    ".hg",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".tox",
+    ".venv",
+    "__pycache__",
+    "artifacts",
+    "build",
+    "dist",
+    "htmlcov",
+    "node_modules",
+    "site-packages",
+}
 
 
 def collect_api(
@@ -658,6 +674,11 @@ def _resolve_source_files(package: str | PathLike) -> tuple[Path, str, list[Path
                 files = [file_path for package_dir in package_dirs for file_path in _python_files_under(package_dir)]
                 package_name = package_dirs[0].name if len(package_dirs) == 1 else project_name
                 return src_root, package_name, sorted(files)
+            namespace_dirs = _namespace_package_dirs(src_root)
+            if namespace_dirs:
+                files = [file_path for package_dir in namespace_dirs for file_path in _python_files_under(package_dir)]
+                package_name = namespace_dirs[0].name if len(namespace_dirs) == 1 else project_name
+                return src_root, package_name, sorted(files)
 
         package_dirs = _package_dirs(resolved)
         if package_dirs:
@@ -692,6 +713,8 @@ def _module_name_for_file(path: Path, *, root: Path, package_name: str) -> str:
         return ".".join(parts)
     if parts and (root / parts[0] / "__init__.py").exists():
         return ".".join(parts)
+    if parts and _is_namespace_source_dir(root / parts[0]):
+        return ".".join(parts)
     if not package_name:
         return ".".join(parts)
     return ".".join([package_name, *parts]) if package_name not in parts[:1] else ".".join(parts)
@@ -706,26 +729,10 @@ def _module_is_included(module_name: str, config: ApiCollectConfig) -> bool:
 
 
 def _python_files_under(directory: Path) -> list[Path]:
-    ignored = {
-        ".git",
-        ".hg",
-        ".mypy_cache",
-        ".pytest_cache",
-        ".ruff_cache",
-        ".tox",
-        ".venv",
-        "__pycache__",
-        "artifacts",
-        "build",
-        "dist",
-        "htmlcov",
-        "node_modules",
-        "site-packages",
-    }
     return sorted(
         path
         for path in directory.rglob("*.py")
-        if not any(part in ignored for part in path.relative_to(directory).parts)
+        if not any(part in _IGNORED_SOURCE_PARTS for part in path.relative_to(directory).parts)
     )
 
 
@@ -737,6 +744,24 @@ def _package_dirs(source_root: Path) -> list[Path]:
         and (path / "__init__.py").exists()
         and not path.name.startswith(".")
         and path.name != "__pycache__"
+    )
+
+
+def _namespace_package_dirs(source_root: Path) -> list[Path]:
+    return sorted(
+        path
+        for path in source_root.iterdir()
+        if _is_namespace_source_dir(path)
+    )
+
+
+def _is_namespace_source_dir(path: Path) -> bool:
+    return (
+        path.is_dir()
+        and not path.name.startswith(".")
+        and path.name not in _IGNORED_SOURCE_PARTS
+        and not (path / "__init__.py").exists()
+        and bool(_python_files_under(path))
     )
 
 

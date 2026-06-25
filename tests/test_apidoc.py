@@ -660,6 +660,46 @@ def test_collect_api_supports_src_layout_repo_reexports_and_deep_object_lookup(
     assert looked_up.parameters[0].name == "path"
 
 
+def test_collect_api_supports_src_layout_namespace_package_repo(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    package_dir = repo / "src" / "ns_pkg"
+    package_dir.mkdir(parents=True)
+    (repo / "pyproject.toml").write_text(
+        "[project]\nname = \"namespace-lib\"\n",
+        encoding="utf-8",
+    )
+    (package_dir / "core.py").write_text(
+        "\n".join(
+            [
+                '"""Namespace core APIs."""',
+                "",
+                "def run(path: str) -> str:",
+                '    """Run a namespace command.',
+                "",
+                "    Args:",
+                "        path: Input path.",
+                "    Returns:",
+                "        str: Input path.",
+                '    """',
+                "    return path",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    api = collect_api(repo, public_policy="underscore", collector="inspect")
+
+    assert api.name == "ns_pkg"
+    assert [module.name for module in api.modules] == ["ns_pkg.core"]
+    run = api.find("ns_pkg.core.run")
+    assert run is not None
+    assert run.parameters[0].description == "Input path."
+
+    if importlib.util.find_spec("griffe") is not None:
+        griffe_api = collect_api(repo, public_policy="underscore", collector="griffe")
+        assert griffe_api.find("ns_pkg.core.run") is not None
+
+
 def test_collect_api_accepts_reusable_public_policy_object(tmp_path: Path) -> None:
     package_dir = tmp_path / "pkg"
     package_dir.mkdir()
