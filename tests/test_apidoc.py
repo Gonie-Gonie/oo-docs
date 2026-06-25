@@ -172,6 +172,8 @@ def test_docstring_parsers_normalize_standard_styles() -> None:
     assert google.renderer_notes[0].format == "pdf"
     mismatch = parse_docstring(GOOGLE_DOCSTRING, style="numpy", qualname="pkg.load", module="pkg")
     assert any(issue.code == "docstring-style-mismatch" for issue in mismatch.issues)
+    assert ParsedDocstring.from_dict(google.to_dict()).to_dict() == google.to_dict()
+    assert ParsedDocstring.from_dict(mismatch.to_dict()).to_dict() == mismatch.to_dict()
 
     assert numpy.parameters[1].name == "retries"
     assert numpy.returns and numpy.returns.documented

@@ -73,6 +73,102 @@ class ParsedDocstring:
     deprecated: bool = False
     deprecation_message: str | None = None
 
+    def to_dict(self) -> dict[str, object]:
+        """Return deterministic serialized parser output.
+
+        Returns:
+            JSON-serializable mapping containing every normalized docstring
+            section and parser diagnostic.
+
+        Examples:
+            Persist parser output before deciding how to render it:
+
+            ```python
+            from oodocs.apidoc import parse_docstring
+
+            parsed = parse_docstring("Summary.\\n\\nArgs:\\n    path: Input.")
+            payload = parsed.to_dict()
+            ```
+        """
+
+        return {
+            "summary": self.summary,
+            "description": self.description,
+            "parameters": [item.to_dict() for item in self.parameters],
+            "attributes": [item.to_dict() for item in self.attributes],
+            "returns": self.returns.to_dict() if self.returns is not None else None,
+            "raises": [item.to_dict() for item in self.raises],
+            "examples": [item.to_dict() for item in self.examples],
+            "see_also": [item.to_dict() for item in self.see_also],
+            "renderer_notes": [item.to_dict() for item in self.renderer_notes],
+            "notes": list(self.notes),
+            "warnings": list(self.warnings),
+            "style": self.style,
+            "issues": [item.to_dict() for item in self.issues],
+            "deprecated": self.deprecated,
+            "deprecation_message": self.deprecation_message,
+        }
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, object]) -> ParsedDocstring:
+        """Reconstruct parser output from serialized data.
+
+        Args:
+            data: Mapping produced by ``to_dict``.
+
+        Returns:
+            Parsed docstring object with normalized section metadata.
+
+        Examples:
+            Rehydrate parser output from a custom cache:
+
+            ```python
+            from oodocs.apidoc import ParsedDocstring
+
+            parsed = ParsedDocstring.from_dict(saved_payload)
+            ```
+        """
+
+        returns_data = data.get("returns")
+        return cls(
+            summary=_optional_str(data.get("summary")),
+            description=_optional_str(data.get("description")),
+            parameters=[
+                ApiParameter.from_dict(item)
+                for item in data.get("parameters", [])  # type: ignore[union-attr]
+            ],
+            attributes=[
+                ApiParameter.from_dict(item)
+                for item in data.get("attributes", [])  # type: ignore[union-attr]
+            ],
+            returns=ApiReturn.from_dict(returns_data) if isinstance(returns_data, dict) else None,
+            raises=[
+                ApiRaises.from_dict(item)
+                for item in data.get("raises", [])  # type: ignore[union-attr]
+            ],
+            examples=[
+                ApiExample.from_dict(item)
+                for item in data.get("examples", [])  # type: ignore[union-attr]
+            ],
+            see_also=[
+                ApiSeeAlso.from_dict(item)
+                for item in data.get("see_also", [])  # type: ignore[union-attr]
+            ],
+            renderer_notes=[
+                ApiRendererNote.from_dict(item)
+                for item in data.get("renderer_notes", [])  # type: ignore[union-attr]
+            ],
+            notes=[str(item) for item in data.get("notes", [])],  # type: ignore[union-attr]
+            warnings=[str(item) for item in data.get("warnings", [])],  # type: ignore[union-attr]
+            style=str(data.get("style", "plain")),  # type: ignore[arg-type]
+            issues=[
+                ApiDocIssue.from_dict(item)
+                for item in data.get("issues", [])  # type: ignore[union-attr]
+            ],
+            deprecated=bool(data.get("deprecated", False)),
+            deprecation_message=_optional_str(data.get("deprecation_message")),
+        )
+
 
 @dataclass(frozen=True, slots=True)
 class ApiDocstringParser:
@@ -362,6 +458,12 @@ def is_docstring_style_supported(style: str | ApiDocstringParser) -> bool:
 
     normalized = ApiDocstringParser.from_value(style).style
     return normalized == "auto" or normalized in _PARSERS
+
+
+def _optional_str(value: object) -> str | None:
+    if value is None:
+        return None
+    return str(value)
 
 
 def detect_docstring_style(text: str | None) -> ApiDocstringStyleName:

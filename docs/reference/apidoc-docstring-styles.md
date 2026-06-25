@@ -44,6 +44,10 @@ assert parsed.parameters[0].name == "path"
 assert parsed.attributes[0].name == "cache_key"
 ```
 
+`ParsedDocstring.to_dict()` and `ParsedDocstring.from_dict(...)` preserve the
+normalized parser output when a workflow wants to cache raw docstring parse
+results before converting them into collected API objects.
+
 `docstring-parser` is used when installed for Google, NumPy, and Sphinx styles;
 OODocs keeps fallback parsers so the public API remains usable without the
 optional extra.
