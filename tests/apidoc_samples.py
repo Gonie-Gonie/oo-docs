@@ -424,6 +424,66 @@ def write_single_file_module(tmp_path: Path) -> Path:
     return module_path
 
 
+def write_custom_docstring_parser_repo(tmp_path: Path) -> Path:
+    repo = tmp_path / "custom-parser-repo"
+    package_dir = repo / "src" / "briefpkg"
+    package_dir.mkdir(parents=True)
+    (repo / "example_brief_parsers.py").write_text(
+        "\n".join(
+            [
+                "from oodocs.apidoc import ParsedDocstring, docstring_parser_names, register_docstring_parser",
+                "",
+                "def parse_example_brief(text, qualname=None, module=None):",
+                "    first = (text or '').strip().splitlines()[0]",
+                "    return ParsedDocstring(summary=f'brief:{first}', style='example-brief')",
+                "",
+                "if 'example-brief' not in docstring_parser_names():",
+                "    register_docstring_parser('example-brief', parse_example_brief)",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (repo / "pyproject.toml").write_text(
+        dedent(
+            '''\
+            [project]
+            name = "briefpkg"
+
+            [tool.setuptools]
+            package-dir = {"" = "src"}
+
+            [tool.oodocs.apidoc]
+            collector = "inspect"
+            public-policy = "__all__"
+            docstring-style = "example-brief"
+            docstring-parser-modules = ["example_brief_parsers"]
+            profile = "compact"
+            formats = ["html"]
+            sidecars = true
+            '''
+        ),
+        encoding="utf-8",
+    )
+    (package_dir / "__init__.py").write_text(
+        dedent(
+            '''\
+            """Brief package."""
+
+            __all__ = ["Runner", "run"]
+
+            class Runner:
+                """Runner class."""
+
+            def run():
+                """Run custom command."""
+            '''
+        ),
+        encoding="utf-8",
+    )
+    return repo
+
+
 def collect_sample_api(tmp_path: Path, **kwargs: object) -> ApiPackage:
     package_dir = write_sample_package(tmp_path)
     options = {

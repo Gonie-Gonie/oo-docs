@@ -3,7 +3,11 @@ from __future__ import annotations
 import importlib.util
 from pathlib import Path
 
-from apidoc_samples import write_mixed_docstring_repo, write_single_file_module
+from apidoc_samples import (
+    write_custom_docstring_parser_repo,
+    write_mixed_docstring_repo,
+    write_single_file_module,
+)
 from example_regression import assert_html_internal_links_resolve
 from oodocs import Chapter, Document, Paragraph
 from oodocs.apidoc import (
@@ -396,3 +400,50 @@ def test_general_python_file_module_targets_build_reference_and_example(
     assert "singlemod.Client" in example_html.read_text(encoding="utf-8")
     assert_html_internal_links_resolve(example_html)
     assert ApiPackage.read_json(example_api_json).find("singlemod.stream") is not None
+
+
+def test_api_objects_example_config_loads_repo_docstring_parser_modules(
+    tmp_path: Path,
+) -> None:
+    repo = write_custom_docstring_parser_repo(tmp_path)
+    build_config = ApiBuildConfig.from_pyproject(repo)
+    output_dir = tmp_path / "custom-parser-example"
+    example = _load_api_objects_example()
+
+    assert build_config.collection.docstring_parser_modules == (
+        "example_brief_parsers",
+    )
+    assert build_config.collection.docstring_parser().style == "example-brief"
+
+    example.main(
+        [
+            str(repo),
+            "--config",
+            str(repo / "pyproject.toml"),
+            "--out",
+            str(output_dir),
+            "--quiet",
+        ]
+    )
+
+    full_reference = output_dir / "oodocs-full-api-reference.html"
+    api_json = output_dir / "oodocs-api-objects.json"
+    coverage_json = output_dir / "oodocs-api-coverage.json"
+    assert full_reference.exists()
+    assert api_json.exists()
+    assert coverage_json.exists()
+    assert not (output_dir / "oodocs-full-api-reference.docx").exists()
+
+    api = ApiPackage.read_json(api_json)
+    runner = api.find("briefpkg.Runner")
+    run = api.find("briefpkg.run")
+    assert runner is not None
+    assert runner.summary == "brief:Runner class."
+    assert run is not None
+    assert run.summary == "brief:Run custom command."
+    assert ApiCoverageResult.read_json(coverage_json).object_coverage == 1.0
+
+    html = full_reference.read_text(encoding="utf-8")
+    assert "brief:Runner class." in html
+    assert "brief:Run custom command." in html
+    assert_html_internal_links_resolve(full_reference)
