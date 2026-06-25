@@ -25,6 +25,26 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     Returns:
         Process exit code.
+
+    Examples:
+        Invoke the CLI entrypoint from a Python automation script:
+
+        ```python
+        from oodocs.apidoc.cli import main
+
+        exit_code = main([
+            "build",
+            ".",
+            "--profile",
+            "reference",
+            "--out",
+            "artifacts/api",
+            "--to",
+            "html",
+            "--sidecars",
+        ])
+        assert exit_code == 0
+        ```
     """
 
     parser = _build_parser()

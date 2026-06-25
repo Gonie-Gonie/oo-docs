@@ -28,6 +28,23 @@ def collect_package_inspect(
 
     Returns:
         Collected API package.
+
+    Examples:
+        Use the import-safe collector directly when a repository has optional
+        runtime dependencies:
+
+        ```python
+        from oodocs.apidoc import ApiCollectConfig
+        from oodocs.apidoc.collect_inspect import collect_package_inspect
+
+        config = ApiCollectConfig(
+            public_policy="__all__",
+            docstring_style="auto",
+            module_exclude_patterns=("mypkg.tests*",),
+        )
+        api = collect_package_inspect(".", config=config)
+        document = api.to_document(profile="reference")
+        ```
     """
 
     from oodocs.apidoc.collect import _collect_package_source

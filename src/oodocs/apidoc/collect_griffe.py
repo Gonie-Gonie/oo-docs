@@ -43,6 +43,27 @@ def collect_package_griffe(
         ``griffe`` is optional. If it is unavailable or cannot load the target,
         this function falls back to the source collector and records a
         diagnostic issue while preserving the same public schema.
+
+    Examples:
+        Prefer griffe-compatible collection for a normal source-layout
+        repository and then render the result through OODocs:
+
+        ```python
+        from oodocs.apidoc import ApiCollectConfig
+        from oodocs.apidoc.collect_griffe import collect_package_griffe
+
+        config = ApiCollectConfig(
+            collector="griffe",
+            public_policy="__all__",
+            docstring_style="auto",
+            module_exclude_patterns=("mypkg.tests*",),
+        )
+        api = collect_package_griffe(".", config=config)
+        api.to_document(profile="reference").save_all(
+            "artifacts/api",
+            stem="mypkg-api",
+        )
+        ```
     """
 
     try:
