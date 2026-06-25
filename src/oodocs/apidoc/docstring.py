@@ -1100,10 +1100,7 @@ def _parse_markdown(text: str, qualname: str | None, module: str | None) -> Pars
         elif normalized in {"returns", "yields"}:
             parsed.returns = _parse_return_section(body)
         elif normalized == "raises":
-            parsed.raises.extend(
-                ApiRaises(item.name, item.description)
-                for item in _parse_markdown_parameters(body, annotation_in_name=True)
-            )
+            parsed.raises.extend(_parse_markdown_raises(body))
         elif normalized == "examples":
             parsed.examples.extend(_examples_or_text(body))
         elif normalized == "see also":
@@ -1265,6 +1262,38 @@ def _parse_markdown_parameters(
                 )
             )
     return items
+
+
+def _parse_markdown_raises(text: str) -> list[ApiRaises]:
+    table_items = _parse_markdown_raises_table(text)
+    if table_items:
+        return table_items
+    items = _parse_markdown_parameters(text, annotation_in_name=True)
+    if not items:
+        items = _parse_colon_items(text, annotation_in_name=True)
+    return [ApiRaises(item.name, item.description) for item in items]
+
+
+def _parse_markdown_raises_table(text: str) -> list[ApiRaises]:
+    lines = [line.strip() for line in text.splitlines() if line.strip().startswith("|")]
+    if len(lines) < 3:
+        return []
+    headers = [cell.strip().lower() for cell in lines[0].strip("|").split("|")]
+    name_header = next(
+        (header for header in ("exception", "raises", "name", "type") if header in headers),
+        None,
+    )
+    if name_header is None:
+        return []
+    result: list[ApiRaises] = []
+    for row in lines[2:]:
+        cells = [_plain_code_text(cell) or "" for cell in row.strip("|").split("|")]
+        values = {header: cells[index] if index < len(cells) else "" for index, header in enumerate(headers)}
+        exception = values.get(name_header, "")
+        description = values.get("description") or values.get("reason") or values.get("when") or None
+        if exception:
+            result.append(ApiRaises(exception, description))
+    return result
 
 
 def _parse_markdown_parameter_table(

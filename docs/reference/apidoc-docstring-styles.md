@@ -12,8 +12,9 @@ Supported styles:
   `Notes`, `Warnings`, `Renderer Notes`, and `Deprecated`.
 - `sphinx`: `:param:`, `:type:`, `:returns:`, `:rtype:`, `:yields:`,
   `:ytype:`, directives, and code blocks.
-- `markdown`: Markdown headings, parameter tables, `Returns`/`Yields`, notes,
-  warnings, renderer notes, and deprecation sections.
+- `markdown`: Markdown headings, parameter tables, `Returns`/`Yields`,
+  `Raises` colon lines, exception tables, notes, warnings, renderer notes, and
+  deprecation sections.
 - `plain`: summary and paragraph extraction only.
 - `auto`: style detection.
 

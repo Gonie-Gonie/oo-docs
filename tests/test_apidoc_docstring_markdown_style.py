@@ -18,6 +18,8 @@ def test_markdown_docstring_fixture_extracts_shared_fields() -> None:
     assert function.parameters[0].annotation == "str"
     assert function.parameters[0].description == "Input path."
     assert function.returns is not None
+    assert function.raises[0].exception == "ValueError"
+    assert function.raises[0].description == "If the path is empty."
     assert function.examples
     assert function.notes
     assert function.renderer_notes[0].format == "html"
@@ -32,3 +34,24 @@ def test_markdown_docstring_fixture_extracts_shared_fields() -> None:
     assert dataclass_doc.attributes[0].name == "identifier"
     assert dataclass_doc.attributes[0].annotation == "str"
     assert dataclass_doc.attributes[0].description == "Stable record id."
+
+
+def test_markdown_docstring_parses_raises_table() -> None:
+    parsed = parse_docstring(
+        """
+        Load a widget.
+
+        ## Raises
+
+        | Exception | Description |
+        | --- | --- |
+        | `ValueError` | If the path is empty. |
+        | RuntimeError | If loading fails. |
+        """,
+        style="markdown",
+    )
+
+    assert [(item.exception, item.description) for item in parsed.raises] == [
+        ("ValueError", "If the path is empty."),
+        ("RuntimeError", "If loading fails."),
+    ]
