@@ -1,4 +1,14 @@
-"""Structured API documentation object model."""
+"""Structured API documentation object model.
+
+Attributes:
+    ApiKind: Literal object kinds stored in an ``ApiObject`` tree.
+    ApiVisibility: Literal visibility labels assigned during collection.
+    ApiDocIssueSeverity: Literal issue severities used by coverage and parser
+        diagnostics.
+    ApiDocstringStyleName: Literal built-in docstring parser style names.
+    ApiPresentationProfileName: Literal API reference presentation profile
+        names.
+"""
 
 from __future__ import annotations
 

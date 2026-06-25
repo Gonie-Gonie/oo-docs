@@ -1,4 +1,9 @@
-"""Docstring parsers for normalized API documentation metadata."""
+"""Docstring parsers for normalized API documentation metadata.
+
+Attributes:
+    DocstringParser: Callable signature for custom parser functions registered
+        with ``register_docstring_parser``.
+"""
 
 from __future__ import annotations
 
