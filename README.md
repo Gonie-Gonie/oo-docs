@@ -316,6 +316,7 @@ By default they write outputs under:
 - `artifacts/native-benchmark-report/`
 - `artifacts/release-notes/`
 - `artifacts/api-objects-example/`
+- `artifacts/api/`
 
 The main exported filenames are:
 
@@ -327,6 +328,12 @@ The main exported filenames are:
 - `artifacts/api-objects-example/oodocs-full-api-reference.docx`
 - `artifacts/api-objects-example/oodocs-full-api-reference.pdf`
 - `artifacts/api-objects-example/oodocs-full-api-reference.html`
+- `artifacts/api/oodocs-api.docx`
+- `artifacts/api/oodocs-api.pdf`
+- `artifacts/api/oodocs-api.html`
+- `artifacts/api/oodocs-api.json`
+- `artifacts/api/oodocs-api-coverage.json`
+- `artifacts/api/oodocs-api-coverage.csv`
 
 ## Project Layout
 

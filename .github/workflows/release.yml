@@ -77,6 +77,7 @@ jobs:
           python examples/journal_paper_example/main.py
           python examples/release_notes_digest/main.py
           python examples/api_objects_example/main.py
+          python -m oodocs apidoc build . --config pyproject.toml
 
       - name: Build release evidence
         run: python -m oodocs.evidence build --out artifacts/evidence
@@ -115,6 +116,12 @@ jobs:
             artifacts/api-objects-example/oodocs-full-api-reference.docx
             artifacts/api-objects-example/oodocs-full-api-reference.pdf
             artifacts/api-objects-example/oodocs-full-api-reference.html
+            artifacts/api/oodocs-api.docx
+            artifacts/api/oodocs-api.pdf
+            artifacts/api/oodocs-api.html
+            artifacts/api/oodocs-api.json
+            artifacts/api/oodocs-api-coverage.json
+            artifacts/api/oodocs-api-coverage.csv
             artifacts/evidence/oodocs-evidence-report.pdf
           body_path: ${{ steps.release_notes.outputs.path }}
 
@@ -134,6 +141,12 @@ jobs:
             artifacts/api-objects-example/oodocs-full-api-reference.docx
             artifacts/api-objects-example/oodocs-full-api-reference.pdf
             artifacts/api-objects-example/oodocs-full-api-reference.html
+            artifacts/api/oodocs-api.docx
+            artifacts/api/oodocs-api.pdf
+            artifacts/api/oodocs-api.html
+            artifacts/api/oodocs-api.json
+            artifacts/api/oodocs-api-coverage.json
+            artifacts/api/oodocs-api-coverage.csv
             artifacts/evidence/oodocs-evidence-report.pdf
           generate_release_notes: true
 
