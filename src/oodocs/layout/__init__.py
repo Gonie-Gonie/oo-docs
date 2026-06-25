@@ -16,6 +16,7 @@ _EXPORTS = {
     "HeadingNumbering": "oodocs.layout.theme",
     "ListStyle": "oodocs.layout.theme",
     "ParagraphStyle": "oodocs.layout.theme",
+    "ParagraphTitleStyle": "oodocs.layout.theme",
     "RenderIndex": "oodocs.layout.indexing",
     "TableStyle": "oodocs.layout.theme",
     "TextStyle": "oodocs.layout.theme",

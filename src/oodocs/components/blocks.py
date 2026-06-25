@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from copy import copy
+from dataclasses import dataclass, replace
 import re
 from typing import TYPE_CHECKING, Iterable, Literal, Sequence
 
@@ -19,6 +20,8 @@ from oodocs.layout.theme import (
     BoxStyle,
     ListStyle,
     ParagraphStyle,
+    ParagraphTitleStyle,
+    TextStyle,
     box_style_with_overrides,
     list_style_with_overrides,
     paragraph_style_with_overrides,
@@ -41,6 +44,8 @@ class Paragraph(Block):
 
     Args:
         *content: Inline fragments or strings to include in the paragraph.
+        title: Optional run-in paragraph title rendered before ``content``.
+        title_style: Optional title style override for this paragraph.
         style: Base paragraph style.
         alignment: Optional text alignment override.
         space_before: Optional spacing before the paragraph.
@@ -59,7 +64,7 @@ class Paragraph(Block):
 
     Examples:
         ```python
-        from oodocs import Document, Paragraph, bold, link
+        from oodocs import Document, Paragraph, ParagraphTitleStyle, TextStyle, bold, link
 
         paragraph = Paragraph(
             "Read the ",
@@ -67,17 +72,23 @@ class Paragraph(Block):
             " before approving ",
             bold("production"),
             ".",
+            title="Action",
+            title_style=ParagraphTitleStyle(TextStyle(bold=True), separator=": "),
         )
         document = Document("Approval Notes", paragraph)
         ```
     """
 
     content: list[Text]
+    title: list[Text] | None
+    title_style: ParagraphTitleStyle | None
     style: ParagraphStyle
 
     def __init__(
         self,
         *content: InlineInput,
+        title: InlineInput | None = None,
+        title_style: ParagraphTitleStyle | None = None,
         style: ParagraphStyle | None = None,
         alignment: str | None = None,
         space_before: float | None = None,
@@ -93,6 +104,8 @@ class Paragraph(Block):
         unit: str | None = None,
     ) -> None:
         self.content = coerce_inlines(content)
+        self.title = coerce_inlines((title,)) if title is not None else None
+        self.title_style = title_style
         self.style = paragraph_style_with_overrides(
             style,
             alignment=alignment,
@@ -116,7 +129,34 @@ class Paragraph(Block):
             Concatenated plain text for all inline fragments.
         """
 
+        if self.title is not None:
+            title_text = "".join(fragment.plain_text() for fragment in self.title)
+            separator = (self.title_style or ParagraphTitleStyle()).separator
+            return title_text + separator + "".join(fragment.plain_text() for fragment in self.content)
         return "".join(fragment.plain_text() for fragment in self.content)
+
+    def render_content(self, title_style: ParagraphTitleStyle) -> list[Text]:
+        """Return inline fragments with the effective run-in title prepended.
+
+        Args:
+            title_style: Effective title style for this paragraph.
+
+        Returns:
+            Paragraph title fragments, separator, and content fragments.
+        """
+
+        if self.title is None:
+            return self.content
+        titled: list[Text] = [
+            _inline_with_style(
+                fragment,
+                title_style.text_style.merged(fragment.style),
+            )
+            for fragment in self.title
+        ]
+        if title_style.separator:
+            titled.append(Text(title_style.separator))
+        return [*titled, *self.content]
 
     def render_to_docx(
         self,
@@ -167,6 +207,12 @@ class Paragraph(Block):
         """
 
         return renderer.render_paragraph(self, context)
+
+
+def _inline_with_style(fragment: Text, style: TextStyle) -> Text:
+    cloned = copy(fragment)
+    cloned.style = style
+    return cloned
 
 
 ListInput = Paragraph | InlineInput
@@ -1730,15 +1776,22 @@ class Section(Block):
         numbered: Whether the heading should be numbered.
         toc: Whether the section should appear in generated tables of contents.
             Defaults to ``numbered``.
+        paragraph_title_style: Optional paragraph-title style inherited by
+            paragraphs in this section subtree.
 
     Raises:
         ValueError: If ``level`` is less than one.
 
     Examples:
         ```python
-        from oodocs import Document, Paragraph, Section
+        from oodocs import Document, Paragraph, ParagraphTitleStyle, Section, TextStyle
 
-        section = Section("Results", Paragraph("The benchmark passed."), level=2)
+        section = Section(
+            "Results",
+            Paragraph("The benchmark passed.", title="Outcome"),
+            level=2,
+            paragraph_title_style=ParagraphTitleStyle(TextStyle(bold=True), separator=". "),
+        )
         document = Document("Benchmark", section)
         ```
     """
@@ -1748,6 +1801,7 @@ class Section(Block):
     level: int
     numbered: bool
     toc: bool
+    paragraph_title_style: ParagraphTitleStyle | None
 
     def __init__(
         self,
@@ -1756,6 +1810,7 @@ class Section(Block):
         level: int = 2,
         numbered: bool = True,
         toc: bool | None = None,
+        paragraph_title_style: ParagraphTitleStyle | None = None,
     ) -> None:
         if level < 1:
             raise ValueError("Section level must be >= 1")
@@ -1764,6 +1819,7 @@ class Section(Block):
         self.level = level
         self.numbered = numbered
         self.toc = numbered if toc is None else bool(toc)
+        self.paragraph_title_style = paragraph_title_style
 
     def add(self, *children: BlockInput) -> Section:
         """Append child blocks.
@@ -1827,8 +1883,11 @@ class Section(Block):
             anchor=context.render_index.heading_anchor(self),
             toc=self.toc,
         )
+        child_context = context
+        if self.paragraph_title_style is not None:
+            child_context = replace(context, paragraph_title_style=self.paragraph_title_style)
         for child in self.children:
-            child.render_to_docx(renderer, container, context)
+            child.render_to_docx(renderer, container, child_context)
 
     def render_to_pdf(
         self,
@@ -1865,6 +1924,8 @@ class Chapter(Section):
         *children: Child block content.
         numbered: Whether the chapter should be numbered.
         toc: Whether the chapter should appear in generated tables of contents.
+        paragraph_title_style: Optional paragraph-title style inherited by
+            paragraphs in this chapter subtree.
 
     Examples:
         ```python
@@ -1881,8 +1942,16 @@ class Chapter(Section):
         *children: BlockInput,
         numbered: bool = True,
         toc: bool | None = None,
+        paragraph_title_style: ParagraphTitleStyle | None = None,
     ) -> None:
-        super().__init__(title, *children, level=1, numbered=numbered, toc=toc)
+        super().__init__(
+            title,
+            *children,
+            level=1,
+            numbered=numbered,
+            toc=toc,
+            paragraph_title_style=paragraph_title_style,
+        )
 
 
 class Subsection(Section):
@@ -1894,6 +1963,8 @@ class Subsection(Section):
         numbered: Whether the subsection should be numbered.
         toc: Whether the subsection should appear in generated tables of
             contents.
+        paragraph_title_style: Optional paragraph-title style inherited by
+            paragraphs in this subsection subtree.
 
     Examples:
         ```python
@@ -1910,8 +1981,16 @@ class Subsection(Section):
         *children: BlockInput,
         numbered: bool = True,
         toc: bool | None = None,
+        paragraph_title_style: ParagraphTitleStyle | None = None,
     ) -> None:
-        super().__init__(title, *children, level=3, numbered=numbered, toc=toc)
+        super().__init__(
+            title,
+            *children,
+            level=3,
+            numbered=numbered,
+            toc=toc,
+            paragraph_title_style=paragraph_title_style,
+        )
 
 
 class Subsubsection(Section):
@@ -1923,6 +2002,8 @@ class Subsubsection(Section):
         numbered: Whether the subsubsection should be numbered.
         toc: Whether the subsubsection should appear in generated tables of
             contents.
+        paragraph_title_style: Optional paragraph-title style inherited by
+            paragraphs in this subsubsection subtree.
 
     Examples:
         ```python
@@ -1939,8 +2020,16 @@ class Subsubsection(Section):
         *children: BlockInput,
         numbered: bool = True,
         toc: bool | None = None,
+        paragraph_title_style: ParagraphTitleStyle | None = None,
     ) -> None:
-        super().__init__(title, *children, level=4, numbered=numbered, toc=toc)
+        super().__init__(
+            title,
+            *children,
+            level=4,
+            numbered=numbered,
+            toc=toc,
+            paragraph_title_style=paragraph_title_style,
+        )
 
 
 def section_for_level(
@@ -1951,6 +2040,7 @@ def section_for_level(
     toc: bool | None = None,
     min_level: int = MIN_SECTION_LEVEL,
     max_level: int = MAX_SECTION_LEVEL,
+    paragraph_title_style: ParagraphTitleStyle | None = None,
 ) -> Section:
     """Create the section-like object that best matches a heading level.
 
@@ -1962,6 +2052,8 @@ def section_for_level(
         toc: Whether the section should appear in generated tables of contents.
         min_level: Lowest accepted heading level.
         max_level: Highest accepted heading level.
+        paragraph_title_style: Optional paragraph-title style inherited by
+            paragraphs in this section subtree.
 
     Returns:
         ``Chapter``, ``Subsection``, ``Subsubsection``, or ``Section`` based on
@@ -1980,12 +2072,37 @@ def section_for_level(
 
     _validate_section_level(level, min_level=min_level, max_level=max_level)
     if level == 1:
-        return Chapter(title, *children, numbered=numbered, toc=toc)
+        return Chapter(
+            title,
+            *children,
+            numbered=numbered,
+            toc=toc,
+            paragraph_title_style=paragraph_title_style,
+        )
     if level == 3:
-        return Subsection(title, *children, numbered=numbered, toc=toc)
+        return Subsection(
+            title,
+            *children,
+            numbered=numbered,
+            toc=toc,
+            paragraph_title_style=paragraph_title_style,
+        )
     if level == 4:
-        return Subsubsection(title, *children, numbered=numbered, toc=toc)
-    return Section(title, *children, level=level, numbered=numbered, toc=toc)
+        return Subsubsection(
+            title,
+            *children,
+            numbered=numbered,
+            toc=toc,
+            paragraph_title_style=paragraph_title_style,
+        )
+    return Section(
+        title,
+        *children,
+        level=level,
+        numbered=numbered,
+        toc=toc,
+        paragraph_title_style=paragraph_title_style,
+    )
 
 
 def shift_heading_levels(
@@ -2081,6 +2198,7 @@ def shift_heading_level(
         toc=block.toc,
         min_level=min_level,
         max_level=max_level,
+        paragraph_title_style=block.paragraph_title_style,
     )
 
 

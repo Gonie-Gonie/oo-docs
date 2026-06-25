@@ -735,11 +735,15 @@ class PdfRenderer:
             context.styles["BodyText"],
             default_unit=context.unit,
         )
+        title_style = context.theme.resolve_paragraph_title_style(
+            block.title_style,
+            context.paragraph_title_style,
+        )
         paragraph = RLParagraph(
             self._anchor_markup(context.render_index.block_anchor(block))
             +
             self._inline_markup(
-                block.content,
+                block.render_content(title_style),
                 context.theme,
                 context.render_index,
                 base_font_name=paragraph_style.fontName,
@@ -838,9 +842,14 @@ class PdfRenderer:
             Flowables representing the heading and section body.
         """
 
+        child_context = (
+            replace(context, paragraph_title_style=block.paragraph_title_style)
+            if block.paragraph_title_style is not None
+            else context
+        )
         return [self.make_section_heading(block, context)] + self._render_flow_children(
             block.children,
-            context,
+            child_context,
             flush_trailing_floats=False,
         )
 

@@ -399,6 +399,35 @@ class ParagraphStyle:
 
 
 @dataclass(slots=True)
+class ParagraphTitleStyle:
+    """Run-in title styling for titled paragraphs.
+
+    Attributes:
+        text_style: Inline styling applied to the paragraph title.
+        separator: Text inserted between the title and paragraph body.
+
+    Examples:
+        ```python
+        from oodocs import Document, Paragraph, ParagraphTitleStyle, TextStyle
+
+        paragraph = Paragraph(
+            "The rollout completed successfully.",
+            title="Outcome",
+            title_style=ParagraphTitleStyle(TextStyle(bold=True, color="166534")),
+        )
+        document = Document("Release Notes", paragraph)
+        ```
+    """
+
+    text_style: TextStyle = field(default_factory=lambda: TextStyle(bold=True))
+    separator: str = " "
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.separator, str):
+            raise TypeError("ParagraphTitleStyle.separator must be a string")
+
+
+@dataclass(slots=True)
 class HeadingNumbering:
     """Configurable hierarchical numbering for authored headings.
 
@@ -948,16 +977,21 @@ class BlockOptions:
         part_number_format: Counter format used for parts.
         footnote_placement: Native or generated-page footnote placement.
         auto_footnotes_page: Whether missing footnote pages are auto-rendered.
+        paragraph_title_style: Default style for paragraph titles.
         heading_numbering: Heading numbering configuration.
         bullet_list_style: Default bullet list style.
         numbered_list_style: Default numbered list style.
 
     Examples:
         ```python
-        from oodocs import BlockOptions, Document, DocumentSettings, HeadingNumbering, Section, Theme
+        from oodocs import BlockOptions, Document, DocumentSettings, HeadingNumbering, Paragraph, Section, Theme
 
         theme = Theme(BlockOptions(heading_numbering=HeadingNumbering(enabled=False)))
-        document = Document("Report", Section("Unnumbered"), settings=DocumentSettings(theme=theme))
+        document = Document(
+            "Report",
+            Section("Unnumbered", Paragraph("Body", title="Scope")),
+            settings=DocumentSettings(theme=theme),
+        )
         ```
     """
 
@@ -970,6 +1004,7 @@ class BlockOptions:
     part_number_format: str = "upper-roman"
     footnote_placement: str = "page"
     auto_footnotes_page: bool = True
+    paragraph_title_style: ParagraphTitleStyle = field(default_factory=ParagraphTitleStyle)
     heading_numbering: HeadingNumbering = field(default_factory=HeadingNumbering)
     bullet_list_style: ListStyle = field(
         default_factory=lambda: ListStyle(marker_format="bullet", suffix="")
@@ -1047,6 +1082,7 @@ class Theme:
     title_font_size: float = 22.0
     body_font_size: float = 11.0
     paragraph_alignment: str = "justify"
+    paragraph_title_style: ParagraphTitleStyle = field(default_factory=ParagraphTitleStyle)
     heading_sizes: tuple[float, ...] = (18.0, 15.0, 13.0, 11.5)
     caption_font_size: float | None = None
     caption_alignment: str = "center"
@@ -1108,6 +1144,7 @@ class Theme:
         title_font_size: float | object = _UNSET,
         body_font_size: float | object = _UNSET,
         paragraph_alignment: str | object = _UNSET,
+        paragraph_title_style: ParagraphTitleStyle | object = _UNSET,
         heading_sizes: tuple[float, ...] | object = _UNSET,
         caption_font_size: float | None | object = _UNSET,
         caption_alignment: str | object = _UNSET,
@@ -1226,6 +1263,7 @@ class Theme:
             "title_font_size": title_font_size,
             "body_font_size": body_font_size,
             "paragraph_alignment": paragraph_alignment,
+            "paragraph_title_style": paragraph_title_style,
             "heading_sizes": heading_sizes,
             "caption_font_size": caption_font_size,
             "caption_alignment": caption_alignment,
@@ -1285,6 +1323,8 @@ class Theme:
     def __post_init__(self) -> None:
         self.page_background_color = normalize_color(self.page_background_color) or "FFFFFF"
         self.paragraph_alignment = normalize_text_alignment(self.paragraph_alignment)
+        if not isinstance(self.paragraph_title_style, ParagraphTitleStyle):
+            raise TypeError("paragraph_title_style must be a ParagraphTitleStyle")
         if self.caption_alignment not in {"left", "center", "right", "justify"}:
             raise ValueError(
                 f"Unsupported caption alignment: {self.caption_alignment!r}"
@@ -1394,6 +1434,7 @@ class Theme:
             part_number_format=self.part_number_format,
             footnote_placement=self.footnote_placement,
             auto_footnotes_page=self.auto_footnotes_page,
+            paragraph_title_style=self.paragraph_title_style,
             heading_numbering=self.heading_numbering,
             bullet_list_style=self.bullet_list_style,
             numbered_list_style=self.numbered_list_style,
@@ -1475,6 +1516,32 @@ class Theme:
         """
 
         return style.alignment or self.paragraph_alignment
+
+    def resolve_paragraph_title_style(
+        self,
+        paragraph_style: ParagraphTitleStyle | None = None,
+        section_style: ParagraphTitleStyle | None = None,
+    ) -> ParagraphTitleStyle:
+        """Return the effective paragraph-title style.
+
+        Args:
+            paragraph_style: Title style set directly on a paragraph.
+            section_style: Title style inherited from the nearest section.
+
+        Returns:
+            Effective paragraph title style.
+
+        Examples:
+            ```python
+            from oodocs import ParagraphTitleStyle, TextStyle, Theme
+
+            style = Theme().resolve_paragraph_title_style(
+                ParagraphTitleStyle(TextStyle(bold=True, italic=True))
+            )
+            ```
+        """
+
+        return paragraph_style or section_style or self.paragraph_title_style
 
     def table_caption_label_text(self) -> str:
         """Return the label used in table captions and generated table lists.
@@ -1643,6 +1710,7 @@ __all__ = [
     "ListStyle",
     "PageNumberOptions",
     "ParagraphStyle",
+    "ParagraphTitleStyle",
     "TableStyle",
     "TextStyle",
     "TitleMatterOptions",

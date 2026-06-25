@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from oodocs.layout.indexing import RenderIndex
-from oodocs.layout.theme import Theme
+from oodocs.layout.theme import ParagraphTitleStyle, Theme
 from oodocs.settings import DocumentSettings
 
 
@@ -21,6 +21,8 @@ class DocxRenderContext:
         unit: Preferred length unit for component measurements.
         word_document: Active ``python-docx`` document object.
         in_box: Whether the current render call is inside a styled box.
+        paragraph_title_style: Paragraph title style inherited from the
+            current section, if any.
     """
 
     theme: Theme
@@ -29,6 +31,7 @@ class DocxRenderContext:
     unit: str
     word_document: Any
     in_box: bool = False
+    paragraph_title_style: ParagraphTitleStyle | None = None
 
 
 @dataclass(slots=True)
@@ -42,6 +45,8 @@ class PdfRenderContext:
         unit: Preferred length unit for component measurements.
         styles: Active ReportLab stylesheet.
         in_box: Whether the current render call is inside a styled box.
+        paragraph_title_style: Paragraph title style inherited from the
+            current section, if any.
     """
 
     theme: Theme
@@ -50,6 +55,7 @@ class PdfRenderContext:
     unit: str
     styles: Any
     in_box: bool = False
+    paragraph_title_style: ParagraphTitleStyle | None = None
 
 
 @dataclass(slots=True)
@@ -62,6 +68,8 @@ class HtmlRenderContext:
         settings: Document settings that affect page and output behavior.
         unit: Preferred length unit for component measurements.
         in_box: Whether the current render call is inside a styled box.
+        paragraph_title_style: Paragraph title style inherited from the
+            current section, if any.
     """
 
     theme: Theme
@@ -69,3 +77,4 @@ class HtmlRenderContext:
     settings: DocumentSettings
     unit: str
     in_box: bool = False
+    paragraph_title_style: ParagraphTitleStyle | None = None

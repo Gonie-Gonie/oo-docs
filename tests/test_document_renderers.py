@@ -70,6 +70,7 @@ from oodocs import (
     PageBreak,
     Paragraph,
     ParagraphStyle,
+    ParagraphTitleStyle,
     Part,
     Proof,
     Proposition,
@@ -88,6 +89,7 @@ from oodocs import (
     TableOfContents,
     TableList,
     Text,
+    TextStyle,
     TextBox,
     Theorem,
     Theme,
@@ -460,7 +462,11 @@ def test_theme_accepts_grouped_option_objects() -> None:
         GeneratedPageOptions(contents_title="Outline"),
         PageNumberOptions(show_page_numbers=True, page_number_format="p. {page}"),
         TitleMatterOptions(title_alignment="left"),
-        BlockOptions(paragraph_alignment="left", table_alignment="right"),
+        BlockOptions(
+            paragraph_alignment="left",
+            table_alignment="right",
+            paragraph_title_style=ParagraphTitleStyle(TextStyle(italic=True), separator=": "),
+        ),
         body_font_name="Calibri",
     )
 
@@ -477,7 +483,16 @@ def test_theme_accepts_grouped_option_objects() -> None:
     assert theme.format_page_number(4) == "p. 4"
     assert theme.title_alignment == "left"
     assert theme.paragraph_alignment == "left"
+    assert theme.paragraph_title_style.text_style.italic is True
+    assert theme.blocks.paragraph_title_style.separator == ": "
     assert theme.table_alignment == "right"
+
+    direct_title_style = Theme(
+        BlockOptions(paragraph_title_style=ParagraphTitleStyle(TextStyle(italic=True))),
+        paragraph_title_style=ParagraphTitleStyle(TextStyle(bold=True), separator=". "),
+    )
+    assert direct_title_style.paragraph_title_style.text_style.bold is True
+    assert direct_title_style.paragraph_title_style.separator == ". "
 
     keyword_group = Theme(typography=TypographyOptions(body_font_name="Aptos"))
     assert keyword_group.body_font_name == "Aptos"
@@ -587,6 +602,78 @@ def test_document_and_paragraph_alignment_options_render(tmp_path: Path) -> None
     assert "Paragraph-level right paragraph." in pdf_text
     assert "text-align: center" in html_text
     assert "text-align: right" in html_text
+
+
+def test_paragraph_titles_render_and_inherit_styles(tmp_path: Path) -> None:
+    document = Document(
+        "Paragraph Titles",
+        Paragraph("Default body.", title="Default"),
+        Section(
+            "Scoped",
+            Paragraph("Scoped body.", title="Scoped"),
+            Paragraph(
+                "Direct body.",
+                title="Direct",
+                title_style=ParagraphTitleStyle(
+                    TextStyle(bold=True, color="991B1B"),
+                    separator=" - ",
+                ),
+            ),
+            paragraph_title_style=ParagraphTitleStyle(
+                TextStyle(bold=True, italic=True),
+                separator=": ",
+            ),
+        ),
+        Paragraph(
+            "Individual body.",
+            title="Individual",
+            title_style=ParagraphTitleStyle(
+                TextStyle(bold=True, color="166534"),
+                separator=". ",
+            ),
+        ),
+        settings=DocumentSettings(
+            theme=Theme(
+                paragraph_title_style=ParagraphTitleStyle(
+                    TextStyle(bold=True),
+                    separator=" ",
+                )
+            )
+        ),
+    )
+
+    assert document.body.children[0].plain_text() == "Default Default body."
+
+    docx_path = tmp_path / "paragraph-titles.docx"
+    pdf_path = tmp_path / "paragraph-titles.pdf"
+    html_path = tmp_path / "paragraph-titles.html"
+    document.save_docx(docx_path)
+    document.save_pdf(pdf_path)
+    document.save_html(html_path)
+
+    word_document = WordDocument(docx_path)
+    default = next(paragraph for paragraph in word_document.paragraphs if paragraph.text == "Default Default body.")
+    scoped = next(paragraph for paragraph in word_document.paragraphs if paragraph.text == "Scoped: Scoped body.")
+    direct = next(paragraph for paragraph in word_document.paragraphs if paragraph.text == "Direct - Direct body.")
+    individual = next(paragraph for paragraph in word_document.paragraphs if paragraph.text == "Individual. Individual body.")
+    assert default.runs[0].text == "Default"
+    assert default.runs[0].bold is True
+    assert scoped.runs[0].italic is True
+    assert direct.runs[0].italic in (None, False)
+    assert direct.runs[0].font.color.rgb == RGBColor(0x99, 0x1B, 0x1B)
+    assert individual.runs[0].font.color.rgb == RGBColor(0x16, 0x65, 0x34)
+
+    pdf_text = "\n".join(page.extract_text() or "" for page in PdfReader(BytesIO(pdf_path.read_bytes())).pages)
+    html = html_path.read_text(encoding="utf-8")
+    assert "Default Default body." in pdf_text
+    assert "Scoped: Scoped body." in pdf_text
+    assert "Direct - Direct body." in pdf_text
+    assert "Individual. Individual body." in pdf_text
+    assert "Default Default body." in unescape(re.sub(r"<[^>]+>", "", html))
+    assert "Scoped: Scoped body." in unescape(re.sub(r"<[^>]+>", "", html))
+    assert "Direct - Direct body." in unescape(re.sub(r"<[^>]+>", "", html))
+    assert "#991B1B" in html
+    assert "#166534" in html
 
 
 def test_paragraph_style_supports_word_like_indents() -> None:

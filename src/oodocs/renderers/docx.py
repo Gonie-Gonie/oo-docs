@@ -352,6 +352,10 @@ class DocxRenderer:
         """
 
         paragraph = self._add_paragraph(container)
+        title_style = context.theme.resolve_paragraph_title_style(
+            paragraph_block.title_style,
+            context.paragraph_title_style,
+        )
         self._apply_paragraph_style(
             paragraph,
             paragraph_block.style,
@@ -360,7 +364,7 @@ class DocxRenderer:
         )
         self._append_runs(
             paragraph,
-            paragraph_block.content,
+            paragraph_block.render_content(title_style),
             theme=context.theme,
             render_index=context.render_index,
             word_document=context.word_document,

@@ -178,10 +178,14 @@ class HtmlRenderer:
 
         anchor = context.render_index.block_anchor(block)
         anchor_attr = f' id="{escape(anchor)}"' if anchor else ""
+        title_style = context.theme.resolve_paragraph_title_style(
+            block.title_style,
+            context.paragraph_title_style,
+        )
         return (
             f'<p{anchor_attr} class="oodocs-paragraph" style="{self._paragraph_style_css(block.style, context.theme, default_unit=context.unit)}">'
             + self._inline_html(
-                block.content,
+                block.render_content(title_style),
                 context.theme,
                 context.render_index,
             )
@@ -629,8 +633,13 @@ class HtmlRenderer:
         heading_tag = self._heading_tag(block.level)
         number_label = context.render_index.heading_number(block) if block.numbered else None
         anchor = context.render_index.heading_anchor(block)
+        child_context = (
+            replace(context, paragraph_title_style=block.paragraph_title_style)
+            if block.paragraph_title_style is not None
+            else context
+        )
         children_html = "".join(
-            child.render_to_html(self, context)
+            child.render_to_html(self, child_context)
             for child in block.children
         )
         heading_html = (

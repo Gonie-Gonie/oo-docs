@@ -592,6 +592,8 @@ def _index_blocks(
             if id(block) not in render_index.paragraph_numbers:
                 render_index.paragraph_numbers[id(block)] = len(render_index.paragraph_numbers) + 1
             _register_block_anchor(render_index, block, "paragraph")
+            if block.title is not None:
+                _index_inlines(block.title, render_index, citations)
             _index_inlines(block.content, render_index, citations)
             continue
         if isinstance(block, (BulletList, NumberedList)):
