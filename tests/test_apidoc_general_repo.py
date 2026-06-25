@@ -228,7 +228,7 @@ def test_general_repo_auto_parser_extended_parameter_sections_render(
             [
                 '"""Keyword parameter package."""',
                 "",
-                "__all__ = ['load_google', 'load_numpy', 'load_markdown']",
+                "__all__ = ['load_google', 'load_numpy', 'load_sphinx', 'load_markdown']",
                 "",
                 "def load_google(path: str, *, retries: int = 0) -> str:",
                 '    """Load via Google-style sections.',
@@ -264,6 +264,18 @@ def test_general_repo_auto_parser_extended_parameter_sections_render(
                 '    """',
                 "    return path",
                 "",
+                "def load_sphinx(path: str, *, cache: bool = False) -> str:",
+                '    """Load via Sphinx-style keyword fields.',
+                "",
+                "    :param path: Input path.",
+                "    :type path: str",
+                "    :keyword cache: Whether to use cached data.",
+                "    :kwtype cache: bool",
+                "    :returns: Loaded path.",
+                "    :rtype: str",
+                '    """',
+                "    return path",
+                "",
                 "def load_markdown(path: str, *, verbose: bool = False) -> str:",
                 '    """Load via Markdown-style sections.',
                 "",
@@ -295,6 +307,7 @@ def test_general_repo_auto_parser_extended_parameter_sections_render(
     )
     google = api.find("kwpkg.load_google")
     numpy = api.find("kwpkg.load_numpy")
+    sphinx = api.find("kwpkg.load_sphinx")
     markdown = api.find("kwpkg.load_markdown")
 
     assert google is not None
@@ -303,6 +316,9 @@ def test_general_repo_auto_parser_extended_parameter_sections_render(
     assert numpy is not None
     assert numpy.metadata["docstring_style"] == "numpy"
     assert [item.name for item in numpy.parameters] == ["path", "timeout"]
+    assert sphinx is not None
+    assert sphinx.metadata["docstring_style"] == "sphinx"
+    assert [item.name for item in sphinx.parameters] == ["path", "cache"]
     assert markdown is not None
     assert markdown.metadata["docstring_style"] == "markdown"
     assert [item.name for item in markdown.parameters] == ["path", "verbose"]
@@ -313,6 +329,7 @@ def test_general_repo_auto_parser_extended_parameter_sections_render(
             "Selected API",
             google.to_section(level=2),
             numpy.to_section(level=2),
+            sphinx.to_section(level=2),
             markdown.to_section(level=2),
         ),
     )
@@ -323,6 +340,7 @@ def test_general_repo_auto_parser_extended_parameter_sections_render(
     html = html_path.read_text(encoding="utf-8")
     assert "Retry count." in html
     assert "Timeout in seconds." in html
+    assert "Whether to use cached data." in html
     assert "Whether to print progress." in html
 
 

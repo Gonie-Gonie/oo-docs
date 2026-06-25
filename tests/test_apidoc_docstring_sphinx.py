@@ -140,6 +140,29 @@ def test_sphinx_parser_extracts_seealso_and_renderer_admonitions() -> None:
     assert parsed.renderer_notes[1].message == "load_widget receives a stable anchor."
 
 
+def test_sphinx_parser_extracts_keyword_parameters() -> None:
+    parsed = parse_docstring(
+        """
+        Load data.
+
+        :param path: Input path.
+        :type path: str
+        :keyword retries: Retry count.
+        :kwtype retries: int
+        :kwarg float timeout: Timeout in seconds.
+        :returns: Loaded data.
+        :rtype: str
+        """,
+        style="sphinx",
+    )
+
+    assert [(item.name, item.annotation, item.description, item.kind) for item in parsed.parameters] == [
+        ("path", "str", "Input path.", None),
+        ("retries", "int", "Retry count.", "keyword-only"),
+        ("timeout", "float", "Timeout in seconds.", "keyword-only"),
+    ]
+
+
 def test_sphinx_fallback_parser_degrades_inline_rest_markup_to_plain_text(monkeypatch) -> None:
     monkeypatch.setattr(docstring_module.importlib.util, "find_spec", lambda name: None)
 
@@ -198,3 +221,28 @@ def test_sphinx_fallback_parser_extracts_seealso_and_renderer_admonitions(monkey
     assert parsed.renderer_notes[0].message == "Wide signatures may wrap."
     assert parsed.renderer_notes[1].format == "html"
     assert parsed.renderer_notes[1].message == "load_widget receives a stable anchor."
+
+
+def test_sphinx_fallback_parser_extracts_keyword_parameters(monkeypatch) -> None:
+    monkeypatch.setattr(docstring_module.importlib.util, "find_spec", lambda name: None)
+
+    parsed = parse_docstring(
+        """
+        Load data.
+
+        :param path: Input path.
+        :type path: str
+        :keyword retries: Retry count.
+        :kwtype retries: int
+        :key float timeout: Timeout in seconds.
+        :returns: Loaded data.
+        :rtype: str
+        """,
+        style="sphinx",
+    )
+
+    assert [(item.name, item.annotation, item.description, item.kind) for item in parsed.parameters] == [
+        ("path", "str", "Input path.", None),
+        ("retries", "int", "Retry count.", "keyword-only"),
+        ("timeout", "float", "Timeout in seconds.", "keyword-only"),
+    ]

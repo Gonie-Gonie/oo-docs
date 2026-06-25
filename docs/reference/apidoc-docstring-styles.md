@@ -12,9 +12,10 @@ Supported styles:
 - `numpy`: dashed section headings such as `Parameters`, `Other Parameters`,
   `Attributes`, `Returns`, `Yields`, `Raises`, `Examples`, `See Also`,
   `Notes`, `Warnings`, `Renderer Notes`, and `Deprecated`.
-- `sphinx`: `:param:`, `:type:`, `:returns:`, `:rtype:`, `:yields:`,
-  `:ytype:`, `.. seealso::`, `.. admonition:: Renderer Notes`, directives,
-  and code blocks.
+- `sphinx`: `:param:`, `:type:`, `:keyword:`, `:kwarg:`, `:key:`,
+  `:kwtype:`, `:returns:`, `:rtype:`, `:yields:`, `:ytype:`,
+  `.. seealso::`, `.. admonition:: Renderer Notes`, directives, and code
+  blocks.
 - `markdown`: Markdown headings, parameter tables, `Parameters`,
   `Keyword Arguments`, `Other Parameters`, `Returns`/`Yields`, `Raises` colon
   lines, exception tables, notes, warnings, renderer notes, and deprecation
@@ -81,7 +82,9 @@ assert [parameter.name for parameter in parsed.parameters] == ["path", "timeout"
 ```
 
 Sphinx `.. seealso::` and renderer-note admonitions are normalized into
-sections that render in reference profiles:
+sections that render in reference profiles. Sphinx keyword fields are merged
+into the same parameter list, so keyword-only parameters render in the normal
+parameter table:
 
 ```python
 from oodocs.apidoc import parse_docstring
@@ -89,6 +92,10 @@ from oodocs.apidoc import parse_docstring
 parsed = parse_docstring(
     """Load data.
 
+    :param path: File path.
+    :type path: str
+    :keyword cache: Whether to use cached data.
+    :kwtype cache: bool
     :returns: Loaded object.
     :rtype: object
 
@@ -103,6 +110,7 @@ parsed = parse_docstring(
     style="sphinx",
 )
 
+assert [parameter.name for parameter in parsed.parameters] == ["path", "cache"]
 assert parsed.see_also[0].label == "open_data"
 assert parsed.renderer_notes[0].format == "html"
 ```

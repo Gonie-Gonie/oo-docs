@@ -1006,6 +1006,45 @@ def _parse_sphinx(text: str, qualname: str | None, module: str | None) -> Parsed
                 param_map.setdefault(name, ApiParameter(name=name, documented=True)).annotation = annotation
             i = next_index - 1
         elif match := re.match(
+            r"^:(?:keyword|kwarg|key)\s+(?:(?P<type>[^:\s]+)\s+)?(?P<name>[*]{0,2}[A-Za-z_][\w.]*)\s*:\s*(?P<body>.*)$",
+            stripped,
+        ):
+            name = match.group("name")
+            desc, next_index = _collect_sphinx_field_body(lines, i, match.group("body"))
+            parameter = ApiParameter(
+                name=name,
+                annotation=match.group("type"),
+                description=desc,
+                kind="keyword-only",
+                documented=True,
+            )
+            if parsed.parameters:
+                _extend_missing_parameters(parsed.parameters, [parameter])
+            else:
+                param_map[name] = parameter
+            i = next_index - 1
+        elif match := re.match(r"^:(?:kwtype|keytype)\s+([*]{0,2}[A-Za-z_][\w.]*)\s*:\s*(.*)$", stripped):
+            name, annotation = match.groups()
+            annotation, next_index = _collect_sphinx_field_body(lines, i, annotation)
+            if parsed.parameters:
+                _extend_missing_parameters(
+                    parsed.parameters,
+                    [
+                        ApiParameter(
+                            name=name,
+                            annotation=annotation,
+                            kind="keyword-only",
+                            documented=True,
+                        )
+                    ],
+                )
+            else:
+                param_map.setdefault(
+                    name,
+                    ApiParameter(name=name, kind="keyword-only", documented=True),
+                ).annotation = annotation
+            i = next_index - 1
+        elif match := re.match(
             r"^:(?:ivar|var|cvar)\s+(?:(?P<type>[^:\s]+)\s+)?(?P<name>[A-Za-z_][\w.]*)\s*:\s*(?P<body>.*)$",
             stripped,
         ):
@@ -1351,11 +1390,22 @@ def _extend_missing_parameters(
     target: list[ApiParameter],
     items: Iterable[ApiParameter],
 ) -> None:
-    existing = {item.name for item in target}
     for item in items:
-        if item.name not in existing:
+        existing = next((candidate for candidate in target if candidate.name == item.name), None)
+        if existing is None:
             target.append(item)
-            existing.add(item.name)
+            continue
+        if existing.annotation is None and item.annotation is not None:
+            existing.annotation = item.annotation
+        if existing.description is None and item.description is not None:
+            existing.description = item.description
+        if existing.default is None and item.default is not None:
+            existing.default = item.default
+        if existing.kind is None and item.kind is not None:
+            existing.kind = item.kind
+        if existing.source is None and item.source is not None:
+            existing.source = item.source
+        existing.documented = existing.documented or item.documented
 
 
 def _parse_colon_items(
