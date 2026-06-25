@@ -73,6 +73,8 @@ def _build_parser() -> argparse.ArgumentParser:
     check.add_argument("--fail-under", type=float, help="Minimum documented-object ratio.")
     check.add_argument("--require-examples", action="store_true", help="Require examples for public API objects.")
     check.add_argument("--require-renderer-notes", action="store_true", help="Require renderer notes for public API objects.")
+    check.add_argument("--out-json", help="Optional coverage result JSON path.")
+    check.add_argument("--out-csv", help="Optional coverage issues CSV path.")
     _add_filter_options(check)
     _add_collect_options(check)
     check.set_defaults(func=_run_check)
@@ -223,6 +225,12 @@ def _run_check(args: argparse.Namespace) -> int:
         f"{api.name}: {result.documented_object_count}/{result.public_object_count} "
         f"public objects documented ({result.object_coverage:.1%})"
     )
+    if args.out_json:
+        result.write_json(args.out_json)
+        print(f"Wrote coverage-json: {args.out_json}")
+    if args.out_csv:
+        result.write_csv(args.out_csv)
+        print(f"Wrote coverage-csv: {args.out_csv}")
     if result.issues:
         for issue in result.issues[:20]:
             print(f"- {issue.severity.upper()} {issue.code}: {issue.qualname or issue.module or api.name} - {issue.message}")

@@ -1109,13 +1109,32 @@ def test_apidoc_cli_collect_check_build_snapshot_and_diff(tmp_path: Path, capsys
     )
     (package_dir / "__init__.py").write_text(source, encoding="utf-8")
     api_json = tmp_path / "api.json"
+    coverage_json = tmp_path / "coverage.json"
+    coverage_csv = tmp_path / "coverage.csv"
     snapshot_json = tmp_path / "snapshot.json"
     build_dir = tmp_path / "build"
     diff_dir = tmp_path / "diff"
 
     assert main(["apidoc", "collect", str(package_dir), "--out", str(api_json)]) == 0
     assert api_json.exists()
-    assert main(["apidoc", "check", str(package_dir)]) == 0
+    assert (
+        main(
+            [
+                "apidoc",
+                "check",
+                str(package_dir),
+                "--out-json",
+                str(coverage_json),
+                "--out-csv",
+                str(coverage_csv),
+            ]
+        )
+        == 0
+    )
+    assert ApiCoverageResult.read_json(coverage_json).package == "clipkg"
+    assert coverage_csv.read_text(encoding="utf-8").startswith(
+        "severity,code,qualname,module,path,line_number,message"
+    )
     assert main(["apidoc", "build", str(package_dir), "--out", str(build_dir), "--to", "html", "--sidecars"]) == 0
     assert any(path.suffix == ".html" for path in build_dir.iterdir())
     assert (build_dir / "clipkg-api.json").exists()
@@ -1143,6 +1162,7 @@ def test_apidoc_cli_collect_check_build_snapshot_and_diff(tmp_path: Path, capsys
 
     captured = capsys.readouterr()
     assert "Wrote api-json" in captured.out
+    assert "Wrote coverage-json" in captured.out
     assert "Wrote coverage-csv" in captured.out
 
 

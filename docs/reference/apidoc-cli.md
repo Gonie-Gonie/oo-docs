@@ -28,6 +28,15 @@ Check documentation coverage:
 python -m oodocs apidoc check oodocs --collector griffe --public-policy __all__ --fail-under 0.90
 ```
 
+Write coverage evidence while checking:
+
+```powershell
+python -m oodocs apidoc check . --config pyproject.toml --fail-under 0.90 --out-json artifacts/api-coverage.json --out-csv artifacts/api-coverage.csv
+```
+
+The JSON output stores the complete coverage result; the CSV output stores the
+issue rows.
+
 Filter coverage to selected object kinds or module prefixes:
 
 ```powershell
@@ -97,8 +106,10 @@ Common collection options are `--collector`, `--public-policy`,
 `--include-inherited`, `--module-include`, and `--module-exclude`.
 Module include/exclude patterns are applied before module contents are
 collected, while `check`, `build`, and `snapshot` also accept `--kind` and
-`--module-prefix` object filters after collection. `build` also accepts
-`--profile`, `--to`, `--stem`, `--max-level`, `--out`, and `--sidecars`.
+`--module-prefix` object filters after collection. `check` also accepts
+`--fail-under`, `--require-examples`, `--require-renderer-notes`, `--out-json`,
+and `--out-csv`. `build` also accepts `--profile`, `--to`, `--stem`,
+`--max-level`, `--out`, and `--sidecars`.
 When those build options are omitted, `build` can read `profile`, `formats`,
 `stem`, `max-level`, `out`/`output-dir`, `sidecars`, `kind`, and
 `module-prefix` from `[tool.oodocs.apidoc]`. `init` writes the same section to
