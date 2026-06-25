@@ -1425,6 +1425,12 @@ def _resolve_source_files(package: str | PathLike) -> tuple[Path, str, list[Path
             return resolved.parent, resolved.name, files
 
         project_name = _project_name_from_pyproject(resolved) or resolved.name
+        flit_target = _flit_source_files_from_pyproject(
+            resolved,
+            project_name=project_name,
+        )
+        if flit_target is not None:
+            return flit_target
         py_modules = _py_modules_from_pyproject(resolved)
         for source_root in _project_source_roots(resolved):
             if (source_root / "__init__.py").exists():
@@ -1589,6 +1595,84 @@ def _project_name_from_pyproject(directory: Path) -> str | None:
         if isinstance(name, str):
             return name.replace("-", "_") or None
     return None
+
+
+def _flit_source_files_from_pyproject(
+    directory: Path,
+    *,
+    project_name: str,
+) -> tuple[Path, str, list[Path]] | None:
+    data = _pyproject_data(directory)
+    if not data or not _is_flit_pyproject(data):
+        return None
+    import_names = _flit_import_names(data, default_name=project_name)
+    if not import_names:
+        return None
+
+    for source_root in (directory / "src", directory):
+        files: list[Path] = []
+        for import_name in import_names:
+            files.extend(_flit_files_for_import_name(source_root, import_name))
+        if files:
+            package_name = import_names[0] if len(import_names) == 1 else project_name
+            return source_root.resolve(), package_name, sorted(dict.fromkeys(files))
+    return None
+
+
+def _is_flit_pyproject(data: dict[str, object]) -> bool:
+    build_system = data.get("build-system")
+    build_backend = (
+        build_system.get("build-backend")
+        if isinstance(build_system, dict)
+        else None
+    )
+    tool = data.get("tool")
+    return (
+        isinstance(build_backend, str)
+        and "flit" in build_backend
+    ) or (isinstance(tool, dict) and isinstance(tool.get("flit"), dict))
+
+
+def _flit_import_names(
+    data: dict[str, object],
+    *,
+    default_name: str,
+) -> tuple[str, ...]:
+    project = data.get("project")
+    names: list[str] = []
+    if isinstance(project, dict):
+        names.extend(_flit_import_names_from_value(project.get("import-names")))
+        names.extend(_flit_import_names_from_value(project.get("import-namespaces")))
+
+    tool = data.get("tool")
+    flit = tool.get("flit") if isinstance(tool, dict) else None
+    module = flit.get("module") if isinstance(flit, dict) else None
+    module_name = module.get("name") if isinstance(module, dict) else None
+    if isinstance(module_name, str) and module_name.strip():
+        names.append(module_name.strip())
+
+    if not names and default_name:
+        names.append(default_name)
+    return tuple(dict.fromkeys(names))
+
+
+def _flit_import_names_from_value(value: object) -> list[str]:
+    names = _module_names_from_value(value)
+    return [
+        name.split(";", 1)[0].strip()
+        for name in names
+        if name.split(";", 1)[0].strip()
+    ]
+
+
+def _flit_files_for_import_name(source_root: Path, import_name: str) -> list[Path]:
+    package_path = source_root.joinpath(*import_name.split("."))
+    module_path = package_path.with_suffix(".py")
+    if module_path.is_file():
+        return [module_path.resolve()]
+    if package_path.is_dir() and _python_files_under(package_path):
+        return [path.resolve() for path in _python_files_under(package_path)]
+    return []
 
 
 def _py_modules_from_pyproject(directory: Path) -> tuple[str, ...]:

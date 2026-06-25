@@ -6,6 +6,8 @@ import pytest
 
 from apidoc_samples import (
     collect_sample_api,
+    write_flit_module_file_repo,
+    write_flit_package_repo,
     write_hatch_multi_package_repo,
     write_hatch_package_repo,
     write_mixed_docstring_repo,
@@ -381,6 +383,40 @@ def test_griffe_collector_uses_pyproject_pdm_module_includes(tmp_path) -> None:
     assert [module.name for module in api.modules] == ["pdmrunner"]
     assert api.find("pdmrunner.Client.connect") is not None
     assert api.find("pdm_module_repo.pdmrunner.Client") is None
+
+
+def test_griffe_collector_uses_pyproject_flit_module_name(tmp_path) -> None:
+    if importlib.util.find_spec("griffe") is None:
+        pytest.skip("griffe is not installed")
+
+    repo = write_flit_package_repo(tmp_path)
+
+    api = collect_api(repo, collector="griffe", public_policy="__all__")
+
+    assert api.metadata["collector"] == "griffe"
+    assert api.name == "flitpkg"
+    assert [module.name for module in api.modules] == ["flitpkg", "flitpkg.core"]
+    assert api.find("flitpkg.run") is not None
+    assert api.find("flitpkg.core.Runner.run") is not None
+    assert api.find("published_flit_project.flitpkg.run") is None
+    assert api.find("straypkg.leak") is None
+
+
+def test_griffe_collector_uses_pyproject_flit_default_module_file(
+    tmp_path,
+) -> None:
+    if importlib.util.find_spec("griffe") is None:
+        pytest.skip("griffe is not installed")
+
+    repo = write_flit_module_file_repo(tmp_path)
+
+    api = collect_api(repo, collector="griffe", public_policy="__all__")
+
+    assert api.metadata["collector"] == "griffe"
+    assert api.name == "flitrunner"
+    assert [module.name for module in api.modules] == ["flitrunner"]
+    assert api.find("flitrunner.Client.connect") is not None
+    assert api.find("helper.leak") is None
 
 
 def test_griffe_collector_records_load_failure_fallback_issue(

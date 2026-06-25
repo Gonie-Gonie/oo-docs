@@ -8,10 +8,14 @@ through `[tool.setuptools] py-modules`. Repository roots that use setuptools
 custom source roots are also supported through
 `[tool.setuptools] package-dir = {"" = "lib"}` or
 `[tool.setuptools.packages.find] where = ["lib"]`, hatch wheel
-`packages`/`only-include` settings, Poetry `packages` entries, and PDM
+`packages`/`only-include` settings, Poetry `packages` entries, PDM
 `[tool.pdm.build] package-dir`/`includes` settings.
 Multiple hatch `packages` entries are grouped under their common source roots,
 so one repository reference can include several top-level packages.
+Flit projects are resolved by import name: the default import name is the
+`[project] name` with hyphens translated to underscores, and
+`[tool.flit.module] name` is honored when the distribution and import names
+differ.
 
 ```toml
 [project]
@@ -49,6 +53,29 @@ api = collect_api(".", collector="griffe", public_policy="__all__")
 assert api.find("samplepkg.run") is not None
 ```
 
+Flit projects that publish a different import name can also be targeted by the
+repository root. OODocs narrows collection to the declared Flit import module
+instead of sweeping unrelated packages from the checkout:
+
+```toml
+[build-system]
+requires = ["flit_core >=3.11,<5"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "published-name"
+
+[tool.flit.module]
+name = "import_name"
+```
+
+```python
+from oodocs.apidoc import collect_api
+
+api = collect_api(".", collector="inspect", public_policy="__all__")
+assert api.find("import_name.run") is not None
+```
+
 For a single-module project, pass the repository root. OODocs uses the declared
 source root and keeps the public module name stable in rendered anchors and JSON
 sidecars:
@@ -75,6 +102,10 @@ PDM module-file repositories can declare the module through `includes`:
 [tool.pdm.build]
 includes = ["reporting.py"]
 ```
+
+Flit single-module repositories use the default import name from `[project]`
+or the explicit `[tool.flit.module] name`, so sibling helper files are not
+published in the generated API tree.
 
 For a standalone module file, pass the file path directly. The file stem becomes
 the package/module name in generated sidecars and rendered references:

@@ -1565,8 +1565,8 @@ def _project_source_roots(directory: Path) -> list[Path]:
     Returns:
         Existing source roots from setuptools ``package-dir`` mappings,
         ``packages.find.where`` settings, hatch wheel package settings, Poetry
-        package entries, PDM build settings, and the conventional ``src/``
-        layout.
+        package entries, PDM build settings, Flit import-name source roots, and
+        the conventional ``src/`` layout.
     """
 
     roots: list[Path] = []
@@ -1594,6 +1594,7 @@ def _project_source_roots(directory: Path) -> list[Path]:
         roots.extend(_hatch_source_roots(directory, tool))
         roots.extend(_poetry_source_roots(directory, tool))
         roots.extend(_pdm_source_roots(directory, tool))
+        roots.extend(_flit_source_roots(directory, data))
 
     roots.append(directory / "src")
     return _existing_unique_paths(roots)
@@ -1700,6 +1701,59 @@ def _pdm_include_source_root(directory: Path, include: str) -> Path | None:
     if path.is_dir() and any(child.name == "__init__.py" for child in path.rglob("__init__.py")):
         return path.parent
     return path
+
+
+def _flit_source_roots(directory: Path, data: Mapping[str, object]) -> list[Path]:
+    if not _is_flit_project(data):
+        return []
+    roots: list[Path] = []
+    for source_root in (directory / "src", directory):
+        for import_name in _flit_import_names(data):
+            source = source_root.joinpath(*import_name.split("."))
+            if source.with_suffix(".py").is_file() or source.is_dir():
+                roots.append(source_root)
+    return roots
+
+
+def _is_flit_project(data: Mapping[str, object]) -> bool:
+    build_system = data.get("build-system")
+    build_backend = (
+        build_system.get("build-backend")
+        if isinstance(build_system, Mapping)
+        else None
+    )
+    tool = data.get("tool")
+    return (
+        isinstance(build_backend, str)
+        and "flit" in build_backend
+    ) or (isinstance(tool, Mapping) and isinstance(tool.get("flit"), Mapping))
+
+
+def _flit_import_names(data: Mapping[str, object]) -> tuple[str, ...]:
+    names: list[str] = []
+    project = data.get("project")
+    if isinstance(project, Mapping):
+        names.extend(_flit_import_names_from_value(project.get("import-names")))
+        names.extend(_flit_import_names_from_value(project.get("import-namespaces")))
+    tool = data.get("tool")
+    flit = tool.get("flit") if isinstance(tool, Mapping) else None
+    module = flit.get("module") if isinstance(flit, Mapping) else None
+    module_name = module.get("name") if isinstance(module, Mapping) else None
+    if isinstance(module_name, str) and module_name.strip():
+        names.append(module_name.strip())
+    if not names and isinstance(project, Mapping):
+        project_name = project.get("name")
+        if isinstance(project_name, str) and project_name.strip():
+            names.append(project_name.replace("-", "_").strip())
+    return tuple(dict.fromkeys(names))
+
+
+def _flit_import_names_from_value(value: object) -> list[str]:
+    return [
+        name.split(";", 1)[0].strip()
+        for name in _path_strings(value)
+        if name.split(";", 1)[0].strip()
+    ]
 
 
 def _path_strings(value: object) -> tuple[str, ...]:

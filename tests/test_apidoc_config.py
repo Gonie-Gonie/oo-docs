@@ -5,6 +5,7 @@ import json
 import pytest
 
 from apidoc_samples import (
+    write_flit_package_repo,
     write_hatch_package_repo,
     write_pdm_package_dir_repo,
     write_setuptools_find_repo,
@@ -395,3 +396,63 @@ def test_apidoc_build_config_read_file_uses_pdm_target_import_roots(tmp_path) ->
     assert document.validate(formats=("html",)).ok
     assert run is not None
     assert run.summary == "pdm-target:Run from a PDM-layout repository."
+
+
+def test_apidoc_build_config_read_file_uses_flit_target_import_roots(tmp_path) -> None:
+    repo = write_flit_package_repo(
+        tmp_path,
+        repo_name="flit-target-build-config-repo",
+        package_name="flittargetpkg",
+    )
+    parser_path = repo / "src" / "flittargetpkg" / "docs_parsers.py"
+    parser_path.write_text(
+        "\n".join(
+            [
+                "from oodocs.apidoc import ParsedDocstring, docstring_parser_names, register_docstring_parser",
+                "",
+                "def parse_flit_target_style(text, qualname=None, module=None):",
+                "    lines = (text or '').strip().splitlines()",
+                "    first = lines[0] if lines else ''",
+                "    summary = f'flit-target:{first}' if first else None",
+                '    return ParsedDocstring(summary=summary, style="flit-target-brief")',
+                "",
+                'if "flit-target-brief" not in docstring_parser_names():',
+                '    register_docstring_parser("flit-target-brief", parse_flit_target_style)',
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    config_path = tmp_path / "external-flit-build-config.json"
+    config_path.write_text(
+        json.dumps(
+            {
+                "collector": "inspect",
+                "public_policy": "__all__",
+                "docstring_style": "flit-target-brief",
+                "docstring_parser_modules": ["flittargetpkg.docs_parsers"],
+                "profile": "compact",
+                "formats": ["html"],
+                "module_exclude_patterns": ["*.docs_parsers"],
+                "sidecars": True,
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    assert "flit-target-brief" not in docstring_parser_names()
+    with pytest.raises(ImportError):
+        ApiBuildConfig.read_file(config_path)
+
+    build = ApiBuildConfig.read_file(config_path, target=repo)
+    api = build.collect(repo)
+    document = build.to_document(repo)
+    run = api.find("flittargetpkg.run")
+
+    assert document.validate(formats=("html",)).ok
+    assert run is not None
+    assert run.summary == "flit-target:Run from a Flit-layout repository."
+    assert api.find("straypkg.leak") is None

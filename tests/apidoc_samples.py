@@ -559,6 +559,146 @@ def write_pdm_module_file_repo(
     return repo
 
 
+def write_flit_package_repo(
+    tmp_path: Path,
+    *,
+    repo_name: str = "flit-repo",
+    package_name: str = "flitpkg",
+    project_name: str = "published-flit-project",
+    source_root: str = "src",
+) -> Path:
+    repo = tmp_path / repo_name
+    package_dir = repo / source_root / package_name
+    extra_package_dir = repo / source_root / "straypkg"
+    package_dir.mkdir(parents=True)
+    extra_package_dir.mkdir(parents=True)
+    (repo / "pyproject.toml").write_text(
+        dedent(
+            f'''\
+            [build-system]
+            requires = ["flit_core >=3.11,<5"]
+            build-backend = "flit_core.buildapi"
+
+            [project]
+            name = "{project_name}"
+            version = "0.1.0"
+            description = "Flit fixture project."
+
+            [tool.flit.module]
+            name = "{package_name}"
+            '''
+        ),
+        encoding="utf-8",
+    )
+    (package_dir / "__init__.py").write_text(
+        '"""Flit package."""\nfrom .core import Runner, run\n__all__ = ["Runner", "run"]\n',
+        encoding="utf-8",
+    )
+    (package_dir / "core.py").write_text(
+        dedent(
+            '''\
+            class Runner:
+                """Runner from a Flit-layout repository."""
+
+                def run(self, path: str) -> str:
+                    """Run a task.
+
+                    Args:
+                        path: Input path.
+
+                    Returns:
+                        str: Input path.
+                    """
+
+                    return path
+
+            def run(path: str) -> str:
+                """Run from a Flit-layout repository.
+
+                Args:
+                    path: Input path.
+
+                Returns:
+                    str: Input path.
+                """
+
+                return path
+            '''
+        ),
+        encoding="utf-8",
+    )
+    (extra_package_dir / "__init__.py").write_text(
+        '"""Stray package that Flit should not expose."""\n__all__ = ["leak"]\n\ndef leak() -> None:\n    """Should not be collected."""\n',
+        encoding="utf-8",
+    )
+    return repo
+
+
+def write_flit_module_file_repo(
+    tmp_path: Path,
+    *,
+    repo_name: str = "flit-module-repo",
+    module_name: str = "flitrunner",
+) -> Path:
+    repo = tmp_path / repo_name
+    repo.mkdir()
+    (repo / "pyproject.toml").write_text(
+        dedent(
+            f'''\
+            [build-system]
+            requires = ["flit_core >=3.11,<5"]
+            build-backend = "flit_core.buildapi"
+
+            [project]
+            name = "{module_name.replace("_", "-")}"
+            version = "0.1.0"
+            description = "Flit module fixture project."
+            '''
+        ),
+        encoding="utf-8",
+    )
+    (repo / f"{module_name}.py").write_text(
+        dedent(
+            '''\
+            __all__ = ["Client", "connect"]
+
+            class Client:
+                """Client object from a Flit module."""
+
+                def connect(self, endpoint: str) -> bool:
+                    """Connect to an endpoint.
+
+                    Args:
+                        endpoint: Target endpoint.
+
+                    Returns:
+                        bool: Whether the connection succeeded.
+                    """
+
+                    return bool(endpoint)
+
+            def connect(endpoint: str) -> Client:
+                """Create a client.
+
+                Args:
+                    endpoint: Target endpoint.
+
+                Returns:
+                    Client: Created client.
+                """
+
+                return Client()
+            '''
+        ),
+        encoding="utf-8",
+    )
+    (repo / "helper.py").write_text(
+        '"""Helper module that Flit should not expose."""\n__all__ = ["leak"]\n\ndef leak() -> None:\n    """Should not be collected."""\n',
+        encoding="utf-8",
+    )
+    return repo
+
+
 def write_mixed_docstring_repo(tmp_path: Path) -> Path:
     repo = tmp_path / "mixed-repo"
     package_dir = repo / "src" / "mixedpkg"
