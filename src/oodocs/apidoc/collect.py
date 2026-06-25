@@ -240,7 +240,7 @@ def _collect_module_from_file(
     *,
     config: ApiCollectConfig,
 ) -> ApiModule:
-    source = path.read_text(encoding="utf-8")
+    source = path.read_text(encoding="utf-8-sig")
     tree = ast.parse(source, filename=str(path))
     parsed_module = parse_docstring(
         ast.get_docstring(tree),
@@ -739,7 +739,7 @@ def _project_name_from_pyproject(directory: Path) -> str | None:
     if not path.exists():
         return None
     in_project = False
-    for line in path.read_text(encoding="utf-8").splitlines():
+    for line in path.read_text(encoding="utf-8-sig").splitlines():
         stripped = line.strip()
         if stripped.startswith("[") and stripped.endswith("]"):
             in_project = stripped == "[project]"

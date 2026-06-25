@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Sequence
 
 from oodocs.apidoc.collect import collect_api
-from oodocs.apidoc.config import ApiCollectConfig
+from oodocs.apidoc.config import ApiBuildConfig, ApiCollectConfig
 from oodocs.apidoc.coverage import check_api_docs
 from oodocs.apidoc.diff import ApiSnapshot, diff_api
 from oodocs.apidoc.model import ApiObject, ApiPackage
@@ -55,13 +55,14 @@ def _build_parser() -> argparse.ArgumentParser:
 
     build = subparsers.add_parser("build", help="Build rendered API documentation.")
     build.add_argument("package", help="Package/module name, Python file, or package directory.")
-    build.add_argument("--out", required=True, help="Output directory.")
-    build.add_argument("--to", default="docx,pdf,html", help="Comma-separated output formats.")
+    build.add_argument("--out", help="Output directory.")
+    build.add_argument("--to", help="Comma-separated output formats.")
     build.add_argument("--stem", help="Output file stem.")
-    build.add_argument("--profile", default="reference", help="Presentation profile.")
+    build.add_argument("--profile", help="Presentation profile.")
     build.add_argument(
         "--sidecars",
         action="store_true",
+        default=None,
         help="Write API JSON and coverage JSON/CSV sidecars beside rendered documents.",
     )
     build.add_argument(
@@ -175,11 +176,19 @@ def _run_check(args: argparse.Namespace) -> int:
 
 
 def _run_build(args: argparse.Namespace) -> int:
-    api = _collect_from_args(args)
-    rendered_api = _filter_from_args(api, args)
-    formats = normalize_output_formats(_split_csv(args.to))
-    stem = args.stem or f"{api.name.replace('.', '-')}-api"
-    if _has_filters(args):
+    build_config = ApiBuildConfig.read_file(args.config) if args.config else ApiBuildConfig()
+    api = _collect_from_args(args, config=build_config.collection)
+    kind = tuple(args.kind) if args.kind else build_config.kind or None
+    module_prefix = args.module_prefix or build_config.module_prefix
+    rendered_api = _filter_api(api, kind=kind, module_prefix=module_prefix)
+    profile = args.profile or build_config.profile
+    formats = normalize_output_formats(_split_csv(args.to) if args.to else build_config.output_formats)
+    stem = args.stem or build_config.stem or f"{api.name.replace('.', '-')}-api"
+    max_level = args.max_level if args.max_level is not None else build_config.max_level
+    output_dir = args.out or build_config.output_dir
+    if output_dir is None:
+        raise SystemExit("oodocs apidoc build requires --out or output-dir in config")
+    if _has_filter_values(kind, module_prefix):
         selected = _top_level_objects(rendered_api)
         document = Document(
             f"{api.name} API Reference",
@@ -188,28 +197,29 @@ def _run_build(args: argparse.Namespace) -> int:
                 rendered_api.to_summary_table(
                     selected,
                     caption="Selected public API objects",
-                    profile=args.profile,
+                    profile=profile,
                 ),
                 *[
                     obj.to_section(
                         level=2,
-                        profile=args.profile,
-                        max_level=args.max_level,
+                        profile=profile,
+                        max_level=max_level,
                     )
                     for obj in selected
                 ],
             ),
         )
     else:
-        document = rendered_api.to_document(profile=args.profile, max_level=args.max_level)
+        document = rendered_api.to_document(profile=profile, max_level=max_level)
     outputs = document.save_all(
-        args.out,
+        output_dir,
         stem=stem,
         formats=formats,
     )
     _print_outputs(outputs)
-    if args.sidecars:
-        _write_build_sidecars(rendered_api, args.out, stem)
+    sidecars = args.sidecars if args.sidecars is not None else build_config.sidecars
+    if sidecars:
+        _write_build_sidecars(rendered_api, output_dir, stem)
     return 0
 
 
@@ -235,8 +245,13 @@ def _run_diff(args: argparse.Namespace) -> int:
     return 0
 
 
-def _collect_from_args(args: argparse.Namespace):
-    config = ApiCollectConfig.read_file(args.config) if args.config else None
+def _collect_from_args(
+    args: argparse.Namespace,
+    *,
+    config: ApiCollectConfig | None = None,
+):
+    if config is None and args.config:
+        config = ApiCollectConfig.read_file(args.config)
     return collect_api(
         args.package,
         config=config,
@@ -252,16 +267,33 @@ def _collect_from_args(args: argparse.Namespace):
 
 
 def _filter_from_args(api: ApiPackage, args: argparse.Namespace) -> ApiPackage:
-    if not _has_filters(args):
-        return api
-    return api.filtered(
+    return _filter_api(
+        api,
         kind=tuple(args.kind) if args.kind else None,
         module_prefix=args.module_prefix,
     )
 
 
+def _filter_api(
+    api: ApiPackage,
+    *,
+    kind: tuple[str, ...] | None = None,
+    module_prefix: str | None = None,
+) -> ApiPackage:
+    if not _has_filter_values(kind, module_prefix):
+        return api
+    return api.filtered(
+        kind=kind,
+        module_prefix=module_prefix,
+    )
+
+
 def _has_filters(args: argparse.Namespace) -> bool:
     return bool(getattr(args, "kind", None) or getattr(args, "module_prefix", None))
+
+
+def _has_filter_values(kind: tuple[str, ...] | None, module_prefix: str | None) -> bool:
+    return bool(kind or module_prefix)
 
 
 def _top_level_objects(api: ApiPackage) -> list[ApiObject]:

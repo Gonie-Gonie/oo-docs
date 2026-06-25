@@ -39,6 +39,24 @@ Write API object and coverage sidecars beside the rendered bundle:
 python -m oodocs apidoc build . --config pyproject.toml --profile reference --out artifacts/api --to docx,pdf,html --sidecars
 ```
 
+The same build defaults can live in `pyproject.toml`:
+
+```toml
+[tool.oodocs.apidoc]
+collector = "griffe"
+public-policy = "__all__"
+docstring-style = "auto"
+profile = "website"
+formats = ["html"]
+out = "artifacts/api"
+sidecars = true
+module-exclude-patterns = ["mypkg.tests*"]
+```
+
+```powershell
+python -m oodocs apidoc build . --config pyproject.toml
+```
+
 Limit nested API heading depth for larger repositories:
 
 ```powershell
@@ -73,7 +91,7 @@ Common collection options are `--collector`, `--public-policy`,
 Module include/exclude patterns are applied before module contents are
 collected, while `check`, `build`, and `snapshot` also accept `--kind` and
 `--module-prefix` object filters after collection. `build` also accepts
-`--max-level` to cap nested API section depth and the generated table of
-contents. Use `--sidecars` when one build should leave the rendered documents,
-the collected API object JSON, and coverage JSON/CSV evidence in the same
-output directory.
+`--profile`, `--to`, `--stem`, `--max-level`, `--out`, and `--sidecars`.
+When those build options are omitted, `build` can read `profile`, `formats`,
+`stem`, `max-level`, `out`/`output-dir`, `sidecars`, `kind`, and
+`module-prefix` from `[tool.oodocs.apidoc]`.

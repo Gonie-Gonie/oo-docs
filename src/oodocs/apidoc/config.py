@@ -8,10 +8,37 @@ from pathlib import Path
 import tomllib
 from typing import Literal, Mapping, Sequence
 
+from oodocs.compatibility import normalize_output_formats
 from oodocs.core import PathLike
 
 ApiCollectorName = Literal["auto", "inspect", "griffe"]
 ApiPublicPolicyName = Literal["__all__", "underscore", "all", "explicit"]
+
+_COLLECT_CONFIG_KEYS = {
+    "class_signature_from_init",
+    "collector",
+    "docstring_style",
+    "explicit_names",
+    "include_imported",
+    "include_inherited",
+    "module_exclude_patterns",
+    "module_include_patterns",
+    "public_api_policy",
+    "public_policy",
+}
+_BUILD_CONFIG_KEYS = {
+    "formats",
+    "kind",
+    "max_level",
+    "module_prefix",
+    "out",
+    "output_dir",
+    "output_formats",
+    "profile",
+    "sidecars",
+    "stem",
+    "to",
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -291,7 +318,15 @@ class ApiCollectConfig:
             ```
         """
 
-        return cls.from_kwargs(**_normalize_config_mapping(data))
+        normalized = _normalize_config_mapping(data)
+        _validate_known_config_keys(normalized)
+        return cls.from_kwargs(
+            **{
+                key: value
+                for key, value in normalized.items()
+                if key in _COLLECT_CONFIG_KEYS
+            }
+        )
 
     @classmethod
     def from_pyproject(cls, path: PathLike = "pyproject.toml") -> ApiCollectConfig:
@@ -321,7 +356,7 @@ class ApiCollectConfig:
         """
 
         pyproject_path = _pyproject_path(path)
-        data = tomllib.loads(pyproject_path.read_text(encoding="utf-8"))
+        data = tomllib.loads(pyproject_path.read_text(encoding="utf-8-sig"))
         try:
             section = data["tool"]["oodocs"]["apidoc"]  # type: ignore[index]
         except KeyError as exc:
@@ -455,6 +490,177 @@ class ApiCollectConfig:
         return cls.read_json(config_path)
 
 
+@dataclass(frozen=True, slots=True)
+class ApiBuildConfig:
+    """Reusable API reference rendering configuration.
+
+    Attributes:
+        collection: Collection settings used before rendering.
+        profile: Presentation profile name.
+        output_formats: Output formats passed to ``Document.save_all``.
+        stem: Optional output file stem.
+        max_level: Optional deepest nested API heading level.
+        sidecars: Whether build commands write API and coverage sidecars.
+        output_dir: Optional default output directory.
+        kind: Optional object kinds to render after collection.
+        module_prefix: Optional module prefix filter after collection.
+
+    Examples:
+        Store repository-local build defaults in ``pyproject.toml`` and use
+        them from Python or the CLI:
+
+        ```python
+        from oodocs.apidoc import ApiBuildConfig, collect_api
+
+        build = ApiBuildConfig.from_pyproject(".")
+        api = collect_api(".", config=build.collection)
+        api.to_document(profile=build.profile).save_all(
+            build.output_dir or "artifacts/api",
+            formats=build.output_formats,
+        )
+        ```
+    """
+
+    collection: ApiCollectConfig = field(default_factory=ApiCollectConfig)
+    profile: str = "reference"
+    output_formats: tuple[str, ...] = ("docx", "pdf", "html")
+    stem: str | None = None
+    max_level: int | None = None
+    sidecars: bool = False
+    output_dir: str | None = None
+    kind: tuple[str, ...] = field(default_factory=tuple)
+    module_prefix: str | None = None
+
+    def __post_init__(self) -> None:
+        object.__setattr__(
+            self,
+            "collection",
+            self.collection
+            if isinstance(self.collection, ApiCollectConfig)
+            else ApiCollectConfig.from_dict(self.collection),  # type: ignore[arg-type]
+        )
+        object.__setattr__(self, "profile", self.profile.strip().lower())
+        object.__setattr__(self, "output_formats", normalize_output_formats(self.output_formats))
+        object.__setattr__(self, "kind", _string_tuple(self.kind))
+        if self.module_prefix is not None:
+            object.__setattr__(self, "module_prefix", str(self.module_prefix).strip() or None)
+        if self.output_dir is not None:
+            object.__setattr__(self, "output_dir", str(self.output_dir))
+        if self.stem is not None:
+            object.__setattr__(self, "stem", str(self.stem).strip() or None)
+        self.validate()
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, object]) -> ApiBuildConfig:
+        """Reconstruct build config from serialized data.
+
+        Args:
+            data: Mapping from JSON or ``[tool.oodocs.apidoc]``.
+
+        Returns:
+            Validated build configuration.
+        """
+
+        normalized = _normalize_config_mapping(data)
+        _validate_known_config_keys(normalized)
+        output_formats = normalized.get(
+            "output_formats",
+            normalized.get("formats", normalized.get("to", ("docx", "pdf", "html"))),
+        )
+        output_dir = normalized.get("output_dir", normalized.get("out"))
+        return cls(
+            collection=ApiCollectConfig.from_dict(normalized),
+            profile=str(normalized.get("profile", "reference")),
+            output_formats=_format_tuple(output_formats),
+            stem=_optional_str(normalized.get("stem")),
+            max_level=_optional_int(normalized.get("max_level")),
+            sidecars=bool(normalized.get("sidecars", False)),
+            output_dir=_optional_str(output_dir),
+            kind=_string_tuple(normalized.get("kind", ())),
+            module_prefix=_optional_str(normalized.get("module_prefix")),
+        )
+
+    @classmethod
+    def from_pyproject(cls, path: PathLike = "pyproject.toml") -> ApiBuildConfig:
+        """Read build config from ``pyproject.toml``.
+
+        Args:
+            path: Project root directory or ``pyproject.toml`` path.
+
+        Returns:
+            Build configuration from ``[tool.oodocs.apidoc]``.
+        """
+
+        pyproject_path = _pyproject_path(path)
+        data = tomllib.loads(pyproject_path.read_text(encoding="utf-8-sig"))
+        try:
+            section = data["tool"]["oodocs"]["apidoc"]  # type: ignore[index]
+        except KeyError as exc:
+            raise KeyError("pyproject.toml must contain [tool.oodocs.apidoc]") from exc
+        if not isinstance(section, Mapping):
+            raise TypeError("[tool.oodocs.apidoc] must be a table")
+        return cls.from_dict(section)
+
+    @classmethod
+    def read_json(cls, path: PathLike) -> ApiBuildConfig:
+        """Read a build config JSON sidecar."""
+
+        return cls.from_dict(json.loads(Path(path).read_text(encoding="utf-8")))
+
+    @classmethod
+    def read_file(cls, path: PathLike) -> ApiBuildConfig:
+        """Read a build config from JSON or ``pyproject.toml``."""
+
+        config_path = Path(path)
+        if config_path.is_dir() or config_path.suffix.lower() == ".toml":
+            return cls.from_pyproject(config_path)
+        return cls.read_json(config_path)
+
+    def validate(self) -> None:
+        """Validate build settings.
+
+        Raises:
+            ValueError: If profile, formats, or heading depth are invalid.
+        """
+
+        from oodocs.apidoc.styles import resolve_profile
+
+        resolve_profile(self.profile)
+        if self.max_level is not None and self.max_level < 1:
+            raise ValueError("max_level must be >= 1")
+        if not self.output_formats:
+            raise ValueError("output_formats must include at least one format")
+
+    def to_dict(self) -> dict[str, object]:
+        """Return this build config as JSON-serializable data."""
+
+        values = self.collection.to_dict()
+        values.update(
+            {
+                "profile": self.profile,
+                "output_formats": list(self.output_formats),
+                "stem": self.stem,
+                "max_level": self.max_level,
+                "sidecars": self.sidecars,
+                "output_dir": self.output_dir,
+                "kind": list(self.kind),
+                "module_prefix": self.module_prefix,
+            }
+        )
+        return values
+
+    def write_json(self, path: PathLike) -> Path:
+        """Write this build config as deterministic JSON."""
+
+        output_path = Path(path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(
+            json.dumps(self.to_dict(), indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        return output_path
+
+
 def normalize_explicit_names(names: Sequence[str] | None) -> tuple[str, ...]:
     """Normalize explicit public API names.
 
@@ -476,6 +682,39 @@ def _normalize_config_mapping(data: Mapping[str, object]) -> dict[str, object]:
     return {str(key).replace("-", "_"): value for key, value in data.items()}
 
 
+def _validate_known_config_keys(data: Mapping[str, object]) -> None:
+    unknown = sorted(set(data) - _COLLECT_CONFIG_KEYS - _BUILD_CONFIG_KEYS)
+    if unknown:
+        raise TypeError(f"Unsupported apidoc config key(s): {', '.join(unknown)}")
+
+
+def _format_tuple(value: object) -> tuple[str, ...]:
+    if isinstance(value, str):
+        return tuple(piece.strip() for piece in value.split(",") if piece.strip())
+    return _string_tuple(value)
+
+
+def _string_tuple(value: object) -> tuple[str, ...]:
+    if value is None:
+        return ()
+    if isinstance(value, str):
+        return (value.strip(),) if value.strip() else ()
+    return tuple(str(item).strip() for item in value if str(item).strip())  # type: ignore[union-attr]
+
+
+def _optional_str(value: object) -> str | None:
+    if value is None:
+        return None
+    text = str(value).strip()
+    return text or None
+
+
+def _optional_int(value: object) -> int | None:
+    if value is None:
+        return None
+    return int(value)
+
+
 def _pyproject_path(path: PathLike) -> Path:
     source_path = Path(path)
     if source_path.is_dir():
@@ -484,6 +723,7 @@ def _pyproject_path(path: PathLike) -> Path:
 
 
 __all__ = [
+    "ApiBuildConfig",
     "ApiCollectConfig",
     "ApiCollectorName",
     "ApiPublicPolicy",

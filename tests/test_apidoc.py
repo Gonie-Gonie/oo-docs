@@ -6,6 +6,7 @@ import importlib.util
 
 from oodocs import Chapter, Document
 from oodocs.apidoc import (
+    ApiBuildConfig,
     ApiCollectConfig,
     ApiCoverageResult,
     ApiDiffResult,
@@ -759,6 +760,11 @@ def test_collect_api_filters_modules_before_collection(tmp_path: Path) -> None:
                 'docstring-style = "auto"',
                 'module-include-patterns = ["filtermods.*"]',
                 'module-exclude-patterns = ["filtermods.tests", "filtermods.experimental"]',
+                'profile = "website"',
+                'formats = ["html"]',
+                "sidecars = true",
+                'kind = ["function"]',
+                'module-prefix = "filtermods.core"',
             ]
         ),
         encoding="utf-8",
@@ -772,6 +778,16 @@ def test_collect_api_filters_modules_before_collection(tmp_path: Path) -> None:
         "filtermods.experimental",
     )
     assert ApiCollectConfig.read_file(pyproject_path) == pyproject_config
+    pyproject_build_config = ApiBuildConfig.from_pyproject(tmp_path)
+    assert pyproject_build_config.collection == pyproject_config
+    assert pyproject_build_config.profile == "website"
+    assert pyproject_build_config.output_formats == ("html",)
+    assert pyproject_build_config.sidecars
+    assert pyproject_build_config.kind == ("function",)
+    assert pyproject_build_config.module_prefix == "filtermods.core"
+    build_config_path = tmp_path / "apidoc-build-config.json"
+    pyproject_build_config.write_json(build_config_path)
+    assert ApiBuildConfig.read_json(build_config_path) == pyproject_build_config
 
     if importlib.util.find_spec("griffe") is not None:
         griffe_api = collect_api(
@@ -783,6 +799,43 @@ def test_collect_api_filters_modules_before_collection(tmp_path: Path) -> None:
         )
         assert griffe_api.metadata["file_count"] == 1
         assert [module.name for module in griffe_api.modules] == ["filtermods.core"]
+
+
+def test_collect_api_accepts_utf8_bom_pyproject_and_sources(tmp_path: Path) -> None:
+    package_dir = tmp_path / "bompkg"
+    package_dir.mkdir()
+    (package_dir / "__init__.py").write_bytes(
+        b"\xef\xbb\xbf"
+        + (
+            '"""BOM package."""\n'
+            "\n"
+            "def run(path: str) -> str:\n"
+            '    """Run a path.\n\n'
+            "    Args:\n"
+            "        path: Input path.\n"
+            "    Returns:\n"
+            "        str: Input path.\n"
+            '    """\n'
+            "    return path\n"
+        ).encode("utf-8")
+    )
+    (tmp_path / "pyproject.toml").write_bytes(
+        b"\xef\xbb\xbf"
+        + (
+            "[project]\n"
+            'name = "bompkg"\n'
+            "\n"
+            "[tool.oodocs.apidoc]\n"
+            'collector = "inspect"\n'
+            'public-policy = "underscore"\n'
+            'docstring-style = "auto"\n'
+        ).encode("utf-8")
+    )
+
+    config = ApiCollectConfig.from_pyproject(tmp_path)
+    api = collect_api(tmp_path, config=config)
+
+    assert api.find("bompkg.run") is not None
 
 
 def test_griffe_collector_matches_inspect_schema_on_src_layout_repo(
@@ -1127,6 +1180,7 @@ def test_apidoc_cli_filters_check_and_snapshot(tmp_path: Path) -> None:
     )
     snapshot_json = tmp_path / "filtered-snapshot.json"
     build_dir = tmp_path / "filtered-build"
+    configured_build_dir = tmp_path / "configured-filtered-build"
     max_level_build_dir = tmp_path / "max-level-build"
     config_path = tmp_path / "apidoc-config.json"
     config_json = tmp_path / "configured-api.json"
@@ -1146,6 +1200,12 @@ def test_apidoc_cli_filters_check_and_snapshot(tmp_path: Path) -> None:
                 'public-policy = "underscore"',
                 'module-include-patterns = ["filterpkg.core"]',
                 'module-exclude-patterns = ["filterpkg.legacy"]',
+                'profile = "website"',
+                'formats = ["html"]',
+                f'out = "{configured_build_dir.as_posix()}"',
+                "sidecars = true",
+                'kind = ["function"]',
+                'module-prefix = "filterpkg.core"',
             ]
         ),
         encoding="utf-8",
@@ -1227,6 +1287,24 @@ def test_apidoc_cli_filters_check_and_snapshot(tmp_path: Path) -> None:
     pyproject_configured = json.loads(pyproject_config_json.read_text(encoding="utf-8"))
     assert [module["name"] for module in pyproject_configured["modules"]] == ["filterpkg.core"]
     assert pyproject_configured["metadata"]["collector"] == "inspect"
+
+    assert main(
+        [
+            "apidoc",
+            "build",
+            str(package_dir),
+            "--config",
+            str(pyproject_config_path),
+        ]
+    ) == 0
+    configured_html = (configured_build_dir / "filterpkg-api.html").read_text(encoding="utf-8")
+    assert 'id="filterpkg-core-run"' in configured_html
+    assert 'id="filterpkg-core-worker"' not in configured_html
+    configured_build_api = json.loads(
+        (configured_build_dir / "filterpkg-api.json").read_text(encoding="utf-8")
+    )
+    assert configured_build_api["modules"][0]["members"][0]["qualname"] == "filterpkg.core.run"
+    assert (configured_build_dir / "filterpkg-api-coverage.csv").exists()
 
     assert main(
         [

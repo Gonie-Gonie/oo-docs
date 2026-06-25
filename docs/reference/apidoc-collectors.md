@@ -47,6 +47,9 @@ api = collect_api(".", collector="griffe", public_policy=policy)
 curated boundary. Use `ApiCollectConfig.from_pyproject(...)` when a repository
 stores its policy in `pyproject.toml`, or `ApiCollectConfig.write_json(...)`
 when the full collection policy should be shared as a standalone sidecar.
+Use `ApiBuildConfig.from_pyproject(...)` when the same repository config should
+also supply rendered-document defaults such as profile, formats, filters, and
+sidecar generation.
 
 ```toml
 [tool.oodocs.apidoc]
@@ -54,13 +57,16 @@ collector = "griffe"
 public-policy = "__all__"
 docstring-style = "auto"
 module-exclude-patterns = ["mypkg.tests*"]
+profile = "website"
+formats = ["html"]
+sidecars = true
 ```
 
 ```python
-from oodocs.apidoc import ApiCollectConfig, collect_api
+from oodocs.apidoc import ApiBuildConfig, collect_api
 
-config = ApiCollectConfig.from_pyproject(".")
-api = collect_api(".", config=config)
+build = ApiBuildConfig.from_pyproject(".")
+api = collect_api(".", config=build.collection)
 ```
 
 ```powershell

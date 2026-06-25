@@ -7,7 +7,13 @@ OODocs documents as ``Section``, ``Table``, ``Paragraph``, ``CodeBlock``, and
 """
 
 from oodocs.apidoc.collect import collect_api, collect_module_api, collect_object_api
-from oodocs.apidoc.config import ApiCollectConfig, ApiCollectorName, ApiPublicPolicy, ApiPublicPolicyName
+from oodocs.apidoc.config import (
+    ApiBuildConfig,
+    ApiCollectConfig,
+    ApiCollectorName,
+    ApiPublicPolicy,
+    ApiPublicPolicyName,
+)
 from oodocs.apidoc.coverage import ApiCoverageResult, check_api_docs
 from oodocs.apidoc.diff import ApiDiffResult, ApiSnapshot, diff_api
 from oodocs.apidoc.docstring import (
@@ -58,6 +64,7 @@ from oodocs.apidoc.styles import (
 
 __all__ = [
     "ApiCollectConfig",
+    "ApiBuildConfig",
     "ApiCollectorName",
     "ApiCoverageResult",
     "ApiDiffResult",
