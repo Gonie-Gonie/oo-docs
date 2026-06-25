@@ -145,6 +145,70 @@ def test_general_repo_auto_parser_objects_compose_into_document(tmp_path) -> Non
     assert "Object coverage" in html
 
 
+def test_general_repo_auto_parser_object_survives_build_config_json_roundtrip(
+    tmp_path: Path,
+) -> None:
+    repo = write_mixed_docstring_repo(tmp_path)
+    config_path = tmp_path / "mixed-apidoc-build.json"
+    output_dir = tmp_path / "roundtrip-rendered"
+    build = ApiBuildConfig(
+        collection=ApiCollectConfig(
+            collector="inspect",
+            public_policy="__all__",
+            docstring_style=ApiDocstringParser.auto(),
+        ),
+        profile="compact",
+        output_formats=("docx", "pdf", "html"),
+        output_dir=str(output_dir),
+        stem="mixed-roundtrip",
+        sidecars=True,
+    )
+
+    build.write_json(config_path)
+    readback = ApiBuildConfig.read_json(config_path, target=repo)
+    api = readback.collect(repo)
+    method = api.find("mixedpkg.Client.connect")
+    function = api.find("mixedpkg.connect")
+    stream = api.find("mixedpkg.stream")
+    outputs = readback.save_all(repo)
+
+    assert readback.collection.docstring_style == "auto"
+    assert readback.collection.docstring_parser() == ApiDocstringParser.auto()
+    assert method is not None
+    assert method.metadata["docstring_style"] == "numpy"
+    assert method.parameters[0].description == "Timeout in seconds."
+    assert function is not None
+    assert function.metadata["docstring_style"] == "google"
+    assert stream is not None
+    assert stream.metadata["docstring_style"] == "markdown"
+    assert_rendered_bundle(outputs["docx"], outputs["pdf"], outputs["html"])
+    assert outputs["api-json"].exists()
+    assert outputs["coverage-json"].exists()
+    assert outputs["coverage-csv"].exists()
+    assert ApiPackage.read_json(outputs["api-json"]).find("mixedpkg.Client.connect") is not None
+    assert ApiCoverageResult.read_json(outputs["coverage-json"]).object_coverage == 1.0
+    assert_docx_structure(
+        outputs["docx"],
+        required_paragraphs=(
+            "mixedpkg API Reference",
+            "1 API Documentation Coverage",
+            "2 mixedpkg",
+            "3 mixedpkg.core",
+        ),
+        min_tables=6,
+    )
+    assert_pdf_text_and_pages(
+        outputs["pdf"],
+        required_text=(
+            "mixedpkg API Reference",
+            "mixedpkg.Client",
+            "Base endpoint URL.",
+        ),
+        min_pages=1,
+    )
+    assert_html_internal_links_resolve(outputs["html"], required_text=("mixedpkg.Client",))
+
+
 def test_general_repo_facades_select_module_and_object_from_target_path(
     tmp_path: Path,
 ) -> None:
