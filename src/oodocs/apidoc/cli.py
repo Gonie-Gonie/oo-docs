@@ -299,26 +299,27 @@ def _add_filter_options(parser: argparse.ArgumentParser) -> None:
 
 
 def _run_init(args: argparse.Namespace) -> int:
-    collection = ApiCollectConfig.from_kwargs(
-        collector=args.collector,
-        fallback_collector=args.fallback_collector,
-        public_policy=args.public_policy,
-        explicit_names=args.explicit_names,
-        docstring_style=args.docstring_style,
-        docstring_parser_modules=args.docstring_parser_modules,
-        include_private=args.include_private,
-        include_imported=args.include_imported,
-        include_inherited=args.include_inherited,
-        include_attributes=args.include_attributes,
-        include_properties=args.include_properties,
-        include_methods=args.include_methods,
-        include_source_locations=args.include_source_locations,
-        class_signature_from_init=args.class_signature_from_init,
-        module_include_patterns=args.module_include_patterns,
-        module_exclude_patterns=args.module_exclude_patterns,
-        object_include_patterns=args.object_include_patterns,
-        object_exclude_patterns=args.object_exclude_patterns,
-    )
+    with docstring_parser_import_paths(_init_import_target(args.path)):
+        collection = ApiCollectConfig.from_kwargs(
+            collector=args.collector,
+            fallback_collector=args.fallback_collector,
+            public_policy=args.public_policy,
+            explicit_names=args.explicit_names,
+            docstring_style=args.docstring_style,
+            docstring_parser_modules=args.docstring_parser_modules,
+            include_private=args.include_private,
+            include_imported=args.include_imported,
+            include_inherited=args.include_inherited,
+            include_attributes=args.include_attributes,
+            include_properties=args.include_properties,
+            include_methods=args.include_methods,
+            include_source_locations=args.include_source_locations,
+            class_signature_from_init=args.class_signature_from_init,
+            module_include_patterns=args.module_include_patterns,
+            module_exclude_patterns=args.module_exclude_patterns,
+            object_include_patterns=args.object_include_patterns,
+            object_exclude_patterns=args.object_exclude_patterns,
+        )
     config = ApiBuildConfig(
         collection=collection,
         profile=args.profile,
@@ -513,6 +514,13 @@ def _load_docstring_parser_modules_from_args(args: argparse.Namespace) -> None:
 
 def _target_from_args(args: argparse.Namespace) -> object:
     return getattr(args, "package", None) or getattr(args, "path", None)
+
+
+def _init_import_target(path: str | Path) -> Path:
+    target = Path(path)
+    if target.is_dir():
+        return target
+    return target.parent if target.suffix else target
 
 
 def _filter_api(

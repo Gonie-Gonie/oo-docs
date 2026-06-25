@@ -874,3 +874,108 @@ def test_apidoc_cli_loads_repo_local_docstring_parser_module_option(
     assert runner.summary == "brief:Runner class."
     assert function is not None
     assert function.summary == "brief:Run custom command."
+
+
+def test_apidoc_cli_init_loads_repo_local_docstring_parser_module(
+    tmp_path,
+) -> None:
+    repo = tmp_path / "init-custom-parser-repo"
+    package_dir = repo / "src" / "initbriefpkg"
+    package_dir.mkdir(parents=True)
+    (repo / "pyproject.toml").write_text(
+        "\n".join(
+            [
+                "[project]",
+                'name = "initbriefpkg"',
+                "",
+                "[tool.setuptools]",
+                'package-dir = {"" = "src"}',
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (repo / "init_brief_parsers.py").write_text(
+        "\n".join(
+            [
+                "from oodocs.apidoc import ParsedDocstring, docstring_parser_names, register_docstring_parser",
+                "",
+                "def parse_init_brief(text, qualname=None, module=None):",
+                "    first = (text or '').strip().splitlines()[0]",
+                '    return ParsedDocstring(summary=f"init:{first}", style="init-brief")',
+                "",
+                'if "init-brief" not in docstring_parser_names():',
+                '    register_docstring_parser("init-brief", parse_init_brief)',
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (package_dir / "__init__.py").write_text(
+        "\n".join(
+            [
+                '"""Init brief package."""',
+                "",
+                '__all__ = ["run"]',
+                "",
+                "def run() -> None:",
+                '    """Run through initialized config."""',
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    output_dir = tmp_path / "init-config-api"
+
+    assert "init-brief" not in docstring_parser_names()
+    assert (
+        main(
+            [
+                "apidoc",
+                "init",
+                str(repo),
+                "--collector",
+                "inspect",
+                "--public-policy",
+                "__all__",
+                "--docstring-parser-module",
+                "init_brief_parsers",
+                "--docstring-style",
+                "init-brief",
+                "--profile",
+                "compact",
+                "--to",
+                "html",
+                "--out-dir",
+                str(output_dir),
+            ]
+        )
+        == 0
+    )
+
+    build_config = ApiBuildConfig.from_pyproject(repo)
+
+    assert build_config.collection.docstring_parser_modules == ("init_brief_parsers",)
+    assert build_config.collection.docstring_parser().style == "init-brief"
+    assert (
+        main(
+            [
+                "apidoc",
+                "build",
+                str(repo),
+                "--config",
+                str(repo / "pyproject.toml"),
+            ]
+        )
+        == 0
+    )
+
+    api = ApiPackage.read_json(output_dir / "initbriefpkg-api.json")
+    run = api.find("initbriefpkg.run")
+
+    assert run is not None
+    assert run.summary == "init:Run through initialized config."
+    assert_html_internal_links_resolve(
+        output_dir / "initbriefpkg-api.html",
+        required_text=("init:Run through initialized config.",),
+    )

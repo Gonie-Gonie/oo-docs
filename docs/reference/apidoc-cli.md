@@ -9,6 +9,15 @@ python -m oodocs apidoc init . --collector griffe --public-policy __all__ --prof
 python -m oodocs apidoc build . --config pyproject.toml
 ```
 
+`init` can validate custom parser styles registered by modules inside the
+target repository. The command temporarily adds the repository root and `src/`
+directory while it builds the config:
+
+```powershell
+python -m oodocs apidoc init C:\work\mypkg --docstring-parser-module docs_parsers --docstring-style brief --to html
+python -m oodocs apidoc build C:\work\mypkg --config C:\work\mypkg\pyproject.toml
+```
+
 Collect an API tree:
 
 ```powershell
