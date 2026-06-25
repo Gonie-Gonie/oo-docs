@@ -7,6 +7,8 @@ import importlib.util
 from oodocs import Chapter, Document
 from oodocs.apidoc import (
     ApiCollectConfig,
+    ApiCoverageResult,
+    ApiDiffResult,
     ApiDocstringParser,
     ApiPackage,
     ApiPublicPolicy,
@@ -530,6 +532,18 @@ def test_api_coverage_and_diff_detect_doc_changes(tmp_path: Path) -> None:
     snapshot_path = tmp_path / "snapshot.json"
     ApiSnapshot.from_package(head).write_json(snapshot_path)
     assert json.loads(snapshot_path.read_text(encoding="utf-8"))["name"] == "pkg"
+
+    coverage_path = tmp_path / "coverage.json"
+    coverage.write_json(coverage_path)
+    coverage_readback = ApiCoverageResult.read_json(coverage_path)
+    assert coverage_readback.to_dict() == coverage.to_dict()
+    assert isinstance(coverage_readback.to_table(), Table)
+
+    diff_path = tmp_path / "diff.json"
+    diff.write_json(diff_path)
+    diff_readback = ApiDiffResult.read_json(diff_path)
+    assert diff_readback.to_dict() == diff.to_dict()
+    assert isinstance(diff_readback.to_summary_table(), Table)
 
 
 def test_apidoc_cli_collect_check_build_snapshot_and_diff(tmp_path: Path, capsys) -> None:

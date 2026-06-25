@@ -28,5 +28,16 @@ document = diff.to_document()
 document.save_all("artifacts/api-diff", stem="api-diff")
 ```
 
+When diffing and rendering happen in separate jobs, write and read the diff
+sidecar:
+
+```python
+from oodocs.apidoc import ApiDiffResult
+
+diff.write_json("artifacts/api-diff/api-diff.json")
+readback = ApiDiffResult.read_json("artifacts/api-diff/api-diff.json")
+readback.to_document().save_all("artifacts/api-diff", stem="api-diff")
+```
+
 The diff tracks added and removed objects, changed signatures, changed default
 values, changed docstrings, deprecated objects, and coverage deltas.

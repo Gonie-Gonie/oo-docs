@@ -15,6 +15,16 @@ coverage.write_json("artifacts/api-coverage.json")
 coverage.write_csv("artifacts/api-coverage.csv")
 ```
 
+Read the JSON sidecar back later when report generation runs in a separate job:
+
+```python
+from oodocs import Chapter, Document
+from oodocs.apidoc import ApiCoverageResult
+
+coverage = ApiCoverageResult.read_json("artifacts/api-coverage.json")
+doc = Document("API Evidence", Chapter("Coverage", coverage.to_table()))
+```
+
 CLI equivalent:
 
 ```powershell

@@ -94,6 +94,19 @@ class ApiDiffResult:
         changed_docstrings: Pairs whose summary/description changed.
         deprecated: Public objects newly or currently marked deprecated.
         coverage_delta: Documentation coverage delta summary.
+
+    Examples:
+        Compare two snapshots and place the generated diff sections in an
+        OODocs document:
+
+        ```python
+        from oodocs.apidoc import ApiSnapshot, diff_api
+
+        base = ApiSnapshot.read_json("artifacts/api-base.json")
+        head = ApiSnapshot.read_json("artifacts/api-head.json")
+        diff = diff_api(base, head)
+        diff.to_document(title="Public API Changes").save_all("artifacts/api-diff")
+        ```
     """
 
     base_name: str
@@ -167,6 +180,65 @@ class ApiDiffResult:
             "coverage_delta": self.coverage_delta,
         }
 
+    @classmethod
+    def from_dict(cls, data: dict[str, object]) -> ApiDiffResult:
+        """Reconstruct a diff result from serialized data.
+
+        Args:
+            data: Mapping produced by ``to_dict``.
+
+        Returns:
+            Diff result that can be rendered into OODocs blocks.
+
+        Raises:
+            KeyError: If the serialized data is missing required snapshot
+                names.
+            ValueError: If a serialized changed-object pair does not contain
+                exactly two API objects.
+
+        Examples:
+            Restore a diff sidecar payload and append its summary table to a
+            document:
+
+            ```python
+            from oodocs import Chapter, Document
+            from oodocs.apidoc import ApiDiffResult
+
+            diff = ApiDiffResult.from_dict(saved_diff)
+            doc = Document("API Review", Chapter("Summary", diff.to_summary_table()))
+            ```
+        """
+
+        return cls(
+            base_name=str(data["base_name"]),
+            head_name=str(data["head_name"]),
+            added=[
+                ApiObject.from_dict(item)
+                for item in data.get("added", [])  # type: ignore[union-attr]
+            ],
+            removed=[
+                ApiObject.from_dict(item)
+                for item in data.get("removed", [])  # type: ignore[union-attr]
+            ],
+            changed_signatures=[
+                _object_pair_from_dict(item)
+                for item in data.get("changed_signatures", [])  # type: ignore[union-attr]
+            ],
+            changed_defaults=[
+                _object_pair_from_dict(item)
+                for item in data.get("changed_defaults", [])  # type: ignore[union-attr]
+            ],
+            changed_docstrings=[
+                _object_pair_from_dict(item)
+                for item in data.get("changed_docstrings", [])  # type: ignore[union-attr]
+            ],
+            deprecated=[
+                ApiObject.from_dict(item)
+                for item in data.get("deprecated", [])  # type: ignore[union-attr]
+            ],
+            coverage_delta=dict(data.get("coverage_delta", {})),  # type: ignore[arg-type]
+        )
+
     def write_json(self, path: PathLike) -> Path:
         """Write diff sidecar JSON."""
 
@@ -177,6 +249,34 @@ class ApiDiffResult:
             encoding="utf-8",
         )
         return output_path
+
+    @classmethod
+    def read_json(cls, path: PathLike) -> ApiDiffResult:
+        """Read a diff result JSON sidecar.
+
+        Args:
+            path: JSON sidecar path.
+
+        Returns:
+            Diff result object.
+
+        Raises:
+            FileNotFoundError: If the sidecar path does not exist.
+            json.JSONDecodeError: If the sidecar is not valid JSON.
+            ValueError: If a serialized changed-object pair is malformed.
+
+        Examples:
+            Render a diff produced by an earlier CI job:
+
+            ```python
+            from oodocs.apidoc import ApiDiffResult
+
+            diff = ApiDiffResult.read_json("artifacts/api-diff/api-diff.json")
+            diff.to_document(title="Public API Changes").save_all("artifacts/api-diff")
+            ```
+        """
+
+        return cls.from_dict(json.loads(Path(path).read_text(encoding="utf-8")))
 
 
 def diff_api(
@@ -242,6 +342,12 @@ def _coverage_delta(base: ApiPackage | ApiSnapshot, head: ApiPackage | ApiSnapsh
 
 def _defaults(obj: ApiObject) -> tuple[tuple[str, str | None], ...]:
     return tuple((parameter.name, parameter.default) for parameter in obj.parameters)
+
+
+def _object_pair_from_dict(data: object) -> tuple[ApiObject, ApiObject]:
+    if not isinstance(data, (list, tuple)) or len(data) != 2:
+        raise ValueError("Serialized API object pair must contain exactly two objects")
+    return ApiObject.from_dict(data[0]), ApiObject.from_dict(data[1])
 
 
 def _objects_table(objects: list[ApiObject]) -> Table:
