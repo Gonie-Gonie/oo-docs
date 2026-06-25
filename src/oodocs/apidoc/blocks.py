@@ -20,6 +20,17 @@ def api_heading_text(obj: ApiObject) -> list[Text]:
 
     Returns:
         Inline fragments suitable for an OODocs heading.
+
+    Examples:
+        Build the inline heading fragments used by ``api_object_to_section``:
+
+        ```python
+        from oodocs.apidoc import ApiObject
+        from oodocs.apidoc.blocks import api_heading_text
+
+        obj = ApiObject("function", "load", "mypkg.load", "mypkg")
+        heading = api_heading_text(obj)
+        ```
     """
 
     fragments: list[Text] = [Text(obj.display_name())]
@@ -29,7 +40,26 @@ def api_heading_text(obj: ApiObject) -> list[Text]:
 
 
 def api_kind_chip(obj: ApiObject) -> InlineChip:
-    """Return a compact chip showing the API object kind."""
+    """Return a compact chip showing the API object kind.
+
+    Args:
+        obj: API object to label.
+
+    Returns:
+        Inline chip containing ``obj.kind``.
+
+    Examples:
+        Add an API kind badge to a custom summary paragraph:
+
+        ```python
+        from oodocs import Paragraph
+        from oodocs.apidoc import ApiObject
+        from oodocs.apidoc.blocks import api_kind_chip
+
+        obj = ApiObject("class", "Client", "mypkg.Client", "mypkg")
+        paragraph = Paragraph(api_kind_chip(obj), " ", obj.qualname)
+        ```
+    """
 
     return InlineChip(
         obj.kind,
@@ -44,7 +74,25 @@ def api_kind_chip(obj: ApiObject) -> InlineChip:
 
 
 def api_visibility_chip(obj: ApiObject) -> InlineChip:
-    """Return a compact chip showing the object visibility."""
+    """Return a compact chip showing the object visibility.
+
+    Args:
+        obj: API object to label.
+
+    Returns:
+        Inline chip containing ``obj.visibility``.
+
+    Examples:
+        Show public/private status in a custom API index row:
+
+        ```python
+        from oodocs.apidoc import ApiObject
+        from oodocs.apidoc.blocks import api_visibility_chip
+
+        obj = ApiObject("function", "load", "mypkg.load", "mypkg")
+        chip = api_visibility_chip(obj)
+        ```
+    """
 
     style = InlineChipStyle(
         background_color="ECFDF3" if obj.visibility == "public" else "F3F4F6",
@@ -63,6 +111,23 @@ def api_deprecated_chip(obj: ApiObject) -> InlineChip | None:
 
     Returns:
         Deprecation chip, or ``None`` for active objects.
+
+    Examples:
+        Render a status chip only when an object is deprecated:
+
+        ```python
+        from oodocs.apidoc import ApiObject
+        from oodocs.apidoc.blocks import api_deprecated_chip
+
+        obj = ApiObject(
+            "function",
+            "old_load",
+            "mypkg.old_load",
+            "mypkg",
+            deprecated=True,
+        )
+        chip = api_deprecated_chip(obj)
+        ```
     """
 
     if not obj.deprecated:
@@ -80,7 +145,30 @@ def api_deprecated_chip(obj: ApiObject) -> InlineChip | None:
 
 
 def api_object_summary_paragraph(obj: ApiObject) -> Paragraph:
-    """Return a compact summary paragraph for an API object."""
+    """Return a compact summary paragraph for an API object.
+
+    Args:
+        obj: API object to summarize.
+
+    Returns:
+        Paragraph containing object kind, display name, and summary.
+
+    Examples:
+        Insert a single parsed object summary into an authored chapter:
+
+        ```python
+        from oodocs import Chapter, Document
+        from oodocs.apidoc import collect_api
+        from oodocs.apidoc.blocks import api_object_summary_paragraph
+
+        api = collect_api(".")
+        obj = api.functions()[0]
+        doc = Document(
+            "API Notes",
+            Chapter("Selected Object", api_object_summary_paragraph(obj)),
+        )
+        ```
+    """
 
     pieces: list[object] = [
         api_kind_chip(obj),
@@ -105,6 +193,20 @@ def api_signature_block(
 
     Returns:
         Code block, or ``None`` when signatures are suppressed.
+
+    Examples:
+        Render a signature block in a custom API appendix:
+
+        ```python
+        from oodocs import Chapter, Document
+        from oodocs.apidoc import collect_api
+        from oodocs.apidoc.blocks import api_signature_block
+
+        api = collect_api(".")
+        obj = api.functions()[0]
+        block = api_signature_block(obj, profile="reference")
+        doc = Document("API Appendix", Chapter("Signature", block))
+        ```
     """
 
     resolved = resolve_profile(profile)
@@ -123,7 +225,31 @@ def api_description_blocks(
     obj: ApiObject,
     profile: str | ApiDocProfile = "reference",
 ) -> list[Block]:
-    """Return summary and description blocks for an API object."""
+    """Return summary and description blocks for an API object.
+
+    Args:
+        obj: API object to render.
+        profile: Presentation profile.
+
+    Returns:
+        Paragraph or deprecation blocks for summary/description content.
+
+    Examples:
+        Use description blocks before adding custom guidance:
+
+        ```python
+        from oodocs import Chapter, Document, Paragraph
+        from oodocs.apidoc import collect_api
+        from oodocs.apidoc.blocks import api_description_blocks
+
+        api = collect_api(".")
+        obj = api.classes()[0]
+        doc = Document(
+            "API Notes",
+            Chapter("Class Notes", *api_description_blocks(obj), Paragraph("Review complete.")),
+        )
+        ```
+    """
 
     resolved = resolve_profile(profile)
     if not resolved.include_description:
@@ -162,6 +288,20 @@ def api_parameter_table(
 
     Returns:
         Parameter table, or ``None`` when no parameters should render.
+
+    Examples:
+        Add only a parameter table to an evidence document:
+
+        ```python
+        from oodocs import Chapter, Document
+        from oodocs.apidoc import collect_api
+        from oodocs.apidoc.blocks import api_parameter_table
+
+        api = collect_api(".")
+        obj = api.functions()[0]
+        table = api_parameter_table(obj, profile="review", caption="Parameters")
+        doc = Document("API Review", Chapter("Parameter Review", table))
+        ```
     """
 
     resolved = resolve_profile(profile)
@@ -177,7 +317,28 @@ def api_returns_blocks(
     obj: ApiObject,
     profile: str | ApiDocProfile = "reference",
 ) -> list[Block]:
-    """Return blocks documenting return values."""
+    """Return blocks documenting return values.
+
+    Args:
+        obj: API object to render.
+        profile: Presentation profile.
+
+    Returns:
+        Return documentation blocks, or an empty list.
+
+    Examples:
+        Append return docs to a custom function section:
+
+        ```python
+        from oodocs import Chapter, Document
+        from oodocs.apidoc import collect_api
+        from oodocs.apidoc.blocks import api_returns_blocks
+
+        api = collect_api(".")
+        obj = api.functions()[0]
+        doc = Document("API Notes", Chapter("Returns", *api_returns_blocks(obj)))
+        ```
+    """
 
     resolved = resolve_profile(profile)
     if not resolved.include_returns or obj.returns is None:
@@ -198,7 +359,28 @@ def api_raises_table(
     *,
     caption: str | None = None,
 ) -> Table | None:
-    """Return an exception table for an API object."""
+    """Return an exception table for an API object.
+
+    Args:
+        obj: API object to render.
+        profile: Presentation profile.
+        caption: Optional table caption.
+
+    Returns:
+        Exception table, or ``None`` when no exceptions should render.
+
+    Examples:
+        Render documented exceptions in a review appendix:
+
+        ```python
+        from oodocs.apidoc import collect_api
+        from oodocs.apidoc.blocks import api_raises_table
+
+        api = collect_api(".")
+        obj = api.functions()[0]
+        table = api_raises_table(obj, caption="Raises")
+        ```
+    """
 
     resolved = resolve_profile(profile)
     if not resolved.include_raises or not obj.raises:
@@ -215,7 +397,28 @@ def api_examples_blocks(
     obj: ApiObject,
     profile: str | ApiDocProfile = "reference",
 ) -> list[Block]:
-    """Return example blocks for an API object."""
+    """Return example blocks for an API object.
+
+    Args:
+        obj: API object to render.
+        profile: Presentation profile.
+
+    Returns:
+        Example caption paragraphs and code blocks.
+
+    Examples:
+        Insert parsed examples into a tutorial chapter:
+
+        ```python
+        from oodocs import Chapter, Document
+        from oodocs.apidoc import collect_api
+        from oodocs.apidoc.blocks import api_examples_blocks
+
+        api = collect_api(".")
+        obj = api.functions()[0]
+        tutorial = Document("Tutorial", Chapter("Examples", *api_examples_blocks(obj)))
+        ```
+    """
 
     resolved = resolve_profile(profile)
     if not resolved.include_examples or not obj.examples:
@@ -237,7 +440,28 @@ def api_see_also_blocks(
     obj: ApiObject,
     profile: str | ApiDocProfile = "reference",
 ) -> list[Block]:
-    """Return see-also blocks for an API object."""
+    """Return see-also blocks for an API object.
+
+    Args:
+        obj: API object to render.
+        profile: Presentation profile.
+
+    Returns:
+        Related API table blocks, or an empty list.
+
+    Examples:
+        Add related API references to a custom section:
+
+        ```python
+        from oodocs import Chapter, Document
+        from oodocs.apidoc import collect_api
+        from oodocs.apidoc.blocks import api_see_also_blocks
+
+        api = collect_api(".")
+        obj = api.functions()[0]
+        doc = Document("API Notes", Chapter("Related API", *api_see_also_blocks(obj)))
+        ```
+    """
 
     resolved = resolve_profile(profile)
     if not resolved.include_see_also or not obj.see_also:
@@ -260,7 +484,28 @@ def api_notes_blocks(
     obj: ApiObject,
     profile: str | ApiDocProfile = "reference",
 ) -> list[Block]:
-    """Return parsed general notes as OODocs blocks."""
+    """Return parsed general notes as OODocs blocks.
+
+    Args:
+        obj: API object to render.
+        profile: Presentation profile.
+
+    Returns:
+        Note paragraphs, or an empty list.
+
+    Examples:
+        Place parsed ``Notes:`` content in a review document:
+
+        ```python
+        from oodocs import Chapter, Document
+        from oodocs.apidoc import collect_api
+        from oodocs.apidoc.blocks import api_notes_blocks
+
+        api = collect_api(".")
+        obj = api.functions()[0]
+        doc = Document("API Review", Chapter("Notes", *api_notes_blocks(obj)))
+        ```
+    """
 
     resolved = resolve_profile(profile)
     if not resolved.include_notes or not obj.notes:
@@ -275,7 +520,28 @@ def api_warnings_blocks(
     obj: ApiObject,
     profile: str | ApiDocProfile = "reference",
 ) -> list[Block]:
-    """Return parsed warning notes as OODocs blocks."""
+    """Return parsed warning notes as OODocs blocks.
+
+    Args:
+        obj: API object to render.
+        profile: Presentation profile.
+
+    Returns:
+        Warning box blocks, or an empty list.
+
+    Examples:
+        Surface parsed ``Warnings:`` content in release evidence:
+
+        ```python
+        from oodocs import Chapter, Document
+        from oodocs.apidoc import collect_api
+        from oodocs.apidoc.blocks import api_warnings_blocks
+
+        api = collect_api(".")
+        obj = api.functions()[0]
+        doc = Document("API Evidence", Chapter("Warnings", *api_warnings_blocks(obj)))
+        ```
+    """
 
     resolved = resolve_profile(profile)
     if not resolved.include_warnings or not obj.warnings:
@@ -297,7 +563,30 @@ def api_renderer_notes_table(
     *,
     caption: str | None = "Renderer notes",
 ) -> Table | None:
-    """Return renderer-specific notes as a table."""
+    """Return renderer-specific notes as a table.
+
+    Args:
+        obj: API object to render.
+        profile: Presentation profile.
+        caption: Optional table caption.
+
+    Returns:
+        Renderer notes table, or ``None`` when no notes should render.
+
+    Examples:
+        Add renderer-specific notes to a compatibility report:
+
+        ```python
+        from oodocs import Chapter, Document
+        from oodocs.apidoc import collect_api
+        from oodocs.apidoc.blocks import api_renderer_notes_table
+
+        api = collect_api(".")
+        obj = api.functions()[0]
+        table = api_renderer_notes_table(obj, profile="reference")
+        doc = Document("Renderer Notes", Chapter("API", table))
+        ```
+    """
 
     resolved = resolve_profile(profile)
     if not resolved.include_renderer_notes or not obj.renderer_notes:
@@ -319,7 +608,31 @@ def api_renderer_notes_blocks(
     obj: ApiObject,
     profile: str | ApiDocProfile = "reference",
 ) -> list[Block]:
-    """Return renderer notes table as a block list."""
+    """Return renderer notes table as a block list.
+
+    Args:
+        obj: API object to render.
+        profile: Presentation profile.
+
+    Returns:
+        One-item table block list, or an empty list.
+
+    Examples:
+        Compose renderer notes with other custom blocks:
+
+        ```python
+        from oodocs import Chapter, Document
+        from oodocs.apidoc import collect_api
+        from oodocs.apidoc.blocks import api_renderer_notes_blocks
+
+        api = collect_api(".")
+        obj = api.functions()[0]
+        doc = Document(
+            "Renderer Evidence",
+            Chapter("Notes", *api_renderer_notes_blocks(obj)),
+        )
+        ```
+    """
 
     table = api_renderer_notes_table(obj, profile)
     return [table] if table is not None else []
@@ -329,7 +642,27 @@ def api_source_location_paragraph(
     obj: ApiObject,
     profile: str | ApiDocProfile = "reference",
 ) -> Paragraph | None:
-    """Return source location as a paragraph when enabled."""
+    """Return source location as a paragraph when enabled.
+
+    Args:
+        obj: API object to render.
+        profile: Presentation profile.
+
+    Returns:
+        Source location paragraph, or ``None`` when disabled or unavailable.
+
+    Examples:
+        Show source locations in an evidence appendix:
+
+        ```python
+        from oodocs.apidoc import collect_api
+        from oodocs.apidoc.blocks import api_source_location_paragraph
+
+        api = collect_api(".")
+        obj = api.functions()[0]
+        source = api_source_location_paragraph(obj, profile="evidence")
+        ```
+    """
 
     resolved = resolve_profile(profile)
     if not resolved.include_source or not obj.source_path:
@@ -353,6 +686,18 @@ def api_review_note_paragraph(
     Returns:
         Paragraph containing an inline comment, or ``None`` when review notes
         are disabled.
+
+    Examples:
+        Generate review-note comments for a DOCX review profile:
+
+        ```python
+        from oodocs.apidoc import collect_api
+        from oodocs.apidoc.blocks import api_review_note_paragraph
+
+        api = collect_api(".")
+        obj = api.functions()[0]
+        note = api_review_note_paragraph(obj, profile="review")
+        ```
     """
 
     resolved = resolve_profile(profile)
@@ -375,7 +720,27 @@ def api_member_summary_table(
     obj: ApiObject,
     profile: str | ApiDocProfile = "reference",
 ) -> Table | None:
-    """Return a member summary table for class-like objects."""
+    """Return a member summary table for class-like objects.
+
+    Args:
+        obj: API object whose members should be summarized.
+        profile: Presentation profile.
+
+    Returns:
+        Member summary table, or ``None`` when there are no members.
+
+    Examples:
+        Summarize class methods before rendering detailed member sections:
+
+        ```python
+        from oodocs.apidoc import collect_api
+        from oodocs.apidoc.blocks import api_member_summary_table
+
+        api = collect_api(".")
+        cls = api.classes()[0]
+        table = api_member_summary_table(cls, profile="reference")
+        ```
+    """
 
     resolved = resolve_profile(profile)
     if not resolved.include_member_summary or not obj.members:
@@ -390,7 +755,31 @@ def api_object_to_blocks(
     level: int = 2,
     max_level: int | None = None,
 ) -> list[Block]:
-    """Convert one API object into renderer-neutral blocks."""
+    """Convert one API object into renderer-neutral blocks.
+
+    Args:
+        obj: API object to render.
+        profile: Presentation profile.
+        level: Current heading level, used for nested member sections.
+        max_level: Optional deepest heading level to expand.
+
+    Returns:
+        Renderer-neutral OODocs blocks for the object.
+
+    Examples:
+        Insert one parsed object into an authored chapter without a new
+        heading:
+
+        ```python
+        from oodocs import Chapter, Document
+        from oodocs.apidoc import collect_api
+        from oodocs.apidoc.blocks import api_object_to_blocks
+
+        api = collect_api(".")
+        obj = api.functions()[0]
+        doc = Document("API Notes", Chapter("load", *api_object_to_blocks(obj)))
+        ```
+    """
 
     resolved = resolve_profile(profile)
     max_level = _normalize_max_level(max_level)
@@ -437,7 +826,31 @@ def api_object_to_section(
     title: str | None = None,
     max_level: int | None = None,
 ) -> Section:
-    """Convert one API object into an OODocs section."""
+    """Convert one API object into an OODocs section.
+
+    Args:
+        obj: API object to render.
+        profile: Presentation profile.
+        level: Heading level for the resulting section.
+        title: Optional heading override.
+        max_level: Optional deepest heading level to expand.
+
+    Returns:
+        OODocs section with stable API anchor.
+
+    Examples:
+        Build a section from a selected API object:
+
+        ```python
+        from oodocs import Chapter, Document
+        from oodocs.apidoc import collect_api
+        from oodocs.apidoc.blocks import api_object_to_section
+
+        api = collect_api(".")
+        obj = api.classes()[0]
+        doc = Document("API", Chapter("Classes", api_object_to_section(obj)))
+        ```
+    """
 
     heading = title or obj.display_name()
     section = section_for_level(
@@ -459,7 +872,28 @@ def api_object_to_compact_box(
     *,
     profile: str | ApiDocProfile = "compact",
 ) -> Box:
-    """Return an API object as a compact boxed summary."""
+    """Return an API object as a compact boxed summary.
+
+    Args:
+        obj: API object to render.
+        profile: Presentation profile.
+
+    Returns:
+        Box containing a compact object summary and optional signature.
+
+    Examples:
+        Add a compact API callout to a guide:
+
+        ```python
+        from oodocs import Chapter, Document
+        from oodocs.apidoc import collect_api
+        from oodocs.apidoc.blocks import api_object_to_compact_box
+
+        api = collect_api(".")
+        obj = api.functions()[0]
+        doc = Document("Guide", Chapter("Related API", api_object_to_compact_box(obj)))
+        ```
+    """
 
     blocks: list[Block] = [api_object_summary_paragraph(obj)]
     if signature := api_signature_block(obj, profile):
@@ -478,6 +912,32 @@ def api_objects_to_summary_table(
 
     The website profile links object names to the stable section anchors
     produced by ``ApiObject.to_section(...)``.
+
+    Args:
+        objects: API objects to summarize.
+        profile: Presentation profile.
+        caption: Optional table caption.
+        include_module: Whether to include the module column.
+
+    Returns:
+        OODocs table containing kind, module/name, and summary columns.
+
+    Examples:
+        Build a function index for an authored document:
+
+        ```python
+        from oodocs import Chapter, Document
+        from oodocs.apidoc import collect_api
+        from oodocs.apidoc.blocks import api_objects_to_summary_table
+
+        api = collect_api(".")
+        table = api_objects_to_summary_table(
+            api.functions(),
+            profile="compact",
+            caption="Public functions",
+        )
+        doc = Document("API Index", Chapter("Functions", table))
+        ```
     """
 
     resolved = resolve_profile(profile)
@@ -496,7 +956,30 @@ def api_module_to_blocks(
     level: int = 2,
     max_level: int | None = None,
 ) -> list[Block]:
-    """Convert a module into renderer-neutral blocks."""
+    """Convert a module into renderer-neutral blocks.
+
+    Args:
+        module: API module to render.
+        profile: Presentation profile.
+        level: Heading level for contained object sections.
+        max_level: Optional deepest heading level to expand.
+
+    Returns:
+        Renderer-neutral blocks for module prose, summaries, and objects.
+
+    Examples:
+        Embed a module reference inside a larger guide:
+
+        ```python
+        from oodocs import Chapter, Document
+        from oodocs.apidoc import collect_api
+        from oodocs.apidoc.blocks import api_module_to_blocks
+
+        api = collect_api(".")
+        module = next(iter(api))
+        doc = Document("Module Guide", Chapter(module.name, *api_module_to_blocks(module)))
+        ```
+    """
 
     resolved = resolve_profile(profile)
     max_level = _normalize_max_level(max_level)
@@ -551,7 +1034,30 @@ def api_module_to_chapter(
     title: str | None = None,
     max_level: int | None = None,
 ):
-    """Convert a module into an OODocs chapter."""
+    """Convert a module into an OODocs chapter.
+
+    Args:
+        module: API module to render.
+        profile: Presentation profile.
+        title: Optional chapter title override.
+        max_level: Optional deepest heading level to expand.
+
+    Returns:
+        OODocs chapter for the module.
+
+    Examples:
+        Render one module as a document chapter:
+
+        ```python
+        from oodocs import Document
+        from oodocs.apidoc import collect_api
+        from oodocs.apidoc.blocks import api_module_to_chapter
+
+        api = collect_api(".")
+        module = next(iter(api))
+        doc = Document("Module API", api_module_to_chapter(module))
+        ```
+    """
 
     from oodocs.components.blocks import Chapter
 
@@ -572,7 +1078,28 @@ def api_package_to_chapters(
     profile: str | ApiDocProfile = "reference",
     max_level: int | None = None,
 ) -> list[object]:
-    """Convert package modules into OODocs chapters."""
+    """Convert package modules into OODocs chapters.
+
+    Args:
+        package: API package to render.
+        profile: Presentation profile.
+        max_level: Optional deepest heading level to expand.
+
+    Returns:
+        Chapter list, one per collected module.
+
+    Examples:
+        Build a complete package reference document:
+
+        ```python
+        from oodocs import Document
+        from oodocs.apidoc import collect_api
+        from oodocs.apidoc.blocks import api_package_to_chapters
+
+        api = collect_api(".")
+        doc = Document("Package API", *api_package_to_chapters(api))
+        ```
+    """
 
     return [
         module.to_chapter(profile=profile, max_level=max_level)
