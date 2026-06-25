@@ -31,6 +31,26 @@ def test_inspect_collector_can_exclude_member_kinds(tmp_path) -> None:
     assert api.find("samplepkg.Widget.render") is None
 
 
+def test_inspect_collector_can_strip_source_locations(tmp_path) -> None:
+    api = collect_sample_api(
+        tmp_path,
+        collector="inspect",
+        include_source_locations=False,
+    )
+    widget = api.find("samplepkg.Widget")
+    render = api.find("samplepkg.Widget.render")
+
+    assert api.metadata.get("source_root") is None
+    assert api.modules[0].source_path is None
+    assert api.modules[0].line_number is None
+    assert widget is not None
+    assert widget.source_path is None
+    assert widget.line_number is None
+    assert render is not None
+    assert render.source_path is None
+    assert render.line_number is None
+
+
 def test_inspect_collector_can_include_same_module_inherited_members(tmp_path) -> None:
     package_dir = tmp_path / "inheritpkg"
     package_dir.mkdir()

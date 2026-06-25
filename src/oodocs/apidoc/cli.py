@@ -227,6 +227,19 @@ def _add_collect_options(parser: argparse.ArgumentParser, *, include_config: boo
         help="Exclude class methods from the collected API tree.",
     )
     parser.add_argument(
+        "--include-source-locations",
+        action="store_true",
+        default=None,
+        help="Retain source paths and line numbers in API trees and diagnostics.",
+    )
+    parser.add_argument(
+        "--no-source-locations",
+        action="store_false",
+        dest="include_source_locations",
+        default=None,
+        help="Remove source paths and line numbers from API trees and diagnostics.",
+    )
+    parser.add_argument(
         "--class-signature-from-init",
         action="store_true",
         default=None,
@@ -282,6 +295,7 @@ def _run_init(args: argparse.Namespace) -> int:
         include_attributes=args.include_attributes,
         include_properties=args.include_properties,
         include_methods=args.include_methods,
+        include_source_locations=args.include_source_locations,
         class_signature_from_init=args.class_signature_from_init,
         module_include_patterns=args.module_include_patterns,
         module_exclude_patterns=args.module_exclude_patterns,
@@ -444,6 +458,7 @@ def _collect_from_args(
         include_attributes=args.include_attributes,
         include_properties=args.include_properties,
         include_methods=args.include_methods,
+        include_source_locations=args.include_source_locations,
         class_signature_from_init=args.class_signature_from_init,
         module_include_patterns=args.module_include_patterns,
         module_exclude_patterns=args.module_exclude_patterns,

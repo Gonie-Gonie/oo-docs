@@ -71,6 +71,7 @@ object-exclude-patterns = ["render_to_docx", "render_to_pdf", "render_to_html"]
 include-attributes = true
 include-properties = true
 include-methods = true
+include-source-locations = true
 profile = "website"
 formats = ["html"]
 out = "artifacts/api"
@@ -122,6 +123,13 @@ member kinds:
 python -m oodocs apidoc build . --no-attributes --no-properties --no-methods --out artifacts/api
 ```
 
+Source locations can also be stripped during collection when rendered
+references or JSON sidecars should not expose local paths:
+
+```powershell
+python -m oodocs apidoc build . --no-source-locations --out artifacts/api
+```
+
 Snapshot and diff:
 
 ```powershell
@@ -139,7 +147,8 @@ Common collection options are `--collector`, `--public-policy`,
 `--docstring-parser-module`, `--include-imported`, `--config`,
 `--include-inherited`, `--include-attributes`, `--no-attributes`,
 `--include-properties`, `--no-properties`, `--include-methods`,
-`--no-methods`, `--class-signature-from-init`,
+`--no-methods`, `--include-source-locations`, `--no-source-locations`,
+`--class-signature-from-init`,
 `--no-class-signature-from-init`, `--module-include`, `--module-exclude`,
 `--object-include`, and `--object-exclude`.
 Module include/exclude patterns are applied before module contents are

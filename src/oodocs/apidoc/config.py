@@ -36,6 +36,7 @@ _COLLECT_CONFIG_KEYS = {
     "include_inherited",
     "include_methods",
     "include_properties",
+    "include_source_locations",
     "module_exclude_patterns",
     "module_include_patterns",
     "object_exclude_patterns",
@@ -320,6 +321,8 @@ class ApiCollectConfig:
             API trees.
         include_methods: Whether class methods are included in collected API
             trees.
+        include_source_locations: Whether source paths and line numbers are
+            retained in collected API trees and diagnostics.
         class_signature_from_init: Whether class signatures use ``__init__``.
         module_include_patterns: Optional glob-style module names to include.
         module_exclude_patterns: Optional glob-style module names to exclude.
@@ -352,6 +355,7 @@ class ApiCollectConfig:
     include_attributes: bool = True
     include_properties: bool = True
     include_methods: bool = True
+    include_source_locations: bool = True
     class_signature_from_init: bool = True
     module_include_patterns: tuple[str, ...] = field(default_factory=tuple)
     module_exclude_patterns: tuple[str, ...] = field(default_factory=tuple)
@@ -628,6 +632,7 @@ class ApiCollectConfig:
             "include_attributes": self.include_attributes,
             "include_properties": self.include_properties,
             "include_methods": self.include_methods,
+            "include_source_locations": self.include_source_locations,
             "class_signature_from_init": self.class_signature_from_init,
             "module_include_patterns": list(self.module_include_patterns),
             "module_exclude_patterns": list(self.module_exclude_patterns),

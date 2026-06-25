@@ -59,6 +59,7 @@ def collect_api(
     include_attributes: bool | None = None,
     include_properties: bool | None = None,
     include_methods: bool | None = None,
+    include_source_locations: bool | None = None,
     class_signature_from_init: bool | None = None,
     module_include_patterns: Iterable[str] | None = None,
     module_exclude_patterns: Iterable[str] | None = None,
@@ -93,6 +94,8 @@ def collect_api(
             included.
         include_properties: Whether class properties should be included.
         include_methods: Whether class methods should be included.
+        include_source_locations: Whether source paths and line numbers should
+            be retained in the returned API tree and diagnostics.
         class_signature_from_init: Whether class signatures use ``__init__``.
         module_include_patterns: Optional glob-style module names to include
             before collection.
@@ -159,6 +162,7 @@ def collect_api(
         "include_attributes": include_attributes,
         "include_properties": include_properties,
         "include_methods": include_methods,
+        "include_source_locations": include_source_locations,
         "class_signature_from_init": class_signature_from_init,
         "module_include_patterns": tuple(module_include_patterns)
         if module_include_patterns is not None
@@ -210,7 +214,10 @@ def collect_api(
                         f"Fell back to inspect-compatible source collection: {exc}",
                     )
                 )
-    return _filter_collected_objects(api, config=resolved)
+    api = _filter_collected_objects(api, config=resolved)
+    if not resolved.include_source_locations:
+        _strip_source_locations(api)
+    return api
 
 
 def collect_module_api(
@@ -500,6 +507,44 @@ def _object_kind_enabled(kind: str, config: ApiCollectConfig) -> bool:
     if kind == "method":
         return config.include_methods
     return True
+
+
+_SOURCE_LOCATION_METADATA_KEYS = {
+    "end_line_number",
+    "line_number",
+    "path",
+    "source_path",
+    "source_root",
+}
+
+
+def _strip_source_locations(api: ApiPackage) -> None:
+    _strip_source_location_metadata(api.metadata)
+    for issue in api.issues:
+        issue.path = None
+        issue.line_number = None
+    for module in api.modules:
+        module.source_path = None
+        module.line_number = None
+        module.end_line_number = None
+        _strip_source_location_metadata(module.metadata)
+        for obj in module.iter_objects(recursive=True):
+            obj.source_path = None
+            obj.line_number = None
+            obj.end_line_number = None
+            _strip_source_location_metadata(obj.metadata)
+
+
+def _strip_source_location_metadata(value: object) -> None:
+    if isinstance(value, dict):
+        for key in list(value):
+            if key in _SOURCE_LOCATION_METADATA_KEYS:
+                value.pop(key, None)
+        for child in value.values():
+            _strip_source_location_metadata(child)
+    elif isinstance(value, list):
+        for child in value:
+            _strip_source_location_metadata(child)
 
 
 def _issue_matches_object_filters(

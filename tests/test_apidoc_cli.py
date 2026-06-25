@@ -108,3 +108,35 @@ def test_apidoc_cli_can_exclude_member_kinds(tmp_path) -> None:
     assert api.find("samplepkg.Widget.label") is None
     assert api.find("samplepkg.Widget.title") is None
     assert api.find("samplepkg.Widget.render") is None
+
+
+def test_apidoc_cli_can_strip_source_locations(tmp_path) -> None:
+    package_dir = write_sample_package(tmp_path)
+    output_path = tmp_path / "samplepkg-api.json"
+
+    assert (
+        main(
+            [
+                "apidoc",
+                "collect",
+                str(package_dir),
+                "--collector",
+                "inspect",
+                "--public-policy",
+                "__all__",
+                "--no-source-locations",
+                "--out",
+                str(output_path),
+            ]
+        )
+        == 0
+    )
+
+    api = ApiPackage.read_json(output_path)
+    widget = api.find("samplepkg.Widget")
+
+    assert api.metadata.get("source_root") is None
+    assert api.modules[0].source_path is None
+    assert widget is not None
+    assert widget.source_path is None
+    assert widget.line_number is None

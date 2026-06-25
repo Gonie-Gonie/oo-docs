@@ -188,3 +188,19 @@ api = collect_api(
     include_methods=False,
 )
 ```
+
+Use `include_source_locations=False` when generated sidecars or rendered
+references should not expose local source paths and line numbers. Collection
+still uses source positions internally to keep stable object ordering, then
+strips source paths, line numbers, and location-like metadata from the returned
+API tree.
+
+```python
+api = collect_api(
+    ".",
+    collector="inspect",
+    public_policy="__all__",
+    include_source_locations=False,
+)
+api.to_document(profile="website").save_html("artifacts/api/index.html")
+```
