@@ -392,6 +392,7 @@ def _collect_from_args(
         args.package,
         config=config,
         collector=args.collector,
+        fallback_collector=args.fallback_collector,
         public_policy=args.public_policy,
         explicit_names=args.explicit_names,
         docstring_style=args.docstring_style,
