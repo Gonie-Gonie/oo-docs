@@ -407,7 +407,7 @@ def _class_object(
         signature = f"{qualname}({_signature_parameter_text(signature_parameters)})"
     parameters, extra_issues = _merge_parameters(
         signature_parameters,
-        parsed.parameters or (init_parsed.parameters if init_parsed else []),
+        _class_parameter_docs(signature_parameters, parsed, init_parsed),
         qualname=qualname,
         module=module_name,
         path=path,
@@ -685,6 +685,31 @@ def _class_attribute_docs(parsed: ParsedDocstring) -> list[ApiParameter]:
         by_name.setdefault(_normalize_param_name(parameter.name), parameter)
     for attribute in parsed.attributes:
         by_name[_normalize_param_name(attribute.name)] = attribute
+    return list(by_name.values())
+
+
+def _class_parameter_docs(
+    signature_parameters: list[ApiParameter],
+    parsed: ParsedDocstring,
+    init_parsed: ParsedDocstring | None,
+) -> list[ApiParameter]:
+    """Return doc entries that can describe class constructor parameters."""
+
+    primary = parsed.parameters or (init_parsed.parameters if init_parsed else [])
+    by_name = {
+        _normalize_param_name(parameter.name): parameter
+        for parameter in primary
+        if parameter.name
+    }
+    signature_names = {
+        _normalize_param_name(parameter.name)
+        for parameter in signature_parameters
+        if parameter.name
+    }
+    for attribute in parsed.attributes:
+        normalized = _normalize_param_name(attribute.name)
+        if normalized in signature_names and normalized not in by_name:
+            by_name[normalized] = attribute
     return list(by_name.values())
 
 

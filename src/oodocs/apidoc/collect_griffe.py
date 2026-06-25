@@ -269,9 +269,11 @@ def _class_from_griffe(
     signature_parameters = []
     if config.class_signature_from_init:
         signature_parameters = _parameters_from_griffe(getattr(obj, "parameters", ()), drop_first=True)
+    from oodocs.apidoc.collect import _class_parameter_docs
+
     parameters, extra_issues = _merge_parameters(
         signature_parameters,
-        parsed.parameters or (init_parsed.parameters if init_parsed else []),
+        _class_parameter_docs(signature_parameters, parsed, init_parsed),
         qualname=qualname,
         module=module_name,
         path=_object_filepath(obj),
