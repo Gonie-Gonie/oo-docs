@@ -600,6 +600,60 @@ def test_griffe_collector_matches_inspect_schema_on_src_layout_repo(
     assert method.returns and method.returns.annotation == "str"
 
 
+def test_collectors_detect_deprecated_decorators_and_warning_bodies(
+    tmp_path: Path,
+) -> None:
+    package_dir = tmp_path / "deppkg"
+    package_dir.mkdir()
+    (package_dir / "__init__.py").write_text(
+        "\n".join(
+            [
+                "import warnings",
+                "",
+                "def deprecated(value):",
+                "    return value",
+                "",
+                "@deprecated",
+                "class OldWidget:",
+                '    """Old widget."""',
+                "",
+                "def old_run() -> None:",
+                '    """Run the old workflow."""',
+                "    warnings.warn(",
+                "        'Use new_run instead.',",
+                "        DeprecationWarning,",
+                "        stacklevel=2,",
+                "    )",
+                "",
+                "def keyword_old() -> None:",
+                '    """Run the keyword old workflow."""',
+                "    warnings.warn(",
+                "        'Use keyword_new instead.',",
+                "        category=DeprecationWarning,",
+                "    )",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    inspect_api = collect_api(package_dir, public_policy="underscore", collector="inspect")
+    old_class = inspect_api.find("deppkg.OldWidget")
+    old_run = inspect_api.find("deppkg.old_run")
+    keyword_old = inspect_api.find("deppkg.keyword_old")
+
+    assert old_class is not None and old_class.deprecated
+    assert old_run is not None and old_run.deprecated
+    assert old_run.deprecation_message == "Use new_run instead."
+    assert keyword_old is not None and keyword_old.deprecated
+    assert keyword_old.deprecation_message == "Use keyword_new instead."
+
+    if importlib.util.find_spec("griffe") is not None:
+        griffe_api = collect_api(package_dir, public_policy="underscore", collector="griffe")
+        assert griffe_api.find("deppkg.OldWidget").deprecated
+        assert griffe_api.find("deppkg.old_run").deprecated
+        assert griffe_api.find("deppkg.old_run").deprecation_message == "Use new_run instead."
+
+
 def test_api_coverage_and_diff_detect_doc_changes(tmp_path: Path) -> None:
     base_dir = tmp_path / "base" / "pkg"
     head_dir = tmp_path / "head" / "pkg"

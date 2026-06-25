@@ -10,6 +10,12 @@ Collectors normalize Python source metadata into the same `ApiPackage` schema.
 - `collector="auto"` tries griffe first and records a fallback issue if source
   collection is used.
 
+Collectors mark objects as deprecated when docstrings contain `Deprecated:` or
+Sphinx `.. deprecated::`, when class/function decorators are named
+`deprecated`, `deprecate`, or `deprecated_alias`, or when function bodies call
+`warnings.warn(..., DeprecationWarning)`. Warning messages are preserved as
+`ApiObject.deprecation_message` when they are literal strings.
+
 ```python
 from oodocs.apidoc import collect_api
 

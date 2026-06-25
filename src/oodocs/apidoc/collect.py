@@ -24,6 +24,9 @@ from oodocs.apidoc.model import (
 from oodocs.core import PathLike
 
 
+_DEPRECATION_DECORATORS = {"deprecated", "deprecate", "deprecated_alias"}
+
+
 def collect_api(
     package: str | PathLike,
     *,
@@ -327,6 +330,8 @@ def _class_object(
                         )
                     )
     members = _merge_attribute_docs(members, _class_attribute_docs(parsed))
+    decorators = {_decorator_name(decorator) for decorator in node.decorator_list}
+    deprecated = parsed.deprecated or bool(decorators & _DEPRECATION_DECORATORS)
     obj = ApiObject(
         kind="class",
         name=node.name,
@@ -346,9 +351,10 @@ def _class_object(
         source_path=str(path),
         line_number=getattr(node, "lineno", None),
         end_line_number=getattr(node, "end_lineno", None),
-        deprecated=parsed.deprecated,
+        deprecated=deprecated,
         deprecation_message=parsed.deprecation_message,
         metadata={
+            "decorators": sorted(name for name in decorators if name),
             "docstring_style": parsed.style,
             "issues": [issue.to_dict() for issue in [*parsed.issues, *extra_issues]],
         },
@@ -398,7 +404,12 @@ def _function_object(
     signature = None if kind == "property" else f"{qualname}({_signature_parameter_text(signature_parameters)})"
     if signature and return_annotation:
         signature = f"{signature} -> {return_annotation}"
-    deprecated = parsed.deprecated or bool(decorators & {"deprecated", "deprecate", "deprecated_alias"})
+    warning_message = _deprecation_warning_message(node)
+    deprecated = (
+        parsed.deprecated
+        or bool(decorators & _DEPRECATION_DECORATORS)
+        or warning_message is not None
+    )
     return ApiObject(
         kind=kind,  # type: ignore[arg-type]
         name=local_name,
@@ -418,7 +429,7 @@ def _function_object(
         line_number=getattr(node, "lineno", None),
         end_line_number=getattr(node, "end_lineno", None),
         deprecated=deprecated,
-        deprecation_message=parsed.deprecation_message,
+        deprecation_message=parsed.deprecation_message or warning_message,
         metadata={
             "decorators": sorted(name for name in decorators if name),
             "docstring_style": parsed.style,
@@ -878,6 +889,54 @@ def _decorator_name(node: ast.expr) -> str:
     if isinstance(node, ast.Call):
         return _decorator_name(node.func)
     return ""
+
+
+def _deprecation_warning_message(
+    node: ast.FunctionDef | ast.AsyncFunctionDef,
+) -> str | None:
+    for child in ast.walk(node):
+        if not isinstance(child, ast.Call):
+            continue
+        if not _is_warnings_warn_call(child):
+            continue
+        if not _call_uses_deprecation_warning(child):
+            continue
+        return _literal_message(child.args[0]) if child.args else None
+    return None
+
+
+def _is_warnings_warn_call(node: ast.Call) -> bool:
+    func = node.func
+    return (
+        isinstance(func, ast.Attribute)
+        and func.attr == "warn"
+        and isinstance(func.value, ast.Name)
+        and func.value.id == "warnings"
+    )
+
+
+def _call_uses_deprecation_warning(node: ast.Call) -> bool:
+    positional = node.args[1:] if len(node.args) > 1 else []
+    keyword_values = [
+        keyword.value
+        for keyword in node.keywords
+        if keyword.arg in {"category", "warning"}
+    ]
+    return any(_is_deprecation_warning_expr(value) for value in [*positional, *keyword_values])
+
+
+def _is_deprecation_warning_expr(node: ast.expr) -> bool:
+    if isinstance(node, ast.Name):
+        return node.id == "DeprecationWarning"
+    if isinstance(node, ast.Attribute):
+        return node.attr == "DeprecationWarning"
+    return False
+
+
+def _literal_message(node: ast.expr) -> str | None:
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        return node.value
+    return None
 
 
 def _normalize_param_name(name: str) -> str:

@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import ast
 from dataclasses import replace
 from pathlib import Path
+import textwrap
 from typing import Iterable
 
 from oodocs.apidoc.config import ApiCollectConfig
@@ -17,6 +19,9 @@ from oodocs.apidoc.model import (
     ApiReturn,
 )
 from oodocs.core import PathLike
+
+
+_DEPRECATION_DECORATORS = {"deprecated", "deprecate", "deprecated_alias"}
 
 
 def collect_package_griffe(
@@ -248,6 +253,8 @@ def _class_from_griffe(
 
     members = _merge_attribute_docs(members, _class_attribute_docs(parsed))
     signature = f"{qualname}({_signature_parameter_text(parameters)})"
+    decorators = [_decorator_name(decorator) for decorator in getattr(obj, "decorators", [])]
+    deprecated = parsed.deprecated or _has_deprecation_decorator(decorators)
     return ApiObject(
         kind="class",
         name=local_name,
@@ -267,9 +274,10 @@ def _class_from_griffe(
         source_path=str(_object_filepath(obj)) if _object_filepath(obj) else None,
         line_number=getattr(obj, "lineno", None),
         end_line_number=getattr(obj, "endlineno", None),
-        deprecated=parsed.deprecated,
+        deprecated=deprecated,
         deprecation_message=parsed.deprecation_message,
         metadata={
+            "decorators": [name for name in decorators if name],
             "docstring_style": parsed.style,
             "issues": [issue.to_dict() for issue in [*parsed.issues, *extra_issues]],
         },
@@ -307,10 +315,12 @@ def _function_from_griffe(
     signature = f"{qualname}({_signature_parameter_text(parameters)})"
     if return_annotation:
         signature = f"{signature} -> {return_annotation}"
-    decorators = [_display_expr(decorator) for decorator in getattr(obj, "decorators", [])]
-    deprecated = parsed.deprecated or any(
-        name and name.rstrip("()").split(".")[-1] in {"deprecated", "deprecate", "deprecated_alias"}
-        for name in decorators
+    decorators = [_decorator_name(decorator) for decorator in getattr(obj, "decorators", [])]
+    warning_message = _griffe_deprecation_warning_message(obj)
+    deprecated = (
+        parsed.deprecated
+        or _has_deprecation_decorator(decorators)
+        or warning_message is not None
     )
     return ApiObject(
         kind="method" if parent_class else "function",
@@ -331,7 +341,7 @@ def _function_from_griffe(
         line_number=getattr(obj, "lineno", None),
         end_line_number=getattr(obj, "endlineno", None),
         deprecated=deprecated,
-        deprecation_message=parsed.deprecation_message,
+        deprecation_message=parsed.deprecation_message or warning_message,
         metadata={
             "decorators": [name for name in decorators if name],
             "docstring_style": parsed.style,
@@ -584,6 +594,57 @@ def _is_inherited(member: object, owner: object) -> bool:
     member_path = str(getattr(member, "path", ""))
     owner_path = str(getattr(owner, "path", ""))
     return bool(member_path and owner_path and not member_path.startswith(f"{owner_path}."))
+
+
+def _has_deprecation_decorator(names: Iterable[str | None]) -> bool:
+    return any(_decorator_leaf(name) in _DEPRECATION_DECORATORS for name in names if name)
+
+
+def _decorator_name(decorator: object) -> str | None:
+    path = getattr(decorator, "callable_path", None)
+    if path:
+        return str(path)
+    value = getattr(decorator, "value", None)
+    return _display_expr(value if value is not None else decorator)
+
+
+def _decorator_leaf(name: str | None) -> str:
+    if not name:
+        return ""
+    cleaned = str(name).strip().lstrip("@")
+    cleaned = cleaned.split("(", 1)[0].strip()
+    return cleaned.rsplit(".", 1)[-1]
+
+
+def _griffe_deprecation_warning_message(obj: object) -> str | None:
+    filepath = _object_filepath(obj)
+    lineno = getattr(obj, "lineno", None)
+    endlineno = getattr(obj, "endlineno", None)
+    source: str | None = None
+    if filepath is not None and lineno is not None and endlineno is not None:
+        lines = filepath.read_text(encoding="utf-8").splitlines()
+        source = "\n".join(lines[max(int(lineno) - 1, 0) : int(endlineno)])
+    if not source:
+        value = getattr(obj, "source", None)
+        if callable(value):
+            try:
+                value = value()
+            except Exception:
+                value = None
+        if value:
+            source = str(value)
+    if not source:
+        return None
+    try:
+        module = ast.parse(textwrap.dedent(source))
+    except SyntaxError:
+        return None
+    from oodocs.apidoc.collect import _deprecation_warning_message
+
+    for node in module.body:
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            return _deprecation_warning_message(node)
+    return None
 
 
 __all__ = ["collect_package_griffe"]
