@@ -6,6 +6,7 @@ import csv
 from dataclasses import dataclass, field
 import json
 from pathlib import Path
+from typing import Mapping
 
 from oodocs.apidoc.examples import check_doctest_examples, check_example_syntax
 from oodocs.apidoc.model import ApiDocIssue, ApiObject, ApiPackage
@@ -371,6 +372,7 @@ def check_api_docs(
     fail_under: float | None = None,
     require_examples: bool = False,
     require_renderer_notes: bool = False,
+    doctest_namespace: Mapping[str, object] | None = None,
 ) -> ApiCoverageResult:
     """Check API documentation coverage.
 
@@ -383,6 +385,9 @@ def check_api_docs(
             examples.
         require_renderer_notes: Whether every public object should include
             renderer notes.
+        doctest_namespace: Optional trusted namespace used to execute
+            doctest-style examples. When omitted, doctest examples are parsed
+            but not executed.
 
     Returns:
         Coverage result with counters and issue rows. The result can be
@@ -397,7 +402,11 @@ def check_api_docs(
         from oodocs.apidoc import check_api_docs, collect_api
 
         api = collect_api(".", public_policy="__all__", collector="griffe")
-        coverage = check_api_docs(api, fail_under=0.90, require_examples=True)
+        coverage = check_api_docs(
+            api,
+            fail_under=0.90,
+            require_examples=True,
+        )
         coverage.write_json("artifacts/api-coverage.json")
         coverage.write_csv("artifacts/api-coverage.csv")
         Document("API Coverage", coverage.to_section()).save_docx(
@@ -465,7 +474,7 @@ def check_api_docs(
                     syntax_ok_example_count += 1
                 else:
                     issues.append(_issue(obj, "warning", "example-syntax-error", "Example contains invalid Python syntax."))
-        issues.extend(check_doctest_examples(obj))
+        issues.extend(check_doctest_examples(obj, globs=doctest_namespace))
         for example in obj.examples:
             if example.doctest_ok is None:
                 continue

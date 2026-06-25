@@ -28,6 +28,21 @@ coverage.write_json("artifacts/api-coverage.json")
 coverage.write_csv("artifacts/api-coverage.csv")
 ```
 
+Doctest-style examples are parsed by default. When examples should also be
+executed, pass a trusted namespace from Python:
+
+```python
+from oodocs.apidoc import check_api_docs, collect_api
+from mypkg import connect
+
+api = collect_api(".", public_policy="__all__")
+coverage = check_api_docs(
+    api,
+    fail_under=0.90,
+    doctest_namespace={"connect": connect},
+)
+```
+
 Read the JSON sidecar back later when report generation runs in a separate job:
 
 ```python
@@ -70,7 +85,7 @@ python -m oodocs apidoc check . --config pyproject.toml --fail-under 0.95
 ```
 
 Coverage issues include missing summaries, missing parameter docs, extra
-parameter docs, missing return docs, example syntax errors, doctest parse
-failures, and missing deprecation guidance. The coverage table also records
-syntax-checked examples and doctest-checked examples separately so CI evidence
-can distinguish normal Python code blocks from `>>>` examples.
+parameter docs, missing return docs, example syntax errors, doctest parse or
+execution failures, and missing deprecation guidance. The coverage table also
+records syntax-checked examples and doctest-checked examples separately so CI
+evidence can distinguish normal Python code blocks from `>>>` examples.

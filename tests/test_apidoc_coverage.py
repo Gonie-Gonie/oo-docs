@@ -141,3 +141,51 @@ def test_apidoc_coverage_reports_quality_gate_issues(tmp_path) -> None:
 
     assert "doctest-failed" in csv_text
     assert "missing-renderer-notes" in csv_text
+
+
+def test_apidoc_coverage_can_execute_doctest_examples() -> None:
+    def echo(value: str) -> str:
+        return value
+
+    api = ApiPackage(
+        "doctestexecpkg",
+        modules=[
+            ApiModule(
+                "doctestexecpkg",
+                members=[
+                    ApiObject(
+                        kind="function",
+                        name="good",
+                        qualname="doctestexecpkg.good",
+                        module="doctestexecpkg",
+                        summary="Run a passing doctest.",
+                        examples=[ApiExample(">>> echo('ok')\n'ok'", language="pycon")],
+                    ),
+                    ApiObject(
+                        kind="function",
+                        name="bad",
+                        qualname="doctestexecpkg.bad",
+                        module="doctestexecpkg",
+                        summary="Run a failing doctest.",
+                        examples=[ApiExample(">>> echo('bad')\n'ok'", language="pycon")],
+                    ),
+                ],
+            )
+        ],
+    )
+
+    coverage = check_api_docs(api, doctest_namespace={"echo": echo})
+    issue_codes = {issue.code for issue in coverage.issues}
+    good = api.find("doctestexecpkg.good")
+    bad = api.find("doctestexecpkg.bad")
+
+    assert coverage.example_count == 2
+    assert coverage.syntax_checked_example_count == 2
+    assert coverage.syntax_ok_example_count == 2
+    assert coverage.doctest_checked_example_count == 2
+    assert coverage.doctest_ok_example_count == 1
+    assert "doctest-failed" in issue_codes
+    assert good is not None
+    assert good.examples[0].doctest_ok is True
+    assert bad is not None
+    assert bad.examples[0].doctest_ok is False

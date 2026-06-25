@@ -1084,6 +1084,7 @@ class ApiBuildConfig:
         fail_under: float | None = None,
         require_examples: bool = False,
         require_renderer_notes: bool = False,
+        doctest_namespace: Mapping[str, object] | None = None,
     ) -> ApiCoverageResult:
         """Collect a target and check API documentation coverage.
 
@@ -1096,6 +1097,8 @@ class ApiBuildConfig:
             require_examples: Whether public API objects must include examples.
             require_renderer_notes: Whether public API objects must include
                 renderer notes.
+            doctest_namespace: Optional trusted namespace used to execute
+                doctest-style examples.
 
         Returns:
             ``ApiCoverageResult`` for the collected and build-filtered API
@@ -1121,6 +1124,7 @@ class ApiBuildConfig:
             fail_under=fail_under,
             require_examples=require_examples,
             require_renderer_notes=require_renderer_notes,
+            doctest_namespace=doctest_namespace,
         )
 
     def snapshot(self, target: str | PathLike) -> ApiSnapshot:

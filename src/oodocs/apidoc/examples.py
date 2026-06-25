@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import doctest
 import re
+from typing import Mapping
 
 from oodocs.apidoc.model import ApiDocIssue, ApiExample, ApiObject
 
@@ -91,17 +92,26 @@ def check_example_syntax(example: ApiExample) -> bool:
     return True
 
 
-def check_doctest_examples(api_object: ApiObject) -> list[ApiDocIssue]:
+def check_doctest_examples(
+    api_object: ApiObject,
+    *,
+    globs: Mapping[str, object] | None = None,
+) -> list[ApiDocIssue]:
     """Validate doctest-style examples for one API object.
 
     Args:
         api_object: API object whose examples should be checked.
+        globs: Optional namespace used to execute doctest examples. When
+            omitted, examples are parsed for doctest validity without running
+            user code.
 
     Returns:
         Issues for failing doctest examples.
 
     Notes:
-        This helper parses doctest syntax without executing it.
+        By default, this helper parses doctest syntax without executing it.
+        Pass ``globs`` when a trusted caller wants to run examples against a
+        prepared namespace.
         ``check_example_syntax`` performs compile-level checking for ``pycon``
         examples before coverage counters are computed.
 
@@ -122,6 +132,17 @@ def check_doctest_examples(api_object: ApiObject) -> list[ApiDocIssue]:
         assert not issues
         assert obj.examples[0].doctest_ok is True
         ```
+
+        Execute doctest examples against a trusted namespace:
+
+        ```python
+        def echo(value):
+            return value
+
+        obj.examples[0].code = ">>> echo('ok')\\n'ok'"
+        issues = check_doctest_examples(obj, globs={"echo": echo})
+        assert not issues
+        ```
     """
 
     issues: list[ApiDocIssue] = []
@@ -130,7 +151,22 @@ def check_doctest_examples(api_object: ApiObject) -> list[ApiDocIssue]:
         if example.language.lower() != "pycon":
             continue
         try:
-            parser.get_examples(example.code)
+            if globs is None:
+                parser.get_examples(example.code)
+            else:
+                test = parser.get_doctest(
+                    example.code,
+                    dict(globs),
+                    api_object.qualname,
+                    api_object.source_path or "<apidoc-doctest>",
+                    api_object.line_number or 0,
+                )
+                result = doctest.DocTestRunner(
+                    verbose=False,
+                    optionflags=doctest.ELLIPSIS,
+                ).run(test, out=lambda _: None)
+                if result.failed:
+                    raise ValueError(f"{result.failed} doctest example(s) failed")
         except ValueError as exc:
             example.doctest_ok = False
             issues.append(
