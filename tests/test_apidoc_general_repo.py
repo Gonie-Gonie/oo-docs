@@ -321,6 +321,10 @@ def test_general_repo_api_objects_example_cli_targets_repo_path(tmp_path) -> Non
             "--docstring-style",
             "auto",
             "--to",
+            "docx",
+            "--to",
+            "pdf",
+            "--to",
             "html",
             "--out",
             str(output_dir),
@@ -328,15 +332,58 @@ def test_general_repo_api_objects_example_cli_targets_repo_path(tmp_path) -> Non
         ]
     )
 
-    full_reference = output_dir / "oodocs-full-api-reference.html"
-    composition = output_dir / "oodocs-api-objects.html"
+    full_reference_docx = output_dir / "oodocs-full-api-reference.docx"
+    full_reference_pdf = output_dir / "oodocs-full-api-reference.pdf"
+    full_reference_html = output_dir / "oodocs-full-api-reference.html"
+    composition_docx = output_dir / "oodocs-api-objects.docx"
+    composition_pdf = output_dir / "oodocs-api-objects.pdf"
+    composition_html_path = output_dir / "oodocs-api-objects.html"
     api_json = output_dir / "oodocs-api-objects.json"
     coverage_json = output_dir / "oodocs-api-coverage.json"
 
-    assert full_reference.exists()
-    assert composition.exists()
+    assert_rendered_bundle(full_reference_docx, full_reference_pdf, full_reference_html)
+    assert_rendered_bundle(composition_docx, composition_pdf, composition_html_path)
     assert api_json.exists()
     assert coverage_json.exists()
+    assert_docx_structure(
+        full_reference_docx,
+        required_paragraphs=(
+            "mixedpkg API Reference",
+            "1 API Documentation Coverage",
+            "2 mixedpkg",
+            "2.1 mixedpkg.Client",
+        ),
+        min_tables=6,
+    )
+    assert_docx_structure(
+        composition_docx,
+        required_paragraphs=(
+            "OODocs API Object Composition",
+            "1 Selected Classes",
+            "2 Focused Module: mixedpkg.core",
+            "3 Function Summary",
+            "4 Coverage Summary",
+        ),
+        min_tables=4,
+    )
+    assert_pdf_text_and_pages(
+        full_reference_pdf,
+        required_text=(
+            "mixedpkg API Reference",
+            "mixedpkg.Client",
+            "mixedpkg.connect",
+        ),
+        min_pages=1,
+    )
+    assert_pdf_text_and_pages(
+        composition_pdf,
+        required_text=(
+            "OODocs API Object Composition",
+            "Focused Module: mixedpkg.core",
+            "mixedpkg.core.Client.connect",
+        ),
+        min_pages=1,
+    )
     rendered_api = ApiPackage.read_json(api_json)
     rendered_method = rendered_api.find("mixedpkg.Client.connect")
     assert rendered_api.name == "mixedpkg"
@@ -345,15 +392,15 @@ def test_general_repo_api_objects_example_cli_targets_repo_path(tmp_path) -> Non
     assert rendered_method.parameters[0].description == "Timeout in seconds."
     assert ApiCoverageResult.read_json(coverage_json).object_coverage == 1.0
 
-    html = full_reference.read_text(encoding="utf-8")
-    composition_html = composition.read_text(encoding="utf-8")
+    html = full_reference_html.read_text(encoding="utf-8")
+    composition_html = composition_html_path.read_text(encoding="utf-8")
     assert "mixedpkg API Reference" in html
     assert "mixedpkg.Client" in html
     assert "mixedpkg.connect" in html
     assert "Focused Module: mixedpkg.core" in composition_html
     assert "mixedpkg.core.Client.connect" in composition_html
-    assert_html_internal_links_resolve(full_reference)
-    assert_html_internal_links_resolve(composition)
+    assert_html_internal_links_resolve(full_reference_html)
+    assert_html_internal_links_resolve(composition_html_path)
 
 
 def test_general_repo_pyproject_auto_parser_builds_cli_bundle(tmp_path) -> None:
