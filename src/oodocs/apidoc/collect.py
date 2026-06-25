@@ -509,6 +509,15 @@ def _collect_module_from_file(
     )
     public_names = _module_all_names(tree)
     members: list[ApiObject] = []
+    class_nodes = {
+        node.name: node
+        for node in tree.body
+        if isinstance(node, ast.ClassDef)
+    }
+    class_objects = {
+        name: _class_object(node, module_name, path, config=config)
+        for name, node in class_nodes.items()
+    }
     module = ApiModule(
         module_name,
         summary=parsed_module.summary,
@@ -531,7 +540,7 @@ def _collect_module_from_file(
                 members.append(_function_object(node, module_name, path, config=config, parent=None))
         elif isinstance(node, ast.ClassDef):
             if _is_public_name(node.name, f"{module_name}.{node.name}", public_names, config):
-                members.append(_class_object(node, module_name, path, config=config))
+                members.append(class_objects[node.name])
         elif isinstance(node, (ast.Assign, ast.AnnAssign)):
             for name, annotation, default in _assignment_targets(node):
                 if _is_public_name(name, f"{module_name}.{name}", public_names, config):
@@ -551,6 +560,12 @@ def _collect_module_from_file(
                             metadata={"default": default} if default is not None else {},
                         )
                     )
+    if config.include_inherited:
+        _add_source_inherited_members(
+            members,
+            class_nodes=class_nodes,
+            class_objects=class_objects,
+        )
     module.members = sorted(
         _merge_attribute_docs(members, parsed_module.attributes),
         key=lambda obj: (obj.line_number or 0, obj.name),
@@ -651,6 +666,89 @@ def _class_object(
         },
     )
     return obj
+
+
+def _add_source_inherited_members(
+    members: list[ApiObject],
+    *,
+    class_nodes: dict[str, ast.ClassDef],
+    class_objects: dict[str, ApiObject],
+) -> None:
+    for class_obj in members:
+        if class_obj.kind != "class":
+            continue
+        node = class_nodes.get(class_obj.name)
+        if node is None:
+            continue
+        existing = {member.name for member in class_obj.members}
+        inherited: list[ApiObject] = []
+        for member in _source_inherited_members(
+            node,
+            class_nodes=class_nodes,
+            class_objects=class_objects,
+            visited=set(),
+        ):
+            if member.name in existing:
+                continue
+            clone = _inherited_member_alias(member, class_obj.qualname)
+            inherited.append(clone)
+            existing.add(member.name)
+        if inherited:
+            class_obj.members = sorted(
+                [*class_obj.members, *inherited],
+                key=lambda item: (item.line_number or 0, item.name),
+            )
+
+
+def _source_inherited_members(
+    node: ast.ClassDef,
+    *,
+    class_nodes: dict[str, ast.ClassDef],
+    class_objects: dict[str, ApiObject],
+    visited: set[str],
+) -> Iterable[ApiObject]:
+    for base_name in _source_base_names(node):
+        if base_name in visited:
+            continue
+        visited.add(base_name)
+        base_node = class_nodes.get(base_name)
+        base_obj = class_objects.get(base_name)
+        if base_node is None or base_obj is None:
+            continue
+        yield from base_obj.members
+        yield from _source_inherited_members(
+            base_node,
+            class_nodes=class_nodes,
+            class_objects=class_objects,
+            visited=visited,
+        )
+
+
+def _source_base_names(node: ast.ClassDef) -> list[str]:
+    names: list[str] = []
+    for base in node.bases:
+        name = _source_base_name(base)
+        if name:
+            names.append(name)
+    return names
+
+
+def _source_base_name(node: ast.expr) -> str | None:
+    if isinstance(node, ast.Name):
+        return node.id
+    if isinstance(node, ast.Attribute):
+        return node.attr
+    return None
+
+
+def _inherited_member_alias(member: ApiObject, owner_qualname: str) -> ApiObject:
+    clone = ApiObject.from_dict(copy.deepcopy(member.to_dict()))
+    clone.qualname = f"{owner_qualname}.{member.name}"
+    clone.metadata = dict(clone.metadata)
+    clone.metadata["inherited_from"] = member.metadata.get("inherited_from") or member.qualname
+    if clone.signature and clone.signature.startswith(member.qualname):
+        clone.signature = clone.qualname + clone.signature[len(member.qualname) :]
+    return clone
 
 
 def _function_object(

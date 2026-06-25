@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from apidoc_samples import collect_sample_api
+from oodocs.apidoc import collect_api
 
 
 def test_inspect_collector_collects_general_package_tree(tmp_path) -> None:
@@ -11,3 +12,45 @@ def test_inspect_collector_collects_general_package_tree(tmp_path) -> None:
     assert api.find("samplepkg.make_widget") is not None
     assert api.classes()
     assert api.functions()
+
+
+def test_inspect_collector_can_include_same_module_inherited_members(tmp_path) -> None:
+    package_dir = tmp_path / "inheritpkg"
+    package_dir.mkdir()
+    (package_dir / "__init__.py").write_text(
+        "\n".join(
+            [
+                "class Base:",
+                '    """Base class."""',
+                "    def inherited(self, value: str) -> str:",
+                '        """Inherited method."""',
+                "        return value",
+                "",
+                "class Child(Base):",
+                '    """Child class."""',
+                "    def own(self) -> None:",
+                '        """Own method."""',
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    default_api = collect_api(
+        package_dir,
+        collector="inspect",
+        public_policy="underscore",
+    )
+    inherited_api = collect_api(
+        package_dir,
+        collector="inspect",
+        public_policy="underscore",
+        include_inherited=True,
+    )
+
+    assert default_api.find("inheritpkg.Child.inherited") is None
+    inherited = inherited_api.find("inheritpkg.Child.inherited")
+    assert inherited is not None
+    assert inherited.summary == "Inherited method."
+    assert inherited.signature == "inheritpkg.Child.inherited(value: str) -> str"
+    assert inherited.metadata["inherited_from"] == "inheritpkg.Base.inherited"

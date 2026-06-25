@@ -158,9 +158,10 @@ api = collect_api(
 ```
 
 Use `include_inherited=True` when class references should include inherited
-methods, properties, or attributes. Griffe-backed collection walks the class
-MRO and records the original member qualname in `metadata["inherited_from"]` so
-rendered references can distinguish local API from inherited API.
+methods, properties, or attributes. Source collection can include same-module
+base class members; griffe-backed collection walks the class MRO. Both record
+the original member qualname in `metadata["inherited_from"]` so rendered
+references can distinguish local API from inherited API.
 
 ```python
 api = collect_api(
