@@ -201,37 +201,71 @@ class ApiDocstringParser:
 
     @classmethod
     def auto(cls) -> ApiDocstringParser:
-        """Return a parser that detects the docstring style automatically."""
+        """Return a parser that detects the docstring style automatically.
+
+        Returns:
+            Parser object configured with ``style="auto"``.
+
+        Examples:
+            Reuse auto detection across a repository collection:
+
+            ```python
+            from oodocs.apidoc import ApiDocstringParser, collect_api
+
+            parser = ApiDocstringParser.auto()
+            api = collect_api(".", docstring_style=parser)
+            ```
+        """
 
         return cls("auto")
 
     @classmethod
     def google(cls) -> ApiDocstringParser:
-        """Return a Google-style parser object."""
+        """Return a Google-style parser object.
+
+        Returns:
+            Parser object configured with ``style="google"``.
+        """
 
         return cls("google")
 
     @classmethod
     def numpy(cls) -> ApiDocstringParser:
-        """Return a NumPy-style parser object."""
+        """Return a NumPy-style parser object.
+
+        Returns:
+            Parser object configured with ``style="numpy"``.
+        """
 
         return cls("numpy")
 
     @classmethod
     def sphinx(cls) -> ApiDocstringParser:
-        """Return a Sphinx/reST-style parser object."""
+        """Return a Sphinx/reST-style parser object.
+
+        Returns:
+            Parser object configured with ``style="sphinx"``.
+        """
 
         return cls("sphinx")
 
     @classmethod
     def markdown(cls) -> ApiDocstringParser:
-        """Return a Markdown-style parser object."""
+        """Return a Markdown-style parser object.
+
+        Returns:
+            Parser object configured with ``style="markdown"``.
+        """
 
         return cls("markdown")
 
     @classmethod
     def plain(cls) -> ApiDocstringParser:
-        """Return a plain text parser object."""
+        """Return a plain text parser object.
+
+        Returns:
+            Parser object configured with ``style="plain"``.
+        """
 
         return cls("plain")
 
@@ -247,6 +281,17 @@ class ApiDocstringParser:
 
         Returns:
             Normalized parser object.
+
+        Examples:
+            Normalize user-facing configuration before passing it to
+            ``collect_api``:
+
+            ```python
+            from oodocs.apidoc import ApiDocstringParser, collect_api
+
+            parser = ApiDocstringParser.from_value({"style": "google"})
+            api = collect_api(".", docstring_style=parser)
+            ```
         """
 
         if isinstance(value, cls):
@@ -269,7 +314,19 @@ class ApiDocstringParser:
         return cls(str(data.get("style", "auto")))
 
     def to_dict(self) -> dict[str, object]:
-        """Return deterministic serialized parser data."""
+        """Return deterministic serialized parser data.
+
+        Returns:
+            JSON-serializable parser configuration.
+
+        Examples:
+            Store the parser policy beside an API sidecar:
+
+            ```python
+            parser = ApiDocstringParser.google()
+            payload = parser.to_dict()
+            ```
+        """
 
         return {"style": self.style}
 
@@ -282,6 +339,14 @@ class ApiDocstringParser:
         Returns:
             Detected style for ``"auto"`` parsers or this parser's explicit
             style when configured explicitly.
+
+        Examples:
+            Preview the parser choice before collection:
+
+            ```python
+            parser = ApiDocstringParser.auto()
+            assert parser.detect("Args:\\n    path: Input.") == "google"
+            ```
         """
 
         if self.style == "auto":
@@ -304,6 +369,20 @@ class ApiDocstringParser:
 
         Returns:
             Normalized parse result.
+
+        Examples:
+            Parse an isolated docstring before deciding whether to collect the
+            full package:
+
+            ```python
+            parser = ApiDocstringParser.google()
+            parsed = parser.parse(
+                "Load a file.\\n\\nArgs:\\n    path: File path.",
+                qualname="mypkg.load",
+                module="mypkg",
+            )
+            assert parsed.parameters[0].name == "path"
+            ```
         """
 
         return parse_docstring(text, style=self.style, qualname=qualname, module=module)
@@ -315,7 +394,16 @@ class ApiDocstringParser:
         qualname: str | None = None,
         module: str | None = None,
     ) -> ParsedDocstring:
-        """Parse one docstring when the object is called directly."""
+        """Parse one docstring when the parser object is called directly.
+
+        Args:
+            text: Raw docstring text.
+            qualname: Optional API object qualname for diagnostics.
+            module: Optional module name for diagnostics.
+
+        Returns:
+            Normalized parse result.
+        """
 
         return self.parse(text, qualname=qualname, module=module)
 
@@ -418,13 +506,19 @@ def register_docstring_parser(name: str, parser: DocstringParser) -> None:
         ValueError: If the style name is empty or already registered.
 
     Examples:
+        Register a parser for a repository-specific brief format and pass the
+        parser object into collection:
+
         ```python
-        from oodocs.apidoc.docstring import register_docstring_parser
+        from oodocs.apidoc import ApiDocstringParser, ParsedDocstring, collect_api
+        from oodocs.apidoc.docstring import parse_docstring, register_docstring_parser
 
         def parse_custom(text, qualname, module):
-            return parse_docstring(text, style="plain")
+            parsed = parse_docstring(text, style="plain", qualname=qualname, module=module)
+            return ParsedDocstring(summary=f"brief: {parsed.summary}", style="brief")
 
-        register_docstring_parser("custom", parse_custom)
+        register_docstring_parser("brief", parse_custom)
+        api = collect_api(".", docstring_style=ApiDocstringParser("brief"))
         ```
     """
 
@@ -472,6 +566,15 @@ def docstring_parser_names() -> tuple[str, ...]:
     Returns:
         Sorted parser style names. ``"auto"`` is not included because it is a
         dispatch mode rather than a concrete parser.
+
+    Examples:
+        Check whether a plugin module registered the expected parser:
+
+        ```python
+        from oodocs.apidoc import docstring_parser_names
+
+        assert "google" in docstring_parser_names()
+        ```
     """
 
     return tuple(sorted(_PARSERS))
@@ -485,6 +588,16 @@ def is_docstring_style_supported(style: str | ApiDocstringParser) -> bool:
 
     Returns:
         Whether ``parse_docstring`` can dispatch the style.
+
+    Examples:
+        Validate user configuration before running collection:
+
+        ```python
+        from oodocs.apidoc import ApiDocstringParser, is_docstring_style_supported
+
+        parser = ApiDocstringParser.from_value("google")
+        assert is_docstring_style_supported(parser)
+        ```
     """
 
     normalized = ApiDocstringParser.from_value(style).style
