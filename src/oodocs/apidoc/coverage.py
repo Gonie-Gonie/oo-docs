@@ -71,14 +71,25 @@ class ApiCoverageResult:
 
     @property
     def object_coverage(self) -> float:
-        """Return documented object ratio."""
+        """Return the documented public object ratio.
+
+        Returns:
+            Fraction between ``0.0`` and ``1.0``. Packages with no public
+            objects report ``1.0`` so empty internal packages do not fail
+            coverage gates by default.
+        """
 
         if self.public_object_count == 0:
             return 1.0
         return self.documented_object_count / self.public_object_count
 
     def to_dict(self) -> dict[str, object]:
-        """Return deterministic serialized coverage data."""
+        """Return deterministic serialized coverage data.
+
+        Returns:
+            JSON-serializable mapping containing the coverage counters,
+            computed object coverage, and issue rows.
+        """
 
         return {
             "package": self.package,
@@ -150,7 +161,27 @@ class ApiCoverageResult:
         )
 
     def to_table(self, *, caption: str | None = "API documentation coverage") -> Table:
-        """Return coverage metrics as an OODocs table."""
+        """Return coverage metrics as an OODocs table.
+
+        Args:
+            caption: Optional table caption.
+
+        Returns:
+            Two-column metrics table ready to insert into a ``Chapter`` or
+            ``Section``.
+
+        Examples:
+            Render coverage metrics beside release notes:
+
+            ```python
+            from oodocs import Chapter, Document
+            from oodocs.apidoc import check_api_docs, collect_api
+
+            api = collect_api("mypkg")
+            coverage = check_api_docs(api)
+            doc = Document("Release Evidence", Chapter("API Coverage", coverage.to_table()))
+            ```
+        """
 
         rows = [
             ["Public objects", str(self.public_object_count)],
@@ -171,7 +202,25 @@ class ApiCoverageResult:
         return Table(["Metric", "Value"], rows, caption=caption, split=True)
 
     def to_section(self) -> Chapter:
-        """Return coverage as an OODocs chapter."""
+        """Return coverage metrics and issue rows as an OODocs chapter.
+
+        Returns:
+            Chapter titled ``"API Documentation Coverage"``. The chapter
+            contains the metric table and either an issue table or a short
+            success paragraph.
+
+        Examples:
+            Add complete coverage evidence to a rendered API reference:
+
+            ```python
+            from oodocs import Document
+            from oodocs.apidoc import check_api_docs, collect_api
+
+            api = collect_api(".", collector="griffe")
+            coverage = check_api_docs(api, fail_under=0.90)
+            Document("API Evidence", coverage.to_section()).save_all("artifacts/api-evidence")
+            ```
+        """
 
         blocks: list[object] = [self.to_table()]
         if self.issues:
@@ -188,7 +237,25 @@ class ApiCoverageResult:
         return Chapter("API Documentation Coverage", *blocks)
 
     def write_json(self, path: PathLike) -> Path:
-        """Write coverage sidecar JSON."""
+        """Write coverage sidecar JSON.
+
+        Args:
+            path: Output JSON path.
+
+        Returns:
+            Written path.
+
+        Examples:
+            Persist CI coverage data for a later rendering job:
+
+            ```python
+            from oodocs.apidoc import check_api_docs, collect_api
+
+            api = collect_api(".", collector="griffe")
+            coverage = check_api_docs(api)
+            coverage.write_json("artifacts/api-coverage.json")
+            ```
+        """
 
         output_path = Path(path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -228,7 +295,25 @@ class ApiCoverageResult:
         return cls.from_dict(json.loads(Path(path).read_text(encoding="utf-8")))
 
     def write_csv(self, path: PathLike) -> Path:
-        """Write coverage issues as CSV."""
+        """Write coverage issues as CSV.
+
+        Args:
+            path: Output CSV path.
+
+        Returns:
+            Written path.
+
+        Examples:
+            Attach coverage issue rows to release evidence:
+
+            ```python
+            from oodocs.apidoc import check_api_docs, collect_api
+
+            api = collect_api(".", collector="griffe")
+            coverage = check_api_docs(api)
+            coverage.write_csv("artifacts/api-coverage.csv")
+            ```
+        """
 
         output_path = Path(path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -260,14 +345,35 @@ def check_api_docs(
     """Check API documentation coverage.
 
     Args:
-        api: Collected API package.
-        fail_under: Optional minimum object coverage ratio.
-        require_examples: Whether every public object should include examples.
+        api: Collected API package to inspect.
+        fail_under: Optional minimum documented-public-object ratio. When the
+            result falls below this value, an ``error`` issue with code
+            ``"coverage-fail-under"`` is appended.
+        require_examples: Whether every public object should include parsed
+            examples.
         require_renderer_notes: Whether every public object should include
             renderer notes.
 
     Returns:
-        Coverage result with issues.
+        Coverage result with counters and issue rows. The result can be
+        rendered with ``to_table()`` or ``to_section()``, serialized with
+        ``write_json()``, or exported as CSV with ``write_csv()``.
+
+    Examples:
+        Gate public API docs and render the evidence:
+
+        ```python
+        from oodocs import Document
+        from oodocs.apidoc import check_api_docs, collect_api
+
+        api = collect_api(".", public_policy="__all__", collector="griffe")
+        coverage = check_api_docs(api, fail_under=0.90, require_examples=True)
+        coverage.write_json("artifacts/api-coverage.json")
+        coverage.write_csv("artifacts/api-coverage.csv")
+        Document("API Coverage", coverage.to_section()).save_docx(
+            "artifacts/api-coverage.docx"
+        )
+        ```
     """
 
     objects = api.public_objects()
