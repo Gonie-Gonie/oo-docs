@@ -114,7 +114,7 @@ def parse_markdown(
         from oodocs.importers.markdown import parse_markdown
         from oodocs.importers.results import ImportResult
 
-        result = parse_markdown("# Intro\n\nRaw <span>HTML</span>", diagnostics=True)
+        result = parse_markdown("# Intro\\n\\nRaw <span>HTML</span>", diagnostics=True)
         assert isinstance(result, ImportResult)
         print(result.format_issues())
         ```
@@ -191,7 +191,7 @@ def from_markdown(
         ```python
         from oodocs.importers.markdown import from_markdown
 
-        doc = from_markdown("# Release Notes\n\n- Added importer diagnostics.")
+        doc = from_markdown("# Release Notes\\n\\n- Added importer diagnostics.")
         doc.save("release-notes.html")
         ```
     """

@@ -47,9 +47,10 @@ class PageSize:
 
     Examples:
         ```python
-        from oodocs import DocumentSettings, PageSize
+        from oodocs import Document, DocumentSettings, PageSize, Paragraph
 
         settings = DocumentSettings(page_size=PageSize.letter())
+        document = Document("Letter Report", Paragraph("Body text."), settings=settings)
         ```
     """
 
@@ -147,9 +148,10 @@ class PageMargins:
 
     Examples:
         ```python
-        from oodocs import DocumentSettings, PageMargins
+        from oodocs import Document, DocumentSettings, PageMargins, Paragraph
 
         settings = DocumentSettings(page_margins=PageMargins(1.0, 0.8, 1.0, 0.8, unit="in"))
+        document = Document("Margin Report", Paragraph("Body text."), settings=settings)
         ```
     """
 
@@ -311,7 +313,7 @@ class DocumentSettings:
 
     Examples:
         ```python
-        from oodocs import Author, DocumentSettings, PageMargins, PageSize
+        from oodocs import Author, Document, DocumentSettings, PageMargins, PageSize, Paragraph
 
         settings = DocumentSettings(
             authors=[Author("Jane Doe", email="jane@example.edu")],
@@ -319,6 +321,7 @@ class DocumentSettings:
             page_margins=PageMargins.symmetric(vertical=1.0, horizontal=0.8, unit="in"),
             cover_page=True,
         )
+        document = Document("Study Report", Paragraph("Findings."), settings=settings)
         ```
     """
 

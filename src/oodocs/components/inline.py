@@ -23,9 +23,10 @@ class Text:
 
     Examples:
         ```python
-        from oodocs import Paragraph, Text, TextStyle
+        from oodocs import Document, Paragraph, Text, TextStyle
 
         paragraph = Paragraph(Text("Important", style=TextStyle(bold=True)))
+        document = Document("Notes", paragraph)
         ```
     """
 
@@ -235,9 +236,10 @@ class Bold(Text):
 
     Examples:
         ```python
+        from oodocs import Document, Paragraph
         from oodocs.components.inline import Bold
 
-        fragment = Bold("required")
+        document = Document("Checklist", Paragraph("Approval is ", Bold("required"), "."))
         ```
     """
 
@@ -254,9 +256,10 @@ class Italic(Text):
 
     Examples:
         ```python
+        from oodocs import Document, Paragraph
         from oodocs.components.inline import Italic
 
-        fragment = Italic("optional")
+        document = Document("Checklist", Paragraph("This step is ", Italic("optional"), "."))
         ```
     """
 
@@ -273,9 +276,10 @@ class Monospace(Text):
 
     Examples:
         ```python
+        from oodocs import Document, Paragraph
         from oodocs.components.inline import Monospace
 
-        fragment = Monospace("pip install oodocs")
+        document = Document("Install", Paragraph("Run ", Monospace("pip install oodocs"), "."))
         ```
     """
 
@@ -325,9 +329,10 @@ class InlineChipStyle:
 
     Examples:
         ```python
-        from oodocs import InlineChipStyle, tag
+        from oodocs import Document, InlineChipStyle, Paragraph, tag
 
         fragment = tag("beta", chip_style=InlineChipStyle(background_color="EEF2FF"))
+        document = Document("Roadmap", Paragraph("Release channel: ", fragment))
         ```
     """
 
@@ -469,9 +474,10 @@ class InlineChip(Text):
 
     Examples:
         ```python
-        from oodocs import InlineChip
+        from oodocs import Document, InlineChip, Paragraph
 
         chip = InlineChip("approved", kind="status")
+        document = Document("Review", Paragraph("Status: ", chip))
         ```
     """
 
@@ -525,9 +531,10 @@ class Highlight(Text):
 
     Examples:
         ```python
+        from oodocs import Document, Paragraph
         from oodocs.components.inline import Highlight
 
-        fragment = Highlight("changed", color="FFF3B0")
+        document = Document("Diff", Paragraph("Field ", Highlight("changed", color="FFF3B0")))
         ```
     """
 
@@ -553,9 +560,10 @@ class Strikethrough(Text):
 
     Examples:
         ```python
+        from oodocs import Document, Paragraph
         from oodocs.components.inline import Strikethrough
 
-        fragment = Strikethrough("deprecated")
+        document = Document("Plan", Paragraph(Strikethrough("deprecated"), " option removed."))
         ```
     """
 
@@ -575,9 +583,10 @@ class LineBreak(Text):
 
     Examples:
         ```python
-        from oodocs import Paragraph, line_break
+        from oodocs import Document, Paragraph, line_break
 
         paragraph = Paragraph("First line", line_break(), "Second line")
+        document = Document("Two-Line Note", paragraph)
         ```
     """
 
@@ -609,10 +618,10 @@ class BlockReference(Text):
 
     Examples:
         ```python
-        from oodocs import Paragraph
+        from oodocs import Document, Paragraph
 
         target = Paragraph("Details")
-        reference = target.reference("the details")
+        document = Document("Report", target, Paragraph("See ", target.reference("the details"), "."))
         ```
     """
 
@@ -705,10 +714,10 @@ class Citation(Text):
 
     Examples:
         ```python
-        from oodocs import CitationSource, cite
+        from oodocs import CitationSource, Document, Paragraph, cite
 
-        source = CitationSource("Doe 2024", author="Doe", title="A Study")
-        citation = cite(source)
+        source = CitationSource("A Study", key="doe2024", authors=("Doe",), year="2024")
+        document = Document("Paper", Paragraph("Prior work ", cite("doe2024"), "."), citations=[source])
         ```
     """
 
@@ -779,9 +788,10 @@ class Hyperlink(Text):
 
     Examples:
         ```python
-        from oodocs import Paragraph, link
+        from oodocs import Document, Paragraph, link
 
         paragraph = Paragraph("Open ", link("https://example.com", "the dashboard"))
+        document = Document("Operations", paragraph)
         ```
     """
 
@@ -864,9 +874,10 @@ class Comment(Text):
 
     Examples:
         ```python
-        from oodocs import comment
+        from oodocs import Document, Paragraph, comment
 
         fragment = comment("metric", "Confirm source before publishing.", author="QA")
+        document = Document("Review", Paragraph("Check ", fragment, "."))
         ```
     """
 
@@ -969,9 +980,10 @@ class Footnote(Text):
 
     Examples:
         ```python
-        from oodocs import footnote
+        from oodocs import Document, Paragraph, footnote
 
         fragment = footnote("SLA", "Service-level agreement.")
+        document = Document("Report", Paragraph("The SLA", fragment, " was met."))
         ```
     """
 
@@ -1049,9 +1061,10 @@ class Math(Text):
 
     Examples:
         ```python
-        from oodocs import Paragraph, math
+        from oodocs import Document, Paragraph, math
 
         paragraph = Paragraph("Energy is ", math(r"E = mc^2"), ".")
+        document = Document("Physics Note", paragraph)
         ```
     """
 

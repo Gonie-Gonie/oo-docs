@@ -183,6 +183,8 @@ class CitationSource:
 
     Examples:
         ```python
+        from oodocs import Document, Paragraph, cite
+
         source = CitationSource(
             "Reliable APIs",
             key="doe2024",
@@ -190,6 +192,7 @@ class CitationSource:
             publisher="Journal of Docs",
             year="2024",
         )
+        document = Document("Paper", Paragraph("See ", cite("doe2024"), "."), citations=[source])
         ```
     """
 
@@ -285,10 +288,12 @@ class CitationLibrary:
 
     Examples:
         ```python
+        from oodocs import Document, Paragraph, cite
+
         library = CitationLibrary([
             CitationSource("Reliable APIs", key="doe2024", authors=("Jane Doe",))
         ])
-        citation = library.cite("doe2024")
+        document = Document("Paper", Paragraph("See ", cite("doe2024"), "."), citations=library)
         ```
     """
 

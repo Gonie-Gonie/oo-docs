@@ -45,10 +45,11 @@ class ImageData:
 
     Examples:
         ```python
-        from oodocs import Figure, ImageData
+        from oodocs import Document, Figure, ImageData
 
         image = ImageData(png_bytes, format="png")
         figure = Figure(image, caption="Generated chart")
+        document = Document("Chart Report", figure)
         ```
     """
 
@@ -273,9 +274,11 @@ class TableCellStyle:
 
     Examples:
         ```python
-        from oodocs import TableCellStyle
+        from oodocs import Document, Table, TableCellStyle
 
         style = TableCellStyle(background_color="F8FAFC", bold=True)
+        table = Table(["Metric", "Value"], [["Latency", "42 ms"]], column_styles={0: style})
+        document = Document("Metrics", table)
         ```
     """
 
@@ -428,10 +431,11 @@ class TableCell:
 
     Examples:
         ```python
-        from oodocs import Table, TableCell
+        from oodocs import Document, Table, TableCell
 
         header = TableCell("Model", colspan=2, bold=True)
         table = Table([[header]], [["Baseline", "v1"]])
+        document = Document("Models", table)
         ```
     """
 
@@ -1568,9 +1572,10 @@ class Figure(Block):
 
     Examples:
         ```python
-        from oodocs import Figure
+        from oodocs import Document, Figure
 
         figure = Figure("figures/architecture.png", caption="System architecture", width=4)
+        document = Document("Architecture", figure)
         ```
     """
 
@@ -1773,9 +1778,11 @@ class SubFigure:
 
     Examples:
         ```python
-        from oodocs import SubFigure
+        from oodocs import Document, SubFigure, SubFigureGroup
 
         left = SubFigure("before.png", caption="Before")
+        group = SubFigureGroup(left, SubFigure("after.png", caption="After"), caption="Comparison")
+        document = Document("Experiment", group)
         ```
     """
 
@@ -1881,7 +1888,7 @@ class SubFigureGroup(Block):
 
     Examples:
         ```python
-        from oodocs import SubFigure, SubFigureGroup
+        from oodocs import Document, SubFigure, SubFigureGroup
 
         group = SubFigureGroup(
             SubFigure("before.png", caption="Before"),
@@ -1889,6 +1896,7 @@ class SubFigureGroup(Block):
             caption="Before and after comparison",
             columns=2,
         )
+        document = Document("Experiment", group)
         ```
     """
 

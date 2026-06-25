@@ -23,10 +23,11 @@ class Block:
 
     Examples:
         ```python
-        from oodocs import Paragraph
+        from oodocs import Document, Paragraph
 
         target = Paragraph("Deployment note")
         paragraph = Paragraph("See ", target.reference("the deployment note"))
+        document = Document("Release Notes", target, paragraph)
         ```
     """
 
@@ -166,8 +167,10 @@ class Body(Block):
 
     Examples:
         ```python
+        from oodocs import Document
+
         body = Body("Intro").add("Next paragraph")
-        assert len(body.children) == 2
+        document = Document("Report", body=body)
         ```
     """
 

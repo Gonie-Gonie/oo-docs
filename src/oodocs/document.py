@@ -143,7 +143,7 @@ class Document:
             ```python
             from oodocs import Document
 
-            doc = Document.from_markdown("# Overview\n\nImported content.")
+            doc = Document.from_markdown("# Overview\\n\\nImported content.")
             doc.save_html("overview.html")
             ```
         """

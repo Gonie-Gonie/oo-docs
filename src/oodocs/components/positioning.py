@@ -34,8 +34,11 @@ class PositionedBox:
 
     Examples:
         ```python
-        item = TextBox("DRAFT", width=2.0, height=0.5)
-        box = PositionedBox(item=item, x=1.0, y=1.0, width=2.0, height=0.5)
+        from oodocs import DocumentSettings, TextBox
+        from oodocs.components.positioning import resolve_positioned_boxes
+
+        settings = DocumentSettings()
+        boxes = resolve_positioned_boxes([TextBox("DRAFT", width=2, height=0.5)], settings, settings.unit)
         ```
     """
 
@@ -82,7 +85,7 @@ class TextBox(Block):
 
     Examples:
         ```python
-        from oodocs import DocumentSettings, TextBox
+        from oodocs import Document, DocumentSettings, Paragraph, TextBox
 
         watermark = TextBox(
             "DRAFT",
@@ -93,6 +96,7 @@ class TextBox(Block):
             font_size=24,
         )
         settings = DocumentSettings(page_items=[watermark])
+        document = Document("Draft Report", Paragraph("Body"), settings=settings)
         ```
     """
 
@@ -221,7 +225,7 @@ class Shape(Block):
 
     Examples:
         ```python
-        from oodocs import Shape
+        from oodocs import Document, DocumentSettings, Paragraph, Shape
 
         anchor = Shape.rect(
             width=2,
@@ -231,6 +235,8 @@ class Shape(Block):
             name="logo-area",
             fill_color="F7FAFC",
         )
+        settings = DocumentSettings(page_items=[anchor])
+        document = Document("Branded Report", Paragraph("Body"), settings=settings)
         ```
     """
 
@@ -424,9 +430,11 @@ class ImageBox(Block):
 
     Examples:
         ```python
-        from oodocs import ImageBox
+        from oodocs import Document, DocumentSettings, ImageBox, Paragraph
 
         logo = ImageBox("logo.png", x=0.5, y=0.5, width=1.2, height=0.6)
+        settings = DocumentSettings(page_items=[logo])
+        document = Document("Branded Report", Paragraph("Body"), settings=settings)
         ```
     """
 

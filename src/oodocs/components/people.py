@@ -25,11 +25,15 @@ class Affiliation:
 
     Examples:
         ```python
+        from oodocs import Author, Document, DocumentSettings, Paragraph
+
         affiliation = Affiliation(
             department="AI Lab",
             organization="Example University",
             country="KR",
         )
+        author = Author("Jane Doe", affiliations=[affiliation])
+        document = Document("Research Note", Paragraph("Summary."), settings=DocumentSettings(authors=[author]))
         ```
     """
 
@@ -92,7 +96,11 @@ class AuthorLayout:
 
     Examples:
         ```python
+        from oodocs import Author, Document, DocumentSettings, Paragraph
+
         layout = AuthorLayout(mode="journal", corresponding_marker="*")
+        settings = DocumentSettings(authors=[Author("Jane Doe", corresponding=True)], author_layout=layout)
+        document = Document("Research Note", Paragraph("Summary."), settings=settings)
         ```
     """
 
@@ -125,7 +133,10 @@ class AuthorTitleLine:
 
     Examples:
         ```python
-        line = AuthorTitleLine("name", (Text("Jane Doe"),))
+        from oodocs import Author
+
+        author = Author("Jane Doe", affiliations=["Example University"])
+        lines = author.title_lines()
         ```
     """
 
@@ -155,7 +166,7 @@ class Author:
 
     Examples:
         ```python
-        from oodocs import Author, Document, DocumentSettings
+        from oodocs import Author, Document, DocumentSettings, Paragraph
 
         author = Author(
             "Jane Doe",
@@ -164,7 +175,7 @@ class Author:
             corresponding=True,
         )
         settings = DocumentSettings(authors=[author])
-        doc = Document("Research Note", settings=settings)
+        doc = Document("Research Note", Paragraph("Summary."), settings=settings)
         ```
     """
 

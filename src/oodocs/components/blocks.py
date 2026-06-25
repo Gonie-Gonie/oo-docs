@@ -59,7 +59,7 @@ class Paragraph(Block):
 
     Examples:
         ```python
-        from oodocs import Paragraph, bold, link
+        from oodocs import Document, Paragraph, bold, link
 
         paragraph = Paragraph(
             "Read the ",
@@ -68,6 +68,7 @@ class Paragraph(Block):
             bold("production"),
             ".",
         )
+        document = Document("Approval Notes", paragraph)
         ```
     """
 
@@ -320,9 +321,10 @@ class BulletList(ListBlock):
 
     Examples:
         ```python
-        from oodocs import BulletList
+        from oodocs import BulletList, Document, Section
 
         tasks = BulletList("Collect metrics", "Review failures", "Publish report")
+        document = Document("Release Checklist", Section("Tasks", tasks))
         ```
     """
 
@@ -371,9 +373,10 @@ class NumberedList(ListBlock):
 
     Examples:
         ```python
-        from oodocs import NumberedList
+        from oodocs import Document, NumberedList, Section
 
         steps = NumberedList("Install", "Configure", "Run", start=1)
+        document = Document("Runbook", Section("Procedure", steps))
         ```
     """
 
@@ -433,9 +436,10 @@ class CodeBlock(Block):
 
     Examples:
         ```python
-        from oodocs import CodeBlock
+        from oodocs import CodeBlock, Document, Section
 
         snippet = CodeBlock("print('hello')", language="python")
+        document = Document("Developer Notes", Section("Example", snippet))
         ```
     """
 
@@ -554,9 +558,10 @@ class Equation(Block):
 
     Examples:
         ```python
-        from oodocs import Equation
+        from oodocs import Document, Equation, Section
 
         energy = Equation(r"E = mc^2")
+        document = Document("Physics Note", Section("Energy", energy))
         ```
     """
 
@@ -721,9 +726,14 @@ class VerticalSpace(Block):
 
     Examples:
         ```python
-        from oodocs import VerticalSpace
+        from oodocs import Document, Paragraph, VerticalSpace
 
-        spacer = VerticalSpace(18, unit="pt")
+        document = Document(
+            "Agenda",
+            Paragraph("Morning session"),
+            VerticalSpace(18, unit="pt"),
+            Paragraph("Afternoon session"),
+        )
         ```
     """
 
@@ -806,9 +816,14 @@ class Divider(Block):
 
     Examples:
         ```python
-        from oodocs import Divider
+        from oodocs import Divider, Document, Paragraph
 
-        divider = Divider(color="B7C2D0", width=3.5, unit="in")
+        document = Document(
+            "Summary",
+            Paragraph("Findings"),
+            Divider(color="B7C2D0", width=3.5, unit="in"),
+            Paragraph("Appendix"),
+        )
         ```
     """
 
@@ -916,9 +931,15 @@ class ColumnSpan(Block):
 
     Examples:
         ```python
-        from oodocs import ColumnSpan, Paragraph
+        from oodocs import ColumnSpan, Document, MultiColumn, Paragraph
 
-        span = ColumnSpan(Paragraph("This paragraph spans all columns."))
+        layout = MultiColumn(
+            Paragraph("Left column."),
+            ColumnSpan(Paragraph("This paragraph spans all columns.")),
+            Paragraph("Right column."),
+            columns=2,
+        )
+        document = Document("Layout", layout)
         ```
     """
 
@@ -1014,13 +1035,14 @@ class MultiColumn(Block):
 
     Examples:
         ```python
-        from oodocs import MultiColumn, Paragraph
+        from oodocs import Document, MultiColumn, Paragraph
 
         layout = MultiColumn(
             Paragraph("Left flow."),
             Paragraph("Right flow."),
             columns=2,
         )
+        document = Document("Newsletter", layout)
         ```
     """
 
@@ -1194,9 +1216,10 @@ class Part(Block):
 
     Examples:
         ```python
-        from oodocs import Chapter, Part
+        from oodocs import Chapter, Document, Part
 
         part = Part("Methods", Chapter("Data Collection"))
+        document = Document("Study Protocol", part)
         ```
     """
 
@@ -1322,9 +1345,10 @@ class Box(Block):
 
     Examples:
         ```python
-        from oodocs import Box, Paragraph
+        from oodocs import Box, Document, Paragraph
 
         note = Box(Paragraph("Review this before release."), title="Note")
+        document = Document("Release Notes", note)
         ```
     """
 
@@ -1461,7 +1485,7 @@ class CountableBlock(Block):
 
     Examples:
         ```python
-        from oodocs import CountableBlock, Paragraph
+        from oodocs import CountableBlock, Document, Paragraph
 
         theorem = CountableBlock(
             "Theorem",
@@ -1469,6 +1493,7 @@ class CountableBlock(Block):
             title="Leaf existence",
             counter="theorem",
         )
+        document = Document("Proof Notes", theorem)
         ```
     """
 
@@ -1711,9 +1736,10 @@ class Section(Block):
 
     Examples:
         ```python
-        from oodocs import Paragraph, Section
+        from oodocs import Document, Paragraph, Section
 
         section = Section("Results", Paragraph("The benchmark passed."), level=2)
+        document = Document("Benchmark", section)
         ```
     """
 
@@ -1842,9 +1868,10 @@ class Chapter(Section):
 
     Examples:
         ```python
-        from oodocs import Chapter, Paragraph
+        from oodocs import Chapter, Document, Paragraph
 
         chapter = Chapter("Introduction", Paragraph("This report summarizes the release."))
+        document = Document("Release Report", chapter)
         ```
     """
 
@@ -1870,9 +1897,10 @@ class Subsection(Section):
 
     Examples:
         ```python
-        from oodocs import Paragraph, Subsection
+        from oodocs import Chapter, Document, Paragraph, Subsection
 
         subsection = Subsection("Validation", Paragraph("All checks passed."))
+        document = Document("Release Report", Chapter("Evidence", subsection))
         ```
     """
 
@@ -1898,9 +1926,10 @@ class Subsubsection(Section):
 
     Examples:
         ```python
-        from oodocs import Paragraph, Subsubsection
+        from oodocs import Chapter, Document, Paragraph, Subsection, Subsubsection
 
         subsection = Subsubsection("Audit Evidence", Paragraph("Evidence was archived."))
+        document = Document("Release Report", Chapter("Evidence", Subsection("Validation", subsection)))
         ```
     """
 

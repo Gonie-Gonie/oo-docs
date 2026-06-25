@@ -160,9 +160,10 @@ class TextStyle:
 
     Examples:
         ```python
-        from oodocs import Text, TextStyle
+        from oodocs import Document, Paragraph, Text, TextStyle
 
         fragment = Text("Important", style=TextStyle(bold=True))
+        document = Document("Notes", Paragraph("Status: ", fragment))
         ```
     """
 
@@ -257,9 +258,10 @@ class ParagraphStyle:
 
     Examples:
         ```python
-        from oodocs import Paragraph, ParagraphStyle
+        from oodocs import Document, Paragraph, ParagraphStyle
 
         paragraph = Paragraph("Indented text", style=ParagraphStyle.hanging())
+        document = Document("Notes", paragraph)
         ```
     """
 
@@ -409,8 +411,11 @@ class HeadingNumbering:
 
     Examples:
         ```python
+        from oodocs import Document, DocumentSettings, Section, Theme
+
         numbering = HeadingNumbering(formats=("upper-roman", "decimal"))
-        assert numbering.format_label([2, 3]) == "II.3"
+        theme = Theme(heading_numbering=numbering)
+        document = Document("Report", Section("Methods"), settings=DocumentSettings(theme=theme))
         ```
     """
 
@@ -461,8 +466,10 @@ class ListStyle:
 
     Examples:
         ```python
-        style = ListStyle(marker_format="lower-alpha", suffix=")")
-        assert style.marker_for(0) == "a)"
+        from oodocs import Document, NumberedList
+
+        list_block = NumberedList("Install", "Run", style=ListStyle(marker_format="lower-alpha"))
+        document = Document("Procedure", list_block)
         ```
     """
 
@@ -521,9 +528,10 @@ class BoxStyle:
 
     Examples:
         ```python
-        from oodocs import Box, BoxStyle
+        from oodocs import Box, BoxStyle, Document
 
         box = Box("Note body", title="Note", style=BoxStyle(background_color="F7FAFC"))
+        document = Document("Notes", box)
         ```
     """
 
@@ -598,9 +606,10 @@ class TableStyle:
 
     Examples:
         ```python
-        from oodocs import Table, TableStyle
+        from oodocs import Document, Table, TableStyle
 
         table = Table(["A"], [[1]], style=TableStyle.compact())
+        document = Document("Metrics", table)
         ```
     """
 
@@ -755,9 +764,10 @@ class TypographyOptions:
 
     Examples:
         ```python
-        from oodocs import Theme, TypographyOptions
+        from oodocs import Document, DocumentSettings, Paragraph, Theme, TypographyOptions
 
         theme = Theme(TypographyOptions(body_font_name="Arial", body_font_size=10.5))
+        document = Document("Report", Paragraph("Body"), settings=DocumentSettings(theme=theme))
         ```
     """
 
@@ -786,9 +796,14 @@ class CaptionOptions:
 
     Examples:
         ```python
-        from oodocs import CaptionOptions, Theme
+        from oodocs import CaptionOptions, Document, DocumentSettings, Table, Theme
 
         theme = Theme(CaptionOptions(table_caption_position="below"))
+        document = Document(
+            "Metrics",
+            Table(["Metric"], [["Latency"]], caption="Runtime metric"),
+            settings=DocumentSettings(theme=theme),
+        )
         ```
     """
 
@@ -813,9 +828,16 @@ class CitationOptions:
 
     Examples:
         ```python
-        from oodocs import CitationOptions, Theme
+        from oodocs import CitationOptions, CitationSource, Document, DocumentSettings, Paragraph, Theme, cite
 
         theme = Theme(CitationOptions(citation_format="author-year"))
+        source = CitationSource("Reliable APIs", key="api2024", authors=("Jane Doe",))
+        document = Document(
+            "Paper",
+            Paragraph("Prior work ", cite("api2024"), "."),
+            settings=DocumentSettings(theme=theme),
+            citations=[source],
+        )
         ```
     """
 
@@ -839,9 +861,10 @@ class GeneratedPageOptions:
 
     Examples:
         ```python
-        from oodocs import GeneratedPageOptions, Theme
+        from oodocs import Document, DocumentSettings, GeneratedPageOptions, ReferencesPage, Theme
 
         theme = Theme(GeneratedPageOptions(references_title="Bibliography"))
+        document = Document("Paper", ReferencesPage(), settings=DocumentSettings(theme=theme))
         ```
     """
 
@@ -869,9 +892,10 @@ class PageNumberOptions:
 
     Examples:
         ```python
-        from oodocs import PageNumberOptions, Theme
+        from oodocs import Document, DocumentSettings, PageNumberOptions, Paragraph, Theme
 
         theme = Theme(PageNumberOptions(show_page_numbers=True))
+        document = Document("Report", Paragraph("Body"), settings=DocumentSettings(theme=theme))
         ```
     """
 
@@ -896,9 +920,10 @@ class TitleMatterOptions:
 
     Examples:
         ```python
-        from oodocs import Theme, TitleMatterOptions
+        from oodocs import Document, DocumentSettings, Paragraph, Theme, TitleMatterOptions
 
         theme = Theme(TitleMatterOptions(title_alignment="left"))
+        document = Document("Report", Paragraph("Body"), settings=DocumentSettings(theme=theme))
         ```
     """
 
@@ -929,9 +954,10 @@ class BlockOptions:
 
     Examples:
         ```python
-        from oodocs import BlockOptions, HeadingNumbering, Theme
+        from oodocs import BlockOptions, Document, DocumentSettings, HeadingNumbering, Section, Theme
 
         theme = Theme(BlockOptions(heading_numbering=HeadingNumbering(enabled=False)))
+        document = Document("Report", Section("Unnumbered"), settings=DocumentSettings(theme=theme))
         ```
     """
 

@@ -81,9 +81,10 @@ class ManuscriptSection:
     Examples:
         ```python
         from oodocs import Paragraph
-        from oodocs.presets import ManuscriptSection
+        from oodocs.presets import JournalArticleTemplate, ManuscriptSection
 
         section = ManuscriptSection("Methods", [Paragraph("Cohort details.")])
+        document = JournalArticleTemplate().build("Clinical Study", sections=[section])
         ```
     """
 

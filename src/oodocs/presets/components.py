@@ -96,9 +96,11 @@ class CompactTable(Table):
 
     Examples:
         ```python
+        from oodocs import Document
         from oodocs.presets import CompactTable
 
         table = CompactTable(["Metric", "Value"], [["Latency", "42 ms"]])
+        document = Document("Metrics", table)
         ```
     """
 
@@ -135,9 +137,11 @@ class KeyValueTable(CompactTable):
 
     Examples:
         ```python
+        from oodocs import Document
         from oodocs.presets import KeyValueTable
 
         table = KeyValueTable({"Environment": "prod", "Version": "1.2.0"})
+        document = Document("Deployment", table)
         ```
     """
 
@@ -181,9 +185,11 @@ class Nomenclature(Box):
 
     Examples:
         ```python
+        from oodocs import Document
         from oodocs.presets import Nomenclature
 
         symbols = Nomenclature([("R", "Recall"), ("P", "Precision")], title="Symbols")
+        document = Document("Model Report", symbols)
         ```
     """
 

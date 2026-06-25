@@ -26,7 +26,10 @@ class TocLevelStyle:
 
     Examples:
         ```python
-        style = TocLevelStyle(indent=0.25, bold=True)
+        from oodocs import Document, Section, TableOfContents, TocLevelStyle
+
+        toc = TableOfContents(level_styles={1: TocLevelStyle(indent=0.25, bold=True)})
+        document = Document("Report", toc, Section("Summary"))
         ```
     """
 
