@@ -719,12 +719,18 @@ def api_review_note_paragraph(
 def api_member_summary_table(
     obj: ApiObject,
     profile: str | ApiDocProfile = "reference",
+    *,
+    level: int = 2,
+    max_level: int | None = None,
 ) -> Table | None:
     """Return a member summary table for class-like objects.
 
     Args:
         obj: API object whose members should be summarized.
         profile: Presentation profile.
+        level: Heading level of ``obj`` when the table is rendered.
+        max_level: Optional deepest heading level. Website links are emitted
+            only when member sections will also be rendered.
 
     Returns:
         Member summary table, or ``None`` when there are no members.
@@ -745,7 +751,17 @@ def api_member_summary_table(
     resolved = resolve_profile(profile)
     if not resolved.include_member_summary or not obj.members:
         return None
-    return api_objects_to_summary_table(obj.members, caption="Members", profile=resolved)
+    link_names = (
+        resolved.name == "website"
+        and resolved.include_member_sections
+        and _can_render_child_sections(level, _normalize_max_level(max_level))
+    )
+    return api_objects_to_summary_table(
+        obj.members,
+        caption="Members",
+        profile=resolved,
+        link_names=link_names,
+    )
 
 
 def api_object_to_blocks(
@@ -798,7 +814,12 @@ def api_object_to_blocks(
     blocks.extend(api_examples_blocks(obj, resolved))
     blocks.extend(api_see_also_blocks(obj, resolved))
     blocks.extend(api_renderer_notes_blocks(obj, resolved))
-    if member_summary := api_member_summary_table(obj, resolved):
+    if member_summary := api_member_summary_table(
+        obj,
+        resolved,
+        level=level,
+        max_level=max_level,
+    ):
         blocks.append(member_summary)
     if source := api_source_location_paragraph(obj, resolved):
         blocks.append(source)
@@ -907,6 +928,7 @@ def api_objects_to_summary_table(
     profile: str | ApiDocProfile = "compact",
     caption: str | None = None,
     include_module: bool = True,
+    link_names: bool | None = None,
 ) -> Table:
     """Return a summary table for API objects.
 
@@ -918,6 +940,9 @@ def api_objects_to_summary_table(
         profile: Presentation profile.
         caption: Optional table caption.
         include_module: Whether to include the module column.
+        link_names: Optional override for whether object names should link to
+            object anchors. Defaults to ``True`` for the website profile and
+            ``False`` otherwise.
 
     Returns:
         OODocs table containing kind, module/name, and summary columns.
@@ -942,8 +967,9 @@ def api_objects_to_summary_table(
 
     resolved = resolve_profile(profile)
     headers = ["Kind", "Module", "Name", "Summary"] if include_module else ["Kind", "Name", "Summary"]
+    resolved_link_names = resolved.name == "website" if link_names is None else link_names
     rows = [
-        obj.to_summary_row(include_module=include_module, link_name=resolved.name == "website")
+        obj.to_summary_row(include_module=include_module, link_name=resolved_link_names)
         for obj in objects
     ]
     return Table(headers, rows, caption=caption, split=True)
@@ -1014,9 +1040,17 @@ def api_module_to_blocks(
                 split=True,
             )
         )
+    render_member_sections = max_level is None or level <= max_level
     if module.members:
-        blocks.append(module.to_summary_table(caption="Module API", profile=resolved))
-    if max_level is None or level <= max_level:
+        blocks.append(
+            api_objects_to_summary_table(
+                module.members,
+                caption="Module API",
+                profile=resolved,
+                link_names=resolved.name == "website" and render_member_sections,
+            )
+        )
+    if render_member_sections:
         blocks.extend(
             module.to_sections(
                 profile=resolved,
