@@ -37,7 +37,14 @@ from oodocs.layout.theme import (
 
 @dataclass(slots=True, init=False)
 class PageSize:
-    """Physical page size used by renderers and layout helpers."""
+    """Physical page size used by renderers and layout helpers.
+
+    Args:
+        width: Page width in ``unit``.
+        height: Page height in ``unit``.
+        unit: Length unit for ``width`` and ``height``. When ``None``, callers
+            must supply a default unit when resolving physical sizes.
+    """
 
     width: float
     height: float
@@ -56,22 +63,61 @@ class PageSize:
 
     @classmethod
     def a4(cls) -> PageSize:
+        """Create an A4 page size.
+
+        Returns:
+            A ``PageSize`` configured as 21 x 29.7 cm.
+        """
+
         return cls(21.0, 29.7, unit="cm")
 
     @classmethod
     def letter(cls) -> PageSize:
+        """Create a US Letter page size.
+
+        Returns:
+            A ``PageSize`` configured as 8.5 x 11 inches.
+        """
+
         return cls(8.5, 11.0, unit="in")
 
     def width_in_inches(self, default_unit: str) -> float:
+        """Return the page width in inches.
+
+        Args:
+            default_unit: Unit to use when this page size has ``unit=None``.
+
+        Returns:
+            The resolved page width in inches.
+        """
+
         return length_to_inches(self.width, self.unit or default_unit)
 
     def height_in_inches(self, default_unit: str) -> float:
+        """Return the page height in inches.
+
+        Args:
+            default_unit: Unit to use when this page size has ``unit=None``.
+
+        Returns:
+            The resolved page height in inches.
+        """
+
         return length_to_inches(self.height, self.unit or default_unit)
 
 
 @dataclass(slots=True, init=False)
 class PageMargins:
-    """Physical page margins used by renderers and layout helpers."""
+    """Physical page margins used by renderers and layout helpers.
+
+    Args:
+        top: Top margin in ``unit``.
+        right: Right margin in ``unit``.
+        bottom: Bottom margin in ``unit``.
+        left: Left margin in ``unit``.
+        unit: Length unit for all margin values. When ``None``, callers must
+            supply a default unit when resolving physical margins.
+    """
 
     top: float
     right: float
@@ -96,6 +142,16 @@ class PageMargins:
 
     @classmethod
     def all(cls, value: float, *, unit: str | None = None) -> PageMargins:
+        """Create margins with the same value on every side.
+
+        Args:
+            value: Margin value for all sides.
+            unit: Length unit for the margin value.
+
+        Returns:
+            A ``PageMargins`` instance with equal sides.
+        """
+
         return cls(value, value, value, value, unit=unit)
 
     @classmethod
@@ -106,24 +162,87 @@ class PageMargins:
         horizontal: float,
         unit: str | None = None,
     ) -> PageMargins:
+        """Create margins from vertical and horizontal pairs.
+
+        Args:
+            vertical: Top and bottom margin value.
+            horizontal: Left and right margin value.
+            unit: Length unit for the margin values.
+
+        Returns:
+            A ``PageMargins`` instance with symmetric sides.
+        """
+
         return cls(vertical, horizontal, vertical, horizontal, unit=unit)
 
     def top_in_inches(self, default_unit: str) -> float:
+        """Return the top margin in inches.
+
+        Args:
+            default_unit: Unit to use when these margins have ``unit=None``.
+
+        Returns:
+            The top margin in inches.
+        """
+
         return length_to_inches(self.top, self.unit or default_unit)
 
     def right_in_inches(self, default_unit: str) -> float:
+        """Return the right margin in inches.
+
+        Args:
+            default_unit: Unit to use when these margins have ``unit=None``.
+
+        Returns:
+            The right margin in inches.
+        """
+
         return length_to_inches(self.right, self.unit or default_unit)
 
     def bottom_in_inches(self, default_unit: str) -> float:
+        """Return the bottom margin in inches.
+
+        Args:
+            default_unit: Unit to use when these margins have ``unit=None``.
+
+        Returns:
+            The bottom margin in inches.
+        """
+
         return length_to_inches(self.bottom, self.unit or default_unit)
 
     def left_in_inches(self, default_unit: str) -> float:
+        """Return the left margin in inches.
+
+        Args:
+            default_unit: Unit to use when these margins have ``unit=None``.
+
+        Returns:
+            The left margin in inches.
+        """
+
         return length_to_inches(self.left, self.unit or default_unit)
 
 
 @dataclass(slots=True, init=False)
 class DocumentSettings:
-    """Document-level metadata and rendering configuration."""
+    """Document-level metadata and rendering configuration.
+
+    Args:
+        metadata_author: Author string written to file metadata. Defaults to
+            the configured document authors when omitted.
+        summary: Optional document summary or description.
+        subtitle: Optional subtitle rendered with title matter.
+        authors: Optional author metadata used for title matter.
+        author_layout: Layout rules for author title matter.
+        cover_page: Whether renderers should place title matter on a separate
+            cover page when supported.
+        unit: Default length unit for values that do not carry an explicit unit.
+        page_size: Physical page size.
+        page_margins: Physical page margins.
+        page_items: Absolute-positioned page decorations or overlays.
+        theme: Rendering theme.
+    """
 
     metadata_author: str | None
     summary: str | None
@@ -165,12 +284,22 @@ class DocumentSettings:
         self.theme = theme or Theme()
 
     def page_width_in_inches(self) -> float:
+        """Return the resolved page width in inches."""
+
         return self.page_size.width_in_inches(self.unit)
 
     def page_height_in_inches(self) -> float:
+        """Return the resolved page height in inches."""
+
         return self.page_size.height_in_inches(self.unit)
 
     def page_margin_inches(self) -> tuple[float, float, float, float]:
+        """Return resolved page margins in inches.
+
+        Returns:
+            A ``(top, right, bottom, left)`` tuple in inches.
+        """
+
         return (
             self.page_margins.top_in_inches(self.unit),
             self.page_margins.right_in_inches(self.unit),
@@ -179,31 +308,80 @@ class DocumentSettings:
         )
 
     def text_width_in_inches(self) -> float:
+        """Return the writable page width after horizontal margins."""
+
         _, right, _, left = self.page_margin_inches()
         return max(self.page_width_in_inches() - left - right, 0)
 
     def text_height_in_inches(self) -> float:
+        """Return the writable page height after vertical margins."""
+
         top, _, bottom, _ = self.page_margin_inches()
         return max(self.page_height_in_inches() - top - bottom, 0)
 
     def get_page_width(self, scale: float = 1.0, *, unit: str | None = None) -> float:
+        """Return the page width in a requested unit.
+
+        Args:
+            scale: Multiplier applied before conversion.
+            unit: Output unit. Defaults to this settings object's default unit.
+
+        Returns:
+            The scaled page width in the requested unit.
+        """
+
         output_unit = normalize_length_unit(unit) if unit is not None else self.unit
         return inches_to_length(self.page_width_in_inches() * scale, output_unit)
 
     def get_page_height(self, scale: float = 1.0, *, unit: str | None = None) -> float:
+        """Return the page height in a requested unit.
+
+        Args:
+            scale: Multiplier applied before conversion.
+            unit: Output unit. Defaults to this settings object's default unit.
+
+        Returns:
+            The scaled page height in the requested unit.
+        """
+
         output_unit = normalize_length_unit(unit) if unit is not None else self.unit
         return inches_to_length(self.page_height_in_inches() * scale, output_unit)
 
     def get_text_width(self, scale: float = 1.0, *, unit: str | None = None) -> float:
+        """Return the writable text width in a requested unit.
+
+        Args:
+            scale: Multiplier applied before conversion.
+            unit: Output unit. Defaults to this settings object's default unit.
+
+        Returns:
+            The scaled writable width in the requested unit.
+        """
+
         output_unit = normalize_length_unit(unit) if unit is not None else self.unit
         return inches_to_length(self.text_width_in_inches() * scale, output_unit)
 
     def get_text_height(self, scale: float = 1.0, *, unit: str | None = None) -> float:
+        """Return the writable text height in a requested unit.
+
+        Args:
+            scale: Multiplier applied before conversion.
+            unit: Output unit. Defaults to this settings object's default unit.
+
+        Returns:
+            The scaled writable height in the requested unit.
+        """
+
         output_unit = normalize_length_unit(unit) if unit is not None else self.unit
         return inches_to_length(self.text_height_in_inches() * scale, output_unit)
 
     def resolved_author(self) -> str | None:
-        """Return the metadata author string used in file properties."""
+        """Return the metadata author string used in file properties.
+
+        Returns:
+            The explicit metadata author, a semicolon-separated author list, or
+            ``None`` when no author data is available.
+        """
 
         if self.metadata_author is not None:
             return self.metadata_author
@@ -212,7 +390,11 @@ class DocumentSettings:
         return "; ".join(author.name for author in self.authors)
 
     def iter_author_title_lines(self) -> Iterable[tuple[AuthorTitleLine, bool]]:
-        """Yield author title lines together with author-boundary markers."""
+        """Yield title matter lines with author-boundary markers.
+
+        Yields:
+            Tuples of ``(line, is_author_boundary)`` for renderer title matter.
+        """
 
         if self.author_layout.mode == "stacked":
             yield from self._iter_stacked_author_title_lines()
@@ -233,6 +415,8 @@ class DocumentSettings:
         if not self.authors:
             return
 
+        # Journal title matter de-duplicates affiliation labels before building
+        # the author line so repeated institutions share the same marker.
         affiliation_numbers: dict[str, int] = {}
         ordered_affiliations: list[str] = []
         for author in self.authors:

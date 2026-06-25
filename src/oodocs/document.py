@@ -54,13 +54,27 @@ class Document:
         self.citations = coerce_citation_library(citations)
 
     def add(self, *children: BlockInput) -> Document:
-        """Append top-level blocks and return this document."""
+        """Append top-level blocks.
+
+        Args:
+            *children: Blocks or block-coercible values to append.
+
+        Returns:
+            This document, enabling fluent construction.
+        """
 
         self.body.add(*children)
         return self
 
     def extend(self, children: Iterable[BlockInput]) -> Document:
-        """Append an iterable of top-level blocks and return this document."""
+        """Append an iterable of top-level blocks.
+
+        Args:
+            children: Blocks or block-coercible values to append.
+
+        Returns:
+            This document, enabling fluent construction.
+        """
 
         self.body.extend(children)
         return self
@@ -78,7 +92,22 @@ class Document:
         heading_level_shift: int = 0,
         base_dir: str | Path | None = None,
     ) -> Document:
-        """Create a document from Markdown text."""
+        """Create a document from Markdown text.
+
+        Args:
+            source: Markdown source text.
+            title: Optional document title. When omitted, the importer derives
+                one from the first heading or a fallback.
+            settings: Optional document settings.
+            citations: Optional citation library, citation sources, or BibTeX.
+            numbered: Whether imported headings should be numbered by default.
+            toc: Whether to add a table of contents.
+            heading_level_shift: Number of levels to shift imported headings.
+            base_dir: Directory used to resolve relative media paths.
+
+        Returns:
+            A document built from the Markdown source.
+        """
 
         from oodocs.importers.markdown import from_markdown
 
@@ -105,7 +134,20 @@ class Document:
         toc: bool | None = None,
         heading_level_shift: int = 0,
     ) -> Document:
-        """Create a document from a Markdown file."""
+        """Create a document from a Markdown file.
+
+        Args:
+            path: Markdown file path.
+            title: Optional document title override.
+            settings: Optional document settings.
+            citations: Optional citation library, citation sources, or BibTeX.
+            numbered: Whether imported headings should be numbered by default.
+            toc: Whether to add a table of contents.
+            heading_level_shift: Number of levels to shift imported headings.
+
+        Returns:
+            A document built from the Markdown file.
+        """
 
         from oodocs.importers.markdown import from_markdown_file
 
@@ -139,7 +181,28 @@ class Document:
         heading_level_shift: int = 0,
         import_policy: str = "lossy",
     ) -> Document:
-        """Create a document from a Jupyter notebook."""
+        """Create a document from a Jupyter notebook.
+
+        Args:
+            source: Notebook path, JSON string, or parsed notebook mapping.
+            title: Optional document title override.
+            settings: Optional document settings.
+            citations: Optional citation library, citation sources, or BibTeX.
+            options: Notebook import options object.
+            include_outputs: Override for output cell inclusion.
+            include_code: Override for code cell inclusion.
+            include_markdown: Override for Markdown cell inclusion.
+            include_raw: Override for raw cell inclusion.
+            code_language: Language label for imported code blocks.
+            base_dir: Directory used to resolve relative media paths.
+            numbered: Whether imported headings should be numbered by default.
+            toc: Whether to add a table of contents.
+            heading_level_shift: Number of levels to shift imported headings.
+            import_policy: Policy for lossy imports and warnings.
+
+        Returns:
+            A document built from the notebook.
+        """
 
         from oodocs.importers.notebook import from_ipynb
 
@@ -166,6 +229,9 @@ class Document:
 
         Front matter is defined as every top-level block that appears before the
         first numbered part or level-1 heading.
+
+        Returns:
+            A ``(front_matter, main_matter)`` tuple.
         """
 
         for index, child in enumerate(self.body.children):
@@ -181,7 +247,20 @@ class Document:
         raise_on_error: bool = False,
         formats: Iterable[str] | None = None,
     ) -> ValidationResult:
-        """Validate the document tree and return a structured result."""
+        """Validate the document tree.
+
+        Args:
+            raise_on_error: Whether to raise ``DocumentValidationError`` when
+                blocking errors are present.
+            formats: Output formats to validate for. Defaults to all formats.
+
+        Returns:
+            A structured validation result.
+
+        Raises:
+            DocumentValidationError: If ``raise_on_error`` is true and the
+                document has blocking errors for the requested formats.
+        """
 
         from oodocs.validation import validate_document
 
@@ -199,7 +278,15 @@ class Document:
             raise DocumentValidationError(result, formats=formats)
 
     def save_docx(self, path: PathLike, *, validate: bool = True) -> Path:
-        """Render the document to DOCX and return the output path."""
+        """Render the document to DOCX.
+
+        Args:
+            path: Output ``.docx`` path.
+            validate: Whether to validate the document before rendering.
+
+        Returns:
+            The written output path.
+        """
 
         if validate:
             self._ensure_valid(("docx",))
@@ -209,7 +296,15 @@ class Document:
         return DocxRenderer().render(self, path)
 
     def save_pdf(self, path: PathLike, *, validate: bool = True) -> Path:
-        """Render the document to PDF and return the output path."""
+        """Render the document to PDF.
+
+        Args:
+            path: Output ``.pdf`` path.
+            validate: Whether to validate the document before rendering.
+
+        Returns:
+            The written output path.
+        """
 
         if validate:
             self._ensure_valid(("pdf",))
@@ -219,7 +314,15 @@ class Document:
         return PdfRenderer().render(self, path)
 
     def save_html(self, path: PathLike, *, validate: bool = True) -> Path:
-        """Render the document to HTML and return the output path."""
+        """Render the document to HTML.
+
+        Args:
+            path: Output ``.html`` path.
+            validate: Whether to validate the document before rendering.
+
+        Returns:
+            The written output path.
+        """
 
         if validate:
             self._ensure_valid(("html",))
@@ -234,6 +337,16 @@ class Document:
         Supported extensions are ``.docx``, ``.pdf``, and ``.html``. The
         format-specific methods remain available when code wants to be explicit,
         but this helper keeps first scripts small and readable.
+
+        Args:
+            path: Output path whose extension selects the renderer.
+            validate: Whether to validate the document before rendering.
+
+        Returns:
+            The written output path.
+
+        Raises:
+            ValueError: If the extension is not a supported output format.
         """
 
         output_format = normalize_output_format(Path(path).suffix)
@@ -261,6 +374,8 @@ class Document:
             formats: Iterable of output formats. Supported values are
                 ``"docx"``, ``"pdf"``, and ``"html"`` with or without a
                 leading dot.
+            validate: Whether to validate once for all requested formats before
+                rendering.
             verbose: Print slow major steps. Steps under one second are omitted,
                 and at most ten progress lines are printed.
 
@@ -299,6 +414,8 @@ class Document:
     def _default_output_stem(self) -> str:
         pieces: list[str] = []
         previous_was_separator = False
+        # Collapse runs of punctuation and whitespace into a single hyphen so
+        # generated filenames stay short and portable.
         for character in self.title.strip().lower():
             if character.isalnum():
                 pieces.append(character)

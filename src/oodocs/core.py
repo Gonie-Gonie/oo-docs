@@ -46,7 +46,7 @@ VERTICAL_ALIGNMENTS = {"top", "middle", "center", "bottom"}
 
 
 class OODocsError(Exception):
-    """Raised when the document model cannot be rendered safely."""
+    """Base exception for errors raised by OODocs."""
 
 
 def normalize_color(value: str | None) -> str | None:
@@ -73,7 +73,17 @@ def normalize_color(value: str | None) -> str | None:
 
 
 def normalize_length_unit(value: str) -> str:
-    """Validate and normalize a supported physical length unit."""
+    """Validate and normalize a supported physical length unit.
+
+    Args:
+        value: Unit name or abbreviation to normalize.
+
+    Returns:
+        The lowercase normalized unit string.
+
+    Raises:
+        ValueError: If ``value`` is not a supported length unit.
+    """
 
     normalized = value.strip().lower()
     if normalized not in UNIT_TO_INCHES:
@@ -82,19 +92,51 @@ def normalize_length_unit(value: str) -> str:
 
 
 def length_to_inches(value: float, unit: str) -> float:
-    """Convert a numeric length to inches."""
+    """Convert a numeric length to inches.
+
+    Args:
+        value: Length value in ``unit``.
+        unit: Supported unit name or abbreviation.
+
+    Returns:
+        The equivalent length in inches.
+
+    Raises:
+        ValueError: If ``unit`` is not supported.
+    """
 
     return float(value) * UNIT_TO_INCHES[normalize_length_unit(unit)]
 
 
 def inches_to_length(value: float, unit: str) -> float:
-    """Convert an inch length to the requested unit."""
+    """Convert an inch length to the requested unit.
+
+    Args:
+        value: Length value in inches.
+        unit: Supported unit name or abbreviation for the output.
+
+    Returns:
+        The equivalent length in ``unit``.
+
+    Raises:
+        ValueError: If ``unit`` is not supported.
+    """
 
     return float(value) / UNIT_TO_INCHES[normalize_length_unit(unit)]
 
 
 def normalize_counter_format(value: str) -> str:
-    """Validate and normalize a supported counter format name."""
+    """Validate and normalize a supported counter format name.
+
+    Args:
+        value: Counter format name to normalize.
+
+    Returns:
+        The lowercase normalized counter format.
+
+    Raises:
+        ValueError: If ``value`` is not a supported counter format.
+    """
 
     normalized = value.strip().lower()
     if normalized not in COUNTER_FORMATS:
@@ -103,7 +145,17 @@ def normalize_counter_format(value: str) -> str:
 
 
 def normalize_text_alignment(value: str) -> str:
-    """Validate and normalize a supported horizontal text alignment."""
+    """Validate and normalize a supported horizontal text alignment.
+
+    Args:
+        value: Alignment name to normalize.
+
+    Returns:
+        The lowercase normalized alignment.
+
+    Raises:
+        ValueError: If ``value`` is not a supported horizontal alignment.
+    """
 
     normalized = value.strip().lower()
     if normalized not in TEXT_ALIGNMENTS:
@@ -112,7 +164,18 @@ def normalize_text_alignment(value: str) -> str:
 
 
 def normalize_vertical_alignment(value: str) -> str:
-    """Validate and normalize a supported vertical alignment."""
+    """Validate and normalize a supported vertical alignment.
+
+    Args:
+        value: Alignment name to normalize. ``"center"`` is accepted as an
+            alias for ``"middle"``.
+
+    Returns:
+        The lowercase normalized alignment.
+
+    Raises:
+        ValueError: If ``value`` is not a supported vertical alignment.
+    """
 
     normalized = value.strip().lower()
     if normalized not in VERTICAL_ALIGNMENTS:
@@ -126,6 +189,8 @@ def _alpha_counter(value: int) -> str:
 
     characters: list[str] = []
     number = value
+    # Spreadsheet-style base-26 numbering has no zero digit, so each step
+    # decrements before taking the modulus.
     while number > 0:
         number -= 1
         characters.append(chr(ord("a") + (number % 26)))
@@ -171,6 +236,10 @@ def format_counter_value(value: int, counter_format: str, *, bullet: str = "\u20
 
     Returns:
         A display-ready string for the counter.
+
+    Raises:
+        ValueError: If ``counter_format`` is unsupported, or if an alphabetic
+            or roman counter receives a value smaller than one.
     """
 
     normalized = normalize_counter_format(counter_format)

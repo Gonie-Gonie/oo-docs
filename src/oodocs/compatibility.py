@@ -17,7 +17,13 @@ OUTPUT_FORMAT_LABELS: dict[OutputFormat, str] = {
 
 @dataclass(frozen=True, slots=True)
 class CompatibilityNote:
-    """Renderer compatibility note surfaced by document validation."""
+    """Renderer compatibility note surfaced by document validation.
+
+    Attributes:
+        code: Stable validation code.
+        message: User-facing compatibility message.
+        formats: Output formats affected by the note.
+    """
 
     code: str
     message: str
@@ -37,7 +43,17 @@ COMPATIBILITY_NOTES: dict[str, CompatibilityNote] = {
 
 
 def compatibility_note(code: str) -> CompatibilityNote:
-    """Return a named compatibility note."""
+    """Return a named compatibility note.
+
+    Args:
+        code: Compatibility note code.
+
+    Returns:
+        The matching compatibility note.
+
+    Raises:
+        KeyError: If ``code`` is unknown.
+    """
 
     try:
         return COMPATIBILITY_NOTES[code]
@@ -46,7 +62,17 @@ def compatibility_note(code: str) -> CompatibilityNote:
 
 
 def normalize_output_format(value: str) -> OutputFormat:
-    """Normalize a renderer/output format name."""
+    """Normalize a renderer/output format name.
+
+    Args:
+        value: Format name or extension, such as ``"pdf"`` or ``".html"``.
+
+    Returns:
+        Normalized output format.
+
+    Raises:
+        ValueError: If ``value`` is not a supported output format.
+    """
 
     normalized = value.lower().strip().removeprefix(".")
     if normalized == "htm":
@@ -62,7 +88,17 @@ def normalize_output_format(value: str) -> OutputFormat:
 def normalize_output_formats(
     values: Iterable[str] | None = None,
 ) -> tuple[OutputFormat, ...]:
-    """Normalize a sequence of output formats while preserving order."""
+    """Normalize output formats while preserving caller order.
+
+    Args:
+        values: Format names or extensions. Defaults to every supported format.
+
+    Returns:
+        Unique normalized output formats in first-seen order.
+
+    Raises:
+        ValueError: If any value is not a supported output format.
+    """
 
     if values is None:
         return OUTPUT_FORMATS
@@ -79,7 +115,14 @@ def normalize_output_formats(
 
 
 def format_output_formats(formats: Iterable[OutputFormat]) -> str:
-    """Return a compact display label for output formats."""
+    """Return a compact display label for output formats.
+
+    Args:
+        formats: Output formats to display.
+
+    Returns:
+        ``"All"``, ``"None"``, or a slash-separated list of format labels.
+    """
 
     normalized = normalize_output_formats(formats)
     if not normalized:

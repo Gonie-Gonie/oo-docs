@@ -63,7 +63,15 @@ ValidationSeverity = Literal["error", "warning"]
 
 @dataclass(frozen=True, slots=True)
 class ValidationIssue:
-    """One authoring issue found in a document tree."""
+    """One authoring issue found in a document tree.
+
+    Attributes:
+        severity: Issue severity, either ``"error"`` or ``"warning"``.
+        code: Stable machine-readable issue code.
+        message: Human-readable explanation.
+        path: Dotted path to the document node that triggered the issue.
+        formats: Output formats affected by this issue.
+    """
 
     severity: ValidationSeverity
     code: str
@@ -72,11 +80,24 @@ class ValidationIssue:
     formats: tuple[OutputFormat, ...] = OUTPUT_FORMATS
 
     def applies_to(self, formats: Iterable[str] | None = None) -> bool:
+        """Return whether this issue applies to any requested format.
+
+        Args:
+            formats: Output formats to test. Defaults to all supported formats.
+
+        Returns:
+            ``True`` when this issue affects at least one requested format.
+        """
+
         requested_formats = normalize_output_formats(formats)
         return bool(set(self.formats) & set(requested_formats))
 
     def to_dict(self) -> dict[str, object]:
-        """Return a JSON-serializable representation of this issue."""
+        """Return a JSON-serializable representation of this issue.
+
+        Returns:
+            Dictionary containing severity, code, message, path, and formats.
+        """
 
         return {
             "severity": self.severity,
@@ -95,26 +116,45 @@ class ValidationIssue:
 
 @dataclass(frozen=True, slots=True)
 class ValidationResult:
-    """Validation issues plus table-style display helpers."""
+    """Validation issues plus display and filtering helpers.
+
+    Attributes:
+        issues: Validation issues in discovery order.
+    """
 
     issues: tuple[ValidationIssue, ...] = ()
 
     @property
     def errors(self) -> tuple[ValidationIssue, ...]:
+        """Return all error-level issues."""
+
         return tuple(issue for issue in self.issues if issue.severity == "error")
 
     @property
     def warnings(self) -> tuple[ValidationIssue, ...]:
+        """Return all warning-level issues."""
+
         return tuple(issue for issue in self.issues if issue.severity == "warning")
 
     @property
     def ok(self) -> bool:
+        """Return whether the result has no errors."""
+
         return not self.errors
 
     def errors_for(
         self,
         formats: Iterable[str] | None = None,
     ) -> tuple[ValidationIssue, ...]:
+        """Return error-level issues that affect requested formats.
+
+        Args:
+            formats: Output formats to filter for. Defaults to all formats.
+
+        Returns:
+            Matching error-level issues.
+        """
+
         requested_formats = set(normalize_output_formats(formats))
         return tuple(
             issue
@@ -126,6 +166,15 @@ class ValidationResult:
         self,
         formats: Iterable[str] | None = None,
     ) -> tuple[ValidationIssue, ...]:
+        """Return warning-level issues that affect requested formats.
+
+        Args:
+            formats: Output formats to filter for. Defaults to all formats.
+
+        Returns:
+            Matching warning-level issues.
+        """
+
         requested_formats = set(normalize_output_formats(formats))
         return tuple(
             issue
@@ -137,6 +186,15 @@ class ValidationResult:
         self,
         formats: Iterable[str] | None = None,
     ) -> tuple[ValidationIssue, ...]:
+        """Return issues that affect requested formats.
+
+        Args:
+            formats: Output formats to filter for. Defaults to all formats.
+
+        Returns:
+            Matching issues in discovery order.
+        """
+
         requested_formats = set(normalize_output_formats(formats))
         return tuple(
             issue
@@ -145,13 +203,38 @@ class ValidationResult:
         )
 
     def ok_for(self, formats: Iterable[str] | None = None) -> bool:
+        """Return whether requested formats have no errors.
+
+        Args:
+            formats: Output formats to filter for. Defaults to all formats.
+
+        Returns:
+            ``True`` when no matching errors exist.
+        """
+
         return not self.errors_for(formats)
 
     def for_formats(self, formats: Iterable[str] | None = None) -> ValidationResult:
+        """Return a new result filtered to requested formats.
+
+        Args:
+            formats: Output formats to filter for. Defaults to all formats.
+
+        Returns:
+            A validation result containing only matching issues.
+        """
+
         return ValidationResult(self.issues_for(formats))
 
     def to_dict(self, *, formats: Iterable[str] | None = None) -> dict[str, object]:
-        """Return a JSON-serializable validation summary."""
+        """Return a JSON-serializable validation summary.
+
+        Args:
+            formats: Output formats to include. Defaults to all formats.
+
+        Returns:
+            Dictionary with status counts and issue dictionaries.
+        """
 
         result = self.for_formats(formats)
         return {
@@ -167,7 +250,15 @@ class ValidationResult:
         formats: Iterable[str] | None = None,
         indent: int | None = 2,
     ) -> str:
-        """Serialize this validation summary to JSON."""
+        """Serialize this validation summary to JSON.
+
+        Args:
+            formats: Output formats to include. Defaults to all formats.
+            indent: Indentation passed to ``json.dumps``.
+
+        Returns:
+            JSON string for the validation summary.
+        """
 
         return json.dumps(
             self.to_dict(formats=formats),
@@ -176,6 +267,16 @@ class ValidationResult:
         )
 
     def format_table(self, *, formats: Iterable[str] | None = None) -> str:
+        """Format validation issues as a fixed-width table.
+
+        Args:
+            formats: Output formats to include. Defaults to all formats.
+
+        Returns:
+            A human-readable table, or a single status line when no issues
+            match.
+        """
+
         issues = self.issues_for(formats)
         errors = tuple(issue for issue in issues if issue.severity == "error")
         warnings = tuple(issue for issue in issues if issue.severity == "warning")
@@ -205,7 +306,12 @@ class ValidationResult:
 
 
 class DocumentValidationError(OODocsError):
-    """Raised when document validation blocks rendering."""
+    """Raised when document validation blocks rendering.
+
+    Args:
+        result: Validation result or raw validation issues.
+        formats: Output formats whose errors should block rendering.
+    """
 
     result: ValidationResult
 
@@ -225,14 +331,20 @@ class DocumentValidationError(OODocsError):
 
     @property
     def issues(self) -> tuple[ValidationIssue, ...]:
+        """Return issues associated with the blocked formats."""
+
         return self.result.issues_for(self.formats)
 
     @property
     def errors(self) -> tuple[ValidationIssue, ...]:
+        """Return error-level issues associated with the blocked formats."""
+
         return self.result.errors_for(self.formats)
 
     @property
     def warnings(self) -> tuple[ValidationIssue, ...]:
+        """Return warning-level issues associated with the blocked formats."""
+
         return self.result.warnings_for(self.formats)
 
 
@@ -242,7 +354,20 @@ def validate_document(
     raise_on_error: bool = False,
     formats: Iterable[str] | None = None,
 ) -> ValidationResult:
-    """Validate a document tree and return a structured result object."""
+    """Validate a document tree.
+
+    Args:
+        document: Document to validate.
+        raise_on_error: Whether to raise when blocking errors are present.
+        formats: Output formats to validate for. Defaults to all formats.
+
+    Returns:
+        A structured validation result.
+
+    Raises:
+        DocumentValidationError: If ``raise_on_error`` is true and the document
+            has blocking errors for the requested formats.
+    """
 
     result = ValidationResult(tuple(_ValidationContext(document).validate()))
     if raise_on_error and not result.ok_for(formats):
@@ -261,6 +386,8 @@ class _ValidationContext:
         self.generated_pages: list[tuple[object, str]] = []
 
     def validate(self) -> list[ValidationIssue]:
+        """Collect validation issues for the configured document."""
+
         if not str(self.document.title).strip():
             self._add(
                 "error",
@@ -277,6 +404,8 @@ class _ValidationContext:
             )
 
         self._validate_citations()
+        # Build the render index only after structural checks pass; downstream
+        # reference and generated-page validation depends on stable numbering.
         render_index = self._build_render_index_if_possible()
         self._validate_references(render_index)
         if render_index is not None:
