@@ -10,7 +10,7 @@ import importlib.metadata
 import importlib.util
 from pathlib import Path
 import re
-from typing import Iterable
+from typing import Iterable, Sequence
 
 from oodocs.apidoc.config import ApiCollectConfig, ApiPublicPolicy, normalize_explicit_names
 from oodocs.apidoc.docstring import ApiDocstringParser, ParsedDocstring, parse_docstring
@@ -587,6 +587,7 @@ def _collect_module_from_file(
         name: _class_object(node, module_name, path, config=config)
         for name, node in class_nodes.items()
     }
+    module_overloads = _function_overloads(tree.body, module_name, path, config=config, parent=None)
     module = ApiModule(
         module_name,
         summary=parsed_module.summary,
@@ -605,8 +606,19 @@ def _collect_module_from_file(
     )
     for node in tree.body:
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            if _is_overload_function(node):
+                continue
             if _is_public_name(node.name, f"{module_name}.{node.name}", public_names, config):
-                members.append(_function_object(node, module_name, path, config=config, parent=None))
+                members.append(
+                    _function_object(
+                        node,
+                        module_name,
+                        path,
+                        config=config,
+                        parent=None,
+                        overloads=module_overloads.get(node.name, ()),
+                    )
+                )
         elif isinstance(node, ast.ClassDef):
             if _is_public_name(node.name, f"{module_name}.{node.name}", public_names, config):
                 members.append(class_objects[node.name])
@@ -680,9 +692,10 @@ def _class_object(
         line_number=getattr(node, "lineno", None),
     )
     members: list[ApiObject] = []
+    member_overloads = _function_overloads(node.body, module_name, path, config=config, parent=node.name)
     for child in node.body:
         if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef)):
-            if child.name == "__init__":
+            if child.name == "__init__" or _is_overload_function(child):
                 continue
             decorators = {_decorator_name(decorator) for decorator in child.decorator_list}
             if "property" in decorators:
@@ -691,7 +704,16 @@ def _class_object(
             elif not config.include_methods:
                 continue
             if _class_member_is_public(child.name, config, f"{qualname}.{child.name}"):
-                members.append(_function_object(child, module_name, path, config=config, parent=node.name))
+                members.append(
+                    _function_object(
+                        child,
+                        module_name,
+                        path,
+                        config=config,
+                        parent=node.name,
+                        overloads=member_overloads.get(child.name, ()),
+                    )
+                )
         elif config.include_attributes and isinstance(child, (ast.Assign, ast.AnnAssign)):
             for name, annotation, default in _assignment_targets(child):
                 if _class_member_is_public(name, config, f"{qualname}.{name}"):
@@ -894,6 +916,7 @@ def _function_object(
     *,
     config: ApiCollectConfig,
     parent: str | None,
+    overloads: Sequence[dict[str, object]] = (),
 ) -> ApiObject:
     local_name = node.name
     qualname = f"{module_name}.{parent}.{local_name}" if parent else f"{module_name}.{local_name}"
@@ -935,6 +958,13 @@ def _function_object(
         or bool(decorators & _DEPRECATION_DECORATORS)
         or warning_message is not None
     )
+    metadata: dict[str, object] = {
+        "decorators": sorted(name for name in decorators if name),
+        "docstring_style": parsed.style,
+        "issues": [issue.to_dict() for issue in [*parsed.issues, *extra_issues]],
+    }
+    if overloads:
+        metadata["overloads"] = list(overloads)
     return ApiObject(
         kind=kind,  # type: ignore[arg-type]
         name=local_name,
@@ -957,12 +987,49 @@ def _function_object(
         end_line_number=getattr(node, "end_lineno", None),
         deprecated=deprecated,
         deprecation_message=parsed.deprecation_message or warning_message,
-        metadata={
-            "decorators": sorted(name for name in decorators if name),
-            "docstring_style": parsed.style,
-            "issues": [issue.to_dict() for issue in [*parsed.issues, *extra_issues]],
-        },
+        metadata=metadata,
     )
+
+
+def _function_overloads(
+    nodes: Iterable[ast.stmt],
+    module_name: str,
+    path: Path,
+    *,
+    config: ApiCollectConfig,
+    parent: str | None,
+) -> dict[str, list[dict[str, object]]]:
+    overloads: dict[str, list[dict[str, object]]] = {}
+    for node in nodes:
+        if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            continue
+        if not _is_overload_function(node):
+            continue
+        decorators = {_decorator_name(decorator) for decorator in node.decorator_list}
+        if parent and "property" in decorators:
+            continue
+        drop_first = parent is not None and "staticmethod" not in decorators
+        parameters = _parameters_from_function(node, drop_first=drop_first)
+        qualname = f"{module_name}.{parent}.{node.name}" if parent else f"{module_name}.{node.name}"
+        return_annotation = _unparse(node.returns) if node.returns is not None else None
+        signature = f"{qualname}({_signature_parameter_text(parameters)})"
+        if return_annotation:
+            signature = f"{signature} -> {return_annotation}"
+        overloads.setdefault(node.name, []).append(
+            {
+                "signature": signature,
+                "parameters": [parameter.to_dict() for parameter in parameters],
+                "returns": return_annotation,
+                "source_path": str(path),
+                "line_number": getattr(node, "lineno", None),
+                "end_line_number": getattr(node, "end_lineno", None),
+            }
+        )
+    return overloads
+
+
+def _is_overload_function(node: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
+    return "overload" in {_decorator_name(decorator) for decorator in node.decorator_list}
 
 
 def _parameters_from_function(

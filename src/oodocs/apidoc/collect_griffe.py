@@ -400,6 +400,14 @@ def _function_from_griffe(
         or _has_deprecation_decorator(decorators)
         or warning_message is not None
     )
+    overloads = _griffe_overload_metadata(obj, qualname=qualname, drop_first=drop_first)
+    metadata: dict[str, object] = {
+        "decorators": [name for name in decorators if name],
+        "docstring_style": parsed.style,
+        "issues": [issue.to_dict() for issue in [*parsed.issues, *extra_issues]],
+    }
+    if overloads:
+        metadata["overloads"] = overloads
     return ApiObject(
         kind="method" if parent_class else "function",
         name=local_name,
@@ -422,12 +430,34 @@ def _function_from_griffe(
         end_line_number=getattr(obj, "endlineno", None),
         deprecated=deprecated,
         deprecation_message=parsed.deprecation_message or warning_message,
-        metadata={
-            "decorators": [name for name in decorators if name],
-            "docstring_style": parsed.style,
-            "issues": [issue.to_dict() for issue in [*parsed.issues, *extra_issues]],
-        },
+        metadata=metadata,
     )
+
+
+def _griffe_overload_metadata(
+    obj: object,
+    *,
+    qualname: str,
+    drop_first: bool,
+) -> list[dict[str, object]]:
+    overloads: list[dict[str, object]] = []
+    for overload in getattr(obj, "overloads", ()) or ():
+        parameters = _parameters_from_griffe(getattr(overload, "parameters", ()), drop_first=drop_first)
+        return_annotation = _display_expr(getattr(overload, "returns", None))
+        signature = f"{qualname}({_signature_parameter_text(parameters)})"
+        if return_annotation:
+            signature = f"{signature} -> {return_annotation}"
+        overloads.append(
+            {
+                "signature": signature,
+                "parameters": [parameter.to_dict() for parameter in parameters],
+                "returns": return_annotation,
+                "source_path": str(_object_filepath(overload)) if _object_filepath(overload) else None,
+                "line_number": getattr(overload, "lineno", None),
+                "end_line_number": getattr(overload, "endlineno", None),
+            }
+        )
+    return overloads
 
 
 def _attribute_from_griffe(

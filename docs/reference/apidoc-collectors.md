@@ -33,6 +33,17 @@ Sphinx `.. deprecated::`, when class/function decorators are named
 `warnings.warn(..., DeprecationWarning)`. Warning messages are preserved as
 `ApiObject.deprecation_message` when they are literal strings.
 
+Overloaded functions are represented as one callable object for the runtime
+implementation. Source and griffe collection skip `@overload` stubs as separate
+objects and store their signatures in `ApiObject.metadata["overloads"]`:
+
+```python
+api = collect_api(".", collector="griffe", public_policy="__all__")
+parse = api.find("mypkg.parse")
+for overload in parse.metadata.get("overloads", []):
+    print(overload["signature"])
+```
+
 Class signatures use `__init__` parameters by default. When a class docstring
 does not document those parameters directly, both source and griffe collection
 can use the `__init__` docstring's parameter section as the class constructor

@@ -124,6 +124,55 @@ def write_private_package(tmp_path: Path, name: str = "privatepkg") -> Path:
     return package_dir
 
 
+def write_overload_package(tmp_path: Path, name: str = "overpkg") -> Path:
+    package_dir = tmp_path / name
+    package_dir.mkdir()
+    (package_dir / "__init__.py").write_text(
+        dedent(
+            '''\
+            """Overload API sample."""
+
+            from typing import overload
+
+            __all__ = ["Parser", "parse"]
+
+            @overload
+            def parse(value: str) -> str: ...
+
+            @overload
+            def parse(value: bytes) -> bytes: ...
+
+            def parse(value):
+                """Parse a value.
+
+                Args:
+                    value: Value to parse.
+                """
+                return value
+
+            class Parser:
+                """Parser object."""
+
+                @overload
+                def parse(self, value: str) -> str: ...
+
+                @overload
+                def parse(self, value: bytes) -> bytes: ...
+
+                def parse(self, value):
+                    """Parse a value.
+
+                    Args:
+                        value: Value to parse.
+                    """
+                    return value
+            '''
+        ),
+        encoding="utf-8",
+    )
+    return package_dir
+
+
 def collect_sample_api(tmp_path: Path, **kwargs: object) -> ApiPackage:
     package_dir = write_sample_package(tmp_path)
     options = {

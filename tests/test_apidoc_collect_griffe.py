@@ -4,7 +4,7 @@ import importlib.util
 
 import pytest
 
-from apidoc_samples import collect_sample_api, write_private_package
+from apidoc_samples import collect_sample_api, write_overload_package, write_private_package
 from oodocs.apidoc import collect_api
 
 
@@ -105,6 +105,29 @@ def test_griffe_collector_can_include_private_objects(tmp_path) -> None:
     assert cache is not None
     assert cache.visibility == "protected"
     assert private_api.private_objects()
+
+
+def test_griffe_collector_records_overload_metadata(tmp_path) -> None:
+    if importlib.util.find_spec("griffe") is None:
+        pytest.skip("griffe is not installed")
+
+    package_dir = write_overload_package(tmp_path)
+
+    api = collect_api(package_dir, collector="griffe", public_policy="__all__")
+    parse = api.find("overpkg.parse")
+    method = api.find("overpkg.Parser.parse")
+
+    assert parse is not None
+    assert method is not None
+    assert [obj.qualname for obj in api.iter_objects(recursive=True)].count("overpkg.parse") == 1
+    assert [item["signature"] for item in parse.metadata["overloads"]] == [
+        "overpkg.parse(value: str) -> str",
+        "overpkg.parse(value: bytes) -> bytes",
+    ]
+    assert [item["signature"] for item in method.metadata["overloads"]] == [
+        "overpkg.Parser.parse(value: str) -> str",
+        "overpkg.Parser.parse(value: bytes) -> bytes",
+    ]
 
 
 def test_griffe_collector_can_include_inherited_members(tmp_path) -> None:
