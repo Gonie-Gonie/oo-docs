@@ -257,6 +257,92 @@ def write_setuptools_package_dir_repo(
     return repo
 
 
+def write_mixed_docstring_repo(tmp_path: Path) -> Path:
+    repo = tmp_path / "mixed-repo"
+    package_dir = repo / "src" / "mixedpkg"
+    package_dir.mkdir(parents=True)
+    (repo / "pyproject.toml").write_text(
+        dedent(
+            '''\
+            [project]
+            name = "mixed-project"
+
+            [tool.setuptools]
+            package-dir = {"" = "src"}
+
+            [tool.oodocs.apidoc]
+            collector = "inspect"
+            public-policy = "__all__"
+            docstring-style = "auto"
+            module-prefix = ["mixedpkg"]
+            profile = "manual"
+            formats = ["html"]
+            sidecars = true
+            '''
+        ),
+        encoding="utf-8",
+    )
+    (package_dir / "__init__.py").write_text(
+        dedent(
+            '''\
+            """Mixed docstring package."""
+
+            from .core import Client, connect
+
+            __all__ = ["Client", "connect"]
+            '''
+        ),
+        encoding="utf-8",
+    )
+    (package_dir / "core.py").write_text(
+        dedent(
+            '''\
+            """Core client API."""
+
+            class Client:
+                """HTTP client for the mixed sample package.
+
+                Args:
+                    endpoint: Base endpoint URL.
+                """
+
+                def __init__(self, endpoint: str) -> None:
+                    self.endpoint = endpoint
+
+                def connect(self, timeout: float = 1.0) -> bool:
+                    """Connect to the configured endpoint.
+
+                    Parameters
+                    ----------
+                    timeout : float
+                        Timeout in seconds.
+
+                    Returns
+                    -------
+                    bool
+                        Whether the connection succeeded.
+                    """
+
+                    return bool(self.endpoint) and timeout >= 0
+
+            def connect(endpoint: str) -> Client:
+                """Create a client for an endpoint.
+
+                Args:
+                    endpoint: Base endpoint URL.
+
+                Returns:
+                    Client: Created client instance.
+                """
+
+                return Client(endpoint)
+            '''
+        ),
+        encoding="utf-8",
+    )
+    return repo
+
+
 def collect_sample_api(tmp_path: Path, **kwargs: object) -> ApiPackage:
     package_dir = write_sample_package(tmp_path)
     options = {

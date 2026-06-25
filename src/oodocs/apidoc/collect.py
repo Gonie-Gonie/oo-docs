@@ -1580,6 +1580,8 @@ def _add_reexported_objects(modules: list[ApiModule]) -> None:
             module.members.append(alias)
             existing_names.add(local_name)
             object_map[alias.qualname] = alias
+            for member in alias.iter_members(recursive=True):
+                object_map[member.qualname] = member
         module.members.sort(key=lambda obj: (obj.line_number or 0, obj.name))
 
 
@@ -1630,13 +1632,39 @@ def _reexport_alias(
 ) -> ApiObject:
     alias = ApiObject.from_dict(copy.deepcopy(target.to_dict()))
     alias.name = local_name
-    alias.module = module_name
-    alias.qualname = f"{module_name}.{local_name}"
-    if alias.signature and alias.signature.startswith(target_qualname):
-        alias.signature = alias.qualname + alias.signature[len(target_qualname) :]
-    alias.metadata = dict(alias.metadata)
-    alias.metadata["reexported_from"] = target_qualname
+    _remap_reexported_object(
+        alias,
+        old_prefix=target_qualname,
+        new_prefix=f"{module_name}.{local_name}",
+        module_name=module_name,
+    )
     return alias
+
+
+def _remap_reexported_object(
+    obj: ApiObject,
+    *,
+    old_prefix: str,
+    new_prefix: str,
+    module_name: str,
+) -> None:
+    original_qualname = obj.qualname
+    if obj.qualname == old_prefix:
+        obj.qualname = new_prefix
+    elif obj.qualname.startswith(f"{old_prefix}."):
+        obj.qualname = f"{new_prefix}{obj.qualname[len(old_prefix):]}"
+    obj.module = module_name
+    if obj.signature and obj.signature.startswith(old_prefix):
+        obj.signature = f"{new_prefix}{obj.signature[len(old_prefix):]}"
+    obj.metadata = dict(obj.metadata)
+    obj.metadata.setdefault("reexported_from", original_qualname)
+    for member in obj.members:
+        _remap_reexported_object(
+            member,
+            old_prefix=old_prefix,
+            new_prefix=new_prefix,
+            module_name=module_name,
+        )
 
 
 def _resolve_import_from_module(
