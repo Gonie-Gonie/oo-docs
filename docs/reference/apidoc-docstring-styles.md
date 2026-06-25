@@ -40,3 +40,25 @@ assert parsed.attributes[0].name == "cache_key"
 OODocs keeps fallback parsers so the public API remains usable without the
 optional extra.
 
+Use `ApiDocstringParser` when the same parser configuration should be reused
+across parsing, collection, coverage, and rendering steps.
+
+```python
+from oodocs.apidoc import ApiDocstringParser, collect_api
+
+parser = ApiDocstringParser.auto()
+api = collect_api(".", collector="griffe", docstring_style=parser)
+```
+
+Custom styles can be registered and then used by parser objects or
+`collect_api(...)`.
+
+```python
+from oodocs.apidoc import ApiDocstringParser, ParsedDocstring, register_docstring_parser
+
+def parse_brief(text, qualname, module):
+    return ParsedDocstring(summary=text.strip(), style="brief")
+
+register_docstring_parser("brief", parse_brief)
+parser = ApiDocstringParser("brief")
+```

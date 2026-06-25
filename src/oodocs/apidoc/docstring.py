@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 import inspect
 import importlib.util
 import re
-from typing import Callable
+from typing import Callable, Mapping
 
 from oodocs.apidoc.model import (
     ApiDocIssue,
@@ -74,7 +74,157 @@ class ParsedDocstring:
     deprecation_message: str | None = None
 
 
+@dataclass(frozen=True, slots=True)
+class ApiDocstringParser:
+    """Reusable docstring parser configuration.
+
+    Attributes:
+        style: Parser style name. ``"auto"`` detects the style per docstring;
+            registered custom parser names are also accepted.
+
+    Examples:
+        Reuse one parser while collecting or parsing several objects:
+
+        ```python
+        from oodocs.apidoc import ApiDocstringParser, collect_api
+
+        parser = ApiDocstringParser.auto()
+        api = collect_api(".", collector="griffe", docstring_style=parser)
+        parsed = parser.parse("Summary.\\n\\nArgs:\\n    path: Input path.")
+        ```
+    """
+
+    style: str = "auto"
+
+    def __post_init__(self) -> None:
+        normalized = self.style.strip().lower()
+        if not normalized:
+            raise ValueError("docstring parser style must not be empty")
+        object.__setattr__(self, "style", normalized)
+
+    @classmethod
+    def auto(cls) -> ApiDocstringParser:
+        """Return a parser that detects the docstring style automatically."""
+
+        return cls("auto")
+
+    @classmethod
+    def google(cls) -> ApiDocstringParser:
+        """Return a Google-style parser object."""
+
+        return cls("google")
+
+    @classmethod
+    def numpy(cls) -> ApiDocstringParser:
+        """Return a NumPy-style parser object."""
+
+        return cls("numpy")
+
+    @classmethod
+    def sphinx(cls) -> ApiDocstringParser:
+        """Return a Sphinx/reST-style parser object."""
+
+        return cls("sphinx")
+
+    @classmethod
+    def markdown(cls) -> ApiDocstringParser:
+        """Return a Markdown-style parser object."""
+
+        return cls("markdown")
+
+    @classmethod
+    def plain(cls) -> ApiDocstringParser:
+        """Return a plain text parser object."""
+
+        return cls("plain")
+
+    @classmethod
+    def from_value(
+        cls,
+        value: ApiDocstringParser | str | Mapping[str, object] | None = None,
+    ) -> ApiDocstringParser:
+        """Return a parser object from a string, mapping, or existing parser.
+
+        Args:
+            value: Parser object, style name, serialized mapping, or ``None``.
+
+        Returns:
+            Normalized parser object.
+        """
+
+        if isinstance(value, cls):
+            return value
+        if isinstance(value, Mapping):
+            return cls.from_dict(value)
+        return cls("auto" if value is None else value)
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, object]) -> ApiDocstringParser:
+        """Reconstruct a parser object from serialized data.
+
+        Args:
+            data: Mapping produced by ``to_dict``.
+
+        Returns:
+            Parser object.
+        """
+
+        return cls(str(data.get("style", "auto")))
+
+    def to_dict(self) -> dict[str, object]:
+        """Return deterministic serialized parser data."""
+
+        return {"style": self.style}
+
+    def detect(self, text: str | None) -> ApiDocstringStyleName:
+        """Detect the style that would be used for ``text``.
+
+        Args:
+            text: Raw docstring text.
+
+        Returns:
+            Detected style for ``"auto"`` parsers or this parser's explicit
+            style when configured explicitly.
+        """
+
+        if self.style == "auto":
+            return detect_docstring_style(text)
+        return self.style  # type: ignore[return-value]
+
+    def parse(
+        self,
+        text: str | None,
+        *,
+        qualname: str | None = None,
+        module: str | None = None,
+    ) -> ParsedDocstring:
+        """Parse one docstring with this parser configuration.
+
+        Args:
+            text: Raw docstring text.
+            qualname: Optional API object qualname for diagnostics.
+            module: Optional module name for diagnostics.
+
+        Returns:
+            Normalized parse result.
+        """
+
+        return parse_docstring(text, style=self.style, qualname=qualname, module=module)
+
+    def __call__(
+        self,
+        text: str | None,
+        *,
+        qualname: str | None = None,
+        module: str | None = None,
+    ) -> ParsedDocstring:
+        """Parse one docstring when the object is called directly."""
+
+        return self.parse(text, qualname=qualname, module=module)
+
+
 _PARSERS: dict[str, DocstringParser] = {}
+_STANDARD_STYLES = {"google", "numpy", "sphinx", "markdown", "plain"}
 _DOCSTRING_PARSER_STYLES = {
     "google": "GOOGLE",
     "numpy": "NUMPYDOC",
@@ -101,7 +251,7 @@ _GOOGLE_SECTION_NAMES = {
 
 def parse_docstring(
     text: str | None,
-    style: ApiDocstringStyleName = "auto",
+    style: str | ApiDocstringParser = "auto",
     *,
     qualname: str | None = None,
     module: str | None = None,
@@ -138,13 +288,14 @@ def parse_docstring(
     """
 
     cleaned = inspect.cleandoc(text or "")
-    requested = style
+    parser_config = ApiDocstringParser.from_value(style)
+    requested = parser_config.style
     detected = detect_docstring_style(cleaned) if requested == "auto" else requested
     parser = _PARSERS.get(detected)
     if parser is None:
         raise ValueError(f"Unsupported docstring style: {style!r}")
     parsed = parser(cleaned, qualname, module)
-    if requested != "auto":
+    if requested != "auto" and requested in _STANDARD_STYLES:
         auto_style = detect_docstring_style(cleaned)
         if cleaned and auto_style != requested:
             parsed.issues.append(
@@ -186,6 +337,31 @@ def register_docstring_parser(name: str, parser: DocstringParser) -> None:
     if normalized in _PARSERS:
         raise ValueError(f"Docstring parser already registered: {name!r}")
     _PARSERS[normalized] = parser
+
+
+def docstring_parser_names() -> tuple[str, ...]:
+    """Return registered explicit parser style names.
+
+    Returns:
+        Sorted parser style names. ``"auto"`` is not included because it is a
+        dispatch mode rather than a concrete parser.
+    """
+
+    return tuple(sorted(_PARSERS))
+
+
+def is_docstring_style_supported(style: str | ApiDocstringParser) -> bool:
+    """Return whether a docstring style can be parsed.
+
+    Args:
+        style: Parser style name or parser object.
+
+    Returns:
+        Whether ``parse_docstring`` can dispatch the style.
+    """
+
+    normalized = ApiDocstringParser.from_value(style).style
+    return normalized == "auto" or normalized in _PARSERS
 
 
 def detect_docstring_style(text: str | None) -> ApiDocstringStyleName:
@@ -762,9 +938,12 @@ _PARSERS.update(
 
 
 __all__ = [
+    "ApiDocstringParser",
     "DocstringParser",
     "ParsedDocstring",
     "detect_docstring_style",
+    "docstring_parser_names",
+    "is_docstring_style_supported",
     "parse_docstring",
     "register_docstring_parser",
 ]

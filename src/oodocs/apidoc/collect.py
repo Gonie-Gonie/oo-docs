@@ -12,7 +12,7 @@ import re
 from typing import Iterable
 
 from oodocs.apidoc.config import ApiCollectConfig, ApiPublicPolicy, normalize_explicit_names
-from oodocs.apidoc.docstring import ParsedDocstring, parse_docstring
+from oodocs.apidoc.docstring import ApiDocstringParser, ParsedDocstring, parse_docstring
 from oodocs.apidoc.model import (
     ApiDocIssue,
     ApiModule,
@@ -31,7 +31,7 @@ def collect_api(
     collector: str | None = None,
     public_policy: str | ApiPublicPolicy | None = None,
     explicit_names: Iterable[str] | None = None,
-    docstring_style: str | None = None,
+    docstring_style: str | ApiDocstringParser | None = None,
     include_imported: bool | None = None,
     include_inherited: bool | None = None,
     class_signature_from_init: bool | None = None,
@@ -48,7 +48,8 @@ def collect_api(
         public_policy: Public API boundary policy name or reusable
             ``ApiPublicPolicy`` object.
         explicit_names: Names used with ``public_policy="explicit"``.
-        docstring_style: Docstring parser style.
+        docstring_style: Docstring parser style name or reusable
+            ``ApiDocstringParser`` object.
         include_imported: Reserved for import-aware collectors.
         include_inherited: Reserved for import-aware collectors.
         class_signature_from_init: Whether class signatures use ``__init__``.

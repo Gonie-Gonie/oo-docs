@@ -11,8 +11,11 @@ from oodocs.apidoc.config import ApiCollectConfig, ApiCollectorName, ApiPublicPo
 from oodocs.apidoc.coverage import ApiCoverageResult, check_api_docs
 from oodocs.apidoc.diff import ApiDiffResult, ApiSnapshot, diff_api
 from oodocs.apidoc.docstring import (
+    ApiDocstringParser,
     ParsedDocstring,
     detect_docstring_style,
+    docstring_parser_names,
+    is_docstring_style_supported,
     parse_docstring,
     register_docstring_parser,
 )
@@ -61,6 +64,7 @@ __all__ = [
     "ApiDocIssue",
     "ApiDocIssueSeverity",
     "ApiDocProfile",
+    "ApiDocstringParser",
     "ApiDocstringStyleName",
     "ApiExample",
     "ApiKind",
@@ -91,7 +95,9 @@ __all__ = [
     "collect_object_api",
     "detect_docstring_style",
     "diff_api",
+    "docstring_parser_names",
     "extract_code_blocks_from_docstring",
+    "is_docstring_style_supported",
     "parse_docstring",
     "profile_names",
     "register_docstring_parser",

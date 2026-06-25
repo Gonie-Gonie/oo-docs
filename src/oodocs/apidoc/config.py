@@ -5,9 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Literal, Mapping, Sequence
 
-from oodocs.apidoc.model import ApiDocstringStyleName
-
-
 ApiCollectorName = Literal["auto", "inspect", "griffe"]
 ApiPublicPolicyName = Literal["__all__", "underscore", "all", "explicit"]
 
@@ -189,12 +186,28 @@ class ApiCollectConfig:
     """
 
     collector: ApiCollectorName = "auto"
-    public_policy: ApiPublicPolicyName = "__all__"
+    public_policy: ApiPublicPolicyName | ApiPublicPolicy | Mapping[str, object] = "__all__"
     explicit_names: tuple[str, ...] = field(default_factory=tuple)
-    docstring_style: ApiDocstringStyleName = "auto"
+    docstring_style: str = "auto"
     include_imported: bool = False
     include_inherited: bool = False
     class_signature_from_init: bool = True
+
+    def __post_init__(self) -> None:
+        policy = ApiPublicPolicy.from_value(
+            self.public_policy,
+            explicit_names=self.explicit_names,
+        )
+        object.__setattr__(self, "public_policy", policy.name)
+        object.__setattr__(self, "explicit_names", policy.explicit_names)
+        if isinstance(self.docstring_style, Mapping) or _is_docstring_parser(self.docstring_style):
+            from oodocs.apidoc.docstring import ApiDocstringParser
+
+            parser = ApiDocstringParser.from_value(self.docstring_style)  # type: ignore[arg-type]
+            object.__setattr__(self, "docstring_style", parser.style)
+        else:
+            object.__setattr__(self, "docstring_style", str(self.docstring_style).strip().lower())
+        self.validate()
 
     @classmethod
     def from_kwargs(
@@ -223,6 +236,12 @@ class ApiCollectConfig:
             )
             values["public_policy"] = policy.name
             values["explicit_names"] = policy.explicit_names
+        if isinstance(values.get("docstring_style"), Mapping) or _is_docstring_parser(values.get("docstring_style")):
+            from oodocs.apidoc.docstring import ApiDocstringParser
+
+            values["docstring_style"] = ApiDocstringParser.from_value(
+                values["docstring_style"],  # type: ignore[arg-type]
+            ).style
         if "explicit_names" in values and not isinstance(values["explicit_names"], tuple):
             values["explicit_names"] = tuple(values["explicit_names"])  # type: ignore[arg-type]
         resolved = cls(**values)  # type: ignore[arg-type]
@@ -242,8 +261,17 @@ class ApiCollectConfig:
             raise ValueError("public_policy must be '__all__', 'underscore', 'all', or 'explicit'")
         if self.public_policy == "explicit" and not self.explicit_names:
             raise ValueError("explicit_names is required when public_policy='explicit'")
-        if self.docstring_style not in {"auto", "google", "numpy", "sphinx", "markdown", "plain"}:
+        from oodocs.apidoc.docstring import is_docstring_style_supported
+
+        if not is_docstring_style_supported(self.docstring_style):
             raise ValueError("docstring_style is not supported")
+
+    def docstring_parser(self):
+        """Return this config's reusable docstring parser object."""
+
+        from oodocs.apidoc.docstring import ApiDocstringParser
+
+        return ApiDocstringParser(self.docstring_style)
 
     def public_api_policy(self) -> ApiPublicPolicy:
         """Return this config's reusable public API policy object."""
@@ -275,6 +303,10 @@ def normalize_explicit_names(names: Sequence[str] | None) -> tuple[str, ...]:
     """
 
     return tuple(sorted({name.strip() for name in names or () if name.strip()}))
+
+
+def _is_docstring_parser(value: object) -> bool:
+    return type(value).__name__ == "ApiDocstringParser"
 
 
 __all__ = [

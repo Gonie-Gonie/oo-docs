@@ -6,15 +6,20 @@ import importlib.util
 
 from oodocs import Chapter, Document
 from oodocs.apidoc import (
+    ApiCollectConfig,
+    ApiDocstringParser,
     ApiPackage,
     ApiPublicPolicy,
     ApiSnapshot,
+    ParsedDocstring,
     check_api_docs,
     collect_object_api,
     collect_api,
     detect_docstring_style,
+    docstring_parser_names,
     diff_api,
     parse_docstring,
+    register_docstring_parser,
 )
 from oodocs.cli import main
 from oodocs.components.blocks import Section
@@ -158,6 +163,41 @@ def test_docstring_parser_backend_enriches_standard_style_metadata() -> None:
     assert parsed.parameters[0].required is False
     assert parsed.parameters[0].source == "docstring"
     assert parsed.returns and parsed.returns.annotation == "bool"
+
+
+def test_reusable_docstring_parser_object_and_custom_registry(tmp_path: Path) -> None:
+    parser = ApiDocstringParser.auto()
+    parsed = parser.parse(GOOGLE_DOCSTRING, qualname="pkg.load", module="pkg")
+
+    assert parsed.style == "google"
+    assert parser.detect(GOOGLE_DOCSTRING) == "google"
+    assert ApiDocstringParser.from_dict(parser.to_dict()) == parser
+
+    def parse_brief(text: str, qualname: str | None, module: str | None) -> ParsedDocstring:
+        return ParsedDocstring(summary=text.strip(), style="brief-test")
+
+    if "brief-test" not in docstring_parser_names():
+        register_docstring_parser("brief-test", parse_brief)
+    config = ApiCollectConfig(docstring_style=ApiDocstringParser("brief-test"))
+    assert config.to_dict()["docstring_style"] == "brief-test"
+
+    package_dir = tmp_path / "briefpkg"
+    package_dir.mkdir()
+    (package_dir / "__init__.py").write_text(
+        '"""Brief package."""\n\ndef run() -> None:\n    """Brief function."""\n',
+        encoding="utf-8",
+    )
+
+    api = collect_api(
+        package_dir,
+        collector="inspect",
+        public_policy="underscore",
+        docstring_style=ApiDocstringParser("brief-test"),
+    )
+
+    run = api.find("briefpkg.run")
+    assert run is not None
+    assert run.summary == "Brief function."
 
 
 def test_collect_api_builds_queryable_object_tree_and_blocks(tmp_path: Path) -> None:
