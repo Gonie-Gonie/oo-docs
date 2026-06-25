@@ -41,4 +41,7 @@ readback.to_document().save_all("artifacts/api-diff", stem="api-diff")
 
 The diff tracks added and removed objects, changed signatures, changed default
 values, changed parameter annotations, changed return annotations, changed
-docstrings, deprecated objects, and coverage deltas.
+docstrings, deprecated objects, and coverage deltas. Coverage deltas are
+computed from either live `ApiPackage` objects or persisted `ApiSnapshot`
+sidecars, so CI can compare release artifacts without importing the target
+package again.

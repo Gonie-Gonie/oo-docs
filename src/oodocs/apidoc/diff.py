@@ -372,15 +372,32 @@ def diff_api(
 
 
 def _coverage_delta(base: ApiPackage | ApiSnapshot, head: ApiPackage | ApiSnapshot) -> dict[str, object]:
-    if not isinstance(base, ApiPackage) or not isinstance(head, ApiPackage):
-        return {}
-    base_cov = check_api_docs(base)
-    head_cov = check_api_docs(head)
+    base_count, base_documented, base_object_coverage = _coverage_stats(base)
+    head_count, head_documented, head_object_coverage = _coverage_stats(head)
     return {
-        "base_object_coverage": base_cov.object_coverage,
-        "head_object_coverage": head_cov.object_coverage,
-        "object_coverage_delta": head_cov.object_coverage - base_cov.object_coverage,
+        "base_public_object_count": base_count,
+        "head_public_object_count": head_count,
+        "base_documented_object_count": base_documented,
+        "head_documented_object_count": head_documented,
+        "base_object_coverage": base_object_coverage,
+        "head_object_coverage": head_object_coverage,
+        "object_coverage_delta": head_object_coverage - base_object_coverage,
     }
+
+
+def _coverage_stats(source: ApiPackage | ApiSnapshot) -> tuple[int, int, float]:
+    if isinstance(source, ApiPackage):
+        coverage = check_api_docs(source)
+        return (
+            coverage.public_object_count,
+            coverage.documented_object_count,
+            coverage.object_coverage,
+        )
+    objects = [ApiObject.from_dict(data) for data in source.objects.values()]
+    public_object_count = len(objects)
+    documented_object_count = sum(1 for obj in objects if obj.documented)
+    object_coverage = documented_object_count / public_object_count if public_object_count else 1.0
+    return public_object_count, documented_object_count, object_coverage
 
 
 def _defaults(obj: ApiObject) -> tuple[tuple[str, str | None], ...]:

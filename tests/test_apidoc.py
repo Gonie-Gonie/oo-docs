@@ -589,10 +589,15 @@ def test_api_coverage_and_diff_detect_doc_changes(tmp_path: Path) -> None:
     assert diff.changed_parameter_annotations
     assert diff.changed_return_annotations
     assert diff.changed_docstrings
+    assert diff.coverage_delta["base_public_object_count"] > 0
+    assert diff.coverage_delta["head_public_object_count"] > 0
+    assert "object_coverage_delta" in diff.coverage_delta
 
     snapshot_path = tmp_path / "snapshot.json"
     ApiSnapshot.from_package(head).write_json(snapshot_path)
     assert json.loads(snapshot_path.read_text(encoding="utf-8"))["name"] == "pkg"
+    snapshot_diff = diff_api(ApiSnapshot.from_package(base), ApiSnapshot.from_package(head))
+    assert snapshot_diff.coverage_delta == diff.coverage_delta
 
     coverage_path = tmp_path / "coverage.json"
     coverage.write_json(coverage_path)
