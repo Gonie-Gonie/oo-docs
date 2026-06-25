@@ -77,6 +77,18 @@ class ApiCoverageResult:
             Fraction between ``0.0`` and ``1.0``. Packages with no public
             objects report ``1.0`` so empty internal packages do not fail
             coverage gates by default.
+
+        Examples:
+            Use the ratio as a CI gate before rendering release evidence:
+
+            ```python
+            from oodocs.apidoc import collect_api
+            from oodocs.apidoc.coverage import check_api_docs
+
+            api = collect_api(".")
+            coverage = check_api_docs(api)
+            assert coverage.object_coverage >= 0.9
+            ```
         """
 
         if self.public_object_count == 0:
@@ -89,6 +101,24 @@ class ApiCoverageResult:
         Returns:
             JSON-serializable mapping containing the coverage counters,
             computed object coverage, and issue rows.
+
+        Examples:
+            Persist coverage evidence in a custom automation pipeline:
+
+            ```python
+            import json
+            from pathlib import Path
+
+            from oodocs.apidoc import collect_api
+            from oodocs.apidoc.coverage import check_api_docs
+
+            api = collect_api(".")
+            coverage = check_api_docs(api)
+            Path("artifacts/api-coverage.json").write_text(
+                json.dumps(coverage.to_dict(), indent=2, sort_keys=True),
+                encoding="utf-8",
+            )
+            ```
         """
 
         return {
