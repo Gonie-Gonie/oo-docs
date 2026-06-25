@@ -14,10 +14,7 @@ from oodocs.apidoc.docstring import (
     docstring_parser_import_paths,
     load_docstring_parser_modules,
 )
-from oodocs.apidoc.model import ApiObject, ApiPackage
 from oodocs.compatibility import normalize_output_formats
-from oodocs.components.blocks import Chapter
-from oodocs.document import Document
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -348,13 +345,8 @@ def _run_collect(args: argparse.Namespace) -> int:
 
 
 def _run_check(args: argparse.Namespace) -> int:
-    build_config = _build_config_from_args(args)
-    kind, module_prefix = _filter_options_from_args(args, build_config)
-    api = _filter_api(
-        _collect_from_args(args, config=build_config.collection),
-        kind=kind,
-        module_prefix=module_prefix,
-    )
+    build_config = _effective_build_config_from_args(args)
+    api = build_config.collect(args.package)
     result = check_api_docs(
         api,
         fail_under=args.fail_under,
@@ -380,60 +372,15 @@ def _run_check(args: argparse.Namespace) -> int:
 
 
 def _run_build(args: argparse.Namespace) -> int:
-    build_config = _build_config_from_args(args)
-    api = _collect_from_args(args, config=build_config.collection)
-    kind, module_prefix = _filter_options_from_args(args, build_config)
-    rendered_api = _filter_api(api, kind=kind, module_prefix=module_prefix)
-    profile = args.profile or build_config.profile
-    formats = normalize_output_formats(_split_csv(args.to) if args.to else build_config.output_formats)
-    stem = args.stem or build_config.stem or f"{api.name.replace('.', '-')}-api"
-    max_level = args.max_level if args.max_level is not None else build_config.max_level
-    output_dir = args.out or build_config.output_dir
-    if output_dir is None:
-        raise SystemExit("oodocs apidoc build requires --out or output-dir in config")
-    if _has_filter_values(kind, module_prefix):
-        selected = _top_level_objects(rendered_api)
-        document = Document(
-            f"{api.name} API Reference",
-            Chapter(
-                "Selected API",
-                rendered_api.to_summary_table(
-                    selected,
-                    caption="Selected public API objects",
-                    profile=profile,
-                ),
-                *[
-                    obj.to_section(
-                        level=2,
-                        profile=profile,
-                        max_level=max_level,
-                    )
-                    for obj in selected
-                ],
-            ),
-        )
-    else:
-        document = rendered_api.to_document(profile=profile, max_level=max_level)
-    outputs = document.save_all(
-        output_dir,
-        stem=stem,
-        formats=formats,
-    )
+    build_config = _effective_build_config_from_args(args, require_output_dir=True)
+    outputs = build_config.save_all(args.package)
     _print_outputs(outputs)
-    sidecars = args.sidecars if args.sidecars is not None else build_config.sidecars
-    if sidecars:
-        _write_build_sidecars(rendered_api, output_dir, stem)
     return 0
 
 
 def _run_snapshot(args: argparse.Namespace) -> int:
-    build_config = _build_config_from_args(args)
-    kind, module_prefix = _filter_options_from_args(args, build_config)
-    api = _filter_api(
-        _collect_from_args(args, config=build_config.collection),
-        kind=kind,
-        module_prefix=module_prefix,
-    )
+    build_config = _effective_build_config_from_args(args)
+    api = build_config.collect(args.package)
     ApiSnapshot.from_package(api).write_json(args.out)
     print(f"Wrote api-snapshot: {Path(args.out)}")
     return 0
@@ -465,9 +412,59 @@ def _collect_from_args(
             args.config,
             target=_target_from_args(args),
         )
-    return collect_api(
-        args.package,
-        config=config,
+    return collect_api(args.package, config=_collect_config_from_args(args, config))
+
+
+def _build_config_from_args(args: argparse.Namespace) -> ApiBuildConfig:
+    _load_docstring_parser_modules_from_args(args)
+    if not args.config:
+        return ApiBuildConfig()
+    return ApiBuildConfig.read_file(args.config, target=_target_from_args(args))
+
+
+def _effective_build_config_from_args(
+    args: argparse.Namespace,
+    *,
+    require_output_dir: bool = False,
+) -> ApiBuildConfig:
+    base = _build_config_from_args(args)
+    is_build_command = getattr(args, "command", None) == "build"
+    output_dir = getattr(args, "out", None) if is_build_command else base.output_dir
+    output_dir = output_dir or base.output_dir
+    if require_output_dir and output_dir is None:
+        raise SystemExit("oodocs apidoc build requires --out or output-dir in config")
+    output_formats = (
+        normalize_output_formats(_split_csv(args.to))
+        if is_build_command and getattr(args, "to", None)
+        else base.output_formats
+    )
+    return ApiBuildConfig(
+        collection=_collect_config_from_args(args, base.collection),
+        profile=getattr(args, "profile", None) or base.profile,
+        output_formats=output_formats,
+        stem=getattr(args, "stem", None) or base.stem,
+        max_level=(
+            args.max_level
+            if getattr(args, "max_level", None) is not None
+            else base.max_level
+        ),
+        sidecars=(
+            args.sidecars
+            if getattr(args, "sidecars", None) is not None
+            else base.sidecars
+        ),
+        output_dir=output_dir,
+        kind=tuple(args.kind) if args.kind else base.kind,
+        module_prefix=args.module_prefix or base.module_prefix,
+    )
+
+
+def _collect_config_from_args(
+    args: argparse.Namespace,
+    config: ApiCollectConfig | None = None,
+) -> ApiCollectConfig:
+    return ApiCollectConfig.from_kwargs(
+        config,
         collector=args.collector,
         fallback_collector=args.fallback_collector,
         public_policy=args.public_policy,
@@ -489,22 +486,6 @@ def _collect_from_args(
     )
 
 
-def _build_config_from_args(args: argparse.Namespace) -> ApiBuildConfig:
-    _load_docstring_parser_modules_from_args(args)
-    if not args.config:
-        return ApiBuildConfig()
-    return ApiBuildConfig.read_file(args.config, target=_target_from_args(args))
-
-
-def _filter_options_from_args(
-    args: argparse.Namespace,
-    build_config: ApiBuildConfig,
-) -> tuple[tuple[str, ...] | None, str | None]:
-    kind = tuple(args.kind) if args.kind else build_config.kind or None
-    module_prefix = args.module_prefix or build_config.module_prefix
-    return kind, module_prefix
-
-
 def _load_docstring_parser_modules_from_args(args: argparse.Namespace) -> None:
     modules = getattr(args, "docstring_parser_modules", None)
     if modules:
@@ -523,32 +504,6 @@ def _init_import_target(path: str | Path) -> Path:
     return target.parent if target.suffix else target
 
 
-def _filter_api(
-    api: ApiPackage,
-    *,
-    kind: tuple[str, ...] | None = None,
-    module_prefix: str | None = None,
-) -> ApiPackage:
-    if not _has_filter_values(kind, module_prefix):
-        return api
-    return api.filtered(
-        kind=kind,
-        module_prefix=module_prefix,
-    )
-
-
-def _has_filters(args: argparse.Namespace) -> bool:
-    return bool(getattr(args, "kind", None) or getattr(args, "module_prefix", None))
-
-
-def _has_filter_values(kind: tuple[str, ...] | None, module_prefix: str | None) -> bool:
-    return bool(kind or module_prefix)
-
-
-def _top_level_objects(api: ApiPackage) -> list[ApiObject]:
-    return [member for module in api.modules for member in module.members]
-
-
 def _split_csv(value: str) -> tuple[str, ...]:
     return tuple(piece.strip() for piece in value.split(",") if piece.strip())
 
@@ -563,17 +518,6 @@ def _config_output_format(path: str | Path, requested: str) -> str:
 def _print_outputs(outputs: dict[object, Path]) -> None:
     for output_format, path in outputs.items():
         print(f"Wrote {output_format}: {path}")
-
-
-def _write_build_sidecars(api: ApiPackage, output_dir: str | Path, stem: str) -> None:
-    directory = Path(output_dir)
-    coverage = check_api_docs(api)
-    api_path = api.write_json(directory / f"{stem}.json")
-    coverage_json_path = coverage.write_json(directory / f"{stem}-coverage.json")
-    coverage_csv_path = coverage.write_csv(directory / f"{stem}-coverage.csv")
-    print(f"Wrote api-json: {api_path}")
-    print(f"Wrote coverage-json: {coverage_json_path}")
-    print(f"Wrote coverage-csv: {coverage_csv_path}")
 
 
 if __name__ == "__main__":
