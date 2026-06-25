@@ -91,6 +91,9 @@ class ApiDiffResult:
         removed: Public objects removed from head.
         changed_signatures: Pairs whose signatures changed.
         changed_defaults: Pairs whose parameter defaults changed.
+        changed_parameter_annotations: Pairs whose parameter annotations
+            changed.
+        changed_return_annotations: Pairs whose return annotations changed.
         changed_docstrings: Pairs whose summary/description changed.
         deprecated: Public objects newly or currently marked deprecated.
         coverage_delta: Documentation coverage delta summary.
@@ -115,6 +118,8 @@ class ApiDiffResult:
     removed: list[ApiObject]
     changed_signatures: list[tuple[ApiObject, ApiObject]]
     changed_defaults: list[tuple[ApiObject, ApiObject]]
+    changed_parameter_annotations: list[tuple[ApiObject, ApiObject]]
+    changed_return_annotations: list[tuple[ApiObject, ApiObject]]
     changed_docstrings: list[tuple[ApiObject, ApiObject]]
     deprecated: list[ApiObject]
     coverage_delta: dict[str, object]
@@ -127,6 +132,8 @@ class ApiDiffResult:
             ["Removed", str(len(self.removed))],
             ["Changed signatures", str(len(self.changed_signatures))],
             ["Changed defaults", str(len(self.changed_defaults))],
+            ["Changed parameter annotations", str(len(self.changed_parameter_annotations))],
+            ["Changed return annotations", str(len(self.changed_return_annotations))],
             ["Changed docstrings", str(len(self.changed_docstrings))],
             ["Deprecated", str(len(self.deprecated))],
             ["Coverage delta", str(self.coverage_delta.get("object_coverage_delta", ""))],
@@ -148,6 +155,20 @@ class ApiDiffResult:
             sections.append(Chapter("Changed Signatures", _pairs_table(self.changed_signatures, "Signature")))
         if self.changed_defaults:
             sections.append(Chapter("Changed Defaults", _pairs_table(self.changed_defaults, "Defaults")))
+        if self.changed_parameter_annotations:
+            sections.append(
+                Chapter(
+                    "Changed Parameter Annotations",
+                    _pairs_table(self.changed_parameter_annotations, "Parameter annotations"),
+                )
+            )
+        if self.changed_return_annotations:
+            sections.append(
+                Chapter(
+                    "Changed Return Annotations",
+                    _pairs_table(self.changed_return_annotations, "Return annotation"),
+                )
+            )
         if self.changed_docstrings:
             sections.append(Chapter("Changed Docstrings", _pairs_table(self.changed_docstrings, "Summary")))
         return sections
@@ -175,6 +196,12 @@ class ApiDiffResult:
             "removed": [obj.to_dict() for obj in self.removed],
             "changed_signatures": [[base.to_dict(), head.to_dict()] for base, head in self.changed_signatures],
             "changed_defaults": [[base.to_dict(), head.to_dict()] for base, head in self.changed_defaults],
+            "changed_parameter_annotations": [
+                [base.to_dict(), head.to_dict()] for base, head in self.changed_parameter_annotations
+            ],
+            "changed_return_annotations": [
+                [base.to_dict(), head.to_dict()] for base, head in self.changed_return_annotations
+            ],
             "changed_docstrings": [[base.to_dict(), head.to_dict()] for base, head in self.changed_docstrings],
             "deprecated": [obj.to_dict() for obj in self.deprecated],
             "coverage_delta": self.coverage_delta,
@@ -227,6 +254,14 @@ class ApiDiffResult:
             changed_defaults=[
                 _object_pair_from_dict(item)
                 for item in data.get("changed_defaults", [])  # type: ignore[union-attr]
+            ],
+            changed_parameter_annotations=[
+                _object_pair_from_dict(item)
+                for item in data.get("changed_parameter_annotations", [])  # type: ignore[union-attr]
+            ],
+            changed_return_annotations=[
+                _object_pair_from_dict(item)
+                for item in data.get("changed_return_annotations", [])  # type: ignore[union-attr]
             ],
             changed_docstrings=[
                 _object_pair_from_dict(item)
@@ -303,6 +338,8 @@ def diff_api(
     removed = [base_objects[name] for name in sorted(base_names - head_names)]
     changed_signatures: list[tuple[ApiObject, ApiObject]] = []
     changed_defaults: list[tuple[ApiObject, ApiObject]] = []
+    changed_parameter_annotations: list[tuple[ApiObject, ApiObject]] = []
+    changed_return_annotations: list[tuple[ApiObject, ApiObject]] = []
     changed_docstrings: list[tuple[ApiObject, ApiObject]] = []
     for name in sorted(base_names & head_names):
         base_obj = base_objects[name]
@@ -311,6 +348,10 @@ def diff_api(
             changed_signatures.append((base_obj, head_obj))
         if _defaults(base_obj) != _defaults(head_obj):
             changed_defaults.append((base_obj, head_obj))
+        if _parameter_annotations(base_obj) != _parameter_annotations(head_obj):
+            changed_parameter_annotations.append((base_obj, head_obj))
+        if _return_annotation(base_obj) != _return_annotation(head_obj):
+            changed_return_annotations.append((base_obj, head_obj))
         if (base_obj.summary, base_obj.description) != (head_obj.summary, head_obj.description):
             changed_docstrings.append((base_obj, head_obj))
     deprecated = [obj for obj in head_objects.values() if obj.deprecated]
@@ -322,6 +363,8 @@ def diff_api(
         removed=removed,
         changed_signatures=changed_signatures,
         changed_defaults=changed_defaults,
+        changed_parameter_annotations=changed_parameter_annotations,
+        changed_return_annotations=changed_return_annotations,
         changed_docstrings=changed_docstrings,
         deprecated=sorted(deprecated, key=lambda obj: obj.qualname),
         coverage_delta=coverage_delta,
@@ -342,6 +385,14 @@ def _coverage_delta(base: ApiPackage | ApiSnapshot, head: ApiPackage | ApiSnapsh
 
 def _defaults(obj: ApiObject) -> tuple[tuple[str, str | None], ...]:
     return tuple((parameter.name, parameter.default) for parameter in obj.parameters)
+
+
+def _parameter_annotations(obj: ApiObject) -> tuple[tuple[str, str | None], ...]:
+    return tuple((parameter.name, parameter.annotation) for parameter in obj.parameters)
+
+
+def _return_annotation(obj: ApiObject) -> str | None:
+    return obj.returns.annotation if obj.returns else None
 
 
 def _object_pair_from_dict(data: object) -> tuple[ApiObject, ApiObject]:
@@ -369,6 +420,13 @@ def _field(obj: ApiObject, field_name: str) -> str:
         return obj.signature or ""
     if field_name == "Defaults":
         return ", ".join(f"{name}={default}" for name, default in _defaults(obj) if default is not None)
+    if field_name == "Parameter annotations":
+        return ", ".join(
+            f"{name}: {annotation}" if annotation else name
+            for name, annotation in _parameter_annotations(obj)
+        )
+    if field_name == "Return annotation":
+        return _return_annotation(obj) or ""
     return obj.plain_summary()
 
 

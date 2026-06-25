@@ -40,4 +40,5 @@ readback.to_document().save_all("artifacts/api-diff", stem="api-diff")
 ```
 
 The diff tracks added and removed objects, changed signatures, changed default
-values, changed docstrings, deprecated objects, and coverage deltas.
+values, changed parameter annotations, changed return annotations, changed
+docstrings, deprecated objects, and coverage deltas.

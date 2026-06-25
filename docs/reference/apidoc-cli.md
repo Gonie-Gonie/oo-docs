@@ -40,6 +40,10 @@ python -m oodocs apidoc snapshot oodocs --kind function --module-prefix oodocs.a
 python -m oodocs apidoc diff --base artifacts/api-base.json --head artifacts/api-snapshot.json --out artifacts/api-diff
 ```
 
+The diff command reports added and removed objects, signature changes, default
+value changes, parameter annotation changes, return annotation changes,
+docstring changes, deprecated objects, and coverage deltas.
+
 Common collection options are `--collector`, `--public-policy`,
 `--explicit-name`, and `--docstring-style`. `check`, `build`, and `snapshot`
 also accept `--kind` and `--module-prefix` filters.

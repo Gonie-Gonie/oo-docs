@@ -13,6 +13,9 @@ Core objects:
   normalized docstring subsections.
 - `ApiDocIssue`: stable diagnostics from parsing, collection, coverage, and
   examples.
+- `ApiSnapshot` and `ApiDiffResult`: release comparison sidecars for added,
+  removed, signature-changed, default-changed, annotation-changed,
+  documentation-changed, and deprecated API objects.
 
 ```python
 from oodocs.apidoc import ApiPackage, collect_api
@@ -27,4 +30,6 @@ if obj is not None:
 
 Every model object that is written as a sidecar supports deterministic
 serialization through `to_dict()`/`from_dict()` or package/snapshot JSON helpers.
-
+Diff sidecars preserve parameter annotation and return annotation changes as
+first-class lists so compatibility reports do not need to infer them from the
+rendered signature string.

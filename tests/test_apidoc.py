@@ -500,7 +500,16 @@ def test_api_coverage_and_diff_detect_doc_changes(tmp_path: Path) -> None:
         "    Args:\n"
         "        left: Left value.\n"
         '    """\n'
-        "    return left + right\n",
+        "    return left + right\n"
+        "\n"
+        "def cast(value: int) -> str:\n"
+        '    """Cast a value.\n\n'
+        "    Args:\n"
+        "        value: Value to cast.\n"
+        "    Returns:\n"
+        "        str: Cast value.\n"
+        '    """\n'
+        "    return str(value)\n",
         encoding="utf-8",
     )
     (head_dir / "__init__.py").write_text(
@@ -513,6 +522,15 @@ def test_api_coverage_and_diff_detect_doc_changes(tmp_path: Path) -> None:
         "        int: Sum.\n"
         '    """\n'
         "    return left + right\n"
+        "\n"
+        "def cast(value: str) -> bytes:\n"
+        '    """Cast a value.\n\n'
+        "    Args:\n"
+        "        value: Value to cast.\n"
+        "    Returns:\n"
+        "        bytes: Cast value.\n"
+        '    """\n'
+        "    return value.encode()\n"
         "\n"
         'def subtract(left: int, right: int) -> int:\n    """Subtract values."""\n    return left - right\n',
         encoding="utf-8",
@@ -527,6 +545,8 @@ def test_api_coverage_and_diff_detect_doc_changes(tmp_path: Path) -> None:
     assert diff.added
     assert diff.changed_signatures
     assert diff.changed_defaults
+    assert diff.changed_parameter_annotations
+    assert diff.changed_return_annotations
     assert diff.changed_docstrings
 
     snapshot_path = tmp_path / "snapshot.json"
@@ -543,6 +563,8 @@ def test_api_coverage_and_diff_detect_doc_changes(tmp_path: Path) -> None:
     diff.write_json(diff_path)
     diff_readback = ApiDiffResult.read_json(diff_path)
     assert diff_readback.to_dict() == diff.to_dict()
+    assert diff_readback.changed_parameter_annotations
+    assert diff_readback.changed_return_annotations
     assert isinstance(diff_readback.to_summary_table(), Table)
 
 
