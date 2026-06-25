@@ -466,15 +466,13 @@ def api_objects_to_summary_table(
     return Table(headers, rows, caption=caption)
 
 
-def api_module_to_chapter(
+def api_module_to_blocks(
     module: ApiModule,
     *,
     profile: str | ApiDocProfile = "reference",
-    title: str | None = None,
-):
-    """Convert a module into an OODocs chapter."""
-
-    from oodocs.components.blocks import Chapter
+    level: int = 2,
+) -> list[Block]:
+    """Convert a module into renderer-neutral blocks."""
 
     resolved = resolve_profile(profile)
     blocks: list[Block] = []
@@ -509,8 +507,25 @@ def api_module_to_chapter(
         )
     if module.members:
         blocks.append(module.to_summary_table(caption="Module API", profile=resolved))
-    blocks.extend(module.to_sections(profile=resolved, level=2))
-    return Chapter(title or module.name, *blocks)
+    blocks.extend(module.to_sections(profile=resolved, level=level))
+    return blocks
+
+
+def api_module_to_chapter(
+    module: ApiModule,
+    *,
+    profile: str | ApiDocProfile = "reference",
+    title: str | None = None,
+):
+    """Convert a module into an OODocs chapter."""
+
+    from oodocs.components.blocks import Chapter
+
+    return Chapter(
+        title or module.name,
+        *api_module_to_blocks(module, profile=profile, level=2),
+    )
+
 
 
 def api_package_to_chapters(
@@ -632,6 +647,7 @@ __all__ = [
     "api_heading_text",
     "api_kind_chip",
     "api_member_summary_table",
+    "api_module_to_blocks",
     "api_module_to_chapter",
     "api_notes_blocks",
     "api_object_summary_paragraph",

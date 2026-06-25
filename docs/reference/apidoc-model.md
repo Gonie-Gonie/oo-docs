@@ -41,9 +41,10 @@ can be inserted directly with `obj.to_notes_blocks()` or
 full `obj.to_section(...)` rendering.
 
 Module docstring notes, warnings, and renderer notes are preserved on
-`ApiModule` as well. `module.to_chapter(...)` renders them before the module API
-summary table so overview-level guidance is not lost when a repository uses
-module docstrings as reference introductions.
+`ApiModule` as well. `module.to_blocks(...)` and `module.to_chapter(...)` render
+them before the module API summary table so overview-level guidance is not lost
+when a repository uses module docstrings as reference introductions or embeds a
+module reference inside a larger hand-authored document.
 
 Use `api.iter_issues()` or `api.to_issue_table()` when parser diagnostics stored
 on individual API objects should appear beside package-level collection issues.

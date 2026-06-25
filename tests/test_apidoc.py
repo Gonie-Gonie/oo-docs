@@ -405,6 +405,17 @@ def test_collect_api_builds_queryable_object_tree_and_blocks(tmp_path: Path) -> 
     assert "Module warnings are rendered in module chapters." in module_html_text
     assert "Module renderer notes are visible in references." in module_html_text
 
+    module_blocks_doc = Document(
+        "Module Blocks",
+        Chapter("API", *module.to_blocks(profile="reference")),
+    )
+    module_blocks_html = tmp_path / "module-blocks.html"
+    module_blocks_doc.save_html(module_blocks_html)
+    module_blocks_html_text = module_blocks_html.read_text(encoding="utf-8")
+    assert "Module notes survive API collection." in module_blocks_html_text
+    assert "Module warnings are rendered in module chapters." in module_blocks_html_text
+    assert "Module renderer notes are visible in references." in module_blocks_html_text
+
 
 def test_api_doc_profiles_wrap_long_signature_blocks() -> None:
     obj = ApiObject(

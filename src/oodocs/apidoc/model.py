@@ -1116,7 +1116,9 @@ class ApiModule:
     def to_blocks(self, *, profile: object = "reference", level: int = 2) -> list[object]:
         """Return this module as renderer-neutral blocks."""
 
-        return self.to_sections(profile=profile, level=level)
+        from oodocs.apidoc.blocks import api_module_to_blocks
+
+        return api_module_to_blocks(self, profile=profile, level=level)
 
 
 @dataclass(slots=True)
