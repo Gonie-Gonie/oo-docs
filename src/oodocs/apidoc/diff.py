@@ -140,10 +140,51 @@ class ApiDiffResult:
         ]
         return Table(["Metric", "Count"], rows, caption="API diff summary", split=True)
 
+    def to_coverage_delta_table(self) -> Table:
+        """Return coverage delta details as an OODocs table.
+
+        Returns:
+            Table containing base/head public object counts, documented object
+            counts, coverage ratios, and coverage delta.
+
+        Examples:
+            Add coverage movement to a release review document:
+
+            ```python
+            from oodocs import Chapter, Document
+            from oodocs.apidoc import ApiSnapshot, diff_api
+
+            base = ApiSnapshot.read_json("artifacts/api-base.json")
+            head = ApiSnapshot.read_json("artifacts/api-head.json")
+            diff = diff_api(base, head)
+            doc = Document(
+                "API Review",
+                Chapter("Coverage Movement", diff.to_coverage_delta_table()),
+            )
+            ```
+        """
+
+        rows = [
+            ["Base public objects", _format_delta_value(self.coverage_delta.get("base_public_object_count"))],
+            ["Head public objects", _format_delta_value(self.coverage_delta.get("head_public_object_count"))],
+            [
+                "Base documented objects",
+                _format_delta_value(self.coverage_delta.get("base_documented_object_count")),
+            ],
+            [
+                "Head documented objects",
+                _format_delta_value(self.coverage_delta.get("head_documented_object_count")),
+            ],
+            ["Base object coverage", _format_delta_value(self.coverage_delta.get("base_object_coverage"))],
+            ["Head object coverage", _format_delta_value(self.coverage_delta.get("head_object_coverage"))],
+            ["Object coverage delta", _format_delta_value(self.coverage_delta.get("object_coverage_delta"))],
+        ]
+        return Table(["Metric", "Value"], rows, caption="API coverage delta", split=True)
+
     def to_sections(self) -> list[Chapter]:
         """Return detailed diff sections."""
 
-        sections: list[Chapter] = []
+        sections: list[Chapter] = [Chapter("Coverage Delta", self.to_coverage_delta_table())]
         for title, objects in (
             ("Added API", self.added),
             ("Removed API", self.removed),
@@ -432,6 +473,14 @@ def _pairs_table(pairs: list[tuple[ApiObject, ApiObject]], field_name: str) -> T
         [[base.qualname, _field(base, field_name), _field(head, field_name)] for base, head in pairs],
         split=True,
     )
+
+
+def _format_delta_value(value: object) -> str:
+    if isinstance(value, float):
+        return f"{value:.1%}"
+    if value is None:
+        return ""
+    return str(value)
 
 
 def _field(obj: ApiObject, field_name: str) -> str:

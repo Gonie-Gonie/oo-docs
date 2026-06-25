@@ -1215,6 +1215,15 @@ def test_api_coverage_and_diff_detect_doc_changes(tmp_path: Path) -> None:
     assert diff_readback.changed_parameter_annotations
     assert diff_readback.changed_return_annotations
     assert isinstance(diff_readback.to_summary_table(), Table)
+    assert isinstance(diff_readback.to_coverage_delta_table(), Table)
+
+    diff_document = diff_readback.to_document(title="API Change Report")
+    diff_html_path = tmp_path / "api-diff.html"
+    diff_document.save_html(diff_html_path)
+    diff_html = diff_html_path.read_text(encoding="utf-8")
+    assert "Coverage Delta" in diff_html
+    assert "Base public objects" in diff_html
+    assert "Object coverage delta" in diff_html
 
 
 def test_api_coverage_counts_doctest_examples(tmp_path: Path) -> None:

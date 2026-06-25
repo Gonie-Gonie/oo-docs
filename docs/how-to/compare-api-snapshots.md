@@ -44,4 +44,6 @@ values, changed parameter annotations, changed return annotations, changed
 docstrings, deprecated objects, and coverage deltas. Coverage deltas are
 computed from either live `ApiPackage` objects or persisted `ApiSnapshot`
 sidecars, so CI can compare release artifacts without importing the target
-package again.
+package again. Rendered diff documents include a `Coverage Delta` chapter with
+base/head public-object counts, documented-object counts, coverage ratios, and
+the coverage movement between snapshots.
