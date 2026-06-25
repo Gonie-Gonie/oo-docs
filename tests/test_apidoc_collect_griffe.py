@@ -6,13 +6,14 @@ import pytest
 
 from apidoc_samples import (
     collect_sample_api,
+    write_mixed_docstring_repo,
     write_dataclass_package,
     write_overload_package,
     write_private_package,
     write_sample_package,
     write_setuptools_package_dir_repo,
 )
-from oodocs.apidoc import collect_api
+from oodocs.apidoc import ApiDocstringParser, collect_api, docstring_parser_names
 
 
 def test_inspect_and_griffe_collect_same_sample_public_objects(tmp_path) -> None:
@@ -64,6 +65,101 @@ def test_griffe_collector_passes_docstring_parser_hint(tmp_path, monkeypatch) ->
     plain_root.mkdir()
     collect_sample_api(plain_root, collector="griffe", docstring_style="plain")
     assert seen_parsers[-1] is None
+
+
+def test_griffe_collector_uses_auto_parser_object_on_mixed_repo(tmp_path) -> None:
+    if importlib.util.find_spec("griffe") is None:
+        pytest.skip("griffe is not installed")
+
+    repo = write_mixed_docstring_repo(tmp_path)
+    api = collect_api(
+        repo,
+        collector="griffe",
+        public_policy="__all__",
+        docstring_style=ApiDocstringParser.auto(),
+    )
+    method = api.find("mixedpkg.core.Client.connect")
+    function = api.find("mixedpkg.core.connect")
+    stream = api.find("mixedpkg.core.stream")
+
+    assert method is not None
+    assert method.metadata["docstring_style"] == "numpy"
+    assert method.parameters[0].description == "Timeout in seconds."
+    assert method.returns is not None
+    assert method.returns.description == "Whether the connection succeeded."
+    assert function is not None
+    assert function.metadata["docstring_style"] == "google"
+    assert stream is not None
+    assert stream.metadata["docstring_style"] == "markdown"
+    assert stream.returns is not None
+    assert stream.returns.description == "Endpoint update payload."
+
+
+def test_griffe_collector_uses_repo_local_custom_docstring_parser(tmp_path) -> None:
+    if importlib.util.find_spec("griffe") is None:
+        pytest.skip("griffe is not installed")
+
+    repo = tmp_path / "griffe-custom-repo"
+    package_dir = repo / "src" / "griffecustompkg"
+    package_dir.mkdir(parents=True)
+    (repo / "pyproject.toml").write_text(
+        "\n".join(
+            [
+                "[project]",
+                'name = "griffecustompkg"',
+                "",
+                "[tool.setuptools]",
+                'package-dir = {"" = "src"}',
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (repo / "griffe_custom_parsers.py").write_text(
+        "\n".join(
+            [
+                "from oodocs.apidoc import ParsedDocstring, docstring_parser_names, register_docstring_parser",
+                "",
+                "def parse_griffe_custom(text, qualname=None, module=None):",
+                "    first = (text or '').strip().splitlines()[0]",
+                '    return ParsedDocstring(summary=f"griffe:{first}", style="griffe-custom-brief")',
+                "",
+                'if "griffe-custom-brief" not in docstring_parser_names():',
+                '    register_docstring_parser("griffe-custom-brief", parse_griffe_custom)',
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (package_dir / "__init__.py").write_text(
+        "\n".join(
+            [
+                '"""Griffe custom parser package."""',
+                "",
+                '__all__ = ["run"]',
+                "",
+                "def run() -> None:",
+                '    """Run with a custom parser."""',
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    assert "griffe-custom-brief" not in docstring_parser_names()
+    api = collect_api(
+        repo,
+        collector="griffe",
+        public_policy="__all__",
+        docstring_parser_modules=("griffe_custom_parsers",),
+        docstring_style="griffe-custom-brief",
+    )
+    run = api.find("griffecustompkg.run")
+
+    assert api.metadata["collector"] == "griffe"
+    assert run is not None
+    assert run.summary == "griffe:Run with a custom parser."
+    assert run.metadata["docstring_style"] == "griffe-custom-brief"
 
 
 def test_griffe_collector_can_exclude_member_kinds(tmp_path) -> None:
