@@ -4,14 +4,20 @@ import importlib.util
 import json
 from pathlib import Path
 
+import pytest
+
 from apidoc_samples import (
     write_custom_docstring_parser_repo,
     write_flit_package_repo,
+    write_flit_module_file_repo,
     write_hatch_multi_package_repo,
     write_hatch_only_include_repo,
     write_import_names_package_repo,
+    write_import_names_module_file_repo,
     write_mixed_docstring_repo,
     write_pdm_package_dir_repo,
+    write_pdm_module_file_repo,
+    write_poetry_package_repo,
     write_setuptools_py_module_repo,
     write_single_file_module,
 )
@@ -876,6 +882,112 @@ def test_general_import_names_package_repo_builds_complete_reference(
     assert rendered_api.find("importnamedpkg.run") is not None
     assert rendered_api.find("lib.importnamedpkg.run") is None
     assert rendered_api.find("straypkg.leak") is None
+    assert ApiCoverageResult.read_json(coverage_path).object_coverage == 1.0
+
+
+@pytest.mark.parametrize(
+    (
+        "writer",
+        "expected_package",
+        "expected_qualnames",
+        "forbidden_qualnames",
+        "forbidden_html",
+    ),
+    [
+        (
+            write_poetry_package_repo,
+            "poetrypkg",
+            ("poetrypkg.run", "poetrypkg.core.run"),
+            ("lib.poetrypkg.run",),
+            ("lib.poetrypkg",),
+        ),
+        (
+            write_pdm_module_file_repo,
+            "pdmrunner",
+            ("pdmrunner.Client.connect", "pdmrunner.stream"),
+            ("pdm_module_repo.pdmrunner.Client",),
+            ("pdm_module_repo.pdmrunner",),
+        ),
+        (
+            write_flit_module_file_repo,
+            "flitrunner",
+            ("flitrunner.Client.connect", "flitrunner.connect"),
+            ("helper.leak",),
+            ("helper.leak",),
+        ),
+        (
+            write_import_names_module_file_repo,
+            "importnamedrunner",
+            ("importnamedrunner.run",),
+            ("helper.leak",),
+            ("helper.leak",),
+        ),
+    ],
+)
+def test_general_packaging_variants_build_complete_cli_reference(
+    tmp_path: Path,
+    writer,
+    expected_package: str,
+    expected_qualnames: tuple[str, ...],
+    forbidden_qualnames: tuple[str, ...],
+    forbidden_html: tuple[str, ...],
+) -> None:
+    repo = writer(tmp_path)
+    output_dir = tmp_path / f"{expected_package}-output"
+
+    api = collect_api(
+        repo,
+        collector="inspect",
+        public_policy="__all__",
+        docstring_style=ApiDocstringParser.auto(),
+    )
+    coverage = check_api_docs(api, fail_under=1.0)
+
+    assert api.name == expected_package
+    for qualname in expected_qualnames:
+        assert api.find(qualname) is not None
+    for qualname in forbidden_qualnames:
+        assert api.find(qualname) is None
+    assert coverage.object_coverage == 1.0
+
+    assert (
+        main(
+            [
+                "build",
+                str(repo),
+                "--collector",
+                "inspect",
+                "--public-policy",
+                "__all__",
+                "--docstring-style",
+                "auto",
+                "--out",
+                str(output_dir),
+                "--to",
+                "html",
+                "--sidecars",
+            ]
+        )
+        == 0
+    )
+    html_path = output_dir / f"{expected_package}-api.html"
+    api_path = output_dir / f"{expected_package}-api.json"
+    coverage_path = output_dir / f"{expected_package}-api-coverage.json"
+
+    assert html_path.exists()
+    assert api_path.exists()
+    assert coverage_path.exists()
+    html = html_path.read_text(encoding="utf-8")
+    for qualname in expected_qualnames:
+        assert qualname in html
+    for text in forbidden_html:
+        assert text not in html
+    assert_html_internal_links_resolve(html_path)
+    rendered_api = ApiPackage.read_json(api_path)
+    for qualname in expected_qualnames:
+        assert rendered_api.find(qualname) is not None
+    for qualname in forbidden_qualnames:
+        assert rendered_api.find(qualname) is None
     assert ApiCoverageResult.read_json(coverage_path).object_coverage == 1.0
 
 
