@@ -42,7 +42,9 @@ class ParsedDocstring:
         renderer_notes: Renderer-specific behavior notes.
         notes: Additional notes.
         warnings: Warning notes.
-        style: Parser style that produced the result.
+        style: Parser style that produced the result. Built-in parser results
+            use a standard ``ApiDocstringStyleName``; custom parser results may
+            use repository-specific style names.
         issues: Parser diagnostics.
         deprecated: Whether the docstring marks the object as deprecated.
         deprecation_message: Optional deprecation guidance.
@@ -69,7 +71,7 @@ class ParsedDocstring:
     renderer_notes: list[ApiRendererNote] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
-    style: ApiDocstringStyleName = "plain"
+    style: str = "plain"
     issues: list[ApiDocIssue] = field(default_factory=list)
     deprecated: bool = False
     deprecation_message: str | None = None
@@ -412,7 +414,7 @@ class ApiDocstringParser:
 
         return {"style": self.style}
 
-    def detect(self, text: str | None) -> ApiDocstringStyleName:
+    def detect(self, text: str | None) -> str:
         """Detect the style that would be used for ``text``.
 
         Args:
@@ -420,7 +422,8 @@ class ApiDocstringParser:
 
         Returns:
             Detected style for ``"auto"`` parsers or this parser's explicit
-            style when configured explicitly.
+            style when configured explicitly. Explicit custom parser styles
+            are returned as their registered style name.
 
         Examples:
             Preview the parser choice before collection:
@@ -433,7 +436,7 @@ class ApiDocstringParser:
 
         if self.style == "auto":
             return detect_docstring_style(text)
-        return self.style  # type: ignore[return-value]
+        return self.style
 
     def parse(
         self,
@@ -485,6 +488,21 @@ class ApiDocstringParser:
 
         Returns:
             Normalized parse result.
+
+        Examples:
+            Use a parser object as a callable in repository-local tooling:
+
+            ```python
+            from oodocs.apidoc import ApiDocstringParser
+
+            parser = ApiDocstringParser.google()
+            parsed = parser(
+                "Run.\\n\\nArgs:\\n    path: Input path.",
+                qualname="mypkg.run",
+                module="mypkg",
+            )
+            assert parsed.parameters[0].name == "path"
+            ```
         """
 
         return self.parse(text, qualname=qualname, module=module)
@@ -514,6 +532,43 @@ _GOOGLE_SECTION_NAMES = {
     "renderer notes",
     "deprecated",
 }
+_MARKDOWN_DETECTION_SECTIONS = (
+    "Parameters",
+    "Attributes",
+    "Returns",
+    "Raises",
+    "Examples",
+    "See Also",
+    "Notes",
+    "Warnings",
+    "Renderer Notes",
+    "Deprecated",
+)
+_GOOGLE_DETECTION_SECTIONS = (
+    "Args",
+    "Arguments",
+    "Parameters",
+    "Attributes",
+    "Returns",
+    "Yields",
+    "Raises",
+    "Examples",
+    "See Also",
+    "Notes",
+    "Warnings",
+    "Renderer Notes",
+    "Deprecated",
+)
+_MARKDOWN_SECTION_PATTERN = (
+    r"(?m)^#{1,6}\s+("
+    + "|".join(re.escape(name) for name in _MARKDOWN_DETECTION_SECTIONS)
+    + r")\s*$"
+)
+_GOOGLE_SECTION_PATTERN = (
+    r"(?m)^("
+    + "|".join(re.escape(name) for name in _GOOGLE_DETECTION_SECTIONS)
+    + r"):\s*$"
+)
 
 
 def parse_docstring(
@@ -725,9 +780,9 @@ def detect_docstring_style(text: str | None) -> ApiDocstringStyleName:
         return "sphinx"
     if re.search(r"(?m)^[A-Za-z][A-Za-z ]+\n-{3,}\s*$", cleaned):
         return "numpy"
-    if re.search(r"(?m)^#{1,6}\s+(Parameters|Attributes|Returns|Raises|Examples|See Also|Notes|Warnings|Renderer Notes|Deprecated)\s*$", cleaned):
+    if re.search(_MARKDOWN_SECTION_PATTERN, cleaned):
         return "markdown"
-    if re.search(r"(?m)^(Args|Arguments|Parameters|Attributes|Returns|Yields|Raises|Examples|See Also|Notes|Warnings|Renderer Notes|Deprecated):\s*$", cleaned):
+    if re.search(_GOOGLE_SECTION_PATTERN, cleaned):
         return "google"
     return "plain"
 

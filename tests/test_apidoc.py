@@ -244,8 +244,15 @@ def test_docstring_parser_backend_enriches_standard_style_metadata() -> None:
 def test_reusable_docstring_parser_object_and_custom_registry(tmp_path: Path) -> None:
     parser = ApiDocstringParser.auto()
     parsed = parser.parse(GOOGLE_DOCSTRING, qualname="pkg.load", module="pkg")
+    called = ApiDocstringParser.google()(
+        "Run.\n\nArgs:\n    path: Input path.",
+        qualname="pkg.run",
+        module="pkg",
+    )
 
     assert parsed.style == "google"
+    assert called.style == "google"
+    assert called.parameters[0].name == "path"
     assert parser.detect(GOOGLE_DOCSTRING) == "google"
     assert ApiDocstringParser.from_dict(parser.to_dict()) == parser
 
@@ -256,6 +263,9 @@ def test_reusable_docstring_parser_object_and_custom_registry(tmp_path: Path) ->
         register_docstring_parser("brief-test", parse_brief)
     config = ApiCollectConfig(docstring_style=ApiDocstringParser("brief-test"))
     assert config.to_dict()["docstring_style"] == "brief-test"
+    custom_parser = ApiDocstringParser("brief-test")
+    assert custom_parser.detect("Brief summary.") == "brief-test"
+    assert custom_parser("Brief summary.").style == "brief-test"
 
     package_dir = tmp_path / "briefpkg"
     package_dir.mkdir()

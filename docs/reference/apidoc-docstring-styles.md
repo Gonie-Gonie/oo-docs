@@ -62,6 +62,12 @@ parser = ApiDocstringParser.auto()
 api = collect_api(".", collector="griffe", docstring_style=parser)
 ```
 
+`ApiDocstringStyleName` names the built-in styles used by automatic detection.
+`ApiDocstringParser` and `ParsedDocstring.style` also accept registered custom
+style names, so a repository can keep its own parser convention in an importable
+module and still pass that parser object through `collect_api(...)`, config
+sidecars, and rendered issue tables.
+
 When an explicit style is requested but the docstring looks like another
 supported style, the parser records a `docstring-style-mismatch` warning. These
 warnings are available on parsed results and through package issue tables after
@@ -88,6 +94,8 @@ def parse_brief(text, qualname, module):
 
 register_docstring_parser("brief", parse_brief)
 parser = ApiDocstringParser("brief")
+parsed = parser("Short custom summary.")
+assert parsed.style == "brief"
 ```
 
 For CLI and `pyproject.toml` workflows, put the registration code in an
