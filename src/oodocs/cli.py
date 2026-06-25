@@ -133,6 +133,13 @@ def _build_parser() -> argparse.ArgumentParser:
     _add_traceback_option(validate)
     validate.set_defaults(func=_run_validate)
 
+    apidoc = subparsers.add_parser(
+        "apidoc",
+        help="Collect, check, snapshot, diff, and render Python API documentation.",
+    )
+    apidoc.add_argument("apidoc_args", nargs=argparse.REMAINDER)
+    apidoc.set_defaults(func=_run_apidoc)
+
     return parser
 
 
@@ -255,6 +262,12 @@ def _run_validate(args: argparse.Namespace) -> int:
     if args.strict and result.warnings_for(formats):
         return 1
     return 0
+
+
+def _run_apidoc(args: argparse.Namespace) -> int:
+    from oodocs.apidoc.cli import main as apidoc_main
+
+    return apidoc_main(args.apidoc_args)
 
 
 def _run_import_warning_policy(args: argparse.Namespace) -> int:

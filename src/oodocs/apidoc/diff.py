@@ -1,0 +1,273 @@
+"""API snapshot and diff helpers."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+import json
+from pathlib import Path
+
+from oodocs.apidoc.coverage import check_api_docs
+from oodocs.apidoc.model import ApiObject, ApiPackage
+from oodocs.components.blocks import Chapter, Paragraph
+from oodocs.components.media import Table
+from oodocs.core import PathLike
+from oodocs.document import Document
+
+
+@dataclass(slots=True)
+class ApiSnapshot:
+    """Deterministic snapshot of public API objects.
+
+    Attributes:
+        name: Snapshot package name.
+        version: Optional package version.
+        objects: Public objects keyed by qualname.
+
+    Examples:
+        ```python
+        from oodocs.apidoc import collect_api
+        from oodocs.apidoc.diff import ApiSnapshot
+
+        snapshot = ApiSnapshot.from_package(collect_api("oodocs"))
+        snapshot.write_json("api-snapshot.json")
+        ```
+    """
+
+    name: str
+    version: str | None = None
+    objects: dict[str, dict[str, object]] = field(default_factory=dict)
+
+    @classmethod
+    def from_package(cls, api: ApiPackage) -> ApiSnapshot:
+        """Create a snapshot from a package object."""
+
+        return cls(
+            api.name,
+            version=api.version,
+            objects={obj.qualname: obj.to_dict() for obj in api.public_objects()},
+        )
+
+    def to_dict(self) -> dict[str, object]:
+        """Return deterministic serialized data."""
+
+        return {"name": self.name, "version": self.version, "objects": self.objects}
+
+    @classmethod
+    def from_dict(cls, data: dict[str, object]) -> ApiSnapshot:
+        """Reconstruct a snapshot from serialized data."""
+
+        return cls(
+            name=str(data["name"]),
+            version=data.get("version"),  # type: ignore[arg-type]
+            objects=dict(data.get("objects", {})),  # type: ignore[arg-type]
+        )
+
+    def write_json(self, path: PathLike) -> Path:
+        """Write snapshot JSON."""
+
+        output_path = Path(path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(
+            json.dumps(self.to_dict(), indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        return output_path
+
+    @classmethod
+    def read_json(cls, path: PathLike) -> ApiSnapshot:
+        """Read snapshot JSON."""
+
+        return cls.from_dict(json.loads(Path(path).read_text(encoding="utf-8")))
+
+
+@dataclass(slots=True)
+class ApiDiffResult:
+    """Difference between two API snapshots.
+
+    Attributes:
+        base_name: Base snapshot name.
+        head_name: Head snapshot name.
+        added: Public objects added in head.
+        removed: Public objects removed from head.
+        changed_signatures: Pairs whose signatures changed.
+        changed_defaults: Pairs whose parameter defaults changed.
+        changed_docstrings: Pairs whose summary/description changed.
+        deprecated: Public objects newly or currently marked deprecated.
+        coverage_delta: Documentation coverage delta summary.
+    """
+
+    base_name: str
+    head_name: str
+    added: list[ApiObject]
+    removed: list[ApiObject]
+    changed_signatures: list[tuple[ApiObject, ApiObject]]
+    changed_defaults: list[tuple[ApiObject, ApiObject]]
+    changed_docstrings: list[tuple[ApiObject, ApiObject]]
+    deprecated: list[ApiObject]
+    coverage_delta: dict[str, object]
+
+    def to_summary_table(self) -> Table:
+        """Return a compact diff summary table."""
+
+        rows = [
+            ["Added", str(len(self.added))],
+            ["Removed", str(len(self.removed))],
+            ["Changed signatures", str(len(self.changed_signatures))],
+            ["Changed defaults", str(len(self.changed_defaults))],
+            ["Changed docstrings", str(len(self.changed_docstrings))],
+            ["Deprecated", str(len(self.deprecated))],
+            ["Coverage delta", str(self.coverage_delta.get("object_coverage_delta", ""))],
+        ]
+        return Table(["Metric", "Count"], rows, caption="API diff summary")
+
+    def to_sections(self) -> list[Chapter]:
+        """Return detailed diff sections."""
+
+        sections: list[Chapter] = []
+        for title, objects in (
+            ("Added API", self.added),
+            ("Removed API", self.removed),
+            ("Deprecated API", self.deprecated),
+        ):
+            if objects:
+                sections.append(Chapter(title, _objects_table(objects)))
+        if self.changed_signatures:
+            sections.append(Chapter("Changed Signatures", _pairs_table(self.changed_signatures, "Signature")))
+        if self.changed_defaults:
+            sections.append(Chapter("Changed Defaults", _pairs_table(self.changed_defaults, "Defaults")))
+        if self.changed_docstrings:
+            sections.append(Chapter("Changed Docstrings", _pairs_table(self.changed_docstrings, "Summary")))
+        return sections
+
+    def to_document(self, *, title: str | None = None) -> Document:
+        """Return this diff as an OODocs document."""
+
+        return Document(
+            title or "API Diff",
+            Chapter(
+                "Summary",
+                Paragraph(f"{self.base_name} -> {self.head_name}"),
+                self.to_summary_table(),
+            ),
+            *self.to_sections(),
+        )
+
+    def to_dict(self) -> dict[str, object]:
+        """Return deterministic serialized data."""
+
+        return {
+            "base_name": self.base_name,
+            "head_name": self.head_name,
+            "added": [obj.to_dict() for obj in self.added],
+            "removed": [obj.to_dict() for obj in self.removed],
+            "changed_signatures": [[base.to_dict(), head.to_dict()] for base, head in self.changed_signatures],
+            "changed_defaults": [[base.to_dict(), head.to_dict()] for base, head in self.changed_defaults],
+            "changed_docstrings": [[base.to_dict(), head.to_dict()] for base, head in self.changed_docstrings],
+            "deprecated": [obj.to_dict() for obj in self.deprecated],
+            "coverage_delta": self.coverage_delta,
+        }
+
+    def write_json(self, path: PathLike) -> Path:
+        """Write diff sidecar JSON."""
+
+        output_path = Path(path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(
+            json.dumps(self.to_dict(), indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        return output_path
+
+
+def diff_api(
+    base: ApiPackage | ApiSnapshot,
+    head: ApiPackage | ApiSnapshot,
+) -> ApiDiffResult:
+    """Compare two API packages or snapshots.
+
+    Args:
+        base: Base package or snapshot.
+        head: Head package or snapshot.
+
+    Returns:
+        API diff result.
+    """
+
+    base_snapshot = ApiSnapshot.from_package(base) if isinstance(base, ApiPackage) else base
+    head_snapshot = ApiSnapshot.from_package(head) if isinstance(head, ApiPackage) else head
+    base_objects = {name: ApiObject.from_dict(data) for name, data in base_snapshot.objects.items()}
+    head_objects = {name: ApiObject.from_dict(data) for name, data in head_snapshot.objects.items()}
+    base_names = set(base_objects)
+    head_names = set(head_objects)
+    added = [head_objects[name] for name in sorted(head_names - base_names)]
+    removed = [base_objects[name] for name in sorted(base_names - head_names)]
+    changed_signatures: list[tuple[ApiObject, ApiObject]] = []
+    changed_defaults: list[tuple[ApiObject, ApiObject]] = []
+    changed_docstrings: list[tuple[ApiObject, ApiObject]] = []
+    for name in sorted(base_names & head_names):
+        base_obj = base_objects[name]
+        head_obj = head_objects[name]
+        if base_obj.signature != head_obj.signature:
+            changed_signatures.append((base_obj, head_obj))
+        if _defaults(base_obj) != _defaults(head_obj):
+            changed_defaults.append((base_obj, head_obj))
+        if (base_obj.summary, base_obj.description) != (head_obj.summary, head_obj.description):
+            changed_docstrings.append((base_obj, head_obj))
+    deprecated = [obj for obj in head_objects.values() if obj.deprecated]
+    coverage_delta = _coverage_delta(base, head)
+    return ApiDiffResult(
+        base_name=base_snapshot.name,
+        head_name=head_snapshot.name,
+        added=added,
+        removed=removed,
+        changed_signatures=changed_signatures,
+        changed_defaults=changed_defaults,
+        changed_docstrings=changed_docstrings,
+        deprecated=sorted(deprecated, key=lambda obj: obj.qualname),
+        coverage_delta=coverage_delta,
+    )
+
+
+def _coverage_delta(base: ApiPackage | ApiSnapshot, head: ApiPackage | ApiSnapshot) -> dict[str, object]:
+    if not isinstance(base, ApiPackage) or not isinstance(head, ApiPackage):
+        return {}
+    base_cov = check_api_docs(base)
+    head_cov = check_api_docs(head)
+    return {
+        "base_object_coverage": base_cov.object_coverage,
+        "head_object_coverage": head_cov.object_coverage,
+        "object_coverage_delta": head_cov.object_coverage - base_cov.object_coverage,
+    }
+
+
+def _defaults(obj: ApiObject) -> tuple[tuple[str, str | None], ...]:
+    return tuple((parameter.name, parameter.default) for parameter in obj.parameters)
+
+
+def _objects_table(objects: list[ApiObject]) -> Table:
+    return Table(
+        ["Kind", "Name", "Summary"],
+        [[obj.kind, obj.qualname, obj.plain_summary()] for obj in objects],
+    )
+
+
+def _pairs_table(pairs: list[tuple[ApiObject, ApiObject]], field_name: str) -> Table:
+    return Table(
+        ["Object", f"Base {field_name}", f"Head {field_name}"],
+        [[base.qualname, _field(base, field_name), _field(head, field_name)] for base, head in pairs],
+    )
+
+
+def _field(obj: ApiObject, field_name: str) -> str:
+    if field_name == "Signature":
+        return obj.signature or ""
+    if field_name == "Defaults":
+        return ", ".join(f"{name}={default}" for name, default in _defaults(obj) if default is not None)
+    return obj.plain_summary()
+
+
+__all__ = [
+    "ApiDiffResult",
+    "ApiSnapshot",
+    "diff_api",
+]

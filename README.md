@@ -42,6 +42,13 @@ summaries:
 pip install "oodocs[adapters]"
 ```
 
+If you want to collect Python API objects from modules and docstrings for API
+reference documents:
+
+```powershell
+pip install "oodocs[apidoc]"
+```
+
 If you want to work from a repository checkout, run the bundled example scripts, or contribute locally:
 
 ```powershell
@@ -151,6 +158,7 @@ OODocs tries to keep the source readable:
 - apply inline actions with helpers such as `bold(...)`, `italic(...)`, `code(...)`, `tag(...)`, `badge(...)`, `status(...)`, `keyboard(...)`, `Text.from_markup(...)`, `Comment.annotated(...)`, `Footnote.annotated(...)`, and `CitationSource.cite()`
 - import existing Markdown with `parse_markdown(...)`, `from_markdown(...)`, or `Document.from_markdown(...)` when release notes, README fragments, or generated Markdown should become editable OODocs objects
 - import Jupyter notebooks with `parse_ipynb(...)`, `from_ipynb(...)`, or `Document.from_ipynb(...)` when notebook markdown, code cells, and textual outputs should become OODocs blocks
+- collect Python API metadata with `oodocs.apidoc.collect_api(...)` when public classes, functions, methods, parameters, examples, and docstring coverage should become queryable objects before they become document blocks
 - keep the document tree explicit so the Python structure matches the final output structure
 - move document-wide metadata and theme options into `DocumentSettings(...)` when you want a single place to adjust title matter, cover pages, and renderer defaults
 
@@ -196,6 +204,30 @@ The default behavior is intentionally conventional:
 - Use `heading_level_shift=1` or `heading_level_shift=-1` with `Document.from_markdown(...)` or `parse_markdown(...)` when imported Markdown should be demoted or promoted before it is inserted into a larger outline. Use `shift_heading_levels(...)` when already-created `Chapter(...)`/`Section(...)` objects need the same adjustment; paragraphs and other non-heading blocks stay unchanged, and shifts beyond the supported heading range fail.
 - Use `Document.from_ipynb(...)` when a notebook should become a full document. Use `parse_ipynb(...)` when notebook cells should be merged into a larger report; markdown cells become normal document structure, code cells become `CodeBlock(...)`, and textual outputs can be included or filtered. Use `NotebookImportOptions(...)` for tag filtering, output truncation, image captions, and error-output policy.
 - Use `oodocs.adapters` when repository files should become document objects: `section_from_pyproject(...)`, `section_from_github_workflow(...)`, `section_from_manifest(...)`, and `build_release_evidence_document(...)` are designed for release and audit reports.
+- Use `oodocs.apidoc` when Python modules should become API documentation material. `collect_api(...)` returns an `ApiPackage`, not a pre-rendered string, so user code can query and compose the parsed API objects:
+
+```python
+from oodocs import Chapter, Document, Paragraph
+from oodocs.apidoc import collect_api
+
+api = collect_api("oodocs", public_policy="__all__")
+classes = api.select(kind="class", module_prefix="oodocs.components")
+functions = api.select(kind="function")
+
+doc = Document(
+    "Selected API Notes",
+    Chapter(
+        "Important Classes",
+        Paragraph("This chapter is assembled from parsed API objects."),
+        *[obj.to_section(level=2, profile="manual") for obj in classes[:5]],
+    ),
+    Chapter(
+        "Function Index",
+        api.to_summary_table(functions, caption="Selected public functions."),
+    ),
+)
+```
+
 - Use `document.save_all("artifacts")` when a workflow normally needs DOCX, PDF, and HTML together.
 
 ## Features

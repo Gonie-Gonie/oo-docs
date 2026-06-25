@@ -35,6 +35,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+apidoc = [
+  "griffe>=1.0",
+  "docstring-parser>=0.16",
+]
 adapters = [
   "PyYAML>=6.0.0",
 ]
@@ -44,6 +48,8 @@ examples = [
 ]
 dev = [
   "build>=1.2.1",
+  "docstring-parser>=0.16",
+  "griffe>=1.0",
   "PyYAML>=6.0.0",
   "matplotlib>=3.10.0",
   "pandas>=2.3.0",
