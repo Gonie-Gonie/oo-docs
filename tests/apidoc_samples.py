@@ -357,6 +357,73 @@ def write_mixed_docstring_repo(tmp_path: Path) -> Path:
     return repo
 
 
+def write_single_file_module(tmp_path: Path) -> Path:
+    module_path = tmp_path / "singlemod.py"
+    module_path.write_text(
+        dedent(
+            '''\
+            """Single-file API module."""
+
+            __all__ = ["Client", "connect", "stream"]
+
+            class Client:
+                """Client defined in one Python module.
+
+                Args:
+                    endpoint: Base endpoint URL.
+                """
+
+                def __init__(self, endpoint: str) -> None:
+                    self.endpoint = endpoint
+
+                def connect(self, timeout: float = 1.0) -> bool:
+                    """Connect to the configured endpoint.
+
+                    Parameters
+                    ----------
+                    timeout : float
+                        Timeout in seconds.
+
+                    Returns
+                    -------
+                    bool
+                        Whether the connection succeeded.
+                    """
+
+                    return bool(self.endpoint) and timeout >= 0
+
+            def connect(endpoint: str) -> Client:
+                """Create a client for an endpoint.
+
+                Args:
+                    endpoint: Base endpoint URL.
+
+                Returns:
+                    Client: Created client instance.
+                """
+
+                return Client(endpoint)
+
+            def stream(endpoint: str):
+                """Stream updates from an endpoint.
+
+                ## Parameters
+
+                - `endpoint` (`str`): Base endpoint URL.
+
+                ## Yields
+
+                str: Endpoint update payload.
+                """
+
+                yield endpoint
+            '''
+        ),
+        encoding="utf-8",
+    )
+    return module_path
+
+
 def collect_sample_api(tmp_path: Path, **kwargs: object) -> ApiPackage:
     package_dir = write_sample_package(tmp_path)
     options = {

@@ -39,6 +39,21 @@ For a `src/` layout repository, run the script from the repository root and pass
 `[tool.setuptools] package-dir` or `[tool.setuptools.packages.find]` settings
 when they exist.
 
+For a standalone module, pass the `.py` file path directly. The file stem is
+used as the module name for lookup and anchors:
+
+```python
+from oodocs.apidoc import ApiDocstringParser, collect_api
+
+api = collect_api(
+    "scripts/reporting.py",
+    collector="inspect",
+    public_policy="underscore",
+    docstring_style=ApiDocstringParser.auto(),
+)
+section = api.find("reporting.build_report").to_section(profile="manual")
+```
+
 ## Insert One Object
 
 Use `find(...)` when a guide needs one class or function rather than a full

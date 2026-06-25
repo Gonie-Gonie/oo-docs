@@ -3,7 +3,7 @@ from __future__ import annotations
 import importlib.util
 from pathlib import Path
 
-from apidoc_samples import write_mixed_docstring_repo
+from apidoc_samples import write_mixed_docstring_repo, write_single_file_module
 from example_regression import assert_html_internal_links_resolve
 from oodocs import Chapter, Document, Paragraph
 from oodocs.apidoc import (
@@ -285,3 +285,114 @@ def test_general_repo_pyproject_auto_parser_builds_cli_bundle(tmp_path) -> None:
     assert example_method is not None
     assert example_method.metadata["docstring_style"] == "numpy"
     assert ApiCoverageResult.read_json(example_coverage_path).object_coverage == 1.0
+
+
+def test_general_python_file_module_targets_build_reference_and_example(
+    tmp_path: Path,
+) -> None:
+    module_path = write_single_file_module(tmp_path)
+    parser = ApiDocstringParser.auto()
+    api = collect_api(
+        module_path,
+        collector="inspect",
+        public_policy="__all__",
+        docstring_style=parser,
+    )
+    client = api.find("singlemod.Client")
+    method = api.find("singlemod.Client.connect")
+    function = api.find("singlemod.connect")
+    stream = api.find("singlemod.stream")
+    coverage = check_api_docs(api, fail_under=1.0)
+    composed_output = tmp_path / "single-file-composed"
+    cli_output = tmp_path / "single-file-cli"
+    example_output = tmp_path / "single-file-example"
+    example = _load_api_objects_example()
+
+    assert api.name == "singlemod"
+    assert [module.name for module in api.modules] == ["singlemod"]
+    assert client is not None
+    assert method is not None
+    assert method.metadata["docstring_style"] == "numpy"
+    assert method.parameters[0].description == "Timeout in seconds."
+    assert function is not None
+    assert function.metadata["docstring_style"] == "google"
+    assert stream is not None
+    assert stream.metadata["docstring_style"] == "markdown"
+    assert coverage.object_coverage == 1.0
+
+    document = Document(
+        "Single File API Notes",
+        Chapter(
+            "Selected API",
+            Paragraph("These sections are composed from one Python module file."),
+            client.to_section(level=2, profile="manual"),
+        ),
+        Chapter(
+            "Function Index",
+            api.to_summary_table(api.functions(), profile="compact"),
+        ),
+    )
+    outputs = document.save_all(
+        composed_output,
+        stem="single-file-api",
+        formats=("html",),
+    )
+    assert "singlemod.Client" in outputs["html"].read_text(encoding="utf-8")
+    assert_html_internal_links_resolve(outputs["html"])
+
+    assert (
+        main(
+            [
+                "build",
+                str(module_path),
+                "--collector",
+                "inspect",
+                "--public-policy",
+                "__all__",
+                "--docstring-style",
+                "auto",
+                "--out",
+                str(cli_output),
+                "--to",
+                "html",
+                "--sidecars",
+            ]
+        )
+        == 0
+    )
+    cli_html = cli_output / "singlemod-api.html"
+    cli_api_json = cli_output / "singlemod-api.json"
+    cli_coverage_json = cli_output / "singlemod-api-coverage.json"
+    assert cli_html.exists()
+    assert cli_api_json.exists()
+    assert cli_coverage_json.exists()
+    assert_html_internal_links_resolve(cli_html)
+    assert (
+        ApiPackage.read_json(cli_api_json).find("singlemod.Client.connect")
+        is not None
+    )
+    assert ApiCoverageResult.read_json(cli_coverage_json).object_coverage == 1.0
+
+    example.main(
+        [
+            str(module_path),
+            "--collector",
+            "inspect",
+            "--public-policy",
+            "__all__",
+            "--docstring-style",
+            "auto",
+            "--to",
+            "html",
+            "--out",
+            str(example_output),
+            "--quiet",
+        ]
+    )
+    example_html = example_output / "oodocs-full-api-reference.html"
+    example_api_json = example_output / "oodocs-api-objects.json"
+    assert example_html.exists()
+    assert example_api_json.exists()
+    assert "singlemod.Client" in example_html.read_text(encoding="utf-8")
+    assert_html_internal_links_resolve(example_html)
+    assert ApiPackage.read_json(example_api_json).find("singlemod.stream") is not None

@@ -1,9 +1,10 @@
 # apidoc Collectors
 
 Collectors normalize Python source metadata into the same `ApiPackage` schema.
-Repository paths may point at a package directory, a `src/` layout package, or
-a `src/` layout namespace package that omits `__init__.py`. Repository roots
-that use setuptools custom source roots are also supported through
+Targets may be importable package/module names, one Python file, a package
+directory, a `src/` layout package, or a `src/` layout namespace package that
+omits `__init__.py`. Repository roots that use setuptools custom source roots
+are also supported through
 `[tool.setuptools] package-dir = {"" = "lib"}` or
 `[tool.setuptools.packages.find] where = ["lib"]`.
 
@@ -20,6 +21,21 @@ from oodocs.apidoc import collect_api
 
 api = collect_api(".", collector="inspect", public_policy="__all__")
 assert api.find("samplepkg.run") is not None
+```
+
+For a standalone module file, pass the file path directly. The file stem becomes
+the package/module name in generated sidecars and rendered references:
+
+```python
+from oodocs.apidoc import ApiDocstringParser, collect_api
+
+api = collect_api(
+    "tools/reporting.py",
+    collector="inspect",
+    public_policy="underscore",
+    docstring_style=ApiDocstringParser.auto(),
+)
+assert api.find("reporting.build_report") is not None
 ```
 
 - `collector="griffe"` uses griffe when installed. It captures module data,
