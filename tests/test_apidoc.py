@@ -1755,19 +1755,31 @@ def test_api_objects_example_builds_full_reference_and_composable_document(
     coverage = check_api_docs(api)
     full_reference = example.build_full_package_document(api)
     composition = example.build_document(api, coverage)
+    bundle_outputs = example.render_api_objects_example(
+        api,
+        coverage,
+        tmp_path / "bundle",
+    )
 
-    outputs = full_reference.save_all(tmp_path, stem="full-reference")
+    outputs = {
+        "docx": bundle_outputs["full_reference_docx"],
+        "pdf": bundle_outputs["full_reference_pdf"],
+        "html": bundle_outputs["full_reference_html"],
+    }
 
     assert set(outputs) == {"docx", "pdf", "html"}
     assert all(path.exists() for path in outputs.values())
+    assert bundle_outputs["composition_docx"].exists()
+    assert bundle_outputs["composition_pdf"].exists()
+    assert bundle_outputs["composition_html"].exists()
     assert full_reference.validate(formats=("docx", "pdf", "html")).ok
     assert composition.validate(formats=("html",)).ok
-    sidecars = example.write_sidecars(api, coverage, tmp_path / "sidecars")
-    assert set(sidecars) == {"api_json", "coverage_json", "coverage_csv"}
-    assert all(path.exists() for path in sidecars.values())
-    assert ApiPackage.read_json(sidecars["api_json"]).name == "examplepkg"
-    assert ApiCoverageResult.read_json(sidecars["coverage_json"]).package == "examplepkg"
-    assert sidecars["coverage_csv"].read_text(encoding="utf-8").startswith(
+    assert ApiPackage.read_json(bundle_outputs["api_json"]).name == "examplepkg"
+    assert (
+        ApiCoverageResult.read_json(bundle_outputs["coverage_json"]).package
+        == "examplepkg"
+    )
+    assert bundle_outputs["coverage_csv"].read_text(encoding="utf-8").startswith(
         "severity,code,qualname,module,path,line_number,message"
     )
     html = outputs["html"].read_text(encoding="utf-8")
