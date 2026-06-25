@@ -298,7 +298,7 @@ What they show:
 - `journal_paper_example` shows a longer manuscript-style workflow with article-style sections, unnumbered abstract/highlights/acknowledgements, CSV-backed tables, and matplotlib figures inserted directly from Python objects
 - `native_benchmark_report` shows a compact Python-native workflow where a script generates an in-memory workload, benchmarks several callables, turns structured result objects into tables and prose, and exports one report bundle
 - `release_notes_digest` collects `release-notes/*.md`, sorts semantic versions from filenames, imports the Markdown bodies, and builds a release-note document with a version-management table and runbook
-- `api_objects_example` collects the OODocs API, renders a full package API reference as DOCX/PDF/HTML, inserts selected API object sections and summary tables into a separate composable document, and writes JSON/CSV sidecars for release evidence
+- `api_objects_example` collects the OODocs API, renders a full package API reference as DOCX/PDF/HTML, inserts selected API object sections and summary tables into a separate composable document, and writes API JSON plus coverage JSON/CSV sidecars for release evidence
 
 By default they write outputs under:
 
@@ -374,7 +374,7 @@ Create and push a release tag like this:
 .\scripts\release.ps1 1.0.4
 ```
 
-That pushes `v1.0.4`, and the GitHub release workflow runs the test suite, enforces API documentation coverage with `oodocs apidoc check`, builds the wheel/sdist artifacts, renders the release documents, builds the release evidence bundle, attaches the curated PDFs to the matching GitHub Release, and uploads the Python distributions to PyPI.
+That pushes `v1.0.4`, and the GitHub release workflow runs the test suite, enforces API documentation coverage with `oodocs apidoc check`, builds the wheel/sdist artifacts, renders the release documents, builds the release evidence bundle, attaches the curated documents and API evidence sidecars to the matching GitHub Release, and uploads the Python distributions to PyPI.
 
 If you want a curated release body instead of GitHub's generated notes, add a file such as `release-notes/v1.0.4.md` before pushing the tag.
 
