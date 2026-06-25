@@ -1,4 +1,9 @@
-"""Shared import diagnostics for Markdown and notebook importers."""
+"""Shared import diagnostics for Markdown and notebook importers.
+
+Attributes:
+    ImportSeverity: Literal severity labels for import diagnostics.
+    ImportPolicy: Literal policies for handling lossy imports.
+"""
 
 from __future__ import annotations
 

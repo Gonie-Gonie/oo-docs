@@ -1,4 +1,10 @@
-"""Jupyter notebook import helpers for OODocs documents."""
+"""Jupyter notebook import helpers for OODocs documents.
+
+Attributes:
+    NotebookSource: Accepted notebook source input for notebook import helpers.
+    parse_notebook: Backward-compatible alias for ``parse_ipynb``.
+    from_notebook: Backward-compatible alias for ``from_ipynb``.
+"""
 
 from __future__ import annotations
 

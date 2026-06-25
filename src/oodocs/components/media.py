@@ -1,4 +1,13 @@
-"""Tables, figures, and related media components."""
+"""Tables, figures, and related media components.
+
+Attributes:
+    MediaPlacement: Supported figure/table placement hints.
+    TableSplit: Table splitting policy accepted by table rendering options.
+    DEFAULT_LONG_TABLE_ROW_THRESHOLD: Row count where tables are treated as
+        long tables by default.
+    TableCellStyleInput: Accepted input for table-cell style coercion.
+    TableCellInput: Accepted input for table cells.
+"""
 
 from __future__ import annotations
 

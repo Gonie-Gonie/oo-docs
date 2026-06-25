@@ -1,4 +1,13 @@
-"""DOCX renderer."""
+"""DOCX renderer.
+
+Attributes:
+    ALIGNMENTS: Mapping from OODocs paragraph alignment names to DOCX values.
+    TABLE_ALIGNMENTS: Mapping from OODocs table alignment names to DOCX values.
+    CELL_VERTICAL_ALIGNMENTS: Mapping from OODocs cell vertical alignment names
+        to DOCX values.
+    DEFAULT_FOOTNOTES_XML: Minimal footnotes part XML used when creating native
+        DOCX footnotes.
+"""
 
 from __future__ import annotations
 

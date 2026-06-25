@@ -1,4 +1,9 @@
-"""Generated page blocks and document summaries."""
+"""Generated page blocks and document summaries.
+
+Attributes:
+    TocLevelStyleInput: Accepted input for table-of-contents level style
+        overrides.
+"""
 
 from __future__ import annotations
 

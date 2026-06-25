@@ -1,4 +1,21 @@
-"""PDF renderer."""
+"""PDF renderer.
+
+Attributes:
+    ALIGNMENTS: Mapping from OODocs paragraph alignment names to ReportLab
+        paragraph alignment values.
+    TABLE_CELL_ALIGNMENTS: Mapping from OODocs cell alignment names to
+        ReportLab table style values.
+    TABLE_CELL_VERTICAL_ALIGNMENTS: Mapping from OODocs vertical alignment names
+        to ReportLab table style values.
+    FLOWABLE_ALIGNMENTS: Mapping from OODocs alignment names to ReportLab
+        flowable alignment values.
+    PDF_FONT_VARIANTS: Built-in ReportLab font variants keyed by bold/italic
+        flags.
+    FONT_FAMILY_ALIASES: Normalized font family aliases used by PDF font
+        resolution.
+    SYSTEM_FONT_VARIANTS: Optional Windows system font files used when
+        registering PDF fonts.
+"""
 
 from __future__ import annotations
 
@@ -249,6 +266,8 @@ class CodeBlockFlowable(Flowable):
         font_size: Code font size in points.
         leading: Line height in points.
         anchor: Optional PDF bookmark anchor.
+        width: Wrapped code block width in points after measurement.
+        height: Wrapped code block height in points after measurement.
     """
 
     def __init__(
@@ -367,6 +386,8 @@ class PositionedItemFlowable(Flowable):
         item: Positioned item to draw inline.
         renderer: PDF renderer responsible for drawing the item.
         context: Current PDF render context.
+        width: Inline item width in ReportLab points.
+        height: Inline item height in ReportLab points.
     """
 
     def __init__(

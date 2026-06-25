@@ -1,4 +1,10 @@
-"""Release evidence document and bundle builders."""
+"""Release evidence document and bundle builders.
+
+Attributes:
+    DEFAULT_CSV_FILES: Default CSV evidence files included in release bundles.
+    MANIFEST_NAME: Default reproducibility manifest filename.
+    CHECKSUM_NAME: Default SHA-256 checksum filename.
+"""
 
 from __future__ import annotations
 

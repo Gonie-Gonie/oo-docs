@@ -1,4 +1,12 @@
-"""Positioned and inline drawing components."""
+"""Positioned and inline drawing components.
+
+Attributes:
+    PositionAnchor: Page-positioning anchor name or custom named shape anchor.
+    PositionPlacement: Placement mode for positioned content.
+    ShapeKind: Supported absolute-positioned shape kinds.
+    ImageFit: Image fitting modes for positioned image boxes.
+    PositionedItem: Union of supported page-positioned item objects.
+"""
 
 from __future__ import annotations
 

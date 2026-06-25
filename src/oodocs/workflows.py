@@ -1,4 +1,10 @@
-"""High-level document loading, validation, and rendering workflows."""
+"""High-level document loading, validation, and rendering workflows.
+
+Attributes:
+    PYTHON_DOCUMENT_NAMES: Candidate variable names for Python document modules.
+    PYTHON_FACTORY_NAMES: Candidate factory function names for Python document
+        modules.
+"""
 
 from __future__ import annotations
 

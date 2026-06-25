@@ -1,4 +1,8 @@
-"""Document validation helpers for authoring-time checks."""
+"""Document validation helpers for authoring-time checks.
+
+Attributes:
+    ValidationSeverity: Literal severity labels emitted by document validation.
+"""
 
 from __future__ import annotations
 

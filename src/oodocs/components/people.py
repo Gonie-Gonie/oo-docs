@@ -1,4 +1,9 @@
-"""Structured people and affiliation metadata for title matter."""
+"""Structured people and affiliation metadata for title matter.
+
+Attributes:
+    AffiliationInput: Accepted shorthand for affiliation metadata.
+    AuthorInput: Accepted shorthand for author metadata.
+"""
 
 from __future__ import annotations
 

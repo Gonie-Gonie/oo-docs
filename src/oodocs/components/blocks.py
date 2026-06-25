@@ -1282,6 +1282,9 @@ class Part(Block):
         toc: Whether the part should appear in generated tables of contents.
             Defaults to ``numbered``.
 
+    Attributes:
+        level: Fixed heading level used for part separator pages.
+
     Examples:
         ```python
         from oodocs import Chapter, Document, Part

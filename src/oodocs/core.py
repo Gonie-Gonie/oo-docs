@@ -1,4 +1,13 @@
-"""Core shared utilities used across the document model and renderers."""
+"""Core shared utilities used across the document model and renderers.
+
+Attributes:
+    PathLike: Accepted filesystem path input type.
+    LengthUnit: Length unit name accepted by measurement helpers.
+    UNIT_TO_INCHES: Conversion factors from supported length units to inches.
+    COUNTER_FORMATS: Supported counter display format names.
+    TEXT_ALIGNMENTS: Supported paragraph/text horizontal alignment names.
+    VERTICAL_ALIGNMENTS: Supported vertical alignment names.
+"""
 
 from __future__ import annotations
 

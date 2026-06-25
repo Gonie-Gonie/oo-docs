@@ -1,4 +1,8 @@
-"""Base block protocol and shared body container."""
+"""Base block protocol and shared body container.
+
+Attributes:
+    BlockInput: Recursive block input accepted by block containers.
+"""
 
 from __future__ import annotations
 
