@@ -9,8 +9,9 @@ from oodocs.apidoc.model import ApiDocIssue, ApiExample, ApiObject
 
 
 _FENCED_BLOCK_RE = re.compile(
-    r"```(?P<language>[A-Za-z0-9_+-]*)[ \t]*\n(?P<code>.*?)(?:\n```|$)",
-    flags=re.DOTALL,
+    r"^[ \t]*```(?P<language>[A-Za-z0-9_+-]*)[ \t]*\n"
+    r"(?P<code>.*?)(?:\n[ \t]*```[ \t]*(?=\n|\Z)|\Z)",
+    flags=re.DOTALL | re.MULTILINE,
 )
 
 
@@ -22,12 +23,25 @@ def extract_code_blocks_from_docstring(text: str | None) -> list[ApiExample]:
 
     Returns:
         Parsed example objects. Fenced code blocks preserve their language
-        labels. Doctest snippets use ``language="pycon"``.
+        labels. Doctest snippets outside fenced blocks use
+        ``language="pycon"``.
 
     Examples:
+        Extract fenced Python code for insertion into an API section:
+
         ```python
+        from oodocs.apidoc import extract_code_blocks_from_docstring
+
         examples = extract_code_blocks_from_docstring("```python\\nprint('ok')\\n```")
         assert examples[0].language == "python"
+        ```
+
+        Fenced console sessions stay as one fenced example instead of being
+        counted again as a separate doctest block:
+
+        ```python
+        examples = extract_code_blocks_from_docstring("```pycon\\n>>> run()\\n```")
+        assert [example.language for example in examples] == ["pycon"]
         ```
     """
 
@@ -36,7 +50,7 @@ def extract_code_blocks_from_docstring(text: str | None) -> list[ApiExample]:
         ApiExample(match.group("code").strip("\n"), language=match.group("language") or "text")
         for match in _FENCED_BLOCK_RE.finditer(source)
     ]
-    doctest_code = _extract_doctest_block(source)
+    doctest_code = _extract_doctest_block(_strip_fenced_blocks(source))
     if doctest_code:
         examples.append(ApiExample(doctest_code, language="pycon"))
     return examples
@@ -51,6 +65,17 @@ def check_example_syntax(example: ApiExample) -> bool:
     Returns:
         ``True`` when syntax is valid or the example is not Python code,
         otherwise ``False``.
+
+    Examples:
+        Mark parsed examples before writing coverage evidence:
+
+        ```python
+        from oodocs.apidoc import ApiExample, check_example_syntax
+
+        example = ApiExample("print('ok')", language="python")
+        assert check_example_syntax(example)
+        assert example.syntax_ok is True
+        ```
     """
 
     if example.language.lower() not in {"python", "py", "pycon"}:
@@ -76,9 +101,27 @@ def check_doctest_examples(api_object: ApiObject) -> list[ApiDocIssue]:
         Issues for failing doctest examples.
 
     Notes:
-        This helper parses doctest syntax and performs compile-level checking.
-        It does not execute examples because API reference generation should not
-        run arbitrary user code by default.
+        This helper parses doctest syntax without executing it.
+        ``check_example_syntax`` performs compile-level checking for ``pycon``
+        examples before coverage counters are computed.
+
+    Examples:
+        Check doctest snippets already attached to an ``ApiObject``:
+
+        ```python
+        from oodocs.apidoc import ApiExample, ApiObject, check_doctest_examples
+
+        obj = ApiObject(
+            kind="function",
+            name="echo",
+            qualname="pkg.echo",
+            module="pkg",
+            examples=[ApiExample(">>> echo('ok')\\n'ok'", language="pycon")],
+        )
+        issues = check_doctest_examples(obj)
+        assert not issues
+        assert obj.examples[0].doctest_ok is True
+        ```
     """
 
     issues: list[ApiDocIssue] = []
@@ -119,6 +162,10 @@ def _extract_doctest_block(text: str) -> str | None:
         elif in_block:
             break
     return "\n".join(lines) if lines else None
+
+
+def _strip_fenced_blocks(text: str) -> str:
+    return _FENCED_BLOCK_RE.sub("", text)
 
 
 def _doctest_to_python(text: str) -> str:

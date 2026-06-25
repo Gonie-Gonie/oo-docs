@@ -24,6 +24,7 @@ from oodocs.apidoc import (
     detect_docstring_style,
     docstring_parser_names,
     diff_api,
+    extract_code_blocks_from_docstring,
     parse_docstring,
     register_docstring_parser,
 )
@@ -189,6 +190,32 @@ def test_docstring_parsers_normalize_standard_styles() -> None:
     assert detect_docstring_style(NUMPY_DOCSTRING) == "numpy"
     assert detect_docstring_style(SPHINX_DOCSTRING) == "sphinx"
     assert detect_docstring_style(MARKDOWN_DOCSTRING) == "markdown"
+
+
+def test_example_extraction_does_not_duplicate_fenced_doctest_blocks() -> None:
+    fenced_pycon = extract_code_blocks_from_docstring(
+        """Run an interactive example.
+
+        ```pycon
+        >>> echo("ok")
+        'ok'
+        ```
+        """
+    )
+    mixed = extract_code_blocks_from_docstring(
+        """Show both fenced and plain doctest examples.
+
+        ```python
+        echo("ok")
+        ```
+
+        >>> echo("again")
+        'again'
+        """
+    )
+
+    assert [example.language for example in fenced_pycon] == ["pycon"]
+    assert [example.language for example in mixed] == ["python", "pycon"]
 
 
 def test_docstring_parser_backend_enriches_standard_style_metadata() -> None:
