@@ -122,6 +122,15 @@ docstring-parser-modules = ["docs_parsers"]
 python -m oodocs apidoc build . --config pyproject.toml
 ```
 
+When the config is loaded from a repository path, OODocs temporarily adds the
+config directory and its `src/` child to the import path while importing
+`docstring-parser-modules`. This lets a command target another checkout without
+changing into it first:
+
+```powershell
+python -m oodocs apidoc build C:\work\mypkg --config C:\work\mypkg\pyproject.toml --out C:\work\mypkg\artifacts\api
+```
+
 The same hook can be supplied directly to one command:
 
 ```powershell

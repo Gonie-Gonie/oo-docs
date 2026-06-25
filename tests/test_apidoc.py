@@ -355,6 +355,85 @@ def test_apidoc_cli_loads_custom_docstring_parser_modules_from_pyproject(
     assert (repo / "artifacts" / "api" / "hookpkg-api-coverage.json").exists()
 
 
+def test_apidoc_cli_loads_pyproject_parser_modules_from_target_repo_path(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    repo = tmp_path / "external-repo"
+    package_dir = repo / "src" / "externalhookpkg"
+    package_dir.mkdir(parents=True)
+    (package_dir / "__init__.py").write_text(
+        "\n".join(
+            [
+                '"""External hook package."""',
+                "",
+                "def run() -> None:",
+                '    """Run external command."""',
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (package_dir / "docs_parsers.py").write_text(
+        "\n".join(
+            [
+                "from oodocs.apidoc import ParsedDocstring, docstring_parser_names, register_docstring_parser",
+                "",
+                "def parse_external_style(text, qualname=None, module=None):",
+                '    return ParsedDocstring(summary=f"external:{text.strip()}", style="external-brief-cli")',
+                "",
+                'if "external-brief-cli" not in docstring_parser_names():',
+                '    register_docstring_parser("external-brief-cli", parse_external_style)',
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (repo / "pyproject.toml").write_text(
+        "\n".join(
+            [
+                "[project]",
+                'name = "externalhookpkg"',
+                "",
+                "[tool.oodocs.apidoc]",
+                'collector = "inspect"',
+                'public-policy = "underscore"',
+                'docstring-style = "external-brief-cli"',
+                'docstring-parser-modules = ["externalhookpkg.docs_parsers"]',
+                'profile = "compact"',
+                'formats = ["html"]',
+                "sidecars = true",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    output_dir = repo / "artifacts" / "api"
+
+    monkeypatch.chdir(tmp_path)
+
+    assert (
+        main(
+            [
+                "apidoc",
+                "build",
+                str(repo),
+                "--config",
+                str(repo / "pyproject.toml"),
+                "--out",
+                str(output_dir),
+            ]
+        )
+        == 0
+    )
+    built_api = ApiPackage.read_json(output_dir / "externalhookpkg-api.json")
+    run = built_api.find("externalhookpkg.run")
+
+    assert run is not None
+    assert run.summary == "external:Run external command."
+    assert (output_dir / "externalhookpkg-api-coverage.json").exists()
+
+
 def test_collect_api_builds_queryable_object_tree_and_blocks(tmp_path: Path) -> None:
     package_dir = tmp_path / "samplepkg"
     package_dir.mkdir()

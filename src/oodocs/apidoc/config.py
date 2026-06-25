@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 import json
 from pathlib import Path
+import sys
 import tomllib
 from typing import Literal, Mapping, Sequence
 
@@ -485,7 +487,8 @@ class ApiCollectConfig:
             raise KeyError("pyproject.toml must contain [tool.oodocs.apidoc]") from exc
         if not isinstance(section, Mapping):
             raise TypeError("[tool.oodocs.apidoc] must be a table")
-        return cls.from_dict(section)
+        with _config_import_paths(pyproject_path):
+            return cls.from_dict(section)
 
     def validate(self) -> None:
         """Validate config values.
@@ -655,7 +658,9 @@ class ApiCollectConfig:
             ```
         """
 
-        return cls.from_dict(json.loads(Path(path).read_text(encoding="utf-8")))
+        config_path = Path(path)
+        with _config_import_paths(config_path):
+            return cls.from_dict(json.loads(config_path.read_text(encoding="utf-8")))
 
     @classmethod
     def read_file(cls, path: PathLike) -> ApiCollectConfig:
@@ -831,7 +836,8 @@ class ApiBuildConfig:
             raise KeyError("pyproject.toml must contain [tool.oodocs.apidoc]") from exc
         if not isinstance(section, Mapping):
             raise TypeError("[tool.oodocs.apidoc] must be a table")
-        return cls.from_dict(section)
+        with _config_import_paths(pyproject_path):
+            return cls.from_dict(section)
 
     @classmethod
     def read_json(cls, path: PathLike) -> ApiBuildConfig:
@@ -853,7 +859,9 @@ class ApiBuildConfig:
             ```
         """
 
-        return cls.from_dict(json.loads(Path(path).read_text(encoding="utf-8")))
+        config_path = Path(path)
+        with _config_import_paths(config_path):
+            return cls.from_dict(json.loads(config_path.read_text(encoding="utf-8")))
 
     @classmethod
     def read_file(cls, path: PathLike) -> ApiBuildConfig:
@@ -1108,6 +1116,29 @@ def _optional_int(value: object) -> int | None:
     if value is None:
         return None
     return int(value)
+
+
+@contextmanager
+def _config_import_paths(path: Path):
+    base = path.parent.resolve()
+    roots = [base]
+    src_root = base / "src"
+    if src_root.is_dir():
+        roots.append(src_root.resolve())
+
+    added: list[str] = []
+    for root in reversed([str(item) for item in roots]):
+        if root not in sys.path:
+            sys.path.insert(0, root)
+            added.append(root)
+    try:
+        yield
+    finally:
+        for root in added:
+            try:
+                sys.path.remove(root)
+            except ValueError:  # pragma: no cover - defensive against user mutation.
+                pass
 
 
 def _toml_value(value: object) -> str:
