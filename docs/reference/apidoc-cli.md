@@ -8,10 +8,11 @@ Collect an API tree:
 python -m oodocs apidoc collect oodocs --collector griffe --public-policy __all__ --out artifacts/api-index.json
 ```
 
-Reuse a collection config JSON:
+Reuse a collection config JSON or `pyproject.toml`:
 
 ```powershell
 python -m oodocs apidoc collect . --config apidoc-config.json --out artifacts/api-index.json
+python -m oodocs apidoc collect . --config pyproject.toml --out artifacts/api-index.json
 ```
 
 Check documentation coverage:

@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 import json
 from pathlib import Path
+import tomllib
 from typing import Literal, Mapping, Sequence
 
 from oodocs.core import PathLike
@@ -97,6 +98,7 @@ class ApiPublicPolicy:
             Public policy object.
         """
 
+        data = _normalize_config_mapping(data)
         return cls(
             str(data.get("name", "__all__")),  # type: ignore[arg-type]
             normalize_explicit_names(data.get("explicit_names", ())),  # type: ignore[arg-type]
@@ -289,7 +291,44 @@ class ApiCollectConfig:
             ```
         """
 
-        return cls.from_kwargs(**dict(data))
+        return cls.from_kwargs(**_normalize_config_mapping(data))
+
+    @classmethod
+    def from_pyproject(cls, path: PathLike = "pyproject.toml") -> ApiCollectConfig:
+        """Read apidoc collection config from ``pyproject.toml``.
+
+        Args:
+            path: Project root directory or ``pyproject.toml`` path.
+
+        Returns:
+            Validated collection configuration from ``[tool.oodocs.apidoc]``.
+
+        Raises:
+            FileNotFoundError: If the pyproject file does not exist.
+            KeyError: If ``[tool.oodocs.apidoc]`` is missing.
+            tomllib.TOMLDecodeError: If the pyproject file is invalid TOML.
+
+        Examples:
+            Store apidoc settings in a repository ``pyproject.toml`` and use
+            them for collection:
+
+            ```python
+            from oodocs.apidoc import ApiCollectConfig, collect_api
+
+            config = ApiCollectConfig.from_pyproject(".")
+            api = collect_api(".", config=config)
+            ```
+        """
+
+        pyproject_path = _pyproject_path(path)
+        data = tomllib.loads(pyproject_path.read_text(encoding="utf-8"))
+        try:
+            section = data["tool"]["oodocs"]["apidoc"]  # type: ignore[index]
+        except KeyError as exc:
+            raise KeyError("pyproject.toml must contain [tool.oodocs.apidoc]") from exc
+        if not isinstance(section, Mapping):
+            raise TypeError("[tool.oodocs.apidoc] must be a table")
+        return cls.from_dict(section)
 
     def validate(self) -> None:
         """Validate config values.
@@ -392,6 +431,29 @@ class ApiCollectConfig:
 
         return cls.from_dict(json.loads(Path(path).read_text(encoding="utf-8")))
 
+    @classmethod
+    def read_file(cls, path: PathLike) -> ApiCollectConfig:
+        """Read a collection config from JSON or ``pyproject.toml``.
+
+        Args:
+            path: JSON sidecar, project root directory, or TOML file path.
+
+        Returns:
+            Validated collection configuration.
+
+        Examples:
+            ```python
+            from oodocs.apidoc import ApiCollectConfig
+
+            config = ApiCollectConfig.read_file("pyproject.toml")
+            ```
+        """
+
+        config_path = Path(path)
+        if config_path.is_dir() or config_path.suffix.lower() == ".toml":
+            return cls.from_pyproject(config_path)
+        return cls.read_json(config_path)
+
 
 def normalize_explicit_names(names: Sequence[str] | None) -> tuple[str, ...]:
     """Normalize explicit public API names.
@@ -408,6 +470,17 @@ def normalize_explicit_names(names: Sequence[str] | None) -> tuple[str, ...]:
 
 def _is_docstring_parser(value: object) -> bool:
     return type(value).__name__ == "ApiDocstringParser"
+
+
+def _normalize_config_mapping(data: Mapping[str, object]) -> dict[str, object]:
+    return {str(key).replace("-", "_"): value for key, value in data.items()}
+
+
+def _pyproject_path(path: PathLike) -> Path:
+    source_path = Path(path)
+    if source_path.is_dir():
+        return source_path / "pyproject.toml"
+    return source_path
 
 
 __all__ = [

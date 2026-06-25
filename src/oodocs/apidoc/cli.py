@@ -88,7 +88,7 @@ def _build_parser() -> argparse.ArgumentParser:
 def _add_collect_options(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--config",
-        help="API collection config JSON written by ApiCollectConfig.write_json.",
+        help="Collection config JSON or pyproject.toml with [tool.oodocs.apidoc].",
     )
     parser.add_argument(
         "--collector",
@@ -228,7 +228,7 @@ def _run_diff(args: argparse.Namespace) -> int:
 
 
 def _collect_from_args(args: argparse.Namespace):
-    config = ApiCollectConfig.read_json(args.config) if args.config else None
+    config = ApiCollectConfig.read_file(args.config) if args.config else None
     return collect_api(
         args.package,
         config=config,

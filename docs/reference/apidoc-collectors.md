@@ -44,23 +44,27 @@ api = collect_api(".", collector="griffe", public_policy=policy)
 
 `ApiPublicPolicy` can be serialized with `to_dict()` and reconstructed with
 `from_dict(...)`, which keeps CI scripts and release jobs aligned with the same
-curated boundary. Use `ApiCollectConfig.write_json(...)` when the full
-collection policy should be shared by local scripts and CLI commands.
+curated boundary. Use `ApiCollectConfig.from_pyproject(...)` when a repository
+stores its policy in `pyproject.toml`, or `ApiCollectConfig.write_json(...)`
+when the full collection policy should be shared as a standalone sidecar.
+
+```toml
+[tool.oodocs.apidoc]
+collector = "griffe"
+public-policy = "__all__"
+docstring-style = "auto"
+module-exclude-patterns = ["mypkg.tests*"]
+```
 
 ```python
-from oodocs.apidoc import ApiCollectConfig
+from oodocs.apidoc import ApiCollectConfig, collect_api
 
-config = ApiCollectConfig(
-    collector="griffe",
-    public_policy="__all__",
-    docstring_style="auto",
-    module_exclude_patterns=("mypkg.tests*",),
-)
-config.write_json("apidoc-config.json")
+config = ApiCollectConfig.from_pyproject(".")
+api = collect_api(".", config=config)
 ```
 
 ```powershell
-python -m oodocs apidoc build . --config apidoc-config.json --out artifacts/api
+python -m oodocs apidoc build . --config pyproject.toml --out artifacts/api
 ```
 
 Use `module_include_patterns` and `module_exclude_patterns` to narrow collection

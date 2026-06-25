@@ -747,6 +747,29 @@ def test_collect_api_filters_modules_before_collection(tmp_path: Path) -> None:
     config_path = tmp_path / "apidoc-config.json"
     config.write_json(config_path)
     assert ApiCollectConfig.read_json(config_path) == config
+    pyproject_path = tmp_path / "pyproject.toml"
+    pyproject_path.write_text(
+        "\n".join(
+            [
+                "[tool.oodocs.apidoc]",
+                'collector = "inspect"',
+                'public-policy = "underscore"',
+                'docstring-style = "auto"',
+                'module-include-patterns = ["filtermods.*"]',
+                'module-exclude-patterns = ["filtermods.tests", "filtermods.experimental"]',
+            ]
+        ),
+        encoding="utf-8",
+    )
+    pyproject_config = ApiCollectConfig.from_pyproject(tmp_path)
+    assert pyproject_config.collector == "inspect"
+    assert pyproject_config.public_policy == "underscore"
+    assert pyproject_config.module_include_patterns == ("filtermods.*",)
+    assert pyproject_config.module_exclude_patterns == (
+        "filtermods.tests",
+        "filtermods.experimental",
+    )
+    assert ApiCollectConfig.read_file(pyproject_path) == pyproject_config
 
     if importlib.util.find_spec("griffe") is not None:
         griffe_api = collect_api(
@@ -1099,12 +1122,26 @@ def test_apidoc_cli_filters_check_and_snapshot(tmp_path: Path) -> None:
     max_level_build_dir = tmp_path / "max-level-build"
     config_path = tmp_path / "apidoc-config.json"
     config_json = tmp_path / "configured-api.json"
+    pyproject_config_path = tmp_path / "pyproject.toml"
+    pyproject_config_json = tmp_path / "pyproject-configured-api.json"
     ApiCollectConfig(
         collector="inspect",
         public_policy="underscore",
         module_include_patterns=("filterpkg.core",),
         module_exclude_patterns=("filterpkg.legacy",),
     ).write_json(config_path)
+    pyproject_config_path.write_text(
+        "\n".join(
+            [
+                "[tool.oodocs.apidoc]",
+                'collector = "inspect"',
+                'public-policy = "underscore"',
+                'module-include-patterns = ["filterpkg.core"]',
+                'module-exclude-patterns = ["filterpkg.legacy"]',
+            ]
+        ),
+        encoding="utf-8",
+    )
 
     assert main(
         [
@@ -1167,6 +1204,21 @@ def test_apidoc_cli_filters_check_and_snapshot(tmp_path: Path) -> None:
     configured = json.loads(config_json.read_text(encoding="utf-8"))
     assert [module["name"] for module in configured["modules"]] == ["filterpkg.core"]
     assert configured["metadata"]["collector"] == "inspect"
+
+    assert main(
+        [
+            "apidoc",
+            "collect",
+            str(package_dir),
+            "--config",
+            str(pyproject_config_path),
+            "--out",
+            str(pyproject_config_json),
+        ]
+    ) == 0
+    pyproject_configured = json.loads(pyproject_config_json.read_text(encoding="utf-8"))
+    assert [module["name"] for module in pyproject_configured["modules"]] == ["filterpkg.core"]
+    assert pyproject_configured["metadata"]["collector"] == "inspect"
 
     assert main(
         [
