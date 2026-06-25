@@ -355,6 +355,63 @@ def write_hatch_package_repo(
     return repo
 
 
+def write_hatch_only_include_repo(
+    tmp_path: Path,
+    *,
+    repo_name: str = "hatch-only-include-repo",
+    package_name: str = "onlypkg",
+    source_root: str = "lib",
+) -> Path:
+    repo = tmp_path / repo_name
+    package_dir = repo / source_root / package_name
+    stray_dir = repo / source_root / "straypkg"
+    package_dir.mkdir(parents=True)
+    stray_dir.mkdir(parents=True)
+    (repo / "pyproject.toml").write_text(
+        dedent(
+            f'''\
+            [build-system]
+            requires = ["hatchling"]
+            build-backend = "hatchling.build"
+
+            [project]
+            name = "{package_name.replace("_", "-")}"
+
+            [tool.hatch.build.targets.wheel]
+            only-include = ["{source_root}/{package_name}"]
+            '''
+        ),
+        encoding="utf-8",
+    )
+    (package_dir / "__init__.py").write_text(
+        '"""Hatch only-include package."""\nfrom .core import run\n__all__ = ["run"]\n',
+        encoding="utf-8",
+    )
+    (package_dir / "core.py").write_text(
+        dedent(
+            '''\
+            def run(path: str) -> str:
+                """Run from a Hatch only-include repository.
+
+                Args:
+                    path: Input path.
+
+                Returns:
+                    str: Input path.
+                """
+
+                return path
+            '''
+        ),
+        encoding="utf-8",
+    )
+    (stray_dir / "__init__.py").write_text(
+        '"""Stray package that Hatch only-include should not expose."""\n__all__ = ["leak"]\n\ndef leak() -> None:\n    """Should not be collected."""\n',
+        encoding="utf-8",
+    )
+    return repo
+
+
 def write_hatch_multi_package_repo(tmp_path: Path) -> Path:
     repo = tmp_path / "multi-hatch-repo"
     package_names = ("alpha", "beta")

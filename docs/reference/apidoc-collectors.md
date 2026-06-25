@@ -56,6 +56,31 @@ api = collect_api(".", collector="griffe", public_policy="__all__")
 assert api.find("samplepkg.run") is not None
 ```
 
+Hatch projects that publish a package through `only-include` are also resolved
+from the repository root. When the included path points at a package directory,
+OODocs uses that directory's parent as the import root so rendered names stay
+`samplepkg.*`, not `lib.samplepkg.*`:
+
+```toml
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "sample-project"
+
+[tool.hatch.build.targets.wheel]
+only-include = ["lib/samplepkg"]
+```
+
+```python
+from oodocs.apidoc import collect_api
+
+api = collect_api(".", collector="inspect", public_policy="__all__")
+assert api.find("samplepkg.run") is not None
+assert api.find("lib.samplepkg.run") is None
+```
+
 For backend-independent import metadata, declare the import names directly in
 `[project]`:
 

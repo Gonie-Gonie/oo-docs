@@ -5,6 +5,7 @@ from apidoc_samples import (
     write_flit_module_file_repo,
     write_flit_package_repo,
     write_hatch_multi_package_repo,
+    write_hatch_only_include_repo,
     write_hatch_package_repo,
     write_import_names_module_file_repo,
     write_import_names_package_repo,
@@ -118,6 +119,19 @@ def test_inspect_collector_uses_pyproject_hatch_packages(tmp_path) -> None:
     assert api.find("hatchpkg.run") is not None
     assert api.find("hatchpkg.core.run") is not None
     assert api.find("lib.hatchpkg.run") is None
+
+
+def test_inspect_collector_uses_pyproject_hatch_only_include(tmp_path) -> None:
+    repo = write_hatch_only_include_repo(tmp_path)
+
+    api = collect_api(repo, collector="inspect", public_policy="__all__")
+
+    assert api.name == "onlypkg"
+    assert [module.name for module in api.modules] == ["onlypkg", "onlypkg.core"]
+    assert api.find("onlypkg.run") is not None
+    assert api.find("onlypkg.core.run") is not None
+    assert api.find("lib.onlypkg.run") is None
+    assert api.find("straypkg.leak") is None
 
 
 def test_inspect_collector_uses_pyproject_hatch_multi_packages(tmp_path) -> None:

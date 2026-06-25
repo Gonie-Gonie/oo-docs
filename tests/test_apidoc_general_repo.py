@@ -8,6 +8,7 @@ from apidoc_samples import (
     write_custom_docstring_parser_repo,
     write_flit_package_repo,
     write_hatch_multi_package_repo,
+    write_hatch_only_include_repo,
     write_import_names_package_repo,
     write_mixed_docstring_repo,
     write_pdm_package_dir_repo,
@@ -637,6 +638,67 @@ def test_general_hatch_multi_package_repo_builds_complete_reference(
     rendered_api = ApiPackage.read_json(api_path)
     assert rendered_api.find("alpha.run") is not None
     assert rendered_api.find("beta.run") is not None
+    assert ApiCoverageResult.read_json(coverage_path).object_coverage == 1.0
+
+
+def test_general_hatch_only_include_repo_builds_complete_reference(
+    tmp_path: Path,
+) -> None:
+    repo = write_hatch_only_include_repo(tmp_path)
+    output_dir = tmp_path / "hatch-only-include-output"
+
+    api = collect_api(
+        repo,
+        collector="inspect",
+        public_policy="__all__",
+        docstring_style=ApiDocstringParser.auto(),
+    )
+    coverage = check_api_docs(api, fail_under=1.0)
+
+    assert api.name == "onlypkg"
+    assert api.find("onlypkg.run") is not None
+    assert api.find("onlypkg.core.run") is not None
+    assert api.find("lib.onlypkg.run") is None
+    assert api.find("straypkg.leak") is None
+    assert coverage.object_coverage == 1.0
+
+    assert (
+        main(
+            [
+                "build",
+                str(repo),
+                "--collector",
+                "inspect",
+                "--public-policy",
+                "__all__",
+                "--docstring-style",
+                "auto",
+                "--out",
+                str(output_dir),
+                "--to",
+                "html",
+                "--sidecars",
+            ]
+        )
+        == 0
+    )
+    html_path = output_dir / "onlypkg-api.html"
+    api_path = output_dir / "onlypkg-api.json"
+    coverage_path = output_dir / "onlypkg-api-coverage.json"
+
+    assert html_path.exists()
+    assert api_path.exists()
+    assert coverage_path.exists()
+    html = html_path.read_text(encoding="utf-8")
+    assert "onlypkg.run" in html
+    assert "lib.onlypkg" not in html
+    assert "straypkg" not in html
+    assert_html_internal_links_resolve(html_path)
+    rendered_api = ApiPackage.read_json(api_path)
+    assert rendered_api.find("onlypkg.run") is not None
+    assert rendered_api.find("onlypkg.core.run") is not None
+    assert rendered_api.find("lib.onlypkg.run") is None
+    assert rendered_api.find("straypkg.leak") is None
     assert ApiCoverageResult.read_json(coverage_path).object_coverage == 1.0
 
 
