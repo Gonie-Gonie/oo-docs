@@ -9,6 +9,7 @@ from apidoc_samples import (
     write_dataclass_package,
     write_overload_package,
     write_private_package,
+    write_sample_package,
     write_setuptools_package_dir_repo,
 )
 from oodocs.apidoc import collect_api
@@ -167,6 +168,27 @@ def test_griffe_collector_uses_pyproject_setuptools_package_dir(tmp_path) -> Non
     assert api.find("samplepkg.run") is not None
     assert api.find("samplepkg.core.run") is not None
     assert api.find("lib.samplepkg.run") is None
+
+
+def test_griffe_collector_records_load_failure_fallback_issue(
+    tmp_path,
+    monkeypatch,
+) -> None:
+    griffe = pytest.importorskip("griffe")
+    package_dir = write_sample_package(tmp_path, name="fallbackpkg")
+
+    def fail_load(*args, **kwargs):
+        raise RuntimeError("forced griffe failure")
+
+    monkeypatch.setattr(griffe, "load", fail_load)
+
+    api = collect_api(package_dir, collector="griffe", public_policy="__all__")
+
+    assert api.metadata["collector"] == "inspect"
+    assert api.metadata["requested_collector"] == "griffe"
+    assert api.metadata["fallback_collector"] == "inspect"
+    assert api.find("fallbackpkg.Widget") is not None
+    assert any(issue.code == "griffe-load-failed" for issue in api.issues)
 
 
 def test_griffe_collector_can_include_private_objects(tmp_path) -> None:

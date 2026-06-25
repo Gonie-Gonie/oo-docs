@@ -33,8 +33,9 @@ assert api.find("samplepkg.run") is not None
   collection is used.
 
 By default, griffe failures fall back to the inspect-compatible source
-collector. Set `fallback_collector="none"` when CI should fail loudly instead
-of rendering a best-effort fallback reference:
+collector and add an informational issue such as `griffe-unavailable` or
+`griffe-load-failed` to the API sidecar. Set `fallback_collector="none"` when
+CI should fail loudly instead of rendering a best-effort fallback reference:
 
 ```python
 api = collect_api(".", collector="griffe", fallback_collector="none")
