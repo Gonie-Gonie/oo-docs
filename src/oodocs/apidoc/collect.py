@@ -90,16 +90,41 @@ def collect_api(
         Collected API package.
 
     Examples:
-        Select parsed objects and compose them into a normal OODocs document:
+        Collect a normal Python repository and compose selected objects into an
+        authored OODocs document:
 
         ```python
         from oodocs import Chapter, Document
         from oodocs.apidoc import collect_api
 
-        api = collect_api("oodocs", public_policy="__all__")
-        doc = Document("Classes", Chapter("Public Classes", *[
-            obj.to_section(level=2) for obj in api.classes()[:3]
-        ]))
+        api = collect_api(
+            ".",
+            public_policy="__all__",
+            module_exclude_patterns=("mypkg.tests*",),
+        )
+        classes = api.select(kind="class", module_prefix="mypkg")
+
+        doc = Document(
+            "Selected API",
+            Chapter(
+                "Public Classes",
+                *[obj.to_section(level=2, profile="manual") for obj in classes[:3]],
+            ),
+        )
+        ```
+
+        Reuse a repository config and render a complete reference through the
+        normal ``Document.save_all(...)`` pipeline:
+
+        ```python
+        from oodocs.apidoc import ApiCollectConfig, collect_api
+
+        config = ApiCollectConfig.from_pyproject(".")
+        api = collect_api(".", config=config)
+        api.to_document(profile="reference").save_all(
+            "artifacts/api",
+            stem="mypkg-api",
+        )
         ```
     """
 
@@ -163,6 +188,24 @@ def collect_module_api(
 
     Returns:
         Collected module metadata.
+
+    Raises:
+        ValueError: If the input expands to zero or more than one collected
+            module.
+
+    Examples:
+        Collect a single module and embed it in a larger document:
+
+        ```python
+        from oodocs import Chapter, Document
+        from oodocs.apidoc import collect_module_api
+
+        module = collect_module_api(
+            "mypkg.renderers.pdf",
+            public_policy="underscore",
+        )
+        doc = Document("Renderer Notes", Chapter("PDF API", *module.to_blocks()))
+        ```
     """
 
     api = collect_api(module, config=config, **kwargs)
@@ -189,6 +232,20 @@ def collect_object_api(
 
     Raises:
         LookupError: If the object cannot be found.
+
+    Examples:
+        Collect one object when an API guide needs a focused reference panel:
+
+        ```python
+        from oodocs import Chapter, Document
+        from oodocs.apidoc import collect_object_api
+
+        obj = collect_object_api("mypkg.settings.DocumentSettings")
+        doc = Document(
+            "Settings API",
+            Chapter("Document Settings", obj.to_compact_box(profile="manual")),
+        )
+        ```
     """
 
     errors: list[Exception] = []
