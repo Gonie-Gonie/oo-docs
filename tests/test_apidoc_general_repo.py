@@ -988,19 +988,39 @@ def test_general_packaging_variants_build_complete_cli_reference(
                 "--out",
                 str(output_dir),
                 "--to",
-                "html",
+                "docx,pdf,html",
                 "--sidecars",
             ]
         )
         == 0
     )
+    docx_path = output_dir / f"{expected_package}-api.docx"
+    pdf_path = output_dir / f"{expected_package}-api.pdf"
     html_path = output_dir / f"{expected_package}-api.html"
     api_path = output_dir / f"{expected_package}-api.json"
     coverage_path = output_dir / f"{expected_package}-api-coverage.json"
 
-    assert html_path.exists()
+    assert_rendered_bundle(docx_path, pdf_path, html_path)
     assert api_path.exists()
     assert coverage_path.exists()
+    assert_docx_structure(
+        docx_path,
+        required_paragraphs=(
+            f"{expected_package} API Reference",
+            "1 API Documentation Coverage",
+            f"2 {expected_package}",
+        ),
+        min_tables=2,
+    )
+    assert_pdf_text_and_pages(
+        pdf_path,
+        required_text=(
+            f"{expected_package} API Reference",
+            "API Documentation Coverage",
+            *expected_qualnames,
+        ),
+        min_pages=1,
+    )
     html = html_path.read_text(encoding="utf-8")
     for qualname in expected_qualnames:
         assert qualname in html
