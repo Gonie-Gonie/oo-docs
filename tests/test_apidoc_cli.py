@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from apidoc_samples import write_sample_package
+from apidoc_samples import write_private_package, write_sample_package
 import pytest
 
 from oodocs.apidoc import ApiPackage
@@ -140,3 +140,34 @@ def test_apidoc_cli_can_strip_source_locations(tmp_path) -> None:
     assert widget is not None
     assert widget.source_path is None
     assert widget.line_number is None
+
+
+def test_apidoc_cli_can_include_private_objects(tmp_path) -> None:
+    package_dir = write_private_package(tmp_path)
+    output_path = tmp_path / "privatepkg-api.json"
+
+    assert (
+        main(
+            [
+                "apidoc",
+                "collect",
+                str(package_dir),
+                "--collector",
+                "inspect",
+                "--public-policy",
+                "__all__",
+                "--include-private",
+                "--out",
+                str(output_path),
+            ]
+        )
+        == 0
+    )
+
+    api = ApiPackage.read_json(output_path)
+    helper = api.find("privatepkg._helper")
+    debug = api.find("privatepkg.PublicWidget._debug")
+    assert helper is not None
+    assert helper.visibility == "protected"
+    assert debug is not None
+    assert debug.visibility == "protected"

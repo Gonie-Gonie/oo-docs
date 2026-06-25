@@ -54,6 +54,7 @@ def collect_api(
     explicit_names: Iterable[str] | None = None,
     docstring_style: str | ApiDocstringParser | None = None,
     docstring_parser_modules: Iterable[str] | None = None,
+    include_private: bool | None = None,
     include_imported: bool | None = None,
     include_inherited: bool | None = None,
     include_attributes: bool | None = None,
@@ -85,6 +86,8 @@ def collect_api(
             ``ApiDocstringParser`` object.
         docstring_parser_modules: Importable modules that register custom
             parser styles before collection.
+        include_private: Whether underscore-prefixed objects should be
+            collected in addition to the configured public API boundary.
         include_imported: Whether imported public aliases should be included.
             Source collection records unresolved external imports as ``data``
             objects; griffe can resolve richer imported targets when available.
@@ -157,6 +160,7 @@ def collect_api(
         "docstring_parser_modules": tuple(docstring_parser_modules)
         if docstring_parser_modules is not None
         else None,
+        "include_private": include_private,
         "include_imported": include_imported,
         "include_inherited": include_inherited,
         "include_attributes": include_attributes,
@@ -1508,6 +1512,8 @@ def _is_public_name(
     public_names: set[str] | None,
     config: ApiCollectConfig,
 ) -> bool:
+    if config.include_private and config.public_policy != "explicit" and name.startswith("_"):
+        return True
     return config.public_api_policy().module_name_is_public(name, qualname, public_names)
 
 
@@ -1516,6 +1522,8 @@ def _class_member_is_public(
     config: ApiCollectConfig,
     qualname: str | None = None,
 ) -> bool:
+    if config.include_private and config.public_policy != "explicit" and name.startswith("_"):
+        return True
     return config.public_api_policy().member_name_is_public(name, qualname)
 
 

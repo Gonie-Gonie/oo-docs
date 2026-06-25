@@ -685,6 +685,8 @@ def _is_public_name(
     public_names: set[str] | None,
     config: ApiCollectConfig,
 ) -> bool:
+    if config.include_private and config.public_policy != "explicit" and name.startswith("_"):
+        return True
     return config.public_api_policy().module_name_is_public(name, qualname, public_names)
 
 
@@ -693,6 +695,8 @@ def _class_member_is_public(
     config: ApiCollectConfig,
     qualname: str | None = None,
 ) -> bool:
+    if config.include_private and config.public_policy != "explicit" and name.startswith("_"):
+        return True
     return config.public_api_policy().member_name_is_public(name, qualname)
 
 

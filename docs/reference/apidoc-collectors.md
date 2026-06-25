@@ -56,6 +56,22 @@ underscore-prefixed names are excluded. Use `public_policy="all"` for internal
 audits or `public_policy="explicit"` with `explicit_names=[...]` for curated
 sets.
 
+Use `include_private=True` when an internal reference should collect
+underscore-prefixed objects in addition to the normal public boundary. Collected
+objects keep their original `visibility`, so `api.public_objects()` still
+returns only public entries while `api.private_objects()` can be used for an
+internal appendix.
+
+```python
+api = collect_api(
+    ".",
+    collector="inspect",
+    public_policy="__all__",
+    include_private=True,
+)
+internal = api.private_objects()
+```
+
 For repeated runs against a general development repository, create an
 `ApiPublicPolicy` once and pass it to `collect_api(...)`.
 

@@ -35,6 +35,7 @@ _COLLECT_CONFIG_KEYS = {
     "include_imported",
     "include_inherited",
     "include_methods",
+    "include_private",
     "include_properties",
     "include_source_locations",
     "module_exclude_patterns",
@@ -310,6 +311,8 @@ class ApiCollectConfig:
         docstring_style: Docstring parser style.
         docstring_parser_modules: Importable modules that register custom
             docstring parsers before style validation and collection.
+        include_private: Whether underscore-prefixed objects should be included
+            in addition to the configured public API boundary.
         include_imported: Whether imported public aliases may be included.
             Source collection records unresolved external imports as ``data``
             objects, while griffe may resolve richer imported targets.
@@ -350,6 +353,7 @@ class ApiCollectConfig:
     explicit_names: tuple[str, ...] = field(default_factory=tuple)
     docstring_style: str = "auto"
     docstring_parser_modules: tuple[str, ...] = field(default_factory=tuple)
+    include_private: bool = False
     include_imported: bool = False
     include_inherited: bool = False
     include_attributes: bool = True
@@ -627,6 +631,7 @@ class ApiCollectConfig:
             "explicit_names": list(self.explicit_names),
             "docstring_style": self.docstring_style,
             "docstring_parser_modules": list(self.docstring_parser_modules),
+            "include_private": self.include_private,
             "include_imported": self.include_imported,
             "include_inherited": self.include_inherited,
             "include_attributes": self.include_attributes,

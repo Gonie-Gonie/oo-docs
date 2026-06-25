@@ -4,7 +4,7 @@ import importlib.util
 
 import pytest
 
-from apidoc_samples import collect_sample_api
+from apidoc_samples import collect_sample_api, write_private_package
 from oodocs.apidoc import collect_api
 
 
@@ -77,6 +77,34 @@ def test_griffe_collector_can_strip_source_locations(tmp_path) -> None:
     assert render is not None
     assert render.source_path is None
     assert render.line_number is None
+
+
+def test_griffe_collector_can_include_private_objects(tmp_path) -> None:
+    if importlib.util.find_spec("griffe") is None:
+        pytest.skip("griffe is not installed")
+
+    package_dir = write_private_package(tmp_path)
+
+    default_api = collect_api(package_dir, collector="griffe", public_policy="__all__")
+    private_api = collect_api(
+        package_dir,
+        collector="griffe",
+        public_policy="__all__",
+        include_private=True,
+    )
+
+    assert default_api.find("privatepkg._helper") is None
+    assert default_api.find("privatepkg.PublicWidget._debug") is None
+    assert default_api.find("privatepkg.PublicWidget._cache") is None
+    assert private_api.find("privatepkg._helper") is not None
+    assert private_api.find("privatepkg._TOKEN") is not None
+    debug = private_api.find("privatepkg.PublicWidget._debug")
+    cache = private_api.find("privatepkg.PublicWidget._cache")
+    assert debug is not None
+    assert debug.visibility == "protected"
+    assert cache is not None
+    assert cache.visibility == "protected"
+    assert private_api.private_objects()
 
 
 def test_griffe_collector_can_include_inherited_members(tmp_path) -> None:

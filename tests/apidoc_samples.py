@@ -90,6 +90,40 @@ def write_undocumented_package(tmp_path: Path, name: str = "undocpkg") -> Path:
     return package_dir
 
 
+def write_private_package(tmp_path: Path, name: str = "privatepkg") -> Path:
+    package_dir = tmp_path / name
+    package_dir.mkdir()
+    (package_dir / "__init__.py").write_text(
+        dedent(
+            '''\
+            """Private API sample."""
+
+            __all__ = ["PublicWidget"]
+
+            _TOKEN: str = "secret"
+
+            class PublicWidget:
+                """Public widget."""
+
+                def __init__(self) -> None:
+                    self._cache = {}
+
+                def public(self) -> None:
+                    """Public method."""
+
+                def _debug(self) -> str:
+                    """Private debug hook."""
+                    return "debug"
+
+            def _helper() -> None:
+                """Private helper."""
+            '''
+        ),
+        encoding="utf-8",
+    )
+    return package_dir
+
+
 def collect_sample_api(tmp_path: Path, **kwargs: object) -> ApiPackage:
     package_dir = write_sample_package(tmp_path)
     options = {

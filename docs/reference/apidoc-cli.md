@@ -68,6 +68,7 @@ collector = "griffe"
 public-policy = "__all__"
 docstring-style = "auto"
 object-exclude-patterns = ["render_to_docx", "render_to_pdf", "render_to_html"]
+include-private = false
 include-attributes = true
 include-properties = true
 include-methods = true
@@ -123,6 +124,12 @@ member kinds:
 python -m oodocs apidoc build . --no-attributes --no-properties --no-methods --out artifacts/api
 ```
 
+Private and protected names can be collected for internal review documents:
+
+```powershell
+python -m oodocs apidoc collect . --include-private --out artifacts/internal-api.json
+```
+
 Source locations can also be stripped during collection when rendered
 references or JSON sidecars should not expose local paths:
 
@@ -144,8 +151,9 @@ docstring changes, deprecated objects, and coverage deltas.
 
 Common collection options are `--collector`, `--public-policy`,
 `--fallback-collector`, `--explicit-name`, `--docstring-style`,
-`--docstring-parser-module`, `--include-imported`, `--config`,
-`--include-inherited`, `--include-attributes`, `--no-attributes`,
+`--docstring-parser-module`, `--include-private`, `--no-private`,
+`--include-imported`, `--config`, `--include-inherited`,
+`--include-attributes`, `--no-attributes`,
 `--include-properties`, `--no-properties`, `--include-methods`,
 `--no-methods`, `--include-source-locations`, `--no-source-locations`,
 `--class-signature-from-init`,

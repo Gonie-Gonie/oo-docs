@@ -176,6 +176,19 @@ def _add_collect_options(parser: argparse.ArgumentParser, *, include_config: boo
         help="Import a module that registers custom docstring parsers; may be repeated.",
     )
     parser.add_argument(
+        "--include-private",
+        action="store_true",
+        default=None,
+        help="Include underscore-prefixed objects in addition to the public boundary.",
+    )
+    parser.add_argument(
+        "--no-private",
+        action="store_false",
+        dest="include_private",
+        default=None,
+        help="Exclude underscore-prefixed objects.",
+    )
+    parser.add_argument(
         "--include-imported",
         action="store_true",
         default=None,
@@ -290,6 +303,7 @@ def _run_init(args: argparse.Namespace) -> int:
         explicit_names=args.explicit_names,
         docstring_style=args.docstring_style,
         docstring_parser_modules=args.docstring_parser_modules,
+        include_private=args.include_private,
         include_imported=args.include_imported,
         include_inherited=args.include_inherited,
         include_attributes=args.include_attributes,
@@ -453,6 +467,7 @@ def _collect_from_args(
         explicit_names=args.explicit_names,
         docstring_style=args.docstring_style,
         docstring_parser_modules=args.docstring_parser_modules,
+        include_private=args.include_private,
         include_imported=args.include_imported,
         include_inherited=args.include_inherited,
         include_attributes=args.include_attributes,
