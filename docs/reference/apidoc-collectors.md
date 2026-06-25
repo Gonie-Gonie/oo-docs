@@ -51,6 +51,11 @@ parameter documentation. Disable that behavior with
 `class-signature-from-init = false` in config or
 `--no-class-signature-from-init` on the CLI.
 
+For dataclasses without an explicit `__init__`, source-compatible collection
+uses public dataclass fields to build the class signature and constructor
+parameter metadata. Fields marked `field(init=False)` remain attributes but are
+not treated as constructor parameters.
+
 ```python
 from oodocs.apidoc import collect_api
 

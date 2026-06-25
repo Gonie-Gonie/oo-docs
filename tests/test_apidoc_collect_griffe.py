@@ -4,7 +4,12 @@ import importlib.util
 
 import pytest
 
-from apidoc_samples import collect_sample_api, write_overload_package, write_private_package
+from apidoc_samples import (
+    collect_sample_api,
+    write_dataclass_package,
+    write_overload_package,
+    write_private_package,
+)
 from oodocs.apidoc import collect_api
 
 
@@ -151,6 +156,28 @@ def test_griffe_collector_records_overload_metadata(tmp_path) -> None:
         "overpkg.Parser.parse(value: str) -> str",
         "overpkg.Parser.parse(value: bytes) -> bytes",
     ]
+
+
+def test_griffe_collector_uses_dataclass_fields_for_class_signature(tmp_path) -> None:
+    if importlib.util.find_spec("griffe") is None:
+        pytest.skip("griffe is not installed")
+
+    package_dir = write_dataclass_package(tmp_path)
+
+    api = collect_api(package_dir, collector="griffe", public_policy="__all__")
+    settings = api.find("datapkg.Settings")
+    tags = api.find("datapkg.Settings.tags")
+    cache = api.find("datapkg.Settings.cache")
+
+    assert settings is not None
+    assert settings.signature == "datapkg.Settings(path: str, retries: int = 3, tags: list[str] = list())"
+    assert [parameter.name for parameter in settings.parameters] == ["path", "retries", "tags"]
+    assert all(parameter.documented for parameter in settings.parameters)
+    assert {member.name for member in settings.members} >= {"path", "retries", "tags", "cache"}
+    assert tags is not None
+    assert tags.summary == "Labels attached to the run."
+    assert cache is not None
+    assert cache.metadata["default"] == "field(default_factory=dict, init=False)"
 
 
 def test_griffe_collector_can_include_inherited_members(tmp_path) -> None:

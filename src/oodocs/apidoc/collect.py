@@ -680,8 +680,12 @@ def _class_object(
         )
     signature = qualname
     signature_parameters: list[ApiParameter] = []
-    if config.class_signature_from_init and init_node is not None:
-        signature_parameters = _parameters_from_function(init_node, drop_first=True)
+    if config.class_signature_from_init:
+        if init_node is not None:
+            signature_parameters = _parameters_from_function(init_node, drop_first=True)
+        elif _is_dataclass_class(node):
+            signature_parameters = _parameters_from_dataclass_fields(node, config=config, qualname=qualname)
+    if signature_parameters:
         signature = f"{qualname}({_signature_parameter_text(signature_parameters)})"
     parameters, extra_issues = _merge_parameters(
         signature_parameters,
@@ -1088,6 +1092,87 @@ def _parameters_from_function(
             )
         )
     return parameters
+
+
+def _parameters_from_dataclass_fields(
+    node: ast.ClassDef,
+    *,
+    config: ApiCollectConfig,
+    qualname: str,
+) -> list[ApiParameter]:
+    parameters: list[ApiParameter] = []
+    for child in node.body:
+        if not isinstance(child, ast.AnnAssign):
+            continue
+        if not isinstance(child.target, ast.Name):
+            continue
+        name = child.target.id
+        if not _class_member_is_public(name, config, f"{qualname}.{name}"):
+            continue
+        if _is_classvar_annotation(child.annotation):
+            continue
+        default = _dataclass_field_default(child.value)
+        if default is _DATACLASS_FIELD_INIT_FALSE:
+            continue
+        parameters.append(
+            ApiParameter(
+                name=name,
+                annotation=_unparse(child.annotation) if child.annotation else None,
+                default=default,
+                kind="positional",
+                required=default is None,
+                documented=False,
+                source="dataclass-field",
+            )
+        )
+    return parameters
+
+
+_DATACLASS_FIELD_INIT_FALSE = object()
+
+
+def _is_dataclass_class(node: ast.ClassDef) -> bool:
+    return "dataclass" in {_decorator_name(decorator) for decorator in node.decorator_list}
+
+
+def _is_classvar_annotation(node: ast.expr | None) -> bool:
+    if node is None:
+        return False
+    if isinstance(node, ast.Name):
+        return node.id == "ClassVar"
+    if isinstance(node, ast.Attribute):
+        return node.attr == "ClassVar"
+    if isinstance(node, ast.Subscript):
+        return _is_classvar_annotation(node.value)
+    return False
+
+
+def _dataclass_field_default(node: ast.expr | None) -> str | None | object:
+    if node is None:
+        return None
+    if not _is_dataclass_field_call(node):
+        return _unparse(node)
+    for keyword in node.keywords:
+        if keyword.arg == "init" and isinstance(keyword.value, ast.Constant) and keyword.value.value is False:
+            return _DATACLASS_FIELD_INIT_FALSE
+    for keyword in node.keywords:
+        if keyword.arg == "default":
+            return _unparse(keyword.value)
+    for keyword in node.keywords:
+        if keyword.arg == "default_factory":
+            factory = _unparse(keyword.value)
+            return f"{factory}()" if factory else None
+    return None
+
+
+def _is_dataclass_field_call(node: ast.expr) -> bool:
+    if not isinstance(node, ast.Call):
+        return False
+    if isinstance(node.func, ast.Name):
+        return node.func.id == "field"
+    if isinstance(node.func, ast.Attribute):
+        return node.func.attr == "field"
+    return False
 
 
 def _merge_parameters(

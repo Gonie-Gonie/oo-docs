@@ -173,6 +173,41 @@ def write_overload_package(tmp_path: Path, name: str = "overpkg") -> Path:
     return package_dir
 
 
+def write_dataclass_package(tmp_path: Path, name: str = "datapkg") -> Path:
+    package_dir = tmp_path / name
+    package_dir.mkdir()
+    (package_dir / "__init__.py").write_text(
+        dedent(
+            '''\
+            """Dataclass API sample."""
+
+            from dataclasses import dataclass, field
+            from typing import ClassVar
+
+            __all__ = ["Settings"]
+
+            @dataclass(slots=True)
+            class Settings:
+                """Runtime settings.
+
+                Attributes:
+                    path: Output path.
+                    retries: Retry count.
+                    tags: Labels attached to the run.
+                """
+
+                kind: ClassVar[str] = "settings"
+                path: str
+                retries: int = 3
+                tags: list[str] = field(default_factory=list)
+                cache: dict[str, str] = field(default_factory=dict, init=False)
+            '''
+        ),
+        encoding="utf-8",
+    )
+    return package_dir
+
+
 def collect_sample_api(tmp_path: Path, **kwargs: object) -> ApiPackage:
     package_dir = write_sample_package(tmp_path)
     options = {
