@@ -713,7 +713,7 @@ def test_apidoc_cli_diff_renders_report_and_json_sidecar(tmp_path) -> None:
                 "--out",
                 str(output_dir),
                 "--to",
-                "html",
+                "docx,pdf,html",
                 "--stem",
                 "public-api-diff",
             ]
@@ -721,11 +721,34 @@ def test_apidoc_cli_diff_renders_report_and_json_sidecar(tmp_path) -> None:
         == 0
     )
 
+    docx_path = output_dir / "public-api-diff.docx"
+    pdf_path = output_dir / "public-api-diff.pdf"
     html_path = output_dir / "public-api-diff.html"
     diff_path = output_dir / "public-api-diff.json"
 
-    assert html_path.exists()
+    assert_rendered_bundle(docx_path, pdf_path, html_path)
     assert diff_path.exists()
+    assert_docx_structure(
+        docx_path,
+        required_paragraphs=(
+            "API Diff",
+            "1 Summary",
+            "2 Coverage Delta",
+            "3 Added API",
+            "4 Changed Signatures",
+        ),
+        min_tables=5,
+    )
+    assert_pdf_text_and_pages(
+        pdf_path,
+        required_text=(
+            "API Diff",
+            "Coverage Delta",
+            "diffpkg.added",
+            "diffpkg.run",
+        ),
+        min_pages=1,
+    )
     assert_html_internal_links_resolve(
         html_path,
         required_text=(
