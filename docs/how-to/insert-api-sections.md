@@ -6,8 +6,8 @@ repository checkout, normalizes docstrings into `ApiObject` instances, and lets
 you insert only the selected objects as normal OODocs blocks.
 
 ```python
-from oodocs import Chapter, Document, Paragraph
-from oodocs.apidoc import ApiDocstringParser, collect_api
+from oodocs import Document
+from oodocs.apidoc import ApiDocstringParser, api_objects_to_chapter, collect_api
 
 parser = ApiDocstringParser.auto()
 api = collect_api(
@@ -21,10 +21,11 @@ classes = api.select(kind="class", module_prefix="mypkg")
 
 doc = Document(
     "Developer Notes",
-    Chapter(
+    api_objects_to_chapter(
         "Selected API",
-        Paragraph("These sections are generated from docstrings and signatures."),
-        *[obj.to_section(level=2, profile="manual") for obj in classes[:5]],
+        classes[:5],
+        profile="manual",
+        max_level=3,
     ),
 )
 ```

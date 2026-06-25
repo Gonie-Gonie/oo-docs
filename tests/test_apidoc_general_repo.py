@@ -7,6 +7,10 @@ from oodocs.apidoc import (
     ApiCoverageResult,
     ApiDocstringParser,
     ApiPackage,
+    api_coverage_to_chapter,
+    api_objects_to_chapter,
+    api_objects_to_summary_table,
+    api_package_to_document,
     check_api_docs,
     collect_api,
 )
@@ -63,6 +67,74 @@ def test_general_repo_auto_parser_objects_compose_into_document(tmp_path) -> Non
     assert "mixedpkg.Client" in html
     assert "Timeout in seconds." in html
     assert "Object coverage" in html
+
+
+def test_general_repo_render_helpers_compose_selected_api(tmp_path) -> None:
+    repo = write_mixed_docstring_repo(tmp_path)
+    api = collect_api(
+        repo,
+        collector="inspect",
+        public_policy="__all__",
+        docstring_style=ApiDocstringParser.auto(),
+    )
+    coverage = check_api_docs(api, fail_under=1.0)
+
+    document = Document(
+        "Mixed Package API Helper Notes",
+        api_objects_to_chapter(
+            "Client Classes",
+            api.select(kind="class", module_prefix="mixedpkg"),
+            profile="manual",
+            max_level=3,
+        ),
+        Chapter(
+            "Function Summary",
+            api_objects_to_summary_table(
+                api.functions(),
+                profile="compact",
+                caption="Mixed package functions.",
+            ),
+        ),
+        api_coverage_to_chapter(coverage),
+    )
+
+    outputs = document.save_all(
+        tmp_path / "helper-rendered",
+        stem="mixed-helper-api",
+        formats=("html",),
+    )
+    html = outputs["html"].read_text(encoding="utf-8")
+
+    assert document.validate(formats=("html",)).ok
+    assert "Client Classes" in html
+    assert "mixedpkg.Client" in html
+    assert "Mixed package functions." in html
+    assert "API Documentation Coverage" in html
+
+
+def test_general_repo_package_render_helper_builds_complete_reference(tmp_path) -> None:
+    repo = write_mixed_docstring_repo(tmp_path)
+    api = collect_api(
+        repo,
+        collector="inspect",
+        public_policy="__all__",
+        docstring_style=ApiDocstringParser.auto(),
+    )
+
+    document = api_package_to_document(api, profile="compact", max_level=3)
+    outputs = document.save_all(
+        tmp_path / "package-rendered",
+        stem="mixedpkg-api",
+        formats=("html",),
+    )
+    html = outputs["html"].read_text(encoding="utf-8")
+
+    assert document.validate(formats=("html",)).ok
+    assert "mixedpkg API Reference" in html
+    assert "API Contents" in html
+    assert "API Documentation Coverage" in html
+    assert "mixedpkg.Client" in html
+    assert "mixedpkg.connect" in html
 
 
 def test_general_repo_pyproject_auto_parser_builds_cli_bundle(tmp_path) -> None:
