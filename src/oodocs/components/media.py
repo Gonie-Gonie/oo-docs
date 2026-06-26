@@ -969,6 +969,7 @@ class Table(Block):
         row_styles: Resolved body-row style mapping.
         column_styles: Resolved column style mapping.
         header_row_styles: Resolved header-row style mapping.
+        total_row_count: Total rendered row count, including header rows.
 
     Raises:
         ValueError: If rows are missing, thresholds are invalid, or column
@@ -1116,7 +1117,7 @@ class Table(Block):
             name="header_row_styles",
         )
 
-        layout = self.layout()
+        layout = self._layout()
         if self.column_widths is not None and len(self.column_widths) != layout.column_count:
             raise ValueError("column_widths must match the expanded number of table columns")
 
@@ -1130,16 +1131,11 @@ class Table(Block):
 
         return self.header_rows[0]
 
-    def layout(self) -> TableLayout:
-        """Return the renderer-facing table layout.
-
-        Returns:
-            Expanded rectangular table layout.
-        """
-
+    def _layout(self) -> TableLayout:
         return build_table_layout(self.header_rows, self.rows)
 
-    def row_count(self) -> int:
+    @property
+    def total_row_count(self) -> int:
         """Return the total rendered row count, including headers.
 
         Returns:
@@ -1148,49 +1144,20 @@ class Table(Block):
 
         return len(self.header_rows) + len(self.rows)
 
-    def resolved_split(self, default_threshold: int = DEFAULT_LONG_TABLE_ROW_THRESHOLD) -> bool:
-        """Return whether renderers should allow this table to split across pages.
-
-        Args:
-            default_threshold: Row-count threshold used when this table has no
-                explicit threshold.
-
-        Returns:
-            ``True`` when the table should split.
-        """
-
+    def _resolve_split(self, default_threshold: int = DEFAULT_LONG_TABLE_ROW_THRESHOLD) -> bool:
         if self.split is True:
             return True
         threshold = self.long_table_threshold or default_threshold
-        return self.row_count() > threshold
+        return self.total_row_count > threshold
 
-    def resolved_placement(self, default_threshold: int = DEFAULT_LONG_TABLE_ROW_THRESHOLD) -> MediaPlacement:
-        """Return the effective placement after split and long-table rules.
-
-        Args:
-            default_threshold: Row-count threshold used when this table has no
-                explicit threshold.
-
-        Returns:
-            Effective media placement.
-        """
-
-        if self.split is True or self.resolved_split(default_threshold):
+    def _resolve_placement(self, default_threshold: int = DEFAULT_LONG_TABLE_ROW_THRESHOLD) -> MediaPlacement:
+        if self.split is True or self._resolve_split(default_threshold):
             return "here"
         if self.placement == "auto":
             return "float"
         return self.placement
 
-    def effective_cell_style(self, placement: TablePlacement) -> TableCellStyle:
-        """Return the resolved style for a rendered cell placement.
-
-        Args:
-            placement: Expanded cell placement to style.
-
-        Returns:
-            Merged style from table, column, row, and cell layers.
-        """
-
+    def _effective_cell_style(self, placement: TablePlacement) -> TableCellStyle:
         row_style = (
             self.header_row_styles.get(placement.row)
             if placement.header
@@ -1229,16 +1196,7 @@ class Table(Block):
             vertical_alignment=self.style.cell_vertical_alignment,
         )
 
-    def column_widths_in_inches(self, default_unit: str) -> list[float] | None:
-        """Return column widths converted through the table or document unit.
-
-        Args:
-            default_unit: Unit to use when the table has no explicit unit.
-
-        Returns:
-            Column widths in inches, or ``None`` when widths are automatic.
-        """
-
+    def _column_widths_in_inches(self, default_unit: str) -> list[float] | None:
         if self.column_widths is None:
             return None
         unit = self.unit or default_unit

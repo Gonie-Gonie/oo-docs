@@ -992,8 +992,8 @@ def test_table_accepts_dataframe_like_inputs_and_spans() -> None:
     assert len(table.header_rows) == 2
     assert table.header_rows[0][0].colspan == 2
     assert table.header_rows[0][1].rowspan == 2
-    assert table.layout().column_count == 3
-    assert merged_header.layout().row_count == 3
+    assert table._layout().column_count == 3
+    assert merged_header._layout().row_count == 3
 
 
 def test_table_cell_alignment_options_are_validated() -> None:
@@ -1066,10 +1066,10 @@ def test_table_split_and_media_placement_options_render(tmp_path: Path) -> None:
         ),
     )
 
-    assert long_table.resolved_split() is True
-    assert long_table.resolved_placement() == "here"
-    assert here_table.resolved_split() is True
-    assert here_table.resolved_placement() == "here"
+    assert long_table._resolve_split() is True
+    assert long_table._resolve_placement() == "here"
+    assert here_table._resolve_split() is True
+    assert here_table._resolve_placement() == "here"
     assert top_figure.resolved_placement() == "top"
 
     docx_path = tmp_path / "placement.docx"
@@ -1084,7 +1084,7 @@ def test_table_split_and_media_placement_options_render(tmp_path: Path) -> None:
     pdf_text = "\n".join(page.extract_text() or "" for page in pdf_reader.pages)
     html_text = html_path.read_text(encoding="utf-8")
 
-    assert long_table.row_count() == 35
+    assert long_table.total_row_count == 35
     assert 'w:tblHeader' in docx_xml
     assert '<w:br w:type="page"/>' in docx_xml
     assert "Long table with repeated headers." in pdf_text

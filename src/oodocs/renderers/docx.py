@@ -2492,8 +2492,8 @@ class DocxRenderer:
         *,
         word_document: WordDocument,
     ) -> None:
-        split_table = table_block.resolved_split()
-        media_placement = table_block.resolved_placement()
+        split_table = table_block._resolve_split()
+        media_placement = table_block._resolve_placement()
         self._apply_media_placement_before(container, word_document, media_placement)
 
         def render_caption() -> None:
@@ -2532,7 +2532,7 @@ class DocxRenderer:
             self._repeat_table_header_rows(table, layout.header_row_count)
         else:
             self._keep_table_together(table)
-        column_widths = table_block.column_widths_in_inches(unit)
+        column_widths = table_block._column_widths_in_inches(unit)
         if column_widths is not None:
             for column_index, width in enumerate(column_widths):
                 table.columns[column_index].width = Inches(width)
@@ -2548,7 +2548,7 @@ class DocxRenderer:
                 target_cell = start_cell.merge(end_cell)
 
             paragraph = target_cell.paragraphs[0]
-            effective_style = table_block.effective_cell_style(cell_placement)
+            effective_style = table_block._effective_cell_style(cell_placement)
             cell_horizontal_alignment = self._table_cell_horizontal_alignment(
                 cell_placement,
                 table_block,
@@ -2586,14 +2586,14 @@ class DocxRenderer:
         placement: object,
         table_block: Table,
     ) -> str | None:
-        return table_block.effective_cell_style(placement).horizontal_alignment
+        return table_block._effective_cell_style(placement).horizontal_alignment
 
     def _table_cell_vertical_alignment(
         self,
         placement: object,
         table_block: Table,
     ) -> str | None:
-        return table_block.effective_cell_style(placement).vertical_alignment
+        return table_block._effective_cell_style(placement).vertical_alignment
 
     def _render_figure(
         self,

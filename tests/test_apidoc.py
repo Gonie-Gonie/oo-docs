@@ -620,7 +620,7 @@ def test_collect_api_builds_queryable_object_tree_and_blocks(tmp_path: Path) -> 
     assert ApiPresentationProfile.from_dict(ApiPresentationProfile.review().to_dict()).include_review_notes
     parameter_table = functions[0].to_parameters_table()
     assert isinstance(parameter_table, Table)
-    assert parameter_table.resolved_split(default_threshold=999_999)
+    assert parameter_table._resolve_split(default_threshold=999_999)
     assert functions[0].notes == ["Use this helper when API docs need a factory example."]
     assert functions[0].warnings == ["Do not pass user-facing secrets as names."]
     assert any("Use this helper" in block.plain_text() for block in functions[0].to_notes_blocks())
@@ -636,7 +636,7 @@ def test_collect_api_builds_queryable_object_tree_and_blocks(tmp_path: Path) -> 
     assert ApiObject.from_dict(functions[0].to_dict()).warnings == functions[0].warnings
     summary_table = api.to_summary_table(functions)
     assert isinstance(summary_table, Table)
-    assert summary_table.resolved_split(default_threshold=999_999)
+    assert summary_table._resolve_split(default_threshold=999_999)
     website_table = api.to_summary_table(classes, profile="website")
     website_name = website_table.rows[0][2].content.content[0]
     assert isinstance(website_name, Hyperlink)

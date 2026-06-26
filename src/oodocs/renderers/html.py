@@ -676,10 +676,10 @@ class HtmlRenderer:
         """
 
         layout = build_table_layout(block.header_rows, block.rows)
-        split_table = block.resolved_split()
-        placement = block.resolved_placement()
+        split_table = block._resolve_split()
+        placement = block._resolve_placement()
         colgroup = ""
-        column_widths = block.column_widths_in_inches(context.unit)
+        column_widths = block._column_widths_in_inches(context.unit)
         if column_widths is not None:
             columns = "".join(
                 f'<col style="width: {width:.2f}in;" />'
@@ -1350,7 +1350,7 @@ class HtmlRenderer:
         style_parts.append(
             f"padding: {top_padding:.1f}pt {right_padding:.1f}pt {bottom_padding:.1f}pt {left_padding:.1f}pt"
         )
-        effective_style = block.effective_cell_style(placement)
+        effective_style = block._effective_cell_style(placement)
         horizontal_alignment = self._table_cell_horizontal_alignment(placement, block) or "left"
         vertical_alignment = self._table_cell_vertical_alignment(placement, block)
         style_parts.append(f"text-align: {horizontal_alignment}")
@@ -1393,14 +1393,14 @@ class HtmlRenderer:
         placement: TablePlacement,
         block: Table,
     ) -> str | None:
-        return block.effective_cell_style(placement).horizontal_alignment
+        return block._effective_cell_style(placement).horizontal_alignment
 
     def _table_cell_vertical_alignment(
         self,
         placement: TablePlacement,
         block: Table,
     ) -> str | None:
-        return block.effective_cell_style(placement).vertical_alignment
+        return block._effective_cell_style(placement).vertical_alignment
 
     def _caption_html(
         self,

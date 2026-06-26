@@ -186,6 +186,29 @@ def test_image_components_use_image_format_field_name() -> None:
         assert "image_format" in field_names, cls.__name__
 
 
+def test_table_public_api_hides_renderer_helper_methods() -> None:
+    members = _public_members(oodocs.Table)
+
+    forbidden = {
+        "layout",
+        "row_count",
+        "resolved_split",
+        "resolved_placement",
+        "effective_cell_style",
+        "column_widths_in_inches",
+    }
+    expected = {
+        "total_row_count",
+        "from_csv",
+        "from_dataframe",
+        "from_records",
+        "from_tsv",
+    }
+
+    assert forbidden.isdisjoint(members)
+    assert expected <= members
+
+
 def test_api_renderer_note_uses_output_format_field_name() -> None:
     field_names = {field.name for field in fields(apidoc.ApiRendererNote)}
 

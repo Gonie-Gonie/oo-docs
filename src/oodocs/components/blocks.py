@@ -1211,7 +1211,7 @@ class MultiColumn(Block):
             figure_width = child.width_in_inches(default_unit)
             return figure_width is None or figure_width > column_width
         if isinstance(child, Table):
-            column_widths = child.column_widths_in_inches(default_unit)
+            column_widths = child._column_widths_in_inches(default_unit)
             return column_widths is None or sum(column_widths) > column_width
         if isinstance(child, SubFigureGroup):
             row = child.subfigures[: child.columns]

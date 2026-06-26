@@ -1896,8 +1896,8 @@ class PdfRenderer:
         *,
         in_box: bool = False,
     ) -> list[object]:
-        split_table = block.resolved_split()
-        media_placement = block.resolved_placement()
+        split_table = block._resolve_split()
+        media_placement = block._resolve_placement()
         body_style = self._paragraph_style(ParagraphStyle(space_after=0), theme, styles["BodyText"])
         layout = build_table_layout(block.header_rows, block.rows)
         table_rows: list[list[object]] = [["" for _ in range(layout.column_count)] for _ in range(layout.row_count)]
@@ -1917,7 +1917,7 @@ class PdfRenderer:
             ("BOTTOMPADDING", (0, 0), (-1, -1), bottom_padding),
         ]
         for placement in layout.placements:
-            effective_style = block.effective_cell_style(placement)
+            effective_style = block._effective_cell_style(placement)
             cell_bold = bool(effective_style.bold)
             cell_italic = bool(effective_style.italic)
             cell_text_color = (
@@ -2000,7 +2000,7 @@ class PdfRenderer:
                     )
                 )
 
-        resolved_widths = block.column_widths_in_inches(unit)
+        resolved_widths = block._column_widths_in_inches(unit)
         column_widths = [width * inch for width in resolved_widths] if resolved_widths is not None else None
         table = RLTable(
             table_rows,
@@ -2089,14 +2089,14 @@ class PdfRenderer:
         placement: object,
         block: Table,
     ) -> str | None:
-        return block.effective_cell_style(placement).horizontal_alignment
+        return block._effective_cell_style(placement).horizontal_alignment
 
     def _table_cell_vertical_alignment(
         self,
         placement: object,
         block: Table,
     ) -> str | None:
-        return block.effective_cell_style(placement).vertical_alignment
+        return block._effective_cell_style(placement).vertical_alignment
 
     def _render_list(
         self,

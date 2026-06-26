@@ -762,7 +762,7 @@ class _ValidationContext:
             )
 
     def _validate_table(self, table: Table, path: str) -> None:
-        layout = table.layout()
+        layout = table._layout()
         if layout.column_count < 1:
             self._add(
                 "error",
@@ -1130,7 +1130,7 @@ class _ValidationContext:
                 )
 
     def _validate_table_width(self, table: Table, path: str) -> None:
-        column_widths = table.column_widths_in_inches(self.document.settings.unit)
+        column_widths = table._column_widths_in_inches(self.document.settings.unit)
         if column_widths is None:
             return
         table_width = sum(column_widths)
