@@ -1,0 +1,35 @@
+from __future__ import annotations
+
+import importlib.util
+from pathlib import Path
+
+from example_regression import assert_html_internal_links_resolve, assert_rendered_bundle
+
+
+def _load_style_cleanup_smoke_example():
+    module_path = (
+        Path(__file__).resolve().parents[1]
+        / "examples"
+        / "style_cleanup_smoke"
+        / "main.py"
+    )
+    spec = importlib.util.spec_from_file_location("style_cleanup_smoke_main", module_path)
+    assert spec is not None
+    assert spec.loader is not None
+    example = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(example)
+    return example
+
+
+def test_style_cleanup_smoke_example_builds_outputs(tmp_path: Path) -> None:
+    example = _load_style_cleanup_smoke_example()
+    document = example.build_document()
+    outputs = example.build(tmp_path)
+
+    assert document.validate().ok
+    assert_rendered_bundle(outputs["docx"], outputs["pdf"], outputs["html"])
+    html = outputs["html"].read_text(encoding="utf-8")
+    assert "Style Cleanup Smoke Test" in html
+    assert "Requirement:" in html
+    assert "Schema-style table." in html
+    assert_html_internal_links_resolve(outputs["html"])
