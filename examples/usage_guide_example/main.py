@@ -66,7 +66,7 @@ from oodocs import (
     bold,
     inline_code,
     text_color,
-    countable_kind,
+    create_countable_block_type,
     highlight,
     link,
     line_break,
@@ -336,9 +336,9 @@ table = Table(
 )
 """
 
-COUNTABLE_BLOCK_SNIPPET = """from oodocs import Definition, Lemma, Paragraph, Proof, Theorem, countable_kind
+COUNTABLE_BLOCK_SNIPPET = """from oodocs import Definition, Lemma, Paragraph, Proof, Theorem, create_countable_block_type
 
-Exercise = countable_kind("Exercise", counter="exercise")
+Exercise = create_countable_block_type("Exercise", counter="exercise")
 
 bounded = Definition("A block with an explicit label and document-wide number.")
 setup = Lemma("Shared theorem-like blocks advance the same counter.")
@@ -922,7 +922,7 @@ def build_usage_guide_document() -> Document:
         caption="Validation results are structured objects, but they print as a compact table for terminal and CI logs.",
         column_widths=[2.0, 2.7, 2.7],
     )
-    Exercise = countable_kind("Exercise", counter="exercise")
+    Exercise = create_countable_block_type("Exercise", counter="exercise")
     counted_definition = Definition(
         "A countable block is a document block with a visible kind label and an index-assigned number."
     )
@@ -1171,7 +1171,7 @@ def build_usage_guide_document() -> Document:
                     "OODocs handles those cases with ",
                     inline_code("CountableBlock"),
                     " and the factory ",
-                    inline_code("countable_kind(...)"),
+                    inline_code("create_countable_block_type(...)"),
                     ". The built-in theorem-like classes share the ",
                     inline_code("theorem"),
                     " counter, while ",

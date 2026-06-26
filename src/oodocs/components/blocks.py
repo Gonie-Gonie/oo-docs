@@ -1705,7 +1705,7 @@ class CountableBlock(Block):
         return renderer.render_countable_block(self, context)
 
 
-def countable_kind(
+def create_countable_block_type(
     kind: str,
     *,
     counter: str | None = DEFAULT_COUNTABLE_COUNTER,
@@ -1730,16 +1730,16 @@ def countable_kind(
 
     Examples:
         ```python
-        from oodocs import Paragraph, countable_kind
+        from oodocs import Paragraph, create_countable_block_type
 
-        Requirement = countable_kind("Requirement", counter="requirement")
+        Requirement = create_countable_block_type("Requirement", counter="requirement")
         item = Requirement(Paragraph("The API must render to HTML."))
         ```
     """
 
     normalized_kind = str(kind).strip()
     if not normalized_kind:
-        raise ValueError("countable_kind kind must not be empty")
+        raise ValueError("create_countable_block_type kind must not be empty")
 
     class CustomCountableBlock(CountableBlock):
         def __init__(
@@ -1776,18 +1776,18 @@ def _countable_class_name(kind: str) -> str:
     return name
 
 
-Definition = countable_kind("Definition", counter=THEOREM_COUNTER)
-Lemma = countable_kind("Lemma", counter=THEOREM_COUNTER)
-Proposition = countable_kind("Proposition", counter=THEOREM_COUNTER)
-Theorem = countable_kind("Theorem", counter=THEOREM_COUNTER)
-Corollary = countable_kind("Corollary", counter=THEOREM_COUNTER)
-Proof = countable_kind("Proof", numbered=False, counter=None)
-Example = countable_kind("Example", counter=THEOREM_COUNTER)
-Remark = countable_kind("Remark", counter=THEOREM_COUNTER)
-Assumption = countable_kind("Assumption", counter=THEOREM_COUNTER)
-Axiom = countable_kind("Axiom", counter=THEOREM_COUNTER)
-Claim = countable_kind("Claim", counter=THEOREM_COUNTER)
-Conjecture = countable_kind("Conjecture", counter=THEOREM_COUNTER)
+Definition = create_countable_block_type("Definition", counter=THEOREM_COUNTER)
+Lemma = create_countable_block_type("Lemma", counter=THEOREM_COUNTER)
+Proposition = create_countable_block_type("Proposition", counter=THEOREM_COUNTER)
+Theorem = create_countable_block_type("Theorem", counter=THEOREM_COUNTER)
+Corollary = create_countable_block_type("Corollary", counter=THEOREM_COUNTER)
+Proof = create_countable_block_type("Proof", numbered=False, counter=None)
+Example = create_countable_block_type("Example", counter=THEOREM_COUNTER)
+Remark = create_countable_block_type("Remark", counter=THEOREM_COUNTER)
+Assumption = create_countable_block_type("Assumption", counter=THEOREM_COUNTER)
+Axiom = create_countable_block_type("Axiom", counter=THEOREM_COUNTER)
+Claim = create_countable_block_type("Claim", counter=THEOREM_COUNTER)
+Conjecture = create_countable_block_type("Conjecture", counter=THEOREM_COUNTER)
 
 
 @dataclass(slots=True, init=False)
@@ -2330,7 +2330,7 @@ __all__ = [
     "Proposition",
     "coerce_cell",
     "coerce_list_item",
-    "countable_kind",
+    "create_countable_block_type",
     "section_for_level",
     "shift_heading_level",
     "shift_heading_levels",

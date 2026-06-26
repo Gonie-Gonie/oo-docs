@@ -104,7 +104,7 @@ from oodocs import (
     text_color,
     cite,
     comment,
-    countable_kind,
+    create_countable_block_type,
     footnote,
     highlight,
     italic,
@@ -1241,7 +1241,7 @@ def test_public_api_prefers_classes_for_structural_nodes() -> None:
     assert hasattr(oodocs, "Axiom")
     assert hasattr(oodocs, "Claim")
     assert hasattr(oodocs, "Conjecture")
-    assert hasattr(oodocs, "countable_kind")
+    assert hasattr(oodocs, "create_countable_block_type")
     assert hasattr(oodocs, "MultiColumn")
     assert hasattr(oodocs, "NumberedList")
     assert hasattr(oodocs, "PageBreak")
@@ -2345,7 +2345,7 @@ def test_explicit_reference_api_covers_numbered_blocks(tmp_path: Path) -> None:
 
 
 def test_countable_blocks_share_document_counter_and_render_references(tmp_path: Path) -> None:
-    CustomClaim = countable_kind("Claim", counter="theorem")
+    CustomClaim = create_countable_block_type("Claim", counter="theorem")
     definition = Definition("A countable block participates in the document-wide theorem counter.")
     lemma = Lemma("A later theorem-like block advances the same counter.")
     theorem = Theorem("The shared counter is stable across output formats.", title="Main result")

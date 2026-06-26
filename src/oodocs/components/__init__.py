@@ -72,7 +72,7 @@ _EXPORTS = {
     "bold": "oodocs.components.inline",
     "cite": "oodocs.components.inline",
     "comment": "oodocs.components.inline",
-    "countable_kind": "oodocs.components.blocks",
+    "create_countable_block_type": "oodocs.components.blocks",
     "footnote": "oodocs.components.inline",
     "highlight": "oodocs.components.inline",
     "inline_code": "oodocs.components.inline",

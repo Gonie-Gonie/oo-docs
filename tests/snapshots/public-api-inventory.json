@@ -680,8 +680,8 @@
           "category": "block",
           "kind": "function",
           "module": "oodocs.components.blocks",
-          "name": "countable_kind",
-          "qualname": "oodocs.components.blocks.countable_kind"
+          "name": "create_countable_block_type",
+          "qualname": "oodocs.components.blocks.create_countable_block_type"
         },
         {
           "category": "inline",
