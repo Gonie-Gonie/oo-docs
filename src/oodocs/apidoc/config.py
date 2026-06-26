@@ -53,6 +53,8 @@ _COLLECT_CONFIG_KEYS = {
 }
 _BUILD_CONFIG_KEYS = {
     "formats",
+    "include_coverage",
+    "include_uncategorized_appendix",
     "kind",
     "max_level",
     "module_prefix",
@@ -767,6 +769,10 @@ class ApiHelpBookConfig:
         output_formats: Output formats passed to ``Document.save_all``.
         stem: Optional output file stem.
         max_level: Optional deepest nested API heading level.
+        include_coverage: Whether rendered help books include coverage
+            evidence as the final appendix.
+        include_uncategorized_appendix: Whether rendered help books include
+            public API objects not assigned to curated categories.
         sidecars: Whether ``save_all(...)`` writes API and coverage sidecars.
         output_dir: Optional default output directory.
         kind: Optional object kinds to render after collection.
@@ -789,6 +795,8 @@ class ApiHelpBookConfig:
     output_formats: tuple[str, ...] = ("docx", "pdf", "html")
     stem: str | None = None
     max_level: int | None = None
+    include_coverage: bool = True
+    include_uncategorized_appendix: bool = True
     sidecars: bool = False
     output_dir: str | None = None
     kind: tuple[str, ...] = field(default_factory=tuple)
@@ -856,6 +864,10 @@ class ApiHelpBookConfig:
             output_formats=_format_tuple(output_formats),
             stem=_optional_str(normalized.get("stem")),
             max_level=_optional_int(normalized.get("max_level")),
+            include_coverage=bool(normalized.get("include_coverage", True)),
+            include_uncategorized_appendix=bool(
+                normalized.get("include_uncategorized_appendix", True)
+            ),
             sidecars=bool(normalized.get("sidecars", False)),
             output_dir=_optional_str(output_dir),
             kind=_string_tuple(normalized.get("kind", ())),
@@ -1286,6 +1298,8 @@ class ApiHelpBookConfig:
                 "output_formats": list(self.output_formats),
                 "stem": self.stem,
                 "max_level": self.max_level,
+                "include_coverage": self.include_coverage,
+                "include_uncategorized_appendix": self.include_uncategorized_appendix,
                 "sidecars": self.sidecars,
                 "output_dir": self.output_dir,
                 "kind": list(self.kind),
@@ -1443,7 +1457,8 @@ def _help_book_for_build(
         presentation=config.presentation,
         settings=settings,
         citations=citations,
-        include_coverage=True,
+        include_coverage=config.include_coverage,
+        include_uncategorized_appendix=config.include_uncategorized_appendix,
         max_level=config.max_level,
     )
 

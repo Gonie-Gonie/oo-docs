@@ -1252,6 +1252,13 @@
           "qualname": "oodocs.apidoc.coverage.check_api_docs"
         },
         {
+          "category": "apidoc-composition",
+          "kind": "function",
+          "module": "oodocs.apidoc.categories",
+          "name": "check_api_help_categories",
+          "qualname": "oodocs.apidoc.categories.check_api_help_categories"
+        },
+        {
           "category": "apidoc-parser",
           "kind": "function",
           "module": "oodocs.apidoc.examples",
@@ -1369,6 +1376,13 @@
           "module": "oodocs.apidoc.profiles",
           "name": "resolve_presentation_profile",
           "qualname": "oodocs.apidoc.profiles.resolve_presentation_profile"
+        },
+        {
+          "category": "apidoc-composition",
+          "kind": "function",
+          "module": "oodocs.apidoc.categories",
+          "name": "select_uncategorized_api_objects",
+          "qualname": "oodocs.apidoc.categories.select_uncategorized_api_objects"
         }
       ]
     },

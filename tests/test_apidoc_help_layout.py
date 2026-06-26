@@ -1,6 +1,15 @@
 from __future__ import annotations
 
-from oodocs.apidoc import ApiPresentationProfile, collect_api
+from oodocs.apidoc import (
+    ApiCategory,
+    ApiModule,
+    ApiObject,
+    ApiPackage,
+    ApiPresentationProfile,
+    check_api_help_categories,
+    collect_api,
+    select_uncategorized_api_objects,
+)
 
 
 def _plain_text(value: object) -> str:
@@ -29,6 +38,19 @@ def _all_titles(block: object) -> list[str]:
     for child in getattr(block, "children", ()):
         titles.extend(_all_titles(child))
     return titles
+
+
+def _all_plain_text(block: object) -> str:
+    plain_text = getattr(block, "plain_text", None)
+    text = plain_text() if callable(plain_text) else ""
+    child_text = "".join(_all_plain_text(child) for child in getattr(block, "children", ()))
+    rows = getattr(block, "rows", ())
+    row_text = "".join(
+        _all_plain_text(getattr(cell, "content", cell))
+        for row in rows
+        for cell in row
+    )
+    return text + child_text + row_text
 
 
 def test_help_book_starts_with_category_contents_not_coverage() -> None:
@@ -66,3 +88,48 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "oodocs.Theme" in all_titles
     assert "oodocs.ValidationResult" in all_titles
     assert "API Documentation Coverage" not in titles
+
+
+def test_help_book_renders_uncategorized_api_appendix_from_category_gate() -> None:
+    api = ApiPackage(
+        "samplepkg",
+        modules=[
+            ApiModule(
+                "samplepkg",
+                [
+                    ApiObject("function", "run", "samplepkg.run", "samplepkg"),
+                    ApiObject("function", "save", "samplepkg.save", "samplepkg"),
+                ],
+            )
+        ],
+    )
+    categories = [
+        ApiCategory(
+            id="core",
+            title="Core API",
+            summary="Primary sample API.",
+            include=("samplepkg.run",),
+            order=10,
+        )
+    ]
+
+    uncategorized = select_uncategorized_api_objects(api, categories)
+    issues = check_api_help_categories(api, categories)
+    document = api.to_help_book(
+        categories=categories,
+        include_coverage=False,
+        max_level=1,
+    )
+    without_appendix = api.to_help_book(
+        categories=categories,
+        include_coverage=False,
+        include_uncategorized_appendix=False,
+        max_level=1,
+    )
+
+    assert [obj.qualname for obj in uncategorized] == ["samplepkg.save"]
+    assert [issue.qualname for issue in issues] == ["samplepkg.save"]
+    assert issues[0].code == "uncategorized-api-object"
+    assert "Uncategorized API" in _chapter_titles(document)
+    assert "samplepkg.save" in _all_plain_text(document.body)
+    assert "Uncategorized API" not in _chapter_titles(without_appendix)

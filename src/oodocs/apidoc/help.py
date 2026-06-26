@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Sequence
 
 from oodocs.apidoc.builtin_categories import OODocs_API_CATEGORIES
-from oodocs.apidoc.categories import ApiCategory
+from oodocs.apidoc.categories import ApiCategory, select_uncategorized_api_objects
 from oodocs.apidoc.coverage import check_api_docs
 from oodocs.apidoc.model import ApiObject, ApiPackage
 from oodocs.apidoc.profiles import ApiPresentationProfile, resolve_presentation_profile
@@ -119,6 +119,7 @@ def api_package_to_help_book(
     settings: object | None = None,
     citations: object | None = None,
     include_coverage: bool = True,
+    include_uncategorized_appendix: bool = True,
     max_level: int | None = None,
 ) -> Document:
     """Build a category-based API reference help book.
@@ -136,6 +137,8 @@ def api_package_to_help_book(
         citations: Optional citation library passed to ``Document``.
         include_coverage: Whether to append API documentation coverage evidence
             after category pages.
+        include_uncategorized_appendix: Whether to append public API objects
+            not assigned to a category before coverage evidence.
         max_level: Optional deepest heading level for the table of contents and
             generated symbol sections.
 
@@ -171,9 +174,11 @@ def api_package_to_help_book(
             key=lambda category: category.order,
         )
     )
+    uncategorized = tuple(select_uncategorized_api_objects(api, category_list))
+    rendered_uncategorized = uncategorized if include_uncategorized_appendix else ()
     children: list[object] = [
         TableOfContents(title="API Contents", max_level=max_level),
-        _contents_chapter(api, visible_categories),
+        _contents_chapter(api, visible_categories, rendered_uncategorized),
     ]
     children.extend(
         api_category_to_chapter(
@@ -184,6 +189,14 @@ def api_package_to_help_book(
         )
         for category in visible_categories
     )
+    if rendered_uncategorized:
+        children.append(
+            _uncategorized_chapter(
+                rendered_uncategorized,
+                presentation=presentation,
+                max_level=max_level,
+            )
+        )
     if include_coverage:
         children.append(check_api_docs(api).to_section())
     return Document(
@@ -194,7 +207,11 @@ def api_package_to_help_book(
     )
 
 
-def _contents_chapter(api: ApiPackage, categories: Sequence[ApiCategory]) -> Chapter:
+def _contents_chapter(
+    api: ApiPackage,
+    categories: Sequence[ApiCategory],
+    uncategorized: Sequence[ApiObject] = (),
+) -> Chapter:
     rows = []
     for category in categories:
         objects = _objects_for_category(api, category)
@@ -203,6 +220,14 @@ def _contents_chapter(api: ApiPackage, categories: Sequence[ApiCategory]) -> Cha
                 category.title,
                 category.summary,
                 str(len(objects)),
+            ]
+        )
+    if uncategorized:
+        rows.append(
+            [
+                "Uncategorized API",
+                "Public API symbols not yet assigned to a curated category.",
+                str(len(uncategorized)),
             ]
         )
     return Chapter(
@@ -215,6 +240,39 @@ def _contents_chapter(api: ApiPackage, categories: Sequence[ApiCategory]) -> Cha
             split=True,
         ),
     )
+
+
+def _uncategorized_chapter(
+    objects: Sequence[ApiObject],
+    *,
+    presentation: str | ApiPresentationProfile = "help",
+    max_level: int | None = None,
+) -> Chapter:
+    from oodocs.apidoc.blocks import api_objects_to_summary_table
+
+    blocks: list[object] = [
+        Paragraph(
+            "Public API symbols not yet assigned to a curated category. "
+            "Move these objects into explicit categories before treating the "
+            "help book as complete."
+        ),
+        api_objects_to_summary_table(
+            objects,
+            caption=None,
+            presentation=presentation,
+        ),
+    ]
+    if max_level is None or max_level >= 2:
+        blocks.extend(
+            api_object_to_help_section(
+                obj,
+                level=2,
+                presentation=presentation,
+                max_level=max_level,
+            )
+            for obj in objects
+        )
+    return Chapter("Uncategorized API", *blocks)
 
 
 def _default_categories(api: ApiPackage) -> tuple[ApiCategory, ...]:

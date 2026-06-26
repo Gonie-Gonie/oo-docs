@@ -39,6 +39,8 @@ def test_apidoc_config_roundtrip_supports_general_repo_policy(tmp_path) -> None:
         presentation="website",
         output_formats=("html",),
         output_dir="artifacts/api",
+        include_coverage=False,
+        include_uncategorized_appendix=False,
         sidecars=True,
     )
 
@@ -59,6 +61,8 @@ def test_apidoc_config_roundtrip_supports_general_repo_policy(tmp_path) -> None:
         "*.render_to_html",
     )
     assert readback.output_formats == ("html",)
+    assert readback.include_coverage is False
+    assert readback.include_uncategorized_appendix is False
     assert ApiCollectConfig.from_dict({"fallback-parser": "none"}).fallback_collector == "none"
 
 

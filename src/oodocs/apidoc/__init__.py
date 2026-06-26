@@ -12,7 +12,12 @@ Attributes:
 
 from oodocs.apidoc.collect import collect_api, collect_module_api, collect_object_api
 from oodocs.apidoc.builtin_categories import OODocs_API_CATEGORIES
-from oodocs.apidoc.categories import ApiCategory, GuideLink
+from oodocs.apidoc.categories import (
+    ApiCategory,
+    GuideLink,
+    check_api_help_categories,
+    select_uncategorized_api_objects,
+)
 from oodocs.apidoc.config import (
     ApiHelpBookConfig,
     ApiCollectConfig,
@@ -114,6 +119,7 @@ __all__ = [
     "api_object_to_help_section",
     "api_package_to_help_book",
     "check_api_docs",
+    "check_api_help_categories",
     "check_doctest_examples",
     "check_example_syntax",
     "collect_api",
@@ -131,4 +137,5 @@ __all__ = [
     "register_docstring_parser",
     "register_presentation_profile",
     "resolve_presentation_profile",
+    "select_uncategorized_api_objects",
 ]

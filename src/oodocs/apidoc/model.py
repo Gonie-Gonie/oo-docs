@@ -3621,6 +3621,7 @@ class ApiPackage:
         settings: object | None = None,
         citations: object | None = None,
         include_coverage: bool = True,
+        include_uncategorized_appendix: bool = True,
         max_level: int | None = None,
     ):
         """Return a category-based API help book document.
@@ -3635,6 +3636,8 @@ class ApiPackage:
             settings: Optional ``DocumentSettings`` passed to ``Document``.
             citations: Optional citation library passed to ``Document``.
             include_coverage: Whether to append coverage evidence at the end.
+            include_uncategorized_appendix: Whether to append public API
+                objects not assigned to a category before coverage evidence.
             max_level: Optional deepest heading level for the table of
                 contents and object sections.
 
@@ -3663,6 +3666,7 @@ class ApiPackage:
             settings=settings,
             citations=citations,
             include_coverage=include_coverage,
+            include_uncategorized_appendix=include_uncategorized_appendix,
             max_level=max_level,
         )
 
