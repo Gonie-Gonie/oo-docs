@@ -46,7 +46,7 @@ class ApiPresentationProfile:
         max_description_chars: Optional truncation limit for long descriptions.
         max_examples: Optional maximum number of examples to render.
         prefer_editable_tables: Whether tables should be favored over compact
-            prose in review-style output.
+            prose in review output.
         include_review_notes: Whether to add reviewer note blocks beside API
             objects.
         review_note_text: Optional reviewer note body used when review notes
@@ -179,7 +179,7 @@ class ApiPresentationProfile:
 
     @classmethod
     def manual(cls) -> ApiPresentationProfile:
-        """Return a profile tuned for manual-style authored documents.
+        """Return a profile tuned for manual authored documents.
 
         Returns:
             Profile that keeps examples and see-also content prominent while

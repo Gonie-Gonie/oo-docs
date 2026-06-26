@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import ast
+from pathlib import Path
+
 import pytest
 
 from apidoc_samples import collect_sample_api
@@ -10,6 +13,17 @@ from oodocs.apidoc import (
     resolve_presentation_profile,
 )
 from oodocs.apidoc.profiles import normalize_parameter_columns
+
+
+def _imported_modules(path: Path) -> set[str]:
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    modules: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            modules.update(alias.name for alias in node.names)
+        elif isinstance(node, ast.ImportFrom) and node.module is not None:
+            modules.add(node.module)
+    return modules
 
 
 def test_apidoc_profiles_resolve_all_standard_profiles() -> None:
@@ -39,6 +53,15 @@ def test_apidoc_profile_validates_parameter_columns() -> None:
                 "parameter_columns": ["name", "unknown"],
             }
         )
+
+
+def test_apidoc_profiles_are_separate_from_visual_stylesheet() -> None:
+    profile_imports = _imported_modules(Path("src/oodocs/apidoc/profiles.py"))
+    stylesheet_imports = _imported_modules(Path("src/oodocs/styles/sheet.py"))
+
+    assert not any(module.startswith("oodocs.styles") for module in profile_imports)
+    assert "StyleSheet" not in Path("src/oodocs/apidoc/profiles.py").read_text(encoding="utf-8")
+    assert not any(module.startswith("oodocs.apidoc") for module in stylesheet_imports)
 
 
 @pytest.mark.parametrize(
