@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from apidoc_samples import collect_sample_api
-from oodocs.apidoc import ApiDocProfile
+from oodocs.apidoc import ApiPresentationProfile
 from oodocs.components.media import Table
 
 
@@ -20,7 +20,7 @@ def test_apidoc_parameter_table_uses_profile_columns(tmp_path) -> None:
     render = api.find("samplepkg.Widget.render")
     assert render is not None
 
-    profile = ApiDocProfile(
+    profile = ApiPresentationProfile(
         name="compact",
         parameter_columns=("name", "required", "source"),
     )

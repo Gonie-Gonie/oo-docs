@@ -4,21 +4,25 @@ import pytest
 
 from apidoc_samples import collect_sample_api
 from example_regression import assert_rendered_bundle
-from oodocs.apidoc import ApiDocProfile, profile_names, resolve_profile
-from oodocs.apidoc.styles import normalize_parameter_columns
+from oodocs.apidoc import (
+    ApiPresentationProfile,
+    presentation_profile_names,
+    resolve_presentation_profile,
+)
+from oodocs.apidoc.profiles import normalize_parameter_columns
 
 
-def test_apidoc_styles_resolve_all_standard_profiles() -> None:
+def test_apidoc_profiles_resolve_all_standard_profiles() -> None:
     expected = {"reference", "compact", "manual", "evidence", "review", "website"}
 
-    assert expected.issubset(set(profile_names()))
-    assert resolve_profile("compact").max_examples == 1
-    assert resolve_profile(ApiDocProfile.review()).include_review_notes
-    assert ApiDocProfile.from_dict(ApiDocProfile.website().to_dict()).name == "website"
+    assert expected.issubset(set(presentation_profile_names()))
+    assert resolve_presentation_profile("compact").max_examples == 1
+    assert resolve_presentation_profile(ApiPresentationProfile.review()).include_review_notes
+    assert ApiPresentationProfile.from_dict(ApiPresentationProfile.website().to_dict()).name == "website"
 
 
 def test_apidoc_profile_validates_parameter_columns() -> None:
-    profile = ApiDocProfile(
+    profile = ApiPresentationProfile(
         name="compact",
         parameter_columns=(" Name ", "Required", "source"),
     )
@@ -29,7 +33,7 @@ def test_apidoc_profile_validates_parameter_columns() -> None:
         "description",
     )
     with pytest.raises(ValueError, match="Unsupported API parameter columns"):
-        ApiDocProfile.from_dict(
+        ApiPresentationProfile.from_dict(
             {
                 "name": "compact",
                 "parameter_columns": ["name", "unknown"],

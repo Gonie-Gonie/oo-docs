@@ -994,9 +994,9 @@ class ApiBuildConfig:
             ```
         """
 
-        from oodocs.apidoc.styles import resolve_profile
+        from oodocs.apidoc.profiles import resolve_presentation_profile
 
-        resolve_profile(self.profile)
+        resolve_presentation_profile(self.profile)
         if self.max_level is not None and self.max_level < 1:
             raise ValueError("max_level must be >= 1")
         if not self.output_formats:

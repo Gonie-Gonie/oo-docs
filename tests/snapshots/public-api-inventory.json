@@ -1037,9 +1037,9 @@
         {
           "category": "apidoc-composition",
           "kind": "class",
-          "module": "oodocs.apidoc.styles",
-          "name": "ApiDocProfile",
-          "qualname": "oodocs.apidoc.styles.ApiDocProfile"
+          "module": "oodocs.apidoc.profiles",
+          "name": "ApiPresentationProfile",
+          "qualname": "oodocs.apidoc.profiles.ApiPresentationProfile"
         },
         {
           "category": "apidoc-parser",
@@ -1310,9 +1310,9 @@
         {
           "category": "apidoc-composition",
           "kind": "function",
-          "module": "oodocs.apidoc.styles",
-          "name": "profile_names",
-          "qualname": "oodocs.apidoc.styles.profile_names"
+          "module": "oodocs.apidoc.profiles",
+          "name": "presentation_profile_names",
+          "qualname": "oodocs.apidoc.profiles.presentation_profile_names"
         },
         {
           "category": "apidoc-parser",
@@ -1324,16 +1324,16 @@
         {
           "category": "apidoc-composition",
           "kind": "function",
-          "module": "oodocs.apidoc.styles",
-          "name": "register_profile",
-          "qualname": "oodocs.apidoc.styles.register_profile"
+          "module": "oodocs.apidoc.profiles",
+          "name": "register_presentation_profile",
+          "qualname": "oodocs.apidoc.profiles.register_presentation_profile"
         },
         {
           "category": "apidoc-composition",
           "kind": "function",
-          "module": "oodocs.apidoc.styles",
-          "name": "resolve_profile",
-          "qualname": "oodocs.apidoc.styles.resolve_profile"
+          "module": "oodocs.apidoc.profiles",
+          "name": "resolve_presentation_profile",
+          "qualname": "oodocs.apidoc.profiles.resolve_presentation_profile"
         }
       ]
     },

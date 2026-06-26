@@ -49,10 +49,10 @@ fail before rendering starts.
 
 ```python
 from dataclasses import replace
-from oodocs.apidoc import ApiDocProfile
+from oodocs.apidoc import ApiPresentationProfile
 
 pdf_friendly = replace(
-    ApiDocProfile.reference(),
+    ApiPresentationProfile.reference(),
     parameter_columns=("name", "type", "description"),
     max_description_chars=160,
     max_signature_width=80,
@@ -68,10 +68,10 @@ Custom profiles can enable the same review workflow:
 
 ```python
 from dataclasses import replace
-from oodocs.apidoc import ApiDocProfile
+from oodocs.apidoc import ApiPresentationProfile
 
 profile = replace(
-    ApiDocProfile.compact(),
+    ApiPresentationProfile.compact(),
     include_review_notes=True,
     review_note_text="Check whether this object needs a richer example.",
     max_signature_width=72,

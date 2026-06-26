@@ -19,7 +19,7 @@ from oodocs.apidoc import (
     ApiCollectConfig,
     ApiCoverageResult,
     ApiDiffResult,
-    ApiDocProfile,
+    ApiPresentationProfile,
     ApiDocstringParser,
     ApiExample,
     ApiObject,
@@ -617,7 +617,7 @@ def test_collect_api_builds_queryable_object_tree_and_blocks(tmp_path: Path) -> 
     ]
     assert review_notes
     assert "Review note[?]" in review_notes[0].plain_text()
-    assert ApiDocProfile.from_dict(ApiDocProfile.review().to_dict()).include_review_notes
+    assert ApiPresentationProfile.from_dict(ApiPresentationProfile.review().to_dict()).include_review_notes
     parameter_table = functions[0].to_parameter_table()
     assert isinstance(parameter_table, Table)
     assert parameter_table.resolved_split(default_threshold=999_999)
@@ -749,7 +749,7 @@ def test_api_doc_profiles_wrap_long_signature_blocks() -> None:
     )
 
     reference = obj.to_signature_block(profile="reference")
-    compact = obj.to_signature_block(profile=ApiDocProfile.compact())
+    compact = obj.to_signature_block(profile=ApiPresentationProfile.compact())
 
     assert reference is not None
     assert compact is not None
@@ -762,8 +762,8 @@ def test_api_doc_profiles_wrap_long_signature_blocks() -> None:
         "    metadata: dict[str, object] | None = None",
         ") -> dict[str, object]",
     ]
-    assert ApiDocProfile.from_dict(ApiDocProfile.compact().to_dict()).max_signature_width == 88
-    assert ApiDocProfile.from_dict(ApiDocProfile.compact().to_dict()).max_signature_lines == 24
+    assert ApiPresentationProfile.from_dict(ApiPresentationProfile.compact().to_dict()).max_signature_width == 88
+    assert ApiPresentationProfile.from_dict(ApiPresentationProfile.compact().to_dict()).max_signature_lines == 24
 
     long_signature = ApiObject(
         kind="function",
@@ -772,7 +772,7 @@ def test_api_doc_profiles_wrap_long_signature_blocks() -> None:
         module="pkg",
         signature="pkg.many(" + ", ".join(f"value_{index}: str" for index in range(40)) + ")",
     )
-    truncated = long_signature.to_signature_block(profile=ApiDocProfile.compact())
+    truncated = long_signature.to_signature_block(profile=ApiPresentationProfile.compact())
     assert truncated is not None
     assert len(truncated.code.splitlines()) == 24
     assert truncated.code.splitlines()[-1] == "..."

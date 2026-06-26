@@ -19,7 +19,7 @@ _ALLOWED_PARAMETER_COLUMNS = {
 
 
 @dataclass(frozen=True, slots=True)
-class ApiDocProfile:
+class ApiPresentationProfile:
     """Block-composition policy for API object rendering.
 
     A profile does not target a specific output format. It controls how much of
@@ -67,11 +67,11 @@ class ApiDocProfile:
 
         ```python
         from oodocs.apidoc import collect_api
-        from oodocs.apidoc.styles import ApiDocProfile
+        from oodocs.apidoc.profiles import ApiPresentationProfile
 
         api = collect_api("oodocs", collector="auto")
         section = api.find("oodocs.Document").to_section(
-            profile=ApiDocProfile.compact()
+            profile=ApiPresentationProfile.compact()
         )
         ```
     """
@@ -120,7 +120,7 @@ class ApiDocProfile:
         object.__setattr__(self, "parameter_columns", normalized_columns)
 
     @classmethod
-    def reference(cls) -> ApiDocProfile:
+    def reference(cls) -> ApiPresentationProfile:
         """Return the full API reference profile.
 
         Returns:
@@ -129,14 +129,14 @@ class ApiDocProfile:
 
         Examples:
             ```python
-            profile = ApiDocProfile.reference()
+            profile = ApiPresentationProfile.reference()
             ```
         """
 
         return cls(name="reference")
 
     @classmethod
-    def compact(cls) -> ApiDocProfile:
+    def compact(cls) -> ApiPresentationProfile:
         """Return a compact profile for summaries and indexes.
 
         Returns:
@@ -149,7 +149,7 @@ class ApiDocProfile:
             ```python
             from oodocs import Chapter, Document
             from oodocs.apidoc import collect_api
-            from oodocs.apidoc.styles import ApiDocProfile
+            from oodocs.apidoc.profiles import ApiPresentationProfile
 
             api = collect_api(".")
             functions = api.functions()
@@ -159,7 +159,7 @@ class ApiDocProfile:
                     "Function Summary",
                     api.to_summary_table(
                         functions,
-                        profile=ApiDocProfile.compact(),
+                        profile=ApiPresentationProfile.compact(),
                     ),
                 ),
             )
@@ -178,7 +178,7 @@ class ApiDocProfile:
         )
 
     @classmethod
-    def manual(cls) -> ApiDocProfile:
+    def manual(cls) -> ApiPresentationProfile:
         """Return a profile tuned for manual-style authored documents.
 
         Returns:
@@ -191,7 +191,7 @@ class ApiDocProfile:
             ```python
             from oodocs import Chapter, Document
             from oodocs.apidoc import collect_api
-            from oodocs.apidoc.styles import ApiDocProfile
+            from oodocs.apidoc.profiles import ApiPresentationProfile
 
             api = collect_api(".")
             classes = api.select(kind="class", module_prefix="mypkg.widgets")
@@ -200,7 +200,7 @@ class ApiDocProfile:
                 Chapter(
                     "Reference Notes",
                     *[
-                        item.to_section(level=2, profile=ApiDocProfile.manual())
+                        item.to_section(level=2, profile=ApiPresentationProfile.manual())
                         for item in classes
                     ],
                 ),
@@ -211,7 +211,7 @@ class ApiDocProfile:
         return cls(name="manual", include_source=False)
 
     @classmethod
-    def evidence(cls) -> ApiDocProfile:
+    def evidence(cls) -> ApiPresentationProfile:
         """Return a profile for release evidence and coverage appendices.
 
         Returns:
@@ -224,7 +224,7 @@ class ApiDocProfile:
             ```python
             from oodocs import Chapter, Document
             from oodocs.apidoc import collect_api
-            from oodocs.apidoc.styles import ApiDocProfile
+            from oodocs.apidoc.profiles import ApiPresentationProfile
 
             api = collect_api(".")
             doc = Document(
@@ -232,7 +232,7 @@ class ApiDocProfile:
                 Chapter(
                     "Public API",
                     *api.to_sections(
-                        profile=ApiDocProfile.evidence(),
+                        profile=ApiPresentationProfile.evidence(),
                         max_level=2,
                     ),
                 ),
@@ -256,7 +256,7 @@ class ApiDocProfile:
         )
 
     @classmethod
-    def review(cls) -> ApiDocProfile:
+    def review(cls) -> ApiPresentationProfile:
         """Return a profile optimized for DOCX review copies.
 
         Returns:
@@ -267,10 +267,10 @@ class ApiDocProfile:
 
             ```python
             from oodocs.apidoc import collect_api
-            from oodocs.apidoc.styles import ApiDocProfile
+            from oodocs.apidoc.profiles import ApiPresentationProfile
 
             api = collect_api(".")
-            document = api.to_document(profile=ApiDocProfile.review())
+            document = api.to_document(profile=ApiPresentationProfile.review())
             document.save_docx("artifacts/api-review.docx")
             ```
         """
@@ -289,7 +289,7 @@ class ApiDocProfile:
         )
 
     @classmethod
-    def website(cls) -> ApiDocProfile:
+    def website(cls) -> ApiPresentationProfile:
         """Return a profile optimized for HTML API pages.
 
         Returns:
@@ -301,10 +301,10 @@ class ApiDocProfile:
 
             ```python
             from oodocs.apidoc import collect_api
-            from oodocs.apidoc.styles import ApiDocProfile
+            from oodocs.apidoc.profiles import ApiPresentationProfile
 
             api = collect_api(".")
-            document = api.to_document(profile=ApiDocProfile.website())
+            document = api.to_document(profile=ApiPresentationProfile.website())
             document.save_html("artifacts/api/index.html")
             ```
         """
@@ -321,9 +321,9 @@ class ApiDocProfile:
             Store a custom profile beside an API sidecar:
 
             ```python
-            from oodocs.apidoc.styles import ApiDocProfile
+            from oodocs.apidoc.profiles import ApiPresentationProfile
 
-            payload = ApiDocProfile.compact().to_dict()
+            payload = ApiPresentationProfile.compact().to_dict()
             ```
         """
 
@@ -356,7 +356,7 @@ class ApiDocProfile:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, object]) -> ApiDocProfile:
+    def from_dict(cls, data: dict[str, object]) -> ApiPresentationProfile:
         """Build a profile from serialized data.
 
         Args:
@@ -369,9 +369,9 @@ class ApiDocProfile:
             Reuse a profile loaded from repository-local settings:
 
             ```python
-            from oodocs.apidoc.styles import ApiDocProfile
+            from oodocs.apidoc.profiles import ApiPresentationProfile
 
-            profile = ApiDocProfile.from_dict({
+            profile = ApiPresentationProfile.from_dict({
                 "name": "compact",
                 "include_member_sections": False,
                 "parameter_columns": ["name", "type", "description"],
@@ -385,21 +385,21 @@ class ApiDocProfile:
         return cls(**values)  # type: ignore[arg-type]
 
 
-_PROFILES: dict[str, ApiDocProfile] = {
-    "reference": ApiDocProfile.reference(),
-    "compact": ApiDocProfile.compact(),
-    "manual": ApiDocProfile.manual(),
-    "evidence": ApiDocProfile.evidence(),
-    "review": ApiDocProfile.review(),
-    "website": ApiDocProfile.website(),
+_PROFILES: dict[str, ApiPresentationProfile] = {
+    "reference": ApiPresentationProfile.reference(),
+    "compact": ApiPresentationProfile.compact(),
+    "manual": ApiPresentationProfile.manual(),
+    "evidence": ApiPresentationProfile.evidence(),
+    "review": ApiPresentationProfile.review(),
+    "website": ApiPresentationProfile.website(),
 }
 
 
-def register_profile(name: str, profile: ApiDocProfile) -> None:
+def register_presentation_profile(name: str, profile: ApiPresentationProfile) -> None:
     """Register a custom API documentation profile.
 
     Args:
-        name: Profile name used by ``resolve_profile``.
+        name: Profile name used by ``resolve_presentation_profile``.
         profile: Profile object to register.
 
     Raises:
@@ -407,9 +407,9 @@ def register_profile(name: str, profile: ApiDocProfile) -> None:
 
     Examples:
         ```python
-        from oodocs.apidoc.styles import ApiDocProfile, register_profile
+        from oodocs.apidoc.profiles import ApiPresentationProfile, register_presentation_profile
 
-        register_profile("brief", ApiDocProfile.compact())
+        register_presentation_profile("brief", ApiPresentationProfile.compact())
         ```
     """
 
@@ -421,7 +421,7 @@ def register_profile(name: str, profile: ApiDocProfile) -> None:
     _PROFILES[normalized] = profile
 
 
-def resolve_profile(profile: str | ApiDocProfile = "reference") -> ApiDocProfile:
+def resolve_presentation_profile(profile: str | ApiPresentationProfile = "reference") -> ApiPresentationProfile:
     """Resolve a profile name or object.
 
     Args:
@@ -438,15 +438,15 @@ def resolve_profile(profile: str | ApiDocProfile = "reference") -> ApiDocProfile
 
         ```python
         from oodocs.apidoc import collect_api
-        from oodocs.apidoc.styles import resolve_profile
+        from oodocs.apidoc.profiles import resolve_presentation_profile
 
         api = collect_api(".")
-        profile = resolve_profile("compact")
+        profile = resolve_presentation_profile("compact")
         table = api.to_summary_table(profile=profile)
         ```
     """
 
-    if isinstance(profile, ApiDocProfile):
+    if isinstance(profile, ApiPresentationProfile):
         return profile
     normalized = profile.strip().lower()
     try:
@@ -456,7 +456,7 @@ def resolve_profile(profile: str | ApiDocProfile = "reference") -> ApiDocProfile
         raise ValueError(f"Unknown API documentation profile {profile!r}. Available: {available}") from exc
 
 
-def profile_names() -> tuple[str, ...]:
+def presentation_profile_names() -> tuple[str, ...]:
     """Return registered profile names.
 
     Returns:
@@ -466,9 +466,9 @@ def profile_names() -> tuple[str, ...]:
         Check whether a plugin registered a custom profile:
 
         ```python
-        from oodocs.apidoc.styles import profile_names
+        from oodocs.apidoc.profiles import presentation_profile_names
 
-        assert "reference" in profile_names()
+        assert "reference" in presentation_profile_names()
         ```
     """
 
@@ -491,9 +491,9 @@ def normalize_parameter_columns(columns: Sequence[str]) -> tuple[str, ...]:
         Validate columns before building a custom profile:
 
         ```python
-        from oodocs.apidoc.styles import ApiDocProfile, normalize_parameter_columns
+        from oodocs.apidoc.profiles import ApiPresentationProfile, normalize_parameter_columns
 
-        profile = ApiDocProfile(
+        profile = ApiPresentationProfile(
             name="compact",
             parameter_columns=normalize_parameter_columns(
                 ("name", "type", "description"),
@@ -512,9 +512,9 @@ def normalize_parameter_columns(columns: Sequence[str]) -> tuple[str, ...]:
 
 
 __all__ = [
-    "ApiDocProfile",
+    "ApiPresentationProfile",
     "normalize_parameter_columns",
-    "profile_names",
-    "register_profile",
-    "resolve_profile",
+    "presentation_profile_names",
+    "register_presentation_profile",
+    "resolve_presentation_profile",
 ]

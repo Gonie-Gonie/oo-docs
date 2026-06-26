@@ -60,7 +60,7 @@ APIDOC_MODULE_CATEGORIES = {
     "oodocs.apidoc.examples": "apidoc-parser",
     "oodocs.apidoc.model": "apidoc-model",
     "oodocs.apidoc.render": "apidoc-composition",
-    "oodocs.apidoc.styles": "apidoc-composition",
+    "oodocs.apidoc.profiles": "apidoc-composition",
 }
 
 EXACT_CATEGORIES = {

@@ -61,11 +61,11 @@ from oodocs.apidoc.render import (
     api_objects_to_summary_table,
     api_package_to_document,
 )
-from oodocs.apidoc.styles import (
-    ApiDocProfile,
-    profile_names,
-    register_profile,
-    resolve_profile,
+from oodocs.apidoc.profiles import (
+    ApiPresentationProfile,
+    presentation_profile_names,
+    register_presentation_profile,
+    resolve_presentation_profile,
 )
 
 
@@ -77,7 +77,7 @@ __all__ = [
     "ApiDiffResult",
     "ApiDocIssue",
     "ApiDocIssueSeverity",
-    "ApiDocProfile",
+    "ApiPresentationProfile",
     "ApiDocstringParser",
     "ApiDocstringStyleName",
     "ApiFallbackCollectorName",
@@ -116,8 +116,8 @@ __all__ = [
     "is_docstring_style_supported",
     "load_docstring_parser_modules",
     "parse_docstring",
-    "profile_names",
+    "presentation_profile_names",
     "register_docstring_parser",
-    "register_profile",
-    "resolve_profile",
+    "register_presentation_profile",
+    "resolve_presentation_profile",
 ]

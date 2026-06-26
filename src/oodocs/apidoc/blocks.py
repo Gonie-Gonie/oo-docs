@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Iterable, Sequence
 
 from oodocs.apidoc.model import ApiModule, ApiObject, ApiPackage
-from oodocs.apidoc.styles import ApiDocProfile, resolve_profile
+from oodocs.apidoc.profiles import ApiPresentationProfile, resolve_presentation_profile
 from oodocs.components.base import Block
 from oodocs.components.blocks import Box, CodeBlock, Paragraph, Section, section_for_level
 from oodocs.components.inline import InlineChip, InlineChipStyle, Text, bold, code, comment, italic
@@ -183,7 +183,7 @@ def api_object_summary_paragraph(obj: ApiObject) -> Paragraph:
 
 def api_signature_block(
     obj: ApiObject,
-    profile: str | ApiDocProfile = "reference",
+    profile: str | ApiPresentationProfile = "reference",
 ) -> CodeBlock | None:
     """Return an API signature as a code block.
 
@@ -209,7 +209,7 @@ def api_signature_block(
         ```
     """
 
-    resolved = resolve_profile(profile)
+    resolved = resolve_presentation_profile(profile)
     if not resolved.include_signature or not obj.signature:
         return None
     signature = _wrap_signature(
@@ -223,7 +223,7 @@ def api_signature_block(
 
 def api_description_blocks(
     obj: ApiObject,
-    profile: str | ApiDocProfile = "reference",
+    profile: str | ApiPresentationProfile = "reference",
 ) -> list[Block]:
     """Return summary and description blocks for an API object.
 
@@ -251,7 +251,7 @@ def api_description_blocks(
         ```
     """
 
-    resolved = resolve_profile(profile)
+    resolved = resolve_presentation_profile(profile)
     if not resolved.include_description:
         return []
     blocks: list[Block] = []
@@ -275,7 +275,7 @@ def api_description_blocks(
 
 def api_parameter_table(
     obj: ApiObject,
-    profile: str | ApiDocProfile = "reference",
+    profile: str | ApiPresentationProfile = "reference",
     *,
     caption: str | None = None,
 ) -> Table | None:
@@ -304,7 +304,7 @@ def api_parameter_table(
         ```
     """
 
-    resolved = resolve_profile(profile)
+    resolved = resolve_presentation_profile(profile)
     if not resolved.include_parameters or not obj.parameters:
         return None
     columns = resolved.parameter_columns
@@ -315,7 +315,7 @@ def api_parameter_table(
 
 def api_returns_blocks(
     obj: ApiObject,
-    profile: str | ApiDocProfile = "reference",
+    profile: str | ApiPresentationProfile = "reference",
 ) -> list[Block]:
     """Return blocks documenting return values.
 
@@ -340,7 +340,7 @@ def api_returns_blocks(
         ```
     """
 
-    resolved = resolve_profile(profile)
+    resolved = resolve_presentation_profile(profile)
     if not resolved.include_returns or obj.returns is None:
         return []
     parts: list[object] = []
@@ -355,7 +355,7 @@ def api_returns_blocks(
 
 def api_raises_table(
     obj: ApiObject,
-    profile: str | ApiDocProfile = "reference",
+    profile: str | ApiPresentationProfile = "reference",
     *,
     caption: str | None = None,
 ) -> Table | None:
@@ -382,7 +382,7 @@ def api_raises_table(
         ```
     """
 
-    resolved = resolve_profile(profile)
+    resolved = resolve_presentation_profile(profile)
     if not resolved.include_raises or not obj.raises:
         return None
     return Table(
@@ -395,7 +395,7 @@ def api_raises_table(
 
 def api_examples_blocks(
     obj: ApiObject,
-    profile: str | ApiDocProfile = "reference",
+    profile: str | ApiPresentationProfile = "reference",
 ) -> list[Block]:
     """Return example blocks for an API object.
 
@@ -420,7 +420,7 @@ def api_examples_blocks(
         ```
     """
 
-    resolved = resolve_profile(profile)
+    resolved = resolve_presentation_profile(profile)
     if not resolved.include_examples or not obj.examples:
         return []
     examples = obj.examples
@@ -438,7 +438,7 @@ def api_examples_blocks(
 
 def api_see_also_blocks(
     obj: ApiObject,
-    profile: str | ApiDocProfile = "reference",
+    profile: str | ApiPresentationProfile = "reference",
 ) -> list[Block]:
     """Return see-also blocks for an API object.
 
@@ -463,7 +463,7 @@ def api_see_also_blocks(
         ```
     """
 
-    resolved = resolve_profile(profile)
+    resolved = resolve_presentation_profile(profile)
     if not resolved.include_see_also or not obj.see_also:
         return []
     if resolved.name == "manual":
@@ -488,7 +488,7 @@ def api_see_also_blocks(
 
 def api_notes_blocks(
     obj: ApiObject,
-    profile: str | ApiDocProfile = "reference",
+    profile: str | ApiPresentationProfile = "reference",
 ) -> list[Block]:
     """Return parsed general notes as OODocs blocks.
 
@@ -513,7 +513,7 @@ def api_notes_blocks(
         ```
     """
 
-    resolved = resolve_profile(profile)
+    resolved = resolve_presentation_profile(profile)
     if not resolved.include_notes or not obj.notes:
         return []
     return [
@@ -524,7 +524,7 @@ def api_notes_blocks(
 
 def api_warnings_blocks(
     obj: ApiObject,
-    profile: str | ApiDocProfile = "reference",
+    profile: str | ApiPresentationProfile = "reference",
 ) -> list[Block]:
     """Return parsed warning notes as OODocs blocks.
 
@@ -549,7 +549,7 @@ def api_warnings_blocks(
         ```
     """
 
-    resolved = resolve_profile(profile)
+    resolved = resolve_presentation_profile(profile)
     if not resolved.include_warnings or not obj.warnings:
         return []
     warning_text = "\n\n".join(obj.warnings)
@@ -565,7 +565,7 @@ def api_warnings_blocks(
 
 def api_renderer_notes_table(
     obj: ApiObject,
-    profile: str | ApiDocProfile = "reference",
+    profile: str | ApiPresentationProfile = "reference",
     *,
     caption: str | None = "Renderer notes",
 ) -> Table | None:
@@ -594,7 +594,7 @@ def api_renderer_notes_table(
         ```
     """
 
-    resolved = resolve_profile(profile)
+    resolved = resolve_presentation_profile(profile)
     if not resolved.include_renderer_notes or not obj.renderer_notes:
         return None
     notes = obj.renderer_notes
@@ -612,7 +612,7 @@ def api_renderer_notes_table(
 
 def api_renderer_notes_blocks(
     obj: ApiObject,
-    profile: str | ApiDocProfile = "reference",
+    profile: str | ApiPresentationProfile = "reference",
 ) -> list[Block]:
     """Return renderer notes table as a block list.
 
@@ -646,7 +646,7 @@ def api_renderer_notes_blocks(
 
 def api_source_location_paragraph(
     obj: ApiObject,
-    profile: str | ApiDocProfile = "reference",
+    profile: str | ApiPresentationProfile = "reference",
 ) -> Paragraph | None:
     """Return source location as a paragraph when enabled.
 
@@ -670,7 +670,7 @@ def api_source_location_paragraph(
         ```
     """
 
-    resolved = resolve_profile(profile)
+    resolved = resolve_presentation_profile(profile)
     if not resolved.include_source or not obj.source_path:
         return None
     location = obj.source_path
@@ -681,7 +681,7 @@ def api_source_location_paragraph(
 
 def api_review_note_paragraph(
     obj: ApiObject,
-    profile: str | ApiDocProfile = "reference",
+    profile: str | ApiPresentationProfile = "reference",
 ) -> Paragraph | None:
     """Return a reviewer note paragraph when enabled by the profile.
 
@@ -706,7 +706,7 @@ def api_review_note_paragraph(
         ```
     """
 
-    resolved = resolve_profile(profile)
+    resolved = resolve_presentation_profile(profile)
     if not resolved.include_review_notes:
         return None
     note_text = resolved.review_note_text or "Review this API object's docstring before publishing."
@@ -724,7 +724,7 @@ def api_review_note_paragraph(
 
 def api_member_summary_table(
     obj: ApiObject,
-    profile: str | ApiDocProfile = "reference",
+    profile: str | ApiPresentationProfile = "reference",
     *,
     level: int = 2,
     max_level: int | None = None,
@@ -754,7 +754,7 @@ def api_member_summary_table(
         ```
     """
 
-    resolved = resolve_profile(profile)
+    resolved = resolve_presentation_profile(profile)
     if not resolved.include_member_summary or not obj.members:
         return None
     link_names = (
@@ -773,7 +773,7 @@ def api_member_summary_table(
 def api_object_to_blocks(
     obj: ApiObject,
     *,
-    profile: str | ApiDocProfile = "reference",
+    profile: str | ApiPresentationProfile = "reference",
     level: int = 2,
     max_level: int | None = None,
 ) -> list[Block]:
@@ -803,7 +803,7 @@ def api_object_to_blocks(
         ```
     """
 
-    resolved = resolve_profile(profile)
+    resolved = resolve_presentation_profile(profile)
     max_level = _normalize_max_level(max_level)
     blocks: list[Block] = []
 
@@ -848,7 +848,7 @@ def api_object_to_blocks(
 def api_object_to_section(
     obj: ApiObject,
     *,
-    profile: str | ApiDocProfile = "reference",
+    profile: str | ApiPresentationProfile = "reference",
     level: int = 2,
     title: str | None = None,
     max_level: int | None = None,
@@ -897,7 +897,7 @@ def api_object_to_section(
 def api_object_to_compact_box(
     obj: ApiObject,
     *,
-    profile: str | ApiDocProfile = "compact",
+    profile: str | ApiPresentationProfile = "compact",
 ) -> Box:
     """Return an API object as a compact boxed summary.
 
@@ -931,7 +931,7 @@ def api_object_to_compact_box(
 def api_objects_to_summary_table(
     objects: Sequence[ApiObject],
     *,
-    profile: str | ApiDocProfile = "compact",
+    profile: str | ApiPresentationProfile = "compact",
     caption: str | None = None,
     include_module: bool = True,
     link_names: bool | None = None,
@@ -971,7 +971,7 @@ def api_objects_to_summary_table(
         ```
     """
 
-    resolved = resolve_profile(profile)
+    resolved = resolve_presentation_profile(profile)
     headers = ["Kind", "Module", "Name", "Summary"] if include_module else ["Kind", "Name", "Summary"]
     resolved_link_names = resolved.name == "website" if link_names is None else link_names
     rows = [
@@ -984,7 +984,7 @@ def api_objects_to_summary_table(
 def api_module_to_blocks(
     module: ApiModule,
     *,
-    profile: str | ApiDocProfile = "reference",
+    profile: str | ApiPresentationProfile = "reference",
     level: int = 2,
     max_level: int | None = None,
 ) -> list[Block]:
@@ -1013,7 +1013,7 @@ def api_module_to_blocks(
         ```
     """
 
-    resolved = resolve_profile(profile)
+    resolved = resolve_presentation_profile(profile)
     max_level = _normalize_max_level(max_level)
     blocks: list[Block] = []
     if module.summary:
@@ -1067,7 +1067,7 @@ def api_module_to_blocks(
 def api_module_to_chapter(
     module: ApiModule,
     *,
-    profile: str | ApiDocProfile = "reference",
+    profile: str | ApiPresentationProfile = "reference",
     title: str | None = None,
     max_level: int | None = None,
 ):
@@ -1112,7 +1112,7 @@ def api_module_to_chapter(
 def api_package_to_chapters(
     package: ApiPackage,
     *,
-    profile: str | ApiDocProfile = "reference",
+    profile: str | ApiPresentationProfile = "reference",
     max_level: int | None = None,
 ) -> list[object]:
     """Convert package modules into OODocs chapters.
@@ -1148,7 +1148,7 @@ def api_objects_to_chapter(
     title: str,
     objects: Iterable[ApiObject],
     *,
-    profile: str | ApiDocProfile = "manual",
+    profile: str | ApiPresentationProfile = "manual",
     level: int = 2,
     max_level: int | None = None,
 ):
@@ -1157,7 +1157,7 @@ def api_objects_to_chapter(
     Args:
         title: Chapter title.
         objects: API objects to render as child sections.
-        profile: Presentation profile name or ``ApiDocProfile``.
+        profile: Presentation profile name or ``ApiPresentationProfile``.
         level: Heading level used for each object section.
         max_level: Optional deepest heading level for nested member sections.
 

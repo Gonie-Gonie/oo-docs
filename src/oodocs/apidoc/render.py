@@ -8,7 +8,7 @@ from oodocs.apidoc.blocks import api_objects_to_chapter, api_objects_to_summary_
 from oodocs.apidoc.coverage import ApiCoverageResult, check_api_docs
 from oodocs.apidoc.diff import ApiDiffResult
 from oodocs.apidoc.model import ApiObject, ApiPackage
-from oodocs.apidoc.styles import ApiDocProfile
+from oodocs.apidoc.profiles import ApiPresentationProfile
 from oodocs.components.blocks import Chapter, Paragraph
 from oodocs.components.generated import TableOfContents
 from oodocs.document import Document
@@ -18,7 +18,7 @@ def api_package_to_document(
     api: ApiPackage,
     *,
     title: str | None = None,
-    profile: str | ApiDocProfile = "reference",
+    profile: str | ApiPresentationProfile = "reference",
     settings: object | None = None,
     citations: object | None = None,
     include_coverage: bool = True,
@@ -31,7 +31,7 @@ def api_package_to_document(
         api: Collected API package object tree.
         title: Optional document title. Defaults to ``"{api.name} API
             Reference"``.
-        profile: Presentation profile name or ``ApiDocProfile`` object.
+        profile: Presentation profile name or ``ApiPresentationProfile`` object.
         settings: Optional ``DocumentSettings`` passed to ``Document``.
         citations: Optional citation library passed to ``Document``.
         include_coverage: Whether to include a documentation coverage overview
@@ -94,14 +94,14 @@ def api_package_to_document(
 def api_objects_to_summary_table(
     objects: Sequence[ApiObject],
     *,
-    profile: str | ApiDocProfile = "compact",
+    profile: str | ApiPresentationProfile = "compact",
     caption: str | None = None,
 ):
     """Return a summary table for selected API objects.
 
     Args:
         objects: API objects to include as rows.
-        profile: Presentation profile name or ``ApiDocProfile``. The website
+        profile: Presentation profile name or ``ApiPresentationProfile``. The website
             profile renders object names as links to object section anchors.
         caption: Optional table caption.
 
