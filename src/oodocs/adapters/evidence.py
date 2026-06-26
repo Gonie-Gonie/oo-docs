@@ -70,7 +70,7 @@ def build_release_evidence_document(
     pyproject: PathLike = "pyproject.toml",
     workflow: PathLike | None = ".github/workflows/release.yml",
     evidence_dir: PathLike = "artifacts/evidence",
-    strict: bool = True,
+    fail_on_missing_input: bool = True,
 ) -> Document:
     """Build a human-readable release evidence document.
 
@@ -78,23 +78,24 @@ def build_release_evidence_document(
         pyproject: Path to the project ``pyproject.toml`` file.
         workflow: Optional path to a GitHub Actions workflow YAML file.
         evidence_dir: Directory containing machine-readable evidence files.
-        strict: Whether missing optional evidence should raise an exception.
+        fail_on_missing_input: Whether missing optional evidence inputs should
+            raise an exception.
 
     Returns:
         Document summarizing release metadata, workflow metadata, evidence
         tables, manifest values, and checksums.
 
     Raises:
-        FileNotFoundError: If required evidence files are missing in strict
-            mode.
+        FileNotFoundError: If evidence files are missing and
+            ``fail_on_missing_input`` is true.
         ImportError: If workflow parsing needs PyYAML and it is unavailable in
-            strict mode.
+            fail-on-missing-input mode.
 
     Examples:
         ```python
         from oodocs.adapters import build_release_evidence_document
 
-        doc = build_release_evidence_document(strict=False)
+        doc = build_release_evidence_document(fail_on_missing_input=False)
         doc.save_html("artifacts/evidence/report.html")
         ```
     """
@@ -105,7 +106,7 @@ def build_release_evidence_document(
         try:
             sections.append(section_from_github_workflow(workflow))
         except (FileNotFoundError, ImportError) as exc:
-            if strict:
+            if fail_on_missing_input:
                 raise
             sections.append(_warning_section("GitHub Actions workflow", str(exc)))
 
@@ -131,7 +132,7 @@ def build_release_evidence_document(
         missing.append(CHECKSUM_NAME)
 
     if missing:
-        if strict:
+        if fail_on_missing_input:
             raise FileNotFoundError(
                 "Missing release evidence file(s): " + ", ".join(missing)
             )
@@ -174,7 +175,7 @@ def build_release_evidence_bundle(
     *,
     pyproject: PathLike = "pyproject.toml",
     workflow: PathLike | None = ".github/workflows/release.yml",
-    strict: bool = False,
+    fail_on_missing_input: bool = False,
 ) -> EvidenceBundle:
     """Create machine-readable evidence files and render the evidence document.
 
@@ -183,23 +184,27 @@ def build_release_evidence_bundle(
             should be written.
         pyproject: Path to the project ``pyproject.toml`` file.
         workflow: Optional path to a GitHub Actions workflow YAML file.
-        strict: Whether missing optional inputs should raise an exception while
-            building the document.
+        fail_on_missing_input: Whether missing optional inputs should raise an
+            exception while building the document.
 
     Returns:
         Bundle metadata containing written document, evidence, and checksum
         paths.
 
     Raises:
-        FileNotFoundError: If strict mode rejects missing evidence inputs.
+        FileNotFoundError: If fail-on-missing-input mode rejects missing
+            evidence inputs.
         ImportError: If workflow parsing needs PyYAML and it is unavailable in
-            strict mode.
+            fail-on-missing-input mode.
 
     Examples:
         ```python
         from oodocs.adapters import build_release_evidence_bundle
 
-        bundle = build_release_evidence_bundle("artifacts/evidence", strict=False)
+        bundle = build_release_evidence_bundle(
+            "artifacts/evidence",
+            fail_on_missing_input=False,
+        )
         print(bundle.checksum_file)
         ```
     """
@@ -212,7 +217,7 @@ def build_release_evidence_bundle(
         pyproject=pyproject,
         workflow=workflow,
         evidence_dir=output_path,
-        strict=strict,
+        fail_on_missing_input=fail_on_missing_input,
     )
     outputs = document.save_all(output_path, stem="oodocs-evidence-report")
     checksum_file = _write_checksums(output_path)

@@ -6,6 +6,7 @@ import inspect
 import pytest
 
 import oodocs
+import oodocs.adapters as adapters
 import oodocs.apidoc as apidoc
 import oodocs.components.references as references
 from oodocs.apidoc.cli import _build_parser as _build_apidoc_parser
@@ -332,6 +333,17 @@ def test_table_public_api_hides_renderer_helper_methods() -> None:
     assert expected <= members
     assert "strict" not in from_records_parameters
     assert "fail_on_missing" in from_records_parameters
+
+
+def test_adapter_public_api_uses_canonical_missing_input_policy_names() -> None:
+    for public_function in (
+        adapters.build_release_evidence_document,
+        adapters.build_release_evidence_bundle,
+    ):
+        parameters = set(inspect.signature(public_function).parameters)
+
+        assert "strict" not in parameters, public_function.__name__
+        assert "fail_on_missing_input" in parameters, public_function.__name__
 
 
 def test_table_cell_alignment_fields_use_text_alignment_names() -> None:

@@ -45,7 +45,7 @@ def _run_build(args: argparse.Namespace) -> int:
         args.out,
         pyproject=args.pyproject,
         workflow=args.workflow,
-        strict=args.fail_on_missing_input,
+        fail_on_missing_input=args.fail_on_missing_input,
     )
     print(f"Wrote evidence bundle: {bundle.output_dir}")
     for output_format, path in bundle.document_outputs.items():

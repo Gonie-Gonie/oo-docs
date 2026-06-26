@@ -101,7 +101,7 @@ def test_build_release_evidence_bundle_creates_machine_and_document_files(
         tmp_path / "evidence",
         pyproject=pyproject_path,
         workflow=workflow_path,
-        strict=False,
+        fail_on_missing_input=False,
     )
 
     assert (bundle.output_dir / "feature-coverage.csv").exists()
@@ -113,7 +113,9 @@ def test_build_release_evidence_bundle_creates_machine_and_document_files(
     assert "oodocs-evidence-report.html" in bundle.document_outputs["html"].name
 
 
-def test_build_release_evidence_document_strict_requires_inputs(tmp_path: Path) -> None:
+def test_build_release_evidence_document_fail_on_missing_input_requires_inputs(
+    tmp_path: Path,
+) -> None:
     pyproject_path = tmp_path / "pyproject.toml"
     pyproject_path.write_text("[project]\nname = \"oodocs-test\"\n", encoding="utf-8")
 
@@ -122,5 +124,5 @@ def test_build_release_evidence_document_strict_requires_inputs(tmp_path: Path) 
             pyproject=pyproject_path,
             workflow=None,
             evidence_dir=tmp_path / "empty",
-            strict=True,
+            fail_on_missing_input=True,
         )
