@@ -300,7 +300,7 @@ from oodocs.apidoc import ApiHelpBookConfig
 
 build = ApiHelpBookConfig.from_pyproject(".")
 outputs = build.save_all(".", output_dir="artifacts/api")
-api_json = outputs["api-json"]
+api_json = outputs["api_object_tree_json"]
 ```
 
 When a repository defines a custom parser, store the import hook next to the

@@ -41,7 +41,7 @@ def test_apidoc_build_config_saves_html_and_sidecars_for_general_repo(tmp_path) 
     ).save_all(package_dir)
 
     assert (output_dir / "samplepkg-api.html").exists()
-    api = ApiPackage.load_json(output_dir / "samplepkg-api.json")
+    api = ApiPackage.load_json(output_dir / "samplepkg-api-object-tree.json")
     render = api.find_object("samplepkg.Widget.render")
 
     assert api.name == "samplepkg"
@@ -68,7 +68,7 @@ def test_apidoc_build_config_auto_collector_saves_full_bundle_for_general_repo(
     docx_path = output_dir / "samplepkg-api.docx"
     pdf_path = output_dir / "samplepkg-api.pdf"
     html_path = output_dir / "samplepkg-api.html"
-    api_path = output_dir / "samplepkg-api.json"
+    api_path = output_dir / "samplepkg-api-object-tree.json"
     coverage_path = output_dir / "samplepkg-api-coverage.json"
 
     assert_rendered_bundle(docx_path, pdf_path, html_path)
@@ -140,7 +140,7 @@ def test_apidoc_build_config_saves_full_reference_bundle_from_json_config(tmp_pa
     docx_path = output_dir / "sample-reference.docx"
     pdf_path = output_dir / "sample-reference.pdf"
     html_path = output_dir / "sample-reference.html"
-    api_path = output_dir / "sample-reference.json"
+    api_path = output_dir / "sample-reference-object-tree.json"
     coverage_json_path = output_dir / "sample-reference-coverage.json"
     coverage_csv_path = output_dir / "sample-reference-coverage.csv"
 
@@ -273,7 +273,7 @@ def test_apidoc_cli_json_config_loads_repo_local_parser_modules(tmp_path) -> Non
     ApiHelpBookConfig.load_file(config_path, target=repo).save_all(repo)
 
     html_path = output_dir / "jsonpkg-api.html"
-    api_path = output_dir / "jsonpkg-api.json"
+    api_path = output_dir / "jsonpkg-api-object-tree.json"
     coverage_path = output_dir / "jsonpkg-api-coverage.json"
     assert html_path.exists()
     assert api_path.exists()
@@ -366,7 +366,7 @@ def test_apidoc_cli_external_json_config_loads_target_parser_modules(tmp_path) -
     ApiHelpBookConfig.load_file(config_path, target=repo).save_all(repo)
 
     html_path = output_dir / "externaljsonpkg-api.html"
-    api = ApiPackage.load_json(output_dir / "externaljsonpkg-api.json")
+    api = ApiPackage.load_json(output_dir / "externaljsonpkg-api-object-tree.json")
     run = api.find_object("externaljsonpkg.run")
 
     assert_html_internal_links_resolve(
@@ -459,7 +459,7 @@ def test_apidoc_cli_external_json_config_loads_griffe_target_parser_modules(
     ApiHelpBookConfig.load_file(config_path, target=repo).save_all(repo)
 
     html_path = output_dir / "externalgriffepkg-api.html"
-    api = ApiPackage.load_json(output_dir / "externalgriffepkg-api.json")
+    api = ApiPackage.load_json(output_dir / "externalgriffepkg-api-object-tree.json")
     run = api.find_object("externalgriffepkg.run")
 
     assert api.metadata["collector"] == "griffe"
@@ -527,7 +527,7 @@ def test_apidoc_cli_collect_external_json_config_loads_target_parser_modules(
         encoding="utf-8",
     )
     config_path = tmp_path / "collect-apidoc-config.json"
-    output_path = tmp_path / "collectjsonpkg-api.json"
+    output_path = tmp_path / "collectjsonpkg-api-object-tree.json"
     config_path.write_text(
         json.dumps(
             {
@@ -781,7 +781,7 @@ def test_apidoc_build_config_saves_setuptools_package_dir_repo(tmp_path) -> None
         sidecars=True,
     ).save_all(repo)
 
-    api = ApiPackage.load_json(output_dir / "samplepkg-api.json")
+    api = ApiPackage.load_json(output_dir / "samplepkg-api-object-tree.json")
 
     assert (output_dir / "samplepkg-api.html").exists()
     assert api.find_object("samplepkg.run") is not None
@@ -803,7 +803,7 @@ def test_apidoc_build_config_respects_explicit_public_policy(tmp_path) -> None:
         sidecars=True,
     ).save_all(package_dir)
 
-    api = ApiPackage.load_json(output_dir / "samplepkg-api.json")
+    api = ApiPackage.load_json(output_dir / "samplepkg-api-object-tree.json")
     html = (output_dir / "samplepkg-api.html").read_text(encoding="utf-8")
 
     assert api.metadata["public_policy"] == "explicit"
@@ -858,7 +858,7 @@ def test_apidoc_cli_passes_fallback_collector_to_collection(
 
 def test_apidoc_cli_can_exclude_member_kinds(tmp_path) -> None:
     package_dir = write_sample_package(tmp_path)
-    output_path = tmp_path / "samplepkg-api.json"
+    output_path = tmp_path / "samplepkg-api-object-tree.json"
 
     assert (
         main(
@@ -891,7 +891,7 @@ def test_apidoc_cli_can_exclude_member_kinds(tmp_path) -> None:
 
 def test_apidoc_cli_can_strip_source_locations(tmp_path) -> None:
     package_dir = write_sample_package(tmp_path)
-    output_path = tmp_path / "samplepkg-api.json"
+    output_path = tmp_path / "samplepkg-api-object-tree.json"
 
     assert (
         main(
@@ -956,7 +956,7 @@ def test_apidoc_cli_loads_repo_local_docstring_parser_module_option(
     tmp_path,
 ) -> None:
     repo = write_custom_docstring_parser_repo(tmp_path)
-    output_path = tmp_path / "briefpkg-api.json"
+    output_path = tmp_path / "briefpkg-api-object-tree.json"
 
     assert (
         main(
@@ -1072,7 +1072,7 @@ def test_apidoc_cli_init_loads_repo_local_docstring_parser_module(
     assert build_config.collection.docstring_parser().style == "init-brief"
     build_config.save_all(repo)
 
-    api = ApiPackage.load_json(output_dir / "initbriefpkg-api.json")
+    api = ApiPackage.load_json(output_dir / "initbriefpkg-api-object-tree.json")
     run = api.find_object("initbriefpkg.run")
 
     assert run is not None

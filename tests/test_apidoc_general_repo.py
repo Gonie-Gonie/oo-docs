@@ -550,11 +550,11 @@ def test_general_repo_auto_parser_object_survives_build_config_json_roundtrip(
     assert stream is not None
     assert stream.metadata["docstring_style"] == "markdown"
     assert_rendered_bundle(outputs["docx"], outputs["pdf"], outputs["html"])
-    assert outputs["api-json"].exists()
-    assert outputs["coverage-json"].exists()
-    assert outputs["coverage-csv"].exists()
-    assert ApiPackage.load_json(outputs["api-json"]).find_object("mixedpkg.Client.connect") is not None
-    assert ApiCoverageResult.load_json(outputs["coverage-json"]).object_coverage == 1.0
+    assert outputs["api_object_tree_json"].exists()
+    assert outputs["api_coverage_json"].exists()
+    assert outputs["api_coverage_csv"].exists()
+    assert ApiPackage.load_json(outputs["api_object_tree_json"]).find_object("mixedpkg.Client.connect") is not None
+    assert ApiCoverageResult.load_json(outputs["api_coverage_json"]).object_coverage == 1.0
     assert_docx_structure(
         outputs["docx"],
         required_paragraphs=(
@@ -905,7 +905,7 @@ def test_general_repo_pyproject_auto_parser_builds_cli_bundle(tmp_path) -> None:
     ApiHelpBookConfig.from_pyproject(repo).save_all(repo, output_dir=output_dir)
 
     html_path = output_dir / "mixedpkg-api.html"
-    api_path = output_dir / "mixedpkg-api.json"
+    api_path = output_dir / "mixedpkg-api-object-tree.json"
     coverage_path = output_dir / "mixedpkg-api-coverage.json"
     assert html_path.exists()
     assert api_path.exists()
@@ -1034,7 +1034,7 @@ def test_general_python_file_module_targets_build_reference_and_example(
     cli_docx = cli_output / "singlemod-api.docx"
     cli_pdf = cli_output / "singlemod-api.pdf"
     cli_html = cli_output / "singlemod-api.html"
-    cli_api_object_tree_json = cli_output / "singlemod-api.json"
+    cli_api_object_tree_json = cli_output / "singlemod-api-object-tree.json"
     cli_api_coverage_json = cli_output / "singlemod-api-coverage.json"
     assert_rendered_bundle(cli_docx, cli_pdf, cli_html)
     assert_docx_structure(
@@ -1120,7 +1120,7 @@ def test_general_py_modules_repo_targets_build_reference_and_example(
 
     _save_api_reference(repo, output_dir)
     html_path = output_dir / "singlemod-api.html"
-    api_path = output_dir / "singlemod-api.json"
+    api_path = output_dir / "singlemod-api-object-tree.json"
     coverage_path = output_dir / "singlemod-api-coverage.json"
 
     assert html_path.exists()
@@ -1183,7 +1183,7 @@ def test_general_hatch_multi_package_repo_builds_complete_reference(
 
     _save_api_reference(repo, output_dir)
     html_path = output_dir / "multi_hatch_project-api.html"
-    api_path = output_dir / "multi_hatch_project-api.json"
+    api_path = output_dir / "multi_hatch_project-api-object-tree.json"
     coverage_path = output_dir / "multi_hatch_project-api-coverage.json"
 
     assert html_path.exists()
@@ -1223,7 +1223,7 @@ def test_general_hatch_only_include_repo_builds_complete_reference(
 
     _save_api_reference(repo, output_dir)
     html_path = output_dir / "onlypkg-api.html"
-    api_path = output_dir / "onlypkg-api.json"
+    api_path = output_dir / "onlypkg-api-object-tree.json"
     coverage_path = output_dir / "onlypkg-api-coverage.json"
 
     assert html_path.exists()
@@ -1264,7 +1264,7 @@ def test_general_pdm_package_dir_repo_builds_complete_reference(
 
     _save_api_reference(repo, output_dir)
     html_path = output_dir / "pdmpkg-api.html"
-    api_path = output_dir / "pdmpkg-api.json"
+    api_path = output_dir / "pdmpkg-api-object-tree.json"
     coverage_path = output_dir / "pdmpkg-api-coverage.json"
 
     assert html_path.exists()
@@ -1302,7 +1302,7 @@ def test_general_flit_package_repo_builds_complete_reference(
 
     _save_api_reference(repo, output_dir)
     html_path = output_dir / "flitpkg-api.html"
-    api_path = output_dir / "flitpkg-api.json"
+    api_path = output_dir / "flitpkg-api-object-tree.json"
     coverage_path = output_dir / "flitpkg-api-coverage.json"
 
     assert html_path.exists()
@@ -1341,7 +1341,7 @@ def test_general_import_names_package_repo_builds_complete_reference(
 
     _save_api_reference(repo, output_dir)
     html_path = output_dir / "importnamedpkg-api.html"
-    api_path = output_dir / "importnamedpkg-api.json"
+    api_path = output_dir / "importnamedpkg-api-object-tree.json"
     coverage_path = output_dir / "importnamedpkg-api-coverage.json"
 
     assert html_path.exists()
@@ -1431,7 +1431,7 @@ def test_general_packaging_variants_build_complete_cli_reference(
     docx_path = output_dir / f"{expected_package}-api.docx"
     pdf_path = output_dir / f"{expected_package}-api.pdf"
     html_path = output_dir / f"{expected_package}-api.html"
-    api_path = output_dir / f"{expected_package}-api.json"
+    api_path = output_dir / f"{expected_package}-api-object-tree.json"
     coverage_path = output_dir / f"{expected_package}-api-coverage.json"
 
     assert_rendered_bundle(docx_path, pdf_path, html_path)
@@ -1663,9 +1663,9 @@ def test_build_config_save_all_targets_repo_with_parser_modules(
     assert outputs["docx"] == output_dir / "briefpkg-api.docx"
     assert outputs["pdf"] == output_dir / "briefpkg-api.pdf"
     assert outputs["html"] == output_dir / "briefpkg-api.html"
-    assert outputs["api-json"] == output_dir / "briefpkg-api.json"
-    assert outputs["coverage-json"] == output_dir / "briefpkg-api-coverage.json"
-    assert outputs["coverage-csv"] == output_dir / "briefpkg-api-coverage.csv"
+    assert outputs["api_object_tree_json"] == output_dir / "briefpkg-api-object-tree.json"
+    assert outputs["api_coverage_json"] == output_dir / "briefpkg-api-coverage.json"
+    assert outputs["api_coverage_csv"] == output_dir / "briefpkg-api-coverage.csv"
     assert_rendered_bundle(outputs["docx"], outputs["pdf"], outputs["html"])
     assert_docx_structure(
         outputs["docx"],
@@ -1693,11 +1693,11 @@ def test_build_config_save_all_targets_repo_with_parser_modules(
         outputs["html"],
         required_text=("brief:Run custom command.",),
     )
-    saved_api = ApiPackage.load_json(outputs["api-json"])
+    saved_api = ApiPackage.load_json(outputs["api_object_tree_json"])
     saved_run = saved_api.find_object("briefpkg.run")
     assert saved_run is not None
     assert saved_run.summary == "brief:Run custom command."
-    assert ApiCoverageResult.load_json(outputs["coverage-json"]).object_coverage == coverage.object_coverage
+    assert ApiCoverageResult.load_json(outputs["api_coverage_json"]).object_coverage == coverage.object_coverage
 
 
 def test_collect_api_loads_repo_local_docstring_parser_modules(

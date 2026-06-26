@@ -1217,8 +1217,9 @@ class ApiHelpBookConfig:
 
         Returns:
             Mapping of rendered output names to written paths. When sidecars
-            are enabled, the mapping also includes ``"api-json"``,
-            ``"coverage-json"``, and ``"coverage-csv"``.
+            are enabled, the mapping also includes
+            ``"api_object_tree_json"``, ``"api_coverage_json"``, and
+            ``"api_coverage_csv"``.
 
         Raises:
             ValueError: If no output directory is supplied by the call or
@@ -1236,7 +1237,7 @@ class ApiHelpBookConfig:
             build = ApiHelpBookConfig.load_file(r"C:\\configs\\mypkg-apidoc.json", target=repo)
             outputs = build.save_all(repo)
             assert outputs["html"].exists()
-            assert outputs["api-json"].exists()
+            assert outputs["api_object_tree_json"].exists()
             ```
         """
 
@@ -1468,9 +1469,9 @@ def _write_build_sidecars(
     directory = Path(output_dir)
     coverage = check_api_docs(api)
     return {
-        "api-json": api.save_json(directory / f"{stem}.json"),
-        "coverage-json": coverage.save_json(directory / f"{stem}-coverage.json"),
-        "coverage-csv": coverage.save_csv(directory / f"{stem}-coverage.csv"),
+        "api_object_tree_json": api.save_json(directory / f"{stem}-object-tree.json"),
+        "api_coverage_json": coverage.save_json(directory / f"{stem}-coverage.json"),
+        "api_coverage_csv": coverage.save_csv(directory / f"{stem}-coverage.csv"),
     }
 
 

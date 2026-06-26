@@ -461,7 +461,7 @@ def test_apidoc_cli_loads_custom_docstring_parser_modules_from_pyproject(
 
     config = ApiHelpBookConfig.from_pyproject(repo)
     config.save_all(".")
-    built_api = ApiPackage.load_json(repo / "artifacts" / "api" / "hookpkg-api.json")
+    built_api = ApiPackage.load_json(repo / "artifacts" / "api" / "hookpkg-api-object-tree.json")
     run = built_api.find_object("hookpkg.run")
 
     assert config.collection.docstring_parser_modules == ("repo_apidoc_parsers",)
@@ -531,7 +531,7 @@ def test_apidoc_cli_loads_pyproject_parser_modules_from_target_repo_path(
         repo,
         output_dir=output_dir,
     )
-    built_api = ApiPackage.load_json(output_dir / "externalhookpkg-api.json")
+    built_api = ApiPackage.load_json(output_dir / "externalhookpkg-api-object-tree.json")
     run = built_api.find_object("externalhookpkg.run")
 
     assert run is not None
@@ -1639,10 +1639,10 @@ def test_apidoc_cli_collect_check_build_snapshot_and_diff(tmp_path: Path, capsys
     build_html = (build_dir / "clipkg-api.html").read_text(encoding="utf-8")
     assert "clipkg API Reference" in build_html
     assert "clipkg.run" in build_html
-    assert (build_dir / "clipkg-api.json").exists()
+    assert (build_dir / "clipkg-api-object-tree.json").exists()
     assert (build_dir / "clipkg-api-coverage.json").exists()
     assert (build_dir / "clipkg-api-coverage.csv").exists()
-    built_api = json.loads((build_dir / "clipkg-api.json").read_text(encoding="utf-8"))
+    built_api = json.loads((build_dir / "clipkg-api-object-tree.json").read_text(encoding="utf-8"))
     assert built_api["modules"][0]["name"] == "clipkg"
     assert main(["apidoc", "snapshot", str(package_dir), "--save-json", str(snapshot_json)]) == 0
     assert snapshot_json.exists()
@@ -1659,9 +1659,9 @@ def test_apidoc_cli_collect_check_build_snapshot_and_diff(tmp_path: Path, capsys
     assert ApiDiffResult.load_json(diff_json).added == []
 
     captured = capsys.readouterr()
-    assert "Wrote api-json" in captured.out
-    assert "Wrote coverage-json" in captured.out
-    assert "Wrote coverage-csv" in captured.out
+    assert "Wrote api-object-tree-json" in captured.out
+    assert "Wrote api-coverage-json" in captured.out
+    assert "Wrote api-coverage-csv" in captured.out
 
 
 def test_apidoc_cli_init_writes_config_for_general_repo(tmp_path: Path) -> None:
@@ -1753,8 +1753,8 @@ def test_apidoc_cli_init_writes_config_for_general_repo(tmp_path: Path) -> None:
 
     config.save_all(repo)
     assert (build_dir / "initpkg-api.html").exists()
-    assert (build_dir / "initpkg-api.json").exists()
-    built_api = json.loads((build_dir / "initpkg-api.json").read_text(encoding="utf-8"))
+    assert (build_dir / "initpkg-api-object-tree.json").exists()
+    built_api = json.loads((build_dir / "initpkg-api-object-tree.json").read_text(encoding="utf-8"))
     assert built_api["modules"][0]["members"][0]["qualname"] == "initpkg.core.run"
 
     json_config = tmp_path / "apidoc-build.json"
@@ -1947,7 +1947,7 @@ def test_apidoc_cli_filters_check_and_snapshot(tmp_path: Path) -> None:
     assert 'id="filterpkg-core-run"' in configured_html
     assert 'id="filterpkg-core-worker"' not in configured_html
     configured_build_api = json.loads(
-        (configured_build_dir / "filterpkg-api.json").read_text(encoding="utf-8")
+        (configured_build_dir / "filterpkg-api-object-tree.json").read_text(encoding="utf-8")
     )
     assert configured_build_api["modules"][0]["members"][0]["qualname"] == "filterpkg.core.run"
     assert (configured_build_dir / "filterpkg-api-coverage.csv").exists()
@@ -1964,7 +1964,7 @@ def test_apidoc_cli_filters_check_and_snapshot(tmp_path: Path) -> None:
     assert 'href="#filterpkg-core-run"' in html
     assert 'id="filterpkg-core-run"' in html
     filtered_build_api = json.loads(
-        (build_dir / "filterpkg-api.json").read_text(encoding="utf-8")
+        (build_dir / "filterpkg-api-object-tree.json").read_text(encoding="utf-8")
     )
     assert [module["name"] for module in filtered_build_api["modules"]] == ["filterpkg.core"]
     assert filtered_build_api["modules"][0]["members"][0]["qualname"] == "filterpkg.core.run"

@@ -319,7 +319,7 @@ def _run_init(args: argparse.Namespace) -> int:
 def _run_collect(args: argparse.Namespace) -> int:
     api = _collect_from_args(args)
     api.save_json(args.save_json)
-    print(f"Wrote api-json: {Path(args.save_json)}")
+    print(f"Wrote api-object-tree-json: {Path(args.save_json)}")
     return 0
 
 
@@ -340,9 +340,9 @@ def _run_check(args: argparse.Namespace) -> int:
     else:
         print(result.format_text())
         if args.save_json:
-            print(f"Wrote coverage-json: {args.save_json}")
+            print(f"Wrote api-coverage-json: {args.save_json}")
         if args.save_csv:
-            print(f"Wrote coverage-csv: {args.save_csv}")
+            print(f"Wrote api-coverage-csv: {args.save_csv}")
     return 0 if result.ok else 1
 
 
