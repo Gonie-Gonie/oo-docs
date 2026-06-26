@@ -38,7 +38,7 @@ from oodocs.core import (
     normalize_length_unit,
     normalize_text_alignment,
 )
-from oodocs.layout.theme import (
+from oodocs.styles import (
     BoxStyle,
     ListStyle,
     ParagraphStyle,

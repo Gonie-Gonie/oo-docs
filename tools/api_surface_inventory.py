@@ -18,6 +18,7 @@ INVENTORY_MODULES = (
     "oodocs.adapters",
     "oodocs.importers.markdown",
     "oodocs.importers.notebook",
+    "oodocs.styles",
     "oodocs.validation",
     "oodocs.workflows",
     "oodocs.presets",
@@ -243,10 +244,10 @@ def category_for(
         return "validation"
     if module == "oodocs.workflows":
         return "workflow"
-    if module == "oodocs.layout.theme":
+    if module == "oodocs.styles.theme":
         if export_name == "Theme":
             return "theme"
-        if export_name.endswith("Options"):
+        if export_name.endswith("Defaults"):
             return "theme"
         return "style"
     return None

@@ -124,7 +124,7 @@ from oodocs import (
 )
 from oodocs.presets.components import CalloutBox, KeyValueTable, Nomenclature
 from oodocs.presets.templates import JournalArticleTemplate, ManuscriptSection
-from oodocs.settings import TextStyle
+from oodocs.styles import TextStyle
 
 class HighlightedParagraph(Paragraph):
     pass

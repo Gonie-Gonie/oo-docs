@@ -40,11 +40,11 @@
           "qualname": "oodocs.components.blocks.Axiom"
         },
         {
-          "category": "style",
+          "category": "theme",
           "kind": "class",
-          "module": "oodocs.layout.theme",
+          "module": "oodocs.styles.theme",
           "name": "BlockDefaults",
-          "qualname": "oodocs.layout.theme.BlockDefaults"
+          "qualname": "oodocs.styles.theme.BlockDefaults"
         },
         {
           "category": "block",
@@ -56,9 +56,9 @@
         {
           "category": "style",
           "kind": "class",
-          "module": "oodocs.layout.theme",
+          "module": "oodocs.styles.theme",
           "name": "BoxStyle",
-          "qualname": "oodocs.layout.theme.BoxStyle"
+          "qualname": "oodocs.styles.theme.BoxStyle"
         },
         {
           "category": "block",
@@ -68,18 +68,18 @@
           "qualname": "oodocs.components.blocks.BulletList"
         },
         {
-          "category": "style",
+          "category": "theme",
           "kind": "class",
-          "module": "oodocs.layout.theme",
+          "module": "oodocs.styles.theme",
           "name": "CaptionDefaults",
-          "qualname": "oodocs.layout.theme.CaptionDefaults"
+          "qualname": "oodocs.styles.theme.CaptionDefaults"
         },
         {
-          "category": "style",
+          "category": "theme",
           "kind": "class",
-          "module": "oodocs.layout.theme",
+          "module": "oodocs.styles.theme",
           "name": "CitationDefaults",
-          "qualname": "oodocs.layout.theme.CitationDefaults"
+          "qualname": "oodocs.styles.theme.CitationDefaults"
         },
         {
           "category": "document-core",
@@ -236,18 +236,18 @@
           "qualname": "oodocs.components.generated.FootnoteList"
         },
         {
-          "category": "style",
+          "category": "theme",
           "kind": "class",
-          "module": "oodocs.layout.theme",
+          "module": "oodocs.styles.theme",
           "name": "GeneratedContentDefaults",
-          "qualname": "oodocs.layout.theme.GeneratedContentDefaults"
+          "qualname": "oodocs.styles.theme.GeneratedContentDefaults"
         },
         {
           "category": "style",
           "kind": "class",
-          "module": "oodocs.layout.theme",
+          "module": "oodocs.styles.theme",
           "name": "HeadingNumbering",
-          "qualname": "oodocs.layout.theme.HeadingNumbering"
+          "qualname": "oodocs.styles.theme.HeadingNumbering"
         },
         {
           "category": "media",
@@ -308,9 +308,9 @@
         {
           "category": "style",
           "kind": "class",
-          "module": "oodocs.layout.theme",
+          "module": "oodocs.styles.theme",
           "name": "ListStyle",
-          "qualname": "oodocs.layout.theme.ListStyle"
+          "qualname": "oodocs.styles.theme.ListStyle"
         },
         {
           "category": "block",
@@ -376,11 +376,11 @@
           "qualname": "typing.Literal"
         },
         {
-          "category": "style",
+          "category": "theme",
           "kind": "class",
-          "module": "oodocs.layout.theme",
+          "module": "oodocs.styles.theme",
           "name": "PageNumberDefaults",
-          "qualname": "oodocs.layout.theme.PageNumberDefaults"
+          "qualname": "oodocs.styles.theme.PageNumberDefaults"
         },
         {
           "category": "settings",
@@ -434,16 +434,16 @@
         {
           "category": "style",
           "kind": "class",
-          "module": "oodocs.layout.theme",
+          "module": "oodocs.styles.theme",
           "name": "ParagraphStyle",
-          "qualname": "oodocs.layout.theme.ParagraphStyle"
+          "qualname": "oodocs.styles.theme.ParagraphStyle"
         },
         {
           "category": "style",
           "kind": "class",
-          "module": "oodocs.layout.theme",
+          "module": "oodocs.styles.theme",
           "name": "RunInTitleStyle",
-          "qualname": "oodocs.layout.theme.RunInTitleStyle"
+          "qualname": "oodocs.styles.theme.RunInTitleStyle"
         },
         {
           "category": "generated-page",
@@ -532,9 +532,9 @@
         {
           "category": "style",
           "kind": "class",
-          "module": "oodocs.layout.theme",
+          "module": "oodocs.styles.theme",
           "name": "TableStyle",
-          "qualname": "oodocs.layout.theme.TableStyle"
+          "qualname": "oodocs.styles.theme.TableStyle"
         },
         {
           "category": "generated-page",
@@ -567,9 +567,9 @@
         {
           "category": "style",
           "kind": "class",
-          "module": "oodocs.layout.theme",
+          "module": "oodocs.styles.theme",
           "name": "TextStyle",
-          "qualname": "oodocs.layout.theme.TextStyle"
+          "qualname": "oodocs.styles.theme.TextStyle"
         },
         {
           "category": "block",
@@ -579,18 +579,18 @@
           "qualname": "oodocs.components.blocks.Theorem"
         },
         {
-          "category": "style",
+          "category": "theme",
           "kind": "class",
-          "module": "oodocs.layout.theme",
+          "module": "oodocs.styles.theme",
           "name": "TitleMatterDefaults",
-          "qualname": "oodocs.layout.theme.TitleMatterDefaults"
+          "qualname": "oodocs.styles.theme.TitleMatterDefaults"
         },
         {
           "category": "theme",
           "kind": "class",
-          "module": "oodocs.layout.theme",
+          "module": "oodocs.styles.theme",
           "name": "Theme",
-          "qualname": "oodocs.layout.theme.Theme"
+          "qualname": "oodocs.styles.theme.Theme"
         },
         {
           "category": "generated-page",
@@ -600,11 +600,11 @@
           "qualname": "oodocs.components.generated.TocLevelStyle"
         },
         {
-          "category": "style",
+          "category": "theme",
           "kind": "class",
-          "module": "oodocs.layout.theme",
+          "module": "oodocs.styles.theme",
           "name": "TypographyDefaults",
-          "qualname": "oodocs.layout.theme.TypographyDefaults"
+          "qualname": "oodocs.styles.theme.TypographyDefaults"
         },
         {
           "category": "error",
@@ -1437,6 +1437,143 @@
           "module": "oodocs.presets.components",
           "name": "option_table",
           "qualname": "oodocs.presets.components.option_table"
+        }
+      ]
+    },
+    "oodocs.styles": {
+      "exports": [
+        {
+          "category": "theme",
+          "kind": "class",
+          "module": "oodocs.styles.theme",
+          "name": "BlockDefaults",
+          "qualname": "oodocs.styles.theme.BlockDefaults"
+        },
+        {
+          "category": "style",
+          "kind": "class",
+          "module": "oodocs.styles.theme",
+          "name": "BoxStyle",
+          "qualname": "oodocs.styles.theme.BoxStyle"
+        },
+        {
+          "category": "theme",
+          "kind": "class",
+          "module": "oodocs.styles.theme",
+          "name": "CaptionDefaults",
+          "qualname": "oodocs.styles.theme.CaptionDefaults"
+        },
+        {
+          "category": "theme",
+          "kind": "class",
+          "module": "oodocs.styles.theme",
+          "name": "CitationDefaults",
+          "qualname": "oodocs.styles.theme.CitationDefaults"
+        },
+        {
+          "category": "theme",
+          "kind": "class",
+          "module": "oodocs.styles.theme",
+          "name": "GeneratedContentDefaults",
+          "qualname": "oodocs.styles.theme.GeneratedContentDefaults"
+        },
+        {
+          "category": "style",
+          "kind": "class",
+          "module": "oodocs.styles.theme",
+          "name": "HeadingNumbering",
+          "qualname": "oodocs.styles.theme.HeadingNumbering"
+        },
+        {
+          "category": "style",
+          "kind": "class",
+          "module": "oodocs.styles.theme",
+          "name": "ListStyle",
+          "qualname": "oodocs.styles.theme.ListStyle"
+        },
+        {
+          "category": "theme",
+          "kind": "class",
+          "module": "oodocs.styles.theme",
+          "name": "PageNumberDefaults",
+          "qualname": "oodocs.styles.theme.PageNumberDefaults"
+        },
+        {
+          "category": "style",
+          "kind": "class",
+          "module": "oodocs.styles.theme",
+          "name": "ParagraphStyle",
+          "qualname": "oodocs.styles.theme.ParagraphStyle"
+        },
+        {
+          "category": "style",
+          "kind": "class",
+          "module": "oodocs.styles.theme",
+          "name": "RunInTitleStyle",
+          "qualname": "oodocs.styles.theme.RunInTitleStyle"
+        },
+        {
+          "category": "style",
+          "kind": "class",
+          "module": "oodocs.styles.theme",
+          "name": "TableStyle",
+          "qualname": "oodocs.styles.theme.TableStyle"
+        },
+        {
+          "category": "style",
+          "kind": "class",
+          "module": "oodocs.styles.theme",
+          "name": "TextStyle",
+          "qualname": "oodocs.styles.theme.TextStyle"
+        },
+        {
+          "category": "theme",
+          "kind": "class",
+          "module": "oodocs.styles.theme",
+          "name": "Theme",
+          "qualname": "oodocs.styles.theme.Theme"
+        },
+        {
+          "category": "theme",
+          "kind": "class",
+          "module": "oodocs.styles.theme",
+          "name": "TitleMatterDefaults",
+          "qualname": "oodocs.styles.theme.TitleMatterDefaults"
+        },
+        {
+          "category": "theme",
+          "kind": "class",
+          "module": "oodocs.styles.theme",
+          "name": "TypographyDefaults",
+          "qualname": "oodocs.styles.theme.TypographyDefaults"
+        },
+        {
+          "category": "style",
+          "kind": "function",
+          "module": "oodocs.styles.theme",
+          "name": "box_style_with_overrides",
+          "qualname": "oodocs.styles.theme.box_style_with_overrides"
+        },
+        {
+          "category": "style",
+          "kind": "function",
+          "module": "oodocs.styles.theme",
+          "name": "list_style_with_overrides",
+          "qualname": "oodocs.styles.theme.list_style_with_overrides"
+        },
+        {
+          "category": "style",
+          "kind": "function",
+          "module": "oodocs.styles.theme",
+          "name": "paragraph_style_with_overrides",
+          "qualname": "oodocs.styles.theme.paragraph_style_with_overrides"
+        },
+        {
+          "category": "style",
+          "kind": "function",
+          "module": "oodocs.styles.theme",
+          "name": "table_style_with_overrides",
+          "qualname": "oodocs.styles.theme.table_style_with_overrides"
         }
       ]
     },

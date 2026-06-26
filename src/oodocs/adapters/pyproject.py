@@ -9,7 +9,7 @@ from oodocs.components.blocks import Paragraph, Section
 from oodocs.components.inline import inline_code
 from oodocs.components.media import Table
 from oodocs.core import PathLike
-from oodocs.layout.theme import TableStyle
+from oodocs.styles import TableStyle
 
 
 def section_from_pyproject(path: PathLike = "pyproject.toml") -> Section:

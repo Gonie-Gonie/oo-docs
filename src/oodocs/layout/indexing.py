@@ -32,7 +32,7 @@ from oodocs.components.media import Figure, SubFigure, SubFigureGroup, Table
 from oodocs.components.references import CitationLibrary, CitationSource
 from oodocs.core import OODocsError
 from oodocs.document import Document
-from oodocs.layout.theme import Theme
+from oodocs.styles import Theme
 
 
 @dataclass(slots=True)

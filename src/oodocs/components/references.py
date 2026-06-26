@@ -10,7 +10,7 @@ from oodocs.core import OODocsError
 
 if TYPE_CHECKING:
     from oodocs.components.inline import Citation, Text
-    from oodocs.layout.theme import TextStyle
+    from oodocs.styles import TextStyle
 
 
 _CITATION_STYLE_ALIASES = {

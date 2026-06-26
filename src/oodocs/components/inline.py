@@ -7,7 +7,7 @@ from typing import Iterable, Sequence, TYPE_CHECKING
 
 from oodocs.components.equations import equation_plain_text
 from oodocs.core import normalize_color
-from oodocs.layout.theme import TextStyle
+from oodocs.styles import TextStyle
 
 if TYPE_CHECKING:
     from oodocs.components.references import CitationSource

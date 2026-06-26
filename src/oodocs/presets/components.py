@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 from oodocs.components.base import BlockInput
 from oodocs.components.blocks import Box, CellInput
 from oodocs.components.media import Table, TableCellInput
-from oodocs.layout.theme import BoxStyle, TableStyle
+from oodocs.styles import BoxStyle, TableStyle
 
 
 NomenclatureEntry = tuple[TableCellInput, TableCellInput] | tuple[TableCellInput, TableCellInput, TableCellInput]

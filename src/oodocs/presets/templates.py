@@ -12,7 +12,7 @@ from oodocs.components.inline import InlineInput, Text, bold
 from oodocs.components.people import AuthorInput, AuthorLayout
 from oodocs.components.references import CitationLibrary, CitationSource
 from oodocs.document import Document
-from oodocs.layout.theme import (
+from oodocs.styles import (
     BlockDefaults,
     CaptionDefaults,
     GeneratedContentDefaults,

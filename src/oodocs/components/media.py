@@ -29,7 +29,7 @@ from oodocs.core import (
     normalize_text_alignment,
     normalize_vertical_alignment,
 )
-from oodocs.layout.theme import TableStyle, TextStyle, table_style_with_overrides
+from oodocs.styles import TableStyle, TextStyle, table_style_with_overrides
 
 if TYPE_CHECKING:
     from oodocs.components.inline import BlockReference, InlineInput

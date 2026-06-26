@@ -24,7 +24,7 @@ from oodocs.components.inline import inline_code
 from oodocs.components.media import Table
 from oodocs.core import PathLike
 from oodocs.document import Document
-from oodocs.layout.theme import PageNumberDefaults, TableStyle, Theme
+from oodocs.styles import PageNumberDefaults, TableStyle, Theme
 from oodocs.settings import DocumentSettings
 
 from oodocs.adapters.github_actions import section_from_github_workflow

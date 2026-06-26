@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from oodocs.layout.indexing import RenderIndex
-from oodocs.layout.theme import RunInTitleStyle, Theme
+from oodocs.styles import RunInTitleStyle, Theme
 from oodocs.settings import DocumentSettings
 
 

@@ -14,7 +14,7 @@ from oodocs.components.inline import (
     Strikethrough,
     Text,
 )
-from oodocs.layout.theme import TextStyle
+from oodocs.styles import TextStyle
 
 _BARE_LINK_RE = re.compile(
     r"(https?://[^\s<]+|www\.[^\s<]+|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})"

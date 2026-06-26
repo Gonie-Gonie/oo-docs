@@ -17,23 +17,7 @@ from oodocs.components.people import (
     coerce_author_layout,
     coerce_authors,
 )
-from oodocs.layout.theme import (
-    BoxStyle,
-    BlockDefaults,
-    CaptionDefaults,
-    CitationDefaults,
-    GeneratedContentDefaults,
-    HeadingNumbering,
-    ListStyle,
-    PageNumberDefaults,
-    ParagraphStyle,
-    RunInTitleStyle,
-    TableStyle,
-    TextStyle,
-    TitleMatterDefaults,
-    TypographyDefaults,
-    Theme,
-)
+from oodocs.styles import Theme
 
 
 @dataclass(slots=True, init=False)
@@ -696,22 +680,7 @@ __all__ = [
     "Affiliation",
     "Author",
     "AuthorLayout",
-    "BlockDefaults",
-    "BoxStyle",
-    "CaptionDefaults",
-    "CitationDefaults",
     "DocumentSettings",
-    "GeneratedContentDefaults",
-    "HeadingNumbering",
-    "ListStyle",
-    "PageNumberDefaults",
     "PageMargins",
     "PageSize",
-    "ParagraphStyle",
-    "RunInTitleStyle",
-    "TableStyle",
-    "TextStyle",
-    "TitleMatterDefaults",
-    "TypographyDefaults",
-    "Theme",
 ]

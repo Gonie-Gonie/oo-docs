@@ -107,17 +107,19 @@ from oodocs.components.inline import (
     text_color,
 )
 from oodocs.settings import (
+    DocumentSettings,
+    PageMargins,
+    PageSize,
+)
+from oodocs.styles import (
     BlockDefaults,
     BoxStyle,
     CaptionDefaults,
     CitationDefaults,
-    DocumentSettings,
     GeneratedContentDefaults,
     HeadingNumbering,
     ListStyle,
     PageNumberDefaults,
-    PageMargins,
-    PageSize,
     ParagraphStyle,
     RunInTitleStyle,
     TableStyle,

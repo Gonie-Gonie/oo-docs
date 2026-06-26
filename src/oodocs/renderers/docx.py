@@ -90,7 +90,7 @@ from oodocs.document import Document
 from oodocs.components.equations import SUBSCRIPT, SUPERSCRIPT, parse_latex_segments
 from oodocs.core import OODocsError, PathLike, length_to_inches
 from oodocs.layout.indexing import RenderIndex, build_render_index
-from oodocs.layout.theme import ParagraphStyle, TextStyle, Theme
+from oodocs.styles import ParagraphStyle, TextStyle, Theme
 from oodocs.renderers.context import DocxRenderContext
 from oodocs.renderers.syntax import SyntaxToken, syntax_tokens
 

@@ -1,4 +1,4 @@
-"""Layout, indexing, and theme support for renderers."""
+"""Layout and indexing support for renderers."""
 
 from __future__ import annotations
 
@@ -6,21 +6,12 @@ from importlib import import_module
 
 
 _EXPORTS = {
-    "BoxStyle": "oodocs.layout.theme",
     "CaptionEntry": "oodocs.layout.indexing",
-    "CitationDefaults": "oodocs.layout.theme",
     "CitationReferenceEntry": "oodocs.layout.indexing",
     "CommentReferenceEntry": "oodocs.layout.indexing",
     "FootnoteReferenceEntry": "oodocs.layout.indexing",
     "HeadingEntry": "oodocs.layout.indexing",
-    "HeadingNumbering": "oodocs.layout.theme",
-    "ListStyle": "oodocs.layout.theme",
-    "ParagraphStyle": "oodocs.layout.theme",
-    "RunInTitleStyle": "oodocs.layout.theme",
     "RenderIndex": "oodocs.layout.indexing",
-    "TableStyle": "oodocs.layout.theme",
-    "TextStyle": "oodocs.layout.theme",
-    "Theme": "oodocs.layout.theme",
     "build_render_index": "oodocs.layout.indexing",
 }
 

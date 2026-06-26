@@ -28,7 +28,7 @@ from oodocs.components.media import Figure, Table
 from oodocs.components.references import CitationLibrary, CitationSource
 from oodocs.document import Document
 from oodocs.importers.results import ImportIssue, ImportResult, resolve_import_result
-from oodocs.layout.theme import ListStyle
+from oodocs.styles import ListStyle
 from oodocs.settings import DocumentSettings
 
 
