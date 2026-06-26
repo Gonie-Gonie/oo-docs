@@ -88,3 +88,13 @@ def test_stylesheet_rejects_unknown_or_wrong_category_styles() -> None:
 
     with pytest.raises(TypeError, match="BoxStyle"):
         styles.register("box", "not-a-box", TableStyle())
+
+
+def test_style_css_class_normalization() -> None:
+    assert ParagraphStyle(css_class=" lead   dense ").css_class == "lead dense"
+    assert BoxStyle(css_class="callout").css_class == "callout"
+    assert TableStyle(css_class="data-table").css_class == "data-table"
+    assert InlineChipStyle(css_class="state ok").css_class == "state ok"
+
+    with pytest.raises(TypeError, match="css_class"):
+        ParagraphStyle(css_class=object())  # type: ignore[arg-type]

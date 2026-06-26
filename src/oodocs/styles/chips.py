@@ -5,10 +5,12 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from oodocs.core import normalize_color
+from oodocs.styles.base import _normalize_css_class
 from oodocs.styles.border import BorderStyle
 from oodocs.styles.spacing import Padding
 
 _INLINE_CHIP_STYLE_FIELDS = (
+    "css_class",
     "background_color",
     "text_color",
     "border",
@@ -39,6 +41,7 @@ class InlineChipStyle:
         bold: Whether chip text is bold.
         italic: Whether chip text is italic.
         uppercase: Whether display text is uppercased.
+        css_class: Optional HTML class name or class list.
 
     Examples:
         ```python
@@ -49,6 +52,7 @@ class InlineChipStyle:
         ```
     """
 
+    css_class: str | None = None
     background_color: str = "E8F1FF"
     text_color: str = "1F3A5F"
     border: BorderStyle = field(
@@ -69,6 +73,7 @@ class InlineChipStyle:
     uppercase: bool = False
 
     def __post_init__(self) -> None:
+        self.css_class = _normalize_css_class(self.css_class)
         self.background_color = normalize_color(self.background_color) or "E8F1FF"
         self.text_color = normalize_color(self.text_color) or "1F3A5F"
         if not isinstance(self.border, BorderStyle):

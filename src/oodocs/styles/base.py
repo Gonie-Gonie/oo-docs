@@ -22,3 +22,12 @@ def _style_with_overrides(
     merged = {style_field.name: getattr(style, style_field.name) for style_field in fields(style_type)}
     merged.update(values)
     return style_type(**merged)
+
+
+def _normalize_css_class(css_class: str | None) -> str | None:
+    if css_class is None:
+        return None
+    if not isinstance(css_class, str):
+        raise TypeError("css_class must be a string")
+    normalized = " ".join(css_class.split())
+    return normalized or None

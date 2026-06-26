@@ -183,8 +183,9 @@ class HtmlRenderer:
             context.run_in_title_style,
         )
         paragraph_style = context.stylesheet.resolve("paragraph", block.style, ParagraphStyle())
+        class_attr = self._html_class_attr("oodocs-paragraph", paragraph_style.css_class)
         return (
-            f'<p{anchor_attr} class="oodocs-paragraph" style="{self._paragraph_style_css(paragraph_style, context.theme, default_unit=context.unit)}">'
+            f'<p{anchor_attr}{class_attr} style="{self._paragraph_style_css(paragraph_style, context.theme, default_unit=context.unit)}">'
             + self._inline_html(
                 block.render_content(title_style),
                 context.theme,
@@ -476,8 +477,9 @@ class HtmlRenderer:
         )
         anchor = context.render_index.block_anchor(block)
         anchor_attr = f' id="{escape(anchor)}"' if anchor else ""
+        class_attr = self._html_class_attr("oodocs-box", box_style.css_class)
         return (
-            f'<section{anchor_attr} class="oodocs-box" '
+            f'<section{anchor_attr}{class_attr} '
             f'style="{self._box_css(box_style, context.theme, context.unit)}">'
             + title_html
             + children_html
@@ -721,6 +723,7 @@ class HtmlRenderer:
             if block.caption is not None
             else ""
         )
+        table_class_attr = self._html_class_attr("oodocs-table", table_style.css_class)
         table_html = (
             '<div class="oodocs-table-wrapper '
             f'oodocs-placement-{placement} '
@@ -731,7 +734,7 @@ class HtmlRenderer:
                 if block.caption is not None and context.theme.captions.table_caption_position == "above"
                 else ""
             )
-            + '<table class="oodocs-table">'
+            + f"<table{table_class_attr}>"
             + colgroup
             + (f"<thead>{thead_html}</thead>" if thead_html else "")
             + (f"<tbody>{tbody_html}</tbody>" if tbody_html else "")
@@ -1815,8 +1818,12 @@ class HtmlRenderer:
             styles.append(
                 f"border: {chip_style.border.width_points():.1f}pt solid #{chip_style.border.color}"
             )
-        class_name = f"oodocs-inline-chip oodocs-inline-chip-{fragment.kind}"
-        return f'<span class="{class_name}" style="{"; ".join(styles)}">{text}</span>'
+        class_attr = self._html_class_attr(
+            "oodocs-inline-chip",
+            f"oodocs-inline-chip-{fragment.kind}",
+            chip_style.css_class,
+        )
+        return f'<span{class_attr} style="{"; ".join(styles)}">{text}</span>'
 
     def _styled_text_html(
         self,
@@ -2264,6 +2271,17 @@ class HtmlRenderer:
             return inner_html
         href = f"#{target}" if internal else target
         return f'<a href="{escape(href)}">{inner_html}</a>'
+
+    def _html_class_attr(self, *classes: str | None) -> str:
+        normalized: list[str] = []
+        for class_value in classes:
+            if not class_value:
+                continue
+            normalized.extend(str(class_value).split())
+        if not normalized:
+            return ""
+        escaped = " ".join(escape(class_name, quote=True) for class_name in normalized)
+        return f' class="{escaped}"'
 
     def _css_font_family(self, font_name: str) -> str:
         fallback = "monospace" if "courier" in font_name.lower() else "serif" if "times" in font_name.lower() else "sans-serif"

@@ -838,6 +838,7 @@ def test_document_validate_returns_printable_result_with_format_scopes() -> None
 def test_named_styles_validate_and_render_across_formats(tmp_path: Path) -> None:
     styles = StyleSheet.default()
     styles.register("paragraph", "lead", ParagraphStyle(space_after=4, text_alignment="center"))
+    styles.register("list", "steps", ListStyle(marker_counter_format="decimal"))
     styles.register("table_cell", "positive", TableCellStyle(text_color="166534", bold=True))
 
     document = Document(
@@ -848,6 +849,7 @@ def test_named_styles_validate_and_render_across_formats(tmp_path: Path) -> None
             title="Finding",
             style="info",
         ),
+        NumberedList("Verify named list styles.", style="steps"),
         Table(
             headers=[TableCell("Metric", style="emphasis"), "Value"],
             rows=[["Accuracy", TableCell("98%", style="positive")]],
@@ -872,10 +874,36 @@ def test_named_styles_validate_and_render_across_formats(tmp_path: Path) -> None
     assert "#ECFDF3" in html
 
 
+def test_named_style_css_classes_render_in_html(tmp_path: Path) -> None:
+    styles = StyleSheet.default()
+    styles.register("paragraph", "lead.css", ParagraphStyle(css_class="lead dense"))
+    styles.register("box", "panel.css", BoxStyle(css_class="panel highlight"))
+    styles.register("table", "matrix.css", TableStyle(css_class="matrix"))
+    styles.register("chip", "chip.css", InlineChipStyle(css_class="pill beta"))
+    document = Document(
+        "CSS Hooks",
+        Paragraph("Lead paragraph.", style="lead.css"),
+        Box(Paragraph("Panel body."), title="Panel", style="panel.css"),
+        Table(["A"], [["B"]], caption="Matrix.", style="matrix.css"),
+        Paragraph("Flag: ", tag("beta", chip_style="chip.css")),
+        settings=DocumentSettings(theme=Theme(stylesheet=styles)),
+    )
+    html_path = tmp_path / "css-hooks.html"
+
+    document.save_html(html_path)
+
+    html = html_path.read_text(encoding="utf-8")
+    assert 'class="oodocs-paragraph lead dense"' in html
+    assert 'class="oodocs-box panel highlight"' in html
+    assert 'class="oodocs-table matrix"' in html
+    assert 'class="oodocs-inline-chip oodocs-inline-chip-tag pill beta"' in html
+
+
 def test_document_validate_reports_unknown_and_wrong_named_styles() -> None:
     document = Document(
         "Named Style Errors",
         Paragraph("Unknown paragraph style.", style="missing"),
+        BulletList("Unknown list style.", style="missing-list"),
         Table(
             headers=["A"],
             rows=[[TableCell("B", style="info")]],
@@ -885,6 +913,7 @@ def test_document_validate_reports_unknown_and_wrong_named_styles() -> None:
 
     result = document.validate()
     assert [issue.code for issue in result.errors] == [
+        "unknown-style-name",
         "unknown-style-name",
         "wrong-style-category",
         "wrong-style-category",

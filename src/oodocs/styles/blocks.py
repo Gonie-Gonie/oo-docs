@@ -10,16 +10,16 @@ from oodocs.core import (
     normalize_length_unit,
     normalize_text_alignment,
 )
-from oodocs.styles.base import _style_with_overrides
+from oodocs.styles.base import _normalize_css_class, _style_with_overrides
 from oodocs.styles.border import BorderStyle
 from oodocs.styles.spacing import Padding
 from oodocs.styles.text import TextStyle
 
 
 def paragraph_style_with_overrides(
-    style: ParagraphStyle | None,
+    style: ParagraphStyle | str | None,
     **overrides: object | None,
-) -> ParagraphStyle:
+) -> ParagraphStyle | str:
     """Return a paragraph style with direct keyword overrides applied.
 
     Args:
@@ -27,7 +27,8 @@ def paragraph_style_with_overrides(
         **overrides: Paragraph style fields to override when not ``None``.
 
     Returns:
-        Existing style, copied style, or a new style with overrides applied.
+        Existing named style, copied style, or a new style with overrides
+        applied.
 
     Examples:
         ```python
@@ -39,9 +40,9 @@ def paragraph_style_with_overrides(
 
 
 def box_style_with_overrides(
-    style: BoxStyle | None,
+    style: BoxStyle | str | None,
     **overrides: object | None,
-) -> BoxStyle:
+) -> BoxStyle | str:
     """Return a box style with direct keyword overrides applied.
 
     Args:
@@ -49,7 +50,8 @@ def box_style_with_overrides(
         **overrides: Box style fields to override when not ``None``.
 
     Returns:
-        Existing style, copied style, or a new style with overrides applied.
+        Existing named style, copied style, or a new style with overrides
+        applied.
 
     Examples:
         ```python
@@ -77,6 +79,7 @@ class ParagraphStyle:
         page_break_before: Optional page-break-before flag.
         widow_control: Optional widow-control flag.
         unit: Unit for length values.
+        css_class: Optional HTML class name or class list.
 
     Examples:
         ```python
@@ -99,8 +102,10 @@ class ParagraphStyle:
     page_break_before: bool | None = None
     widow_control: bool | None = None
     unit: str | None = None
+    css_class: str | None = None
 
     def __post_init__(self) -> None:
+        self.css_class = _normalize_css_class(self.css_class)
         self.text_alignment = (
             normalize_text_alignment(self.text_alignment)
             if self.text_alignment is not None
@@ -133,6 +138,7 @@ class ParagraphStyle:
         page_break_before: bool | None = None,
         widow_control: bool | None = None,
         unit: str | None = None,
+        css_class: str | None = None,
     ) -> ParagraphStyle:
         """Create a hanging-indent paragraph style.
 
@@ -148,6 +154,7 @@ class ParagraphStyle:
             page_break_before: Optional page-break-before flag.
             widow_control: Optional widow-control flag.
             unit: Unit for length values.
+            css_class: Optional HTML class name or class list.
 
         Returns:
             Paragraph style with a negative first-line indent.
@@ -176,6 +183,7 @@ class ParagraphStyle:
             page_break_before=page_break_before,
             widow_control=widow_control,
             unit=unit,
+            css_class=css_class,
         )
 
     def left_indent_in_inches(self, default_unit: str) -> float | None:
@@ -262,6 +270,7 @@ class BoxStyle:
         width: Optional box width in ``unit``.
         unit: Unit for ``width`` when a physical width is set.
         block_alignment: Optional block placement alignment override.
+        css_class: Optional HTML class name or class list.
 
     Examples:
         Style a callout box with grouped border and padding objects:
@@ -290,8 +299,10 @@ class BoxStyle:
     width: float | None = None
     unit: str | None = None
     block_alignment: str | None = None
+    css_class: str | None = None
 
     def __post_init__(self) -> None:
+        self.css_class = _normalize_css_class(self.css_class)
         if not isinstance(self.border, BorderStyle):
             raise TypeError("BoxStyle.border must be a BorderStyle")
         if not isinstance(self.padding, Padding):

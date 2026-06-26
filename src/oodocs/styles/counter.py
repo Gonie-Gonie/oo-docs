@@ -128,20 +128,21 @@ class ListStyle:
 
 
 def list_style_with_overrides(
-    style: ListStyle | None,
+    style: ListStyle | str | None,
     *,
     ordered: bool,
     **overrides: object | None,
-) -> ListStyle | None:
+) -> ListStyle | str | None:
     """Return a concrete list style when direct list keyword overrides are used.
 
     Args:
-        style: Base list style or ``None``.
+        style: Base list style, named list style, or ``None``.
         ordered: Whether the target list is ordered.
         **overrides: List style fields to override when not ``None``.
 
     Returns:
-        ``None`` when no style is needed, otherwise a concrete list style.
+        ``None`` when no style is needed, otherwise a named or concrete list
+        style.
 
     Examples:
         ```python
@@ -150,6 +151,10 @@ def list_style_with_overrides(
     """
 
     values = {name: value for name, value in overrides.items() if value is not None}
+    if isinstance(style, str):
+        if values:
+            raise TypeError("Named list styles cannot be combined with direct style overrides")
+        return style
     if style is None and not values:
         return None
     base = style or (

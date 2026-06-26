@@ -6,16 +6,16 @@ from dataclasses import dataclass, field
 from typing import Mapping
 
 from oodocs.core import normalize_color, normalize_text_alignment, normalize_vertical_alignment
-from oodocs.styles.base import _style_with_overrides
+from oodocs.styles.base import _normalize_css_class, _style_with_overrides
 from oodocs.styles.border import BorderStyle
 from oodocs.styles.spacing import Padding
 from oodocs.styles.text import TextStyle
 
 
 def table_style_with_overrides(
-    style: TableStyle | None,
+    style: TableStyle | str | None,
     **overrides: object | None,
-) -> TableStyle:
+) -> TableStyle | str:
     """Return a table style with direct keyword overrides applied.
 
     Args:
@@ -23,7 +23,8 @@ def table_style_with_overrides(
         **overrides: Table style fields to override when not ``None``.
 
     Returns:
-        Existing style, copied style, or a new style with overrides applied.
+        Existing named style, copied style, or a new style with overrides
+        applied.
 
     Examples:
         ```python
@@ -183,6 +184,7 @@ class TableStyle:
         header_vertical_alignment: Optional header cell vertical alignment.
         cell_padding: Cell padding.
         repeat_header_rows: Whether renderers should repeat header rows.
+        css_class: Optional HTML class name or class list.
 
     Examples:
         ```python
@@ -206,8 +208,10 @@ class TableStyle:
     header_vertical_alignment: str | None = None
     cell_padding: Padding = field(default_factory=lambda: Padding.all(5.0))
     repeat_header_rows: bool = False
+    css_class: str | None = None
 
     def __post_init__(self) -> None:
+        self.css_class = _normalize_css_class(self.css_class)
         self.header_background_color = normalize_color(self.header_background_color) or "E8EDF5"
         self.header_text_color = normalize_color(self.header_text_color) or "000000"
         if not isinstance(self.border, BorderStyle):
