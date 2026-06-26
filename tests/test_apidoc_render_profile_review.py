@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from docx import Document as WordDocument
+
 from apidoc_samples import collect_sample_api
 from example_regression import assert_docx_structure
 
@@ -25,4 +27,11 @@ def test_review_profile_builds_editable_docx_review_copy(tmp_path) -> None:
         ),
         min_tables=4,
         comment_count=3,
+    )
+    paragraph_texts = [paragraph.text for paragraph in WordDocument(docx_path).paragraphs]
+    assert "Parameters" in paragraph_texts
+    assert "Members" in paragraph_texts
+    assert not any(
+        text.startswith("Table ") and ("Parameters" in text or "Members" in text)
+        for text in paragraph_texts
     )

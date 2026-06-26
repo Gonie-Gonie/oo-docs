@@ -774,7 +774,7 @@ def api_member_summary_table(
     )
     return api_objects_to_summary_table(
         obj.members,
-        caption="Members",
+        caption=None,
         presentation=resolved,
         link_names=link_names,
     )
@@ -820,10 +820,12 @@ def api_object_to_blocks(
     if signature := api_signature_code_block(obj, resolved):
         blocks.append(signature)
     blocks.extend(api_description_blocks(obj, resolved))
-    if parameter_table := api_parameter_table(obj, resolved, caption="Parameters"):
+    if parameter_table := api_parameter_table(obj, resolved):
+        blocks.append(Paragraph(bold("Parameters")))
         blocks.append(parameter_table)
     blocks.extend(api_returns_blocks(obj, resolved))
-    if exceptions_table := api_exceptions_table(obj, resolved, caption="Raises"):
+    if exceptions_table := api_exceptions_table(obj, resolved):
+        blocks.append(Paragraph(bold("Raises")))
         blocks.append(exceptions_table)
     blocks.extend(api_notes_blocks(obj, resolved))
     blocks.extend(api_warnings_blocks(obj, resolved))
@@ -836,6 +838,7 @@ def api_object_to_blocks(
         level=level,
         max_level=max_level,
     ):
+        blocks.append(Paragraph(bold("Members")))
         blocks.append(member_summary)
     if source := api_source_location_paragraph(obj, resolved):
         blocks.append(source)
