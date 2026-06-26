@@ -181,7 +181,7 @@ def api_object_summary_paragraph(obj: ApiObject) -> Paragraph:
     return Paragraph(*pieces)
 
 
-def api_signature_block(
+def api_signature_code_block(
     obj: ApiObject,
     profile: str | ApiPresentationProfile = "reference",
 ) -> CodeBlock | None:
@@ -200,11 +200,11 @@ def api_signature_block(
         ```python
         from oodocs import Chapter, Document
         from oodocs.apidoc import collect_api
-        from oodocs.apidoc.blocks import api_signature_block
+        from oodocs.apidoc.blocks import api_signature_code_block
 
         api = collect_api(".")
         obj = api.functions()[0]
-        block = api_signature_block(obj, profile="reference")
+        block = api_signature_code_block(obj, profile="reference")
         doc = Document("API Appendix", Chapter("Signature", block))
         ```
     """
@@ -432,7 +432,7 @@ def api_examples_blocks(
             blocks.append(Paragraph(example.caption, title=f"Example {index}"))
         elif len(examples) > 1:
             blocks.append(Paragraph(f"Example {index}"))
-        blocks.append(example.to_block())
+        blocks.append(example.to_code_block())
     return blocks
 
 
@@ -563,7 +563,7 @@ def api_warnings_blocks(
     ]
 
 
-def api_renderer_notes_table(
+def api_output_notes_table(
     obj: ApiObject,
     profile: str | ApiPresentationProfile = "reference",
     *,
@@ -585,11 +585,11 @@ def api_renderer_notes_table(
         ```python
         from oodocs import Chapter, Document
         from oodocs.apidoc import collect_api
-        from oodocs.apidoc.blocks import api_renderer_notes_table
+        from oodocs.apidoc.blocks import api_output_notes_table
 
         api = collect_api(".")
         obj = api.functions()[0]
-        table = api_renderer_notes_table(obj, profile="reference")
+        table = api_output_notes_table(obj, profile="reference")
         doc = Document("Renderer Notes", Chapter("API", table))
         ```
     """
@@ -610,7 +610,7 @@ def api_renderer_notes_table(
     )
 
 
-def api_renderer_notes_blocks(
+def api_output_notes_blocks(
     obj: ApiObject,
     profile: str | ApiPresentationProfile = "reference",
 ) -> list[Block]:
@@ -629,18 +629,18 @@ def api_renderer_notes_blocks(
         ```python
         from oodocs import Chapter, Document
         from oodocs.apidoc import collect_api
-        from oodocs.apidoc.blocks import api_renderer_notes_blocks
+        from oodocs.apidoc.blocks import api_output_notes_blocks
 
         api = collect_api(".")
         obj = api.functions()[0]
         doc = Document(
             "Renderer Evidence",
-            Chapter("Notes", *api_renderer_notes_blocks(obj)),
+            Chapter("Notes", *api_output_notes_blocks(obj)),
         )
         ```
     """
 
-    table = api_renderer_notes_table(obj, profile)
+    table = api_output_notes_table(obj, profile)
     return [table] if table is not None else []
 
 
@@ -807,7 +807,7 @@ def api_object_to_blocks(
     max_level = _normalize_max_level(max_level)
     blocks: list[Block] = []
 
-    if signature := api_signature_block(obj, resolved):
+    if signature := api_signature_code_block(obj, resolved):
         blocks.append(signature)
     blocks.extend(api_description_blocks(obj, resolved))
     if parameter_table := api_parameter_table(obj, resolved, caption="Parameters"):
@@ -819,7 +819,7 @@ def api_object_to_blocks(
     blocks.extend(api_warnings_blocks(obj, resolved))
     blocks.extend(api_examples_blocks(obj, resolved))
     blocks.extend(api_see_also_blocks(obj, resolved))
-    blocks.extend(api_renderer_notes_blocks(obj, resolved))
+    blocks.extend(api_output_notes_blocks(obj, resolved))
     if member_summary := api_member_summary_table(
         obj,
         resolved,
@@ -894,7 +894,7 @@ def api_object_to_section(
     return section
 
 
-def api_object_to_compact_box(
+def api_object_to_box(
     obj: ApiObject,
     *,
     profile: str | ApiPresentationProfile = "compact",
@@ -914,16 +914,16 @@ def api_object_to_compact_box(
         ```python
         from oodocs import Chapter, Document
         from oodocs.apidoc import collect_api
-        from oodocs.apidoc.blocks import api_object_to_compact_box
+        from oodocs.apidoc.blocks import api_object_to_box
 
         api = collect_api(".")
         obj = api.functions()[0]
-        doc = Document("Guide", Chapter("Related API", api_object_to_compact_box(obj)))
+        doc = Document("Guide", Chapter("Related API", api_object_to_box(obj)))
         ```
     """
 
     blocks: list[Block] = [api_object_summary_paragraph(obj)]
-    if signature := api_signature_block(obj, profile):
+    if signature := api_signature_code_block(obj, profile):
         blocks.append(signature)
     return Box(*blocks, title=obj.heading_text())
 
@@ -1310,7 +1310,7 @@ __all__ = [
     "api_notes_blocks",
     "api_object_summary_paragraph",
     "api_object_to_blocks",
-    "api_object_to_compact_box",
+    "api_object_to_box",
     "api_object_to_section",
     "api_objects_to_chapter",
     "api_objects_to_summary_table",
@@ -1318,11 +1318,11 @@ __all__ = [
     "api_parameter_table",
     "api_exceptions_table",
     "api_review_note_paragraph",
-    "api_renderer_notes_blocks",
-    "api_renderer_notes_table",
+    "api_output_notes_blocks",
+    "api_output_notes_table",
     "api_returns_blocks",
     "api_see_also_blocks",
-    "api_signature_block",
+    "api_signature_code_block",
     "api_source_location_paragraph",
     "api_visibility_chip",
     "api_warnings_blocks",

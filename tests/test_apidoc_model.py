@@ -60,7 +60,7 @@ def test_apidoc_leaf_metadata_helpers_compose_into_oodocs_blocks() -> None:
             returns.to_paragraph(),
             exception.to_paragraph(),
             example.to_paragraph(),
-            example.to_block(),
+            example.to_code_block(),
             see_also.to_paragraph(),
             note.to_paragraph(),
             table,

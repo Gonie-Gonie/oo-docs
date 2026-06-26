@@ -618,7 +618,7 @@ def test_collect_api_builds_queryable_object_tree_and_blocks(tmp_path: Path) -> 
     assert review_notes
     assert "Review note[?]" in review_notes[0].plain_text()
     assert ApiPresentationProfile.from_dict(ApiPresentationProfile.review().to_dict()).include_review_notes
-    parameter_table = functions[0].to_parameter_table()
+    parameter_table = functions[0].to_parameters_table()
     assert isinstance(parameter_table, Table)
     assert parameter_table.resolved_split(default_threshold=999_999)
     assert functions[0].notes == ["Use this helper when API docs need a factory example."]
@@ -748,8 +748,8 @@ def test_api_doc_profiles_wrap_long_signature_blocks() -> None:
         ),
     )
 
-    reference = obj.to_signature_block(profile="reference")
-    compact = obj.to_signature_block(profile=ApiPresentationProfile.compact())
+    reference = obj.to_signature_code_block(profile="reference")
+    compact = obj.to_signature_code_block(profile=ApiPresentationProfile.compact())
 
     assert reference is not None
     assert compact is not None
@@ -772,7 +772,7 @@ def test_api_doc_profiles_wrap_long_signature_blocks() -> None:
         module="pkg",
         signature="pkg.many(" + ", ".join(f"value_{index}: str" for index in range(40)) + ")",
     )
-    truncated = long_signature.to_signature_block(profile=ApiPresentationProfile.compact())
+    truncated = long_signature.to_signature_code_block(profile=ApiPresentationProfile.compact())
     assert truncated is not None
     assert len(truncated.code.splitlines()) == 24
     assert truncated.code.splitlines()[-1] == "..."
@@ -780,7 +780,7 @@ def test_api_doc_profiles_wrap_long_signature_blocks() -> None:
 
 def test_api_examples_escape_xml_incompatible_control_chars(tmp_path: Path) -> None:
     example = ApiExample('fragment = math(r"\x07lpha + \x08eta")')
-    block = example.to_block()
+    block = example.to_code_block()
 
     assert "\\x07" in block.code
     assert "\\x08" in block.code

@@ -368,7 +368,7 @@ def collect_object_api(
         obj = collect_object_api("mypkg.settings.DocumentSettings")
         doc = Document(
             "Settings API",
-            Chapter("Document Settings", obj.to_compact_box(profile="manual")),
+            Chapter("Document Settings", obj.to_box(profile="manual")),
         )
         ```
 

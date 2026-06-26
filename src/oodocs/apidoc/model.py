@@ -81,7 +81,7 @@ class ApiParameter:
             module="pkg",
             parameters=[ApiParameter("path", "str", description="Output path.")],
         )
-        doc = Document("API Notes", obj.to_parameter_table())
+        doc = Document("API Notes", obj.to_parameters_table())
         ```
     """
 
@@ -578,7 +578,7 @@ class ApiExample:
         from oodocs.apidoc import ApiExample
 
         example = ApiExample("print('hello')", caption="Minimal use")
-        doc = Document("Examples", Chapter("Snippet", example.to_block()))
+        doc = Document("Examples", Chapter("Snippet", example.to_code_block()))
         ```
     """
 
@@ -634,7 +634,7 @@ class ApiExample:
                 "code": "print('ok')",
                 "language": "python",
             })
-            block = example.to_block()
+            block = example.to_code_block()
             ```
         """
 
@@ -647,7 +647,7 @@ class ApiExample:
             doctest_ok=_optional_bool(data.get("doctest_ok")),
         )
 
-    def to_block(self):
+    def to_code_block(self):
         """Return this example as a code block.
 
         Returns:
@@ -662,7 +662,7 @@ class ApiExample:
             from oodocs.apidoc import ApiExample
 
             example = ApiExample("print('ok')", language="python")
-            doc = Document("Examples", Chapter("Quickstart", example.to_block()))
+            doc = Document("Examples", Chapter("Quickstart", example.to_code_block()))
             ```
         """
 
@@ -719,7 +719,7 @@ class ApiExample:
             from oodocs.apidoc import ApiExample
 
             example = ApiExample("print('ok')", caption="Minimal use")
-            doc = Document("Examples", Chapter("Quickstart", example.to_paragraph(), example.to_block()))
+            doc = Document("Examples", Chapter("Quickstart", example.to_paragraph(), example.to_code_block()))
             ```
         """
 
@@ -1666,7 +1666,7 @@ class ApiObject:
 
         return api_object_summary_paragraph(self)
 
-    def to_signature_block(self, profile: object = "reference"):
+    def to_signature_code_block(self, profile: object = "reference"):
         """Return this object's signature as an OODocs code block.
 
         Args:
@@ -1686,16 +1686,16 @@ class ApiObject:
 
             api = collect_api(".")
             obj = api.functions()[0]
-            block = obj.to_signature_block(profile="reference")
+            block = obj.to_signature_code_block(profile="reference")
             doc = Document("API", Chapter("Signature", block))
             ```
         """
 
-        from oodocs.apidoc.blocks import api_signature_block
+        from oodocs.apidoc.blocks import api_signature_code_block
 
-        return api_signature_block(self, profile)
+        return api_signature_code_block(self, profile)
 
-    def to_parameter_table(self, profile: object = "reference"):
+    def to_parameters_table(self, profile: object = "reference"):
         """Return this object's parameter table, if parameters are available.
 
         Args:
@@ -1715,7 +1715,7 @@ class ApiObject:
 
             api = collect_api(".")
             fn = api.functions()[0]
-            table = fn.to_parameter_table(profile="review")
+            table = fn.to_parameters_table(profile="review")
             doc = Document(
                 "API Review",
                 Chapter("Parameters", table) if table is not None else Chapter("Parameters"),
@@ -1887,7 +1887,7 @@ class ApiObject:
 
         return api_warnings_blocks(self, profile)
 
-    def to_renderer_notes_blocks(self, profile: object = "reference") -> list[object]:
+    def to_output_notes_blocks(self, profile: object = "reference") -> list[object]:
         """Return OODocs blocks for renderer-specific notes.
 
         Args:
@@ -1907,14 +1907,14 @@ class ApiObject:
             obj = api.functions()[0]
             doc = Document(
                 "Compatibility",
-                Chapter("Renderer Notes", *obj.to_renderer_notes_blocks()),
+                Chapter("Renderer Notes", *obj.to_output_notes_blocks()),
             )
             ```
         """
 
-        from oodocs.apidoc.blocks import api_renderer_notes_blocks
+        from oodocs.apidoc.blocks import api_output_notes_blocks
 
-        return api_renderer_notes_blocks(self, profile)
+        return api_output_notes_blocks(self, profile)
 
     def to_blocks(
         self,
@@ -2004,7 +2004,7 @@ class ApiObject:
             max_level=max_level,
         )
 
-    def to_compact_box(self, profile: object = "compact"):
+    def to_box(self, profile: object = "compact"):
         """Return this object as a compact OODocs box.
 
         Args:
@@ -2022,13 +2022,13 @@ class ApiObject:
 
             api = collect_api(".")
             obj = api.functions()[0]
-            doc = Document("Guide", Chapter("Related API", obj.to_compact_box()))
+            doc = Document("Guide", Chapter("Related API", obj.to_box()))
             ```
         """
 
-        from oodocs.apidoc.blocks import api_object_to_compact_box
+        from oodocs.apidoc.blocks import api_object_to_box
 
-        return api_object_to_compact_box(self, profile=profile)
+        return api_object_to_box(self, profile=profile)
 
     def to_index_row(self) -> list[object]:
         """Return a row suitable for API index tables.

@@ -57,7 +57,7 @@ doc = Document(
     Chapter(
         "Raises",
         Table(["Exception", "Description"], rows),
-        *(example.to_block() for example in obj.examples),
+        *(example.to_code_block() for example in obj.examples),
     ),
 )
 ```

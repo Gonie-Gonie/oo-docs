@@ -12,7 +12,7 @@ def test_apidoc_object_converts_to_blocks(tmp_path) -> None:
     assert obj is not None
     blocks = obj.to_blocks(profile="reference")
     assert blocks
-    assert obj.to_signature_block(profile="reference") in blocks
+    assert obj.to_signature_code_block(profile="reference") in blocks
 
 
 def test_manual_profile_renders_see_also_as_box() -> None:

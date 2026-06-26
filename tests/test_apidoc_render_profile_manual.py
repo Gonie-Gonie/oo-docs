@@ -19,7 +19,7 @@ def test_hand_composed_api_document_saves_all_formats(tmp_path) -> None:
     api = collect_sample_api(tmp_path)
     classes = api.select(kind="class")[:1]
     functions = api.select(kind="function")[:1]
-    parameter_table = functions[0].to_parameter_table(profile="reference")
+    parameter_table = functions[0].to_parameters_table(profile="reference")
 
     assert parameter_table is not None
     document = Document(
