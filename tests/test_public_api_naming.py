@@ -336,14 +336,34 @@ def test_table_public_api_hides_renderer_helper_methods() -> None:
 
 
 def test_adapter_public_api_uses_canonical_missing_input_policy_names() -> None:
-    for public_function in (
-        adapters.build_release_evidence_document,
-        adapters.build_release_evidence_bundle,
-    ):
-        parameters = set(inspect.signature(public_function).parameters)
+    forbidden_exports = {
+        "EvidenceBundle",
+        "build_release_evidence_bundle",
+        "build_release_evidence_document",
+        "section_from_github_workflow",
+        "section_from_manifest",
+        "section_from_pyproject",
+        "table_from_csv",
+        "table_from_records",
+        "table_from_tsv",
+    }
+    expected_exports = {
+        "GithubWorkflowSummary",
+        "ProjectMetadata",
+        "ReleaseEvidence",
+        "ReleaseEvidenceBundle",
+        "ReleaseManifestSummary",
+    }
 
-        assert "strict" not in parameters, public_function.__name__
-        assert "fail_on_missing_input" in parameters, public_function.__name__
+    assert forbidden_exports.isdisjoint(adapters.__all__)
+    assert not any(hasattr(adapters, name) for name in forbidden_exports)
+    assert expected_exports <= set(adapters.__all__)
+
+    for method in (adapters.ReleaseEvidence.to_document, adapters.ReleaseEvidence.save_bundle):
+        parameters = set(inspect.signature(method).parameters)
+
+        assert "strict" not in parameters, method.__name__
+        assert "fail_on_missing_input" in parameters, method.__name__
 
 
 def test_table_cell_alignment_fields_use_text_alignment_names() -> None:

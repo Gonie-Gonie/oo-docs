@@ -1,4 +1,4 @@
-"""Release evidence document and bundle builders.
+"""Release evidence document and bundle adapters.
 
 Attributes:
     DEFAULT_CSV_FILES: Default CSV evidence files included in release bundles.
@@ -27,9 +27,9 @@ from oodocs.document import Document
 from oodocs.styles import PageNumberDefaults, TableStyle, Theme
 from oodocs.settings import DocumentSettings
 
-from oodocs.adapters.github_actions import section_from_github_workflow
-from oodocs.adapters.manifest import section_from_manifest
-from oodocs.adapters.pyproject import section_from_pyproject
+from oodocs.adapters.github_actions import GithubWorkflowSummary
+from oodocs.adapters.manifest import ReleaseManifestSummary
+from oodocs.adapters.pyproject import ProjectMetadata
 
 
 DEFAULT_CSV_FILES = (
@@ -43,190 +43,235 @@ CHECKSUM_NAME = "artifact-checksums.sha256"
 
 
 @dataclass(frozen=True, slots=True)
-class EvidenceBundle:
-    """Files written by ``build_release_evidence_bundle``.
+class ReleaseEvidenceBundle:
+    """Files written by ``ReleaseEvidence.save_bundle``.
 
     Attributes:
         output_dir: Directory containing generated evidence artifacts.
-        document_outputs: Mapping from rendered document format to output path.
-        machine_readable_files: CSV and JSON evidence files created or reused.
+        outputs: Mapping from rendered document format to output path.
+        data_files: CSV and JSON evidence files created or reused.
         checksum_file: SHA-256 checksum file for generated artifacts.
 
     Examples:
+        Save a bundle and use the rendered PDF path:
+
         ```python
-        bundle = build_release_evidence_bundle("artifacts/evidence")
-        print(bundle.document_outputs["pdf"])
+        from oodocs.adapters import ReleaseEvidence
+
+        bundle = ReleaseEvidence.from_directory("artifacts/evidence").save_bundle()
+        print(bundle.outputs["pdf"])
         ```
     """
 
     output_dir: Path
-    document_outputs: dict[str, Path]
-    machine_readable_files: tuple[Path, ...]
+    outputs: dict[str, Path]
+    data_files: tuple[Path, ...]
     checksum_file: Path
 
 
-def build_release_evidence_document(
-    *,
-    pyproject: PathLike = "pyproject.toml",
-    workflow: PathLike | None = ".github/workflows/release.yml",
-    evidence_dir: PathLike = "artifacts/evidence",
-    fail_on_missing_input: bool = True,
-) -> Document:
-    """Build a human-readable release evidence document.
+@dataclass(frozen=True, slots=True)
+class ReleaseEvidence:
+    """Release evidence inputs that can be rendered or saved as a bundle.
 
-    Args:
-        pyproject: Path to the project ``pyproject.toml`` file.
-        workflow: Optional path to a GitHub Actions workflow YAML file.
+    Attributes:
         evidence_dir: Directory containing machine-readable evidence files.
-        fail_on_missing_input: Whether missing optional evidence inputs should
-            raise an exception.
-
-    Returns:
-        Document summarizing release metadata, workflow metadata, evidence
-        tables, manifest values, and checksums.
-
-    Raises:
-        FileNotFoundError: If evidence files are missing and
-            ``fail_on_missing_input`` is true.
-        ImportError: If workflow parsing needs PyYAML and it is unavailable in
-            fail-on-missing-input mode.
+        pyproject: Project metadata TOML file.
+        workflow: Optional GitHub Actions workflow YAML file.
 
     Examples:
-        ```python
-        from oodocs.adapters import build_release_evidence_document
+        Render a human-readable report from existing evidence files:
 
-        doc = build_release_evidence_document(fail_on_missing_input=False)
-        doc.save_html("artifacts/evidence/report.html")
+        ```python
+        from oodocs.adapters import ReleaseEvidence
+
+        evidence = ReleaseEvidence.from_directory("artifacts/evidence")
+        document = evidence.to_document(fail_on_missing_input=False)
+        document.save_html("artifacts/evidence/report.html")
+        ```
+
+        Generate missing machine-readable files and render all document outputs:
+
+        ```python
+        bundle = ReleaseEvidence.from_directory("artifacts/evidence").save_bundle()
+        print(bundle.outputs["html"])
         ```
     """
 
-    evidence_path = Path(evidence_dir)
-    sections: list[Section] = [section_from_pyproject(pyproject)]
-    if workflow is not None:
-        try:
-            sections.append(section_from_github_workflow(workflow))
-        except (FileNotFoundError, ImportError) as exc:
-            if fail_on_missing_input:
-                raise
-            sections.append(_warning_section("GitHub Actions workflow", str(exc)))
+    evidence_dir: Path
+    pyproject: Path = Path("pyproject.toml")
+    workflow: Path | None = Path(".github/workflows/release.yml")
 
-    missing: list[str] = []
-    evidence_sections: list[Section] = []
-    for filename in DEFAULT_CSV_FILES:
-        path = evidence_path / filename
-        if path.exists():
-            evidence_sections.append(_section_from_csv(path))
-        else:
-            missing.append(filename)
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "evidence_dir", Path(self.evidence_dir))
+        object.__setattr__(self, "pyproject", Path(self.pyproject))
+        if self.workflow is not None:
+            object.__setattr__(self, "workflow", Path(self.workflow))
 
-    manifest_path = evidence_path / MANIFEST_NAME
-    if manifest_path.exists():
-        evidence_sections.append(section_from_manifest(manifest_path))
-    else:
-        missing.append(MANIFEST_NAME)
+    @classmethod
+    def from_directory(
+        cls,
+        evidence_dir: PathLike = "artifacts/evidence",
+        *,
+        pyproject: PathLike = "pyproject.toml",
+        workflow: PathLike | None = ".github/workflows/release.yml",
+    ) -> ReleaseEvidence:
+        """Create release evidence inputs from an evidence directory.
 
-    checksum_path = evidence_path / CHECKSUM_NAME
-    if checksum_path.exists():
-        evidence_sections.append(_section_from_checksums(checksum_path))
-    else:
-        missing.append(CHECKSUM_NAME)
+        Args:
+            evidence_dir: Directory containing machine-readable evidence files.
+            pyproject: Project metadata TOML file.
+            workflow: Optional GitHub Actions workflow YAML file.
 
-    if missing:
-        if fail_on_missing_input:
-            raise FileNotFoundError(
-                "Missing release evidence file(s): " + ", ".join(missing)
-            )
-        evidence_sections.insert(
-            0,
-            _warning_section(
-                "Missing evidence files",
-                "Missing optional evidence file(s): " + ", ".join(missing),
-            ),
+        Returns:
+            Release evidence input model.
+        """
+
+        return cls(
+            evidence_dir=Path(evidence_dir),
+            pyproject=Path(pyproject),
+            workflow=None if workflow is None else Path(workflow),
         )
 
-    return Document(
-        "OODocs Release Evidence",
-        TableOfContents(max_level=2),
-        Chapter(
-            "Release Inputs",
-            Paragraph(
-                "This document records package metadata, release workflow metadata, "
-                "and machine-readable evidence artefacts for the release."
-            ),
-            sections,
-        ),
-        Chapter("Evidence Artefacts", evidence_sections),
-        settings=DocumentSettings(
-            metadata_author="OODocs Contributors",
-            subtitle="Machine-readable and human-readable release evidence",
-            summary="Release evidence generated by OODocs adapters",
-            theme=Theme(
-                page_numbers=PageNumberDefaults(
-                    show_page_numbers=True,
-                    page_number_template="{page}",
+    def to_document(self, *, fail_on_missing_input: bool = True) -> Document:
+        """Build a human-readable release evidence document.
+
+        Args:
+            fail_on_missing_input: Whether missing optional evidence inputs
+                should raise an exception.
+
+        Returns:
+            Document summarizing release metadata, workflow metadata, evidence
+            tables, manifest values, and checksums.
+
+        Raises:
+            FileNotFoundError: If evidence files are missing and
+                ``fail_on_missing_input`` is true.
+            ImportError: If workflow parsing needs PyYAML and it is unavailable
+                in fail-on-missing-input mode.
+        """
+
+        sections: list[Section] = [
+            ProjectMetadata.from_pyproject(self.pyproject).to_section()
+        ]
+        if self.workflow is not None:
+            try:
+                sections.append(
+                    GithubWorkflowSummary.from_file(self.workflow).to_section()
                 )
+            except (FileNotFoundError, ImportError) as exc:
+                if fail_on_missing_input:
+                    raise
+                sections.append(_warning_section("GitHub Actions workflow", str(exc)))
+
+        missing: list[str] = []
+        evidence_sections: list[Section] = []
+        for filename in DEFAULT_CSV_FILES:
+            path = self.evidence_dir / filename
+            if path.exists():
+                evidence_sections.append(_section_from_csv(path))
+            else:
+                missing.append(filename)
+
+        manifest_path = self.evidence_dir / MANIFEST_NAME
+        if manifest_path.exists():
+            evidence_sections.append(
+                ReleaseManifestSummary.from_file(manifest_path).to_section()
+            )
+        else:
+            missing.append(MANIFEST_NAME)
+
+        checksum_path = self.evidence_dir / CHECKSUM_NAME
+        if checksum_path.exists():
+            evidence_sections.append(_section_from_checksums(checksum_path))
+        else:
+            missing.append(CHECKSUM_NAME)
+
+        if missing:
+            if fail_on_missing_input:
+                raise FileNotFoundError(
+                    "Missing release evidence file(s): " + ", ".join(missing)
+                )
+            evidence_sections.insert(
+                0,
+                _warning_section(
+                    "Missing evidence files",
+                    "Missing optional evidence file(s): " + ", ".join(missing),
+                ),
+            )
+
+        return Document(
+            "OODocs Release Evidence",
+            TableOfContents(max_level=2),
+            Chapter(
+                "Release Inputs",
+                Paragraph(
+                    "This document records package metadata, release workflow metadata, "
+                    "and machine-readable evidence artefacts for the release."
+                ),
+                sections,
             ),
-        ),
-    )
-
-
-def build_release_evidence_bundle(
-    output_dir: PathLike,
-    *,
-    pyproject: PathLike = "pyproject.toml",
-    workflow: PathLike | None = ".github/workflows/release.yml",
-    fail_on_missing_input: bool = False,
-) -> EvidenceBundle:
-    """Create machine-readable evidence files and render the evidence document.
-
-    Args:
-        output_dir: Directory where evidence artifacts and rendered documents
-            should be written.
-        pyproject: Path to the project ``pyproject.toml`` file.
-        workflow: Optional path to a GitHub Actions workflow YAML file.
-        fail_on_missing_input: Whether missing optional inputs should raise an
-            exception while building the document.
-
-    Returns:
-        Bundle metadata containing written document, evidence, and checksum
-        paths.
-
-    Raises:
-        FileNotFoundError: If fail-on-missing-input mode rejects missing
-            evidence inputs.
-        ImportError: If workflow parsing needs PyYAML and it is unavailable in
-            fail-on-missing-input mode.
-
-    Examples:
-        ```python
-        from oodocs.adapters import build_release_evidence_bundle
-
-        bundle = build_release_evidence_bundle(
-            "artifacts/evidence",
-            fail_on_missing_input=False,
+            Chapter("Evidence Artefacts", evidence_sections),
+            settings=DocumentSettings(
+                metadata_author="OODocs Contributors",
+                subtitle="Machine-readable and human-readable release evidence",
+                summary="Release evidence generated by OODocs adapters",
+                theme=Theme(
+                    page_numbers=PageNumberDefaults(
+                        show_page_numbers=True,
+                        page_number_template="{page}",
+                    )
+                ),
+            ),
         )
-        print(bundle.checksum_file)
-        ```
-    """
 
-    output_path = Path(output_dir)
-    output_path.mkdir(parents=True, exist_ok=True)
-    machine_files = _ensure_machine_readable_evidence(output_path, pyproject=pyproject)
-    checksum_file = _write_checksums(output_path)
-    document = build_release_evidence_document(
-        pyproject=pyproject,
-        workflow=workflow,
-        evidence_dir=output_path,
-        fail_on_missing_input=fail_on_missing_input,
-    )
-    outputs = document.save_all(output_path, stem="oodocs-evidence-report")
-    checksum_file = _write_checksums(output_path)
-    return EvidenceBundle(
-        output_dir=output_path,
-        document_outputs=outputs,
-        machine_readable_files=tuple(machine_files),
-        checksum_file=checksum_file,
-    )
+    def save_bundle(
+        self,
+        output_dir: PathLike | None = None,
+        *,
+        fail_on_missing_input: bool = False,
+    ) -> ReleaseEvidenceBundle:
+        """Create evidence data files and render the evidence document.
+
+        Args:
+            output_dir: Directory where evidence artifacts and rendered
+                documents should be written. Defaults to ``evidence_dir``.
+            fail_on_missing_input: Whether missing optional inputs should raise
+                an exception while building the document.
+
+        Returns:
+            Bundle metadata containing written document, evidence, and checksum
+            paths.
+
+        Raises:
+            FileNotFoundError: If fail-on-missing-input mode rejects missing
+                evidence inputs.
+            ImportError: If workflow parsing needs PyYAML and it is unavailable
+                in fail-on-missing-input mode.
+        """
+
+        output_path = Path(output_dir) if output_dir is not None else self.evidence_dir
+        output_path.mkdir(parents=True, exist_ok=True)
+        data_files = _ensure_machine_readable_evidence(
+            output_path,
+            pyproject=self.pyproject,
+        )
+        _write_checksums(output_path)
+        evidence = ReleaseEvidence.from_directory(
+            output_path,
+            pyproject=self.pyproject,
+            workflow=self.workflow,
+        )
+        document = evidence.to_document(
+            fail_on_missing_input=fail_on_missing_input,
+        )
+        outputs = document.save_all(output_path, stem="oodocs-evidence-report")
+        checksum_file = _write_checksums(output_path)
+        return ReleaseEvidenceBundle(
+            output_dir=output_path,
+            outputs=outputs,
+            data_files=tuple(data_files),
+            checksum_file=checksum_file,
+        )
 
 
 def _ensure_machine_readable_evidence(
@@ -370,8 +415,7 @@ def _warning_section(title: str, message: str) -> Section:
 __all__ = [
     "CHECKSUM_NAME",
     "DEFAULT_CSV_FILES",
-    "EvidenceBundle",
     "MANIFEST_NAME",
-    "build_release_evidence_bundle",
-    "build_release_evidence_document",
+    "ReleaseEvidence",
+    "ReleaseEvidenceBundle",
 ]

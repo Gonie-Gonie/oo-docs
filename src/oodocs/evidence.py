@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 from typing import Sequence
 
-from oodocs.adapters import build_release_evidence_bundle
+from oodocs.adapters import ReleaseEvidence
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -41,14 +41,15 @@ def main(argv: Sequence[str] | None = None) -> int:
 
 
 def _run_build(args: argparse.Namespace) -> int:
-    bundle = build_release_evidence_bundle(
+    bundle = ReleaseEvidence.from_directory(
         args.out,
         pyproject=args.pyproject,
         workflow=args.workflow,
+    ).save_bundle(
         fail_on_missing_input=args.fail_on_missing_input,
     )
     print(f"Wrote evidence bundle: {bundle.output_dir}")
-    for output_format, path in bundle.document_outputs.items():
+    for output_format, path in bundle.outputs.items():
         print(f"Wrote {output_format}: {path}")
     print(f"Wrote checksums: {bundle.checksum_file}")
     return 0

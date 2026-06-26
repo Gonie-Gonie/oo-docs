@@ -934,59 +934,38 @@
       "exports": [
         {
           "category": "adapter",
-          "kind": "function",
-          "module": "oodocs.adapters.evidence",
-          "name": "build_release_evidence_bundle",
-          "qualname": "oodocs.adapters.evidence.build_release_evidence_bundle"
-        },
-        {
-          "category": "adapter",
-          "kind": "function",
-          "module": "oodocs.adapters.evidence",
-          "name": "build_release_evidence_document",
-          "qualname": "oodocs.adapters.evidence.build_release_evidence_document"
-        },
-        {
-          "category": "adapter",
-          "kind": "function",
+          "kind": "class",
           "module": "oodocs.adapters.github_actions",
-          "name": "section_from_github_workflow",
-          "qualname": "oodocs.adapters.github_actions.section_from_github_workflow"
+          "name": "GithubWorkflowSummary",
+          "qualname": "oodocs.adapters.github_actions.GithubWorkflowSummary"
         },
         {
           "category": "adapter",
-          "kind": "function",
-          "module": "oodocs.adapters.manifest",
-          "name": "section_from_manifest",
-          "qualname": "oodocs.adapters.manifest.section_from_manifest"
-        },
-        {
-          "category": "adapter",
-          "kind": "function",
+          "kind": "class",
           "module": "oodocs.adapters.pyproject",
-          "name": "section_from_pyproject",
-          "qualname": "oodocs.adapters.pyproject.section_from_pyproject"
+          "name": "ProjectMetadata",
+          "qualname": "oodocs.adapters.pyproject.ProjectMetadata"
         },
         {
           "category": "adapter",
-          "kind": "function",
-          "module": "oodocs.adapters.tabular",
-          "name": "table_from_csv",
-          "qualname": "oodocs.adapters.tabular.table_from_csv"
+          "kind": "class",
+          "module": "oodocs.adapters.evidence",
+          "name": "ReleaseEvidence",
+          "qualname": "oodocs.adapters.evidence.ReleaseEvidence"
         },
         {
           "category": "adapter",
-          "kind": "function",
-          "module": "oodocs.adapters.tabular",
-          "name": "table_from_records",
-          "qualname": "oodocs.adapters.tabular.table_from_records"
+          "kind": "class",
+          "module": "oodocs.adapters.evidence",
+          "name": "ReleaseEvidenceBundle",
+          "qualname": "oodocs.adapters.evidence.ReleaseEvidenceBundle"
         },
         {
           "category": "adapter",
-          "kind": "function",
-          "module": "oodocs.adapters.tabular",
-          "name": "table_from_tsv",
-          "qualname": "oodocs.adapters.tabular.table_from_tsv"
+          "kind": "class",
+          "module": "oodocs.adapters.manifest",
+          "name": "ReleaseManifestSummary",
+          "qualname": "oodocs.adapters.manifest.ReleaseManifestSummary"
         }
       ]
     },

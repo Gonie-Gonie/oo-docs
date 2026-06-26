@@ -7,25 +7,22 @@ from pathlib import Path
 import pytest
 
 from oodocs.adapters import (
-    build_release_evidence_bundle,
-    build_release_evidence_document,
-    section_from_github_workflow,
-    section_from_manifest,
-    section_from_pyproject,
-    table_from_csv,
-    table_from_records,
+    GithubWorkflowSummary,
+    ProjectMetadata,
+    ReleaseEvidence,
+    ReleaseManifestSummary,
 )
 from oodocs.adapters.evidence import CHECKSUM_NAME, MANIFEST_NAME
 from oodocs.components.blocks import Section
 from oodocs.components.media import Table
 
 
-def test_tabular_adapter_wraps_table_helpers(tmp_path: Path) -> None:
+def test_table_factories_replace_tabular_adapter_wrappers(tmp_path: Path) -> None:
     csv_path = tmp_path / "data.csv"
     csv_path.write_text("name,value\nalpha,1\n", encoding="utf-8")
 
-    records_table = table_from_records([{"name": "alpha", "value": 1}])
-    csv_table = table_from_csv(csv_path)
+    records_table = Table.from_records([{"name": "alpha", "value": 1}])
+    csv_table = Table.from_csv(csv_path)
 
     assert isinstance(records_table, Table)
     assert isinstance(csv_table, Table)
@@ -51,8 +48,8 @@ def test_pyproject_and_manifest_adapters_create_sections(tmp_path: Path) -> None
     manifest_path = tmp_path / "manifest.json"
     manifest_path.write_text(json.dumps({"tag": "v1.0.3", "commit": "abc"}), encoding="utf-8")
 
-    pyproject_section = section_from_pyproject(pyproject_path)
-    manifest_section = section_from_manifest(manifest_path)
+    pyproject_section = ProjectMetadata.from_pyproject(pyproject_path).to_section()
+    manifest_section = ReleaseManifestSummary.from_file(manifest_path).to_section()
 
     assert isinstance(pyproject_section, Section)
     assert pyproject_section.children[1].rows[0][1].content.plain_text() == "oodocs-test"
@@ -68,17 +65,17 @@ def test_github_actions_adapter_uses_optional_yaml(tmp_path: Path) -> None:
 
     if importlib.util.find_spec("yaml") is None:
         with pytest.raises(ImportError, match="oodocs\\[adapters\\]"):
-            section_from_github_workflow(workflow_path)
+            GithubWorkflowSummary.from_file(workflow_path)
         return
 
-    section = section_from_github_workflow(workflow_path)
+    section = GithubWorkflowSummary.from_file(workflow_path).to_section()
     assert isinstance(section, Section)
     table = section.children[1]
     assert isinstance(table, Table)
     assert table.rows[0][0].content.plain_text() == "build"
 
 
-def test_build_release_evidence_bundle_creates_machine_and_document_files(
+def test_release_evidence_save_bundle_creates_machine_and_document_files(
     tmp_path: Path,
 ) -> None:
     pyproject_path = tmp_path / "pyproject.toml"
@@ -97,32 +94,33 @@ def test_build_release_evidence_bundle_creates_machine_and_document_files(
     )
     workflow_path = tmp_path / "missing-release.yml"
 
-    bundle = build_release_evidence_bundle(
+    bundle = ReleaseEvidence.from_directory(
         tmp_path / "evidence",
         pyproject=pyproject_path,
         workflow=workflow_path,
+    ).save_bundle(
         fail_on_missing_input=False,
     )
 
     assert (bundle.output_dir / "feature-coverage.csv").exists()
     assert (bundle.output_dir / MANIFEST_NAME).exists()
     assert (bundle.output_dir / CHECKSUM_NAME).exists()
-    assert bundle.document_outputs["html"].exists()
-    assert bundle.document_outputs["docx"].exists()
-    assert bundle.document_outputs["pdf"].exists()
-    assert "oodocs-evidence-report.html" in bundle.document_outputs["html"].name
+    assert bundle.outputs["html"].exists()
+    assert bundle.outputs["docx"].exists()
+    assert bundle.outputs["pdf"].exists()
+    assert "oodocs-evidence-report.html" in bundle.outputs["html"].name
+    assert any(path.name == MANIFEST_NAME for path in bundle.data_files)
 
 
-def test_build_release_evidence_document_fail_on_missing_input_requires_inputs(
+def test_release_evidence_to_document_fail_on_missing_input_requires_inputs(
     tmp_path: Path,
 ) -> None:
     pyproject_path = tmp_path / "pyproject.toml"
     pyproject_path.write_text("[project]\nname = \"oodocs-test\"\n", encoding="utf-8")
 
     with pytest.raises(FileNotFoundError, match="Missing release evidence"):
-        build_release_evidence_document(
+        ReleaseEvidence.from_directory(
+            tmp_path / "empty",
             pyproject=pyproject_path,
             workflow=None,
-            evidence_dir=tmp_path / "empty",
-            fail_on_missing_input=True,
-        )
+        ).to_document(fail_on_missing_input=True)
