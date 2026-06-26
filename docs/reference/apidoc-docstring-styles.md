@@ -256,8 +256,8 @@ profiles or repository-local automation:
   "collector": "inspect",
   "docstring_style": "brief",
   "docstring_parser_modules": ["docs_parsers"],
-  "formats": ["docx", "pdf", "html"],
-  "out": "artifacts/api",
+  "output_formats": ["docx", "pdf", "html"],
+  "output_dir": "artifacts/api",
   "sidecars": true
 }
 ```

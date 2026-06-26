@@ -2109,7 +2109,7 @@ def test_api_objects_example_builds_help_book_and_composable_document(
             "auto",
             "--outputs",
             "html",
-            "--out",
+            "--output-dir",
             str(cli_output),
             "--quiet",
         ]

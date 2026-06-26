@@ -807,7 +807,7 @@ def test_general_repo_api_objects_example_cli_targets_repo_path(tmp_path) -> Non
             "pdf",
             "--outputs",
             "html",
-            "--out",
+            "--output-dir",
             str(output_dir),
             "--quiet",
         ]
@@ -928,7 +928,7 @@ def test_general_repo_pyproject_auto_parser_builds_cli_bundle(tmp_path) -> None:
             str(repo),
             "--config",
             str(repo / "pyproject.toml"),
-            "--out",
+            "--output-dir",
             str(example_output_dir),
             "--quiet",
         ]
@@ -1080,7 +1080,7 @@ def test_general_python_file_module_targets_build_reference_and_example(
             "auto",
             "--outputs",
             "html",
-            "--out",
+            "--output-dir",
             str(example_output),
             "--quiet",
         ]
@@ -1144,7 +1144,7 @@ def test_general_py_modules_repo_targets_build_reference_and_example(
             "auto",
             "--outputs",
             "html",
-            "--out",
+            "--output-dir",
             str(example_output),
             "--quiet",
         ]
@@ -1488,7 +1488,7 @@ def test_api_objects_example_config_loads_repo_docstring_parser_modules(
             str(repo),
             "--config",
             str(repo / "pyproject.toml"),
-            "--out",
+            "--output-dir",
             str(output_dir),
             "--quiet",
         ]
@@ -1592,7 +1592,7 @@ def test_api_objects_example_external_json_config_loads_target_parser_modules(
             str(repo),
             "--config",
             str(config_path),
-            "--out",
+            "--output-dir",
             str(output_dir),
             "--quiet",
         ]

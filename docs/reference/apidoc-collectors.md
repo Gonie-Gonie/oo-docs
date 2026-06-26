@@ -279,8 +279,8 @@ curated boundary. Use `ApiCollectConfig.from_pyproject(...)` when a repository
 stores its policy in `pyproject.toml`, or `ApiCollectConfig.save_json(...)`
 when the full collection policy should be shared as a standalone sidecar.
 Use `ApiHelpBookConfig.from_pyproject(...)` when the same repository config should
-also supply rendered-document defaults such as presentation, formats, filters, and
-sidecar generation.
+also supply rendered-document defaults such as presentation, output formats,
+filters, and sidecar generation.
 
 ```toml
 [tool.oodocs.apidoc]
@@ -291,7 +291,7 @@ class-signature-from-init = true
 module-exclude-patterns = ["mypkg.tests*"]
 object-exclude-patterns = ["render_to_docx", "render_to_pdf", "render_to_html"]
 presentation = "website"
-formats = ["html"]
+output-formats = ["html"]
 sidecars = true
 ```
 

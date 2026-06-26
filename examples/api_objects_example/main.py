@@ -331,7 +331,8 @@ def render_apidoc_example_bundle(
         target: Importable package/module name, Python file, package directory,
             or repository checkout collected when ``api`` is omitted.
         config: Optional build or collection config. Build configs provide the
-            collection settings plus default formats and max level.
+            collection settings plus default output formats and max heading
+            level.
         public_policy: Public boundary used when collecting ``target``.
         collector: Collector backend used when collecting ``target``.
         docstring_style: Docstring parser style or reusable parser object used
@@ -385,7 +386,9 @@ def render_apidoc_example_bundle(
         effective_max_heading_level = build_config.max_heading_level
     else:
         effective_max_heading_level = None
-    effective_formats = output_formats or (build_config.output_formats if build_config else None)
+    effective_output_formats = output_formats or (
+        build_config.output_formats if build_config else None
+    )
 
     if api is None:
         _log(f"Collecting API objects from {target!s}...", verbose=verbose)
@@ -401,8 +404,8 @@ def render_apidoc_example_bundle(
         coverage = check_api_docs(api)
 
     save_kwargs: dict[str, object] = {"verbose": verbose}
-    if effective_formats is not None:
-        save_kwargs["formats"] = tuple(effective_formats)
+    if effective_output_formats is not None:
+        save_kwargs["formats"] = tuple(effective_output_formats)
 
     _log("Building API help book...", verbose=verbose)
     help_book = build_help_book_document(
@@ -457,7 +460,7 @@ def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         help="Importable module/package, Python file, package directory, or repo path.",
     )
     parser.add_argument(
-        "--out",
+        "--output-dir",
         default=str(ARTIFACT_DIR),
         help="Output directory for rendered documents and sidecars.",
     )
@@ -503,7 +506,7 @@ def main(argv: Sequence[str] | None = None) -> None:
         ```python
         from examples.api_objects_example.main import main
 
-        main([".", "--outputs", "html", "--out", "artifacts/api-objects-example"])
+        main([".", "--outputs", "html", "--output-dir", "artifacts/api-objects-example"])
         ```
     """
 
@@ -514,7 +517,7 @@ def main(argv: Sequence[str] | None = None) -> None:
         else None
     )
     outputs = render_apidoc_example_bundle(
-        output_dir=args.out,
+        output_dir=args.output_dir,
         target=args.target,
         config=build_config,
         public_policy=args.public_policy,

@@ -254,7 +254,7 @@ public-policy = "__all__"
 docstring-style = "auto"
 module-prefix = "mypkg"
 presentation = "manual"
-formats = ["docx", "pdf", "html"]
+output-formats = ["docx", "pdf", "html"]
 sidecars = true
 ```
 
