@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from oodocs.layout.theme import TextStyle
 
 
-_CITATION_FORMAT_ALIASES = {
+_CITATION_STYLE_ALIASES = {
     "numeric": "numeric",
     "numbered": "numeric",
     "ieee": "numeric",
@@ -24,7 +24,7 @@ _CITATION_FORMAT_ALIASES = {
     "chicago": "chicago",
 }
 
-_REFERENCE_FORMAT_ALIASES = {
+_REFERENCE_STYLE_ALIASES = {
     "default": "plain",
     "plain": "plain",
     "numeric": "numbered",
@@ -36,79 +36,79 @@ _REFERENCE_FORMAT_ALIASES = {
 }
 
 
-def normalize_citation_format(value: str) -> str:
-    """Return the canonical name for an inline citation format.
+def normalize_citation_style(value: str) -> str:
+    """Return the canonical name for an inline citation style.
 
     Args:
-        value: Citation format name or alias.
+        value: Citation style name or alias.
 
     Returns:
-        Canonical citation format.
+        Canonical citation style.
 
     Raises:
         TypeError: If ``value`` is not a string.
-        ValueError: If the format is unsupported.
+        ValueError: If the style is unsupported.
 
     Examples:
         ```python
-        normalize_citation_format("APA")
+        normalize_citation_style("APA")
         # "apa"
         ```
     """
 
     if not isinstance(value, str):
-        raise TypeError("citation_format must be a string")
+        raise TypeError("citation_style must be a string")
     key = re.sub(r"[\s_]+", "-", value.strip().lower())
-    if key not in _CITATION_FORMAT_ALIASES:
-        supported = ", ".join(sorted(_CITATION_FORMAT_ALIASES))
+    if key not in _CITATION_STYLE_ALIASES:
+        supported = ", ".join(sorted(_CITATION_STYLE_ALIASES))
         raise ValueError(
-            f"Unsupported citation_format: {value!r}. Supported values: {supported}"
+            f"Unsupported citation_style: {value!r}. Supported values: {supported}"
         )
-    return _CITATION_FORMAT_ALIASES[key]
+    return _CITATION_STYLE_ALIASES[key]
 
 
-def normalize_reference_format(value: str) -> str:
+def normalize_reference_style(value: str) -> str:
     """Return the canonical name for a bibliography entry format.
 
     Args:
-        value: Reference format name or alias.
+        value: Reference style name or alias.
 
     Returns:
-        Canonical reference format.
+        Canonical reference style.
 
     Raises:
         TypeError: If ``value`` is not a string.
-        ValueError: If the format is unsupported.
+        ValueError: If the style is unsupported.
 
     Examples:
         ```python
-        normalize_reference_format("ieee")
+        normalize_reference_style("ieee")
         # "ieee"
         ```
     """
 
     if not isinstance(value, str):
-        raise TypeError("reference_format must be a string")
+        raise TypeError("reference_style must be a string")
     key = re.sub(r"[\s_]+", "-", value.strip().lower())
-    if key not in _REFERENCE_FORMAT_ALIASES:
-        supported = ", ".join(sorted(_REFERENCE_FORMAT_ALIASES))
+    if key not in _REFERENCE_STYLE_ALIASES:
+        supported = ", ".join(sorted(_REFERENCE_STYLE_ALIASES))
         raise ValueError(
-            f"Unsupported reference_format: {value!r}. Supported values: {supported}"
+            f"Unsupported reference_style: {value!r}. Supported values: {supported}"
         )
-    return _REFERENCE_FORMAT_ALIASES[key]
+    return _REFERENCE_STYLE_ALIASES[key]
 
 
 def format_citation_label(
     source: CitationSource,
     number: int,
-    citation_format: str,
+    citation_style: str,
 ) -> str:
     """Format the visible inline citation label for a cited source.
 
     Args:
         source: Citation source being cited.
         number: Assigned citation number.
-        citation_format: Citation format name or alias.
+        citation_style: Citation style name or alias.
 
     Returns:
         Visible inline citation label.
@@ -121,14 +121,14 @@ def format_citation_label(
         ```
     """
 
-    resolved_format = normalize_citation_format(citation_format)
-    if resolved_format == "numeric":
+    resolved_style = normalize_citation_style(citation_style)
+    if resolved_style == "numeric":
         return f"[{number}]"
 
     author = _short_author_label(source)
-    if resolved_format == "mla":
+    if resolved_style == "mla":
         return f"({author})"
-    if resolved_format == "chicago":
+    if resolved_style == "chicago":
         return f"({author} {_citation_year(source)})"
     return f"({author}, {_citation_year(source)})"
 
@@ -136,15 +136,15 @@ def format_citation_label(
 def reference_entry_marker(
     number: int,
     *,
-    citation_format: str,
-    reference_format: str,
+    citation_style: str,
+    reference_style: str,
 ) -> str:
     """Return the visible marker prefix for a references-page entry.
 
     Args:
         number: Assigned reference number.
-        citation_format: Active inline citation format.
-        reference_format: Active bibliography entry format.
+        citation_style: Active inline citation style.
+        reference_style: Active bibliography entry style.
 
     Returns:
         Marker prefix, or an empty string for unnumbered references.
@@ -153,16 +153,16 @@ def reference_entry_marker(
         ```python
         marker = reference_entry_marker(
             1,
-            citation_format="numeric",
-            reference_format="plain",
+            citation_style="numeric",
+            reference_style="plain",
         )
         # "[1]"
         ```
     """
 
-    resolved_citation_format = normalize_citation_format(citation_format)
-    resolved_reference_format = normalize_reference_format(reference_format)
-    if resolved_citation_format == "numeric" or resolved_reference_format in {"numbered", "ieee"}:
+    resolved_citation_style = normalize_citation_style(citation_style)
+    resolved_reference_style = normalize_reference_style(reference_style)
+    if resolved_citation_style == "numeric" or resolved_reference_style in {"numbered", "ieee"}:
         return f"[{number}]"
     return ""
 
@@ -226,23 +226,23 @@ class CitationSource:
         self.url = url
         self.note = note
 
-    def format_reference(self, reference_format: str = "plain") -> str:
+    def format_reference(self, reference_style: str = "plain") -> str:
         """Format the entry as a plain bibliography string.
 
         Args:
-            reference_format: Reference format name or alias.
+            reference_style: Reference style name or alias.
 
         Returns:
             Formatted reference string.
         """
 
-        return _format_reference_text(self, reference_format)
+        return _format_reference_text(self, reference_style)
 
-    def reference_fragments(self, reference_format: str = "plain") -> list[Text]:
+    def reference_fragments(self, reference_style: str = "plain") -> list[Text]:
         """Return renderer-friendly inline fragments for a reference entry.
 
         Args:
-            reference_format: Reference format name or alias.
+            reference_style: Reference style name or alias.
 
         Returns:
             Inline fragments, with the URL turned into a hyperlink when present
@@ -251,7 +251,7 @@ class CitationSource:
 
         from oodocs.components.inline import Hyperlink, Text
 
-        text = self.format_reference(reference_format)
+        text = self.format_reference(reference_style)
         if not self.url or self.url not in text:
             return [Text(text)]
 
@@ -429,19 +429,19 @@ def coerce_citation_library(
     return CitationLibrary(value)
 
 
-def _format_reference_text(source: CitationSource, reference_format: str) -> str:
-    resolved_format = normalize_reference_format(reference_format)
-    if resolved_format in {"plain", "numbered"}:
+def _format_reference_text(source: CitationSource, reference_style: str) -> str:
+    resolved_style = normalize_reference_style(reference_style)
+    if resolved_style in {"plain", "numbered"}:
         return _format_plain_reference(source)
-    if resolved_format == "apa":
+    if resolved_style == "apa":
         return _format_apa_reference(source)
-    if resolved_format == "mla":
+    if resolved_style == "mla":
         return _format_mla_reference(source)
-    if resolved_format == "chicago":
+    if resolved_style == "chicago":
         return _format_chicago_reference(source)
-    if resolved_format == "ieee":
+    if resolved_style == "ieee":
         return _format_ieee_reference(source)
-    raise ValueError(f"Unsupported reference_format: {reference_format!r}")
+    raise ValueError(f"Unsupported reference_style: {reference_style!r}")
 
 
 def _format_plain_reference(source: CitationSource) -> str:
@@ -717,7 +717,7 @@ __all__ = [
     "CitationSource",
     "coerce_citation_library",
     "format_citation_label",
-    "normalize_citation_format",
-    "normalize_reference_format",
+    "normalize_citation_style",
+    "normalize_reference_style",
     "reference_entry_marker",
 ]

@@ -1025,13 +1025,13 @@ class HtmlRenderer:
                     f'<span class="oodocs-generated-marker">{escape(marker)}</span> '
                     if (marker := reference_entry_marker(
                         entry.number,
-                        citation_format=context.theme.citation_format,
-                        reference_format=context.theme.reference_format,
+                        citation_style=context.theme.citation_style,
+                        reference_style=context.theme.reference_style,
                     ))
                     else ""
                 )
                 + self._inline_html(
-                    entry.source.reference_fragments(context.theme.reference_format),
+                    entry.source.reference_fragments(context.theme.reference_style),
                     context.theme,
                     context.render_index,
                 )
@@ -1654,7 +1654,7 @@ class HtmlRenderer:
             citation_label = format_citation_label(
                 citation_entry.source,
                 citation_entry.number,
-                theme.citation_format,
+                theme.citation_style,
             )
             return self._link_html(
                 citation_entry.anchor,
@@ -1841,7 +1841,7 @@ class HtmlRenderer:
             return format_citation_label(
                 citation_entry.source,
                 citation_entry.number,
-                theme.citation_format,
+                theme.citation_style,
             )
         if isinstance(fragment, Hyperlink):
             return fragment.plain_text()

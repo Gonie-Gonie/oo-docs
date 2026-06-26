@@ -1379,7 +1379,7 @@ class DocxRenderer:
                 citation_label = format_citation_label(
                     citation_entry.source,
                     citation_entry.number,
-                    theme.citation_format if theme is not None else "numeric",
+                    theme.citation_style if theme is not None else "numeric",
                 )
                 self._append_hyperlink_runs(
                     paragraph,
@@ -2878,7 +2878,7 @@ class DocxRenderer:
             return format_citation_label(
                 citation_entry.source,
                 citation_entry.number,
-                theme.citation_format if theme is not None else "numeric",
+                theme.citation_style if theme is not None else "numeric",
             )
         if isinstance(fragment, Hyperlink):
             return fragment.plain_text()
@@ -3086,10 +3086,10 @@ class DocxRenderer:
             paragraph.paragraph_format.first_line_indent = Inches(-0.3)
             marker = reference_entry_marker(
                 entry.number,
-                citation_format=theme.citation_format,
-                reference_format=theme.reference_format,
+                citation_style=theme.citation_style,
+                reference_style=theme.reference_style,
             )
-            fragments = entry.source.reference_fragments(theme.reference_format)
+            fragments = entry.source.reference_fragments(theme.reference_style)
             if marker:
                 fragments = [Text(f"{marker} ")] + fragments
             self._append_runs(

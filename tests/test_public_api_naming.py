@@ -7,6 +7,7 @@ import pytest
 
 import oodocs
 import oodocs.apidoc as apidoc
+import oodocs.components.references as references
 from oodocs.apidoc.cli import _build_parser as _build_apidoc_parser
 from oodocs.cli import _build_parser as _build_oodocs_parser
 
@@ -82,6 +83,20 @@ def test_text_style_uses_canonical_field_names() -> None:
 
     assert {"color", "all_caps"}.isdisjoint(field_names)
     assert {"text_color", "uppercase"} <= field_names
+
+
+def test_citation_defaults_use_style_field_names() -> None:
+    citation_fields = {field.name for field in fields(oodocs.CitationOptions)}
+    theme_fields = {field.name for field in fields(oodocs.Theme)}
+
+    assert {"citation_format", "reference_format"}.isdisjoint(citation_fields)
+    assert {"citation_style", "reference_style"} <= citation_fields
+    assert {"citation_format", "reference_format"}.isdisjoint(theme_fields)
+    assert {"citation_style", "reference_style"} <= theme_fields
+    assert "normalize_citation_format" not in references.__all__
+    assert "normalize_reference_format" not in references.__all__
+    assert "normalize_citation_style" in references.__all__
+    assert "normalize_reference_style" in references.__all__
 
 
 def test_apidoc_raw_value_helpers_use_as_prefix() -> None:

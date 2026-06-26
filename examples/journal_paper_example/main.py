@@ -293,7 +293,7 @@ def build_journal_paper_document() -> Document:
                 "The corpus table remains full-width because its descriptive source column benefits from horizontal space. Other evidence objects, especially compact plots, can sit inside a single manuscript column so the page feels like a real article instead of a sequence of full-width interruptions."
             ),
             Paragraph(
-                "Input files are kept beside the example script so that the paper can be rebuilt without external services. That makes the example useful as a regression target: if a renderer changes table layout, image sizing, citation formatting, or page flow, the generated paper exposes the change in every supported output format."
+                "Input files are kept beside the example script so that the paper can be rebuilt without external services. That makes the example useful as a regression target: if a renderer changes table layout, image sizing, Citation styleting, or page flow, the generated paper exposes the change in every supported output format."
             ),
             Section("Results", level=1),
             Section(
@@ -413,8 +413,8 @@ def build_journal_paper_document() -> Document:
             theme=Theme(
                 show_page_numbers=True,
                 page_number_format="{page}",
-                citation_format="apa",
-                reference_format="apa",
+                citation_style="apa",
+                reference_style="apa",
             ),
         ),
         citations=manuscript_sources,

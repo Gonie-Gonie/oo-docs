@@ -823,7 +823,7 @@ def build_usage_guide_document() -> Document:
         rows=[
             ["TypographyOptions", "body_font_name, monospace_font_name, title_font_size, body_font_size, heading_sizes, caption_font_size", "Fonts and type scale."],
             ["CaptionOptions", "caption_alignment, table_caption_position, figure_caption_position, table_label, figure_label, caption/reference labels", "Caption placement and localized labels."],
-            ["CitationOptions", "citation_format, reference_format", "Inline citation labels and generated reference entry style."],
+            ["CitationOptions", "citation_style, reference_style", "Inline citation labels and generated reference entry style."],
             ["GeneratedPageOptions", "contents/list/comments/footnotes/references titles, generated_section_level, generated_page_breaks", "Generated pages and their heading level."],
             ["PageNumberOptions", "show_page_numbers, page_number_alignment, page_number_format, front/main matter formats, page_number_font_size", "Footer page labels."],
             ["TitleMatterOptions", "title_alignment, subtitle_alignment, author_alignment, affiliation_alignment, author_detail_alignment", "Title-page and metadata alignment."],
@@ -1394,7 +1394,7 @@ def build_usage_guide_document() -> Document:
                 ),
                 Paragraph(
                     "The visible style is configured on the theme: ",
-                    inline_code('Theme(citation_format="apa", reference_format="apa")'),
+                    inline_code('Theme(citation_style="apa", reference_style="apa")'),
                     " switches inline citations to author-year labels and formats the generated references entries in APA-style order."
                 ),
             ),

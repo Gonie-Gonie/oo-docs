@@ -2716,7 +2716,7 @@ class PdfRenderer:
             citation_label = format_citation_label(
                 citation_entry.source,
                 citation_entry.number,
-                theme.citation_format,
+                theme.citation_style,
             )
             return self._link_markup(
                 citation_entry.anchor,
@@ -2906,7 +2906,7 @@ class PdfRenderer:
             return format_citation_label(
                 citation_entry.source,
                 citation_entry.number,
-                theme.citation_format,
+                theme.citation_style,
             )
         if isinstance(fragment, Hyperlink):
             return fragment.plain_text()
@@ -3272,10 +3272,10 @@ class PdfRenderer:
         for entry in render_index.citations:
             marker = reference_entry_marker(
                 entry.number,
-                citation_format=theme.citation_format,
-                reference_format=theme.reference_format,
+                citation_style=theme.citation_style,
+                reference_style=theme.reference_style,
             )
-            fragments = entry.source.reference_fragments(theme.reference_format)
+            fragments = entry.source.reference_fragments(theme.reference_style)
             if marker:
                 fragments = [Text(f"{marker} ")] + fragments
             story.append(

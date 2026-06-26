@@ -15,8 +15,8 @@ from oodocs.core import (
     normalize_vertical_alignment,
 )
 from oodocs.components.references import (
-    normalize_citation_format,
-    normalize_reference_format,
+    normalize_citation_style,
+    normalize_reference_style,
 )
 
 _UNSET = object()
@@ -861,14 +861,14 @@ class CitationOptions:
     """Grouped citation and bibliography formatting defaults.
 
     Attributes:
-        citation_format: Inline citation style identifier.
-        reference_format: Reference list style identifier.
+        citation_style: Inline citation style identifier.
+        reference_style: Reference list style identifier.
 
     Examples:
         ```python
         from oodocs import CitationOptions, CitationSource, Document, DocumentSettings, Paragraph, Theme, cite
 
-        theme = Theme(CitationOptions(citation_format="author-year"))
+        theme = Theme(CitationOptions(citation_style="author-year"))
         source = CitationSource("Reliable APIs", key="api2024", authors=("Jane Doe",))
         document = Document(
             "Paper",
@@ -879,8 +879,8 @@ class CitationOptions:
         ```
     """
 
-    citation_format: str = "numeric"
-    reference_format: str = "plain"
+    citation_style: str = "numeric"
+    reference_style: str = "plain"
 
 
 @dataclass(slots=True)
@@ -1069,8 +1069,8 @@ class Theme:
         figure_caption_label: Optional figure caption label override.
         table_reference_label: Optional table reference label override.
         figure_reference_label: Optional figure reference label override.
-        citation_format: Inline citation style identifier.
-        reference_format: Reference list style identifier.
+        citation_style: Inline citation style identifier.
+        reference_style: Reference list style identifier.
         list_of_tables_title: Default title for generated table lists.
         list_of_figures_title: Default title for generated figure lists.
         comments_title: Default title for generated comments pages.
@@ -1165,8 +1165,8 @@ class Theme:
     figure_caption_label: str | None = None
     table_reference_label: str | None = None
     figure_reference_label: str | None = None
-    citation_format: str = "numeric"
-    reference_format: str = "plain"
+    citation_style: str = "numeric"
+    reference_style: str = "plain"
     list_of_tables_title: str = "List of Tables"
     list_of_figures_title: str = "List of Figures"
     comments_title: str = "Comments"
@@ -1227,8 +1227,8 @@ class Theme:
         figure_caption_label: str | None | object = _UNSET,
         table_reference_label: str | None | object = _UNSET,
         figure_reference_label: str | None | object = _UNSET,
-        citation_format: str | object = _UNSET,
-        reference_format: str | object = _UNSET,
+        citation_style: str | object = _UNSET,
+        reference_style: str | object = _UNSET,
         list_of_tables_title: str | object = _UNSET,
         list_of_figures_title: str | object = _UNSET,
         comments_title: str | object = _UNSET,
@@ -1346,8 +1346,8 @@ class Theme:
             "figure_caption_label": figure_caption_label,
             "table_reference_label": table_reference_label,
             "figure_reference_label": figure_reference_label,
-            "citation_format": citation_format,
-            "reference_format": reference_format,
+            "citation_style": citation_style,
+            "reference_style": reference_style,
             "list_of_tables_title": list_of_tables_title,
             "list_of_figures_title": list_of_figures_title,
             "comments_title": comments_title,
@@ -1411,8 +1411,8 @@ class Theme:
             raise ValueError(
                 "figure_caption_position must be 'above' or 'below'"
             )
-        self.citation_format = normalize_citation_format(self.citation_format)
-        self.reference_format = normalize_reference_format(self.reference_format)
+        self.citation_style = normalize_citation_style(self.citation_style)
+        self.reference_style = normalize_reference_style(self.reference_style)
         if self.footnote_placement not in {"page", "document"}:
             raise ValueError(
                 "footnote_placement must be 'page' or 'document'"
@@ -1462,8 +1462,8 @@ class Theme:
             figure_reference_label=self.figure_reference_label,
         )
         self.citation_options = CitationOptions(
-            citation_format=self.citation_format,
-            reference_format=self.reference_format,
+            citation_style=self.citation_style,
+            reference_style=self.reference_style,
         )
         self.generated_pages = GeneratedPageOptions(
             list_of_tables_title=self.list_of_tables_title,

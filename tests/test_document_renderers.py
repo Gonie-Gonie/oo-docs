@@ -456,7 +456,7 @@ def test_theme_accepts_grouped_option_objects() -> None:
     theme = Theme(
         TypographyOptions(body_font_name="Arial", body_font_size=10.0),
         CaptionOptions(figure_label="Fig.", table_caption_position="below"),
-        CitationOptions(citation_format="apa", reference_format="apa"),
+        CitationOptions(citation_style="apa", reference_style="apa"),
         GeneratedPageOptions(contents_title="Outline"),
         PageNumberOptions(show_page_numbers=True, page_number_format="p. {page}"),
         TitleMatterOptions(title_alignment="left"),
@@ -473,9 +473,9 @@ def test_theme_accepts_grouped_option_objects() -> None:
     assert theme.body_font_size == 10.0
     assert theme.figure_label == "Fig."
     assert theme.table_caption_position == "below"
-    assert theme.citation_format == "apa"
-    assert theme.reference_format == "apa"
-    assert theme.citation_options.citation_format == "apa"
+    assert theme.citation_style == "apa"
+    assert theme.reference_style == "apa"
+    assert theme.citation_options.citation_style == "apa"
     assert theme.contents_title == "Outline"
     assert theme.show_page_numbers is True
     assert theme.format_page_number(4) == "p. 4"
@@ -2563,7 +2563,7 @@ def test_bibtex_string_creates_citation_library() -> None:
     assert "GitHub repository" in entry.format_reference()
 
 
-def test_citation_and_reference_formats_can_be_configured(tmp_path: Path) -> None:
+def test_citation_and_reference_styles_can_be_configured(tmp_path: Path) -> None:
     source = CitationSource(
         "Literate Programming",
         key="knuth",
@@ -2577,7 +2577,7 @@ def test_citation_and_reference_formats_can_be_configured(tmp_path: Path) -> Non
         Paragraph("Prior work ", cite("knuth"), " remains relevant."),
         ReferencesPage(),
         settings=DocumentSettings(
-            theme=Theme(citation_format="apa", reference_format="apa"),
+            theme=Theme(citation_style="apa", reference_style="apa"),
         ),
         citations=[source],
     )
