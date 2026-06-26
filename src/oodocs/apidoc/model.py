@@ -1032,6 +1032,7 @@ class ApiDocIssue:
         severity: Issue severity.
         code: Stable kebab-case issue code.
         message: Human-readable message.
+        source: Optional source label, such as parser or collector source.
         qualname: Optional API object qualname.
         module: Optional module name.
         path: Optional source path.
@@ -1046,6 +1047,7 @@ class ApiDocIssue:
     severity: ApiDocIssueSeverity
     code: str
     message: str
+    source: str | None = None
     qualname: str | None = None
     module: str | None = None
     path: str | None = None
@@ -1079,6 +1081,7 @@ class ApiDocIssue:
             "severity": self.severity,
             "code": self.code,
             "message": self.message,
+            "source": self.source,
             "qualname": self.qualname,
             "module": self.module,
             "path": self.path,
@@ -1113,6 +1116,7 @@ class ApiDocIssue:
             severity=str(data["severity"]),  # type: ignore[arg-type]
             code=str(data["code"]),
             message=str(data["message"]),
+            source=_optional_str(data.get("source")),
             qualname=_optional_str(data.get("qualname")),
             module=_optional_str(data.get("module")),
             path=_optional_str(data.get("path")),
@@ -1123,7 +1127,7 @@ class ApiDocIssue:
         """Return this issue as a table row.
 
         Returns:
-            ``[severity, code, qualname, module, location, message]``.
+            ``[severity, code, qualname, module, source, location, message]``.
 
         Examples:
             Convert diagnostics into table rows for release evidence:
@@ -1134,7 +1138,7 @@ class ApiDocIssue:
 
             issue = ApiDocIssue("warning", "missing-docstring", "No docstring.")
             table = Table(
-                ["Severity", "Code", "Object", "Module", "Location", "Message"],
+                ["Severity", "Code", "Object", "Module", "Source", "Location", "Message"],
                 [issue.as_issue_row()],
             )
             ```
@@ -1150,6 +1154,7 @@ class ApiDocIssue:
             self.code,
             self.qualname or "",
             self.module or "",
+            self.source or "",
             location,
             self.message,
         ]
@@ -3431,7 +3436,7 @@ class ApiPackage:
         from oodocs.components.media import Table
 
         return Table(
-            ["Severity", "Code", "Object", "Module", "Location", "Message"],
+            ["Severity", "Code", "Object", "Module", "Source", "Location", "Message"],
             [
                 issue.as_issue_row()
                 for issue in self.iter_issues(

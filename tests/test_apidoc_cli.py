@@ -194,7 +194,7 @@ def test_apidoc_build_config_saves_full_reference_bundle_from_json_config(tmp_pa
         for issue in coverage.issues
     )
     assert coverage_csv_path.read_text(encoding="utf-8").startswith(
-        "severity,code,qualname,module,path,line_number,message"
+        "severity,code,qualname,module,source,path,line_number,message"
     )
 
 
@@ -670,7 +670,7 @@ def test_apidoc_cli_check_and_snapshot_external_json_config_load_target_parsers(
     assert coverage.package == "releasejsonpkg"
     assert coverage.object_coverage == 1.0
     assert coverage_csv.read_text(encoding="utf-8").startswith(
-        "severity,code,qualname,module,path,line_number,message"
+        "severity,code,qualname,module,source,path,line_number,message"
     )
     assert snapshot.name == "releasejsonpkg"
     assert snapshot.objects["releasejsonpkg.run"]["summary"] == (

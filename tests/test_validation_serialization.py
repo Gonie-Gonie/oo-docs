@@ -19,6 +19,8 @@ def test_validation_result_serializes_to_dict_and_json(tmp_path: Path) -> None:
     assert payload["warnings"] == 0
     assert payload["infos"] == 0
     assert payload["issues"][0]["code"] == "missing-image-file"
+    assert "source" in payload["issues"][0]
+    assert "line_number" in payload["issues"][0]
     assert payload["issues"][0]["formats"] == ["docx", "pdf", "html"]
     assert parsed == payload
     assert result.infos == ()

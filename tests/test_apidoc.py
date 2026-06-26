@@ -1597,7 +1597,7 @@ def test_apidoc_cli_collect_check_build_snapshot_and_diff(tmp_path: Path, capsys
     )
     assert ApiCoverageResult.load_json(coverage_json).package == "clipkg"
     assert coverage_csv.read_text(encoding="utf-8").startswith(
-        "severity,code,qualname,module,path,line_number,message"
+        "severity,code,qualname,module,source,path,line_number,message"
     )
     ApiBuildConfig(
         output_formats=("docx", "pdf", "html"),
@@ -2051,7 +2051,7 @@ def test_api_objects_example_builds_full_reference_and_composable_document(
         == "examplepkg"
     )
     assert bundle_outputs["coverage_csv"].read_text(encoding="utf-8").startswith(
-        "severity,code,qualname,module,path,line_number,message"
+        "severity,code,qualname,module,source,path,line_number,message"
     )
     html = outputs["html"].read_text(encoding="utf-8")
     assert "examplepkg.Widget" in html

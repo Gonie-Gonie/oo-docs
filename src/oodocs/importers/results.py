@@ -98,6 +98,21 @@ class ImportIssue:
             path=_optional_str(data.get("path")),
         )
 
+    def as_issue_row(self) -> list[object]:
+        """Return this issue as a table row.
+
+        Returns:
+            ``[severity, code, source, line_number, message]``.
+        """
+
+        return [
+            self.severity,
+            self.code,
+            self.source or self.path or "",
+            "" if self.line_number is None else str(self.line_number),
+            self.message,
+        ]
+
 
 @dataclass(frozen=True, slots=True)
 class ImportResult:
@@ -295,16 +310,7 @@ class ImportResult:
             Table containing severity, code, source, line number, and message.
         """
 
-        rows = [
-            [
-                issue.severity,
-                issue.code,
-                issue.source or issue.path or "",
-                "" if issue.line_number is None else str(issue.line_number),
-                issue.message,
-            ]
-            for issue in self.issues
-        ]
+        rows = [issue.as_issue_row() for issue in self.issues]
         return Table(
             ["Severity", "Code", "Source", "Line", "Message"],
             rows,

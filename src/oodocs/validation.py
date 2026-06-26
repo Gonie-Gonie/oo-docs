@@ -133,7 +133,10 @@ class ValidationIssue:
         severity: Issue severity, either ``"error"`` or ``"warning"``.
         code: Stable machine-readable issue code.
         message: Human-readable explanation.
+        source: Optional source label, such as a source file or adapter name.
         path: Dotted path to the document node that triggered the issue.
+        line_number: Optional 1-based source line when the issue can be tied
+            back to an imported source.
         formats: Output formats affected by this issue.
 
     Examples:
@@ -144,6 +147,7 @@ class ValidationIssue:
             "warning",
             "custom-warning",
             "Something should be reviewed.",
+            path="document.body.children[0]",
             formats=("html",),
         )
         assert issue.applies_to(("html",))
@@ -153,7 +157,9 @@ class ValidationIssue:
     severity: ValidationSeverity
     code: str
     message: str
+    source: str | None = None
     path: str = "document"
+    line_number: int | None = None
     formats: tuple[OutputFormat, ...] = OUTPUT_FORMATS
 
     def applies_to(self, formats: Iterable[str] | None = None) -> bool:
@@ -173,14 +179,17 @@ class ValidationIssue:
         """Return a JSON-serializable representation of this issue.
 
         Returns:
-            Dictionary containing severity, code, message, path, and formats.
+            Dictionary containing severity, code, message, source, path, line
+            number, and formats.
         """
 
         return {
             "severity": self.severity,
             "code": self.code,
             "message": self.message,
+            "source": self.source,
             "path": self.path,
+            "line_number": self.line_number,
             "formats": list(self.formats),
         }
 
@@ -199,14 +208,38 @@ class ValidationIssue:
             severity=str(data["severity"]),  # type: ignore[arg-type]
             code=str(data["code"]),
             message=str(data["message"]),
+            source=_optional_str(data.get("source")),
             path=str(data.get("path", "document")),
+            line_number=_optional_int(data.get("line_number")),
             formats=normalize_output_formats(data.get("formats")),  # type: ignore[arg-type]
         )
 
+    def as_issue_row(self) -> list[object]:
+        """Return this issue as a table row.
+
+        Returns:
+            ``[severity, formats, code, source, path, line_number, message]``.
+        """
+
+        return [
+            self.severity,
+            format_output_formats(self.formats),
+            self.code,
+            self.source or "",
+            self.path,
+            "" if self.line_number is None else str(self.line_number),
+            self.message,
+        ]
+
     def __str__(self) -> str:
+        location = self.path
+        if self.line_number is not None:
+            location = f"{location}:{self.line_number}"
+        source = f" in {self.source}" if self.source else ""
         return (
             f"{self.severity.upper()} {self.code} "
-            f"[{format_output_formats(self.formats)}] at {self.path}: {self.message}"
+            f"[{format_output_formats(self.formats)}]{source} at {location}: "
+            f"{self.message}"
         )
 
 
@@ -493,21 +526,13 @@ class ValidationResult:
             caption: Optional table caption.
 
         Returns:
-            Table containing severity, formats, code, path, and message.
+            Table containing severity, formats, code, source, path, line number,
+            and message.
         """
 
-        rows = [
-            [
-                issue.severity,
-                format_output_formats(issue.formats),
-                issue.code,
-                issue.path,
-                issue.message,
-            ]
-            for issue in self.issues_for(formats)
-        ]
+        rows = [issue.as_issue_row() for issue in self.issues_for(formats)]
         return Table(
-            ["Severity", "Formats", "Code", "Path", "Message"],
+            ["Severity", "Formats", "Code", "Source", "Path", "Line", "Message"],
             rows,
             caption=caption,
             split=True,
@@ -538,10 +563,12 @@ class ValidationResult:
 
         rows = [
             (
-                issue.severity.upper(),
+                str(issue.severity).upper(),
                 format_output_formats(issue.formats),
                 issue.code,
+                issue.source or "",
                 issue.path,
+                "" if issue.line_number is None else str(issue.line_number),
                 issue.message,
             )
             for issue in issues
@@ -1485,6 +1512,14 @@ def _plain_text(fragments: Sequence[Text]) -> str:
     return "".join(fragment.plain_text() for fragment in fragments)
 
 
+def _optional_str(value: object) -> str | None:
+    return str(value) if value is not None else None
+
+
+def _optional_int(value: object) -> int | None:
+    return int(value) if value is not None else None
+
+
 def _issue_matches_formats(
     issue: ValidationIssue,
     requested_formats: set[OutputFormat],
@@ -1492,9 +1527,9 @@ def _issue_matches_formats(
     return any(output_format in requested_formats for output_format in issue.formats)
 
 
-def _format_issue_table(rows: Sequence[tuple[str, str, str, str, str]]) -> str:
-    headers = ("Severity", "Formats", "Code", "Path", "Message")
-    max_widths = (8, 14, 30, 42, 72)
+def _format_issue_table(rows: Sequence[tuple[str, str, str, str, str, str, str]]) -> str:
+    headers = ("Severity", "Formats", "Code", "Source", "Path", "Line", "Message")
+    max_widths = (8, 14, 30, 24, 38, 8, 72)
     widths = [
         min(
             max(len(headers[index]), *(len(row[index]) for row in rows)),

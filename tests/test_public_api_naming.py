@@ -554,6 +554,42 @@ def test_import_issue_uses_line_number_field_name() -> None:
     assert issue.to_dict()["line_number"] == 4
 
 
+def test_issue_objects_share_common_location_fields() -> None:
+    expected_fields = {"severity", "code", "message", "source", "path", "line_number"}
+
+    for issue_type in (
+        oodocs.ValidationIssue,
+        oodocs.ImportIssue,
+        apidoc.ApiDocIssue,
+    ):
+        field_names = {field.name for field in fields(issue_type)}
+        assert expected_fields <= field_names
+        assert "as_issue_row" in _public_members(issue_type)
+
+    validation_issue = oodocs.ValidationIssue(
+        "warning",
+        "custom-warning",
+        "Review this imported block.",
+        source="notes.md",
+        path="document.body.children[0]",
+        line_number=12,
+        formats=("html",),
+    )
+    api_issue = apidoc.ApiDocIssue(
+        "warning",
+        "missing-docstring",
+        "No docstring.",
+        source="griffe",
+        qualname="pkg.Widget",
+    )
+
+    assert validation_issue.to_dict()["source"] == "notes.md"
+    assert validation_issue.to_dict()["line_number"] == 12
+    assert api_issue.to_dict()["source"] == "griffe"
+    assert validation_issue.as_issue_row()[3] == "notes.md"
+    assert api_issue.as_issue_row()[4] == "griffe"
+
+
 def test_import_policy_names_describe_lossy_behavior() -> None:
     assert normalize_import_policy(" ALLOW-LOSSY ") == "allow-lossy"
     assert normalize_import_policy("record-lossy") == "record-lossy"

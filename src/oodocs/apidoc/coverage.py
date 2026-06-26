@@ -322,7 +322,7 @@ class ApiCoverageResult:
         if self.issues:
             blocks.append(
                 Table(
-                    ["Severity", "Code", "Object", "Module", "Location", "Message"],
+                    ["Severity", "Code", "Object", "Module", "Source", "Location", "Message"],
                     [issue.as_issue_row() for issue in self.issues],
                     caption="API documentation issues",
                     split=True,
@@ -434,7 +434,18 @@ class ApiCoverageResult:
         output_path.parent.mkdir(parents=True, exist_ok=True)
         with output_path.open("w", newline="", encoding="utf-8") as handle:
             writer = csv.writer(handle)
-            writer.writerow(["severity", "code", "qualname", "module", "path", "line_number", "message"])
+            writer.writerow(
+                [
+                    "severity",
+                    "code",
+                    "qualname",
+                    "module",
+                    "source",
+                    "path",
+                    "line_number",
+                    "message",
+                ]
+            )
             for issue in self.issues:
                 writer.writerow(
                     [
@@ -442,6 +453,7 @@ class ApiCoverageResult:
                         issue.code,
                         issue.qualname or "",
                         issue.module or "",
+                        issue.source or "",
                         issue.path or "",
                         issue.line_number or "",
                         issue.message,
