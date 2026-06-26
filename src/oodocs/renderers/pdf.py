@@ -1846,7 +1846,7 @@ class PdfRenderer:
         *,
         default_unit: str = "in",
     ) -> RLParagraphStyle:
-        alignment = theme.resolve_paragraph_alignment(style)
+        alignment = theme.resolve_paragraph_text_alignment(style)
         left_indent = style.left_indent_in_inches(default_unit) or 0
         right_indent = style.right_indent_in_inches(default_unit) or 0
         first_line_indent = style.first_line_indent_in_inches(default_unit) or 0
@@ -2322,7 +2322,7 @@ class PdfRenderer:
             label_style.spaceBefore = 4
             cell_flowables.append(RLParagraph(escape(block.language.upper()), label_style))
 
-        block_alignment = theme.resolve_paragraph_alignment(block.style)
+        block_alignment = theme.resolve_paragraph_text_alignment(block.style)
         column_widths = None if in_box else [settings.text_width_in_inches() * inch]
         table = RLTable(
             [[cell_flowables]],
@@ -2357,7 +2357,7 @@ class PdfRenderer:
             fontName=self._resolve_font(theme.body_font_name, False, False),
             fontSize=max(theme.body_font_size + 1, 12),
             leading=max(theme.body_font_size + 1, 12) * 1.3,
-            alignment=ALIGNMENTS[theme.resolve_paragraph_alignment(block.style)],
+            alignment=ALIGNMENTS[theme.resolve_paragraph_text_alignment(block.style)],
             spaceAfter=block.style.space_after or 0,
             textColor=colors.black,
         )

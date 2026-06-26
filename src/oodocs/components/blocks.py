@@ -69,7 +69,7 @@ class Paragraph(Block):
         title: Optional run-in paragraph title rendered before ``content``.
         title_style: Optional title style override for this paragraph.
         style: Base paragraph style.
-        alignment: Optional text alignment override.
+        text_alignment: Optional text alignment override.
         space_before: Optional spacing before the paragraph.
         space_after: Optional spacing after the paragraph.
         leading: Optional line spacing.
@@ -112,7 +112,7 @@ class Paragraph(Block):
         title: InlineInput | None = None,
         title_style: RunInTitleStyle | None = None,
         style: ParagraphStyle | None = None,
-        alignment: str | None = None,
+        text_alignment: str | None = None,
         space_before: float | None = None,
         space_after: float | None = None,
         leading: float | None = None,
@@ -130,7 +130,7 @@ class Paragraph(Block):
         self.title_style = title_style
         self.style = paragraph_style_with_overrides(
             style,
-            alignment=alignment,
+            text_alignment=text_alignment,
             space_before=space_before,
             space_after=space_after,
             leading=leading,
@@ -486,7 +486,7 @@ class CodeBlock(Block):
         show_language: Whether to render the language label.
         language_position: Where to place the language label.
         style: Base paragraph style for the code block.
-        alignment: Optional alignment override.
+        text_alignment: Optional text alignment override.
         space_before: Optional spacing before the block.
         space_after: Optional spacing after the block.
         leading: Optional line spacing.
@@ -525,7 +525,7 @@ class CodeBlock(Block):
         show_language: bool = True,
         language_position: CodeLanguagePosition = "top-right",
         style: ParagraphStyle | None = None,
-        alignment: str | None = None,
+        text_alignment: str | None = None,
         space_before: float | None = None,
         space_after: float | None = None,
         leading: float | None = None,
@@ -545,8 +545,8 @@ class CodeBlock(Block):
         self.show_language = show_language
         self.language_position = language_position
         self.style = paragraph_style_with_overrides(
-            style or ParagraphStyle(alignment="left", space_after=12.0),
-            alignment=alignment,
+            style or ParagraphStyle(text_alignment="left", space_after=12.0),
+            text_alignment=text_alignment,
             space_before=space_before,
             space_after=space_after,
             leading=leading,
@@ -610,7 +610,7 @@ class Equation(Block):
     Args:
         expression: LaTeX-like equation source.
         style: Base paragraph style.
-        alignment: Optional alignment override.
+        text_alignment: Optional text alignment override.
         space_before: Optional spacing before the equation.
         space_after: Optional spacing after the equation.
         leading: Optional line spacing.
@@ -641,7 +641,7 @@ class Equation(Block):
         expression: str,
         *,
         style: ParagraphStyle | None = None,
-        alignment: str | None = None,
+        text_alignment: str | None = None,
         space_before: float | None = None,
         space_after: float | None = None,
         leading: float | None = None,
@@ -656,8 +656,8 @@ class Equation(Block):
     ) -> None:
         self.expression = expression
         self.style = paragraph_style_with_overrides(
-            style or ParagraphStyle(alignment="center", space_after=12.0),
-            alignment=alignment,
+            style or ParagraphStyle(text_alignment="center", space_after=12.0),
+            text_alignment=text_alignment,
             space_before=space_before,
             space_after=space_after,
             leading=leading,

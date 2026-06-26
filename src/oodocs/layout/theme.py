@@ -52,7 +52,7 @@ def paragraph_style_with_overrides(
 
     Examples:
         ```python
-        style = paragraph_style_with_overrides(None, alignment="center")
+        style = paragraph_style_with_overrides(None, text_alignment="center")
         ```
     """
 
@@ -243,7 +243,7 @@ class ParagraphStyle:
     """Block-level paragraph spacing and alignment settings.
 
     Attributes:
-        alignment: Optional text alignment.
+        text_alignment: Optional text alignment.
         space_before: Optional spacing before the paragraph.
         space_after: Optional spacing after the paragraph.
         leading: Optional line spacing.
@@ -265,7 +265,7 @@ class ParagraphStyle:
         ```
     """
 
-    alignment: str | None = None
+    text_alignment: str | None = None
     space_before: float | None = None
     space_after: float | None = 12.0
     leading: float | None = None
@@ -279,9 +279,9 @@ class ParagraphStyle:
     unit: str | None = None
 
     def __post_init__(self) -> None:
-        self.alignment = (
-            normalize_text_alignment(self.alignment)
-            if self.alignment is not None
+        self.text_alignment = (
+            normalize_text_alignment(self.text_alignment)
+            if self.text_alignment is not None
             else None
         )
         self.unit = normalize_length_unit(self.unit) if self.unit is not None else None
@@ -302,7 +302,7 @@ class ParagraphStyle:
         left: float = 0.5,
         *,
         by: float | None = None,
-        alignment: str | None = None,
+        text_alignment: str | None = None,
         space_before: float | None = None,
         space_after: float | None = 12.0,
         leading: float | None = None,
@@ -317,7 +317,7 @@ class ParagraphStyle:
         Args:
             left: Left indent.
             by: Hanging amount. Defaults to ``left``.
-            alignment: Optional text alignment.
+            text_alignment: Optional text alignment.
             space_before: Optional spacing before the paragraph.
             space_after: Optional spacing after the paragraph.
             leading: Optional line spacing.
@@ -343,7 +343,7 @@ class ParagraphStyle:
         if hanging_by < 0:
             raise ValueError("ParagraphStyle.hanging by must be >= 0")
         return cls(
-            alignment=alignment,
+            text_alignment=text_alignment,
             space_before=space_before,
             space_after=space_after,
             leading=leading,
@@ -986,7 +986,7 @@ class BlockDefaults:
 
     Attributes:
         page_background_color: Hex page background color.
-        paragraph_alignment: Default paragraph alignment.
+        paragraph_text_alignment: Default paragraph alignment.
         table_alignment: Default table alignment.
         figure_alignment: Default figure alignment.
         box_alignment: Default box alignment.
@@ -1013,7 +1013,7 @@ class BlockDefaults:
     """
 
     page_background_color: str = "FFFFFF"
-    paragraph_alignment: str = "justify"
+    paragraph_text_alignment: str = "justify"
     table_alignment: str = "center"
     figure_alignment: str = "center"
     box_alignment: str = "center"
@@ -1059,7 +1059,7 @@ class Theme:
         monospace_font_name: Default monospace font name.
         title_font_size: Title font size in points.
         body_font_size: Body font size in points.
-        paragraph_alignment: Default paragraph alignment.
+        paragraph_text_alignment: Default paragraph alignment.
         run_in_title_style: Default style for run-in paragraph titles.
         heading_sizes: Heading font sizes by level.
         caption_font_size: Optional caption font size override.
@@ -1116,7 +1116,7 @@ class Theme:
         ```python
         from oodocs import Document, DocumentSettings, Paragraph, Theme, TypographyDefaults
 
-        theme = Theme(TypographyDefaults(body_font_name="Arial"), paragraph_alignment="left")
+        theme = Theme(TypographyDefaults(body_font_name="Arial"), paragraph_text_alignment="left")
         document = Document("Report", Paragraph("Body"), settings=DocumentSettings(theme=theme))
         ```
 
@@ -1156,7 +1156,7 @@ class Theme:
     monospace_font_name: str = "Courier New"
     title_font_size: float = 22.0
     body_font_size: float = 11.0
-    paragraph_alignment: str = "justify"
+    paragraph_text_alignment: str = "justify"
     run_in_title_style: RunInTitleStyle = field(default_factory=RunInTitleStyle)
     heading_sizes: tuple[float, ...] = (18.0, 15.0, 13.0, 11.5)
     caption_font_size: float | None = None
@@ -1218,7 +1218,7 @@ class Theme:
         monospace_font_name: str | object = _UNSET,
         title_font_size: float | object = _UNSET,
         body_font_size: float | object = _UNSET,
-        paragraph_alignment: str | object = _UNSET,
+        paragraph_text_alignment: str | object = _UNSET,
         run_in_title_style: RunInTitleStyle | object = _UNSET,
         heading_sizes: tuple[float, ...] | object = _UNSET,
         caption_font_size: float | None | object = _UNSET,
@@ -1337,7 +1337,7 @@ class Theme:
             "monospace_font_name": monospace_font_name,
             "title_font_size": title_font_size,
             "body_font_size": body_font_size,
-            "paragraph_alignment": paragraph_alignment,
+            "paragraph_text_alignment": paragraph_text_alignment,
             "run_in_title_style": run_in_title_style,
             "heading_sizes": heading_sizes,
             "caption_font_size": caption_font_size,
@@ -1397,7 +1397,7 @@ class Theme:
 
     def __post_init__(self) -> None:
         self.page_background_color = normalize_color(self.page_background_color) or "FFFFFF"
-        self.paragraph_alignment = normalize_text_alignment(self.paragraph_alignment)
+        self.paragraph_text_alignment = normalize_text_alignment(self.paragraph_text_alignment)
         if not isinstance(self.run_in_title_style, RunInTitleStyle):
             raise TypeError("run_in_title_style must be a RunInTitleStyle")
         if self.caption_alignment not in {"left", "center", "right", "justify"}:
@@ -1501,7 +1501,7 @@ class Theme:
         )
         self.blocks = BlockDefaults(
             page_background_color=self.page_background_color,
-            paragraph_alignment=self.paragraph_alignment,
+            paragraph_text_alignment=self.paragraph_text_alignment,
             table_alignment=self.table_alignment,
             figure_alignment=self.figure_alignment,
             box_alignment=self.box_alignment,
@@ -1574,7 +1574,7 @@ class Theme:
 
         return "left"
 
-    def resolve_paragraph_alignment(self, style: ParagraphStyle) -> str:
+    def resolve_paragraph_text_alignment(self, style: ParagraphStyle) -> str:
         """Return a paragraph style's alignment or the document-wide default.
 
         Args:
@@ -1585,12 +1585,12 @@ class Theme:
 
         Examples:
             ```python
-            theme = Theme(paragraph_alignment="left")
-            assert theme.resolve_paragraph_alignment(ParagraphStyle()) == "left"
+            theme = Theme(paragraph_text_alignment="left")
+            assert theme.resolve_paragraph_text_alignment(ParagraphStyle()) == "left"
             ```
         """
 
-        return style.alignment or self.paragraph_alignment
+        return style.text_alignment or self.paragraph_text_alignment
 
     def resolve_run_in_title_style(
         self,

@@ -461,7 +461,7 @@ def test_theme_accepts_grouped_defaults_objects() -> None:
         PageNumberDefaults(show_page_numbers=True, page_number_template="p. {page}"),
         TitleMatterDefaults(title_alignment="left"),
         BlockDefaults(
-            paragraph_alignment="left",
+            paragraph_text_alignment="left",
             table_alignment="right",
             run_in_title_style=RunInTitleStyle(TextStyle(italic=True), separator=": "),
         ),
@@ -480,7 +480,7 @@ def test_theme_accepts_grouped_defaults_objects() -> None:
     assert theme.show_page_numbers is True
     assert theme.format_page_number(4) == "p. 4"
     assert theme.title_alignment == "left"
-    assert theme.paragraph_alignment == "left"
+    assert theme.paragraph_text_alignment == "left"
     assert theme.run_in_title_style.text_style.italic is True
     assert theme.blocks.run_in_title_style.separator == ": "
     assert theme.table_alignment == "right"
@@ -514,7 +514,7 @@ def test_theme_accepts_grouped_defaults_objects() -> None:
 
 
 def test_common_block_styles_accept_direct_kwargs() -> None:
-    paragraph = Paragraph("Right aligned", alignment="right", space_after=4)
+    paragraph = Paragraph("Right aligned", text_alignment="right", space_after=4)
     code_block = CodeBlock("print('x')", language="python", left_indent=0.25)
     equation = Equation("x=1", space_after=2)
     bullet_list = BulletList("one", indent=0.4)
@@ -528,7 +528,7 @@ def test_common_block_styles_accept_direct_kwargs() -> None:
     )
     contents = TableOfContents(level_styles={1: {"bold": False, "space_after": 1}})
 
-    assert paragraph.style.alignment == "right"
+    assert paragraph.style.text_alignment == "right"
     assert paragraph.style.space_after == 4
     assert code_block.style.left_indent == 0.25
     assert code_block.show_language is True
@@ -563,19 +563,19 @@ def test_common_block_styles_accept_direct_kwargs() -> None:
 def test_paragraph_style_defaults_to_justify_alignment() -> None:
     paragraph = Paragraph("Default alignment paragraph.")
 
-    assert paragraph.style.alignment is None
-    assert Theme().resolve_paragraph_alignment(paragraph.style) == "justify"
+    assert paragraph.style.text_alignment is None
+    assert Theme().resolve_paragraph_text_alignment(paragraph.style) == "justify"
 
 
-def test_document_and_paragraph_alignment_options_render(tmp_path: Path) -> None:
+def test_document_and_paragraph_text_alignment_options_render(tmp_path: Path) -> None:
     document = Document(
         "Alignment Test",
         Paragraph("Document-level centered paragraph."),
         Paragraph(
             "Paragraph-level right paragraph.",
-            style=ParagraphStyle(alignment="right"),
+            style=ParagraphStyle(text_alignment="right"),
         ),
-        settings=DocumentSettings(theme=Theme(paragraph_alignment="center")),
+        settings=DocumentSettings(theme=Theme(paragraph_text_alignment="center")),
     )
 
     docx_path = tmp_path / "alignment.docx"
@@ -1984,7 +1984,7 @@ def test_default_table_cell_alignment_is_left_in_all_outputs(tmp_path: Path) -> 
             headers=["Area", "Status"],
             rows=[["Release notes", "Compatibility notes wrap cleanly in narrow cells."]],
         ),
-        settings=DocumentSettings(theme=Theme(paragraph_alignment="justify")),
+        settings=DocumentSettings(theme=Theme(paragraph_text_alignment="justify")),
     )
 
     docx_path = tmp_path / "default-table-alignment.docx"

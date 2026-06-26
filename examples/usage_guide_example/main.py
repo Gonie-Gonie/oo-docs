@@ -314,11 +314,11 @@ settings = DocumentSettings(
         TypographyDefaults(body_font_name="Arial", body_font_size=10.5),
         CaptionDefaults(figure_label="Fig."),
         PageNumberDefaults(show_page_numbers=True, page_number_template="p. {page}"),
-        BlockDefaults(paragraph_alignment="left"),
+        BlockDefaults(paragraph_text_alignment="left"),
     ),
 )
 
-paragraph = Paragraph("Right-aligned note.", alignment="right", space_after=6)
+paragraph = Paragraph("Right-aligned note.", text_alignment="right", space_after=6)
 kept_paragraph = Paragraph(
     "Keep this paragraph with the following evidence table.",
     space_before=6,
@@ -536,7 +536,7 @@ YAML_SNIPPET = """report:
 
 PARAGRAPH_INDENT_SNIPPET = """from oodocs import DocumentSettings, Paragraph, Theme
 
-settings = DocumentSettings(theme=Theme(paragraph_alignment="left"))
+settings = DocumentSettings(theme=Theme(paragraph_text_alignment="left"))
 
 Paragraph(
     "This paragraph inherits the document-wide left alignment."
@@ -544,7 +544,7 @@ Paragraph(
 
 Paragraph(
     "This one overrides the document-wide default.",
-    alignment="right",
+    text_alignment="right",
 )
 
 Paragraph(
@@ -827,7 +827,7 @@ def build_usage_guide_document() -> Document:
             ["GeneratedContentDefaults", "contents/list/comments/footnotes/references titles, generated_heading_level, generated_content_page_breaks", "Generated content titles and heading level."],
             ["PageNumberDefaults", "show_page_numbers, page_number_alignment, page_number_template, front/main matter counter formats, page_number_font_size", "Footer page labels."],
             ["TitleMatterDefaults", "title_alignment, subtitle_alignment, author_alignment, affiliation_alignment, author_detail_alignment", "Title-page and metadata alignment."],
-            ["BlockDefaults", "page_background_color, paragraph_alignment, table/figure/box alignment, footnote_placement, list styles, heading_numbering", "Document-wide defaults that individual blocks can override."],
+            ["BlockDefaults", "page_background_color, paragraph_text_alignment, table/figure/box alignment, footnote_placement, list styles, heading_numbering", "Document-wide defaults that individual blocks can override."],
         ],
         caption="Grouped Theme options; pass them positionally to Theme(...) or override the same names directly.",
         column_widths=[1.7, 3.7, 1.8],
@@ -985,7 +985,7 @@ def build_usage_guide_document() -> Document:
     contributor_certificate = Box(
         Paragraph(
             "Awarded for keeping document structure readable across DOCX, PDF, and HTML.",
-            alignment="center",
+            text_alignment="center",
             space_after=8,
         ),
         Table(
@@ -1004,7 +1004,7 @@ def build_usage_guide_document() -> Document:
         Figure(LOGO_PATH, width=3.2, unit="cm"),
         Paragraph(
             "Generated from the same Python document tree as this guide.",
-            alignment="center",
+            text_alignment="center",
             space_after=0,
         ),
         title="OODocs Contributor Certificate",
@@ -1264,9 +1264,9 @@ def build_usage_guide_document() -> Document:
                     "Paragraph-level Word features are also part of the authored source. ",
                     inline_code("Paragraph(...)"),
                     " accepts explicit alignment, spacing before and after, left and right indents, first-line indents, hanging indents, and keep/page-break controls for reference-like blocks that should not be simulated with spaces. Use ",
-                    inline_code("Theme(paragraph_alignment=...)"),
+                    inline_code("Theme(paragraph_text_alignment=...)"),
                     " for the document-wide default and direct kwargs such as ",
-                    inline_code("alignment='right'"),
+                    inline_code("text_alignment='right'"),
                     " only where one paragraph should diverge."
                 ),
                 CodeBlock(PARAGRAPH_INDENT_SNIPPET, language="python"),

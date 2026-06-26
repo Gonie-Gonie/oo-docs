@@ -358,7 +358,7 @@ class HtmlRenderer:
         number_html = f'<span class="oodocs-equation-number">({number})</span>' if number is not None else ""
         return (
             f'<div{anchor_attr} class="oodocs-equation" '
-            f'style="text-align: {context.theme.resolve_paragraph_alignment(block.style)}; margin: 0 0 {(block.style.space_after or 0):.1f}pt; line-height: {line_height:.1f}pt;">'
+            f'style="text-align: {context.theme.resolve_paragraph_text_alignment(block.style)}; margin: 0 0 {(block.style.space_after or 0):.1f}pt; line-height: {line_height:.1f}pt;">'
             + self._math_html(
                 Math(block.expression),
                 context.theme,
@@ -2077,7 +2077,7 @@ class HtmlRenderer:
             if first_line_indent_value is not None
             else ""
         )
-        resolved_alignment = alignment or theme.resolve_paragraph_alignment(style)
+        resolved_alignment = alignment or theme.resolve_paragraph_text_alignment(style)
         pagination_styles: list[str] = []
         if style.keep_together:
             pagination_styles.extend([" break-inside: avoid;", " page-break-inside: avoid;"])

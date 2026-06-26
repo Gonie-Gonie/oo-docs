@@ -1267,7 +1267,7 @@ class DocxRenderer:
         theme: Theme,
         default_unit: str,
     ) -> None:
-        paragraph.alignment = ALIGNMENTS[theme.resolve_paragraph_alignment(style)]
+        paragraph.alignment = ALIGNMENTS[theme.resolve_paragraph_text_alignment(style)]
         if style.space_before is not None:
             paragraph.paragraph_format.space_before = Pt(style.space_before)
         if style.space_after is not None:

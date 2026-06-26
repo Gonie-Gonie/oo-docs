@@ -181,7 +181,7 @@ The default behavior is intentionally conventional:
 - Use `Paragraph(..., title="Outcome")` for run-in paragraph titles such as LaTeX-style bold labels before body text. Override one paragraph with `title_style=RunInTitleStyle(...)`, set a section/chapter scope with `Section(..., run_in_title_style=...)`, or set the document default with `Theme(run_in_title_style=...)`.
 - Use `tag(...)`, `badge(...)`, `status(...)`, and `keyboard(...)` for compact inline labels. They share the `InlineChip(...)` model; DOCX emits small inline images, while PDF and HTML keep styled text.
 - Use `highlight(...)`, `strikethrough(...)`, and `line_break()` for Word-style emphasis and manual line breaks inside one paragraph.
-- Use `Theme(paragraph_alignment=...)` for the document-wide paragraph default, and direct paragraph kwargs such as `alignment=...` when one paragraph should override it.
+- Use `Theme(paragraph_text_alignment=...)` for the document-wide paragraph default, and direct paragraph kwargs such as `text_alignment=...` when one paragraph should override it.
 - Use `Paragraph(left_indent=..., right_indent=..., first_line_indent=..., unit=...)` when you need Word-like first-line or hanging indents. If `unit` is omitted, indent values follow `DocumentSettings(unit=...)`.
 - Use `subscript(...)`, `superscript(...)`, and `prescript(...)` for ordinary prose. Use `Math(...)` or `Equation(...)` for lightweight LaTeX-style math, including ordinary `x^2` / `x_0` scripts and front scripts such as `\prescript{14}{6}{C}`.
 - Use `Part(...)` for book-like divisions above chapters; each part gets a separator page, while chapter numbers continue across parts by default.

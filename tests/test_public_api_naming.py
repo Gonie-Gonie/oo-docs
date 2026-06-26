@@ -208,6 +208,24 @@ def test_run_in_title_style_uses_canonical_names() -> None:
     assert "run_in_title_style" in theme_fields
 
 
+def test_paragraph_style_uses_text_alignment_names() -> None:
+    paragraph_style_fields = {field.name for field in fields(oodocs.ParagraphStyle)}
+    block_fields = {field.name for field in fields(oodocs.BlockDefaults)}
+    theme_fields = {field.name for field in fields(oodocs.Theme)}
+
+    assert "alignment" not in paragraph_style_fields
+    assert "text_alignment" in paragraph_style_fields
+    assert "paragraph_alignment" not in block_fields
+    assert "paragraph_text_alignment" in block_fields
+    assert "paragraph_alignment" not in theme_fields
+    assert "paragraph_text_alignment" in theme_fields
+
+    for cls in (oodocs.Paragraph, oodocs.CodeBlock, oodocs.Equation):
+        parameters = set(inspect.signature(cls).parameters)
+        assert "alignment" not in parameters, cls.__name__
+        assert "text_alignment" in parameters, cls.__name__
+
+
 def test_image_components_use_image_format_field_name() -> None:
     for cls in (oodocs.ImageData, oodocs.Figure, oodocs.SubFigure, oodocs.ImageBox):
         field_names = {field.name for field in fields(cls)}
