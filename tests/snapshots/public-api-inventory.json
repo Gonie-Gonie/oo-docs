@@ -693,13 +693,6 @@
         {
           "category": "importer",
           "kind": "function",
-          "module": "oodocs.importers.notebook",
-          "name": "from_ipynb",
-          "qualname": "oodocs.importers.notebook.from_ipynb"
-        },
-        {
-          "category": "importer",
-          "kind": "function",
           "module": "oodocs.importers.markdown",
           "name": "from_markdown",
           "qualname": "oodocs.importers.markdown.from_markdown"
@@ -716,7 +709,7 @@
           "kind": "function",
           "module": "oodocs.importers.notebook",
           "name": "from_notebook",
-          "qualname": "oodocs.importers.notebook.from_ipynb"
+          "qualname": "oodocs.importers.notebook.from_notebook"
         },
         {
           "category": "inline",
@@ -833,13 +826,6 @@
         {
           "category": "importer",
           "kind": "function",
-          "module": "oodocs.importers.notebook",
-          "name": "parse_ipynb",
-          "qualname": "oodocs.importers.notebook.parse_ipynb"
-        },
-        {
-          "category": "importer",
-          "kind": "function",
           "module": "oodocs.importers.markdown",
           "name": "parse_markdown",
           "qualname": "oodocs.importers.markdown.parse_markdown"
@@ -856,7 +842,7 @@
           "kind": "function",
           "module": "oodocs.importers.notebook",
           "name": "parse_notebook",
-          "qualname": "oodocs.importers.notebook.parse_ipynb"
+          "qualname": "oodocs.importers.notebook.parse_notebook"
         },
         {
           "category": "block",
@@ -1382,29 +1368,15 @@
           "category": "importer",
           "kind": "function",
           "module": "oodocs.importers.notebook",
-          "name": "from_ipynb",
-          "qualname": "oodocs.importers.notebook.from_ipynb"
-        },
-        {
-          "category": "importer",
-          "kind": "function",
-          "module": "oodocs.importers.notebook",
           "name": "from_notebook",
-          "qualname": "oodocs.importers.notebook.from_ipynb"
-        },
-        {
-          "category": "importer",
-          "kind": "function",
-          "module": "oodocs.importers.notebook",
-          "name": "parse_ipynb",
-          "qualname": "oodocs.importers.notebook.parse_ipynb"
+          "qualname": "oodocs.importers.notebook.from_notebook"
         },
         {
           "category": "importer",
           "kind": "function",
           "module": "oodocs.importers.notebook",
           "name": "parse_notebook",
-          "qualname": "oodocs.importers.notebook.parse_ipynb"
+          "qualname": "oodocs.importers.notebook.parse_notebook"
         }
       ]
     },

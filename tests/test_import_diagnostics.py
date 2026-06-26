@@ -8,7 +8,7 @@ import pytest
 from oodocs import Document, ImportPolicyError, ImportResult, NotebookImportOptions
 from oodocs.cli import main
 from oodocs.importers.markdown import parse_markdown, parse_markdown_file
-from oodocs.importers.notebook import parse_ipynb
+from oodocs.importers.notebook import parse_notebook
 
 _TINY_PNG = (
     b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01"
@@ -48,7 +48,7 @@ def test_parse_markdown_file_records_source_for_raw_html(tmp_path) -> None:
     assert result.issues[0].line == 1
 
 
-def test_parse_ipynb_options_filter_truncate_and_caption_outputs() -> None:
+def test_parse_notebook_options_filter_truncate_and_caption_outputs() -> None:
     notebook = {
         "nbformat": 4,
         "nbformat_minor": 5,
@@ -87,7 +87,7 @@ def test_parse_ipynb_options_filter_truncate_and_caption_outputs() -> None:
         ],
     }
 
-    result = parse_ipynb(
+    result = parse_notebook(
         notebook,
         options=NotebookImportOptions(
             exclude_tags=("skip-report",),
@@ -106,8 +106,8 @@ def test_parse_ipynb_options_filter_truncate_and_caption_outputs() -> None:
     assert any(getattr(block, "caption", None) is not None for block in result.blocks)
 
 
-def test_document_from_ipynb_accepts_options() -> None:
-    document = Document.from_ipynb(
+def test_document_from_notebook_accepts_options() -> None:
+    document = Document.from_notebook(
         {
             "nbformat": 4,
             "nbformat_minor": 5,

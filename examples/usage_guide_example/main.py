@@ -430,14 +430,14 @@ ad_hoc_blocks = parse_markdown("## Follow-up\\n\\n- Publish DOCX\\n- Publish PDF
 digest.body.children.extend(ad_hoc_blocks)
 """
 
-NOTEBOOK_IMPORT_SNIPPET = """from oodocs import Document, Section, parse_ipynb
+NOTEBOOK_IMPORT_SNIPPET = """from oodocs import Document, Section, parse_notebook
 
-analysis = Document.from_ipynb(
+analysis = Document.from_notebook(
     "analysis.ipynb",
     include_outputs=True,
 )
 
-appendix_blocks = parse_ipynb(
+appendix_blocks = parse_notebook(
     "exploration.ipynb",
     include_outputs=False,
 )
@@ -904,7 +904,7 @@ def build_usage_guide_document() -> Document:
         rows=[
             ["oodocs build report.py --out artifacts", "A Python file exposing document, doc, report, or build_document().", "The source of record is a Python-authored Document."],
             ["oodocs convert README.md --to docx,pdf,html", "Markdown source imported with the same parser used by Document.from_markdown(...).", "A README, changelog, release note, or generated Markdown file should become a rendered bundle."],
-            ["oodocs convert notebook.ipynb --to pdf", "A notebook imported with the same parser used by Document.from_ipynb(...).", "A notebook-backed analysis needs a quick PDF export or an appendix source."],
+            ["oodocs convert notebook.ipynb --to pdf", "A notebook imported with the same parser used by Document.from_notebook(...).", "A notebook-backed analysis needs a quick PDF export or an appendix source."],
             ["oodocs validate report.py", "Any Python, Markdown, or notebook source that can be loaded as a Document.", "CI should fail before rendering when authoring mistakes are present."],
         ],
         caption="CLI commands and the source shapes they expect.",
@@ -1619,9 +1619,9 @@ def build_usage_guide_document() -> Document:
                 "Import notebooks without turning them into screenshots",
                 Paragraph(
                     "Jupyter notebooks can enter the same workflow through ",
-                    inline_code("Document.from_ipynb(...)"),
+                    inline_code("Document.from_notebook(...)"),
                     " or ",
-                    inline_code("parse_ipynb(...)"),
+                    inline_code("parse_notebook(...)"),
                     ". Markdown cells become normal document structure, code cells become ",
                     inline_code("CodeBlock"),
                     " objects, and textual outputs can be included for audit trails or omitted when the report should only carry the authored code."

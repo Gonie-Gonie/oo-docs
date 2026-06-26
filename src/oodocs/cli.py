@@ -106,7 +106,7 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     validate.add_argument(
         "--type",
-        choices=("python", "py", "markdown", "md", "notebook", "ipynb"),
+        choices=("python", "py", "markdown", "md", "notebook"),
         help="Override source type inference.",
     )
     validate.add_argument("--title", help="Override imported Markdown/notebook title.")
@@ -286,9 +286,9 @@ def _run_import_warning_policy(args: argparse.Namespace) -> int:
             import_policy=policy,
         )
     elif suffix == ".ipynb":
-        from oodocs.importers.notebook import parse_ipynb
+        from oodocs.importers.notebook import parse_notebook
 
-        result = parse_ipynb(
+        result = parse_notebook(
             source_path,
             diagnostics=True,
             import_policy=policy,

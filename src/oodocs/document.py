@@ -233,7 +233,7 @@ class Document:
         )
 
     @classmethod
-    def from_ipynb(
+    def from_notebook(
         cls,
         source: object,
         *,
@@ -278,16 +278,16 @@ class Document:
             ```python
             from oodocs import Document, NotebookImportOptions
 
-            doc = Document.from_ipynb(
+            doc = Document.from_notebook(
                 "analysis.ipynb",
                 options=NotebookImportOptions(max_output_lines=20),
             )
             ```
         """
 
-        from oodocs.importers.notebook import from_ipynb
+        from oodocs.importers.notebook import from_notebook
 
-        return from_ipynb(
+        return from_notebook(
             source,
             title=title,
             settings=settings,

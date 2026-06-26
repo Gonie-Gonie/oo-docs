@@ -158,8 +158,8 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert any("The journal example at examples/journal_paper_example/main.py" in text for text in paragraph_texts)
     assert any("Document.from_markdown(...)" in text for text in paragraph_texts)
     assert any("parse_markdown(...)" in text for text in paragraph_texts)
-    assert any("Document.from_ipynb(...)" in text for text in paragraph_texts)
-    assert any("parse_ipynb(...)" in text for text in paragraph_texts)
+    assert any("Document.from_notebook(...)" in text for text in paragraph_texts)
+    assert any("parse_notebook(...)" in text for text in paragraph_texts)
     assert any("Notebook-backed report" in text for text in paragraph_texts)
     assert any("Release note digest" in text for text in paragraph_texts)
     assert "OODocs Contributor Certificate" in table_text
@@ -252,8 +252,8 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "github.com/Gonie-Gonie/oo-docs" in pdf_text
     assert "Document.from_markdown(...)" in pdf_text
     assert "parse_markdown(...)" in pdf_text
-    assert "Document.from_ipynb(...)" in pdf_text
-    assert "parse_ipynb(...)" in pdf_text
+    assert "Document.from_notebook(...)" in pdf_text
+    assert "parse_notebook(...)" in pdf_text
     assert "Notebook-backed report" in pdf_text
     assert "Release note digest" in pdf_text
     assert "Footnotes" in pdf_text
@@ -331,8 +331,8 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "github.com/Gonie-Gonie/oo-docs" in normalized_html_text
     assert "Document.from_markdown(...)" in normalized_html_text
     assert "parse_markdown(...)" in normalized_html_text
-    assert "Document.from_ipynb(...)" in normalized_html_text
-    assert "parse_ipynb(...)" in normalized_html_text
+    assert "Document.from_notebook(...)" in normalized_html_text
+    assert "parse_notebook(...)" in normalized_html_text
     assert "Notebook-backed report" in normalized_html_text
     assert "Release note digest" in normalized_html_text
     assert "Footnotes" in normalized_html_text

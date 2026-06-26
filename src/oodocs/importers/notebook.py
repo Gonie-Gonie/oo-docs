@@ -2,8 +2,8 @@
 
 Attributes:
     NotebookSource: Accepted notebook source input for notebook import helpers.
-    parse_notebook: Backward-compatible alias for ``parse_ipynb``.
-    from_notebook: Backward-compatible alias for ``from_ipynb``.
+    parse_notebook: Parse a notebook source into imported blocks or diagnostics.
+    from_notebook: Create a document from a notebook source.
 """
 
 from __future__ import annotations
@@ -48,17 +48,17 @@ class NotebookImportOptions:
         Limit noisy notebook outputs while keeping code and Markdown cells:
 
         ```python
-        from oodocs import NotebookImportOptions, from_ipynb
+        from oodocs import NotebookImportOptions, from_notebook
 
         options = NotebookImportOptions(max_output_lines=25, exclude_tags=("skip-doc",))
-        doc = from_ipynb("analysis.ipynb", options=options)
+        doc = from_notebook("analysis.ipynb", options=options)
         ```
 
         Import only narrative Markdown cells:
 
         ```python
         options = NotebookImportOptions(include_code=False, include_outputs=False)
-        doc = from_ipynb("analysis.ipynb", options=options, title="Narrative Summary")
+        doc = from_notebook("analysis.ipynb", options=options, title="Narrative Summary")
         ```
 
     Notes:
@@ -67,7 +67,7 @@ class NotebookImportOptions:
         and per-call keywords for one-off changes.
 
     See Also:
-        ``parse_ipynb`` for editable imported blocks and ``from_ipynb`` for a
+        ``parse_notebook`` for editable imported blocks and ``from_notebook`` for a
         renderable ``Document``.
     """
 
@@ -93,7 +93,7 @@ class NotebookImportOptions:
         object.__setattr__(self, "exclude_tags", tuple(str(tag) for tag in self.exclude_tags))
 
 
-def parse_ipynb(
+def parse_notebook(
     source: NotebookSource,
     *,
     options: NotebookImportOptions | None = None,
@@ -145,10 +145,10 @@ def parse_ipynb(
         Parse notebook blocks and collect diagnostics:
 
         ```python
-        from oodocs.importers.notebook import parse_ipynb
+        from oodocs.importers.notebook import parse_notebook
         from oodocs.importers.results import ImportResult
 
-        result = parse_ipynb("analysis.ipynb", diagnostics=True, include_outputs=False)
+        result = parse_notebook("analysis.ipynb", diagnostics=True, include_outputs=False)
         assert isinstance(result, ImportResult)
         ```
     """
@@ -245,7 +245,7 @@ def parse_ipynb(
     )
 
 
-def from_ipynb(
+def from_notebook(
     source: NotebookSource,
     *,
     title: str | None = None,
@@ -298,9 +298,9 @@ def from_ipynb(
 
     Examples:
         ```python
-        from oodocs import NotebookImportOptions, from_ipynb
+        from oodocs import NotebookImportOptions, from_notebook
 
-        doc = from_ipynb(
+        doc = from_notebook(
             "analysis.ipynb",
             title="Analysis Report",
             options=NotebookImportOptions(image_caption="Output {output_index}"),
@@ -311,7 +311,7 @@ def from_ipynb(
 
     notebook = _load_notebook(source)
     markdown_base_dir = Path(base_dir) if base_dir is not None else _source_base_dir(source)
-    blocks = parse_ipynb(
+    blocks = parse_notebook(
         notebook,
         options=options,
         include_outputs=include_outputs,
@@ -721,15 +721,9 @@ def _add_unsupported_mime_issue(
         )
 
 
-parse_notebook = parse_ipynb
-from_notebook = from_ipynb
-
-
 __all__ = [
     "NotebookImportOptions",
     "NotebookSource",
-    "from_ipynb",
     "from_notebook",
-    "parse_ipynb",
     "parse_notebook",
 ]

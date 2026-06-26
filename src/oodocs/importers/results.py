@@ -96,7 +96,7 @@ class ImportResult:
 
     See Also:
         ``ImportIssue`` for individual diagnostics, ``ImportPolicyError`` for
-        strict-policy failures, and ``parse_markdown``/``parse_ipynb`` for
+        strict-policy failures, and ``parse_markdown``/``parse_notebook`` for
         diagnostics-producing importers.
     """
 

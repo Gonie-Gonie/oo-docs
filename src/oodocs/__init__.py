@@ -71,9 +71,7 @@ from oodocs.importers.markdown import (
 )
 from oodocs.importers.notebook import (
     NotebookImportOptions,
-    from_ipynb,
     from_notebook,
-    parse_ipynb,
     parse_notebook,
 )
 from oodocs.importers.results import ImportIssue, ImportPolicyError, ImportResult
@@ -259,7 +257,6 @@ __all__ = [
     "countable_kind",
     "convert_source",
     "footnote",
-    "from_ipynb",
     "from_markdown",
     "from_markdown_file",
     "from_notebook",
@@ -279,7 +276,6 @@ __all__ = [
     "strikethrough",
     "markup",
     "styled",
-    "parse_ipynb",
     "parse_markdown",
     "parse_markdown_file",
     "parse_notebook",

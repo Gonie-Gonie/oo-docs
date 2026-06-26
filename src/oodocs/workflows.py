@@ -131,9 +131,9 @@ def load_document(
 
         return from_markdown_file(source_path, title=title)
     if resolved_type == "notebook":
-        from oodocs.importers.notebook import from_ipynb
+        from oodocs.importers.notebook import from_notebook
 
-        return from_ipynb(source_path, title=title)
+        return from_notebook(source_path, title=title)
     raise ValueError(f"Unsupported document source type: {resolved_type!r}")
 
 
@@ -395,7 +395,6 @@ def _resolve_source_type(source_path: Path, source_type: str | None) -> str:
             "python": "python",
             "md": "markdown",
             "markdown": "markdown",
-            "ipynb": "notebook",
             "notebook": "notebook",
         }
         if normalized in aliases:
