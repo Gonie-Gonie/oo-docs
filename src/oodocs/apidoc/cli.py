@@ -35,11 +35,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         exit_code = main([
             "build",
             ".",
-            "--profile",
+            "--presentation-profile",
             "reference",
             "--out",
             "artifacts/api",
-            "--to",
+            "--outputs",
             "html",
             "--sidecars",
         ])
@@ -67,15 +67,20 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Project root, pyproject.toml path, or JSON config path.",
     )
     init.add_argument(
-        "--format",
+        "--config-format",
+        dest="config_format",
         choices=("auto", "pyproject", "json"),
         default="auto",
         help="Config file format. Defaults to pyproject for directories/TOML paths and JSON for .json paths.",
     )
     init.add_argument("--out-dir", default="artifacts/api", help="Default rendered API output directory.")
-    init.add_argument("--to", default="docx,pdf,html", help="Default comma-separated output formats.")
+    init.add_argument("--outputs", default="docx,pdf,html", help="Default comma-separated output formats.")
     init.add_argument("--stem", help="Default output file stem.")
-    init.add_argument("--profile", default="reference", help="Default presentation profile.")
+    init.add_argument(
+        "--presentation-profile",
+        default="reference",
+        help="Default presentation profile.",
+    )
     init.add_argument("--sidecars", action="store_true", default=True, help="Write sidecars by default.")
     init.add_argument("--no-sidecars", action="store_false", dest="sidecars", help="Disable sidecars by default.")
     init.add_argument("--max-level", type=int, help="Default deepest nested API heading level.")
@@ -103,9 +108,9 @@ def _build_parser() -> argparse.ArgumentParser:
     build = subparsers.add_parser("build", help="Build rendered API documentation.")
     build.add_argument("package", help="Package/module name, Python file, or package directory.")
     build.add_argument("--out", help="Output directory.")
-    build.add_argument("--to", help="Comma-separated output formats.")
+    build.add_argument("--outputs", help="Comma-separated output formats.")
     build.add_argument("--stem", help="Output file stem.")
-    build.add_argument("--profile", help="Presentation profile.")
+    build.add_argument("--presentation-profile", help="Presentation profile.")
     build.add_argument(
         "--sidecars",
         action="store_true",
@@ -132,7 +137,7 @@ def _build_parser() -> argparse.ArgumentParser:
     diff.add_argument("--base", required=True, help="Base snapshot JSON path.")
     diff.add_argument("--head", required=True, help="Head snapshot JSON path.")
     diff.add_argument("--out", required=True, help="Output directory.")
-    diff.add_argument("--to", default="docx,pdf,html", help="Comma-separated output formats.")
+    diff.add_argument("--outputs", default="docx,pdf,html", help="Comma-separated output formats.")
     diff.add_argument("--stem", default="api-diff", help="Output file stem.")
     diff.set_defaults(func=_run_diff)
     return parser
@@ -319,8 +324,8 @@ def _run_init(args: argparse.Namespace) -> int:
         )
     config = ApiBuildConfig(
         collection=collection,
-        profile=args.profile,
-        output_formats=_split_csv(args.to),
+        profile=args.presentation_profile,
+        output_formats=_split_outputs(args.outputs),
         stem=args.stem,
         max_level=args.max_level,
         sidecars=args.sidecars,
@@ -328,7 +333,7 @@ def _run_init(args: argparse.Namespace) -> int:
         kind=tuple(args.kind) if args.kind else (),
         module_prefix=args.module_prefix,
     )
-    output_format = _config_output_format(args.path, args.format)
+    output_format = _config_output_format(args.path, args.config_format)
     if output_format == "json":
         output_path = config.save_json(args.path)
     else:
@@ -392,7 +397,7 @@ def _run_diff(args: argparse.Namespace) -> int:
     outputs = document.save_all(
         args.out,
         stem=args.stem,
-        formats=normalize_output_formats(_split_csv(args.to)),
+        formats=normalize_output_formats(_split_outputs(args.outputs)),
     )
     outputs["diff-json"] = result.save_json(Path(args.out) / f"{args.stem}.json")
     _print_outputs(outputs)
@@ -432,13 +437,13 @@ def _effective_build_config_from_args(
     if require_output_dir and output_dir is None:
         raise SystemExit("oodocs apidoc build requires --out or output-dir in config")
     output_formats = (
-        normalize_output_formats(_split_csv(args.to))
-        if is_build_command and getattr(args, "to", None)
+        normalize_output_formats(_split_outputs(args.outputs))
+        if is_build_command and getattr(args, "outputs", None)
         else base.output_formats
     )
     return ApiBuildConfig(
         collection=_collect_config_from_args(args, base.collection),
-        profile=getattr(args, "profile", None) or base.profile,
+        profile=getattr(args, "presentation_profile", None) or base.profile,
         output_formats=output_formats,
         stem=getattr(args, "stem", None) or base.stem,
         max_level=(
@@ -502,7 +507,7 @@ def _init_import_target(path: str | Path) -> Path:
     return target.parent if target.suffix else target
 
 
-def _split_csv(value: str) -> tuple[str, ...]:
+def _split_outputs(value: str) -> tuple[str, ...]:
     return tuple(piece.strip() for piece in value.split(",") if piece.strip())
 
 

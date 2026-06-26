@@ -458,9 +458,9 @@ def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         help="Docstring style or parser name passed to collect_api.",
     )
     parser.add_argument(
-        "--to",
+        "--outputs",
         action="append",
-        dest="formats",
+        dest="outputs",
         help="Output format to render. Repeat for multiple formats.",
     )
     parser.add_argument(
@@ -483,7 +483,7 @@ def main(argv: Sequence[str] | None = None) -> None:
         ```python
         from examples.api_objects_example.main import main
 
-        main([".", "--to", "html", "--out", "artifacts/api-objects-example"])
+        main([".", "--outputs", "html", "--out", "artifacts/api-objects-example"])
         ```
     """
 
@@ -500,7 +500,7 @@ def main(argv: Sequence[str] | None = None) -> None:
         public_policy=args.public_policy,
         collector=args.collector,
         docstring_style=args.docstring_style,
-        formats=args.formats,
+        formats=args.outputs,
         verbose=not args.quiet,
     )
     for path in outputs.values():

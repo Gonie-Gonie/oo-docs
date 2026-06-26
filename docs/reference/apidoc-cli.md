@@ -5,7 +5,7 @@ All commands are available under `oodocs apidoc` or `python -m oodocs apidoc`.
 Create repository-local apidoc settings:
 
 ```powershell
-python -m oodocs apidoc init . --collector griffe --public-policy __all__ --profile website --to html --out-dir artifacts/api
+python -m oodocs apidoc init . --collector griffe --public-policy __all__ --presentation-profile website --outputs html --out-dir artifacts/api
 python -m oodocs apidoc build . --config pyproject.toml
 ```
 
@@ -14,7 +14,7 @@ target repository. The command temporarily adds the repository root and `src/`
 directory while it builds the config:
 
 ```powershell
-python -m oodocs apidoc init C:\work\mypkg --docstring-parser-module docs_parsers --docstring-style brief --to html
+python -m oodocs apidoc init C:\work\mypkg --docstring-parser-module docs_parsers --docstring-style brief --outputs html
 python -m oodocs apidoc build C:\work\mypkg --config C:\work\mypkg\pyproject.toml
 ```
 
@@ -55,7 +55,7 @@ python -m oodocs apidoc check oodocs --kind class --module-prefix oodocs.compone
 Build rendered API documents:
 
 ```powershell
-python -m oodocs apidoc build oodocs --profile reference --out artifacts/api --to docx,pdf,html
+python -m oodocs apidoc build oodocs --presentation-profile reference --out artifacts/api --outputs docx,pdf,html
 ```
 
 Without `--kind` or `--module-prefix`, `build` renders a complete package API
@@ -66,7 +66,7 @@ and any sidecars requested for later review or release evidence.
 Write API object and coverage sidecars beside the rendered bundle:
 
 ```powershell
-python -m oodocs apidoc build . --config pyproject.toml --profile reference --out artifacts/api --to docx,pdf,html --sidecars
+python -m oodocs apidoc build . --config pyproject.toml --presentation-profile reference --out artifacts/api --outputs docx,pdf,html --sidecars
 ```
 
 The same build defaults can live in `pyproject.toml`:
@@ -114,17 +114,17 @@ python -m oodocs apidoc build . --docstring-parser-module docs_parsers --docstri
 Limit nested API heading depth for larger repositories:
 
 ```powershell
-python -m oodocs apidoc build oodocs --profile reference --max-level 2 --out artifacts/api --to html
+python -m oodocs apidoc build oodocs --presentation-profile reference --max-level 2 --out artifacts/api --outputs html
 ```
 
 Filter build output:
 
 ```powershell
-python -m oodocs apidoc build oodocs --kind class --kind function --module-prefix oodocs.components --profile compact --out artifacts/api
+python -m oodocs apidoc build oodocs --kind class --kind function --module-prefix oodocs.components --presentation-profile compact --out artifacts/api
 ```
 
 Filtered builds apply the selected profile to both the summary table and the
-rendered object sections. For example, `--profile website` produces summary
+rendered object sections. For example, `--presentation-profile website` produces summary
 table links that point at the generated object section anchors.
 
 Object include/exclude filters are applied after collection and match either a
@@ -153,7 +153,7 @@ Curated public boundaries can be built with `public-policy=explicit` and one
 or more `--explicit-name` values:
 
 ```powershell
-python -m oodocs apidoc build . --public-policy explicit --explicit-name mypkg.Client --explicit-name mypkg.connect --out artifacts/api --to html --sidecars
+python -m oodocs apidoc build . --public-policy explicit --explicit-name mypkg.Client --explicit-name mypkg.connect --out artifacts/api --outputs html --sidecars
 ```
 
 Source locations can also be stripped during collection when rendered
@@ -191,7 +191,7 @@ remove public-but-internal hooks such as renderer adapters from the generated
 tree. `check`, `build`, and `snapshot` also accept `--kind` and
 `--module-prefix` object filters after collection. `check` also accepts
 `--fail-under`, `--require-examples`, `--require-renderer-notes`, `--out-json`,
-and `--out-csv`. `build` also accepts `--profile`, `--to`, `--stem`,
+and `--out-csv`. `build` also accepts `--presentation-profile`, `--outputs`, `--stem`,
 `--max-level`, `--out`, and `--sidecars`.
 When those build options are omitted, `build` can read `profile`, `formats`,
 `stem`, `max-level`, `out`/`output-dir`, and `sidecars` from
@@ -204,4 +204,4 @@ include several module families. Custom parser modules can be stored as
 `docstring-parser-modules = ["mypkg.docs_parsers"]` or supplied with
 `--docstring-parser-module`. `init` writes the same section to `pyproject.toml`
 by default, or writes a standalone JSON config when the target path ends in
-`.json` or `--format json` is passed.
+`.json` or `--config-format json` is passed.

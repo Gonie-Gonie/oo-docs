@@ -425,7 +425,7 @@ def _resolve_source_type(source_path: Path, source_type: str | None) -> str:
         return "notebook"
     raise ValueError(
         f"Cannot infer document source type from {source_path}. "
-        "Use --type python, markdown, or notebook."
+        "Use --source-type python, markdown, or notebook."
     )
 
 

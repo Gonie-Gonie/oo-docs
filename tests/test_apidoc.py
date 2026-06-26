@@ -1617,7 +1617,7 @@ def test_apidoc_cli_collect_check_build_snapshot_and_diff(tmp_path: Path, capsys
                 str(package_dir),
                 "--out",
                 str(build_dir),
-                "--to",
+                "--outputs",
                 "docx,pdf,html",
                 "--sidecars",
             ]
@@ -1647,7 +1647,7 @@ def test_apidoc_cli_collect_check_build_snapshot_and_diff(tmp_path: Path, capsys
             str(snapshot_json),
             "--out",
             str(diff_dir),
-            "--to",
+            "--outputs",
             "html",
         ]
     ) == 0
@@ -1703,9 +1703,9 @@ def test_apidoc_cli_init_writes_config_for_general_repo(tmp_path: Path) -> None:
             "inspect",
             "--public-policy",
             "__all__",
-            "--profile",
+            "--presentation-profile",
             "website",
-            "--to",
+            "--outputs",
             "html",
             "--out-dir",
             str(build_dir),
@@ -1753,7 +1753,7 @@ def test_apidoc_cli_init_writes_config_for_general_repo(tmp_path: Path) -> None:
     assert built_api["modules"][0]["members"][0]["qualname"] == "initpkg.core.run"
 
     json_config = tmp_path / "apidoc-build.json"
-    assert main(["apidoc", "init", str(json_config), "--format", "json", "--to", "html"]) == 0
+    assert main(["apidoc", "init", str(json_config), "--config-format", "json", "--outputs", "html"]) == 0
     assert ApiBuildConfig.load_json(json_config).output_formats == ("html",)
 
 
@@ -1964,11 +1964,11 @@ def test_apidoc_cli_filters_check_and_snapshot(tmp_path: Path) -> None:
             "function",
             "--module-prefix",
             "filterpkg.core",
-            "--profile",
+            "--presentation-profile",
             "website",
             "--out",
             str(build_dir),
-            "--to",
+            "--outputs",
             "html",
             "--sidecars",
         ]
@@ -1988,13 +1988,13 @@ def test_apidoc_cli_filters_check_and_snapshot(tmp_path: Path) -> None:
             "apidoc",
             "build",
             str(package_dir),
-            "--profile",
+            "--presentation-profile",
             "website",
             "--max-level",
             "2",
             "--out",
             str(max_level_build_dir),
-            "--to",
+            "--outputs",
             "html",
         ]
     ) == 0
@@ -2129,7 +2129,7 @@ def test_api_objects_example_builds_full_reference_and_composable_document(
             "inspect",
             "--docstring-style",
             "auto",
-            "--to",
+            "--outputs",
             "html",
             "--out",
             str(cli_output),

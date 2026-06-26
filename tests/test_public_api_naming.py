@@ -2,12 +2,23 @@ from __future__ import annotations
 
 import inspect
 
+import pytest
+
 import oodocs
 import oodocs.apidoc as apidoc
+from oodocs.apidoc.cli import _build_parser as _build_apidoc_parser
+from oodocs.cli import _build_parser as _build_oodocs_parser
 
 
 def _public_members(cls: type[object]) -> set[str]:
     return {name for name, _ in inspect.getmembers(cls) if not name.startswith("_")}
+
+
+def _subcommand_help(parser, args: list[str], capsys) -> str:
+    with pytest.raises(SystemExit) as exc_info:
+        parser.parse_args([*args, "--help"])
+    assert exc_info.value.code == 0
+    return capsys.readouterr().out
 
 
 def test_top_level_public_api_uses_completed_canonical_names() -> None:
@@ -166,3 +177,35 @@ def test_apidoc_selection_and_json_api_use_canonical_names() -> None:
         members = _public_members(cls)
         assert forbidden.isdisjoint(members), cls.__name__
         assert expected_by_class[cls] <= members, cls.__name__
+
+
+def test_cli_help_uses_canonical_option_names(capsys) -> None:
+    oodocs_parser = _build_oodocs_parser()
+    oodocs_build_help = _subcommand_help(oodocs_parser, ["build"], capsys)
+    oodocs_validate_help = _subcommand_help(oodocs_parser, ["validate"], capsys)
+
+    assert "--outputs" in oodocs_build_help
+    assert "--source-type" in oodocs_build_help
+    assert "--document-factory" in oodocs_build_help
+    assert "--fail-on-warning" in oodocs_validate_help
+    assert "--report-format" in oodocs_validate_help
+
+    for old_option in ("--to", "--type", "--factory", "--strict", "--format"):
+        assert old_option not in oodocs_build_help
+        assert old_option not in oodocs_validate_help
+
+    apidoc_parser = _build_apidoc_parser()
+    apidoc_init_help = _subcommand_help(apidoc_parser, ["init"], capsys)
+    apidoc_build_help = _subcommand_help(apidoc_parser, ["build"], capsys)
+    apidoc_diff_help = _subcommand_help(apidoc_parser, ["diff"], capsys)
+
+    assert "--config-format" in apidoc_init_help
+    assert "--outputs" in apidoc_init_help
+    assert "--outputs" in apidoc_build_help
+    assert "--presentation-profile" in apidoc_build_help
+    assert "--outputs" in apidoc_diff_help
+
+    for old_option in ("--to", "--profile", "--format"):
+        assert old_option not in apidoc_init_help
+        assert old_option not in apidoc_build_help
+        assert old_option not in apidoc_diff_help

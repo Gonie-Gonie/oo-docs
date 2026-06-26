@@ -6,7 +6,7 @@ file, collect a new snapshot, then render a diff document.
 ```powershell
 python -m oodocs apidoc snapshot oodocs --out artifacts/api-base.json
 python -m oodocs apidoc snapshot oodocs --out artifacts/api-head.json
-python -m oodocs apidoc diff --base artifacts/api-base.json --head artifacts/api-head.json --out artifacts/api-diff --to docx,pdf,html
+python -m oodocs apidoc diff --base artifacts/api-base.json --head artifacts/api-head.json --out artifacts/api-diff --outputs docx,pdf,html
 ```
 
 Snapshot only a subset when a package area has its own compatibility promise:

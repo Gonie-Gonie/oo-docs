@@ -130,7 +130,7 @@ oodocs validate report.py
 
 For CI and release evidence, `oodocs validate --report-format json` emits a machine-readable validation summary. `oodocs build ... --fail-on-warning` treats validation warnings as failures, while `--show-warnings` prints warning tables without changing the default success path. Add `--traceback` to any command when debugging needs the full Python stack trace.
 
-For imported Markdown or notebooks, `oodocs build ... --show-import-warnings` prints diagnostics for lossy source features, and `--strict-import` fails on those diagnostics. Release evidence bundles can be generated with `python -m oodocs.evidence build --out artifacts/evidence`.
+For imported Markdown or notebooks, `oodocs build ... --show-import-warnings` prints diagnostics for lossy source features, and `--fail-on-import-warning` fails on those diagnostics. Release evidence bundles can be generated with `python -m oodocs.evidence build --out artifacts/evidence`.
 
 ## Why Not Just LaTeX?
 

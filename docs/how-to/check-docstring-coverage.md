@@ -67,7 +67,7 @@ When a repository needs a rendered API reference and coverage evidence from one
 command, build with sidecars:
 
 ```powershell
-python -m oodocs apidoc build . --config pyproject.toml --out artifacts/api --to docx,pdf,html --sidecars
+python -m oodocs apidoc build . --config pyproject.toml --out artifacts/api --outputs docx,pdf,html --sidecars
 ```
 
 For larger repositories, gate only the API area currently under review:

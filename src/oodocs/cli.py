@@ -85,7 +85,8 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Print lossy Markdown/notebook import warnings before rendering.",
     )
     build.add_argument(
-        "--strict-import",
+        "--fail-on-import-warning",
+        dest="fail_on_import_warning",
         action="store_true",
         help="Fail when Markdown/notebook import reports lossy or unsupported content.",
     )
@@ -248,11 +249,11 @@ def _run_apidoc(args: argparse.Namespace) -> int:
 
 
 def _run_import_warning_policy(args: argparse.Namespace) -> int:
-    if not (args.show_import_warnings or args.strict_import):
+    if not (args.show_import_warnings or args.fail_on_import_warning):
         return 0
 
     source_path = Path(args.source)
-    policy = "strict" if args.strict_import else "warn"
+    policy = "strict" if args.fail_on_import_warning else "warn"
     suffix = source_path.suffix.lower()
     if suffix in {".md", ".markdown"}:
         from oodocs.importers.markdown import parse_markdown_file

@@ -37,12 +37,12 @@ python examples/api_objects_example/main.py oodocs --collector auto
 For a quick HTML-only check while developing another package:
 
 ```powershell
-python examples/api_objects_example/main.py C:\path\to\repo --collector inspect --public-policy underscore --to html
+python examples/api_objects_example/main.py C:\path\to\repo --collector inspect --public-policy underscore --outputs html
 ```
 
 The script writes rendered files under `artifacts/api-objects-example` by
 default. Both the full package reference and the selected composition document
-are saved as DOCX, PDF, and HTML unless `--to` is supplied. The generated files
+are saved as DOCX, PDF, and HTML unless `--outputs` is supplied. The generated files
 can be reviewed, published, or attached to release evidence directly. The
 sidecars use the `oodocs-api-objects.json` and
 `oodocs-api-coverage.{json,csv}` filenames.

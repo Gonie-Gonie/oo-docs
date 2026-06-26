@@ -155,7 +155,7 @@ def test_cli_build_can_show_and_strictly_fail_import_warnings(tmp_path, capsys) 
             "html",
             "--out",
             str(tmp_path / "strict"),
-            "--strict-import",
+            "--fail-on-import-warning",
         ]
     )
     captured = capsys.readouterr()

@@ -30,7 +30,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         help="GitHub Actions workflow YAML path.",
     )
     build.add_argument(
-        "--strict",
+        "--fail-on-missing-input",
+        dest="fail_on_missing_input",
         action="store_true",
         help="Fail if optional evidence inputs are missing.",
     )
@@ -44,7 +45,7 @@ def _run_build(args: argparse.Namespace) -> int:
         args.out,
         pyproject=args.pyproject,
         workflow=args.workflow,
-        strict=args.strict,
+        strict=args.fail_on_missing_input,
     )
     print(f"Wrote evidence bundle: {bundle.output_dir}")
     for output_format, path in bundle.document_outputs.items():
