@@ -617,14 +617,13 @@ diagram = Figure(
 )
 """
 
-COMPONENT_PRESETS_SNIPPET = """from oodocs import Padding, Paragraph
+COMPONENT_PRESETS_SNIPPET = """from oodocs import Paragraph
 from oodocs.presets.components import CalloutBox, KeyValueTable, Nomenclature
 
 review_note = CalloutBox(
     Paragraph("Check terminology before external review."),
     title="Review focus",
-    variant="warning",
-    padding=Padding.all(8),
+    style="warning",
 )
 
 metadata = KeyValueTable(
@@ -855,10 +854,10 @@ def build_usage_guide_document() -> Document:
     component_presets_table = Table(
         headers=["Preset", "What it builds", "Common customizations"],
         rows=[
-            ["CalloutBox", "A styled Box with info, note, success, or warning variants.", "variant, title, padding, border/background styles, width, block_alignment."],
-            ["KeyValueTable", "A compact two-column Table for metadata and option lists.", "headers, caption, cell padding, border style, column widths."],
+            ["CalloutBox", "A styled Box using named styles such as info, note, success, or warning.", "style, title, and normal Box options when using a concrete BoxStyle."],
+            ["KeyValueTable", "A compact two-column Table for metadata and option lists.", "headers, caption, style, column widths."],
             ["Nomenclature", "A heavy-outlined Box containing a symbol, meaning, and optional unit table with no internal rules.", "double_column, headers, padding, border, title."],
-            ["CompactTable", "A denser Table baseline for small reports and appendices.", "Any normal Table kwarg, with style objects still available for reusable designs."],
+            ["CompactTable", "A table preset using the compact named table style.", "Any normal Table kwarg, with style objects still available for reusable designs."],
         ],
         caption="Component presets wrap ordinary blocks and still accept the same block/style options.",
         column_widths=[1.5, 3.0, 2.6],
@@ -946,10 +945,7 @@ def build_usage_guide_document() -> Document:
             "Presets are ordinary oodocs components with carefully chosen defaults. Use direct kwargs for quick local changes and reserve style objects for repeated house styles that need a name."
         ),
         title="Preset rule",
-        variant="info",
-        padding=Padding.all(8),
-        width=15.0,
-        unit="cm",
+        style="info",
     )
     preset_metadata_table = KeyValueTable(
         {

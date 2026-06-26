@@ -69,6 +69,7 @@ def test_stylesheet_resolves_prefixed_names_and_roundtrips() -> None:
     styles.register("chip", "state.ok", InlineChipStyle(uppercase=True))
 
     assert isinstance(styles.resolve("table", "table.compact"), TableStyle)
+    assert isinstance(styles.resolve("table", "nomenclature.inner"), TableStyle)
     assert isinstance(styles.resolve("table_cell", "table_cell.numeric"), TableCellStyle)
     assert styles.resolve("paragraph", "lead").space_after == 10
     assert styles.resolve("chip", "chip.state.ok").uppercase is True

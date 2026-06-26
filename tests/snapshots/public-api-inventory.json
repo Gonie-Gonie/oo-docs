@@ -1426,6 +1426,13 @@
         },
         {
           "category": "preset",
+          "kind": "function",
+          "module": "oodocs.presets.components",
+          "name": "info_box",
+          "qualname": "oodocs.presets.components.info_box"
+        },
+        {
+          "category": "preset",
           "kind": "class",
           "module": "oodocs.presets.templates",
           "name": "JournalArticleTemplate",
@@ -1465,6 +1472,20 @@
           "module": "oodocs.presets.components",
           "name": "option_table",
           "qualname": "oodocs.presets.components.option_table"
+        },
+        {
+          "category": "preset",
+          "kind": "function",
+          "module": "oodocs.presets.components",
+          "name": "success_box",
+          "qualname": "oodocs.presets.components.success_box"
+        },
+        {
+          "category": "preset",
+          "kind": "function",
+          "module": "oodocs.presets.components",
+          "name": "warning_box",
+          "qualname": "oodocs.presets.components.warning_box"
         }
       ]
     },

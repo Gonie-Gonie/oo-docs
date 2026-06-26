@@ -89,6 +89,16 @@ class StyleSheet:
         sheet.register("table", "plain", TableStyle.plain())
         sheet.register("table", "compact", TableStyle.compact())
         sheet.register("table", "evidence", TableStyle.evidence())
+        sheet.register(
+            "table",
+            "nomenclature.inner",
+            TableStyle(
+                header_background_color="FFFFFF",
+                border=BorderStyle.none(),
+                cell_padding=Padding.all(2.0),
+                repeat_header_rows=True,
+            ),
+        )
         sheet.register("table_cell", "emphasis", TableCellStyle(bold=True))
         sheet.register("table_cell", "muted", TableCellStyle(text_color="64748B"))
         sheet.register("table_cell", "numeric", TableCellStyle(text_alignment="right"))

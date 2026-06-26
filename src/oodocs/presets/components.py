@@ -13,53 +13,35 @@ from oodocs.styles import BorderStyle, BoxStyle, Padding, TableStyle
 NomenclatureEntry = tuple[TableCellInput, TableCellInput] | tuple[TableCellInput, TableCellInput, TableCellInput]
 
 
-_CALLOUT_VARIANTS: dict[str, dict[str, object]] = {
-    "info": {
-        "border": BorderStyle.solid("3B82F6", width=0.75),
-        "background_color": "EFF6FF",
-        "title_background_color": "DBEAFE",
-        "title_text_color": "1E3A8A",
-    },
-    "note": {
-        "border": BorderStyle.solid("64748B", width=0.75),
-        "background_color": "F8FAFC",
-        "title_background_color": "E2E8F0",
-        "title_text_color": "0F172A",
-    },
-    "success": {
-        "border": BorderStyle.solid("16A34A", width=0.75),
-        "background_color": "F0FDF4",
-        "title_background_color": "DCFCE7",
-        "title_text_color": "14532D",
-    },
-    "warning": {
-        "border": BorderStyle.solid("D97706", width=0.75),
-        "background_color": "FFFBEB",
-        "title_background_color": "FEF3C7",
-        "title_text_color": "78350F",
-    },
+_CALLOUT_TITLES = {
+    "info": "Info",
+    "note": "Note",
+    "success": "Success",
+    "warning": "Warning",
 }
 
 
 class CalloutBox(Box):
-    """A titled box preset for notes, warnings, and reviewer-facing callouts.
+    """A titled box preset backed by a named box style.
 
     Args:
         *children: Box content.
-        title: Optional callout title. Defaults to the variant title.
-        variant: Visual variant name.
-        style: Optional base box style.
-        **style_overrides: Additional arguments forwarded to ``Box``.
-
-    Raises:
-        ValueError: If ``variant`` is unsupported.
+        title: Optional callout title. Defaults to a title derived from the
+            named style when possible.
+        style: Named box style or concrete box style.
+        **box_options: Additional arguments forwarded to ``Box``.
 
     Examples:
         ```python
-        from oodocs import Document
+        from oodocs import Document, DocumentSettings, StyleSheet, Theme
         from oodocs.presets import CalloutBox
 
-        doc = Document("Review", CalloutBox("Check logs before release.", variant="warning"))
+        styles = StyleSheet.default()
+        doc = Document(
+            "Review",
+            CalloutBox("Check logs before release.", style="warning"),
+            settings=DocumentSettings(theme=Theme(stylesheet=styles)),
+        )
         ```
     """
 
@@ -67,31 +49,25 @@ class CalloutBox(Box):
         self,
         *children: BlockInput,
         title: CellInput | None = None,
-        variant: str = "info",
-        style: BoxStyle | None = None,
-        **style_overrides: object,
+        style: BoxStyle | str | None = "info",
+        **box_options: object,
     ) -> None:
-        normalized_variant = variant.strip().lower()
-        if normalized_variant not in _CALLOUT_VARIANTS:
-            supported = ", ".join(sorted(_CALLOUT_VARIANTS))
-            raise ValueError(f"Unsupported callout variant {variant!r}. Use one of: {supported}")
-        base_style = style or BoxStyle(**_CALLOUT_VARIANTS[normalized_variant])
-        display_title = title if title is not None else normalized_variant.title()
+        display_title = title if title is not None else _callout_title(style)
         super().__init__(
             *children,
             title=display_title,
-            style=base_style,
-            **style_overrides,
+            style=style,
+            **box_options,
         )
 
 
 class CompactTable(Table):
-    """A denser table preset with smaller padding and subdued borders.
+    """A table preset using the named compact table style.
 
     Args:
         headers: Header cells, header rows, or a dataframe-like object.
         rows: Body rows. Required unless ``headers`` is dataframe-like.
-        style: Optional base table style.
+        style: Named table style or concrete table style.
         **table_options: Additional arguments forwarded to ``Table``.
 
     Examples:
@@ -109,17 +85,13 @@ class CompactTable(Table):
         headers: Sequence[TableCellInput] | Sequence[Sequence[TableCellInput]] | object,
         rows: Sequence[Sequence[TableCellInput]] | None = None,
         *,
-        style: TableStyle | None = None,
+        style: TableStyle | str | None = "compact",
         **table_options: object,
     ) -> None:
         super().__init__(
             headers,
             rows,
-            style=style or TableStyle(
-                header_background_color="F1F5F9",
-                border=BorderStyle.solid("CBD5E1", width=0.4),
-                cell_padding=Padding.all(3.0),
-            ),
+            style=style,
             **table_options,
         )
 
@@ -131,7 +103,7 @@ class KeyValueTable(CompactTable):
         items: Mapping or key/value pair sequence.
         headers: Two column headers.
         caption: Optional table caption.
-        style: Optional base table style.
+        style: Named table style or concrete table style.
         **table_options: Additional arguments forwarded to ``CompactTable``.
 
     Examples:
@@ -150,7 +122,7 @@ class KeyValueTable(CompactTable):
         *,
         headers: tuple[str, str] = ("Field", "Value"),
         caption: CellInput | None = None,
-        style: TableStyle | None = None,
+        style: TableStyle | str | None = "compact",
         **table_options: object,
     ) -> None:
         pairs = items.items() if isinstance(items, Mapping) else items
@@ -175,7 +147,7 @@ class Nomenclature(Box):
         headers: Header labels for symbol, meaning, and unit columns.
         border: Box border style.
         padding: Box padding.
-        table_style: Optional style for the internal table.
+        table_style: Named table style or concrete style for the internal table.
         **box_options: Additional arguments forwarded to ``Box``.
 
     Raises:
@@ -200,7 +172,7 @@ class Nomenclature(Box):
         headers: tuple[str, str, str] = ("Symbol", "Meaning", "Unit"),
         border: BorderStyle | None = None,
         padding: Padding | None = None,
-        table_style: TableStyle | None = None,
+        table_style: TableStyle | str | None = "nomenclature.inner",
         **box_options: object,
     ) -> None:
         normalized_entries = self._entries(entries)
@@ -215,12 +187,7 @@ class Nomenclature(Box):
         table = Table(
             table_headers,
             rows,
-            style=table_style or TableStyle(
-                header_background_color="FFFFFF",
-                border=BorderStyle.none(),
-                cell_padding=Padding.all(2.0),
-                repeat_header_rows=True,
-            ),
+            style=table_style,
         )
         super().__init__(
             table,
@@ -300,16 +267,22 @@ def option_table(
     return KeyValueTable(rows, headers=("Option", "Default or meaning"), caption=caption, **table_options)
 
 
-def note_box(*children: BlockInput, title: CellInput | None = None, **style_options: object) -> CalloutBox:
-    """Return an info callout box.
+def note_box(
+    *children: BlockInput,
+    title: CellInput | None = None,
+    style: BoxStyle | str | None = "note",
+    **box_options: object,
+) -> CalloutBox:
+    """Return a note callout box.
 
     Args:
         *children: Box content.
         title: Optional callout title.
-        **style_options: Additional arguments forwarded to ``CalloutBox``.
+        style: Named box style or concrete box style.
+        **box_options: Additional arguments forwarded to ``CalloutBox``.
 
     Returns:
-        Info variant callout box.
+        Note callout box.
 
     Examples:
         ```python
@@ -319,14 +292,108 @@ def note_box(*children: BlockInput, title: CellInput | None = None, **style_opti
         ```
     """
 
-    return CalloutBox(*children, title=title, variant="info", **style_options)
+    return CalloutBox(*children, title=title, style=style, **box_options)
+
+
+def info_box(
+    *children: BlockInput,
+    title: CellInput | None = None,
+    style: BoxStyle | str | None = "info",
+    **box_options: object,
+) -> CalloutBox:
+    """Return an info callout box.
+
+    Args:
+        *children: Box content.
+        title: Optional callout title.
+        style: Named box style or concrete box style.
+        **box_options: Additional arguments forwarded to ``CalloutBox``.
+
+    Returns:
+        Info callout box.
+
+    Examples:
+        ```python
+        from oodocs.presets import info_box
+
+        box = info_box("Rendered documents include generated references.")
+        ```
+    """
+
+    return CalloutBox(*children, title=title, style=style, **box_options)
+
+
+def warning_box(
+    *children: BlockInput,
+    title: CellInput | None = None,
+    style: BoxStyle | str | None = "warning",
+    **box_options: object,
+) -> CalloutBox:
+    """Return a warning callout box.
+
+    Args:
+        *children: Box content.
+        title: Optional callout title.
+        style: Named box style or concrete box style.
+        **box_options: Additional arguments forwarded to ``CalloutBox``.
+
+    Returns:
+        Warning callout box.
+
+    Examples:
+        ```python
+        from oodocs.presets import warning_box
+
+        box = warning_box("Review this before publishing.")
+        ```
+    """
+
+    return CalloutBox(*children, title=title, style=style, **box_options)
+
+
+def success_box(
+    *children: BlockInput,
+    title: CellInput | None = None,
+    style: BoxStyle | str | None = "success",
+    **box_options: object,
+) -> CalloutBox:
+    """Return a success callout box.
+
+    Args:
+        *children: Box content.
+        title: Optional callout title.
+        style: Named box style or concrete box style.
+        **box_options: Additional arguments forwarded to ``CalloutBox``.
+
+    Returns:
+        Success callout box.
+
+    Examples:
+        ```python
+        from oodocs.presets import success_box
+
+        box = success_box("Validation passed.")
+        ```
+    """
+
+    return CalloutBox(*children, title=title, style=style, **box_options)
+
+
+def _callout_title(style: BoxStyle | str | None) -> str:
+    if not isinstance(style, str):
+        return "Callout"
+    normalized = style.strip().lower().removeprefix("box.")
+    return _CALLOUT_TITLES.get(normalized, "Callout")
 
 
 __all__ = [
     "CalloutBox",
     "CompactTable",
+    "info_box",
     "KeyValueTable",
     "Nomenclature",
     "note_box",
     "option_table",
+    "success_box",
+    "warning_box",
 ]

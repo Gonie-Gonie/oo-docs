@@ -126,7 +126,15 @@ from oodocs import (
     superscript,
     tag,
 )
-from oodocs.presets.components import CalloutBox, KeyValueTable, Nomenclature
+from oodocs.presets.components import (
+    CalloutBox,
+    info_box,
+    KeyValueTable,
+    Nomenclature,
+    note_box,
+    success_box,
+    warning_box,
+)
 from oodocs.presets.templates import JournalArticleTemplate, ManuscriptSection
 from oodocs.styles import TextStyle
 
@@ -2160,7 +2168,7 @@ def test_component_and_template_presets_build_renderable_documents(tmp_path: Pat
     callout = CalloutBox(
         Paragraph("Check terminology before review."),
         title="Review focus",
-        variant="warning",
+        style="warning",
     )
     metadata = KeyValueTable(
         {"Preset namespace": "oodocs.presets.components", "Output": "DOCX/PDF/HTML"},
@@ -2220,6 +2228,11 @@ def test_component_and_template_presets_build_renderable_documents(tmp_path: Pat
     unitless = Nomenclature([("x", "value"), ("y", "other value")], double_column=True)
     assert unitless.children[0].header_rows[0][0].content.content[0].value == "Symbol"
     assert len(unitless.children[0].header_rows[0]) == 4
+    assert unitless.children[0].style == "nomenclature.inner"
+    assert note_box("Note body").style == "note"
+    assert info_box("Info body").style == "info"
+    assert warning_box("Warning body").style == "warning"
+    assert success_box("Success body").style == "success"
 
     try:
         Nomenclature([("x", "value", "-", "extra")])  # type: ignore[list-item]
