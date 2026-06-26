@@ -82,8 +82,8 @@ class TextBox(Block):
         height: Box height in ``unit``.
         anchor: Built-in anchor or named shape anchor.
         placement: ``"absolute"`` for page items or ``"inline"`` in content.
-        align: Horizontal text alignment.
-        valign: Vertical text alignment.
+        text_alignment: Horizontal text alignment.
+        vertical_alignment: Vertical text alignment.
         font_size: Optional font size override.
         unit: Unit for coordinates and dimensions.
         z_index: Stacking order for page-positioned rendering.
@@ -115,8 +115,8 @@ class TextBox(Block):
     height: float
     anchor: str
     placement: PositionPlacement
-    align: str
-    valign: str
+    text_alignment: str
+    vertical_alignment: str
     font_size: float | None
     unit: str | None
     z_index: int
@@ -130,18 +130,18 @@ class TextBox(Block):
         height: float,
         anchor: PositionAnchor = "page",
         placement: PositionPlacement = "absolute",
-        align: str = "left",
-        valign: str = "top",
+        text_alignment: str = "left",
+        vertical_alignment: str = "top",
         font_size: float | None = None,
         unit: str | None = None,
         z_index: int = 0,
     ) -> None:
         if placement not in {"absolute", "inline"}:
             raise ValueError(f"Unsupported TextBox placement: {placement!r}")
-        if align not in {"left", "center", "right"}:
-            raise ValueError(f"Unsupported TextBox alignment: {align!r}")
-        if valign not in {"top", "middle", "bottom"}:
-            raise ValueError(f"Unsupported TextBox vertical alignment: {valign!r}")
+        if text_alignment not in {"left", "center", "right"}:
+            raise ValueError(f"Unsupported TextBox text alignment: {text_alignment!r}")
+        if vertical_alignment not in {"top", "middle", "bottom"}:
+            raise ValueError(f"Unsupported TextBox vertical alignment: {vertical_alignment!r}")
         if width < 0 or height < 0:
             raise ValueError("TextBox width and height must be >= 0")
         self.content = coerce_inlines(content)
@@ -151,8 +151,8 @@ class TextBox(Block):
         self.height = height
         self.anchor = _normalize_anchor(anchor)
         self.placement = placement
-        self.align = align
-        self.valign = valign
+        self.text_alignment = text_alignment
+        self.vertical_alignment = vertical_alignment
         self.font_size = font_size
         self.unit = normalize_length_unit(unit) if unit is not None else None
         self.z_index = z_index

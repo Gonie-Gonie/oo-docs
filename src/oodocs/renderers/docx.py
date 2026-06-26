@@ -2363,7 +2363,7 @@ class DocxRenderer:
             z_index=text_box.z_index,
             absolute=absolute,
         )
-        style += f";v-text-anchor:{self._vml_text_anchor(text_box.valign)}"
+        style += f";v-text-anchor:{self._vml_text_anchor(text_box.vertical_alignment)}"
         font_size = text_box.font_size or theme.body_font_size
         paragraph_xml = self._text_box_paragraph_xml(text_box, font_size)
         return parse_xml(
@@ -2433,15 +2433,19 @@ class DocxRenderer:
             "mso-wrap-style:none"
         )
 
-    def _vml_text_anchor(self, valign: str) -> str:
-        return {"top": "top", "middle": "middle", "bottom": "bottom"}[valign]
+    def _vml_text_anchor(self, vertical_alignment: str) -> str:
+        return {"top": "top", "middle": "middle", "bottom": "bottom"}[
+            vertical_alignment
+        ]
 
     def _text_box_paragraph_xml(self, text_box: TextBox, font_size: float) -> str:
         runs = "".join(
             self._text_box_run_xml(fragment, font_size)
             for fragment in text_box.content
         )
-        alignment = {"left": "left", "center": "center", "right": "right"}[text_box.align]
+        alignment = {"left": "left", "center": "center", "right": "right"}[
+            text_box.text_alignment
+        ]
         return (
             '<w:p>'
             f'<w:pPr><w:jc w:val="{alignment}"/></w:pPr>'

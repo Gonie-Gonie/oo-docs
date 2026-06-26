@@ -245,6 +245,16 @@ def test_table_public_api_hides_renderer_helper_methods() -> None:
     assert expected <= members
 
 
+def test_textbox_uses_explicit_alignment_field_names() -> None:
+    field_names = {field.name for field in fields(oodocs.TextBox)}
+    parameter_names = set(inspect.signature(oodocs.TextBox).parameters)
+
+    assert {"align", "valign"}.isdisjoint(field_names)
+    assert {"text_alignment", "vertical_alignment"} <= field_names
+    assert {"align", "valign"}.isdisjoint(parameter_names)
+    assert {"text_alignment", "vertical_alignment"} <= parameter_names
+
+
 def test_api_renderer_note_uses_output_format_field_name() -> None:
     field_names = {field.name for field in fields(apidoc.ApiRendererNote)}
 

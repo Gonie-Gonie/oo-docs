@@ -1511,12 +1511,14 @@ class HtmlRenderer:
         box: PositionedBox,
         context: HtmlRenderContext,
     ) -> str:
-        align_items = {"top": "flex-start", "middle": "center", "bottom": "flex-end"}[item.valign]
+        align_items = {"top": "flex-start", "middle": "center", "bottom": "flex-end"}[
+            item.vertical_alignment
+        ]
         font_size = item.font_size or context.theme.body_font_size
         return (
             '<div class="oodocs-page-item oodocs-textbox" '
             f'style="{self._position_css(box)} '
-            f'display: flex; align-items: {align_items}; justify-content: stretch; text-align: {item.align}; '
+            f'display: flex; align-items: {align_items}; justify-content: stretch; text-align: {item.text_alignment}; '
             f'font-size: {font_size:.1f}pt; line-height: {font_size * 1.22:.1f}pt; box-sizing: border-box;">'
             '<div style="width: 100%;">'
             + self._inline_html(

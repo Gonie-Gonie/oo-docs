@@ -1769,7 +1769,7 @@ class PdfRenderer:
             fontName=self._resolve_font(context.theme.body_font_name, False, False),
             fontSize=font_size,
             leading=font_size * 1.22,
-            alignment=ALIGNMENTS[item.align],
+            alignment=ALIGNMENTS[item.text_alignment],
             textColor=colors.black,
         )
         paragraph = RLParagraph(
@@ -1783,9 +1783,9 @@ class PdfRenderer:
             style,
         )
         _, paragraph_height = paragraph.wrap(width, height)
-        if item.valign == "middle":
+        if item.vertical_alignment == "middle":
             y = page_height - y_top - ((height + paragraph_height) / 2)
-        elif item.valign == "bottom":
+        elif item.vertical_alignment == "bottom":
             y = page_height - y_top - height
         else:
             y = page_height - y_top - paragraph_height
