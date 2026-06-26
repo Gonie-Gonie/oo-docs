@@ -318,7 +318,7 @@ To create that config from Python instead of the CLI:
 ```python
 from oodocs.apidoc import ApiBuildConfig
 
-ApiBuildConfig(profile="website", output_formats=("html",), sidecars=True).write_pyproject(".")
+ApiBuildConfig(profile="website", output_formats=("html",), sidecars=True).save_pyproject(".")
 ```
 
 ```powershell

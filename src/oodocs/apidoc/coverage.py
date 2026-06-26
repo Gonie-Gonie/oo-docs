@@ -325,8 +325,8 @@ class ApiCoverageResult:
 
         return cls.from_dict(json.loads(Path(path).read_text(encoding="utf-8")))
 
-    def write_csv(self, path: PathLike) -> Path:
-        """Write coverage issues as CSV.
+    def save_csv(self, path: PathLike) -> Path:
+        """Save coverage issues as CSV.
 
         Args:
             path: Output CSV path.
@@ -342,7 +342,7 @@ class ApiCoverageResult:
 
             api = collect_api(".", collector="griffe")
             coverage = check_api_docs(api)
-            coverage.write_csv("artifacts/api-coverage.csv")
+            coverage.save_csv("artifacts/api-coverage.csv")
             ```
         """
 
@@ -392,7 +392,7 @@ def check_api_docs(
     Returns:
         Coverage result with counters and issue rows. The result can be
         rendered with ``to_table()`` or ``to_section()``, serialized with
-        ``save_json()``, or exported as CSV with ``write_csv()``.
+        ``save_json()``, or exported as CSV with ``save_csv()``.
 
     Examples:
         Gate public API docs and render the evidence:
@@ -408,7 +408,7 @@ def check_api_docs(
             require_examples=True,
         )
         coverage.save_json("artifacts/api-coverage.json")
-        coverage.write_csv("artifacts/api-coverage.csv")
+        coverage.save_csv("artifacts/api-coverage.csv")
         Document("API Coverage", coverage.to_section()).save_docx(
             "artifacts/api-coverage.docx"
         )

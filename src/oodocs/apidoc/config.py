@@ -726,13 +726,13 @@ class ApiCollectConfig:
             return cls.from_dict(json.loads(config_path.read_text(encoding="utf-8")))
 
     @classmethod
-    def read_file(
+    def load_file(
         cls,
         path: PathLike,
         *,
         target: object | None = None,
     ) -> ApiCollectConfig:
-        """Read a collection config from JSON or ``pyproject.toml``.
+        """Load a collection config from JSON or ``pyproject.toml``.
 
         Args:
             path: JSON sidecar, project root directory, or TOML file path.
@@ -747,7 +747,7 @@ class ApiCollectConfig:
             ```python
             from oodocs.apidoc import ApiCollectConfig
 
-            config = ApiCollectConfig.read_file("pyproject.toml", target=".")
+            config = ApiCollectConfig.load_file("pyproject.toml", target=".")
             ```
         """
 
@@ -941,13 +941,13 @@ class ApiBuildConfig:
             return cls.from_dict(json.loads(config_path.read_text(encoding="utf-8")))
 
     @classmethod
-    def read_file(
+    def load_file(
         cls,
         path: PathLike,
         *,
         target: object | None = None,
     ) -> ApiBuildConfig:
-        """Read a build config from JSON or ``pyproject.toml``.
+        """Load a build config from JSON or ``pyproject.toml``.
 
         Args:
             path: JSON sidecar, project root directory, or TOML file path.
@@ -964,7 +964,7 @@ class ApiBuildConfig:
             ```python
             from oodocs.apidoc import ApiBuildConfig
 
-            build = ApiBuildConfig.read_file("pyproject.toml", target=".")
+            build = ApiBuildConfig.load_file("pyproject.toml", target=".")
             document = build.to_document(".")
             ```
         """
@@ -1020,7 +1020,7 @@ class ApiBuildConfig:
             ```python
             from oodocs.apidoc import ApiBuildConfig
 
-            build = ApiBuildConfig.read_file("apidoc-build.json", target=".")
+            build = ApiBuildConfig.load_file("apidoc-build.json", target=".")
             api = build.collect(".")
             assert api.modules
             ```
@@ -1156,8 +1156,8 @@ class ApiBuildConfig:
 
         return ApiSnapshot.from_package(self.collect(target))
 
-    def write_snapshot(self, target: str | PathLike, path: PathLike) -> Path:
-        """Collect a target and write a public API snapshot sidecar.
+    def save_snapshot(self, target: str | PathLike, path: PathLike) -> Path:
+        """Collect a target and save a public API snapshot sidecar.
 
         Args:
             target: Importable package/module name, Python file, package
@@ -1174,7 +1174,7 @@ class ApiBuildConfig:
             from oodocs.apidoc import ApiBuildConfig
 
             build = ApiBuildConfig.from_pyproject(".")
-            snapshot_path = build.write_snapshot(".", "artifacts/api-head.json")
+            snapshot_path = build.save_snapshot(".", "artifacts/api-head.json")
             ```
         """
 
@@ -1220,13 +1220,13 @@ class ApiBuildConfig:
         Examples:
             Render a full API bundle for a different Python repository using
             an external JSON config. Repository-local custom parser modules are
-            loaded when ``read_file(..., target=repo)`` validates the config:
+            loaded when ``load_file(..., target=repo)`` validates the config:
 
             ```python
             from oodocs.apidoc import ApiBuildConfig
 
             repo = r"C:\\work\\mypkg"
-            build = ApiBuildConfig.read_file(r"C:\\configs\\mypkg-apidoc.json", target=repo)
+            build = ApiBuildConfig.load_file(r"C:\\configs\\mypkg-apidoc.json", target=repo)
             outputs = build.save_all(repo)
             assert outputs["html"].exists()
             assert outputs["api-json"].exists()
@@ -1253,8 +1253,8 @@ class ApiBuildConfig:
             stem=resolved_stem,
             formats=resolved_formats,
         )
-        write_sidecars = self.sidecars if sidecars is None else sidecars
-        if write_sidecars:
+        save_sidecars = self.sidecars if sidecars is None else sidecars
+        if save_sidecars:
             outputs.update(_write_build_sidecars(api, resolved_output_dir, resolved_stem))
         return outputs
 
@@ -1348,8 +1348,8 @@ class ApiBuildConfig:
             lines.append(f"{key.replace('_', '-')} = {_toml_value(value)}")
         return "\n".join(lines) + "\n"
 
-    def write_pyproject(self, path: PathLike = "pyproject.toml") -> Path:
-        """Append this config to a ``pyproject.toml`` file.
+    def save_pyproject(self, path: PathLike = "pyproject.toml") -> Path:
+        """Save this config into a ``pyproject.toml`` file.
 
         Args:
             path: Project root directory or ``pyproject.toml`` path.
@@ -1372,7 +1372,7 @@ class ApiBuildConfig:
                 output_formats=("html",),
                 output_dir="artifacts/api",
                 sidecars=True,
-            ).write_pyproject(".")
+            ).save_pyproject(".")
             ```
         """
 
@@ -1458,7 +1458,7 @@ def _write_build_sidecars(
     return {
         "api-json": api.save_json(directory / f"{stem}.json"),
         "coverage-json": coverage.save_json(directory / f"{stem}-coverage.json"),
-        "coverage-csv": coverage.write_csv(directory / f"{stem}-coverage.csv"),
+        "coverage-csv": coverage.save_csv(directory / f"{stem}-coverage.csv"),
     }
 
 

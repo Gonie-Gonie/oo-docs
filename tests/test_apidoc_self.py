@@ -34,7 +34,7 @@ def test_apidoc_renders_oodocs_public_api_reference_bundle(tmp_path) -> None:
     )
     api_path = api.save_json(tmp_path / "oodocs-api.json")
     coverage_json_path = coverage.save_json(tmp_path / "oodocs-api-coverage.json")
-    coverage_csv_path = coverage.write_csv(tmp_path / "oodocs-api-coverage.csv")
+    coverage_csv_path = coverage.save_csv(tmp_path / "oodocs-api-coverage.csv")
 
     assert_rendered_bundle(outputs["docx"], outputs["pdf"], outputs["html"])
     assert api_path.exists()

@@ -252,7 +252,7 @@ def _focused_module_for_example(api: ApiPackage):
     )
 
 
-def write_sidecars(
+def save_sidecars(
     api: ApiPackage,
     coverage: ApiCoverageResult,
     output_dir: str | Path = ARTIFACT_DIR,
@@ -273,11 +273,11 @@ def write_sidecars(
 
         ```python
         from oodocs.apidoc import check_api_docs, collect_api
-        from examples.api_objects_example.main import write_sidecars
+        from examples.api_objects_example.main import save_sidecars
 
         api = collect_api("oodocs", public_policy="__all__")
         coverage = check_api_docs(api, fail_under=0.90)
-        sidecars = write_sidecars(api, coverage, "artifacts/api-objects-example")
+        sidecars = save_sidecars(api, coverage, "artifacts/api-objects-example")
         ```
     """
 
@@ -286,7 +286,7 @@ def write_sidecars(
     return {
         "api_json": api.save_json(sidecar_dir / f"{COMPOSITION_STEM}.json"),
         "coverage_json": coverage.save_json(sidecar_dir / f"{COVERAGE_STEM}.json"),
-        "coverage_csv": coverage.write_csv(sidecar_dir / f"{COVERAGE_STEM}.csv"),
+        "coverage_csv": coverage.save_csv(sidecar_dir / f"{COVERAGE_STEM}.csv"),
     }
 
 
@@ -420,7 +420,7 @@ def render_api_objects_example(
             for output_format, path in composition_outputs.items()
         }
     )
-    outputs.update(write_sidecars(api, coverage, output_path))
+    outputs.update(save_sidecars(api, coverage, output_path))
     return outputs
 
 
@@ -489,7 +489,7 @@ def main(argv: Sequence[str] | None = None) -> None:
 
     args = _parse_args(argv)
     build_config = (
-        ApiBuildConfig.read_file(args.config, target=args.target)
+        ApiBuildConfig.load_file(args.config, target=args.target)
         if args.config
         else None
     )

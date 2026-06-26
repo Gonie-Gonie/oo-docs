@@ -9,7 +9,7 @@ from oodocs.apidoc import ApiBuildConfig
 build = ApiBuildConfig.from_pyproject(".")
 coverage = build.check_docs(".", fail_under=0.90)
 coverage.save_json("artifacts/api-coverage.json")
-coverage.write_csv("artifacts/api-coverage.csv")
+coverage.save_csv("artifacts/api-coverage.csv")
 ```
 
 Use `check_api_docs(...)` directly when coverage evidence should be inserted
@@ -25,7 +25,7 @@ coverage = check_api_docs(api, fail_under=0.90)
 
 doc = Document("Release Evidence", Chapter("API Coverage", coverage.to_table()))
 coverage.save_json("artifacts/api-coverage.json")
-coverage.write_csv("artifacts/api-coverage.csv")
+coverage.save_csv("artifacts/api-coverage.csv")
 ```
 
 Doctest-style examples are parsed by default. When examples should also be

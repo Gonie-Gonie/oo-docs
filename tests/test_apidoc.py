@@ -1177,7 +1177,7 @@ def test_collect_api_filters_modules_before_collection(tmp_path: Path) -> None:
         "filtermods.experimental",
     )
     assert pyproject_config.object_exclude_patterns == ("filtermods.core.run",)
-    assert ApiCollectConfig.read_file(pyproject_path) == pyproject_config
+    assert ApiCollectConfig.load_file(pyproject_path) == pyproject_config
     pyproject_build_config = ApiBuildConfig.from_pyproject(tmp_path)
     assert pyproject_build_config.collection == pyproject_config
     assert pyproject_build_config.profile == "website"

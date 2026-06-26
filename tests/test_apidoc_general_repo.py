@@ -1773,11 +1773,11 @@ def test_build_config_save_all_targets_repo_with_parser_modules(
         encoding="utf-8",
     )
 
-    build = ApiBuildConfig.read_file(config_path, target=repo)
+    build = ApiBuildConfig.load_file(config_path, target=repo)
     api = build.collect(repo)
     coverage = build.check_docs(repo, fail_under=1.0)
     snapshot = build.snapshot(repo)
-    snapshot_path = build.write_snapshot(repo, tmp_path / "brief-snapshot.json")
+    snapshot_path = build.save_snapshot(repo, tmp_path / "brief-snapshot.json")
     document = build.to_document(repo)
     outputs = build.save_all(repo)
     run = api.find_object("briefpkg.run")

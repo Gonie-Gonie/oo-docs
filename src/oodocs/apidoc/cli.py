@@ -337,7 +337,7 @@ def _run_init(args: argparse.Namespace) -> int:
     if output_format == "json":
         output_path = config.save_json(args.path)
     else:
-        output_path = config.write_pyproject(args.path)
+        output_path = config.save_pyproject(args.path)
     print(f"Wrote apidoc-config: {output_path}")
     return 0
 
@@ -365,7 +365,7 @@ def _run_check(args: argparse.Namespace) -> int:
         result.save_json(args.out_json)
         print(f"Wrote coverage-json: {args.out_json}")
     if args.out_csv:
-        result.write_csv(args.out_csv)
+        result.save_csv(args.out_csv)
         print(f"Wrote coverage-csv: {args.out_csv}")
     if result.issues:
         for issue in result.issues[:20]:
@@ -384,7 +384,7 @@ def _run_build(args: argparse.Namespace) -> int:
 
 def _run_snapshot(args: argparse.Namespace) -> int:
     build_config = _effective_build_config_from_args(args)
-    build_config.write_snapshot(args.package, args.out)
+    build_config.save_snapshot(args.package, args.out)
     print(f"Wrote api-snapshot: {Path(args.out)}")
     return 0
 
@@ -411,7 +411,7 @@ def _collect_from_args(
 ):
     _load_docstring_parser_modules_from_args(args)
     if config is None and args.config:
-        config = ApiCollectConfig.read_file(
+        config = ApiCollectConfig.load_file(
             args.config,
             target=_target_from_args(args),
         )
@@ -422,7 +422,7 @@ def _build_config_from_args(args: argparse.Namespace) -> ApiBuildConfig:
     _load_docstring_parser_modules_from_args(args)
     if not args.config:
         return ApiBuildConfig()
-    return ApiBuildConfig.read_file(args.config, target=_target_from_args(args))
+    return ApiBuildConfig.load_file(args.config, target=_target_from_args(args))
 
 
 def _effective_build_config_from_args(

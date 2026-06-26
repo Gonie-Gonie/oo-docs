@@ -560,9 +560,15 @@ def test_apidoc_selection_and_json_api_use_canonical_names() -> None:
         },
         apidoc.ApiSnapshot: {"write_json", "read_json"},
         apidoc.ApiDiffResult: {"write_json", "read_json"},
-        apidoc.ApiCoverageResult: {"write_json", "read_json"},
-        apidoc.ApiCollectConfig: {"write_json", "read_json"},
-        apidoc.ApiBuildConfig: {"write_json", "read_json"},
+        apidoc.ApiCoverageResult: {"write_json", "read_json", "write_csv"},
+        apidoc.ApiCollectConfig: {"write_json", "read_json", "read_file"},
+        apidoc.ApiBuildConfig: {
+            "write_json",
+            "read_json",
+            "read_file",
+            "write_pyproject",
+            "write_snapshot",
+        },
     }
 
     expected_by_class = {
@@ -596,9 +602,15 @@ def test_apidoc_selection_and_json_api_use_canonical_names() -> None:
         },
         apidoc.ApiSnapshot: {"save_json", "load_json"},
         apidoc.ApiDiffResult: {"save_json", "load_json"},
-        apidoc.ApiCoverageResult: {"save_json", "load_json"},
-        apidoc.ApiCollectConfig: {"save_json", "load_json"},
-        apidoc.ApiBuildConfig: {"save_json", "load_json"},
+        apidoc.ApiCoverageResult: {"save_json", "load_json", "save_csv"},
+        apidoc.ApiCollectConfig: {"save_json", "load_json", "load_file"},
+        apidoc.ApiBuildConfig: {
+            "save_json",
+            "load_json",
+            "load_file",
+            "save_pyproject",
+            "save_snapshot",
+        },
     }
 
     for cls, forbidden in forbidden_by_class.items():

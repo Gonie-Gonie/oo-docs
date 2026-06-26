@@ -91,7 +91,7 @@ document.save_all(
 )
 api.save_json("artifacts/api/api-objects.json")
 coverage.save_json("artifacts/api/api-coverage.json")
-coverage.write_csv("artifacts/api/api-coverage.csv")
+coverage.save_csv("artifacts/api/api-coverage.csv")
 ```
 
 ## Insert One Object
@@ -241,7 +241,7 @@ doc = Document(
 
 api.save_json("artifacts/api/api-objects.json")
 coverage.save_json("artifacts/api/api-coverage.json")
-coverage.write_csv("artifacts/api/api-coverage.csv")
+coverage.save_csv("artifacts/api/api-coverage.csv")
 ```
 
 The same options can live in `pyproject.toml` so Python scripts and CLI commands

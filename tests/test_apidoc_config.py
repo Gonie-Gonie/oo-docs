@@ -67,7 +67,7 @@ def test_apidoc_build_config_rejects_sequence_module_prefix() -> None:
         ApiBuildConfig.from_dict({"module-prefix": ["samplepkg"]})
 
 
-def test_apidoc_config_read_file_accepts_target_for_parser_modules(tmp_path) -> None:
+def test_apidoc_config_load_file_accepts_target_for_parser_modules(tmp_path) -> None:
     repo = tmp_path / "target-config-repo"
     package_dir = repo / "src" / "targetconfigpkg"
     package_dir.mkdir(parents=True)
@@ -132,9 +132,9 @@ def test_apidoc_config_read_file_accepts_target_for_parser_modules(tmp_path) -> 
 
     assert "target-config-brief" not in docstring_parser_names()
     with pytest.raises(ImportError):
-        ApiCollectConfig.read_file(config_path)
+        ApiCollectConfig.load_file(config_path)
 
-    config = ApiCollectConfig.read_file(config_path, target=repo)
+    config = ApiCollectConfig.load_file(config_path, target=repo)
     api = collect_api(repo, config=config)
     run = api.find_object("targetconfigpkg.run")
 
@@ -142,7 +142,7 @@ def test_apidoc_config_read_file_accepts_target_for_parser_modules(tmp_path) -> 
     assert run.summary == "target-config:Run through target-aware config."
 
 
-def test_apidoc_build_config_read_file_accepts_target_for_parser_modules(tmp_path) -> None:
+def test_apidoc_build_config_load_file_accepts_target_for_parser_modules(tmp_path) -> None:
     repo = tmp_path / "target-build-config-repo"
     package_dir = repo / "src" / "targetbuildpkg"
     package_dir.mkdir(parents=True)
@@ -210,9 +210,9 @@ def test_apidoc_build_config_read_file_accepts_target_for_parser_modules(tmp_pat
 
     assert "target-build-brief" not in docstring_parser_names()
     with pytest.raises(ImportError):
-        ApiBuildConfig.read_file(config_path)
+        ApiBuildConfig.load_file(config_path)
 
-    build = ApiBuildConfig.read_file(config_path, target=repo)
+    build = ApiBuildConfig.load_file(config_path, target=repo)
     api = collect_api(repo, config=build.collection)
     run = api.find_object("targetbuildpkg.run")
 
@@ -222,7 +222,7 @@ def test_apidoc_build_config_read_file_accepts_target_for_parser_modules(tmp_pat
     assert run.summary == "target-build:Run through target-aware build config."
 
 
-def test_apidoc_build_config_read_file_uses_setuptools_find_target_import_roots(tmp_path) -> None:
+def test_apidoc_build_config_load_file_uses_setuptools_find_target_import_roots(tmp_path) -> None:
     repo = write_setuptools_find_repo(
         tmp_path,
         repo_name="find-target-build-config-repo",
@@ -269,9 +269,9 @@ def test_apidoc_build_config_read_file_uses_setuptools_find_target_import_roots(
 
     assert "find-target-brief" not in docstring_parser_names()
     with pytest.raises(ImportError):
-        ApiBuildConfig.read_file(config_path)
+        ApiBuildConfig.load_file(config_path)
 
-    build = ApiBuildConfig.read_file(config_path, target=repo)
+    build = ApiBuildConfig.load_file(config_path, target=repo)
     api = build.collect(repo)
     document = build.to_document(repo)
     run = api.find_object("findtargetpkg.run")
@@ -281,7 +281,7 @@ def test_apidoc_build_config_read_file_uses_setuptools_find_target_import_roots(
     assert run.summary == "find-target:Run from a find-layout repository."
 
 
-def test_apidoc_build_config_read_file_uses_hatch_target_import_roots(tmp_path) -> None:
+def test_apidoc_build_config_load_file_uses_hatch_target_import_roots(tmp_path) -> None:
     repo = write_hatch_package_repo(
         tmp_path,
         repo_name="hatch-target-build-config-repo",
@@ -328,9 +328,9 @@ def test_apidoc_build_config_read_file_uses_hatch_target_import_roots(tmp_path) 
 
     assert "hatch-target-brief" not in docstring_parser_names()
     with pytest.raises(ImportError):
-        ApiBuildConfig.read_file(config_path)
+        ApiBuildConfig.load_file(config_path)
 
-    build = ApiBuildConfig.read_file(config_path, target=repo)
+    build = ApiBuildConfig.load_file(config_path, target=repo)
     api = build.collect(repo)
     document = build.to_document(repo)
     run = api.find_object("hatchtargetpkg.run")
@@ -340,7 +340,7 @@ def test_apidoc_build_config_read_file_uses_hatch_target_import_roots(tmp_path) 
     assert run.summary == "hatch-target:Run from a Hatch-layout repository."
 
 
-def test_apidoc_build_config_read_file_uses_pdm_target_import_roots(tmp_path) -> None:
+def test_apidoc_build_config_load_file_uses_pdm_target_import_roots(tmp_path) -> None:
     repo = write_pdm_package_dir_repo(
         tmp_path,
         repo_name="pdm-target-build-config-repo",
@@ -387,9 +387,9 @@ def test_apidoc_build_config_read_file_uses_pdm_target_import_roots(tmp_path) ->
 
     assert "pdm-target-brief" not in docstring_parser_names()
     with pytest.raises(ImportError):
-        ApiBuildConfig.read_file(config_path)
+        ApiBuildConfig.load_file(config_path)
 
-    build = ApiBuildConfig.read_file(config_path, target=repo)
+    build = ApiBuildConfig.load_file(config_path, target=repo)
     api = build.collect(repo)
     document = build.to_document(repo)
     run = api.find_object("pdmtargetpkg.run")
@@ -399,7 +399,7 @@ def test_apidoc_build_config_read_file_uses_pdm_target_import_roots(tmp_path) ->
     assert run.summary == "pdm-target:Run from a PDM-layout repository."
 
 
-def test_apidoc_build_config_read_file_uses_flit_target_import_roots(tmp_path) -> None:
+def test_apidoc_build_config_load_file_uses_flit_target_import_roots(tmp_path) -> None:
     repo = write_flit_package_repo(
         tmp_path,
         repo_name="flit-target-build-config-repo",
@@ -446,9 +446,9 @@ def test_apidoc_build_config_read_file_uses_flit_target_import_roots(tmp_path) -
 
     assert "flit-target-brief" not in docstring_parser_names()
     with pytest.raises(ImportError):
-        ApiBuildConfig.read_file(config_path)
+        ApiBuildConfig.load_file(config_path)
 
-    build = ApiBuildConfig.read_file(config_path, target=repo)
+    build = ApiBuildConfig.load_file(config_path, target=repo)
     api = build.collect(repo)
     document = build.to_document(repo)
     run = api.find_object("flittargetpkg.run")
@@ -459,7 +459,7 @@ def test_apidoc_build_config_read_file_uses_flit_target_import_roots(tmp_path) -
     assert api.find_object("straypkg.leak") is None
 
 
-def test_apidoc_build_config_read_file_uses_import_names_target_import_roots(
+def test_apidoc_build_config_load_file_uses_import_names_target_import_roots(
     tmp_path,
 ) -> None:
     repo = write_import_names_package_repo(
@@ -508,9 +508,9 @@ def test_apidoc_build_config_read_file_uses_import_names_target_import_roots(
 
     assert "import-names-target-brief" not in docstring_parser_names()
     with pytest.raises(ImportError):
-        ApiBuildConfig.read_file(config_path)
+        ApiBuildConfig.load_file(config_path)
 
-    build = ApiBuildConfig.read_file(config_path, target=repo)
+    build = ApiBuildConfig.load_file(config_path, target=repo)
     api = build.collect(repo)
     document = build.to_document(repo)
     run = api.find_object("importnamestargetpkg.run")

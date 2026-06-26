@@ -303,7 +303,7 @@ validating parser modules:
 from oodocs.apidoc import ApiBuildConfig
 
 repo = r"C:\work\mypkg"
-build = ApiBuildConfig.read_file(r"C:\configs\mypkg-apidoc.json", target=repo)
+build = ApiBuildConfig.load_file(r"C:\configs\mypkg-apidoc.json", target=repo)
 outputs = build.save_all(repo, output_dir=r"C:\work\mypkg\artifacts\api")
 assert outputs["docx"].exists()
 assert outputs["pdf"].exists()

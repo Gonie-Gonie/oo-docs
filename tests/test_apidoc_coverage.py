@@ -136,7 +136,7 @@ def test_apidoc_coverage_reports_quality_gate_issues(tmp_path) -> None:
         "missing-return-doc",
     } <= issue_codes
 
-    csv_path = coverage.write_csv(tmp_path / "coverage.csv")
+    csv_path = coverage.save_csv(tmp_path / "coverage.csv")
     csv_text = csv_path.read_text(encoding="utf-8")
 
     assert "doctest-failed" in csv_text

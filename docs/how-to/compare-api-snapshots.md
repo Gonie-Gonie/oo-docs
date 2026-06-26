@@ -21,7 +21,7 @@ Python usage gives direct access to the diff object:
 from oodocs.apidoc import ApiBuildConfig, ApiSnapshot, diff_api
 
 build = ApiBuildConfig.from_pyproject(".")
-build.write_snapshot(".", "artifacts/api-head.json")
+build.save_snapshot(".", "artifacts/api-head.json")
 
 base = ApiSnapshot.load_json("artifacts/api-base.json")
 head = ApiSnapshot.load_json("artifacts/api-head.json")
