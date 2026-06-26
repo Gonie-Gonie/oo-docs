@@ -39,7 +39,7 @@ def test_apidoc_model_roundtrip_preserves_object_tree() -> None:
 def test_apidoc_leaf_metadata_helpers_compose_into_oodocs_blocks() -> None:
     returns = ApiReturn("typing.Sequence[str]", "Rendered paths.", documented=True)
     exception = ApiException("ValueError", "If the path is invalid.")
-    example = ApiExample("print('ok')", caption="Minimal use", syntax_ok=True)
+    example = ApiExample("print('ok')", caption="Minimal use", role="basic", syntax_ok=True)
     see_also = ApiSeeAlso("save", target="samplepkg.save", kind="function")
     note = ApiRendererNote("html", "Adds stable anchors.", "info")
 
@@ -68,7 +68,7 @@ def test_apidoc_leaf_metadata_helpers_compose_into_oodocs_blocks() -> None:
     )
 
     assert returns.as_return_row(("type", "documented")) == ["Sequence[str]", "yes"]
-    assert example.as_example_row(("syntax_ok", "doctest_ok")) == ["yes", ""]
+    assert example.as_example_row(("role", "syntax_ok", "doctest_ok")) == ["basic", "yes", ""]
     assert see_also.as_record() == {
         "label": "save",
         "target": "samplepkg.save",

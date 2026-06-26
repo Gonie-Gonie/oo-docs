@@ -568,6 +568,9 @@ class ApiExample:
         language: Syntax language label.
         caption: Optional caption for rendered examples.
         source: Optional source label.
+        role: Example role. ``"basic"`` examples are rendered on concise help
+            pages by default; ``"guide"`` and advanced roles can be routed to
+            longer authored material.
         syntax_ok: Optional syntax check result.
         doctest_ok: Optional doctest check result.
 
@@ -587,8 +590,13 @@ class ApiExample:
     language: str = "python"
     caption: str | None = None
     source: str | None = None
+    role: Literal["basic", "advanced", "guide", "test", "edge"] = "basic"
     syntax_ok: bool | None = None
     doctest_ok: bool | None = None
+
+    def __post_init__(self) -> None:
+        if self.role not in {"basic", "advanced", "guide", "test", "edge"}:
+            raise ValueError("ApiExample.role must be basic, advanced, guide, test, or edge")
 
     def to_dict(self) -> dict[str, object]:
         """Return deterministic serialized data.
@@ -611,6 +619,7 @@ class ApiExample:
             "language": self.language,
             "caption": self.caption,
             "source": self.source,
+            "role": self.role,
             "syntax_ok": self.syntax_ok,
             "doctest_ok": self.doctest_ok,
         }
@@ -644,12 +653,17 @@ class ApiExample:
             language=str(data.get("language", "python")),
             caption=_optional_str(data.get("caption")),
             source=_optional_str(data.get("source")),
+            role=str(data.get("role", "basic")),  # type: ignore[arg-type]
             syntax_ok=_optional_bool(data.get("syntax_ok")),
             doctest_ok=_optional_bool(data.get("doctest_ok")),
         )
 
-    def to_code_block(self):
+    def to_code_block(self, *, max_lines: int | None = None):
         """Return this example as a code block.
+
+        Args:
+            max_lines: Optional maximum number of source lines to include.
+                Longer examples are truncated with an ellipsis line.
 
         Returns:
             ``oodocs.CodeBlock`` using the example language and code, with
@@ -669,18 +683,19 @@ class ApiExample:
 
         from oodocs.components.blocks import CodeBlock
 
-        return CodeBlock(_xml_safe_text(self.code), language=self.language or "text")
+        code = _preview_code(self.code, max_lines=max_lines)
+        return CodeBlock(_xml_safe_text(code), language=self.language or "text")
 
     def as_example_row(
         self,
-        columns: Sequence[str] = ("language", "caption", "source", "syntax_ok", "doctest_ok"),
+        columns: Sequence[str] = ("language", "caption", "source", "role", "syntax_ok", "doctest_ok"),
     ) -> list[object]:
         """Return this example metadata as a table row.
 
         Args:
             columns: Column names to include. Supported values are
-                ``"language"``, ``"caption"``, ``"source"``, ``"syntax_ok"``,
-                and ``"doctest_ok"``.
+                ``"language"``, ``"caption"``, ``"source"``, ``"role"``,
+                ``"syntax_ok"``, and ``"doctest_ok"``.
 
         Returns:
             List of table cell values.
@@ -701,6 +716,7 @@ class ApiExample:
             "language": self.language or "",
             "caption": self.caption or "",
             "source": self.source or "",
+            "role": self.role,
             "syntax_ok": _display_bool(self.syntax_ok),
             "doctest_ok": _display_bool(self.doctest_ok),
         }
@@ -732,6 +748,8 @@ class ApiExample:
             pieces.extend([": ", self.caption])
         if self.source:
             pieces.extend([" (", self.source, ")"])
+        if self.role != "basic":
+            pieces.extend([" [", self.role, "]"])
         return Paragraph(*pieces)
 
 
@@ -3778,6 +3796,15 @@ def _xml_safe_text(value: str) -> str:
         else:
             chars.append(char)
     return "".join(chars)
+
+
+def _preview_code(value: str, *, max_lines: int | None) -> str:
+    if max_lines is None or max_lines <= 0:
+        return value
+    lines = value.splitlines()
+    if len(lines) <= max_lines:
+        return value
+    return "\n".join([*lines[:max_lines], "..."])
 
 
 def _jsonable_metadata(metadata: dict[str, object]) -> dict[str, object]:

@@ -256,3 +256,30 @@ def test_help_class_section_separates_creation_properties_and_methods() -> None:
     assert "title" in text
     assert "render(path: str) -> str" in text
     assert "render_to_html" not in text
+
+
+def test_help_examples_use_basic_role_and_preview_long_code() -> None:
+    long_basic = "\n".join(f"line_{index}()" for index in range(25))
+    obj = ApiObject(
+        "function",
+        "run",
+        "samplepkg.run",
+        "samplepkg",
+        signature="run() -> None",
+        summary="Run the sample.",
+        examples=[
+            ApiExample("advanced_run()", role="advanced"),
+            ApiExample(long_basic, role="basic"),
+            ApiExample("guide_run()", role="guide"),
+        ],
+    )
+
+    section = api_object_to_help_section(obj, level=2)
+    text = _all_plain_text(section)
+
+    assert "line_0()" in text
+    assert "line_19()" in text
+    assert "line_20()" not in text
+    assert "..." in text
+    assert "advanced_run()" not in text
+    assert "guide_run()" not in text

@@ -441,6 +441,11 @@ def api_examples_blocks(
     if not resolved.include_examples or not obj.examples:
         return []
     examples = obj.examples
+    max_code_lines: int | None = None
+    if resolved.name == "help":
+        basic_examples = [example for example in examples if example.role == "basic"]
+        examples = basic_examples or examples[:1]
+        max_code_lines = 20
     if resolved.max_examples is not None:
         examples = examples[: resolved.max_examples]
     blocks: list[Block] = []
@@ -449,7 +454,7 @@ def api_examples_blocks(
             blocks.append(Paragraph(example.caption, title=f"Example {index}"))
         elif len(examples) > 1:
             blocks.append(Paragraph(f"Example {index}"))
-        blocks.append(example.to_code_block())
+        blocks.append(example.to_code_block(max_lines=max_code_lines))
     return blocks
 
 
