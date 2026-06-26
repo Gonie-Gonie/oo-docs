@@ -8,6 +8,7 @@ from oodocs import (
     BoxStyle,
     CaptionDefaults,
     CounterStyle,
+    GeneratedContentDefaults,
     HeadingNumbering,
     InlineChipStyle,
     ListStyle,
@@ -105,10 +106,19 @@ def test_counter_style_drives_list_heading_page_and_part_defaults() -> None:
 
 def test_theme_resolves_heading_and_caption_defaults() -> None:
     theme = Theme(
-        typography=TypographyDefaults(heading_sizes=(20.0, 16.0)),
-        captions=CaptionDefaults(table_caption_label="Tbl.", figure_reference_label="Fig."),
+        typography=TypographyDefaults(
+            body_font_name="Arial",
+            monospace_font_name="Consolas",
+            heading_sizes=(20.0, 16.0),
+        ),
+        captions=CaptionDefaults(
+            table_caption_label="Tbl.",
+            figure_reference_label="Fig.",
+        ),
     )
 
+    assert theme.resolve_body_font() == "Arial"
+    assert theme.resolve_monospace_font() == "Consolas"
     assert theme.resolve_heading_size(3) == 16.0
     assert theme.resolve_heading_emphasis(1) == (True, False)
     assert theme.resolve_heading_text_alignment(2) == "left"
@@ -120,6 +130,21 @@ def test_theme_resolves_heading_and_caption_defaults() -> None:
 
     with pytest.raises(ValueError, match="caption label context"):
         theme.resolve_caption_label("table", "inline")
+
+
+def test_theme_resolves_generated_page_titles() -> None:
+    theme = Theme(
+        generated_content=GeneratedContentDefaults(
+            list_of_tables_title="Tables",
+            reference_list_title="Bibliography",
+        )
+    )
+
+    assert theme.resolve_generated_page_title("list_of_tables") == "Tables"
+    assert theme.resolve_generated_page_title("reference_list") == "Bibliography"
+
+    with pytest.raises(ValueError, match="unsupported generated content kind"):
+        theme.resolve_generated_page_title("appendix")
 
 
 def test_stylesheet_resolves_prefixed_names_and_roundtrips() -> None:

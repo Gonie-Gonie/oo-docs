@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Sequence
+from typing import Literal, Sequence
 
 from oodocs.components.references import normalize_citation_style, normalize_reference_style
 from oodocs.core import (
@@ -425,6 +425,40 @@ class Theme:
         self.blocks = blocks or BlockDefaults()
         self.stylesheet = stylesheet or StyleSheet.default()
 
+    def resolve_body_font(self) -> str:
+        """Return the document-wide proportional font name.
+
+        Returns:
+            Body font family used for ordinary text and generated content.
+
+        Examples:
+            ```python
+            from oodocs import Theme, TypographyDefaults
+
+            theme = Theme(typography=TypographyDefaults(body_font_name="Arial"))
+            assert theme.resolve_body_font() == "Arial"
+            ```
+        """
+
+        return self.typography.body_font_name
+
+    def resolve_monospace_font(self) -> str:
+        """Return the document-wide monospace font name.
+
+        Returns:
+            Monospace font family used for code spans and code blocks.
+
+        Examples:
+            ```python
+            from oodocs import Theme, TypographyDefaults
+
+            theme = Theme(typography=TypographyDefaults(monospace_font_name="Consolas"))
+            assert theme.resolve_monospace_font() == "Consolas"
+            ```
+        """
+
+        return self.typography.monospace_font_name
+
     def resolve_heading_size(self, level: int) -> float:
         """Return the configured font size for a heading level.
 
@@ -529,7 +563,11 @@ class Theme:
 
         return paragraph_override or scope_style or self.blocks.run_in_title_style
 
-    def resolve_caption_label(self, kind: str, context: str) -> str:
+    def resolve_caption_label(
+        self,
+        kind: Literal["table", "figure"],
+        context: Literal["caption", "reference"],
+    ) -> str:
         """Return the effective label for captions or inline references.
 
         Args:
@@ -560,6 +598,55 @@ class Theme:
         if context == "caption":
             return self.captions.figure_caption_label or self.captions.figure_label
         return self.captions.figure_reference_label or self.captions.figure_label
+
+    def resolve_generated_page_title(
+        self,
+        kind: Literal[
+            "list_of_tables",
+            "list_of_figures",
+            "comment_list",
+            "footnote_list",
+            "reference_list",
+            "table_of_contents",
+        ],
+    ) -> str:
+        """Return the default title for generated document content.
+
+        Args:
+            kind: Generated content kind. Supported values are
+                ``"list_of_tables"``, ``"list_of_figures"``,
+                ``"comment_list"``, ``"footnote_list"``,
+                ``"reference_list"``, and ``"table_of_contents"``.
+
+        Returns:
+            Default title text for the generated content block.
+
+        Raises:
+            ValueError: If ``kind`` is unsupported.
+
+        Examples:
+            ```python
+            from oodocs import GeneratedContentDefaults, Theme
+
+            theme = Theme(
+                generated_content=GeneratedContentDefaults(reference_list_title="Bibliography")
+            )
+            assert theme.resolve_generated_page_title("reference_list") == "Bibliography"
+            ```
+        """
+
+        titles = {
+            "list_of_tables": self.generated_content.list_of_tables_title,
+            "list_of_figures": self.generated_content.list_of_figures_title,
+            "comment_list": self.generated_content.comment_list_title,
+            "footnote_list": self.generated_content.footnote_list_title,
+            "reference_list": self.generated_content.reference_list_title,
+            "table_of_contents": self.generated_content.table_of_contents_title,
+        }
+        try:
+            return titles[kind]
+        except KeyError as exc:
+            raise ValueError(f"unsupported generated content kind: {kind!r}") from exc
 
     def caption_size(self) -> float:
         """Return the effective caption font size.

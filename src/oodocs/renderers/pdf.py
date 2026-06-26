@@ -707,7 +707,7 @@ class PdfRenderer:
         title_style = RLParagraphStyle(
             f"Heading{block.level}",
             parent=styles["Heading1"],
-            fontName=self._resolve_font(theme.typography.body_font_name, bold, italic),
+            fontName=self._resolve_font(theme.resolve_body_font(), bold, italic),
             fontSize=theme.resolve_heading_size(block.level),
             leading=theme.resolve_heading_size(block.level) * 1.2,
             spaceBefore=18 if block.level == 1 else 12,
@@ -1289,7 +1289,7 @@ class PdfRenderer:
             context.theme,
             context.styles,
             context.render_index,
-            context.theme.generated_content.list_of_tables_title,
+            context.theme.resolve_generated_page_title("list_of_tables"),
             context.theme.resolve_caption_label("table", "caption"),
         )
 
@@ -1314,7 +1314,7 @@ class PdfRenderer:
             context.theme,
             context.styles,
             context.render_index,
-            context.theme.generated_content.list_of_figures_title,
+            context.theme.resolve_generated_page_title("list_of_figures"),
             context.theme.resolve_caption_label("figure", "caption"),
         )
 
@@ -1624,7 +1624,7 @@ class PdfRenderer:
         paragraph_style = RLParagraphStyle(
             style_name,
             parent=styles["BodyText"],
-            fontName=self._resolve_font(theme.typography.body_font_name, bold, italic),
+            fontName=self._resolve_font(theme.resolve_body_font(), bold, italic),
             fontSize=font_size,
             leading=font_size * 1.2,
             alignment=ALIGNMENTS[alignment],
@@ -1659,7 +1659,7 @@ class PdfRenderer:
         paragraph_style = RLParagraphStyle(
             style_name,
             parent=context.styles["BodyText"],
-            fontName=self._resolve_font(theme.typography.body_font_name, bold, False),
+            fontName=self._resolve_font(theme.resolve_body_font(), bold, False),
             fontSize=font_size,
             leading=font_size * 1.2,
             alignment=TA_CENTER,
@@ -1767,7 +1767,7 @@ class PdfRenderer:
         font_size = item.font_size or context.theme.typography.body_font_size
         style = RLParagraphStyle(
             "PositionedTextBox",
-            fontName=self._resolve_font(context.theme.typography.body_font_name, False, False),
+            fontName=self._resolve_font(context.theme.resolve_body_font(), False, False),
             fontSize=font_size,
             leading=font_size * 1.22,
             alignment=ALIGNMENTS[item.text_alignment],
@@ -1857,7 +1857,7 @@ class PdfRenderer:
                 f"{left_indent}{right_indent}{first_line_indent}"
             ),
             parent=base_style,
-            fontName=self._resolve_font(theme.typography.body_font_name, False, False),
+            fontName=self._resolve_font(theme.resolve_body_font(), False, False),
             fontSize=theme.typography.body_font_size,
             leading=style.leading or theme.typography.body_font_size * 1.35,
             spaceBefore=style.space_before or 0,
@@ -1938,7 +1938,7 @@ class PdfRenderer:
             paragraph_style = RLParagraphStyle(
                 f"TableCell{placement.row}_{placement.column}_{int(cell_bold)}_{int(cell_italic)}",
                 parent=body_style,
-                fontName=self._resolve_font(theme.typography.body_font_name, cell_bold, cell_italic),
+                fontName=self._resolve_font(theme.resolve_body_font(), cell_bold, cell_italic),
                 textColor=cell_text_color,
             )
             cell_text_alignment = self._table_cell_text_alignment(
@@ -2225,7 +2225,7 @@ class PdfRenderer:
             title_style = RLParagraphStyle(
                 "BoxTitle",
                 parent=body_style,
-                fontName=self._resolve_font(theme.typography.body_font_name, True, False),
+                fontName=self._resolve_font(theme.resolve_body_font(), True, False),
                 spaceAfter=6,
                 textColor=colors.HexColor(f"#{box_style.title_text_color or '000000'}"),
             )
@@ -2323,7 +2323,7 @@ class PdfRenderer:
         code_style = RLParagraphStyle(
             "CodeBlock",
             parent=styles["Code"],
-            fontName=self._resolve_font(theme.typography.monospace_font_name, False, False),
+            fontName=self._resolve_font(theme.resolve_monospace_font(), False, False),
             fontSize=font_size,
             leading=font_size * 1.35,
             leftIndent=0,
@@ -2339,7 +2339,7 @@ class PdfRenderer:
             label_style = RLParagraphStyle(
                 "CodeBlockLabel",
                 parent=styles["BodyText"],
-                fontName=self._resolve_font(theme.typography.monospace_font_name, False, False),
+                fontName=self._resolve_font(theme.resolve_monospace_font(), False, False),
                 fontSize=max(theme.caption_size() - 1, 7),
                 leading=max(theme.caption_size() - 1, 7) * 1.2,
                 textColor=colors.HexColor("#6F7D90"),
@@ -2357,10 +2357,10 @@ class PdfRenderer:
             CodeBlockFlowable(
                 syntax_tokens(block.code, block.language),
                 font_names={
-                    (False, False): self._resolve_font(theme.typography.monospace_font_name, False, False),
-                    (True, False): self._resolve_font(theme.typography.monospace_font_name, True, False),
-                    (False, True): self._resolve_font(theme.typography.monospace_font_name, False, True),
-                    (True, True): self._resolve_font(theme.typography.monospace_font_name, True, True),
+                    (False, False): self._resolve_font(theme.resolve_monospace_font(), False, False),
+                    (True, False): self._resolve_font(theme.resolve_monospace_font(), True, False),
+                    (False, True): self._resolve_font(theme.resolve_monospace_font(), False, True),
+                    (True, True): self._resolve_font(theme.resolve_monospace_font(), True, True),
                 },
                 font_size=code_style.fontSize,
                 leading=code_style.leading,
@@ -2405,7 +2405,7 @@ class PdfRenderer:
         equation_style = RLParagraphStyle(
             "EquationBlock",
             parent=styles["BodyText"],
-            fontName=self._resolve_font(theme.typography.body_font_name, False, False),
+            fontName=self._resolve_font(theme.resolve_body_font(), False, False),
             fontSize=max(theme.typography.body_font_size + 1, 12),
             leading=max(theme.typography.body_font_size + 1, 12) * 1.3,
             alignment=ALIGNMENTS[theme.resolve_paragraph_text_alignment(block_style)],
@@ -2835,7 +2835,7 @@ class PdfRenderer:
         base_size = fragment.style.font_size or base_size or theme.typography.body_font_size
         size = max(base_size + chip_style.font_size_delta, 6.0)
         font_name = self._resolve_font(
-            chip_style.font_name or fragment.style.font_name or theme.typography.body_font_name,
+            chip_style.font_name or fragment.style.font_name or theme.resolve_body_font(),
             chip_style.bold,
             chip_style.italic,
         )
@@ -2865,7 +2865,7 @@ class PdfRenderer:
         text = escape(rendered_text).replace("\n", "<br/>")
         bold = base_bold if fragment.style.bold is None else fragment.style.bold
         italic = base_italic if fragment.style.italic is None else fragment.style.italic
-        font_name = self._resolve_font(fragment.style.font_name or theme.typography.body_font_name, bold, italic)
+        font_name = self._resolve_font(fragment.style.font_name or theme.resolve_body_font(), bold, italic)
         size = fragment.style.font_size or base_size or theme.typography.body_font_size
 
         font_attrs: list[str] = []
@@ -3107,7 +3107,7 @@ class PdfRenderer:
         title_style = RLParagraphStyle(
             "GeneratedCaptionListTitle",
             parent=styles["Heading1"],
-            fontName=self._resolve_font(theme.typography.body_font_name, bold, italic),
+            fontName=self._resolve_font(theme.resolve_body_font(), bold, italic),
             fontSize=theme.resolve_heading_size(level),
             leading=theme.resolve_heading_size(level) * 1.2,
             spaceBefore=12,
@@ -3167,7 +3167,7 @@ class PdfRenderer:
         title_style = RLParagraphStyle(
             "CommentListTitle",
             parent=styles["Heading1"],
-            fontName=self._resolve_font(theme.typography.body_font_name, bold, italic),
+            fontName=self._resolve_font(theme.resolve_body_font(), bold, italic),
             fontSize=theme.resolve_heading_size(level),
             leading=theme.resolve_heading_size(level) * 1.2,
             spaceBefore=0,
@@ -3178,7 +3178,7 @@ class PdfRenderer:
         entry_style = RLParagraphStyle(
             "CommentEntry",
             parent=styles["BodyText"],
-            fontName=self._resolve_font(theme.typography.body_font_name, False, False),
+            fontName=self._resolve_font(theme.resolve_body_font(), False, False),
             fontSize=theme.typography.body_font_size,
             leading=theme.typography.body_font_size * 1.35,
             leftIndent=18,
@@ -3190,7 +3190,7 @@ class PdfRenderer:
             RLPageBreak(),
             RLParagraph(
                 self._inline_markup(
-                    title or [Text(theme.generated_content.comment_list_title)],
+                    title or [Text(theme.resolve_generated_page_title("comment_list"))],
                     theme,
                     render_index,
                     base_font_name=title_style.fontName,
@@ -3228,7 +3228,7 @@ class PdfRenderer:
         title_style = RLParagraphStyle(
             "FootnoteListTitle",
             parent=styles["Heading1"],
-            fontName=self._resolve_font(theme.typography.body_font_name, bold, italic),
+            fontName=self._resolve_font(theme.resolve_body_font(), bold, italic),
             fontSize=theme.resolve_heading_size(level),
             leading=theme.resolve_heading_size(level) * 1.2,
             spaceBefore=0,
@@ -3239,7 +3239,7 @@ class PdfRenderer:
         entry_style = RLParagraphStyle(
             "FootnoteEntry",
             parent=styles["BodyText"],
-            fontName=self._resolve_font(theme.typography.body_font_name, False, False),
+            fontName=self._resolve_font(theme.resolve_body_font(), False, False),
             fontSize=theme.typography.body_font_size,
             leading=theme.typography.body_font_size * 1.35,
             leftIndent=18,
@@ -3251,7 +3251,7 @@ class PdfRenderer:
             RLPageBreak(),
             RLParagraph(
                 self._inline_markup(
-                    title or [Text(theme.generated_content.footnote_list_title)],
+                    title or [Text(theme.resolve_generated_page_title("footnote_list"))],
                     theme,
                     render_index,
                     base_font_name=title_style.fontName,
@@ -3289,7 +3289,7 @@ class PdfRenderer:
         title_style = RLParagraphStyle(
             "ReferenceListTitle",
             parent=styles["Heading1"],
-            fontName=self._resolve_font(theme.typography.body_font_name, bold, italic),
+            fontName=self._resolve_font(theme.resolve_body_font(), bold, italic),
             fontSize=theme.resolve_heading_size(level),
             leading=theme.resolve_heading_size(level) * 1.2,
             spaceBefore=0,
@@ -3300,7 +3300,7 @@ class PdfRenderer:
         entry_style = RLParagraphStyle(
             "ReferenceEntry",
             parent=styles["BodyText"],
-            fontName=self._resolve_font(theme.typography.body_font_name, False, False),
+            fontName=self._resolve_font(theme.resolve_body_font(), False, False),
             fontSize=theme.typography.body_font_size,
             leading=theme.typography.body_font_size * 1.35,
             leftIndent=18,
@@ -3312,7 +3312,7 @@ class PdfRenderer:
             RLPageBreak(),
             RLParagraph(
                 self._inline_markup(
-                    title or [Text(theme.generated_content.reference_list_title)],
+                    title or [Text(theme.resolve_generated_page_title("reference_list"))],
                     theme,
                     render_index,
                     base_font_name=title_style.fontName,
@@ -3360,7 +3360,7 @@ class PdfRenderer:
         title_style = RLParagraphStyle(
             "TableOfContentsTitle",
             parent=styles["Heading1"],
-            fontName=self._resolve_font(theme.typography.body_font_name, bold, italic),
+            fontName=self._resolve_font(theme.resolve_body_font(), bold, italic),
             fontSize=theme.resolve_heading_size(level),
             leading=theme.resolve_heading_size(level) * 1.2,
             spaceBefore=12,
@@ -3371,7 +3371,7 @@ class PdfRenderer:
         story: list[object] = [
             RLParagraph(
                 self._inline_markup(
-                    block.title or [Text(theme.generated_content.table_of_contents_title)],
+                    block.title or [Text(theme.resolve_generated_page_title("table_of_contents"))],
                     theme,
                     render_index,
                     base_font_name=title_style.fontName,
@@ -3430,7 +3430,7 @@ class PdfRenderer:
             f"TableOfContentsEntry{level}",
             parent=styles["BodyText"],
             fontName=self._resolve_font(
-                theme.typography.body_font_name,
+                theme.resolve_body_font(),
                 bool(toc_style.bold),
                 bool(toc_style.italic),
             ),
@@ -3487,7 +3487,7 @@ class PdfRenderer:
         has_front_matter: bool,
     ):
         theme = document.settings.theme
-        font_name = self._resolve_font(theme.typography.body_font_name, False, False)
+        font_name = self._resolve_font(theme.resolve_body_font(), False, False)
 
         def draw_page(canvas: object, doc: object) -> None:
             canvas.saveState()

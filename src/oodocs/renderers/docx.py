@@ -756,7 +756,7 @@ class DocxRenderer:
             context.render_index.tables,
             context.theme,
             context.render_index,
-            context.theme.generated_content.list_of_tables_title,
+            context.theme.resolve_generated_page_title("list_of_tables"),
             context.theme.resolve_caption_label("table", "caption"),
         )
 
@@ -778,7 +778,7 @@ class DocxRenderer:
             context.render_index.figures,
             context.theme,
             context.render_index,
-            context.theme.generated_content.list_of_figures_title,
+            context.theme.resolve_generated_page_title("list_of_figures"),
             context.theme.resolve_caption_label("figure", "caption"),
         )
 
@@ -866,11 +866,11 @@ class DocxRenderer:
         self._enable_field_updates(word_document)
 
         normal_style = word_document.styles["Normal"]
-        normal_style.font.name = theme.typography.body_font_name
+        normal_style.font.name = theme.resolve_body_font()
         normal_style.font.size = Pt(theme.typography.body_font_size)
         normal_style.font.color.rgb = RGBColor(0, 0, 0)
         footer_style = word_document.styles["Footer"]
-        footer_style.font.name = theme.typography.body_font_name
+        footer_style.font.name = theme.resolve_body_font()
         footer_style.font.size = Pt(theme.page_numbers.page_number_font_size)
         footer_style.font.color.rgb = RGBColor(0, 0, 0)
         for section in word_document.sections:
@@ -879,7 +879,7 @@ class DocxRenderer:
         self._configure_named_style(
             word_document,
             "Title",
-            font_name=theme.typography.body_font_name,
+            font_name=theme.resolve_body_font(),
             font_size=theme.typography.title_font_size,
             bold=True,
             italic=False,
@@ -889,7 +889,7 @@ class DocxRenderer:
             self._configure_named_style(
                 word_document,
                 f"Heading {level}",
-                font_name=theme.typography.body_font_name,
+                font_name=theme.resolve_body_font(),
                 font_size=theme.resolve_heading_size(level),
                 bold=bold,
                 italic=italic,
@@ -1491,7 +1491,7 @@ class DocxRenderer:
         font_size = max(base_size + chip_style.font_size_delta, 6.0)
         font_px = max(int(round(font_size * dpi / 72)), 8)
         font = self._inline_chip_font(
-            chip_style.font_name or style.font_name or theme.typography.body_font_name,
+            chip_style.font_name or style.font_name or theme.resolve_body_font(),
             chip_style.bold,
             chip_style.italic,
             font_px,
@@ -1940,7 +1940,7 @@ class DocxRenderer:
             paragraph.paragraph_format.tab_stops.add_tab_stop(Inches(6), WD_TAB_ALIGNMENT.RIGHT)
             paragraph.add_run("\t")
         run = paragraph.add_run(code_block.language.upper() if code_block.language else "")
-        run.font.name = theme.typography.monospace_font_name
+        run.font.name = theme.resolve_monospace_font()
         run.font.size = Pt(max(theme.caption_size() - 1, 7))
         run.font.bold = False
         run.font.color.rgb = RGBColor(0x6F, 0x7D, 0x90)
@@ -1963,7 +1963,7 @@ class DocxRenderer:
                 if not part:
                     continue
                 run = paragraph.add_run(part)
-                run.font.name = theme.typography.monospace_font_name
+                run.font.name = theme.resolve_monospace_font()
                 run.font.size = Pt(default_size)
                 if token.color is not None:
                     run.font.color.rgb = RGBColor.from_string(token.color.upper())
@@ -3063,7 +3063,7 @@ class DocxRenderer:
         render_index: RenderIndex,
     ) -> None:
         word_document.add_page_break()
-        self._add_heading(word_document, title or [Text(theme.generated_content.comment_list_title)], level=theme.generated_content.generated_heading_level, theme=theme, number_label=None)
+        self._add_heading(word_document, title or [Text(theme.resolve_generated_page_title("comment_list"))], level=theme.generated_content.generated_heading_level, theme=theme, number_label=None)
         for entry in render_index.comments:
             paragraph = word_document.add_paragraph()
             paragraph.paragraph_format.left_indent = Inches(0.3)
@@ -3117,7 +3117,7 @@ class DocxRenderer:
         render_index: RenderIndex,
     ) -> None:
         word_document.add_page_break()
-        self._add_heading(word_document, title or [Text(theme.generated_content.footnote_list_title)], level=theme.generated_content.generated_heading_level, theme=theme, number_label=None)
+        self._add_heading(word_document, title or [Text(theme.resolve_generated_page_title("footnote_list"))], level=theme.generated_content.generated_heading_level, theme=theme, number_label=None)
         for entry in render_index.footnotes:
             paragraph = word_document.add_paragraph()
             paragraph.paragraph_format.left_indent = Inches(0.3)
@@ -3139,7 +3139,7 @@ class DocxRenderer:
         render_index: RenderIndex,
     ) -> None:
         word_document.add_page_break()
-        self._add_heading(word_document, title or [Text(theme.generated_content.reference_list_title)], level=theme.generated_content.generated_heading_level, theme=theme, number_label=None)
+        self._add_heading(word_document, title or [Text(theme.resolve_generated_page_title("reference_list"))], level=theme.generated_content.generated_heading_level, theme=theme, number_label=None)
         for entry in render_index.citations:
             paragraph = word_document.add_paragraph()
             paragraph.paragraph_format.left_indent = Inches(0.3)
@@ -3172,7 +3172,7 @@ class DocxRenderer:
         render_index = context.render_index
         self._add_generated_page_title(
             word_document,
-            block.title or [Text(theme.generated_content.table_of_contents_title)],
+            block.title or [Text(theme.resolve_generated_page_title("table_of_contents"))],
             level=theme.generated_content.generated_heading_level,
             theme=theme,
         )

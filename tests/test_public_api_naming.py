@@ -261,11 +261,14 @@ def test_theme_resolver_methods_use_explicit_resolve_names() -> None:
         "figure_reference_label_text",
     }
     expected = {
+        "resolve_body_font",
+        "resolve_monospace_font",
         "resolve_heading_size",
         "resolve_heading_emphasis",
         "resolve_heading_text_alignment",
         "resolve_paragraph_text_alignment",
         "resolve_caption_label",
+        "resolve_generated_page_title",
         "resolve_run_in_title_style",
     }
 

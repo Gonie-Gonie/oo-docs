@@ -916,7 +916,7 @@ class HtmlRenderer:
         return self._render_caption_list(
             title=block.title,
             entries=context.render_index.tables,
-            default_title=context.theme.generated_content.list_of_tables_title,
+            default_title=context.theme.resolve_generated_page_title("list_of_tables"),
             label=context.theme.resolve_caption_label("table", "caption"),
             context=context,
             section_class="oodocs-generated-page oodocs-table-list",
@@ -940,7 +940,7 @@ class HtmlRenderer:
         return self._render_caption_list(
             title=block.title,
             entries=context.render_index.figures,
-            default_title=context.theme.generated_content.list_of_figures_title,
+            default_title=context.theme.resolve_generated_page_title("list_of_figures"),
             label=context.theme.resolve_caption_label("figure", "caption"),
             context=context,
             section_class="oodocs-generated-page oodocs-figure-list",
@@ -975,7 +975,7 @@ class HtmlRenderer:
             for entry in context.render_index.comments
         )
         return self._generated_page_html(
-            title=block.title or [Text(context.theme.generated_content.comment_list_title)],
+            title=block.title or [Text(context.theme.resolve_generated_page_title("comment_list"))],
             body=entries,
             context=context,
             section_class="oodocs-generated-page oodocs-comments-page",
@@ -1010,7 +1010,7 @@ class HtmlRenderer:
             for entry in context.render_index.footnotes
         )
         return self._generated_page_html(
-            title=block.title or [Text(context.theme.generated_content.footnote_list_title)],
+            title=block.title or [Text(context.theme.resolve_generated_page_title("footnote_list"))],
             body=entries,
             context=context,
             section_class="oodocs-generated-page oodocs-footnotes-page",
@@ -1053,7 +1053,7 @@ class HtmlRenderer:
             for entry in context.render_index.citations
         )
         return self._generated_page_html(
-            title=block.title or [Text(context.theme.generated_content.reference_list_title)],
+            title=block.title or [Text(context.theme.resolve_generated_page_title("reference_list"))],
             body=entries,
             context=context,
             section_class="oodocs-generated-page oodocs-references-page",
@@ -1080,7 +1080,7 @@ class HtmlRenderer:
             if block.includes_level(entry.level)
         )
         return self._generated_page_html(
-            title=block.title or [Text(context.theme.generated_content.table_of_contents_title)],
+            title=block.title or [Text(context.theme.resolve_generated_page_title("table_of_contents"))],
             body='<nav class="oodocs-toc">' + entries + "</nav>",
             context=context,
             section_class="oodocs-generated-page oodocs-toc-page",
@@ -2313,7 +2313,7 @@ body {{
   margin: 0;
   background: #{theme.blocks.page_background_color};
   color: #1e2329;
-  font-family: {self._css_font_family(theme.typography.body_font_name)};
+  font-family: {self._css_font_family(theme.resolve_body_font())};
   font-size: {theme.typography.body_font_size:.1f}pt;
 }}
 .oodocs-page-frame {{
@@ -2409,7 +2409,7 @@ body {{
   margin-top: 0;
 }}
 .oodocs-paragraph {{
-  font-family: {self._css_font_family(theme.typography.body_font_name)};
+  font-family: {self._css_font_family(theme.resolve_body_font())};
 }}
 .oodocs-list {{
   margin: 0 0 10pt;
@@ -2434,7 +2434,7 @@ body {{
 .oodocs-code-language {{
   position: absolute;
   z-index: 1;
-  font-family: {self._css_font_family(theme.typography.monospace_font_name)};
+  font-family: {self._css_font_family(theme.resolve_monospace_font())};
   font-size: {max(theme.caption_size() - 1, 7):.1f}pt;
   font-weight: 600;
   color: #6f7d90;
@@ -2467,7 +2467,7 @@ body {{
   border: 0.75pt solid #d8e0eb;
   background: #f5f7fa;
   border-radius: 12px;
-  font-family: {self._css_font_family(theme.typography.monospace_font_name)};
+  font-family: {self._css_font_family(theme.resolve_monospace_font())};
   font-size: {max(theme.typography.body_font_size - 1, 8):.1f}pt;
   line-height: {max(theme.typography.body_font_size - 1, 8) * 1.35:.1f}pt;
 }}
