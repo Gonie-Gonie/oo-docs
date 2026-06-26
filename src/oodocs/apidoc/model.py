@@ -789,6 +789,32 @@ class ApiSeeAlso:
             "kind": self.kind,
         }
 
+    def as_record(self) -> dict[str, object]:
+        """Return this related API entry as a raw Python record.
+
+        Returns:
+            Dictionary containing ``label``, ``target``, ``description``, and
+            ``kind`` values.
+
+        Examples:
+            Feed parsed related API metadata into a custom index:
+
+            ```python
+            from oodocs.apidoc import ApiSeeAlso
+
+            item = ApiSeeAlso(
+                "save",
+                target="mypkg.save",
+                description="Persist the loaded object.",
+                kind="function",
+            )
+            record = item.as_record()
+            assert record["target"] == "mypkg.save"
+            ```
+        """
+
+        return self.to_dict()
+
     @classmethod
     def from_dict(cls, data: dict[str, object]) -> ApiSeeAlso:
         """Reconstruct see-also metadata from serialized data.

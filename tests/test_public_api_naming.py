@@ -660,7 +660,7 @@ def test_apidoc_raw_value_helpers_use_as_prefix() -> None:
         apidoc.ApiReturn: {"as_return_row"},
         apidoc.ApiException: {"as_exception_row"},
         apidoc.ApiExample: {"as_example_row", "to_code_block"},
-        apidoc.ApiSeeAlso: {"as_see_also_row"},
+        apidoc.ApiSeeAlso: {"as_record", "as_see_also_row"},
         apidoc.ApiRendererNote: {"as_output_note_row"},
         apidoc.ApiDocIssue: {"as_issue_row"},
         apidoc.ApiObject: {"as_summary_row", "as_index_row", "as_issue_rows"},

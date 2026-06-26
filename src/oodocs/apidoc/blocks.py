@@ -5,13 +5,23 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Iterable, Sequence
 
-from oodocs.apidoc.model import ApiModule, ApiObject, ApiPackage
+from oodocs.apidoc.model import ApiModule, ApiObject, ApiPackage, ApiSeeAlso
 from oodocs.apidoc.profiles import ApiPresentationProfile, resolve_presentation_profile
 from oodocs.components.base import Block
 from oodocs.components.blocks import Box, CodeBlock, Paragraph, Section, section_for_level
 from oodocs.components.inline import InlineChip, Text, bold, inline_code, comment, italic
 from oodocs.styles import BorderStyle, InlineChipStyle
 from oodocs.components.media import Table
+
+
+def _unique_see_also_items(obj: ApiObject) -> Iterable[ApiSeeAlso]:
+    seen: set[str] = set()
+    for item in obj.see_also:
+        key = item.target or item.label
+        if key in seen:
+            continue
+        seen.add(key)
+        yield item
 
 
 def api_heading_text(obj: ApiObject) -> list[Text]:
@@ -454,7 +464,8 @@ def api_see_also_blocks(
         presentation: Presentation profile.
 
     Returns:
-        Related API table or guide-style box blocks, or an empty list.
+        Compact related API paragraphs, guide-style box blocks, or an empty
+        list.
 
     Examples:
         Add related API references to a custom section:
@@ -473,24 +484,19 @@ def api_see_also_blocks(
     resolved = resolve_presentation_profile(presentation)
     if not resolved.include_see_also or not obj.see_also:
         return []
+    items = list(_unique_see_also_items(obj))
+    if not items:
+        return []
     if resolved.name == "manual":
         return [
             Box(
-                *(item.to_paragraph() for item in obj.see_also),
+                *(item.to_paragraph() for item in items),
                 title="See also",
                 border=BorderStyle.solid("93C5FD", width=0.75),
                 background_color="EFF6FF",
             )
         ]
-    rows = [item.as_see_also_row() for item in obj.see_also]
-    return [
-        Table(
-            ["Label", "Target", "Kind", "Description"],
-            rows,
-            caption="See also",
-            split=True,
-        )
-    ]
+    return [Paragraph(bold("See also")), *(item.to_paragraph() for item in items)]
 
 
 def api_notes_blocks(

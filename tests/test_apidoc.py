@@ -202,6 +202,34 @@ def test_docstring_parsers_normalize_standard_styles() -> None:
     assert detect_docstring_style(MARKDOWN_DOCSTRING) == "markdown"
 
 
+def test_docstring_see_also_keeps_symbol_entries_only() -> None:
+    parsed = parse_docstring(
+        """Load an object.
+
+        See Also:
+            open_file: Lower-level file opener.
+            DocumentSettings for document-level metadata.
+            `close_file`
+            load, save : Shared lifecycle helpers.
+            Widget.render: Render the loaded widget.
+                Includes output serialization.
+        """,
+        style="google",
+    )
+
+    assert [item.label for item in parsed.see_also] == [
+        "open_file",
+        "close_file",
+        "load",
+        "save",
+        "Widget.render",
+    ]
+    assert parsed.see_also[0].description == "Lower-level file opener."
+    assert parsed.see_also[2].description == "Shared lifecycle helpers."
+    assert parsed.see_also[3].description == "Shared lifecycle helpers."
+    assert parsed.see_also[4].description == "Render the loaded widget. Includes output serialization."
+
+
 def test_docstring_parsers_normalize_yields_sections() -> None:
     google = parse_docstring(
         """Iterate values.

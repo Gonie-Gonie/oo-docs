@@ -1685,23 +1685,61 @@ def _parse_return_section(text: str) -> ApiReturn:
 
 def _parse_see_also(text: str) -> list[ApiSeeAlso]:
     items: list[ApiSeeAlso] = []
-    current: ApiSeeAlso | None = None
+    current_items: list[ApiSeeAlso] = []
     for raw_line in text.splitlines():
-        if current is not None and raw_line.startswith((" ", "\t")) and raw_line.strip():
-            current.description = _join_text(current.description, raw_line.strip())
+        if current_items and raw_line.startswith((" ", "\t")) and raw_line.strip():
+            for item in current_items:
+                item.description = _join_text(item.description, raw_line.strip())
             continue
         stripped = raw_line.strip().lstrip("-*").strip()
         if not stripped:
+            current_items = []
             continue
         if ":" in stripped:
-            label, description = stripped.split(":", 1)
-            label = label.strip("` ")
-            current = ApiSeeAlso(label, target=label, description=description.strip() or None)
+            label_text, description = stripped.split(":", 1)
+            labels = _see_also_labels(label_text)
+            if not labels:
+                current_items = []
+                continue
+            current_items = []
+            for label in labels:
+                item = ApiSeeAlso(label, target=label, description=description.strip() or None)
+                items.append(item)
+                current_items.append(item)
         else:
-            label = stripped.strip("` ")
-            current = ApiSeeAlso(label, target=label)
-        items.append(current)
+            labels = _see_also_labels(stripped)
+            if not labels:
+                current_items = []
+                continue
+            current_items = []
+            for label in labels:
+                item = ApiSeeAlso(label, target=label)
+                items.append(item)
+                current_items.append(item)
     return items
+
+
+_SEE_ALSO_SYMBOL_RE = re.compile(r"^~?[A-Za-z_][\w]*(?:\.[A-Za-z_][\w]*)*$")
+
+
+def _see_also_labels(text: str) -> list[str]:
+    labels: list[str] = []
+    for part in text.split(","):
+        cleaned = _see_also_label(part)
+        if cleaned is not None:
+            labels.append(cleaned)
+    return labels
+
+
+def _see_also_label(text: str) -> str | None:
+    label = text.strip().strip("` ")
+    label = _plain_sphinx_text(label) or label
+    label = re.sub(r"\s*\([^)]*\)\s*$", "", label).strip()
+    if label.startswith("~"):
+        label = label.rsplit(".", 1)[-1]
+    if not _SEE_ALSO_SYMBOL_RE.match(label):
+        return None
+    return label
 
 
 def _parse_renderer_notes(text: str) -> list[ApiRendererNote]:

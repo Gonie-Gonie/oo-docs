@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from apidoc_samples import collect_sample_api
-from oodocs import Box, Table
+from oodocs import Box, Paragraph, Table
 from oodocs.apidoc import ApiModule, ApiObject, ApiRendererNote, ApiSeeAlso
 
 
@@ -27,7 +27,13 @@ def test_manual_profile_renders_see_also_as_box() -> None:
                 target="samplepkg.save",
                 kind="function",
                 description="Persist a loaded object.",
-            )
+            ),
+            ApiSeeAlso(
+                "save helper",
+                target="samplepkg.save",
+                kind="function",
+                description="Duplicate target.",
+            ),
         ],
     )
 
@@ -36,9 +42,14 @@ def test_manual_profile_renders_see_also_as_box() -> None:
 
     assert len(manual_blocks) == 1
     assert isinstance(manual_blocks[0], Box)
+    assert len(manual_blocks[0].children) == 1
     assert "samplepkg.save" in manual_blocks[0].children[0].plain_text()
-    assert len(reference_blocks) == 1
-    assert isinstance(reference_blocks[0], Table)
+    assert len(reference_blocks) == 2
+    assert all(not isinstance(block, Table) for block in reference_blocks)
+    assert isinstance(reference_blocks[0], Paragraph)
+    assert reference_blocks[0].plain_text() == "See also"
+    assert isinstance(reference_blocks[1], Paragraph)
+    assert "samplepkg.save" in reference_blocks[1].plain_text()
 
 
 def test_module_renderer_notes_use_leaf_row_helper() -> None:
