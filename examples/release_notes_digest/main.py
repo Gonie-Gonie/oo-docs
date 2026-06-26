@@ -12,6 +12,7 @@ from oodocs import (
     DocumentSettings,
     Figure,
     NumberedList,
+    OutputBundle,
     PageNumberDefaults,
     Paragraph,
     Section,
@@ -303,29 +304,25 @@ def build_release_notes(
     output_dir: str | Path,
     *,
     verbose: bool = False,
-) -> tuple[Path, Path]:
+) -> OutputBundle:
     """Build the release-note digest and export it to DOCX, PDF, and HTML."""
 
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
 
     document = build_release_notes_document()
-    outputs = document.save_all(
+    return document.save_all(
         output_path,
         stem="oodocs-release-notes",
         verbose=verbose,
     )
-    return outputs["docx"], outputs["pdf"]
 
 
 def main() -> None:
     """Build the release-note digest into the default example output directory."""
 
-    docx_path, pdf_path = build_release_notes(OUTPUT_DIR, verbose=True)
-    html_path = OUTPUT_DIR / "oodocs-release-notes.html"
-    print(f"Wrote {docx_path}")
-    print(f"Wrote {pdf_path}")
-    print(f"Wrote {html_path}")
+    for output_format, path in build_release_notes(OUTPUT_DIR, verbose=True):
+        print(f"Wrote {output_format}: {path}")
 
 
 if __name__ == "__main__":

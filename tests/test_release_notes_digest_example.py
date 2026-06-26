@@ -70,8 +70,10 @@ def test_release_notes_digest_example_builds_outputs(tmp_path: Path) -> None:
         latest_release_date,
     )
 
-    docx_path, pdf_path = release_notes_example.build_release_notes(tmp_path)
-    html_path = tmp_path / "oodocs-release-notes.html"
+    outputs = release_notes_example.build_release_notes(tmp_path)
+    docx_path = outputs["docx"]
+    pdf_path = outputs["pdf"]
+    html_path = outputs["html"]
 
     assert_rendered_bundle(docx_path, pdf_path, html_path)
 

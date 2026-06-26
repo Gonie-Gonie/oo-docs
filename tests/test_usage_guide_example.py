@@ -61,8 +61,10 @@ def _normalized_html_text(html_path: Path) -> str:
 
 def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     usage_guide = _load_example_module("usage_guide_example")
-    docx_path, pdf_path = usage_guide.build_usage_guide(tmp_path)
-    html_path = tmp_path / "oodocs-user-guide.html"
+    outputs = usage_guide.build_usage_guide(tmp_path)
+    docx_path = outputs["docx"]
+    pdf_path = outputs["pdf"]
+    html_path = outputs["html"]
 
     assert_rendered_bundle(docx_path, pdf_path, html_path)
     assert (Path(usage_guide.__file__).resolve().parent / "assets" / "oodocs-logo.png").exists()

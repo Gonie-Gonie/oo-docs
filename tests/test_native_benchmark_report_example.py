@@ -45,8 +45,10 @@ def test_native_benchmark_report_example_builds_outputs(tmp_path: Path) -> None:
     assert len({result["checksum"] for result in results}) == 1
     assert results == sorted(results, key=lambda result: float(result["median_ms"]))
 
-    docx_path, pdf_path = benchmark_example.build_native_benchmark_report(tmp_path)
-    html_path = tmp_path / "native-python-benchmark.html"
+    outputs = benchmark_example.build_native_benchmark_report(tmp_path)
+    docx_path = outputs["docx"]
+    pdf_path = outputs["pdf"]
+    html_path = outputs["html"]
 
     assert_rendered_bundle(docx_path, pdf_path, html_path)
 

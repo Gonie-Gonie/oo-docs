@@ -13,6 +13,7 @@ from oodocs import (
     Document,
     DocumentSettings,
     NumberedList,
+    OutputBundle,
     PageNumberDefaults,
     Paragraph,
     Section,
@@ -255,24 +256,24 @@ def build_native_benchmark_report(
     output_dir: str | Path,
     *,
     verbose: bool = False,
-) -> tuple[Path, Path]:
+) -> OutputBundle:
+    """Build the benchmark report example and export it to DOCX, PDF, and HTML."""
+
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
 
-    outputs = build_benchmark_document().save_all(
+    return build_benchmark_document().save_all(
         output_path,
         stem="native-python-benchmark",
         verbose=verbose,
     )
-    return outputs["docx"], outputs["pdf"]
 
 
 def main() -> None:
-    docx_path, pdf_path = build_native_benchmark_report(OUTPUT_DIR, verbose=True)
-    html_path = OUTPUT_DIR / "native-python-benchmark.html"
-    print(f"Wrote {docx_path}")
-    print(f"Wrote {pdf_path}")
-    print(f"Wrote {html_path}")
+    """Build the benchmark report into the default example output directory."""
+
+    for output_format, path in build_native_benchmark_report(OUTPUT_DIR, verbose=True):
+        print(f"Wrote {output_format}: {path}")
 
 
 if __name__ == "__main__":

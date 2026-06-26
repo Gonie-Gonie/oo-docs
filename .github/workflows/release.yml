@@ -74,8 +74,11 @@ jobs:
         run: |
           python examples/usage_guide_example/main.py
           python examples/journal_paper_example/main.py
+          python examples/native_benchmark_report/main.py
           python examples/release_notes_digest/main.py
           python examples/api_objects_example/main.py . --config pyproject.toml
+          python examples/style_cleanup_smoke/main.py
+          python examples/template_presets/build_all.py
           python - <<'PY'
           from oodocs.apidoc import ApiBuildConfig
 
@@ -111,7 +114,9 @@ jobs:
             dist/*
             artifacts/usage-guide/oodocs-user-guide.pdf
             artifacts/journal-paper/oodocs-development-philosophy.pdf
+            artifacts/native-benchmark-report/native-python-benchmark.pdf
             artifacts/release-notes/oodocs-release-notes.pdf
+            artifacts/template/journal-article-template.pdf
             artifacts/api-objects-example/oodocs-api-objects.pdf
             artifacts/api-objects-example/oodocs-api-objects.json
             artifacts/api-objects-example/oodocs-api-coverage.json
@@ -136,7 +141,9 @@ jobs:
             dist/*
             artifacts/usage-guide/oodocs-user-guide.pdf
             artifacts/journal-paper/oodocs-development-philosophy.pdf
+            artifacts/native-benchmark-report/native-python-benchmark.pdf
             artifacts/release-notes/oodocs-release-notes.pdf
+            artifacts/template/journal-article-template.pdf
             artifacts/api-objects-example/oodocs-api-objects.pdf
             artifacts/api-objects-example/oodocs-api-objects.json
             artifacts/api-objects-example/oodocs-api-coverage.json

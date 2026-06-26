@@ -38,6 +38,7 @@ from oodocs import (
     ImageBox,
     Lemma,
     NumberedList,
+    OutputBundle,
     PageNumberDefaults,
     PageMargins,
     PageSize,
@@ -1735,29 +1736,25 @@ def build_usage_guide(
     output_dir: str | Path,
     *,
     verbose: bool = False,
-) -> tuple[Path, Path]:
+) -> OutputBundle:
     """Build the usage guide example and export it to DOCX, PDF, and HTML."""
 
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
 
     document = build_usage_guide_document()
-    outputs = document.save_all(
+    return document.save_all(
         output_path,
         stem="oodocs-user-guide",
         verbose=verbose,
     )
-    return outputs["docx"], outputs["pdf"]
 
 
 def main() -> None:
     """Build the guide into the default example output directory."""
 
-    docx_path, pdf_path = build_usage_guide(OUTPUT_DIR, verbose=True)
-    html_path = OUTPUT_DIR / "oodocs-user-guide.html"
-    print(f"Wrote {docx_path}")
-    print(f"Wrote {pdf_path}")
-    print(f"Wrote {html_path}")
+    for output_format, path in build_usage_guide(OUTPUT_DIR, verbose=True):
+        print(f"Wrote {output_format}: {path}")
 
 
 if __name__ == "__main__":

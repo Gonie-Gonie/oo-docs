@@ -66,8 +66,10 @@ def _docx_document_xml(docx_path: Path) -> str:
 
 def test_journal_paper_example_builds_outputs(tmp_path: Path) -> None:
     paper_example = _load_example_module("journal_paper_example")
-    docx_path, pdf_path = paper_example.build_journal_paper(tmp_path)
-    html_path = tmp_path / "oodocs-development-philosophy.html"
+    outputs = paper_example.build_journal_paper(tmp_path)
+    docx_path = outputs["docx"]
+    pdf_path = outputs["pdf"]
+    html_path = outputs["html"]
 
     assert_rendered_bundle(docx_path, pdf_path, html_path)
     assert (Path(paper_example.__file__).resolve().parent / "assets" / "benchmark_results.csv").exists()

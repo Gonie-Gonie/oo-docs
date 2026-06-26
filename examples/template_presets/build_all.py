@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import journal_article_template
+from oodocs import OutputBundle
 
 
 OUTPUT_DIR = Path("artifacts") / "template"
@@ -14,7 +15,7 @@ def build_all(
     output_dir: str | Path = OUTPUT_DIR,
     *,
     verbose: bool = False,
-) -> dict[str, dict[str, Path]]:
+) -> dict[str, OutputBundle]:
     """Render all template preset examples into one artifact directory."""
 
     return {

@@ -275,13 +275,15 @@ doc = Document(
 
 ## Example Scripts
 
-The repository includes five standalone example directories:
+The repository includes seven standalone example directories:
 
 - `examples/usage_guide_example/`
 - `examples/journal_paper_example/`
 - `examples/native_benchmark_report/`
 - `examples/release_notes_digest/`
 - `examples/api_objects_example/`
+- `examples/style_cleanup_smoke/`
+- `examples/template_presets/`
 
 Run them directly from the repository checkout:
 
@@ -291,6 +293,8 @@ Run them directly from the repository checkout:
 .\.venv\Scripts\python.exe .\examples\native_benchmark_report\main.py
 .\.venv\Scripts\python.exe .\examples\release_notes_digest\main.py
 .\.venv\Scripts\python.exe .\examples\api_objects_example\main.py . --config pyproject.toml
+.\.venv\Scripts\python.exe .\examples\style_cleanup_smoke\main.py
+.\.venv\Scripts\python.exe .\examples\template_presets\build_all.py
 ```
 
 The full package API reference can also be rendered directly from the
@@ -312,6 +316,8 @@ What they show:
 - `native_benchmark_report` shows a compact Python-native workflow where a script generates an in-memory workload, benchmarks several callables, turns structured result objects into tables and prose, and exports one report bundle
 - `release_notes_digest` collects `release-notes/*.md`, sorts semantic versions from filenames, imports the Markdown bodies, and builds a release-note document with a version-management table and runbook
 - `api_objects_example` collects the OODocs API, renders a full package API reference as DOCX/PDF/HTML, inserts selected API object sections and summary tables into a separate composable document, and writes API JSON plus coverage JSON/CSV sidecars for release evidence
+- `style_cleanup_smoke` exercises named paragraph, table, box, and chip styles through a document-level `StyleSheet`
+- `template_presets` renders ready-to-customize document templates built from ordinary preset objects
 
 By default they write outputs under:
 
@@ -320,6 +326,8 @@ By default they write outputs under:
 - `artifacts/native-benchmark-report/`
 - `artifacts/release-notes/`
 - `artifacts/api-objects-example/`
+- `artifacts/style-cleanup-smoke/`
+- `artifacts/template/`
 - `artifacts/api/`
 
 The main exported filenames are:
@@ -329,6 +337,8 @@ The main exported filenames are:
 - `artifacts/native-benchmark-report/native-python-benchmark.pdf`
 - `artifacts/release-notes/oodocs-release-notes.pdf`
 - `artifacts/api-objects-example/oodocs-api-objects.pdf`
+- `artifacts/style-cleanup-smoke/style-cleanup-smoke.pdf`
+- `artifacts/template/journal-article-template.pdf`
 - `artifacts/api-objects-example/oodocs-full-api-reference.docx`
 - `artifacts/api-objects-example/oodocs-full-api-reference.pdf`
 - `artifacts/api-objects-example/oodocs-full-api-reference.html`

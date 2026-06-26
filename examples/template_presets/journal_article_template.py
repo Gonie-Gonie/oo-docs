@@ -9,6 +9,7 @@ from oodocs import (
     Author,
     CitationLibrary,
     CitationSource,
+    OutputBundle,
     Padding,
     Paragraph,
     Table,
@@ -219,7 +220,7 @@ def build(
     output_dir: str | Path = OUTPUT_DIR,
     *,
     verbose: bool = False,
-) -> dict[str, Path]:
+) -> OutputBundle:
     """Render the example into the template artifact directory."""
 
     return build_document().save_all(

@@ -12,6 +12,7 @@ from oodocs import (
     DocumentSettings,
     InlineChip,
     InlineChipStyle,
+    OutputBundle,
     Padding,
     Paragraph,
     ParagraphStyle,
@@ -100,7 +101,7 @@ def build(
     output_dir: str | Path = OUTPUT_DIR,
     *,
     verbose: bool = False,
-) -> dict[str, Path]:
+) -> OutputBundle:
     """Render the smoke document to DOCX, PDF, and HTML.
 
     Args:
@@ -108,7 +109,7 @@ def build(
         verbose: Print slow render steps.
 
     Returns:
-        Mapping from output format to rendered file path.
+        Rendered output bundle keyed by normalized output format.
     """
 
     document = build_document()
@@ -122,5 +123,5 @@ def build(
 
 
 if __name__ == "__main__":
-    for path in build(verbose=True).values():
-        print(path)
+    for output_format, path in build(verbose=True):
+        print(f"Wrote {output_format}: {path}")
