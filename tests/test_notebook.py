@@ -80,7 +80,7 @@ def _sample_notebook() -> dict[str, object]:
 
 
 def test_parse_notebook_maps_cells_to_oodocs_blocks() -> None:
-    blocks = parse_notebook(_sample_notebook())
+    blocks = parse_notebook(_sample_notebook()).blocks
 
     assert len(blocks) == 1
     chapter = blocks[0]
@@ -148,7 +148,7 @@ def test_parse_notebook_can_filter_code_markdown_and_outputs() -> None:
         include_code=False,
         include_outputs=False,
         include_raw_cells=False,
-    )
+    ).blocks
 
     assert len(markdown_only) == 1
     assert isinstance(markdown_only[0], Chapter)
@@ -196,7 +196,7 @@ def test_parse_notebook_imports_markdown_and_image_outputs_as_editable_blocks() 
         ],
     }
 
-    blocks = parse_notebook(notebook)
+    blocks = parse_notebook(notebook).blocks
 
     chapter = blocks[0]
     assert isinstance(chapter, Chapter)

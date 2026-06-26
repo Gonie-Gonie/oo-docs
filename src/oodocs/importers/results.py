@@ -76,7 +76,7 @@ class ImportResult:
         ```python
         from oodocs import parse_markdown
 
-        result = parse_markdown("# Title", diagnostics=True)
+        result = parse_markdown("# Title")
         if result.warnings():
             print(result.format_text())
         ```
@@ -86,13 +86,13 @@ class ImportResult:
         ```python
         from oodocs import Document, parse_markdown
 
-        result = parse_markdown("# Title", diagnostics=True)
+        result = parse_markdown("# Title")
         document = Document("Imported", result.blocks)
         ```
 
     Notes:
-        Importers return this object only when ``diagnostics=True``. Otherwise
-        they return plain block lists or documents, depending on the importer.
+        Parser functions return this object. Document factory functions such as
+        ``from_markdown`` and ``from_notebook`` return ``Document`` objects.
 
     See Also:
         ``ImportIssue`` for individual diagnostics, ``ImportPolicyError`` for
@@ -207,20 +207,17 @@ def resolve_import_result(
     blocks: Iterable[Block],
     issues: Iterable[ImportIssue],
     *,
-    diagnostics: bool,
     import_policy: str,
-) -> list[Block] | ImportResult:
-    """Apply importer diagnostics policy and choose the return shape.
+) -> ImportResult:
+    """Apply importer diagnostics policy and return imported blocks with issues.
 
     Args:
         blocks: Imported block objects.
         issues: Diagnostics collected during import.
-        diagnostics: Whether to return an ``ImportResult`` instead of blocks.
         import_policy: Import policy controlling lossy conversions.
 
     Returns:
-        A list of blocks when ``diagnostics`` is false, otherwise an
-        ``ImportResult`` containing blocks and diagnostics.
+        Import result containing imported blocks and diagnostics.
 
     Raises:
         ImportPolicyError: If ``import_policy`` is ``"fail-on-lossy"`` and any
@@ -234,7 +231,6 @@ def resolve_import_result(
         result = resolve_import_result(
             [Paragraph("Imported")],
             [],
-            diagnostics=True,
             import_policy="record-lossy",
         )
         ```
@@ -245,9 +241,7 @@ def resolve_import_result(
     normalized_issues = tuple(issues)
     if normalized_policy == "fail-on-lossy" and normalized_issues:
         raise ImportPolicyError(normalized_issues)
-    if diagnostics:
-        return ImportResult(normalized_blocks, normalized_issues)
-    return list(normalized_blocks)
+    return ImportResult(normalized_blocks, normalized_issues)
 
 
 __all__ = [

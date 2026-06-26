@@ -17,16 +17,11 @@ _TINY_PNG = (
 )
 
 
-def test_parse_markdown_diagnostics_preserves_default_return() -> None:
-    blocks = parse_markdown("![Remote](https://example.com/plot.png)")
-    result = parse_markdown(
-        "![Remote](https://example.com/plot.png)",
-        diagnostics=True,
-    )
+def test_parse_markdown_returns_import_result_with_diagnostics() -> None:
+    result = parse_markdown("![Remote](https://example.com/plot.png)")
 
-    assert isinstance(blocks, list)
     assert isinstance(result, ImportResult)
-    assert len(result.blocks) == len(blocks)
+    assert len(result.blocks) == 1
     assert result.issues[0].code == "remote-image-lossy"
 
     with pytest.raises(ImportPolicyError):
@@ -42,7 +37,6 @@ def test_parse_markdown_file_records_source_for_raw_html(tmp_path) -> None:
 
     result = parse_markdown_file(
         markdown_path,
-        diagnostics=True,
         import_policy="record-lossy",
     )
 
@@ -98,7 +92,6 @@ def test_parse_notebook_options_filter_truncate_and_caption_outputs() -> None:
             max_output_lines=2,
             output_image_caption="Output image from cell {cell_index}",
         ),
-        diagnostics=True,
     )
 
     assert isinstance(result, ImportResult)

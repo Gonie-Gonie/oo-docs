@@ -2,7 +2,7 @@
 
 Attributes:
     NotebookSource: Accepted notebook source input for notebook import helpers.
-    parse_notebook: Parse a notebook source into imported blocks or diagnostics.
+    parse_notebook: Parse a notebook source into imported blocks and diagnostics.
     from_notebook: Create a document from a notebook source.
 """
 
@@ -110,9 +110,8 @@ def parse_notebook(
     toc: bool | None = None,
     heading_level_shift: int = 0,
     base_dir: str | OsPathLike[str] | None = None,
-    diagnostics: bool = False,
     import_policy: str = "allow-lossy",
-) -> list[Block] | ImportResult:
+) -> ImportResult:
     """Parse a Jupyter notebook into oodocs block objects.
 
     Markdown cells are parsed through ``parse_markdown(...)``. Code cells become
@@ -133,12 +132,10 @@ def parse_notebook(
             contents pages.
         heading_level_shift: Signed offset applied to Markdown heading levels.
         base_dir: Directory used to resolve local Markdown image paths.
-        diagnostics: Whether to return ``ImportResult`` with diagnostics.
         import_policy: Policy for diagnostics produced by lossy imports.
 
     Returns:
-        Imported block objects, or an ``ImportResult`` when ``diagnostics`` is
-        true.
+        Import result containing imported block objects and diagnostics.
 
     Raises:
         ImportPolicyError: If fail-on-lossy policy rejects collected issues.
@@ -152,8 +149,7 @@ def parse_notebook(
         from oodocs.importers.notebook import parse_notebook
         from oodocs.importers.results import ImportResult
 
-        result = parse_notebook("analysis.ipynb", diagnostics=True, include_outputs=False)
-        assert isinstance(result, ImportResult)
+        result = parse_notebook("analysis.ipynb", include_outputs=False)
         ```
     """
 
@@ -202,11 +198,9 @@ def parse_notebook(
                     toc=toc,
                     heading_level_shift=heading_level_shift,
                     base_dir=markdown_base_dir,
-                    diagnostics=True,
                     import_policy=import_policy,
                     source_name=f"cell[{cell_index}]",
                 )
-                assert isinstance(markdown_result, ImportResult)
                 issues.extend(markdown_result.issues)
                 for block in markdown_result.blocks:
                     _append_notebook_block(blocks, heading_stack, block)
@@ -248,7 +242,6 @@ def parse_notebook(
     return resolve_import_result(
         blocks,
         issues,
-        diagnostics=diagnostics,
         import_policy=import_policy,
     )
 
@@ -319,7 +312,7 @@ def from_notebook(
 
     notebook = _load_notebook(source)
     markdown_base_dir = Path(base_dir) if base_dir is not None else _source_base_dir(source)
-    blocks = parse_notebook(
+    import_result = parse_notebook(
         notebook,
         options=options,
         include_outputs=include_outputs,
@@ -333,7 +326,7 @@ def from_notebook(
         base_dir=markdown_base_dir,
         import_policy=import_policy,
     )
-    assert isinstance(blocks, list)
+    blocks = list(import_result.blocks)
     document_title = title
     if document_title is None:
         document_title = _consume_first_chapter_title(blocks)
@@ -583,11 +576,9 @@ def _output_blocks(
                         toc=toc,
                         heading_level_shift=heading_level_shift,
                         base_dir=base_dir,
-                        diagnostics=True,
                         import_policy=import_policy,
                         source_name=f"cell[{cell_index}].outputs[{output_index}]",
                     )
-                    assert isinstance(markdown_result, ImportResult)
                     issues.extend(markdown_result.issues)
                     return list(markdown_result.blocks)
             image = _output_image(

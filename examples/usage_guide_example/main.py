@@ -426,7 +426,7 @@ digest = Document(
     ],
 )
 
-ad_hoc_blocks = parse_markdown("## Follow-up\\n\\n- Publish DOCX\\n- Publish PDF")
+ad_hoc_blocks = parse_markdown("## Follow-up\\n\\n- Publish DOCX\\n- Publish PDF").blocks
 digest.body.children.extend(ad_hoc_blocks)
 """
 
@@ -440,7 +440,7 @@ analysis = Document.from_notebook(
 appendix_blocks = parse_notebook(
     "exploration.ipynb",
     include_outputs=False,
-)
+).blocks
 
 report = Document(
     "Notebook-backed report",

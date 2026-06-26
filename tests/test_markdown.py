@@ -55,7 +55,7 @@ Intro with **stable** text, ~~old behavior~~, [docs](https://example.com/docs), 
 print("ok")
 ```
 """
-    )
+    ).blocks
 
     assert len(blocks) == 1
     chapter = blocks[0]
@@ -136,7 +136,7 @@ def test_markdown_file_import_resolves_local_images_as_editable_figures(tmp_path
         encoding="utf-8",
     )
 
-    blocks = parse_markdown_file(markdown_path)
+    blocks = parse_markdown_file(markdown_path).blocks
     document = from_markdown_file(markdown_path)
 
     assert document.title == "Imported Report"
@@ -196,7 +196,7 @@ def test_markdown_import_can_shift_heading_levels() -> None:
 Body paragraph.
 """,
         heading_level_shift=1,
-    )
+    ).blocks
 
     release = blocks[0]
     assert isinstance(release, Subsection)
@@ -210,7 +210,7 @@ Body paragraph.
 Body paragraph.
 """,
         heading_level_shift=-1,
-    )
+    ).blocks
     assert isinstance(promoted[0], Chapter)
 
     try:
@@ -259,7 +259,7 @@ def test_parse_markdown_preserves_nested_lists() -> None:
   - `TextBox(...)`
 - Added inline drawing placement.
 """
-    )
+    ).blocks
 
     assert len(blocks) == 1
     section = blocks[0]

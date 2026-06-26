@@ -260,7 +260,6 @@ def _run_import_warning_policy(args: argparse.Namespace) -> int:
 
         result = parse_markdown_file(
             source_path,
-            diagnostics=True,
             import_policy=policy,
         )
     elif suffix == ".ipynb":
@@ -268,7 +267,6 @@ def _run_import_warning_policy(args: argparse.Namespace) -> int:
 
         result = parse_notebook(
             source_path,
-            diagnostics=True,
             import_policy=policy,
         )
     else:

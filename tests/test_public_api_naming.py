@@ -404,6 +404,24 @@ def test_import_policy_names_describe_lossy_behavior() -> None:
             normalize_import_policy(old_policy)
 
 
+def test_parse_importers_return_import_result_without_diagnostics_switch() -> None:
+    for callable_obj in (oodocs.parse_markdown, oodocs.parse_markdown_file, oodocs.parse_notebook):
+        assert "diagnostics" not in inspect.signature(callable_obj).parameters
+
+    markdown_result = oodocs.parse_markdown("# Title")
+    notebook_result = oodocs.parse_notebook(
+        {
+            "nbformat": 4,
+            "nbformat_minor": 5,
+            "metadata": {},
+            "cells": [],
+        }
+    )
+
+    assert isinstance(markdown_result, oodocs.ImportResult)
+    assert isinstance(notebook_result, oodocs.ImportResult)
+
+
 def test_notebook_import_options_use_explicit_field_names() -> None:
     option_fields = {field.name for field in fields(oodocs.NotebookImportOptions)}
     forbidden = {"include_raw", "code_language", "image_caption"}

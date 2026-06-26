@@ -71,10 +71,9 @@ def parse_markdown(
     toc: bool | None = None,
     heading_level_shift: int = 0,
     base_dir: str | OsPathLike[str] | None = None,
-    diagnostics: bool = False,
     import_policy: str = "allow-lossy",
     source_name: str | None = None,
-) -> list[Block] | ImportResult:
+) -> ImportResult:
     """Parse Markdown text into oodocs block objects.
 
     The parser targets the Markdown and GitHub Flavored Markdown constructs that
@@ -94,13 +93,11 @@ def parse_markdown(
             pages. ``None`` keeps each section's default.
         heading_level_shift: Signed offset applied to Markdown heading levels.
         base_dir: Directory used to resolve local image paths.
-        diagnostics: Whether to return ``ImportResult`` with diagnostics.
         import_policy: Policy for diagnostics produced by lossy imports.
         source_name: Optional source label included in diagnostics.
 
     Returns:
-        Imported block objects, or an ``ImportResult`` when ``diagnostics`` is
-        true.
+        Import result containing imported block objects and diagnostics.
 
     Raises:
         ImportPolicyError: If fail-on-lossy policy rejects collected issues.
@@ -114,8 +111,7 @@ def parse_markdown(
         from oodocs.importers.markdown import parse_markdown
         from oodocs.importers.results import ImportResult
 
-        result = parse_markdown("# Intro\\n\\nRaw <span>HTML</span>", diagnostics=True)
-        assert isinstance(result, ImportResult)
+        result = parse_markdown("# Intro\\n\\nRaw <span>HTML</span>")
         print(result.format_text())
         ```
     """
@@ -137,7 +133,6 @@ def parse_markdown(
     return resolve_import_result(
         blocks,
         parser.issues,
-        diagnostics=diagnostics,
         import_policy=import_policy,
     )
 
@@ -211,15 +206,14 @@ def from_markdown(
         toc=toc,
         heading_level_shift=heading_level_shift,
     )
-    checked_blocks = resolve_import_result(
+    import_result = resolve_import_result(
         blocks,
         parser.issues,
-        diagnostics=False,
         import_policy=import_policy,
     )
     return Document(
         document_title,
-        checked_blocks,
+        import_result.blocks,
         settings=settings,
         citations=citations,
     )
@@ -231,9 +225,8 @@ def parse_markdown_file(
     numbered: bool = True,
     toc: bool | None = None,
     heading_level_shift: int = 0,
-    diagnostics: bool = False,
     import_policy: str = "allow-lossy",
-) -> list[Block] | ImportResult:
+) -> ImportResult:
     """Parse a Markdown file into editable OODocs blocks.
 
     Local image paths are resolved relative to the Markdown file.
@@ -244,12 +237,10 @@ def parse_markdown_file(
         toc: Whether imported headings should appear in generated contents
             pages. ``None`` keeps each section's default.
         heading_level_shift: Signed offset applied to Markdown heading levels.
-        diagnostics: Whether to return ``ImportResult`` with diagnostics.
         import_policy: Policy for diagnostics produced by lossy imports.
 
     Returns:
-        Imported block objects, or an ``ImportResult`` when ``diagnostics`` is
-        true.
+        Import result containing imported block objects and diagnostics.
 
     Raises:
         FileNotFoundError: If ``path`` does not exist.
@@ -259,7 +250,8 @@ def parse_markdown_file(
         ```python
         from oodocs.importers.markdown import parse_markdown_file
 
-        blocks = parse_markdown_file("docs/overview.md", numbered=False)
+        result = parse_markdown_file("docs/overview.md", numbered=False)
+        blocks = result.blocks
         ```
     """
 
@@ -270,7 +262,6 @@ def parse_markdown_file(
         toc=toc,
         heading_level_shift=heading_level_shift,
         base_dir=source_path.parent,
-        diagnostics=diagnostics,
         import_policy=import_policy,
         source_name=str(source_path),
     )
@@ -518,14 +509,15 @@ class _MarkdownParser:
                 content = content[1:]
             quote_lines.append(content)
             index += 1
-        children = parse_markdown(
+        quote_result = parse_markdown(
             "\n".join(quote_lines),
             numbered=self.numbered,
             toc=self.toc,
             heading_level_shift=self.heading_level_shift,
             base_dir=self.base_dir,
         )
-        return Box(*children), index
+        self.issues.extend(quote_result.issues)
+        return Box(*quote_result.blocks), index
 
     def _parse_list(self, index: int) -> tuple[BulletList | NumberedList, int] | None:
         first_match = _LIST_RE.match(self.lines[index])
