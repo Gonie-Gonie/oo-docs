@@ -50,7 +50,7 @@ from oodocs import (
     SubFigure,
     SubFigureGroup,
     Subsection,
-    Subsubsection,
+    SubSubsection,
     Table,
     ListOfTables,
     TableOfContents,
@@ -1469,8 +1469,8 @@ def build_usage_guide_document() -> Document:
                     Paragraph(
                         "This subsection is included as a live example of a third-level heading. It should appear in the contents below the section with normal font weight and a deeper indent."
                     ),
-                    Subsubsection(
-                        "Subsubsection entries",
+                    SubSubsection(
+                        "Fourth-level section entries",
                         Paragraph(
                             "This fourth-level heading gives the contents page one more depth to render, which makes hierarchy checks easier in examples and tests."
                         ),

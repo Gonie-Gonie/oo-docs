@@ -11,7 +11,7 @@ from oodocs import (
     Paragraph,
     Section,
     Subsection,
-    Subsubsection,
+    SubSubsection,
     Table,
     TableOfContents,
     from_markdown_file,
@@ -202,7 +202,7 @@ Body paragraph.
     assert isinstance(release, Subsection)
     assert release.level == 3
     highlights = release.children[0]
-    assert isinstance(highlights, Subsubsection)
+    assert isinstance(highlights, SubSubsection)
     assert highlights.level == 4
 
     promoted = parse_markdown(

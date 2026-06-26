@@ -668,7 +668,7 @@ def _reference_label_prefix(target: object) -> str:
         return "Box"
     if target_name == "Part":
         return "Part"
-    if target_name in {"Chapter", "Section", "Subsection", "Subsubsection"}:
+    if target_name in {"Chapter", "Section", "Subsection", "SubSubsection"}:
         return "Section"
     return type(target).__name__
 
@@ -1585,7 +1585,7 @@ def _is_referenceable(value: object) -> bool:
         "SubFigure",
         "SubFigureGroup",
         "Subsection",
-        "Subsubsection",
+        "SubSubsection",
         "Table",
     }
 

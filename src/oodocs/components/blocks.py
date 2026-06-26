@@ -2031,25 +2031,25 @@ class Subsection(Section):
         )
 
 
-class Subsubsection(Section):
+class SubSubsection(Section):
     """Fourth-level document division.
 
     Args:
-        title: Subsubsection title inline content.
+        title: Fourth-level section title inline content.
         *children: Child block content.
-        numbered: Whether the subsubsection should be numbered.
-        toc: Whether the subsubsection should appear in generated tables of
+        numbered: Whether the fourth-level section should be numbered.
+        toc: Whether the fourth-level section should appear in generated tables of
             contents.
         anchor: Optional stable heading anchor used by renderers for internal
             links.
         run_in_title_style: Optional run-in title style inherited by
-            paragraphs in this subsubsection subtree.
+            paragraphs in this fourth-level section subtree.
 
     Examples:
         ```python
-        from oodocs import Chapter, Document, Paragraph, Subsection, Subsubsection
+        from oodocs import Chapter, Document, Paragraph, Subsection, SubSubsection
 
-        subsection = Subsubsection("Audit Evidence", Paragraph("Evidence was archived."))
+        subsection = SubSubsection("Audit Evidence", Paragraph("Evidence was archived."))
         document = Document("Release Report", Chapter("Evidence", Subsection("Validation", subsection)))
         ```
     """
@@ -2101,7 +2101,7 @@ def section_for_level(
             paragraphs in this section subtree.
 
     Returns:
-        ``Chapter``, ``Subsection``, ``Subsubsection``, or ``Section`` based on
+        ``Chapter``, ``Subsection``, ``SubSubsection``, or ``Section`` based on
         ``level``.
 
     Raises:
@@ -2135,7 +2135,7 @@ def section_for_level(
             run_in_title_style=run_in_title_style,
         )
     if level == 4:
-        return Subsubsection(
+        return SubSubsection(
             title,
             *children,
             numbered=numbered,
@@ -2318,7 +2318,7 @@ __all__ = [
     "Remark",
     "Section",
     "Subsection",
-    "Subsubsection",
+    "SubSubsection",
     "THEOREM_COUNTER",
     "VerticalSpace",
     "Assumption",

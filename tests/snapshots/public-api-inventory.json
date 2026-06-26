@@ -505,8 +505,8 @@
           "category": "block",
           "kind": "class",
           "module": "oodocs.components.blocks",
-          "name": "Subsubsection",
-          "qualname": "oodocs.components.blocks.Subsubsection"
+          "name": "SubSubsection",
+          "qualname": "oodocs.components.blocks.SubSubsection"
         },
         {
           "category": "media",

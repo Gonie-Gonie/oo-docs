@@ -81,7 +81,7 @@ from oodocs import (
     SubFigure,
     SubFigureGroup,
     Subsection,
-    Subsubsection,
+    SubSubsection,
     Table,
     TableCell,
     TableCellStyle,
@@ -1141,7 +1141,7 @@ def test_heading_hierarchy_uses_latex_like_levels() -> None:
             "Overview",
             Subsection(
                 "Details",
-                Subsubsection("Examples"),
+                SubSubsection("Examples"),
             ),
         ),
     )
@@ -2983,7 +2983,7 @@ def test_document_renders_to_docx_and_pdf(tmp_path: Path) -> None:
                         "Lists render into both DOCX and PDF.",
                         Paragraph("Paragraph instances can also be list items."),
                     ),
-                    Subsubsection(
+                    SubSubsection(
                         "Export Steps",
                         CodeBlock(
                             "from oodocs import Document\n\ndocument.save_docx('report.docx')\ndocument.save_pdf('report.pdf')",

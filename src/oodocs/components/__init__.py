@@ -58,7 +58,7 @@ _EXPORTS = {
     "SubFigure": "oodocs.components.media",
     "SubFigureGroup": "oodocs.components.media",
     "Subsection": "oodocs.components.blocks",
-    "Subsubsection": "oodocs.components.blocks",
+    "SubSubsection": "oodocs.components.blocks",
     "Table": "oodocs.components.media",
     "TableCell": "oodocs.components.media",
     "TableCellStyle": "oodocs.components.media",

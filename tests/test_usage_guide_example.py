@@ -99,7 +99,7 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "5 Notes, Comments, and References" in paragraph_texts
     assert "6 Layout and Pagination" in paragraph_texts
     assert "6.4.1 Subsection entries" in paragraph_texts
-    assert "6.4.1.1 Subsubsection entries" in paragraph_texts
+    assert "6.4.1.1 Fourth-level section entries" in paragraph_texts
     assert "7 Project Structure and Scaling Up" in paragraph_texts
     assert "Part III" in paragraph_texts
     assert "Presets and Templates" in paragraph_texts
@@ -234,7 +234,7 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "Your Paper Your Way" in pdf_text
     assert "Instructions for Authors" in pdf_text
     assert "6.4.1 Subsection entries" in pdf_text
-    assert "6.4.1.1 Subsubsection entries" in pdf_text
+    assert "6.4.1.1 Fourth-level section entries" in pdf_text
     assert "Figure sizing patterns for width, height, and document-relative sizing." in pdf_text
     assert "Coordinate-based drawings can be page overlays or inline flow objects." in pdf_text
     assert "Advanced table and figure placement controls." in pdf_text
@@ -314,7 +314,7 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "Your Paper Your Way" in normalized_html_text
     assert "Instructions for Authors" in normalized_html_text
     assert "6.4.1 Subsection entries" in normalized_html_text
-    assert "6.4.1.1 Subsubsection entries" in normalized_html_text
+    assert "6.4.1.1 Fourth-level section entries" in normalized_html_text
     assert "Figure sizing patterns for width, height, and document-relative sizing." in normalized_html_text
     assert "Coordinate-based drawings can be page overlays or inline flow objects." in normalized_html_text
     assert "Advanced table and figure placement controls." in normalized_html_text
