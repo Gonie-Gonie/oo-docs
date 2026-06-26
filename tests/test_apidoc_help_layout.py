@@ -102,7 +102,10 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "oodocs.MIN_SECTION_LEVEL" in all_titles
     assert "oodocs.Theme" in all_titles
     assert "oodocs.ValidationResult" in all_titles
+    assert check_api_help_categories(api) == ()
     assert "API Documentation Coverage" not in titles
+    assert "Uncategorized API" not in titles
+    assert "Renderer Extension API" not in titles
 
 
 def test_help_book_renders_uncategorized_api_appendix_from_category_gate() -> None:
@@ -148,6 +151,45 @@ def test_help_book_renders_uncategorized_api_appendix_from_category_gate() -> No
     assert "Uncategorized API" in _chapter_titles(document)
     assert "samplepkg.save" in _all_plain_text(document.body)
     assert "Uncategorized API" not in _chapter_titles(without_appendix)
+
+
+def test_api_category_prefix_include_matches_rendering_and_gate() -> None:
+    api = ApiPackage(
+        "samplepkg",
+        modules=[
+            ApiModule(
+                "samplepkg.core",
+                [
+                    ApiObject("class", "Client", "samplepkg.core.Client", "samplepkg.core"),
+                    ApiObject("function", "connect", "samplepkg.core.connect", "samplepkg.core"),
+                ],
+            ),
+            ApiModule(
+                "samplepkg.extras",
+                [
+                    ApiObject("function", "debug", "samplepkg.extras.debug", "samplepkg.extras"),
+                ],
+            ),
+        ],
+    )
+    categories = [
+        ApiCategory(
+            id="core",
+            title="Core API",
+            summary="Primary sample API.",
+            include=("samplepkg.core.*",),
+            order=10,
+        )
+    ]
+
+    chapter = api_category_to_chapter(categories[0], api, max_level=1)
+    uncategorized = select_uncategorized_api_objects(api, categories)
+
+    text = _all_plain_text(chapter)
+    assert "Client" in text
+    assert "connect" in text
+    assert "samplepkg.extras.debug" not in text
+    assert [obj.qualname for obj in uncategorized] == ["samplepkg.extras.debug"]
 
 
 def test_help_function_section_uses_matlab_style_argument_layout() -> None:

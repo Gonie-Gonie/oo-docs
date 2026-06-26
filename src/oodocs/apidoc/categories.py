@@ -59,7 +59,8 @@ class ApiCategory:
         id: Stable kebab-case category identifier.
         title: Display title.
         summary: Short category introduction.
-        include: Public symbol names or qualified names shown in this category.
+        include: Public symbol names, qualified names, or qualified-name
+            prefixes ending with ``".*"`` shown in this category.
         order: Sort order.
         guide_links: Related User Guide pages.
         show_in_help_book: Whether this category is rendered by default.
@@ -74,7 +75,7 @@ class ApiCategory:
                 id="core",
                 title="Core Objects",
                 summary="Primary classes and construction helpers.",
-                include=("my_package.Document", "my_package.render"),
+                include=("my_package.Document", "my_package.render", "my_package.io.*"),
                 order=10,
                 guide_links=(GuideLink("User Guide", "usage-guide.html#core"),),
             )
@@ -133,7 +134,7 @@ def select_uncategorized_api_objects(
     """
 
     category_list = tuple(categories) if categories is not None else _default_categories(api)
-    covered = _covered_category_names(category_list)
+    exact_names, prefixes = _covered_category_matchers(category_list)
     objects = api.select_objects(
         kind=("class", "function", "data", "attribute"),
         visibility="public",
@@ -142,7 +143,7 @@ def select_uncategorized_api_objects(
     return [
         obj
         for obj in objects
-        if obj.qualname not in covered and obj.name not in covered
+        if not _is_category_match(obj, exact_names=exact_names, prefixes=prefixes)
     ]
 
 
@@ -198,13 +199,30 @@ def check_api_help_categories(
     )
 
 
-def _covered_category_names(categories: Sequence[ApiCategory]) -> set[str]:
-    covered: set[str] = set()
+def _covered_category_matchers(categories: Sequence[ApiCategory]) -> tuple[set[str], tuple[str, ...]]:
+    exact_names: set[str] = set()
+    prefixes: list[str] = []
     for category in categories:
         for name in category.include:
-            covered.add(name)
-            covered.add(name.rsplit(".", 1)[-1])
-    return covered
+            if name.endswith(".*"):
+                prefixes.append(name[:-1])
+                continue
+            exact_names.add(name)
+            exact_names.add(name.rsplit(".", 1)[-1])
+    return exact_names, tuple(prefixes)
+
+
+def _is_category_match(
+    obj: ApiObject,
+    *,
+    exact_names: set[str],
+    prefixes: Sequence[str],
+) -> bool:
+    return (
+        obj.qualname in exact_names
+        or obj.name in exact_names
+        or any(obj.qualname.startswith(prefix) for prefix in prefixes)
+    )
 
 
 def _default_categories(api: ApiPackage) -> tuple[ApiCategory, ...]:

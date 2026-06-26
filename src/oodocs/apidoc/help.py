@@ -611,7 +611,23 @@ def _constants_table(objects: Sequence[ApiObject]) -> Table | None:
 def _objects_for_category(api: ApiPackage, category: ApiCategory) -> tuple[ApiObject, ...]:
     found: list[ApiObject] = []
     seen: set[str] = set()
+    public_objects: tuple[ApiObject, ...] | None = None
     for name in category.include:
+        if name.endswith(".*"):
+            prefix = name[:-1]
+            if public_objects is None:
+                public_objects = tuple(
+                    api.select_objects(
+                        kind=("class", "function", "data", "attribute"),
+                        visibility="public",
+                        recursive=False,
+                    )
+                )
+            for obj in public_objects:
+                if obj.qualname.startswith(prefix) and obj.qualname not in seen:
+                    found.append(obj)
+                    seen.add(obj.qualname)
+            continue
         obj = api.find_object(name)
         if obj is None:
             obj = api.find_object(name.rsplit(".", 1)[-1])
