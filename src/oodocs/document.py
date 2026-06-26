@@ -16,6 +16,7 @@ from oodocs.settings import DocumentSettings
 if TYPE_CHECKING:
     from oodocs.importers.notebook import NotebookImportOptions
     from oodocs.validation import ValidationResult
+    from oodocs.workflows import OutputBundle
 
 
 @dataclass(slots=True, init=False)
@@ -478,7 +479,7 @@ class Document:
         formats: Sequence[str] = ("docx", "pdf", "html"),
         validate: bool = True,
         verbose: bool = False,
-    ) -> dict[str, Path]:
+    ) -> OutputBundle:
         """Render the document to multiple output formats.
 
         Args:
@@ -494,7 +495,7 @@ class Document:
                 and at most ten progress lines are printed.
 
         Returns:
-            A mapping from normalized format name to the written path.
+            Output bundle indexed by normalized format name.
 
         Examples:
             ```python
@@ -529,7 +530,9 @@ class Document:
                 validate=False,
             )
             report_step(f"Rendered {output_format.upper()}", start)
-        return outputs
+        from oodocs.workflows import OutputBundle
+
+        return OutputBundle(outputs)
 
     def _default_output_stem(self) -> str:
         pieces: list[str] = []

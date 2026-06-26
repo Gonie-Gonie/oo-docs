@@ -1248,11 +1248,12 @@ class ApiBuildConfig:
             settings=settings,
             citations=citations,
         )
-        outputs = document.save_all(
+        rendered_outputs = document.save_all(
             resolved_output_dir,
             stem=resolved_stem,
             formats=resolved_formats,
         )
+        outputs: dict[object, Path] = dict(rendered_outputs.items())
         save_sidecars = self.sidecars if sidecars is None else sidecars
         if save_sidecars:
             outputs.update(_write_build_sidecars(api, resolved_output_dir, resolved_stem))

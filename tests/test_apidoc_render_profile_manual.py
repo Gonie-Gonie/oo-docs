@@ -38,6 +38,6 @@ def test_hand_composed_api_document_saves_all_formats(tmp_path) -> None:
         formats=("docx", "pdf", "html"),
     )
 
-    assert set(outputs) == {"docx", "pdf", "html"}
+    assert set(outputs.keys()) == {"docx", "pdf", "html"}
     assert all(path.exists() and path.stat().st_size > 0 for path in outputs.values())
     assert "samplepkg.Widget" in outputs["html"].read_text(encoding="utf-8")

@@ -66,6 +66,7 @@ from oodocs import (
     Math,
     MultiColumn,
     NumberedList,
+    OutputBundle,
     PageNumberDefaults,
     PageMargins,
     PageSize,
@@ -786,11 +787,13 @@ def test_document_save_all_renders_multiple_formats(tmp_path: Path) -> None:
 
     outputs = document.save_all(tmp_path)
 
-    assert sorted(outputs) == ["docx", "html", "pdf"]
+    assert isinstance(outputs, OutputBundle)
+    assert sorted(outputs.formats) == ["docx", "html", "pdf"]
     assert outputs["docx"] == tmp_path / "quarterly-review-draft.docx"
     assert outputs["pdf"] == tmp_path / "quarterly-review-draft.pdf"
     assert outputs["html"] == tmp_path / "quarterly-review-draft.html"
     assert all(path.exists() for path in outputs.values())
+    assert sorted(output_format for output_format, _path in outputs) == ["docx", "html", "pdf"]
 
     selected_outputs = document.save_all(
         tmp_path / "selected",
@@ -798,7 +801,7 @@ def test_document_save_all_renders_multiple_formats(tmp_path: Path) -> None:
         formats=(".docx", "htm"),
     )
 
-    assert sorted(selected_outputs) == ["docx", "html"]
+    assert sorted(selected_outputs.keys()) == ["docx", "html"]
     assert selected_outputs["docx"] == tmp_path / "selected" / "review-pack.docx"
     assert selected_outputs["html"] == tmp_path / "selected" / "review-pack.html"
     assert all(path.exists() for path in selected_outputs.values())
@@ -868,7 +871,7 @@ def test_named_styles_validate_and_render_across_formats(tmp_path: Path) -> None
     assert result.errors == ()
 
     outputs = document.save_all(tmp_path, stem="named-styles")
-    assert set(outputs) == {"docx", "html", "pdf"}
+    assert set(outputs.keys()) == {"docx", "html", "pdf"}
     assert all(path.exists() for path in outputs.values())
 
     html = outputs["html"].read_text(encoding="utf-8")
@@ -957,7 +960,7 @@ def test_image_data_sources_render_without_temp_files(tmp_path: Path) -> None:
 
     outputs = document.save_all(tmp_path, stem="image-data")
 
-    assert set(outputs) == {"docx", "pdf", "html"}
+    assert set(outputs.keys()) == {"docx", "pdf", "html"}
     assert all(path.exists() for path in outputs.values())
     assert "data:image/png;base64," in outputs["html"].read_text(encoding="utf-8")
 

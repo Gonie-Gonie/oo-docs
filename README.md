@@ -111,8 +111,8 @@ report.save("artifacts/hello.html")
 When you want the normal review bundle in one call:
 
 ```python
-paths = report.save_all("artifacts")
-print(paths["docx"], paths["pdf"], paths["html"])
+outputs = report.save_all("artifacts")
+print(outputs["docx"], outputs["pdf"], outputs["html"])
 ```
 
 ## Command Line

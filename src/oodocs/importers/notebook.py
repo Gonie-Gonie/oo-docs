@@ -306,7 +306,7 @@ def from_notebook(
             title="Analysis Report",
             options=NotebookImportOptions(output_image_caption="Output {output_index}"),
         )
-        doc.save_all("dist", outputs=("pdf", "html"))
+        doc.save_all("dist", formats=("pdf", "html"))
         ```
     """
 

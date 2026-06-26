@@ -79,6 +79,22 @@ class OutputBundle:
 
         return iter(self.outputs.items())
 
+    def __len__(self) -> int:
+        """Return the number of rendered outputs."""
+
+        return len(self.outputs)
+
+    def __contains__(self, output_format: object) -> bool:
+        """Return whether a normalized output format exists in the bundle."""
+
+        if not isinstance(output_format, str):
+            return False
+        try:
+            normalized = normalize_output_formats((output_format,))
+        except ValueError:
+            return False
+        return normalized[0] in self.outputs
+
     def __getitem__(self, output_format: str) -> Path:
         """Return the rendered path for an output format.
 
@@ -95,6 +111,21 @@ class OutputBundle:
 
         normalized = normalize_output_formats((output_format,))
         return self.outputs[normalized[0]]
+
+    def keys(self) -> tuple[OutputFormat, ...]:
+        """Return normalized output format keys."""
+
+        return tuple(self.outputs.keys())
+
+    def values(self) -> tuple[Path, ...]:
+        """Return rendered output paths."""
+
+        return tuple(self.outputs.values())
+
+    def items(self) -> tuple[tuple[OutputFormat, Path], ...]:
+        """Return rendered output pairs."""
+
+        return tuple(self.outputs.items())
 
     def by_format(self, output_format: str) -> Path:
         """Return the rendered path for an output format.
@@ -256,14 +287,13 @@ def save_document_outputs(
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
     normalized_outputs = normalize_output_formats(outputs)
-    rendered = document.save_all(
+    return document.save_all(
         output_path,
         stem=stem,
         formats=normalized_outputs,
         validate=validate,
         verbose=verbose,
     )
-    return OutputBundle(rendered)
 
 
 def build_source_outputs(
