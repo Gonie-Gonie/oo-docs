@@ -52,19 +52,16 @@ _COLLECT_CONFIG_KEYS = {
     "public_policy",
 }
 _BUILD_CONFIG_KEYS = {
-    "formats",
     "include_coverage",
     "include_uncategorized_appendix",
     "kind",
     "max_level",
     "module_prefix",
-    "out",
     "output_dir",
     "output_formats",
     "presentation",
     "sidecars",
     "stem",
-    "to",
 }
 
 
@@ -844,8 +841,8 @@ class ApiHelpBookConfig:
                 "collector": "griffe",
                 "public_policy": "__all__",
                 "presentation": "reference",
-                "formats": ["docx", "html"],
-                "out": "artifacts/api",
+                "output_formats": ["docx", "html"],
+                "output_dir": "artifacts/api",
             })
             outputs = build.save_all(".")
             ```
@@ -853,11 +850,8 @@ class ApiHelpBookConfig:
 
         normalized = _normalize_config_mapping(data)
         _validate_known_config_keys(normalized)
-        output_formats = normalized.get(
-            "output_formats",
-            normalized.get("formats", normalized.get("to", ("docx", "pdf", "html"))),
-        )
-        output_dir = normalized.get("output_dir", normalized.get("out"))
+        output_formats = normalized.get("output_formats", ("docx", "pdf", "html"))
+        output_dir = normalized.get("output_dir")
         return cls(
             collection=ApiCollectConfig.from_dict(normalized),
             presentation=str(normalized.get("presentation", "help")),
@@ -1198,7 +1192,7 @@ class ApiHelpBookConfig:
         output_dir: PathLike | None = None,
         *,
         stem: str | None = None,
-        formats: Sequence[str] | None = None,
+        output_formats: Sequence[str] | None = None,
         sidecars: bool | None = None,
         title: str | None = None,
         settings: object | None = None,
@@ -1213,7 +1207,8 @@ class ApiHelpBookConfig:
                 ``output_dir``.
             stem: Optional output filename stem. Defaults to this config's
                 ``stem`` or ``"{api.name}-api"``.
-            formats: Optional output formats. Defaults to ``output_formats``.
+            output_formats: Optional output formats. Defaults to this config's
+                ``output_formats``.
             sidecars: Whether to write API JSON and coverage JSON/CSV sidecars.
                 Defaults to this config's ``sidecars``.
             title: Optional document title.
@@ -1251,7 +1246,7 @@ class ApiHelpBookConfig:
             raise ValueError("ApiHelpBookConfig.save_all requires output_dir or config output_dir")
         resolved_stem = stem or self.stem or f"{api.name.replace('.', '-')}-api"
         resolved_formats = normalize_output_formats(
-            tuple(formats) if formats is not None else self.output_formats
+            tuple(output_formats) if output_formats is not None else self.output_formats
         )
         document = _help_book_for_build(
             api,

@@ -888,7 +888,7 @@ def write_mixed_docstring_repo(tmp_path: Path) -> Path:
             docstring-style = "auto"
             module-prefix = "mixedpkg"
             presentation = "manual"
-            formats = ["html"]
+            output-formats = ["html"]
             sidecars = true
             '''
         ),
@@ -1092,7 +1092,7 @@ def write_custom_docstring_parser_repo(tmp_path: Path) -> Path:
             docstring-style = "example-brief"
             docstring-parser-modules = ["example_brief_parsers"]
             presentation = "compact"
-            formats = ["html"]
+            output-formats = ["html"]
             sidecars = true
             '''
         ),

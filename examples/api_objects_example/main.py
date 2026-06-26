@@ -318,7 +318,7 @@ def render_apidoc_example_bundle(
     docstring_style: str | ApiDocstringParser | None = None,
     presentation: str | ApiPresentationProfile | None = None,
     max_level: int | None = None,
-    formats: Sequence[str] | None = None,
+    output_formats: Sequence[str] | None = None,
     verbose: bool = False,
 ) -> dict[str, Path]:
     """Render the API reference and object-composition example bundle.
@@ -340,8 +340,9 @@ def render_apidoc_example_bundle(
             Defaults to ``"help"``.
         max_level: Optional deepest heading level to render in the API help
             book.
-        formats: Optional subset of formats passed to ``Document.save_all``.
-            Defaults to build config formats or all supported formats.
+        output_formats: Optional subset of formats passed to
+            ``Document.save_all``. Defaults to build config output formats or
+            all supported formats.
         verbose: Whether to print major collection and rendering steps.
 
     Returns:
@@ -384,7 +385,7 @@ def render_apidoc_example_bundle(
         effective_max_level = build_config.max_level
     else:
         effective_max_level = None
-    effective_formats = formats or (build_config.output_formats if build_config else None)
+    effective_formats = output_formats or (build_config.output_formats if build_config else None)
 
     if api is None:
         _log(f"Collecting API objects from {target!s}...", verbose=verbose)
@@ -519,7 +520,7 @@ def main(argv: Sequence[str] | None = None) -> None:
         public_policy=args.public_policy,
         collector=args.collector,
         docstring_style=args.docstring_style,
-        formats=args.outputs,
+        output_formats=args.outputs,
         verbose=not args.quiet,
     )
     for path in outputs.values():
