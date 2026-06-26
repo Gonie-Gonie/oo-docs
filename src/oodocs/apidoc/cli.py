@@ -330,7 +330,7 @@ def _run_init(args: argparse.Namespace) -> int:
     )
     output_format = _config_output_format(args.path, args.format)
     if output_format == "json":
-        output_path = config.write_json(args.path)
+        output_path = config.save_json(args.path)
     else:
         output_path = config.write_pyproject(args.path)
     print(f"Wrote apidoc-config: {output_path}")
@@ -339,7 +339,7 @@ def _run_init(args: argparse.Namespace) -> int:
 
 def _run_collect(args: argparse.Namespace) -> int:
     api = _collect_from_args(args)
-    api.write_json(args.out)
+    api.save_json(args.out)
     print(f"Wrote api-json: {Path(args.out)}")
     return 0
 
@@ -357,7 +357,7 @@ def _run_check(args: argparse.Namespace) -> int:
         f"public objects documented ({result.object_coverage:.1%})"
     )
     if args.out_json:
-        result.write_json(args.out_json)
+        result.save_json(args.out_json)
         print(f"Wrote coverage-json: {args.out_json}")
     if args.out_csv:
         result.write_csv(args.out_csv)
@@ -385,8 +385,8 @@ def _run_snapshot(args: argparse.Namespace) -> int:
 
 
 def _run_diff(args: argparse.Namespace) -> int:
-    base = ApiSnapshot.read_json(args.base)
-    head = ApiSnapshot.read_json(args.head)
+    base = ApiSnapshot.load_json(args.base)
+    head = ApiSnapshot.load_json(args.head)
     result = diff_api(base, head)
     document = result.to_document()
     outputs = document.save_all(
@@ -394,7 +394,7 @@ def _run_diff(args: argparse.Namespace) -> int:
         stem=args.stem,
         formats=normalize_output_formats(_split_csv(args.to)),
     )
-    outputs["diff-json"] = result.write_json(Path(args.out) / f"{args.stem}.json")
+    outputs["diff-json"] = result.save_json(Path(args.out) / f"{args.stem}.json")
     _print_outputs(outputs)
     return 0
 

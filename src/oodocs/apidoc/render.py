@@ -174,8 +174,8 @@ def api_diff_to_chapter(diff: ApiDiffResult) -> Chapter:
         from oodocs import Document
         from oodocs.apidoc import ApiSnapshot, api_diff_to_chapter, diff_api
 
-        base = ApiSnapshot.read_json("artifacts/api-base.json")
-        head = ApiSnapshot.read_json("artifacts/api-head.json")
+        base = ApiSnapshot.load_json("artifacts/api-base.json")
+        head = ApiSnapshot.load_json("artifacts/api-head.json")
         diff = diff_api(base, head)
         Document("Public API Changes", api_diff_to_chapter(diff)).save_all(
             "artifacts/api-diff"

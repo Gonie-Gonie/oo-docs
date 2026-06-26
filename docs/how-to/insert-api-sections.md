@@ -89,8 +89,8 @@ document.save_all(
     stem=f"{api.name}-api",
     formats=("docx", "pdf", "html"),
 )
-api.write_json("artifacts/api/api-objects.json")
-coverage.write_json("artifacts/api/api-coverage.json")
+api.save_json("artifacts/api/api-objects.json")
+coverage.save_json("artifacts/api/api-coverage.json")
 coverage.write_csv("artifacts/api/api-coverage.csv")
 ```
 
@@ -239,8 +239,8 @@ doc = Document(
     Chapter("Coverage", coverage.to_table()),
 )
 
-api.write_json("artifacts/api/api-objects.json")
-coverage.write_json("artifacts/api/api-coverage.json")
+api.save_json("artifacts/api/api-objects.json")
+coverage.save_json("artifacts/api/api-coverage.json")
 coverage.write_csv("artifacts/api/api-coverage.csv")
 ```
 

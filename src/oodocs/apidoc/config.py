@@ -659,7 +659,7 @@ class ApiCollectConfig:
             "object_exclude_patterns": list(self.object_exclude_patterns),
         }
 
-    def write_json(self, path: PathLike) -> Path:
+    def save_json(self, path: PathLike) -> Path:
         """Write this collection config as deterministic JSON.
 
         Args:
@@ -679,7 +679,7 @@ class ApiCollectConfig:
                 public_policy="__all__",
                 module_exclude_patterns=("mypkg.tests*",),
             )
-            config.write_json("apidoc-config.json")
+            config.save_json("apidoc-config.json")
             ```
         """
 
@@ -692,7 +692,7 @@ class ApiCollectConfig:
         return output_path
 
     @classmethod
-    def read_json(
+    def load_json(
         cls,
         path: PathLike,
         *,
@@ -716,7 +716,7 @@ class ApiCollectConfig:
             ```python
             from oodocs.apidoc import ApiCollectConfig, collect_api
 
-            config = ApiCollectConfig.read_json("apidoc-config.json", target=".")
+            config = ApiCollectConfig.load_json("apidoc-config.json", target=".")
             api = collect_api(".", config=config)
             ```
         """
@@ -754,7 +754,7 @@ class ApiCollectConfig:
         config_path = Path(path)
         if config_path.is_dir() or config_path.suffix.lower() == ".toml":
             return cls.from_pyproject(config_path, target=target)
-        return cls.read_json(config_path, target=target)
+        return cls.load_json(config_path, target=target)
 
 
 @dataclass(frozen=True, slots=True)
@@ -908,7 +908,7 @@ class ApiBuildConfig:
             return cls.from_dict(section)
 
     @classmethod
-    def read_json(
+    def load_json(
         cls,
         path: PathLike,
         *,
@@ -926,12 +926,12 @@ class ApiBuildConfig:
             Validated build configuration.
 
         Examples:
-            Load a build config written by ``ApiBuildConfig.write_json(...)``:
+            Load a build config written by ``ApiBuildConfig.save_json(...)``:
 
             ```python
             from oodocs.apidoc import ApiBuildConfig
 
-            build = ApiBuildConfig.read_json("apidoc-build.json", target=".")
+            build = ApiBuildConfig.load_json("apidoc-build.json", target=".")
             outputs = build.save_all(".", output_dir="artifacts/api")
             ```
         """
@@ -972,7 +972,7 @@ class ApiBuildConfig:
         config_path = Path(path)
         if config_path.is_dir() or config_path.suffix.lower() == ".toml":
             return cls.from_pyproject(config_path, target=target)
-        return cls.read_json(config_path, target=target)
+        return cls.load_json(config_path, target=target)
 
     def validate(self) -> None:
         """Validate build settings.
@@ -1113,7 +1113,7 @@ class ApiBuildConfig:
 
             build = ApiBuildConfig.from_pyproject(".")
             coverage = build.check_docs(".", fail_under=0.90)
-            coverage.write_json("artifacts/api/coverage.json")
+            coverage.save_json("artifacts/api/coverage.json")
             ```
         """
 
@@ -1178,7 +1178,7 @@ class ApiBuildConfig:
             ```
         """
 
-        return self.snapshot(target).write_json(path)
+        return self.snapshot(target).save_json(path)
 
     def save_all(
         self,
@@ -1293,7 +1293,7 @@ class ApiBuildConfig:
         )
         return values
 
-    def write_json(self, path: PathLike) -> Path:
+    def save_json(self, path: PathLike) -> Path:
         """Write this build config as deterministic JSON.
 
         Args:
@@ -1313,7 +1313,7 @@ class ApiBuildConfig:
                 output_dir="artifacts/api",
                 sidecars=True,
             )
-            build.write_json("apidoc-build.json")
+            build.save_json("apidoc-build.json")
             ```
         """
 
@@ -1456,8 +1456,8 @@ def _write_build_sidecars(
     directory = Path(output_dir)
     coverage = check_api_docs(api)
     return {
-        "api-json": api.write_json(directory / f"{stem}.json"),
-        "coverage-json": coverage.write_json(directory / f"{stem}-coverage.json"),
+        "api-json": api.save_json(directory / f"{stem}.json"),
+        "coverage-json": coverage.save_json(directory / f"{stem}-coverage.json"),
         "coverage-csv": coverage.write_csv(directory / f"{stem}-coverage.csv"),
     }
 

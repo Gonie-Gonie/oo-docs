@@ -284,8 +284,8 @@ def write_sidecars(
     sidecar_dir = Path(output_dir)
     sidecar_dir.mkdir(parents=True, exist_ok=True)
     return {
-        "api_json": api.write_json(sidecar_dir / f"{COMPOSITION_STEM}.json"),
-        "coverage_json": coverage.write_json(sidecar_dir / f"{COVERAGE_STEM}.json"),
+        "api_json": api.save_json(sidecar_dir / f"{COMPOSITION_STEM}.json"),
+        "coverage_json": coverage.save_json(sidecar_dir / f"{COVERAGE_STEM}.json"),
         "coverage_csv": coverage.write_csv(sidecar_dir / f"{COVERAGE_STEM}.csv"),
     }
 

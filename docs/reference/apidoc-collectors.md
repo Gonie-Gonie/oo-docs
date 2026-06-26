@@ -276,7 +276,7 @@ api = collect_api(".", collector="griffe", public_policy=policy)
 `ApiPublicPolicy` can be serialized with `to_dict()` and reconstructed with
 `from_dict(...)`, which keeps CI scripts and release jobs aligned with the same
 curated boundary. Use `ApiCollectConfig.from_pyproject(...)` when a repository
-stores its policy in `pyproject.toml`, or `ApiCollectConfig.write_json(...)`
+stores its policy in `pyproject.toml`, or `ApiCollectConfig.save_json(...)`
 when the full collection policy should be shared as a standalone sidecar.
 Use `ApiBuildConfig.from_pyproject(...)` when the same repository config should
 also supply rendered-document defaults such as profile, formats, filters, and

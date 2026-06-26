@@ -29,7 +29,7 @@ class ApiSnapshot:
         from oodocs.apidoc.diff import ApiSnapshot
 
         snapshot = ApiSnapshot.from_package(collect_api("oodocs"))
-        snapshot.write_json("api-snapshot.json")
+        snapshot.save_json("api-snapshot.json")
         ```
     """
 
@@ -55,7 +55,7 @@ class ApiSnapshot:
             from oodocs.apidoc import ApiSnapshot, collect_api
 
             api = collect_api(".", public_policy="__all__")
-            ApiSnapshot.from_package(api).write_json("artifacts/api-base.json")
+            ApiSnapshot.from_package(api).save_json("artifacts/api-base.json")
             ```
         """
 
@@ -114,7 +114,7 @@ class ApiSnapshot:
             objects=dict(data.get("objects", {})),  # type: ignore[arg-type]
         )
 
-    def write_json(self, path: PathLike) -> Path:
+    def save_json(self, path: PathLike) -> Path:
         """Write snapshot JSON.
 
         Args:
@@ -130,7 +130,7 @@ class ApiSnapshot:
             from oodocs.apidoc import ApiSnapshot, collect_api
 
             api = collect_api(".")
-            ApiSnapshot.from_package(api).write_json("artifacts/api-base.json")
+            ApiSnapshot.from_package(api).save_json("artifacts/api-base.json")
             ```
         """
 
@@ -143,7 +143,7 @@ class ApiSnapshot:
         return output_path
 
     @classmethod
-    def read_json(cls, path: PathLike) -> ApiSnapshot:
+    def load_json(cls, path: PathLike) -> ApiSnapshot:
         """Read snapshot JSON.
 
         Args:
@@ -162,8 +162,8 @@ class ApiSnapshot:
             ```python
             from oodocs.apidoc import ApiSnapshot, diff_api
 
-            base = ApiSnapshot.read_json("artifacts/api-base.json")
-            head = ApiSnapshot.read_json("artifacts/api-head.json")
+            base = ApiSnapshot.load_json("artifacts/api-base.json")
+            head = ApiSnapshot.load_json("artifacts/api-head.json")
             diff = diff_api(base, head)
             document = diff.to_document()
             ```
@@ -197,8 +197,8 @@ class ApiDiffResult:
         ```python
         from oodocs.apidoc import ApiSnapshot, diff_api
 
-        base = ApiSnapshot.read_json("artifacts/api-base.json")
-        head = ApiSnapshot.read_json("artifacts/api-head.json")
+        base = ApiSnapshot.load_json("artifacts/api-base.json")
+        head = ApiSnapshot.load_json("artifacts/api-head.json")
         diff = diff_api(base, head)
         diff.to_document(title="Public API Changes").save_all("artifacts/api-diff")
         ```
@@ -230,8 +230,8 @@ class ApiDiffResult:
             from oodocs import Chapter, Document
             from oodocs.apidoc import ApiSnapshot, diff_api
 
-            base = ApiSnapshot.read_json("artifacts/api-base.json")
-            head = ApiSnapshot.read_json("artifacts/api-head.json")
+            base = ApiSnapshot.load_json("artifacts/api-base.json")
+            head = ApiSnapshot.load_json("artifacts/api-head.json")
             diff = diff_api(base, head)
             doc = Document("Release Notes", Chapter("API Changes", diff.to_summary_table()))
             ```
@@ -264,8 +264,8 @@ class ApiDiffResult:
             from oodocs import Chapter, Document
             from oodocs.apidoc import ApiSnapshot, diff_api
 
-            base = ApiSnapshot.read_json("artifacts/api-base.json")
-            head = ApiSnapshot.read_json("artifacts/api-head.json")
+            base = ApiSnapshot.load_json("artifacts/api-base.json")
+            head = ApiSnapshot.load_json("artifacts/api-head.json")
             diff = diff_api(base, head)
             doc = Document(
                 "API Review",
@@ -305,8 +305,8 @@ class ApiDiffResult:
             from oodocs import Chapter, Document
             from oodocs.apidoc import ApiSnapshot, diff_api
 
-            base = ApiSnapshot.read_json("artifacts/api-base.json")
-            head = ApiSnapshot.read_json("artifacts/api-head.json")
+            base = ApiSnapshot.load_json("artifacts/api-base.json")
+            head = ApiSnapshot.load_json("artifacts/api-head.json")
             diff = diff_api(base, head)
             doc = Document(
                 "Release Report",
@@ -361,8 +361,8 @@ class ApiDiffResult:
             ```python
             from oodocs.apidoc import ApiSnapshot, diff_api
 
-            base = ApiSnapshot.read_json("artifacts/api-base.json")
-            head = ApiSnapshot.read_json("artifacts/api-head.json")
+            base = ApiSnapshot.load_json("artifacts/api-base.json")
+            head = ApiSnapshot.load_json("artifacts/api-head.json")
             diff = diff_api(base, head)
             diff.to_document(title="Public API Changes").save_all(
                 "artifacts/api-diff",
@@ -397,8 +397,8 @@ class ApiDiffResult:
 
             from oodocs.apidoc import ApiSnapshot, diff_api
 
-            base = ApiSnapshot.read_json("artifacts/api-base.json")
-            head = ApiSnapshot.read_json("artifacts/api-head.json")
+            base = ApiSnapshot.load_json("artifacts/api-base.json")
+            head = ApiSnapshot.load_json("artifacts/api-head.json")
             diff = diff_api(base, head)
             Path("artifacts/api-diff.json").write_text(
                 json.dumps(diff.to_dict(), indent=2, sort_keys=True),
@@ -492,7 +492,7 @@ class ApiDiffResult:
             coverage_delta=dict(data.get("coverage_delta", {})),  # type: ignore[arg-type]
         )
 
-    def write_json(self, path: PathLike) -> Path:
+    def save_json(self, path: PathLike) -> Path:
         """Write diff sidecar JSON.
 
         Args:
@@ -507,10 +507,10 @@ class ApiDiffResult:
             ```python
             from oodocs.apidoc import ApiSnapshot, diff_api
 
-            base = ApiSnapshot.read_json("artifacts/api-base.json")
-            head = ApiSnapshot.read_json("artifacts/api-head.json")
+            base = ApiSnapshot.load_json("artifacts/api-base.json")
+            head = ApiSnapshot.load_json("artifacts/api-head.json")
             diff = diff_api(base, head)
-            diff.write_json("artifacts/api-diff/api-diff.json")
+            diff.save_json("artifacts/api-diff/api-diff.json")
             ```
         """
 
@@ -523,7 +523,7 @@ class ApiDiffResult:
         return output_path
 
     @classmethod
-    def read_json(cls, path: PathLike) -> ApiDiffResult:
+    def load_json(cls, path: PathLike) -> ApiDiffResult:
         """Read a diff result JSON sidecar.
 
         Args:
@@ -543,7 +543,7 @@ class ApiDiffResult:
             ```python
             from oodocs.apidoc import ApiDiffResult
 
-            diff = ApiDiffResult.read_json("artifacts/api-diff/api-diff.json")
+            diff = ApiDiffResult.load_json("artifacts/api-diff/api-diff.json")
             diff.to_document(title="Public API Changes").save_all("artifacts/api-diff")
             ```
         """
@@ -585,8 +585,8 @@ def diff_api(
         from oodocs.apidoc import ApiSnapshot, diff_api
 
         diff = diff_api(
-            ApiSnapshot.read_json("artifacts/api-base.json"),
-            ApiSnapshot.read_json("artifacts/api-head.json"),
+            ApiSnapshot.load_json("artifacts/api-base.json"),
+            ApiSnapshot.load_json("artifacts/api-head.json"),
         )
         ```
     """

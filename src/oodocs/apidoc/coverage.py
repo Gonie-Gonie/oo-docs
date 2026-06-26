@@ -267,7 +267,7 @@ class ApiCoverageResult:
             blocks.append(Paragraph("No API documentation issues were found."))
         return Chapter("API Documentation Coverage", *blocks)
 
-    def write_json(self, path: PathLike) -> Path:
+    def save_json(self, path: PathLike) -> Path:
         """Write coverage sidecar JSON.
 
         Args:
@@ -284,7 +284,7 @@ class ApiCoverageResult:
 
             api = collect_api(".", collector="griffe")
             coverage = check_api_docs(api)
-            coverage.write_json("artifacts/api-coverage.json")
+            coverage.save_json("artifacts/api-coverage.json")
             ```
         """
 
@@ -297,7 +297,7 @@ class ApiCoverageResult:
         return output_path
 
     @classmethod
-    def read_json(cls, path: PathLike) -> ApiCoverageResult:
+    def load_json(cls, path: PathLike) -> ApiCoverageResult:
         """Read a coverage JSON sidecar.
 
         Args:
@@ -318,7 +318,7 @@ class ApiCoverageResult:
             from oodocs import Chapter, Document
             from oodocs.apidoc import ApiCoverageResult
 
-            coverage = ApiCoverageResult.read_json("artifacts/api-coverage.json")
+            coverage = ApiCoverageResult.load_json("artifacts/api-coverage.json")
             doc = Document("Release Evidence", Chapter("Coverage", coverage.to_table()))
             ```
         """
@@ -392,7 +392,7 @@ def check_api_docs(
     Returns:
         Coverage result with counters and issue rows. The result can be
         rendered with ``to_table()`` or ``to_section()``, serialized with
-        ``write_json()``, or exported as CSV with ``write_csv()``.
+        ``save_json()``, or exported as CSV with ``write_csv()``.
 
     Examples:
         Gate public API docs and render the evidence:
@@ -407,7 +407,7 @@ def check_api_docs(
             fail_under=0.90,
             require_examples=True,
         )
-        coverage.write_json("artifacts/api-coverage.json")
+        coverage.save_json("artifacts/api-coverage.json")
         coverage.write_csv("artifacts/api-coverage.csv")
         Document("API Coverage", coverage.to_section()).save_docx(
             "artifacts/api-coverage.docx"

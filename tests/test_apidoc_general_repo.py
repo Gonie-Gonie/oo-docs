@@ -511,8 +511,8 @@ def test_general_repo_auto_parser_object_survives_build_config_json_roundtrip(
         sidecars=True,
     )
 
-    build.write_json(config_path)
-    readback = ApiBuildConfig.read_json(config_path, target=repo)
+    build.save_json(config_path)
+    readback = ApiBuildConfig.load_json(config_path, target=repo)
     api = readback.collect(repo)
     method = api.find_object("mixedpkg.Client.connect")
     function = api.find_object("mixedpkg.connect")
@@ -532,8 +532,8 @@ def test_general_repo_auto_parser_object_survives_build_config_json_roundtrip(
     assert outputs["api-json"].exists()
     assert outputs["coverage-json"].exists()
     assert outputs["coverage-csv"].exists()
-    assert ApiPackage.read_json(outputs["api-json"]).find_object("mixedpkg.Client.connect") is not None
-    assert ApiCoverageResult.read_json(outputs["coverage-json"]).object_coverage == 1.0
+    assert ApiPackage.load_json(outputs["api-json"]).find_object("mixedpkg.Client.connect") is not None
+    assert ApiCoverageResult.load_json(outputs["coverage-json"]).object_coverage == 1.0
     assert_docx_structure(
         outputs["docx"],
         required_paragraphs=(
@@ -843,13 +843,13 @@ def test_general_repo_api_objects_example_cli_targets_repo_path(tmp_path) -> Non
         ),
         min_pages=1,
     )
-    rendered_api = ApiPackage.read_json(api_json)
+    rendered_api = ApiPackage.load_json(api_json)
     rendered_method = rendered_api.find_object("mixedpkg.Client.connect")
     assert rendered_api.name == "mixedpkg"
     assert rendered_method is not None
     assert rendered_method.metadata["docstring_style"] == "numpy"
     assert rendered_method.parameters[0].description == "Timeout in seconds."
-    assert ApiCoverageResult.read_json(coverage_json).object_coverage == 1.0
+    assert ApiCoverageResult.load_json(coverage_json).object_coverage == 1.0
 
     html = full_reference_html.read_text(encoding="utf-8")
     composition_html = composition_html_path.read_text(encoding="utf-8")
@@ -906,11 +906,11 @@ def test_general_repo_pyproject_auto_parser_builds_cli_bundle(tmp_path) -> None:
     assert "Timeout in seconds." in html
     assert_html_internal_links_resolve(html_path)
 
-    rendered_api = ApiPackage.read_json(api_path)
+    rendered_api = ApiPackage.load_json(api_path)
     rendered_method = rendered_api.find_object("mixedpkg.Client.connect")
     assert rendered_method is not None
     assert rendered_method.metadata["docstring_style"] == "numpy"
-    assert ApiCoverageResult.read_json(coverage_path).object_coverage == 1.0
+    assert ApiCoverageResult.load_json(coverage_path).object_coverage == 1.0
 
     example.main(
         [
@@ -933,11 +933,11 @@ def test_general_repo_pyproject_auto_parser_builds_cli_bundle(tmp_path) -> None:
     assert not (example_output_dir / "oodocs-full-api-reference.pdf").exists()
     assert_html_internal_links_resolve(example_html)
 
-    example_api = ApiPackage.read_json(example_api_path)
+    example_api = ApiPackage.load_json(example_api_path)
     example_method = example_api.find_object("mixedpkg.Client.connect")
     assert example_method is not None
     assert example_method.metadata["docstring_style"] == "numpy"
-    assert ApiCoverageResult.read_json(example_coverage_path).object_coverage == 1.0
+    assert ApiCoverageResult.load_json(example_coverage_path).object_coverage == 1.0
 
 
 def test_general_python_file_module_targets_build_reference_and_example(
@@ -1067,10 +1067,10 @@ def test_general_python_file_module_targets_build_reference_and_example(
     assert cli_coverage_json.exists()
     assert_html_internal_links_resolve(cli_html)
     assert (
-        ApiPackage.read_json(cli_api_json).find_object("singlemod.Client.connect")
+        ApiPackage.load_json(cli_api_json).find_object("singlemod.Client.connect")
         is not None
     )
-    assert ApiCoverageResult.read_json(cli_coverage_json).object_coverage == 1.0
+    assert ApiCoverageResult.load_json(cli_coverage_json).object_coverage == 1.0
 
     example.main(
         [
@@ -1094,7 +1094,7 @@ def test_general_python_file_module_targets_build_reference_and_example(
     assert example_api_json.exists()
     assert "singlemod.Client" in example_html.read_text(encoding="utf-8")
     assert_html_internal_links_resolve(example_html)
-    assert ApiPackage.read_json(example_api_json).find_object("singlemod.stream") is not None
+    assert ApiPackage.load_json(example_api_json).find_object("singlemod.stream") is not None
 
 
 def test_general_py_modules_repo_targets_build_reference_and_example(
@@ -1152,8 +1152,8 @@ def test_general_py_modules_repo_targets_build_reference_and_example(
     assert "singlemod.Client" in html
     assert "src.singlemod" not in html
     assert_html_internal_links_resolve(html_path)
-    assert ApiPackage.read_json(api_path).find_object("singlemod.Client.connect") is not None
-    assert ApiCoverageResult.read_json(coverage_path).object_coverage == 1.0
+    assert ApiPackage.load_json(api_path).find_object("singlemod.Client.connect") is not None
+    assert ApiCoverageResult.load_json(coverage_path).object_coverage == 1.0
 
     example.main(
         [
@@ -1180,7 +1180,7 @@ def test_general_py_modules_repo_targets_build_reference_and_example(
     assert "singlemod.Client" in rendered_example
     assert "src.singlemod" not in rendered_example
     assert_html_internal_links_resolve(example_html)
-    assert ApiPackage.read_json(example_api_json).find_object("singlemod.stream") is not None
+    assert ApiPackage.load_json(example_api_json).find_object("singlemod.stream") is not None
 
 
 def test_general_hatch_multi_package_repo_builds_complete_reference(
@@ -1235,10 +1235,10 @@ def test_general_hatch_multi_package_repo_builds_complete_reference(
     assert "beta.run" in html
     assert "lib.alpha" not in html
     assert_html_internal_links_resolve(html_path)
-    rendered_api = ApiPackage.read_json(api_path)
+    rendered_api = ApiPackage.load_json(api_path)
     assert rendered_api.find_object("alpha.run") is not None
     assert rendered_api.find_object("beta.run") is not None
-    assert ApiCoverageResult.read_json(coverage_path).object_coverage == 1.0
+    assert ApiCoverageResult.load_json(coverage_path).object_coverage == 1.0
 
 
 def test_general_hatch_only_include_repo_builds_complete_reference(
@@ -1294,12 +1294,12 @@ def test_general_hatch_only_include_repo_builds_complete_reference(
     assert "lib.onlypkg" not in html
     assert "straypkg" not in html
     assert_html_internal_links_resolve(html_path)
-    rendered_api = ApiPackage.read_json(api_path)
+    rendered_api = ApiPackage.load_json(api_path)
     assert rendered_api.find_object("onlypkg.run") is not None
     assert rendered_api.find_object("onlypkg.core.run") is not None
     assert rendered_api.find_object("lib.onlypkg.run") is None
     assert rendered_api.find_object("straypkg.leak") is None
-    assert ApiCoverageResult.read_json(coverage_path).object_coverage == 1.0
+    assert ApiCoverageResult.load_json(coverage_path).object_coverage == 1.0
 
 
 def test_general_pdm_package_dir_repo_builds_complete_reference(
@@ -1353,10 +1353,10 @@ def test_general_pdm_package_dir_repo_builds_complete_reference(
     assert "pdmpkg.run" in html
     assert "lib.pdmpkg" not in html
     assert_html_internal_links_resolve(html_path)
-    rendered_api = ApiPackage.read_json(api_path)
+    rendered_api = ApiPackage.load_json(api_path)
     assert rendered_api.find_object("pdmpkg.run") is not None
     assert rendered_api.find_object("pdmpkg.core.run") is not None
-    assert ApiCoverageResult.read_json(coverage_path).object_coverage == 1.0
+    assert ApiCoverageResult.load_json(coverage_path).object_coverage == 1.0
 
 
 def test_general_flit_package_repo_builds_complete_reference(
@@ -1410,11 +1410,11 @@ def test_general_flit_package_repo_builds_complete_reference(
     assert "flitpkg.run" in html
     assert "straypkg" not in html
     assert_html_internal_links_resolve(html_path)
-    rendered_api = ApiPackage.read_json(api_path)
+    rendered_api = ApiPackage.load_json(api_path)
     assert rendered_api.find_object("flitpkg.run") is not None
     assert rendered_api.find_object("flitpkg.core.Runner.run") is not None
     assert rendered_api.find_object("straypkg.leak") is None
-    assert ApiCoverageResult.read_json(coverage_path).object_coverage == 1.0
+    assert ApiCoverageResult.load_json(coverage_path).object_coverage == 1.0
 
 
 def test_general_import_names_package_repo_builds_complete_reference(
@@ -1468,11 +1468,11 @@ def test_general_import_names_package_repo_builds_complete_reference(
     assert "importnamedpkg.run" in html
     assert "straypkg" not in html
     assert_html_internal_links_resolve(html_path)
-    rendered_api = ApiPackage.read_json(api_path)
+    rendered_api = ApiPackage.load_json(api_path)
     assert rendered_api.find_object("importnamedpkg.run") is not None
     assert rendered_api.find_object("lib.importnamedpkg.run") is None
     assert rendered_api.find_object("straypkg.leak") is None
-    assert ApiCoverageResult.read_json(coverage_path).object_coverage == 1.0
+    assert ApiCoverageResult.load_json(coverage_path).object_coverage == 1.0
 
 
 @pytest.mark.parametrize(
@@ -1593,12 +1593,12 @@ def test_general_packaging_variants_build_complete_cli_reference(
     for text in forbidden_html:
         assert text not in html
     assert_html_internal_links_resolve(html_path)
-    rendered_api = ApiPackage.read_json(api_path)
+    rendered_api = ApiPackage.load_json(api_path)
     for qualname in expected_qualnames:
         assert rendered_api.find_object(qualname) is not None
     for qualname in forbidden_qualnames:
         assert rendered_api.find_object(qualname) is None
-    assert ApiCoverageResult.read_json(coverage_path).object_coverage == 1.0
+    assert ApiCoverageResult.load_json(coverage_path).object_coverage == 1.0
 
 
 def test_api_objects_example_config_loads_repo_docstring_parser_modules(
@@ -1633,14 +1633,14 @@ def test_api_objects_example_config_loads_repo_docstring_parser_modules(
     assert coverage_json.exists()
     assert not (output_dir / "oodocs-full-api-reference.docx").exists()
 
-    api = ApiPackage.read_json(api_json)
+    api = ApiPackage.load_json(api_json)
     runner = api.find_object("briefpkg.Runner")
     run = api.find_object("briefpkg.run")
     assert runner is not None
     assert runner.summary == "brief:Runner class."
     assert run is not None
     assert run.summary == "brief:Run custom command."
-    assert ApiCoverageResult.read_json(coverage_json).object_coverage == 1.0
+    assert ApiCoverageResult.load_json(coverage_json).object_coverage == 1.0
 
     html = full_reference.read_text(encoding="utf-8")
     assert "brief:Runner class." in html
@@ -1736,12 +1736,12 @@ def test_api_objects_example_external_json_config_loads_target_parser_modules(
     assert api_json.exists()
     assert coverage_json.exists()
 
-    api = ApiPackage.read_json(api_json)
+    api = ApiPackage.load_json(api_json)
     run = api.find_object("examplejsonpkg.run")
 
     assert run is not None
     assert run.summary == "example-json:Run from the example external config."
-    assert ApiCoverageResult.read_json(coverage_json).object_coverage == 1.0
+    assert ApiCoverageResult.load_json(coverage_json).object_coverage == 1.0
     assert_html_internal_links_resolve(
         full_reference,
         required_text=("example-json:Run from the example external config.",),
@@ -1787,7 +1787,7 @@ def test_build_config_save_all_targets_repo_with_parser_modules(
     assert run.summary == "brief:Run custom command."
     assert coverage.object_coverage == 1.0
     assert snapshot.objects["briefpkg.run"]["summary"] == "brief:Run custom command."
-    assert ApiSnapshot.read_json(snapshot_path).objects["briefpkg.run"]["summary"] == (
+    assert ApiSnapshot.load_json(snapshot_path).objects["briefpkg.run"]["summary"] == (
         "brief:Run custom command."
     )
     assert document.validate(formats=("docx", "pdf", "html")).ok
@@ -1823,11 +1823,11 @@ def test_build_config_save_all_targets_repo_with_parser_modules(
         outputs["html"],
         required_text=("brief:Run custom command.",),
     )
-    saved_api = ApiPackage.read_json(outputs["api-json"])
+    saved_api = ApiPackage.load_json(outputs["api-json"])
     saved_run = saved_api.find_object("briefpkg.run")
     assert saved_run is not None
     assert saved_run.summary == "brief:Run custom command."
-    assert ApiCoverageResult.read_json(outputs["coverage-json"]).object_coverage == coverage.object_coverage
+    assert ApiCoverageResult.load_json(outputs["coverage-json"]).object_coverage == coverage.object_coverage
 
 
 def test_collect_api_loads_repo_local_docstring_parser_modules(

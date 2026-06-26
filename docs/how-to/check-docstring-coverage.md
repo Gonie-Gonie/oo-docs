@@ -8,7 +8,7 @@ from oodocs.apidoc import ApiBuildConfig
 
 build = ApiBuildConfig.from_pyproject(".")
 coverage = build.check_docs(".", fail_under=0.90)
-coverage.write_json("artifacts/api-coverage.json")
+coverage.save_json("artifacts/api-coverage.json")
 coverage.write_csv("artifacts/api-coverage.csv")
 ```
 
@@ -24,7 +24,7 @@ api = collect_api("oodocs", public_policy="__all__", collector="griffe")
 coverage = check_api_docs(api, fail_under=0.90)
 
 doc = Document("Release Evidence", Chapter("API Coverage", coverage.to_table()))
-coverage.write_json("artifacts/api-coverage.json")
+coverage.save_json("artifacts/api-coverage.json")
 coverage.write_csv("artifacts/api-coverage.csv")
 ```
 
@@ -49,7 +49,7 @@ Read the JSON sidecar back later when report generation runs in a separate job:
 from oodocs import Chapter, Document
 from oodocs.apidoc import ApiCoverageResult
 
-coverage = ApiCoverageResult.read_json("artifacts/api-coverage.json")
+coverage = ApiCoverageResult.load_json("artifacts/api-coverage.json")
 doc = Document("API Evidence", Chapter("Coverage", coverage.to_table()))
 ```
 

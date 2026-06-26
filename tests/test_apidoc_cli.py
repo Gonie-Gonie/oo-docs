@@ -53,7 +53,7 @@ def test_apidoc_cli_builds_html_and_sidecars_for_general_repo(tmp_path) -> None:
     )
 
     assert (output_dir / "samplepkg-api.html").exists()
-    api = ApiPackage.read_json(output_dir / "samplepkg-api.json")
+    api = ApiPackage.load_json(output_dir / "samplepkg-api.json")
     render = api.find_object("samplepkg.Widget.render")
 
     assert api.name == "samplepkg"
@@ -129,8 +129,8 @@ def test_apidoc_cli_auto_collector_builds_full_bundle_for_general_repo(
         ),
     )
 
-    api = ApiPackage.read_json(api_path)
-    coverage = ApiCoverageResult.read_json(coverage_path)
+    api = ApiPackage.load_json(api_path)
+    coverage = ApiCoverageResult.load_json(coverage_path)
     render = api.find_object("samplepkg.Widget.render")
 
     assert api.metadata["collector"] in {"griffe", "inspect"}
@@ -158,7 +158,7 @@ def test_apidoc_cli_builds_full_reference_bundle_from_json_config(tmp_path) -> N
             "stem": "sample-reference",
             "sidecars": True,
         }
-    ).write_json(config_path)
+    ).save_json(config_path)
 
     assert (
         main(
@@ -214,8 +214,8 @@ def test_apidoc_cli_builds_full_reference_bundle_from_json_config(tmp_path) -> N
         ),
     )
 
-    api = ApiPackage.read_json(api_path)
-    coverage = ApiCoverageResult.read_json(coverage_json_path)
+    api = ApiPackage.load_json(api_path)
+    coverage = ApiCoverageResult.load_json(coverage_json_path)
     render = api.find_object("samplepkg.Widget.render")
 
     assert api.name == "samplepkg"
@@ -318,9 +318,9 @@ def test_apidoc_cli_json_config_loads_repo_local_parser_modules(tmp_path) -> Non
         required_text=("json:Run from JSON config.",),
     )
 
-    api = ApiPackage.read_json(api_path)
+    api = ApiPackage.load_json(api_path)
     run = api.find_object("jsonpkg.run")
-    coverage = ApiCoverageResult.read_json(coverage_path)
+    coverage = ApiCoverageResult.load_json(coverage_path)
 
     assert run is not None
     assert run.summary == "json:Run from JSON config."
@@ -401,7 +401,7 @@ def test_apidoc_cli_external_json_config_loads_target_parser_modules(tmp_path) -
     assert main(["apidoc", "build", str(repo), "--config", str(config_path)]) == 0
 
     html_path = output_dir / "externaljsonpkg-api.html"
-    api = ApiPackage.read_json(output_dir / "externaljsonpkg-api.json")
+    api = ApiPackage.load_json(output_dir / "externaljsonpkg-api.json")
     run = api.find_object("externaljsonpkg.run")
 
     assert_html_internal_links_resolve(
@@ -411,7 +411,7 @@ def test_apidoc_cli_external_json_config_loads_target_parser_modules(tmp_path) -
     assert run is not None
     assert run.summary == "target:Run from external JSON config."
     assert (
-        ApiCoverageResult.read_json(
+        ApiCoverageResult.load_json(
             output_dir / "externaljsonpkg-api-coverage.json"
         ).object_coverage
         == 1.0
@@ -494,7 +494,7 @@ def test_apidoc_cli_external_json_config_loads_griffe_target_parser_modules(
     assert main(["apidoc", "build", str(repo), "--config", str(config_path)]) == 0
 
     html_path = output_dir / "externalgriffepkg-api.html"
-    api = ApiPackage.read_json(output_dir / "externalgriffepkg-api.json")
+    api = ApiPackage.load_json(output_dir / "externalgriffepkg-api.json")
     run = api.find_object("externalgriffepkg.run")
 
     assert api.metadata["collector"] == "griffe"
@@ -505,7 +505,7 @@ def test_apidoc_cli_external_json_config_loads_griffe_target_parser_modules(
     assert run is not None
     assert run.summary == "griffe-json:Run from external griffe JSON config."
     assert (
-        ApiCoverageResult.read_json(
+        ApiCoverageResult.load_json(
             output_dir / "externalgriffepkg-api-coverage.json"
         ).object_coverage
         == 1.0
@@ -594,7 +594,7 @@ def test_apidoc_cli_collect_external_json_config_loads_target_parser_modules(
         == 0
     )
 
-    api = ApiPackage.read_json(output_path)
+    api = ApiPackage.load_json(output_path)
     run = api.find_object("collectjsonpkg.run")
 
     assert run is not None
@@ -701,8 +701,8 @@ def test_apidoc_cli_check_and_snapshot_external_json_config_load_target_parsers(
         == 0
     )
 
-    coverage = ApiCoverageResult.read_json(coverage_json)
-    snapshot = ApiSnapshot.read_json(snapshot_json)
+    coverage = ApiCoverageResult.load_json(coverage_json)
+    snapshot = ApiSnapshot.load_json(snapshot_json)
 
     assert coverage.package == "releasejsonpkg"
     assert coverage.object_coverage == 1.0
@@ -842,7 +842,7 @@ def test_apidoc_cli_diff_renders_report_and_json_sidecar(tmp_path, capsys) -> No
         ),
     )
 
-    diff = ApiDiffResult.read_json(diff_path)
+    diff = ApiDiffResult.load_json(diff_path)
     assert [obj.qualname for obj in diff.added] == ["diffpkg.added"]
     assert diff.changed_signatures[0][0].qualname == "diffpkg.run"
     assert diff.changed_docstrings[0][1].summary == "Run task with force."
@@ -873,7 +873,7 @@ def test_apidoc_cli_builds_setuptools_package_dir_repo(tmp_path) -> None:
         == 0
     )
 
-    api = ApiPackage.read_json(output_dir / "samplepkg-api.json")
+    api = ApiPackage.load_json(output_dir / "samplepkg-api.json")
 
     assert (output_dir / "samplepkg-api.html").exists()
     assert api.find_object("samplepkg.run") is not None
@@ -906,7 +906,7 @@ def test_apidoc_cli_build_respects_explicit_public_policy(tmp_path) -> None:
         == 0
     )
 
-    api = ApiPackage.read_json(output_dir / "samplepkg-api.json")
+    api = ApiPackage.load_json(output_dir / "samplepkg-api.json")
     html = (output_dir / "samplepkg-api.html").read_text(encoding="utf-8")
 
     assert api.metadata["public_policy"] == "explicit"
@@ -949,7 +949,7 @@ def test_apidoc_cli_passes_fallback_collector_to_collection(
         == 0
     )
 
-    api = ApiPackage.read_json(output_path)
+    api = ApiPackage.load_json(output_path)
     assert api.name == "strictcli"
     assert not api.modules
     assert api.metadata["fallback_collector"] == "none"
@@ -983,7 +983,7 @@ def test_apidoc_cli_can_exclude_member_kinds(tmp_path) -> None:
         == 0
     )
 
-    api = ApiPackage.read_json(output_path)
+    api = ApiPackage.load_json(output_path)
     assert api.find_object("samplepkg.Widget") is not None
     assert api.find_object("samplepkg.make_widget") is not None
     assert api.find_object("samplepkg.CONSTANT") is None
@@ -1014,7 +1014,7 @@ def test_apidoc_cli_can_strip_source_locations(tmp_path) -> None:
         == 0
     )
 
-    api = ApiPackage.read_json(output_path)
+    api = ApiPackage.load_json(output_path)
     widget = api.find_object("samplepkg.Widget")
 
     assert api.metadata.get("source_root") is None
@@ -1046,7 +1046,7 @@ def test_apidoc_cli_can_include_private_objects(tmp_path) -> None:
         == 0
     )
 
-    api = ApiPackage.read_json(output_path)
+    api = ApiPackage.load_json(output_path)
     helper = api.find_object("privatepkg._helper")
     debug = api.find_object("privatepkg.PublicWidget._debug")
     assert helper is not None
@@ -1082,7 +1082,7 @@ def test_apidoc_cli_loads_repo_local_docstring_parser_module_option(
         == 0
     )
 
-    api = ApiPackage.read_json(output_path)
+    api = ApiPackage.load_json(output_path)
     runner = api.find_object("briefpkg.Runner")
     function = api.find_object("briefpkg.run")
 
@@ -1186,7 +1186,7 @@ def test_apidoc_cli_init_loads_repo_local_docstring_parser_module(
         == 0
     )
 
-    api = ApiPackage.read_json(output_dir / "initbriefpkg-api.json")
+    api = ApiPackage.load_json(output_dir / "initbriefpkg-api.json")
     run = api.find_object("initbriefpkg.run")
 
     assert run is not None

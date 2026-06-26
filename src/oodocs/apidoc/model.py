@@ -2647,8 +2647,8 @@ class ApiPackage:
         ```python
         from oodocs.apidoc import ApiPackage, collect_api
 
-        collect_api(".").write_json("build/api.json")
-        api = ApiPackage.read_json("build/api.json")
+        collect_api(".").save_json("build/api.json")
+        api = ApiPackage.load_json("build/api.json")
         doc = api.to_document("API Reference")
         ```
     """
@@ -2734,7 +2734,7 @@ class ApiPackage:
             metadata=dict(data.get("metadata", {})),  # type: ignore[arg-type]
         )
 
-    def write_json(self, path: PathLike) -> Path:
+    def save_json(self, path: PathLike) -> Path:
         """Write this API package as deterministic JSON.
 
         Args:
@@ -2750,7 +2750,7 @@ class ApiPackage:
             from oodocs.apidoc import collect_api
 
             api = collect_api(".", collector="griffe")
-            sidecar_path = api.write_json("build/api/objects.json")
+            sidecar_path = api.save_json("build/api/objects.json")
             doc = api.to_document("API Reference")
             ```
         """
@@ -2764,7 +2764,7 @@ class ApiPackage:
         return output_path
 
     @classmethod
-    def read_json(cls, path: PathLike) -> ApiPackage:
+    def load_json(cls, path: PathLike) -> ApiPackage:
         """Read an API package JSON sidecar.
 
         Args:
@@ -2779,7 +2779,7 @@ class ApiPackage:
             ```python
             from oodocs.apidoc import ApiPackage
 
-            api = ApiPackage.read_json("build/api/objects.json")
+            api = ApiPackage.load_json("build/api/objects.json")
             doc = api.to_document("API Reference", profile="reference")
             ```
         """

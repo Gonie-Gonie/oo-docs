@@ -226,7 +226,7 @@ api = collect_api("oodocs", public_policy="__all__")
 # For curated public boundaries, pass an ApiPublicPolicy object instead of a
 # string and reuse it across collect/check/build steps.
 # ApiCollectConfig.from_pyproject(".") can load [tool.oodocs.apidoc], and
-# ApiCollectConfig.write_json("apidoc-config.json") stores the same policy so
+# ApiCollectConfig.save_json("apidoc-config.json") stores the same policy so
 # CLI commands can reuse it with --config.
 classes = api.select_objects(kind="class", module_prefix="oodocs.components")
 functions = api.select_objects(kind="function")

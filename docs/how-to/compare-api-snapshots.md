@@ -23,8 +23,8 @@ from oodocs.apidoc import ApiBuildConfig, ApiSnapshot, diff_api
 build = ApiBuildConfig.from_pyproject(".")
 build.write_snapshot(".", "artifacts/api-head.json")
 
-base = ApiSnapshot.read_json("artifacts/api-base.json")
-head = ApiSnapshot.read_json("artifacts/api-head.json")
+base = ApiSnapshot.load_json("artifacts/api-base.json")
+head = ApiSnapshot.load_json("artifacts/api-head.json")
 diff = diff_api(base, head)
 
 document = diff.to_document()
@@ -37,8 +37,8 @@ sidecar:
 ```python
 from oodocs.apidoc import ApiDiffResult
 
-diff.write_json("artifacts/api-diff/api-diff.json")
-readback = ApiDiffResult.read_json("artifacts/api-diff/api-diff.json")
+diff.save_json("artifacts/api-diff/api-diff.json")
+readback = ApiDiffResult.load_json("artifacts/api-diff/api-diff.json")
 readback.to_document().save_all("artifacts/api-diff", stem="api-diff")
 ```
 

@@ -32,8 +32,8 @@ def test_apidoc_renders_oodocs_public_api_reference_bundle(tmp_path) -> None:
         stem="oodocs-api",
         formats=("docx", "pdf", "html"),
     )
-    api_path = api.write_json(tmp_path / "oodocs-api.json")
-    coverage_json_path = coverage.write_json(tmp_path / "oodocs-api-coverage.json")
+    api_path = api.save_json(tmp_path / "oodocs-api.json")
+    coverage_json_path = coverage.save_json(tmp_path / "oodocs-api-coverage.json")
     coverage_csv_path = coverage.write_csv(tmp_path / "oodocs-api-coverage.csv")
 
     assert_rendered_bundle(outputs["docx"], outputs["pdf"], outputs["html"])
@@ -62,5 +62,5 @@ def test_apidoc_renders_oodocs_public_api_reference_bundle(tmp_path) -> None:
             "oodocs.Document",
         ),
     )
-    assert ApiPackage.read_json(api_path).find_object("oodocs.Document") is not None
-    assert ApiCoverageResult.read_json(coverage_json_path).public_object_count > 0
+    assert ApiPackage.load_json(api_path).find_object("oodocs.Document") is not None
+    assert ApiCoverageResult.load_json(coverage_json_path).public_object_count > 0

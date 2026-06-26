@@ -42,8 +42,8 @@ def test_apidoc_config_roundtrip_supports_general_repo_policy(tmp_path) -> None:
         sidecars=True,
     )
 
-    path = config.write_json(tmp_path / "apidoc-config.json")
-    readback = ApiBuildConfig.read_json(path)
+    path = config.save_json(tmp_path / "apidoc-config.json")
+    readback = ApiBuildConfig.load_json(path)
 
     assert readback.collection.public_policy == "explicit"
     assert readback.collection.fallback_collector == "none"

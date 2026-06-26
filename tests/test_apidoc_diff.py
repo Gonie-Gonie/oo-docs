@@ -102,8 +102,8 @@ def ping(endpoint: str, retries: int = 1) -> bool:
         docstring_style=parser,
     )
     diff = diff_api(ApiSnapshot.from_package(base), ApiSnapshot.from_package(head))
-    diff_json = diff.write_json(tmp_path / "mixed-api-diff.json")
-    readback = ApiDiffResult.read_json(diff_json)
+    diff_json = diff.save_json(tmp_path / "mixed-api-diff.json")
+    readback = ApiDiffResult.load_json(diff_json)
     outputs = readback.to_document(title="Mixed API Change Report").save_all(
         tmp_path / "mixed-api-diff",
         stem="mixed-api-diff",

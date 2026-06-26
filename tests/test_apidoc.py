@@ -433,7 +433,7 @@ def test_apidoc_cli_loads_custom_docstring_parser_modules_from_pyproject(
 
     assert main(["apidoc", "build", ".", "--config", "pyproject.toml"]) == 0
     config = ApiBuildConfig.from_pyproject(repo)
-    built_api = ApiPackage.read_json(repo / "artifacts" / "api" / "hookpkg-api.json")
+    built_api = ApiPackage.load_json(repo / "artifacts" / "api" / "hookpkg-api.json")
     run = built_api.find_object("hookpkg.run")
 
     assert config.collection.docstring_parser_modules == ("repo_apidoc_parsers",)
@@ -513,7 +513,7 @@ def test_apidoc_cli_loads_pyproject_parser_modules_from_target_repo_path(
         )
         == 0
     )
-    built_api = ApiPackage.read_json(output_dir / "externalhookpkg-api.json")
+    built_api = ApiPackage.load_json(output_dir / "externalhookpkg-api.json")
     run = built_api.find_object("externalhookpkg.run")
 
     assert run is not None
@@ -671,8 +671,8 @@ def test_collect_api_builds_queryable_object_tree_and_blocks(tmp_path: Path) -> 
     assert f'href="#{classes[0].anchor_name()}"' in website_html
 
     sidecar = tmp_path / "api.json"
-    api.write_json(sidecar)
-    readback = ApiPackage.read_json(sidecar)
+    api.save_json(sidecar)
+    readback = ApiPackage.load_json(sidecar)
     assert readback.find_object("samplepkg.Widget") is not None
     assert readback.module_map()["samplepkg"].warnings == module.warnings
 
@@ -1100,7 +1100,7 @@ def test_source_collector_can_include_external_import_aliases(tmp_path: Path) ->
             str(cli_json),
         ]
     ) == 0
-    cli_api = ApiPackage.read_json(cli_json)
+    cli_api = ApiPackage.load_json(cli_json)
     assert cli_api.find_object("importpkg.Path") is not None
 
 
@@ -1146,8 +1146,8 @@ def test_collect_api_filters_modules_before_collection(tmp_path: Path) -> None:
     assert config.to_dict()["object_exclude_patterns"] == ["filtermods.core.run"]
     assert ApiCollectConfig.from_dict(config.to_dict()) == config
     config_path = tmp_path / "apidoc-config.json"
-    config.write_json(config_path)
-    assert ApiCollectConfig.read_json(config_path) == config
+    config.save_json(config_path)
+    assert ApiCollectConfig.load_json(config_path) == config
     pyproject_path = tmp_path / "pyproject.toml"
     pyproject_path.write_text(
         "\n".join(
@@ -1186,8 +1186,8 @@ def test_collect_api_filters_modules_before_collection(tmp_path: Path) -> None:
     assert pyproject_build_config.kind == ("function",)
     assert pyproject_build_config.module_prefix == "filtermods.core"
     build_config_path = tmp_path / "apidoc-build-config.json"
-    pyproject_build_config.write_json(build_config_path)
-    assert ApiBuildConfig.read_json(build_config_path) == pyproject_build_config
+    pyproject_build_config.save_json(build_config_path)
+    assert ApiBuildConfig.load_json(build_config_path) == pyproject_build_config
 
     if importlib.util.find_spec("griffe") is not None:
         griffe_api = collect_api(
@@ -1505,20 +1505,20 @@ def test_api_coverage_and_diff_detect_doc_changes(tmp_path: Path) -> None:
     assert "object_coverage_delta" in diff.coverage_delta
 
     snapshot_path = tmp_path / "snapshot.json"
-    ApiSnapshot.from_package(head).write_json(snapshot_path)
+    ApiSnapshot.from_package(head).save_json(snapshot_path)
     assert json.loads(snapshot_path.read_text(encoding="utf-8"))["name"] == "pkg"
     snapshot_diff = diff_api(ApiSnapshot.from_package(base), ApiSnapshot.from_package(head))
     assert snapshot_diff.coverage_delta == diff.coverage_delta
 
     coverage_path = tmp_path / "coverage.json"
-    coverage.write_json(coverage_path)
-    coverage_readback = ApiCoverageResult.read_json(coverage_path)
+    coverage.save_json(coverage_path)
+    coverage_readback = ApiCoverageResult.load_json(coverage_path)
     assert coverage_readback.to_dict() == coverage.to_dict()
     assert isinstance(coverage_readback.to_table(), Table)
 
     diff_path = tmp_path / "diff.json"
-    diff.write_json(diff_path)
-    diff_readback = ApiDiffResult.read_json(diff_path)
+    diff.save_json(diff_path)
+    diff_readback = ApiDiffResult.load_json(diff_path)
     assert diff_readback.to_dict() == diff.to_dict()
     assert diff_readback.changed_parameter_annotations
     assert diff_readback.changed_return_annotations
@@ -1605,7 +1605,7 @@ def test_apidoc_cli_collect_check_build_snapshot_and_diff(tmp_path: Path, capsys
         )
         == 0
     )
-    assert ApiCoverageResult.read_json(coverage_json).package == "clipkg"
+    assert ApiCoverageResult.load_json(coverage_json).package == "clipkg"
     assert coverage_csv.read_text(encoding="utf-8").startswith(
         "severity,code,qualname,module,path,line_number,message"
     )
@@ -1741,7 +1741,7 @@ def test_apidoc_cli_init_writes_config_for_general_repo(tmp_path: Path) -> None:
             str(signature_json),
         ]
     ) == 0
-    signature_api = ApiPackage.read_json(signature_json)
+    signature_api = ApiPackage.load_json(signature_json)
     widget = signature_api.find_object("initpkg.core.Widget")
     assert widget is not None
     assert widget.signature == "initpkg.core.Widget"
@@ -1754,7 +1754,7 @@ def test_apidoc_cli_init_writes_config_for_general_repo(tmp_path: Path) -> None:
 
     json_config = tmp_path / "apidoc-build.json"
     assert main(["apidoc", "init", str(json_config), "--format", "json", "--to", "html"]) == 0
-    assert ApiBuildConfig.read_json(json_config).output_formats == ("html",)
+    assert ApiBuildConfig.load_json(json_config).output_formats == ("html",)
 
 
 def test_apidoc_cli_filters_check_and_snapshot(tmp_path: Path) -> None:
@@ -1805,7 +1805,7 @@ def test_apidoc_cli_filters_check_and_snapshot(tmp_path: Path) -> None:
         module_include_patterns=("filterpkg.core",),
         module_exclude_patterns=("filterpkg.legacy",),
         object_exclude_patterns=("*.Worker.process",),
-    ).write_json(config_path)
+    ).save_json(config_path)
     pyproject_config_path.write_text(
         "\n".join(
             [
@@ -1921,7 +1921,7 @@ def test_apidoc_cli_filters_check_and_snapshot(tmp_path: Path) -> None:
             str(pyproject_coverage_json),
         ]
     ) == 0
-    assert ApiCoverageResult.read_json(pyproject_coverage_json).public_object_count == 1
+    assert ApiCoverageResult.load_json(pyproject_coverage_json).public_object_count == 1
 
     assert main(
         [
@@ -2096,9 +2096,9 @@ def test_api_objects_example_builds_full_reference_and_composable_document(
     )
     assert target_api.name == "examplepkg"
     assert target_api.find_object("examplepkg.Widget") is not None
-    assert ApiPackage.read_json(bundle_outputs["api_json"]).name == "examplepkg"
+    assert ApiPackage.load_json(bundle_outputs["api_json"]).name == "examplepkg"
     assert (
-        ApiCoverageResult.read_json(bundle_outputs["coverage_json"]).package
+        ApiCoverageResult.load_json(bundle_outputs["coverage_json"]).package
         == "examplepkg"
     )
     assert bundle_outputs["coverage_csv"].read_text(encoding="utf-8").startswith(
