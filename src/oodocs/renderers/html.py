@@ -213,7 +213,7 @@ class HtmlRenderer:
                 context.theme,
                 context.render_index,
                 base_bold=True,
-                base_size=max(context.theme.body_font_size + 3, 14),
+                base_size=max(context.theme.typography.body_font_size + 3, 14),
             )
             + "</p>"
             if number_label
@@ -226,7 +226,7 @@ class HtmlRenderer:
                 context.theme,
                 context.render_index,
                 base_bold=True,
-                base_size=max(context.theme.title_font_size, context.theme.heading_size(1) + 2),
+                base_size=max(context.theme.typography.title_font_size, context.theme.heading_size(1) + 2),
             )
             + "</h1>"
         )
@@ -351,7 +351,7 @@ class HtmlRenderer:
             HTML fragment for the equation.
         """
 
-        line_height = block.style.leading or max(context.theme.body_font_size + 1, 12) * 1.3
+        line_height = block.style.leading or max(context.theme.typography.body_font_size + 1, 12) * 1.3
         anchor = context.render_index.block_anchor(block)
         anchor_attr = f' id="{escape(anchor)}"' if anchor else ""
         number = context.render_index.equation_number(block)
@@ -362,7 +362,7 @@ class HtmlRenderer:
             + self._math_html(
                 Math(block.expression),
                 context.theme,
-                base_size=max(context.theme.body_font_size + 1, 12),
+                base_size=max(context.theme.typography.body_font_size + 1, 12),
             )
             + number_html
             + "</div>"
@@ -718,7 +718,7 @@ class HtmlRenderer:
             f'style="{self._table_wrapper_css(context.theme, in_box=context.in_box)} {self._media_placement_css(placement, in_box=context.in_box)}">'
             + (
                 caption_html
-                if block.caption is not None and context.theme.table_caption_position == "above"
+                if block.caption is not None and context.theme.captions.table_caption_position == "above"
                 else ""
             )
             + '<table class="oodocs-table">'
@@ -728,7 +728,7 @@ class HtmlRenderer:
             + "</table>"
             + (
                 caption_html
-                if block.caption is not None and context.theme.table_caption_position == "below"
+                if block.caption is not None and context.theme.captions.table_caption_position == "below"
                 else ""
             )
             + "</div>"
@@ -780,10 +780,10 @@ class HtmlRenderer:
             else ""
         )
         content_parts = []
-        if block.caption is not None and context.theme.figure_caption_position == "above":
+        if block.caption is not None and context.theme.captions.figure_caption_position == "above":
             content_parts.append(caption_html)
         content_parts.append(image_html)
-        if block.caption is not None and context.theme.figure_caption_position == "below":
+        if block.caption is not None and context.theme.captions.figure_caption_position == "below":
             content_parts.append(caption_html)
         return (
             f'<figure class="oodocs-figure oodocs-placement-{placement}" '
@@ -825,10 +825,10 @@ class HtmlRenderer:
             f"gap: {length_to_inches(block.column_gap, block.unit or context.unit):.2f}in;"
         )
         content_parts = []
-        if block.caption is not None and context.theme.figure_caption_position == "above":
+        if block.caption is not None and context.theme.captions.figure_caption_position == "above":
             content_parts.append(caption_html)
         content_parts.append(f'<div class="oodocs-subfigure-grid" style="{grid_style}">{subfigures}</div>')
-        if block.caption is not None and context.theme.figure_caption_position == "below":
+        if block.caption is not None and context.theme.captions.figure_caption_position == "below":
             content_parts.append(caption_html)
         return (
             f'<figure class="oodocs-figure oodocs-subfigure-group oodocs-placement-{placement}" '
@@ -865,7 +865,7 @@ class HtmlRenderer:
             anchor_attr = f' id="{escape(anchor)}"' if anchor else ""
             caption_html = (
                 f'<figcaption{anchor_attr} class="oodocs-caption oodocs-subfigure-caption" '
-                f'style="text-align: {context.theme.caption_text_alignment}; font-size: {context.theme.caption_size():.1f}pt;">'
+                f'style="text-align: {context.theme.captions.caption_text_alignment}; font-size: {context.theme.caption_size():.1f}pt;">'
                 + self._inline_html(
                     self._subfigure_caption_fragments(
                         group.formatted_label_for_index(index),
@@ -879,7 +879,7 @@ class HtmlRenderer:
             )
         alt_text = subfigure.caption.plain_text() if subfigure.caption is not None else "Subfigure"
         return (
-            f'<figure{container_anchor} class="oodocs-subfigure" style="margin: 0; text-align: {context.theme.figure_block_alignment};">'
+            f'<figure{container_anchor} class="oodocs-subfigure" style="margin: 0; text-align: {context.theme.blocks.figure_block_alignment};">'
             f'<img class="oodocs-figure-image" src="{self._figure_src(subfigure)}" alt="{escape(alt_text)}"{image_style} />'
             + caption_html
             + "</figure>"
@@ -903,7 +903,7 @@ class HtmlRenderer:
         return self._render_caption_list(
             title=block.title,
             entries=context.render_index.tables,
-            default_title=context.theme.list_of_tables_title,
+            default_title=context.theme.generated_content.list_of_tables_title,
             label=context.theme.table_caption_label_text(),
             context=context,
             section_class="oodocs-generated-page oodocs-table-list",
@@ -927,7 +927,7 @@ class HtmlRenderer:
         return self._render_caption_list(
             title=block.title,
             entries=context.render_index.figures,
-            default_title=context.theme.list_of_figures_title,
+            default_title=context.theme.generated_content.list_of_figures_title,
             label=context.theme.figure_caption_label_text(),
             context=context,
             section_class="oodocs-generated-page oodocs-figure-list",
@@ -962,7 +962,7 @@ class HtmlRenderer:
             for entry in context.render_index.comments
         )
         return self._generated_page_html(
-            title=block.title or [Text(context.theme.comment_list_title)],
+            title=block.title or [Text(context.theme.generated_content.comment_list_title)],
             body=entries,
             context=context,
             section_class="oodocs-generated-page oodocs-comments-page",
@@ -997,7 +997,7 @@ class HtmlRenderer:
             for entry in context.render_index.footnotes
         )
         return self._generated_page_html(
-            title=block.title or [Text(context.theme.footnote_list_title)],
+            title=block.title or [Text(context.theme.generated_content.footnote_list_title)],
             body=entries,
             context=context,
             section_class="oodocs-generated-page oodocs-footnotes-page",
@@ -1025,13 +1025,13 @@ class HtmlRenderer:
                     f'<span class="oodocs-generated-marker">{escape(marker)}</span> '
                     if (marker := reference_entry_marker(
                         entry.number,
-                        citation_style=context.theme.citation_style,
-                        reference_style=context.theme.reference_style,
+                        citation_style=context.theme.citations.citation_style,
+                        reference_style=context.theme.citations.reference_style,
                     ))
                     else ""
                 )
                 + self._inline_html(
-                    entry.source.reference_fragments(context.theme.reference_style),
+                    entry.source.reference_fragments(context.theme.citations.reference_style),
                     context.theme,
                     context.render_index,
                 )
@@ -1040,7 +1040,7 @@ class HtmlRenderer:
             for entry in context.render_index.citations
         )
         return self._generated_page_html(
-            title=block.title or [Text(context.theme.reference_list_title)],
+            title=block.title or [Text(context.theme.generated_content.reference_list_title)],
             body=entries,
             context=context,
             section_class="oodocs-generated-page oodocs-references-page",
@@ -1067,7 +1067,7 @@ class HtmlRenderer:
             if block.includes_level(entry.level)
         )
         return self._generated_page_html(
-            title=block.title or [Text(context.theme.table_of_contents_title)],
+            title=block.title or [Text(context.theme.generated_content.table_of_contents_title)],
             body='<nav class="oodocs-toc">' + entries + "</nav>",
             context=context,
             section_class="oodocs-generated-page oodocs-toc-page",
@@ -1093,7 +1093,7 @@ class HtmlRenderer:
             f"margin-left: {toc_style.indent:.2f}in",
             f"margin-top: {toc_style.space_before:.1f}pt",
             f"margin-bottom: {toc_style.space_after:.1f}pt",
-            f"font-size: {context.theme.body_font_size + toc_style.font_size_delta:.1f}pt",
+            f"font-size: {context.theme.typography.body_font_size + toc_style.font_size_delta:.1f}pt",
             f"font-weight: {'700' if toc_style.bold else '400'}",
             f"font-style: {'italic' if toc_style.italic else 'normal'}",
         ]
@@ -1133,7 +1133,7 @@ class HtmlRenderer:
         render_index: RenderIndex,
     ) -> bool:
         return (
-            document.settings.theme.auto_footnotes_page
+            document.settings.theme.blocks.auto_footnotes_page
             and bool(render_index.footnotes)
             and not any(isinstance(child, FootnoteList) for child in document.body.children)
         )
@@ -1155,8 +1155,8 @@ class HtmlRenderer:
         lines = [
             self._title_line_html(
                 [Text(document.title)],
-                font_size=context.theme.title_font_size,
-                alignment=context.theme.title_text_alignment,
+                font_size=context.theme.typography.title_font_size,
+                alignment=context.theme.title_matter.title_text_alignment,
                 bold=True,
                 class_name="oodocs-title",
                 theme=context.theme,
@@ -1166,8 +1166,8 @@ class HtmlRenderer:
             lines.append(
                 self._title_line_html(
                     settings.subtitle,
-                    font_size=max(context.theme.body_font_size + 1, 12),
-                    alignment=context.theme.subtitle_text_alignment,
+                    font_size=max(context.theme.typography.body_font_size + 1, 12),
+                    alignment=context.theme.title_matter.subtitle_text_alignment,
                     italic=True,
                     class_name="oodocs-subtitle",
                     theme=context.theme,
@@ -1217,17 +1217,17 @@ class HtmlRenderer:
 
     def _title_line_alignment(self, line: AuthorTitleLine, theme: Theme) -> str:
         if line.kind == "name":
-            return theme.author_text_alignment
+            return theme.title_matter.author_text_alignment
         if line.kind == "affiliation":
-            return theme.affiliation_text_alignment
-        return theme.author_detail_text_alignment
+            return theme.title_matter.affiliation_text_alignment
+        return theme.title_matter.author_detail_text_alignment
 
     def _title_line_font_size(self, line: AuthorTitleLine, theme: Theme) -> float:
         if line.kind == "name":
-            return theme.body_font_size
+            return theme.typography.body_font_size
         if line.kind == "affiliation":
-            return max(theme.body_font_size - 0.5, 9)
-        return max(theme.body_font_size - 1, 9)
+            return max(theme.typography.body_font_size - 0.5, 9)
+        return max(theme.typography.body_font_size - 1, 9)
 
     def _author_title_line_space_after(
         self,
@@ -1298,7 +1298,7 @@ class HtmlRenderer:
         context: HtmlRenderContext,
         section_class: str,
     ) -> str:
-        level = context.theme.generated_heading_level
+        level = context.theme.generated_content.generated_heading_level
         heading_tag = self._heading_tag(level)
         heading_html = (
             f"<{heading_tag} class=\"oodocs-generated-title\" style=\"{self._heading_css(level, context.theme)}\">"
@@ -1418,7 +1418,7 @@ class HtmlRenderer:
         anchor_attr = f' id="{escape(anchor)}"' if anchor else ""
         return (
             f"<{tag}{anchor_attr} class=\"oodocs-caption oodocs-{kind}-caption\" "
-            f'style="text-align: {context.theme.caption_text_alignment}; font-size: {context.theme.caption_size():.1f}pt;">'
+            f'style="text-align: {context.theme.captions.caption_text_alignment}; font-size: {context.theme.caption_size():.1f}pt;">'
             + self._inline_html(
                 self._caption_fragments(label, number, caption),
                 context.theme,
@@ -1514,7 +1514,7 @@ class HtmlRenderer:
         align_items = {"top": "flex-start", "middle": "center", "bottom": "flex-end"}[
             item.vertical_alignment
         ]
-        font_size = item.font_size or context.theme.body_font_size
+        font_size = item.font_size or context.theme.typography.body_font_size
         return (
             '<div class="oodocs-page-item oodocs-textbox" '
             f'style="{self._position_css(box)} '
@@ -1656,7 +1656,7 @@ class HtmlRenderer:
             citation_label = format_citation_label(
                 citation_entry.source,
                 citation_entry.number,
-                theme.citation_style,
+                theme.citations.citation_style,
             )
             return self._link_html(
                 citation_entry.anchor,
@@ -1728,7 +1728,7 @@ class HtmlRenderer:
     ) -> str:
         chip_style = fragment.chip_style
         text = escape(fragment.display_text()).replace("\n", " ")
-        base_size = fragment.style.font_size or base_size or theme.body_font_size
+        base_size = fragment.style.font_size or base_size or theme.typography.body_font_size
         font_size = max(base_size + chip_style.font_size_delta, 6.0)
         styles = [
             "display: inline-block",
@@ -1843,7 +1843,7 @@ class HtmlRenderer:
             return format_citation_label(
                 citation_entry.source,
                 citation_entry.number,
-                theme.citation_style,
+                theme.citations.citation_style,
             )
         if isinstance(fragment, Hyperlink):
             return fragment.plain_text()
@@ -2058,7 +2058,7 @@ class HtmlRenderer:
         space_after = style.space_after
         if space_after is None:
             space_after = default_space_after if default_space_after is not None else 0
-        line_height = style.leading or theme.body_font_size * 1.35
+        line_height = style.leading or theme.typography.body_font_size * 1.35
         left_indent_value = style.left_indent_in_inches(default_unit)
         right_indent_value = style.right_indent_in_inches(default_unit)
         first_line_indent_value = style.first_line_indent_in_inches(default_unit)
@@ -2111,7 +2111,7 @@ class HtmlRenderer:
             f" padding: {top_padding:.1f}pt {right_padding:.1f}pt {bottom_padding:.1f}pt {left_padding:.1f}pt;"
             f" margin: 0 0 {block.style.space_after:.1f}pt;"
             f"{width}"
-            f" {self._block_alignment_css(block.style.block_alignment or theme.box_block_alignment)}"
+            f" {self._block_alignment_css(block.style.block_alignment or theme.blocks.box_block_alignment)}"
         )
 
     def _table_wrapper_css(self, theme: Theme, *, in_box: bool = False) -> str:
@@ -2123,7 +2123,7 @@ class HtmlRenderer:
             " overflow-x: auto;"
             f" padding: {padding};"
             f" margin: {margin};"
-            f" {self._block_alignment_css(theme.table_block_alignment)}"
+            f" {self._block_alignment_css(theme.blocks.table_block_alignment)}"
         )
 
     def _figure_css(self, theme: Theme, *, in_box: bool = False) -> str:
@@ -2131,10 +2131,10 @@ class HtmlRenderer:
         margin = "4pt 0" if in_box else "0 0 12pt"
         return (
             f"padding: {padding};"
-            f" text-align: {theme.figure_block_alignment};"
+            f" text-align: {theme.blocks.figure_block_alignment};"
             f" margin: {margin};"
             + (" background: transparent; box-shadow: none;" if in_box else "")
-            + f" {self._block_alignment_css(theme.figure_block_alignment)}"
+            + f" {self._block_alignment_css(theme.blocks.figure_block_alignment)}"
         )
 
     def _media_placement_css(self, placement: str, *, in_box: bool = False) -> str:
@@ -2167,7 +2167,7 @@ class HtmlRenderer:
             parts.append("padding: 4pt 6pt")
         if block.style.title_text_color is not None:
             parts.append(f"color: #{block.style.title_text_color}")
-        parts.append(f"font-size: {theme.body_font_size:.1f}pt")
+        parts.append(f"font-size: {theme.typography.body_font_size:.1f}pt")
         return "; ".join(parts)
 
     def _assert_box_children_supported(self, children: list[object]) -> None:
@@ -2208,7 +2208,7 @@ class HtmlRenderer:
         text_width = settings.text_width_in_inches()
         page_break_before = (
             "break-before: page; page-break-before: always;"
-            if theme.generated_content_page_breaks
+            if theme.generated_content.generated_content_page_breaks
             else ""
         )
         return f"""
@@ -2221,10 +2221,10 @@ class HtmlRenderer:
 }}
 body {{
   margin: 0;
-  background: #{theme.page_background_color};
+  background: #{theme.blocks.page_background_color};
   color: #1e2329;
-  font-family: {self._css_font_family(theme.body_font_name)};
-  font-size: {theme.body_font_size:.1f}pt;
+  font-family: {self._css_font_family(theme.typography.body_font_name)};
+  font-size: {theme.typography.body_font_size:.1f}pt;
 }}
 .oodocs-page-frame {{
   position: relative;
@@ -2288,12 +2288,12 @@ body {{
 }}
 .oodocs-part-label {{
   margin: 0 0 18pt;
-  font-size: {max(theme.body_font_size + 3, 14):.1f}pt;
+  font-size: {max(theme.typography.body_font_size + 3, 14):.1f}pt;
   font-weight: 700;
 }}
 .oodocs-part-title {{
   margin: 0;
-  font-size: {max(theme.title_font_size, theme.heading_size(1) + 2):.1f}pt;
+  font-size: {max(theme.typography.title_font_size, theme.heading_size(1) + 2):.1f}pt;
   font-weight: 700;
 }}
 .oodocs-page-break-after {{
@@ -2319,7 +2319,7 @@ body {{
   margin-top: 0;
 }}
 .oodocs-paragraph {{
-  font-family: {self._css_font_family(theme.body_font_name)};
+  font-family: {self._css_font_family(theme.typography.body_font_name)};
 }}
 .oodocs-list {{
   margin: 0 0 10pt;
@@ -2344,7 +2344,7 @@ body {{
 .oodocs-code-language {{
   position: absolute;
   z-index: 1;
-  font-family: {self._css_font_family(theme.monospace_font_name)};
+  font-family: {self._css_font_family(theme.typography.monospace_font_name)};
   font-size: {max(theme.caption_size() - 1, 7):.1f}pt;
   font-weight: 600;
   color: #6f7d90;
@@ -2377,9 +2377,9 @@ body {{
   border: 0.75pt solid #d8e0eb;
   background: #f5f7fa;
   border-radius: 12px;
-  font-family: {self._css_font_family(theme.monospace_font_name)};
-  font-size: {max(theme.body_font_size - 1, 8):.1f}pt;
-  line-height: {max(theme.body_font_size - 1, 8) * 1.35:.1f}pt;
+  font-family: {self._css_font_family(theme.typography.monospace_font_name)};
+  font-size: {max(theme.typography.body_font_size - 1, 8):.1f}pt;
+  line-height: {max(theme.typography.body_font_size - 1, 8) * 1.35:.1f}pt;
 }}
 .oodocs-code-has-label-top {{
   padding-top: 24pt;
@@ -2388,11 +2388,11 @@ body {{
   padding-bottom: 24pt;
 }}
 .oodocs-equation {{
-  font-size: {max(theme.body_font_size + 1, 12):.1f}pt;
+  font-size: {max(theme.typography.body_font_size + 1, 12):.1f}pt;
 }}
 .oodocs-equation-number {{
   margin-left: 0.5em;
-  font-size: {theme.body_font_size:.1f}pt;
+  font-size: {theme.typography.body_font_size:.1f}pt;
 }}
 .oodocs-multi-column-layout {{
   display: block;

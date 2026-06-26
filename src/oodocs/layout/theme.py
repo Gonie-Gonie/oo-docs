@@ -859,6 +859,13 @@ class CaptionDefaults:
     table_reference_label: str | None = None
     figure_reference_label: str | None = None
 
+    def __post_init__(self) -> None:
+        self.caption_text_alignment = normalize_text_alignment(self.caption_text_alignment)
+        if self.table_caption_position not in {"above", "below"}:
+            raise ValueError("table_caption_position must be 'above' or 'below'")
+        if self.figure_caption_position not in {"above", "below"}:
+            raise ValueError("figure_caption_position must be 'above' or 'below'")
+
 
 @dataclass(slots=True)
 class CitationDefaults:
@@ -885,6 +892,10 @@ class CitationDefaults:
 
     citation_style: str = "numeric"
     reference_style: str = "plain"
+
+    def __post_init__(self) -> None:
+        self.citation_style = normalize_citation_style(self.citation_style)
+        self.reference_style = normalize_reference_style(self.reference_style)
 
 
 @dataclass(slots=True)
@@ -949,6 +960,20 @@ class PageNumberDefaults:
     main_matter_counter_format: str = "decimal"
     page_number_font_size: float = 9.0
 
+    def __post_init__(self) -> None:
+        if self.page_number_alignment not in {"left", "center", "right"}:
+            raise ValueError(
+                f"Unsupported page number alignment: {self.page_number_alignment!r}"
+            )
+        self.front_matter_counter_format = normalize_counter_format(
+            self.front_matter_counter_format
+        )
+        self.main_matter_counter_format = normalize_counter_format(
+            self.main_matter_counter_format
+        )
+        if "{page}" not in self.page_number_template:
+            raise ValueError("page_number_template must contain a '{page}' placeholder")
+
 
 @dataclass(slots=True)
 class TitleMatterDefaults:
@@ -975,6 +1000,16 @@ class TitleMatterDefaults:
     author_text_alignment: str = "center"
     affiliation_text_alignment: str = "center"
     author_detail_text_alignment: str = "center"
+
+    def __post_init__(self) -> None:
+        for field_name in (
+            "title_text_alignment",
+            "subtitle_text_alignment",
+            "author_text_alignment",
+            "affiliation_text_alignment",
+            "author_detail_text_alignment",
+        ):
+            setattr(self, field_name, normalize_text_alignment(getattr(self, field_name)))
 
 
 @dataclass(slots=True)
@@ -1025,6 +1060,29 @@ class BlockDefaults:
     )
     numbered_list_style: ListStyle = field(default_factory=ListStyle)
 
+    def __post_init__(self) -> None:
+        self.page_background_color = normalize_color(self.page_background_color) or "FFFFFF"
+        self.paragraph_text_alignment = normalize_text_alignment(self.paragraph_text_alignment)
+        for field_name in (
+            "table_block_alignment",
+            "figure_block_alignment",
+            "box_block_alignment",
+        ):
+            value = getattr(self, field_name)
+            if value not in {"left", "center", "right"}:
+                raise ValueError(f"Unsupported alignment for {field_name}: {value!r}")
+        self.part_counter_format = normalize_counter_format(self.part_counter_format)
+        if self.footnote_placement not in {"page", "document"}:
+            raise ValueError("footnote_placement must be 'page' or 'document'")
+        if not isinstance(self.run_in_title_style, RunInTitleStyle):
+            raise TypeError("run_in_title_style must be a RunInTitleStyle")
+        if not isinstance(self.heading_numbering, HeadingNumbering):
+            raise TypeError("heading_numbering must be a HeadingNumbering")
+        if not isinstance(self.bullet_list_style, ListStyle):
+            raise TypeError("bullet_list_style must be a ListStyle")
+        if not isinstance(self.numbered_list_style, ListStyle):
+            raise TypeError("numbered_list_style must be a ListStyle")
+
 
 @dataclass(slots=True, init=False)
 class Theme:
@@ -1047,56 +1105,6 @@ class Theme:
         page_numbers: Resolved page-number defaults group.
         title_matter: Resolved title-matter defaults group.
         blocks: Resolved block defaults group.
-        page_background_color: Hex page background color.
-        body_font_name: Default proportional font name.
-        monospace_font_name: Default monospace font name.
-        title_font_size: Title font size in points.
-        body_font_size: Body font size in points.
-        paragraph_text_alignment: Default paragraph alignment.
-        run_in_title_style: Default style for run-in paragraph titles.
-        heading_sizes: Heading font sizes by level.
-        caption_font_size: Optional caption font size override.
-        caption_text_alignment: Caption paragraph text alignment.
-        table_block_alignment: Default table block placement alignment.
-        figure_block_alignment: Default figure block placement alignment.
-        box_block_alignment: Default box block placement alignment.
-        table_caption_position: Table caption position.
-        figure_caption_position: Figure caption position.
-        table_label: Default table label text.
-        figure_label: Default figure label text.
-        part_label: Label used for numbered part pages.
-        part_counter_format: Counter format used for parts.
-        table_caption_label: Optional table caption label override.
-        figure_caption_label: Optional figure caption label override.
-        table_reference_label: Optional table reference label override.
-        figure_reference_label: Optional figure reference label override.
-        citation_style: Inline citation style identifier.
-        reference_style: Reference list style identifier.
-        list_of_tables_title: Default title for generated table lists.
-        list_of_figures_title: Default title for generated figure lists.
-        comment_list_title: Default title for generated comment lists.
-        footnote_list_title: Default title for generated footnote lists.
-        reference_list_title: Default title for generated reference lists.
-        table_of_contents_title: Default title for generated tables of contents.
-        generated_heading_level: Heading level used by generated content.
-        generated_content_page_breaks: Whether generated content starts on new
-            pages when supported.
-        footnote_placement: Native or generated content footnote placement.
-        auto_footnotes_page: Whether missing footnote pages are auto-rendered.
-        show_page_numbers: Whether renderers should emit footer page numbers.
-        page_number_alignment: Footer page-number alignment.
-        page_number_template: Footer text template containing ``{page}``.
-        front_matter_counter_format: Front-matter page counter style.
-        main_matter_counter_format: Main-matter page counter style.
-        page_number_font_size: Footer page-number font size in points.
-        title_text_alignment: Title text alignment.
-        subtitle_text_alignment: Subtitle text alignment.
-        author_text_alignment: Author line text alignment.
-        affiliation_text_alignment: Affiliation line text alignment.
-        author_detail_text_alignment: Author detail line text alignment.
-        heading_numbering: Heading numbering configuration.
-        bullet_list_style: Default bullet list style.
-        numbered_list_style: Default numbered list style.
 
     Raises:
         TypeError: If a grouped defaults argument has the wrong type.
@@ -1147,57 +1155,6 @@ class Theme:
     page_numbers: PageNumberDefaults
     title_matter: TitleMatterDefaults
     blocks: BlockDefaults
-    page_background_color: str = "FFFFFF"
-    body_font_name: str = "Times New Roman"
-    monospace_font_name: str = "Courier New"
-    title_font_size: float = 22.0
-    body_font_size: float = 11.0
-    paragraph_text_alignment: str = "justify"
-    run_in_title_style: RunInTitleStyle = field(default_factory=RunInTitleStyle)
-    heading_sizes: tuple[float, ...] = (18.0, 15.0, 13.0, 11.5)
-    caption_font_size: float | None = None
-    caption_text_alignment: str = "center"
-    table_block_alignment: str = "center"
-    figure_block_alignment: str = "center"
-    box_block_alignment: str = "center"
-    table_caption_position: str = "above"
-    figure_caption_position: str = "below"
-    table_label: str = "Table"
-    figure_label: str = "Figure"
-    part_label: str = "Part"
-    part_counter_format: str = "upper-roman"
-    table_caption_label: str | None = None
-    figure_caption_label: str | None = None
-    table_reference_label: str | None = None
-    figure_reference_label: str | None = None
-    citation_style: str = "numeric"
-    reference_style: str = "plain"
-    list_of_tables_title: str = "List of Tables"
-    list_of_figures_title: str = "List of Figures"
-    comment_list_title: str = "Comments"
-    footnote_list_title: str = "Footnotes"
-    reference_list_title: str = "References"
-    table_of_contents_title: str = "Contents"
-    generated_heading_level: int = 2
-    generated_content_page_breaks: bool = True
-    footnote_placement: str = "page"
-    auto_footnotes_page: bool = True
-    show_page_numbers: bool = False
-    page_number_alignment: str = "center"
-    page_number_template: str = "{page}"
-    front_matter_counter_format: str = "lower-roman"
-    main_matter_counter_format: str = "decimal"
-    page_number_font_size: float = 9.0
-    title_text_alignment: str = "center"
-    subtitle_text_alignment: str = "center"
-    author_text_alignment: str = "center"
-    affiliation_text_alignment: str = "center"
-    author_detail_text_alignment: str = "center"
-    heading_numbering: HeadingNumbering = field(default_factory=HeadingNumbering)
-    bullet_list_style: ListStyle = field(
-        default_factory=lambda: ListStyle(marker_counter_format="bullet", suffix="")
-    )
-    numbered_list_style: ListStyle = field(default_factory=ListStyle)
 
     def __init__(
         self,
@@ -1233,148 +1190,6 @@ class Theme:
         self.title_matter = title_matter or TitleMatterDefaults()
         self.blocks = blocks or BlockDefaults()
 
-        grouped_values: dict[str, object] = {}
-        for group_type, group in (
-            (BlockDefaults, self.blocks),
-            (TypographyDefaults, self.typography),
-            (CaptionDefaults, self.captions),
-            (CitationDefaults, self.citations),
-            (GeneratedContentDefaults, self.generated_content),
-            (PageNumberDefaults, self.page_numbers),
-            (TitleMatterDefaults, self.title_matter),
-        ):
-            grouped_values.update(
-                {
-                    group_field.name: getattr(group, group_field.name)
-                    for group_field in fields(group_type)
-                }
-            )
-        for name, value in grouped_values.items():
-            setattr(self, name, value)
-
-        self.__post_init__()
-        self._sync_default_groups()
-
-    def __post_init__(self) -> None:
-        self.page_background_color = normalize_color(self.page_background_color) or "FFFFFF"
-        self.paragraph_text_alignment = normalize_text_alignment(self.paragraph_text_alignment)
-        if not isinstance(self.run_in_title_style, RunInTitleStyle):
-            raise TypeError("run_in_title_style must be a RunInTitleStyle")
-        if self.caption_text_alignment not in {"left", "center", "right", "justify"}:
-            raise ValueError(
-                f"Unsupported caption_text_alignment: {self.caption_text_alignment!r}"
-            )
-        for field_name in (
-            "table_block_alignment",
-            "figure_block_alignment",
-            "box_block_alignment",
-        ):
-            value = getattr(self, field_name)
-            if value not in {"left", "center", "right"}:
-                raise ValueError(f"Unsupported alignment for {field_name}: {value!r}")
-        if self.table_caption_position not in {"above", "below"}:
-            raise ValueError(
-                "table_caption_position must be 'above' or 'below'"
-            )
-        if self.figure_caption_position not in {"above", "below"}:
-            raise ValueError(
-                "figure_caption_position must be 'above' or 'below'"
-            )
-        self.citation_style = normalize_citation_style(self.citation_style)
-        self.reference_style = normalize_reference_style(self.reference_style)
-        if self.footnote_placement not in {"page", "document"}:
-            raise ValueError(
-                "footnote_placement must be 'page' or 'document'"
-            )
-        if self.page_number_alignment not in {"left", "center", "right"}:
-            raise ValueError(
-                f"Unsupported page number alignment: {self.page_number_alignment!r}"
-            )
-        self.front_matter_counter_format = normalize_counter_format(
-            self.front_matter_counter_format
-        )
-        self.main_matter_counter_format = normalize_counter_format(
-            self.main_matter_counter_format
-        )
-        self.part_counter_format = normalize_counter_format(self.part_counter_format)
-        if "{page}" not in self.page_number_template:
-            raise ValueError("page_number_template must contain a '{page}' placeholder")
-        for field_name in (
-            "title_text_alignment",
-            "subtitle_text_alignment",
-            "author_text_alignment",
-            "affiliation_text_alignment",
-            "author_detail_text_alignment",
-        ):
-            value = getattr(self, field_name)
-            if value not in {"left", "center", "right", "justify"}:
-                raise ValueError(f"Unsupported alignment for {field_name}: {value!r}")
-
-    def _sync_default_groups(self) -> None:
-        self.typography = TypographyDefaults(
-            body_font_name=self.body_font_name,
-            monospace_font_name=self.monospace_font_name,
-            title_font_size=self.title_font_size,
-            body_font_size=self.body_font_size,
-            heading_sizes=self.heading_sizes,
-            caption_font_size=self.caption_font_size,
-        )
-        self.captions = CaptionDefaults(
-            caption_text_alignment=self.caption_text_alignment,
-            table_caption_position=self.table_caption_position,
-            figure_caption_position=self.figure_caption_position,
-            table_label=self.table_label,
-            figure_label=self.figure_label,
-            table_caption_label=self.table_caption_label,
-            figure_caption_label=self.figure_caption_label,
-            table_reference_label=self.table_reference_label,
-            figure_reference_label=self.figure_reference_label,
-        )
-        self.citations = CitationDefaults(
-            citation_style=self.citation_style,
-            reference_style=self.reference_style,
-        )
-        self.generated_content = GeneratedContentDefaults(
-            list_of_tables_title=self.list_of_tables_title,
-            list_of_figures_title=self.list_of_figures_title,
-            comment_list_title=self.comment_list_title,
-            footnote_list_title=self.footnote_list_title,
-            reference_list_title=self.reference_list_title,
-            table_of_contents_title=self.table_of_contents_title,
-            generated_heading_level=self.generated_heading_level,
-            generated_content_page_breaks=self.generated_content_page_breaks,
-        )
-        self.page_numbers = PageNumberDefaults(
-            show_page_numbers=self.show_page_numbers,
-            page_number_alignment=self.page_number_alignment,
-            page_number_template=self.page_number_template,
-            front_matter_counter_format=self.front_matter_counter_format,
-            main_matter_counter_format=self.main_matter_counter_format,
-            page_number_font_size=self.page_number_font_size,
-        )
-        self.title_matter = TitleMatterDefaults(
-            title_text_alignment=self.title_text_alignment,
-            subtitle_text_alignment=self.subtitle_text_alignment,
-            author_text_alignment=self.author_text_alignment,
-            affiliation_text_alignment=self.affiliation_text_alignment,
-            author_detail_text_alignment=self.author_detail_text_alignment,
-        )
-        self.blocks = BlockDefaults(
-            page_background_color=self.page_background_color,
-            paragraph_text_alignment=self.paragraph_text_alignment,
-            table_block_alignment=self.table_block_alignment,
-            figure_block_alignment=self.figure_block_alignment,
-            box_block_alignment=self.box_block_alignment,
-            part_label=self.part_label,
-            part_counter_format=self.part_counter_format,
-            footnote_placement=self.footnote_placement,
-            auto_footnotes_page=self.auto_footnotes_page,
-            run_in_title_style=self.run_in_title_style,
-            heading_numbering=self.heading_numbering,
-            bullet_list_style=self.bullet_list_style,
-            numbered_list_style=self.numbered_list_style,
-        )
-
     def heading_size(self, level: int) -> float:
         """Return the configured font size for a heading level.
 
@@ -1390,8 +1205,8 @@ class Theme:
             ```
         """
 
-        index = min(max(level - 1, 0), len(self.heading_sizes) - 1)
-        return self.heading_sizes[index]
+        index = min(max(level - 1, 0), len(self.typography.heading_sizes) - 1)
+        return self.typography.heading_sizes[index]
 
     def heading_emphasis(self, level: int) -> tuple[bool, bool]:
         """Return heading emphasis for a heading level.
@@ -1450,7 +1265,7 @@ class Theme:
             ```
         """
 
-        return style.text_alignment or self.paragraph_text_alignment
+        return style.text_alignment or self.blocks.paragraph_text_alignment
 
     def resolve_run_in_title_style(
         self,
@@ -1477,7 +1292,7 @@ class Theme:
             ```
         """
 
-        return paragraph_override or scope_style or self.run_in_title_style
+        return paragraph_override or scope_style or self.blocks.run_in_title_style
 
     def table_caption_label_text(self) -> str:
         """Return the label used in table captions and generated table lists.
@@ -1492,7 +1307,7 @@ class Theme:
             ```
         """
 
-        return self.table_caption_label or self.table_label
+        return self.captions.table_caption_label or self.captions.table_label
 
     def figure_caption_label_text(self) -> str:
         """Return the label used in figure captions and generated figure lists.
@@ -1507,7 +1322,7 @@ class Theme:
             ```
         """
 
-        return self.figure_caption_label or self.figure_label
+        return self.captions.figure_caption_label or self.captions.figure_label
 
     def table_reference_label_text(self) -> str:
         """Return the label used for inline table references.
@@ -1522,7 +1337,7 @@ class Theme:
             ```
         """
 
-        return self.table_reference_label or self.table_label
+        return self.captions.table_reference_label or self.captions.table_label
 
     def figure_reference_label_text(self) -> str:
         """Return the label used for inline figure and subfigure references.
@@ -1537,7 +1352,7 @@ class Theme:
             ```
         """
 
-        return self.figure_reference_label or self.figure_label
+        return self.captions.figure_reference_label or self.captions.figure_label
 
     def caption_size(self) -> float:
         """Return the effective caption font size.
@@ -1551,7 +1366,11 @@ class Theme:
             ```
         """
 
-        return self.body_font_size if self.caption_font_size is None else self.caption_font_size
+        return (
+            self.typography.body_font_size
+            if self.typography.caption_font_size is None
+            else self.typography.caption_font_size
+        )
 
     def format_page_number(
         self,
@@ -1576,12 +1395,12 @@ class Theme:
         """
 
         counter_format = (
-            self.front_matter_counter_format
+            self.page_numbers.front_matter_counter_format
             if front_matter
-            else self.main_matter_counter_format
+            else self.page_numbers.main_matter_counter_format
         )
         page_label = format_counter_value(page_number, counter_format)
-        return self.page_number_template.format(page=page_label)
+        return self.page_numbers.page_number_template.format(page=page_label)
 
     def format_heading_label(self, counters: Sequence[int]) -> str | None:
         """Render a heading numbering label for nested section counters.
@@ -1599,7 +1418,7 @@ class Theme:
             ```
         """
 
-        return self.heading_numbering.format_label(counters)
+        return self.blocks.heading_numbering.format_label(counters)
 
     def format_part_label(self, value: int) -> str | None:
         """Render a part label such as ``Part I`` from an independent counter.
@@ -1617,10 +1436,10 @@ class Theme:
             ```
         """
 
-        if not self.heading_numbering.enabled:
+        if not self.blocks.heading_numbering.enabled:
             return None
-        marker = format_counter_value(value, self.part_counter_format)
-        return f"{self.part_label} {marker}".strip()
+        marker = format_counter_value(value, self.blocks.part_counter_format)
+        return f"{self.blocks.part_label} {marker}".strip()
 
     def list_style(self, *, ordered: bool) -> ListStyle:
         """Return the default style for bullet or ordered lists.
@@ -1637,7 +1456,7 @@ class Theme:
             ```
         """
 
-        return self.numbered_list_style if ordered else self.bullet_list_style
+        return self.blocks.numbered_list_style if ordered else self.blocks.bullet_list_style
 
 
 __all__ = [

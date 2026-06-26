@@ -124,7 +124,7 @@ def test_citation_defaults_use_style_field_names() -> None:
     assert {"citation_format", "reference_format"}.isdisjoint(citation_fields)
     assert {"citation_style", "reference_style"} <= citation_fields
     assert {"citation_format", "reference_format"}.isdisjoint(theme_fields)
-    assert {"citation_style", "reference_style"} <= theme_fields
+    assert {"citation_style", "reference_style"}.isdisjoint(theme_fields)
     assert "citation_options" not in theme_fields
     assert "citations" in theme_fields
     assert "normalize_citation_format" not in references.__all__
@@ -168,9 +168,9 @@ def test_page_and_part_numbering_use_template_and_counter_field_names() -> None:
     assert "part_number_format" not in block_fields
     assert "part_counter_format" in block_fields
     assert forbidden_page_fields.isdisjoint(theme_fields)
-    assert expected_page_fields <= theme_fields
+    assert expected_page_fields.isdisjoint(theme_fields)
     assert "part_number_format" not in theme_fields
-    assert "part_counter_format" in theme_fields
+    assert "part_counter_format" not in theme_fields
 
 
 def test_generated_content_defaults_use_document_language_field_names() -> None:
@@ -196,7 +196,7 @@ def test_generated_content_defaults_use_document_language_field_names() -> None:
     assert forbidden_fields.isdisjoint(generated_fields)
     assert expected_fields <= generated_fields
     assert forbidden_fields.isdisjoint(theme_fields)
-    assert expected_fields <= theme_fields
+    assert expected_fields.isdisjoint(theme_fields)
     assert "generated_pages" not in theme_fields
     assert "generated_content" in theme_fields
 
@@ -208,7 +208,7 @@ def test_run_in_title_style_uses_canonical_names() -> None:
     assert "paragraph_title_style" not in block_fields
     assert "run_in_title_style" in block_fields
     assert "paragraph_title_style" not in theme_fields
-    assert "run_in_title_style" in theme_fields
+    assert "run_in_title_style" not in theme_fields
 
 
 def test_theme_constructor_uses_grouped_defaults_only() -> None:
@@ -250,7 +250,7 @@ def test_paragraph_style_uses_text_alignment_names() -> None:
     assert "paragraph_alignment" not in block_fields
     assert "paragraph_text_alignment" in block_fields
     assert "paragraph_alignment" not in theme_fields
-    assert "paragraph_text_alignment" in theme_fields
+    assert "paragraph_text_alignment" not in theme_fields
 
     for cls in (oodocs.Paragraph, oodocs.CodeBlock, oodocs.Equation):
         parameters = set(inspect.signature(cls).parameters)
@@ -267,7 +267,7 @@ def test_theme_caption_and_title_matter_use_text_alignment_names() -> None:
     assert "caption_alignment" not in caption_fields
     assert "caption_text_alignment" in caption_fields
     assert "caption_alignment" not in theme_fields
-    assert "caption_text_alignment" in theme_fields
+    assert "caption_text_alignment" not in theme_fields
     assert "caption_alignment" not in theme_parameters
     assert "caption_text_alignment" not in theme_parameters
 
@@ -289,7 +289,7 @@ def test_theme_caption_and_title_matter_use_text_alignment_names() -> None:
     assert forbidden.isdisjoint(title_matter_fields)
     assert expected <= title_matter_fields
     assert forbidden.isdisjoint(theme_fields)
-    assert expected <= theme_fields
+    assert expected.isdisjoint(theme_fields)
     assert forbidden.isdisjoint(theme_parameters)
     assert expected.isdisjoint(theme_parameters)
 
@@ -379,7 +379,7 @@ def test_block_alignment_fields_use_block_alignment_names() -> None:
     assert forbidden.isdisjoint(block_fields)
     assert expected <= block_fields
     assert forbidden.isdisjoint(theme_fields)
-    assert expected <= theme_fields
+    assert expected.isdisjoint(theme_fields)
     assert forbidden.isdisjoint(theme_parameters)
     assert expected.isdisjoint(theme_parameters)
 

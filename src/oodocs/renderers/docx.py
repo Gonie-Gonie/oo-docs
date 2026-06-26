@@ -244,7 +244,7 @@ class DocxRenderer:
         if self._should_auto_render_footnote_list(document, render_index):
             self.render_footnote_list(FootnoteList(), context)
 
-        if settings.theme.show_page_numbers:
+        if settings.theme.page_numbers.show_page_numbers:
             self._configure_page_number_sections(
                 word_document,
                 settings.theme,
@@ -314,7 +314,7 @@ class DocxRenderer:
             self._add_title_line(
                 word_document,
                 [Text(number_label)],
-                font_size=max(context.theme.body_font_size + 3, 14),
+                font_size=max(context.theme.typography.body_font_size + 3, 14),
                 alignment="center",
                 bold=True,
                 space_after=18,
@@ -324,7 +324,7 @@ class DocxRenderer:
         title_paragraph = self._add_title_line(
             word_document,
             block.title,
-            font_size=max(context.theme.title_font_size, context.theme.heading_size(1) + 2),
+            font_size=max(context.theme.typography.title_font_size, context.theme.heading_size(1) + 2),
             alignment="center",
             bold=True,
             space_after=0,
@@ -560,14 +560,14 @@ class DocxRenderer:
         self._apply_run_style(
             label_run,
             TextStyle(bold=True),
-            default_size=context.theme.body_font_size,
+            default_size=context.theme.typography.body_font_size,
         )
         if block.title is not None:
             paragraph.add_run(" ")
             self._append_runs(
                 paragraph,
                 block.title,
-                default_size=context.theme.body_font_size,
+                default_size=context.theme.typography.body_font_size,
                 default_style=TextStyle(italic=True),
                 theme=context.theme,
                 render_index=context.render_index,
@@ -751,7 +751,7 @@ class DocxRenderer:
             context.render_index.tables,
             context.theme,
             context.render_index,
-            context.theme.list_of_tables_title,
+            context.theme.generated_content.list_of_tables_title,
             context.theme.table_caption_label_text(),
         )
 
@@ -773,7 +773,7 @@ class DocxRenderer:
             context.render_index.figures,
             context.theme,
             context.render_index,
-            context.theme.list_of_figures_title,
+            context.theme.generated_content.list_of_figures_title,
             context.theme.figure_caption_label_text(),
         )
 
@@ -861,12 +861,12 @@ class DocxRenderer:
         self._enable_field_updates(word_document)
 
         normal_style = word_document.styles["Normal"]
-        normal_style.font.name = theme.body_font_name
-        normal_style.font.size = Pt(theme.body_font_size)
+        normal_style.font.name = theme.typography.body_font_name
+        normal_style.font.size = Pt(theme.typography.body_font_size)
         normal_style.font.color.rgb = RGBColor(0, 0, 0)
         footer_style = word_document.styles["Footer"]
-        footer_style.font.name = theme.body_font_name
-        footer_style.font.size = Pt(theme.page_number_font_size)
+        footer_style.font.name = theme.typography.body_font_name
+        footer_style.font.size = Pt(theme.page_numbers.page_number_font_size)
         footer_style.font.color.rgb = RGBColor(0, 0, 0)
         for section in word_document.sections:
             self._configure_section_page_box(section, settings)
@@ -874,8 +874,8 @@ class DocxRenderer:
         self._configure_named_style(
             word_document,
             "Title",
-            font_name=theme.body_font_name,
-            font_size=theme.title_font_size,
+            font_name=theme.typography.body_font_name,
+            font_size=theme.typography.title_font_size,
             bold=True,
             italic=False,
         )
@@ -884,12 +884,12 @@ class DocxRenderer:
             self._configure_named_style(
                 word_document,
                 f"Heading {level}",
-                font_name=theme.body_font_name,
+                font_name=theme.typography.body_font_name,
                 font_size=theme.heading_size(level),
                 bold=bold,
                 italic=italic,
             )
-        self._set_page_background(word_document, theme.page_background_color)
+        self._set_page_background(word_document, theme.blocks.page_background_color)
 
     def _enable_field_updates(self, word_document: WordDocument) -> None:
         settings = word_document.settings.element
@@ -934,7 +934,7 @@ class DocxRenderer:
         context: DocxRenderContext,
     ) -> None:
         for index, child in enumerate(children):
-            if self._is_paginated_generated_page(child) and context.theme.generated_content_page_breaks:
+            if self._is_paginated_generated_page(child) and context.theme.generated_content.generated_content_page_breaks:
                 if word_document.paragraphs and not self._ends_with_page_break(word_document):
                     self._ensure_page_break(word_document)
                 child.render_to_docx(self, word_document, context)
@@ -954,8 +954,8 @@ class DocxRenderer:
         self._add_title_line(
             word_document,
             [Text(document.title)],
-            font_size=context.theme.title_font_size,
-            alignment=context.theme.title_text_alignment,
+            font_size=context.theme.typography.title_font_size,
+            alignment=context.theme.title_matter.title_text_alignment,
             bold=True,
             space_after=12,
         )
@@ -963,8 +963,8 @@ class DocxRenderer:
             self._add_title_line(
                 word_document,
                 document.settings.subtitle,
-                font_size=max(context.theme.body_font_size + 1, 12),
-                alignment=context.theme.subtitle_text_alignment,
+                font_size=max(context.theme.typography.body_font_size + 1, 12),
+                alignment=context.theme.title_matter.subtitle_text_alignment,
                 italic=True,
                 space_after=10,
             )
@@ -1033,17 +1033,17 @@ class DocxRenderer:
 
     def _title_line_alignment(self, line: AuthorTitleLine, theme: Theme) -> str:
         if line.kind == "name":
-            return theme.author_text_alignment
+            return theme.title_matter.author_text_alignment
         if line.kind == "affiliation":
-            return theme.affiliation_text_alignment
-        return theme.author_detail_text_alignment
+            return theme.title_matter.affiliation_text_alignment
+        return theme.title_matter.author_detail_text_alignment
 
     def _title_line_font_size(self, line: AuthorTitleLine, theme: Theme) -> float:
         if line.kind == "name":
-            return theme.body_font_size
+            return theme.typography.body_font_size
         if line.kind == "affiliation":
-            return max(theme.body_font_size - 0.5, 9)
-        return max(theme.body_font_size - 1, 9)
+            return max(theme.typography.body_font_size - 0.5, 9)
+        return max(theme.typography.body_font_size - 1, 9)
 
     def _author_title_line_space_after(
         self,
@@ -1071,8 +1071,8 @@ class DocxRenderer:
         render_index: RenderIndex,
     ) -> bool:
         return (
-            document.settings.theme.footnote_placement == "document"
-            and document.settings.theme.auto_footnotes_page
+            document.settings.theme.blocks.footnote_placement == "document"
+            and document.settings.theme.blocks.auto_footnotes_page
             and bool(render_index.footnotes)
             and not any(isinstance(child, FootnoteList) for child in document.body.children)
         )
@@ -1156,12 +1156,12 @@ class DocxRenderer:
         self._apply_run_style(
             spacer_run,
             Text("").style,
-            default_size=max(theme.body_font_size - 1, 8),
+            default_size=max(theme.typography.body_font_size - 1, 8),
         )
         self._append_runs(
             paragraph,
             fragment.note,
-            default_size=max(theme.body_font_size - 1, 8),
+            default_size=max(theme.typography.body_font_size - 1, 8),
             theme=theme,
             render_index=render_index,
             word_document=word_document,
@@ -1200,7 +1200,7 @@ class DocxRenderer:
         paragraph = self._add_paragraph(container)
         paragraph.style = "Title" if level == 0 else f"Heading {min(level, 9)}"
         if level == 0:
-            paragraph.alignment = ALIGNMENTS[theme.title_text_alignment]
+            paragraph.alignment = ALIGNMENTS[theme.title_matter.title_text_alignment]
         else:
             paragraph.alignment = ALIGNMENTS[theme.heading_alignment(level)]
             paragraph.paragraph_format.space_before = Pt(18 if level == 1 else 12)
@@ -1209,7 +1209,7 @@ class DocxRenderer:
         self._append_runs(
             paragraph,
             heading_fragments,
-            default_size=theme.title_font_size if level == 0 else theme.heading_size(level),
+            default_size=theme.typography.title_font_size if level == 0 else theme.heading_size(level),
             theme=theme,
             render_index=render_index,
         )
@@ -1379,7 +1379,7 @@ class DocxRenderer:
                 citation_label = format_citation_label(
                     citation_entry.source,
                     citation_entry.number,
-                    theme.citation_style if theme is not None else "numeric",
+                    theme.citations.citation_style if theme is not None else "numeric",
                 )
                 self._append_hyperlink_runs(
                     paragraph,
@@ -1482,11 +1482,11 @@ class DocxRenderer:
     ) -> tuple[BytesIO, float, float]:
         dpi = 192
         chip_style = fragment.chip_style
-        base_size = style.font_size or default_size or theme.body_font_size
+        base_size = style.font_size or default_size or theme.typography.body_font_size
         font_size = max(base_size + chip_style.font_size_delta, 6.0)
         font_px = max(int(round(font_size * dpi / 72)), 8)
         font = self._inline_chip_font(
-            chip_style.font_name or style.font_name or theme.body_font_name,
+            chip_style.font_name or style.font_name or theme.typography.body_font_name,
             chip_style.bold,
             chip_style.italic,
             font_px,
@@ -1802,7 +1802,7 @@ class DocxRenderer:
             theme is not None
             and word_document is not None
             and render_index is not None
-            and theme.footnote_placement == "page"
+            and theme.blocks.footnote_placement == "page"
         ):
             marker_run = paragraph.add_run()
             self._apply_run_style(
@@ -1860,7 +1860,7 @@ class DocxRenderer:
             marker = list_style.marker_for(index)
             if marker:
                 marker_run = paragraph.add_run(f"{marker} ")
-                self._apply_run_style(marker_run, Text("").style, default_size=theme.body_font_size)
+                self._apply_run_style(marker_run, Text("").style, default_size=theme.typography.body_font_size)
             self._append_runs(paragraph, item.content, theme=theme, render_index=render_index, word_document=word_document)
             for child_list in list_block.item_children[index]:
                 self._render_list(
@@ -1916,7 +1916,7 @@ class DocxRenderer:
             paragraph.paragraph_format.tab_stops.add_tab_stop(Inches(6), WD_TAB_ALIGNMENT.RIGHT)
             paragraph.add_run("\t")
         run = paragraph.add_run(code_block.language.upper() if code_block.language else "")
-        run.font.name = theme.monospace_font_name
+        run.font.name = theme.typography.monospace_font_name
         run.font.size = Pt(max(theme.caption_size() - 1, 7))
         run.font.bold = False
         run.font.color.rgb = RGBColor(0x6F, 0x7D, 0x90)
@@ -1930,7 +1930,7 @@ class DocxRenderer:
         *,
         theme: Theme,
     ) -> None:
-        default_size = max(theme.body_font_size - 1, 8)
+        default_size = max(theme.typography.body_font_size - 1, 8)
         for token in tokens:
             parts = token.text.replace("\r\n", "\n").replace("\r", "\n").split("\n")
             for index, part in enumerate(parts):
@@ -1939,7 +1939,7 @@ class DocxRenderer:
                 if not part:
                     continue
                 run = paragraph.add_run(part)
-                run.font.name = theme.monospace_font_name
+                run.font.name = theme.typography.monospace_font_name
                 run.font.size = Pt(default_size)
                 if token.color is not None:
                     run.font.color.rgb = RGBColor.from_string(token.color.upper())
@@ -1966,12 +1966,12 @@ class DocxRenderer:
         self._append_math_runs(
             paragraph,
             Math(equation.expression),
-            default_size=max(theme.body_font_size + 1, 12),
+            default_size=max(theme.typography.body_font_size + 1, 12),
         )
         number = render_index.equation_number(equation)
         if number is not None:
             run = paragraph.add_run(f" ({number})")
-            self._apply_run_style(run, TextStyle(), default_size=theme.body_font_size)
+            self._apply_run_style(run, TextStyle(), default_size=theme.typography.body_font_size)
 
     def _render_box(
         self,
@@ -1984,7 +1984,7 @@ class DocxRenderer:
         *,
         word_document: WordDocument,
     ) -> None:
-        alignment = box.style.block_alignment or theme.box_block_alignment
+        alignment = box.style.block_alignment or theme.blocks.box_block_alignment
         anchor = render_index.block_anchor(box)
         if anchor is not None:
             anchor_paragraph = self._add_paragraph(container)
@@ -2016,7 +2016,7 @@ class DocxRenderer:
             self._append_runs(
                 title_paragraph,
                 box.title,
-                default_size=theme.body_font_size,
+                default_size=theme.typography.body_font_size,
                 default_style=title_style,
                 theme=theme,
                 render_index=render_index,
@@ -2364,7 +2364,7 @@ class DocxRenderer:
             absolute=absolute,
         )
         style += f";v-text-anchor:{self._vml_text_anchor(text_box.vertical_alignment)}"
-        font_size = text_box.font_size or theme.body_font_size
+        font_size = text_box.font_size or theme.typography.body_font_size
         paragraph_xml = self._text_box_paragraph_xml(text_box, font_size)
         return parse_xml(
             f'<w:pict xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" '
@@ -2504,7 +2504,7 @@ class DocxRenderer:
             if table_block.caption is None:
                 return
             caption = self._add_paragraph(container)
-            caption.alignment = ALIGNMENTS[theme.caption_text_alignment]
+            caption.alignment = ALIGNMENTS[theme.captions.caption_text_alignment]
             self._keep_lines_together(caption)
             self._append_runs(
                 caption,
@@ -2521,16 +2521,16 @@ class DocxRenderer:
             anchor = render_index.table_anchor(table_block)
             if anchor is not None:
                 self._add_bookmark(caption, anchor)
-            if theme.table_caption_position == "above":
+            if theme.captions.table_caption_position == "above":
                 self._keep_with_next(caption)
 
-        if table_block.caption is not None and theme.table_caption_position == "above":
+        if table_block.caption is not None and theme.captions.table_caption_position == "above":
             render_caption()
 
         layout = build_table_layout(table_block.header_rows, table_block.rows)
         table = container.add_table(rows=layout.row_count, cols=layout.column_count)
         table.style = "Table Grid"
-        table.alignment = TABLE_ALIGNMENTS[theme.table_block_alignment]
+        table.alignment = TABLE_ALIGNMENTS[theme.blocks.table_block_alignment]
         self._prevent_table_row_split(table)
         if split_table or table_block.style.repeat_header_rows:
             self._repeat_table_header_rows(table, layout.header_row_count)
@@ -2581,7 +2581,7 @@ class DocxRenderer:
             )
             self._set_cell_margins(target_cell, *table_block.style.resolved_cell_padding())
 
-        if table_block.caption is not None and theme.table_caption_position == "below":
+        if table_block.caption is not None and theme.captions.table_caption_position == "below":
             render_caption()
         self._apply_media_placement_after(container, word_document, media_placement)
 
@@ -2617,7 +2617,7 @@ class DocxRenderer:
             if figure.caption is None:
                 return
             caption = self._add_paragraph(container)
-            caption.alignment = ALIGNMENTS[theme.caption_text_alignment]
+            caption.alignment = ALIGNMENTS[theme.captions.caption_text_alignment]
             caption.paragraph_format.space_after = Pt(0 if in_box else 12)
             self._keep_lines_together(caption)
             self._append_runs(
@@ -2635,17 +2635,17 @@ class DocxRenderer:
             anchor = render_index.figure_anchor(figure)
             if anchor is not None:
                 self._add_bookmark(caption, anchor)
-            if theme.figure_caption_position == "above":
+            if theme.captions.figure_caption_position == "above":
                 self._keep_with_next(caption)
 
-        if figure.caption is not None and theme.figure_caption_position == "above":
+        if figure.caption is not None and theme.captions.figure_caption_position == "above":
             render_caption()
 
         paragraph = self._add_paragraph(container)
-        paragraph.alignment = ALIGNMENTS[theme.figure_block_alignment]
+        paragraph.alignment = ALIGNMENTS[theme.blocks.figure_block_alignment]
         paragraph.paragraph_format.space_before = Pt(0)
         paragraph.paragraph_format.space_after = Pt(0 if in_box else 12)
-        if figure.caption is not None and theme.figure_caption_position == "below":
+        if figure.caption is not None and theme.captions.figure_caption_position == "below":
             self._keep_with_next(paragraph)
         run = paragraph.add_run()
         resolved_width = figure.width_in_inches(unit)
@@ -2654,7 +2654,7 @@ class DocxRenderer:
         height = Inches(resolved_height) if resolved_height is not None else None
         run.add_picture(self._figure_picture_source(figure), width=width, height=height)
 
-        if figure.caption is not None and theme.figure_caption_position == "below":
+        if figure.caption is not None and theme.captions.figure_caption_position == "below":
             render_caption()
         self._apply_media_placement_after(container, word_document, placement)
 
@@ -2676,7 +2676,7 @@ class DocxRenderer:
             if group.caption is None:
                 return
             caption = self._add_paragraph(container)
-            caption.alignment = ALIGNMENTS[theme.caption_text_alignment]
+            caption.alignment = ALIGNMENTS[theme.captions.caption_text_alignment]
             caption.paragraph_format.space_after = Pt(0 if in_box else 12)
             self._keep_lines_together(caption)
             self._append_runs(
@@ -2694,15 +2694,15 @@ class DocxRenderer:
             anchor = render_index.figure_anchor(group)
             if anchor is not None:
                 self._add_bookmark(caption, anchor)
-            if theme.figure_caption_position == "above":
+            if theme.captions.figure_caption_position == "above":
                 self._keep_with_next(caption)
 
-        if group.caption is not None and theme.figure_caption_position == "above":
+        if group.caption is not None and theme.captions.figure_caption_position == "above":
             render_caption()
 
         row_count = (len(group.subfigures) + group.columns - 1) // group.columns
         table = container.add_table(rows=row_count, cols=group.columns)
-        table.alignment = TABLE_ALIGNMENTS[theme.figure_block_alignment]
+        table.alignment = TABLE_ALIGNMENTS[theme.blocks.figure_block_alignment]
         gap_points = length_to_inches(group.column_gap, group.unit or unit) * 72
 
         for index, subfigure in enumerate(group.subfigures):
@@ -2717,7 +2717,7 @@ class DocxRenderer:
                 gap_points / 2 if column_index > 0 else 0,
             )
             image_paragraph = cell.paragraphs[0]
-            image_paragraph.alignment = ALIGNMENTS[theme.figure_block_alignment]
+            image_paragraph.alignment = ALIGNMENTS[theme.blocks.figure_block_alignment]
             image_paragraph.paragraph_format.space_after = Pt(2)
             run = image_paragraph.add_run()
             resolved_width = subfigure.width_in_inches(unit)
@@ -2729,7 +2729,7 @@ class DocxRenderer:
             anchor_paragraph = image_paragraph
             if subfigure.caption is not None:
                 subcaption = cell.add_paragraph()
-                subcaption.alignment = ALIGNMENTS[theme.caption_text_alignment]
+                subcaption.alignment = ALIGNMENTS[theme.captions.caption_text_alignment]
                 subcaption.paragraph_format.space_after = Pt(0)
                 self._append_runs(
                     subcaption,
@@ -2747,7 +2747,7 @@ class DocxRenderer:
             if anchor is not None:
                 self._add_bookmark(anchor_paragraph, anchor)
 
-        if group.caption is not None and theme.figure_caption_position == "below":
+        if group.caption is not None and theme.captions.figure_caption_position == "below":
             render_caption()
         self._apply_media_placement_after(container, word_document, placement)
 
@@ -2882,7 +2882,7 @@ class DocxRenderer:
             return format_citation_label(
                 citation_entry.source,
                 citation_entry.number,
-                theme.citation_style if theme is not None else "numeric",
+                theme.citations.citation_style if theme is not None else "numeric",
             )
         if isinstance(fragment, Hyperlink):
             return fragment.plain_text()
@@ -2985,7 +2985,7 @@ class DocxRenderer:
         default_title: str,
         label: str,
     ) -> None:
-        self._add_heading(word_document, title or [Text(default_title)], level=theme.generated_heading_level, theme=theme, number_label=None)
+        self._add_heading(word_document, title or [Text(default_title)], level=theme.generated_content.generated_heading_level, theme=theme, number_label=None)
         for entry in entries:
             paragraph = word_document.add_paragraph()
             paragraph.paragraph_format.left_indent = Inches(0.25)
@@ -3007,7 +3007,7 @@ class DocxRenderer:
         render_index: RenderIndex,
     ) -> None:
         word_document.add_page_break()
-        self._add_heading(word_document, title or [Text(theme.comment_list_title)], level=theme.generated_heading_level, theme=theme, number_label=None)
+        self._add_heading(word_document, title or [Text(theme.generated_content.comment_list_title)], level=theme.generated_content.generated_heading_level, theme=theme, number_label=None)
         for entry in render_index.comments:
             paragraph = word_document.add_paragraph()
             paragraph.paragraph_format.left_indent = Inches(0.3)
@@ -3015,7 +3015,7 @@ class DocxRenderer:
             self._append_runs(
                 paragraph,
                 [Text(f"[{entry.number}] ")] + entry.comment.comment,
-                default_size=theme.body_font_size,
+                default_size=theme.typography.body_font_size,
                 theme=theme,
                 render_index=render_index,
                 word_document=word_document,
@@ -3061,7 +3061,7 @@ class DocxRenderer:
         render_index: RenderIndex,
     ) -> None:
         word_document.add_page_break()
-        self._add_heading(word_document, title or [Text(theme.footnote_list_title)], level=theme.generated_heading_level, theme=theme, number_label=None)
+        self._add_heading(word_document, title or [Text(theme.generated_content.footnote_list_title)], level=theme.generated_content.generated_heading_level, theme=theme, number_label=None)
         for entry in render_index.footnotes:
             paragraph = word_document.add_paragraph()
             paragraph.paragraph_format.left_indent = Inches(0.3)
@@ -3069,7 +3069,7 @@ class DocxRenderer:
             self._append_runs(
                 paragraph,
                 [Text(f"[{entry.number}] ")] + entry.footnote.note,
-                default_size=theme.body_font_size,
+                default_size=theme.typography.body_font_size,
                 theme=theme,
                 render_index=render_index,
                 word_document=word_document,
@@ -3083,23 +3083,23 @@ class DocxRenderer:
         render_index: RenderIndex,
     ) -> None:
         word_document.add_page_break()
-        self._add_heading(word_document, title or [Text(theme.reference_list_title)], level=theme.generated_heading_level, theme=theme, number_label=None)
+        self._add_heading(word_document, title or [Text(theme.generated_content.reference_list_title)], level=theme.generated_content.generated_heading_level, theme=theme, number_label=None)
         for entry in render_index.citations:
             paragraph = word_document.add_paragraph()
             paragraph.paragraph_format.left_indent = Inches(0.3)
             paragraph.paragraph_format.first_line_indent = Inches(-0.3)
             marker = reference_entry_marker(
                 entry.number,
-                citation_style=theme.citation_style,
-                reference_style=theme.reference_style,
+                citation_style=theme.citations.citation_style,
+                reference_style=theme.citations.reference_style,
             )
-            fragments = entry.source.reference_fragments(theme.reference_style)
+            fragments = entry.source.reference_fragments(theme.citations.reference_style)
             if marker:
                 fragments = [Text(f"{marker} ")] + fragments
             self._append_runs(
                 paragraph,
                 fragments,
-                default_size=theme.body_font_size,
+                default_size=theme.typography.body_font_size,
                 theme=theme,
                 render_index=render_index,
                 word_document=word_document,
@@ -3116,8 +3116,8 @@ class DocxRenderer:
         render_index = context.render_index
         self._add_generated_page_title(
             word_document,
-            block.title or [Text(theme.table_of_contents_title)],
-            level=theme.generated_heading_level,
+            block.title or [Text(theme.generated_content.table_of_contents_title)],
+            level=theme.generated_content.generated_heading_level,
             theme=theme,
         )
         if block.show_page_numbers:
@@ -3148,7 +3148,7 @@ class DocxRenderer:
                     bold=toc_style.bold,
                     italic=toc_style.italic,
                 ),
-                default_size=theme.body_font_size + toc_style.font_size_delta,
+                default_size=theme.typography.body_font_size + toc_style.font_size_delta,
             )
             if block.show_page_numbers and entry.anchor is not None:
                 paragraph.add_run("\t")
@@ -3162,12 +3162,12 @@ class DocxRenderer:
         level: int,
         theme: Theme,
     ) -> None:
-        font_size = theme.title_font_size if level == 0 else theme.heading_size(level)
+        font_size = theme.typography.title_font_size if level == 0 else theme.heading_size(level)
         self._add_title_line(
             container,
             title,
             font_size=font_size,
-            alignment=theme.title_text_alignment if level == 0 else theme.heading_alignment(level),
+            alignment=theme.title_matter.title_text_alignment if level == 0 else theme.heading_alignment(level),
             bold=theme.heading_emphasis(level)[0] if level > 0 else True,
             italic=theme.heading_emphasis(level)[1] if level > 0 else False,
             space_after=10 if level <= 1 else 6,
@@ -3246,7 +3246,7 @@ class DocxRenderer:
         if has_front_matter:
             self._set_section_page_counter_format(
                 sections[0],
-                theme.front_matter_counter_format,
+                theme.page_numbers.front_matter_counter_format,
                 start=1,
             )
             self._add_page_number_footer(
@@ -3258,7 +3258,7 @@ class DocxRenderer:
                 sections[1].footer.is_linked_to_previous = False
                 self._set_section_page_counter_format(
                     sections[1],
-                    theme.main_matter_counter_format,
+                    theme.page_numbers.main_matter_counter_format,
                     start=1,
                 )
                 self._add_page_number_footer(
@@ -3270,7 +3270,7 @@ class DocxRenderer:
 
         self._set_section_page_counter_format(
             sections[0],
-            theme.main_matter_counter_format,
+            theme.page_numbers.main_matter_counter_format,
             start=1,
         )
         self._add_page_number_footer(
@@ -3289,18 +3289,18 @@ class DocxRenderer:
         footer = section.footer
         paragraph = footer.paragraphs[0] if footer.paragraphs else footer.add_paragraph()
         paragraph.style = "Footer"
-        paragraph.alignment = ALIGNMENTS[theme.page_number_alignment]
+        paragraph.alignment = ALIGNMENTS[theme.page_numbers.page_number_alignment]
         for child in list(paragraph._p):
             if child.tag != qn("w:pPr"):
                 paragraph._p.remove(child)
-        parts = theme.page_number_template.split("{page}")
+        parts = theme.page_numbers.page_number_template.split("{page}")
         for index, part in enumerate(parts):
             if part:
                 run = paragraph.add_run(part)
                 self._apply_run_style(
                     run,
                     Text(part).style,
-                    default_size=theme.page_number_font_size,
+                    default_size=theme.page_numbers.page_number_font_size,
                 )
             if index < len(parts) - 1:
                 self._append_page_number_field(paragraph)

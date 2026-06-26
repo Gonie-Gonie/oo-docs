@@ -473,38 +473,36 @@ def test_theme_accepts_grouped_defaults_objects() -> None:
         ),
     )
 
-    assert theme.body_font_name == "Calibri"
     assert theme.typography.body_font_name == "Calibri"
-    assert theme.body_font_size == 10.0
-    assert theme.figure_label == "Fig."
-    assert theme.table_caption_position == "below"
-    assert theme.citation_style == "apa"
-    assert theme.reference_style == "apa"
+    assert theme.typography.body_font_size == 10.0
+    assert theme.captions.figure_label == "Fig."
+    assert theme.captions.table_caption_position == "below"
     assert theme.citations.citation_style == "apa"
-    assert theme.table_of_contents_title == "Outline"
-    assert theme.show_page_numbers is True
+    assert theme.citations.reference_style == "apa"
+    assert theme.citations.citation_style == "apa"
+    assert theme.generated_content.table_of_contents_title == "Outline"
+    assert theme.page_numbers.show_page_numbers is True
     assert theme.format_page_number(4) == "p. 4"
-    assert theme.title_text_alignment == "left"
-    assert theme.paragraph_text_alignment == "left"
-    assert theme.run_in_title_style.text_style.italic is True
+    assert theme.title_matter.title_text_alignment == "left"
+    assert theme.blocks.paragraph_text_alignment == "left"
+    assert theme.blocks.run_in_title_style.text_style.italic is True
     assert theme.blocks.run_in_title_style.separator == ": "
-    assert theme.table_block_alignment == "right"
+    assert theme.blocks.table_block_alignment == "right"
 
     title_style_theme = Theme(
         blocks=BlockDefaults(
             run_in_title_style=RunInTitleStyle(TextStyle(bold=True), separator=". ")
         ),
     )
-    assert title_style_theme.run_in_title_style.text_style.bold is True
-    assert title_style_theme.run_in_title_style.separator == ". "
+    assert title_style_theme.blocks.run_in_title_style.text_style.bold is True
+    assert title_style_theme.blocks.run_in_title_style.separator == ". "
 
     keyword_group = Theme(typography=TypographyDefaults(body_font_name="Aptos"))
-    assert keyword_group.body_font_name == "Aptos"
+    assert keyword_group.typography.body_font_name == "Aptos"
     generated_keyword_group = Theme(
         generated_content=GeneratedContentDefaults(reference_list_title="Bibliography")
     )
     assert generated_keyword_group.generated_content.reference_list_title == "Bibliography"
-    assert generated_keyword_group.reference_list_title == "Bibliography"
     try:
         Theme(typography=object())  # type: ignore[arg-type]
     except TypeError as exc:
@@ -718,11 +716,11 @@ def test_paragraph_style_supports_word_like_indents() -> None:
 def test_theme_defaults_center_media_objects_and_captions() -> None:
     theme = Theme()
 
-    assert theme.page_background_color == "FFFFFF"
-    assert theme.caption_text_alignment == "center"
-    assert theme.table_block_alignment == "center"
-    assert theme.figure_block_alignment == "center"
-    assert theme.box_block_alignment == "center"
+    assert theme.blocks.page_background_color == "FFFFFF"
+    assert theme.captions.caption_text_alignment == "center"
+    assert theme.blocks.table_block_alignment == "center"
+    assert theme.blocks.figure_block_alignment == "center"
+    assert theme.blocks.box_block_alignment == "center"
 
 
 def test_page_background_color_renders_to_all_outputs(tmp_path: Path) -> None:
@@ -2662,7 +2660,7 @@ def test_document_accepts_document_settings() -> None:
     assert document.settings.cover_page is True
     assert document.settings.unit == "cm"
     assert round(document.settings.get_text_width(), 2) == 15.92
-    assert document.settings.theme.show_page_numbers is True
+    assert document.settings.theme.page_numbers.show_page_numbers is True
 
 
 def test_print_units_include_common_document_units() -> None:
