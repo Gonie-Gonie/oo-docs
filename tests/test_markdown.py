@@ -92,8 +92,8 @@ print("ok")
     assert isinstance(table, Table)
     assert [cell.content.plain_text() for cell in table.headers] == ["Area", "Status"]
     assert table.rows[0][1].content.plain_text() == "parse_markdown"
-    assert table.column_styles[0].horizontal_alignment == "left"
-    assert table.column_styles[1].horizontal_alignment == "right"
+    assert table.column_styles[0].text_alignment == "left"
+    assert table.column_styles[1].text_alignment == "right"
 
     assert isinstance(added.children[2], Box)
     assert isinstance(added.children[3], Divider)

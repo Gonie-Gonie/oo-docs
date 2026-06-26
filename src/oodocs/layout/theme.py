@@ -637,9 +637,9 @@ class TableStyle:
         border_color: Hex table border color.
         body_background_color: Optional body cell fill color.
         alternate_row_background_color: Optional alternating row fill color.
-        cell_horizontal_alignment: Optional body cell horizontal alignment.
+        cell_text_alignment: Optional body cell text alignment.
         cell_vertical_alignment: Optional body cell vertical alignment.
-        header_horizontal_alignment: Optional header cell horizontal alignment.
+        header_text_alignment: Optional header cell text alignment.
         header_vertical_alignment: Optional header cell vertical alignment.
         cell_padding: Default cell padding in points.
         cell_padding_top: Optional top cell padding override in points.
@@ -663,9 +663,9 @@ class TableStyle:
     border_color: str = "B7C2D0"
     body_background_color: str | None = None
     alternate_row_background_color: str | None = None
-    cell_horizontal_alignment: str | None = None
+    cell_text_alignment: str | None = None
     cell_vertical_alignment: str | None = None
-    header_horizontal_alignment: str | None = None
+    header_text_alignment: str | None = None
     header_vertical_alignment: str | None = None
     cell_padding: float = 5.0
     cell_padding_top: float | None = None
@@ -681,9 +681,9 @@ class TableStyle:
         self.border_color = normalize_color(self.border_color) or "B7C2D0"
         self.body_background_color = normalize_color(self.body_background_color)
         self.alternate_row_background_color = normalize_color(self.alternate_row_background_color)
-        self.cell_horizontal_alignment = (
-            normalize_text_alignment(self.cell_horizontal_alignment)
-            if self.cell_horizontal_alignment is not None
+        self.cell_text_alignment = (
+            normalize_text_alignment(self.cell_text_alignment)
+            if self.cell_text_alignment is not None
             else None
         )
         self.cell_vertical_alignment = (
@@ -691,9 +691,9 @@ class TableStyle:
             if self.cell_vertical_alignment is not None
             else None
         )
-        self.header_horizontal_alignment = (
-            normalize_text_alignment(self.header_horizontal_alignment)
-            if self.header_horizontal_alignment is not None
+        self.header_text_alignment = (
+            normalize_text_alignment(self.header_text_alignment)
+            if self.header_text_alignment is not None
             else None
         )
         self.header_vertical_alignment = (

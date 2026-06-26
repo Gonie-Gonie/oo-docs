@@ -644,7 +644,7 @@ class _MarkdownParser:
             index += 1
 
         column_styles = {
-            column_index: {"horizontal_alignment": alignment}
+            column_index: {"text_alignment": alignment}
             for column_index, alignment in enumerate(alignments)
             if alignment is not None
         }

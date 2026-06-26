@@ -1351,9 +1351,9 @@ class HtmlRenderer:
             f"padding: {top_padding:.1f}pt {right_padding:.1f}pt {bottom_padding:.1f}pt {left_padding:.1f}pt"
         )
         effective_style = block._effective_cell_style(placement)
-        horizontal_alignment = self._table_cell_horizontal_alignment(placement, block) or "left"
+        text_alignment = self._table_cell_text_alignment(placement, block) or "left"
         vertical_alignment = self._table_cell_vertical_alignment(placement, block)
-        style_parts.append(f"text-align: {horizontal_alignment}")
+        style_parts.append(f"text-align: {text_alignment}")
         style_parts.append(
             f"vertical-align: {vertical_alignment}" if vertical_alignment is not None else "vertical-align: top"
         )
@@ -1372,7 +1372,7 @@ class HtmlRenderer:
             attrs.append(f' rowspan="{placement.cell.rowspan}"')
         paragraph_html = (
             '<p class="oodocs-paragraph" '
-            f'style="{self._paragraph_style_css(placement.cell.content.style, context.theme, default_unit=context.unit, alignment=horizontal_alignment)}">'
+            f'style="{self._paragraph_style_css(placement.cell.content.style, context.theme, default_unit=context.unit, alignment=text_alignment)}">'
             + self._inline_html(
                 placement.cell.content.content,
                 context.theme,
@@ -1388,12 +1388,12 @@ class HtmlRenderer:
             + f"</{tag}>"
         )
 
-    def _table_cell_horizontal_alignment(
+    def _table_cell_text_alignment(
         self,
         placement: TablePlacement,
         block: Table,
     ) -> str | None:
-        return block._effective_cell_style(placement).horizontal_alignment
+        return block._effective_cell_style(placement).text_alignment
 
     def _table_cell_vertical_alignment(
         self,

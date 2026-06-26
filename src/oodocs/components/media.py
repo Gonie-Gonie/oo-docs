@@ -278,7 +278,7 @@ class TableCellStyle:
         text_color: Optional text color as a hex string.
         bold: Optional bold override.
         italic: Optional italic override.
-        horizontal_alignment: Optional horizontal alignment override.
+        text_alignment: Optional cell text alignment override.
         vertical_alignment: Optional vertical alignment override.
 
     Examples:
@@ -295,15 +295,15 @@ class TableCellStyle:
     text_color: str | None = None
     bold: bool | None = None
     italic: bool | None = None
-    horizontal_alignment: str | None = None
+    text_alignment: str | None = None
     vertical_alignment: str | None = None
 
     def __post_init__(self) -> None:
         self.background_color = normalize_color(self.background_color)
         self.text_color = normalize_color(self.text_color)
-        self.horizontal_alignment = (
-            normalize_text_alignment(self.horizontal_alignment)
-            if self.horizontal_alignment is not None
+        self.text_alignment = (
+            normalize_text_alignment(self.text_alignment)
+            if self.text_alignment is not None
             else None
         )
         self.vertical_alignment = (
@@ -333,7 +333,7 @@ class TableCellStyle:
             text_color=self.text_color,
             bold=self.bold,
             italic=self.italic,
-            horizontal_alignment=self.horizontal_alignment,
+            text_alignment=self.text_alignment,
             vertical_alignment=self.vertical_alignment,
         )
         for other in others:
@@ -344,7 +344,7 @@ class TableCellStyle:
                 "text_color",
                 "bold",
                 "italic",
-                "horizontal_alignment",
+                "text_alignment",
                 "vertical_alignment",
             ):
                 value = getattr(other, field_name)
@@ -406,7 +406,7 @@ def _style_overrides(
     text_color: str | None = None,
     bold: bool | None = None,
     italic: bool | None = None,
-    horizontal_alignment: str | None = None,
+    text_alignment: str | None = None,
     vertical_alignment: str | None = None,
 ) -> TableCellStyle:
     return TableCellStyle(
@@ -414,7 +414,7 @@ def _style_overrides(
         text_color=text_color,
         bold=bold,
         italic=italic,
-        horizontal_alignment=horizontal_alignment,
+        text_alignment=text_alignment,
         vertical_alignment=vertical_alignment,
     )
 
@@ -432,7 +432,7 @@ class TableCell:
         text_color: Optional text color override.
         bold: Optional bold override.
         italic: Optional italic override.
-        horizontal_alignment: Optional horizontal alignment override.
+        text_alignment: Optional cell text alignment override.
         vertical_alignment: Optional vertical alignment override.
 
     Attributes:
@@ -440,7 +440,7 @@ class TableCell:
         colspan: Number of rendered columns this cell spans.
         rowspan: Number of rendered rows this cell spans.
         background_color: Resolved cell background color.
-        horizontal_alignment: Resolved horizontal alignment.
+        text_alignment: Resolved cell text alignment.
         vertical_alignment: Resolved vertical alignment.
         style: Resolved cell style after overrides are merged.
 
@@ -461,7 +461,7 @@ class TableCell:
     colspan: int
     rowspan: int
     background_color: str | None
-    horizontal_alignment: str | None
+    text_alignment: str | None
     vertical_alignment: str | None
     style: TableCellStyle
 
@@ -476,7 +476,7 @@ class TableCell:
         text_color: str | None = None,
         bold: bool | None = None,
         italic: bool | None = None,
-        horizontal_alignment: str | None = None,
+        text_alignment: str | None = None,
         vertical_alignment: str | None = None,
     ) -> None:
         if colspan < 1:
@@ -497,12 +497,12 @@ class TableCell:
                 text_color=text_color,
                 bold=bold,
                 italic=italic,
-                horizontal_alignment=horizontal_alignment,
+                text_alignment=text_alignment,
                 vertical_alignment=vertical_alignment,
             )
         )
         self.background_color = self.style.background_color
-        self.horizontal_alignment = self.style.horizontal_alignment
+        self.text_alignment = self.style.text_alignment
         self.vertical_alignment = self.style.vertical_alignment
 
 
@@ -934,9 +934,9 @@ class Table(Block):
         border_color: Optional border color override.
         body_background_color: Optional body background color override.
         alternate_row_background_color: Optional alternating row background.
-        cell_horizontal_alignment: Optional body cell horizontal alignment.
+        cell_text_alignment: Optional body cell text alignment.
         cell_vertical_alignment: Optional body cell vertical alignment.
-        header_horizontal_alignment: Optional header horizontal alignment.
+        header_text_alignment: Optional header cell text alignment.
         header_vertical_alignment: Optional header vertical alignment.
         cell_padding: Optional padding override for all sides.
         cell_padding_top: Optional top padding override.
@@ -1044,9 +1044,9 @@ class Table(Block):
         border_color: str | None = None,
         body_background_color: str | None = None,
         alternate_row_background_color: str | None = None,
-        cell_horizontal_alignment: str | None = None,
+        cell_text_alignment: str | None = None,
         cell_vertical_alignment: str | None = None,
-        header_horizontal_alignment: str | None = None,
+        header_text_alignment: str | None = None,
         header_vertical_alignment: str | None = None,
         cell_padding: float | None = None,
         cell_padding_top: float | None = None,
@@ -1092,9 +1092,9 @@ class Table(Block):
             border_color=border_color,
             body_background_color=body_background_color,
             alternate_row_background_color=alternate_row_background_color,
-            cell_horizontal_alignment=cell_horizontal_alignment,
+            cell_text_alignment=cell_text_alignment,
             cell_vertical_alignment=cell_vertical_alignment,
-            header_horizontal_alignment=header_horizontal_alignment,
+            header_text_alignment=header_text_alignment,
             header_vertical_alignment=header_vertical_alignment,
             cell_padding=cell_padding,
             cell_padding_top=cell_padding_top,
@@ -1179,7 +1179,7 @@ class Table(Block):
                 background_color=self.style.header_background_color,
                 text_color=self.style.header_text_color,
                 bold=True,
-                horizontal_alignment=self.style.header_horizontal_alignment,
+                text_alignment=self.style.header_text_alignment,
                 vertical_alignment=self.style.header_vertical_alignment,
             )
 
@@ -1192,7 +1192,7 @@ class Table(Block):
             background_color = self.style.alternate_row_background_color
         return TableCellStyle(
             background_color=background_color,
-            horizontal_alignment=self.style.cell_horizontal_alignment,
+            text_alignment=self.style.cell_text_alignment,
             vertical_alignment=self.style.cell_vertical_alignment,
         )
 
@@ -1217,9 +1217,9 @@ class Table(Block):
         border_color: str | None = None,
         body_background_color: str | None = None,
         alternate_row_background_color: str | None = None,
-        cell_horizontal_alignment: str | None = None,
+        cell_text_alignment: str | None = None,
         cell_vertical_alignment: str | None = None,
-        header_horizontal_alignment: str | None = None,
+        header_text_alignment: str | None = None,
         header_vertical_alignment: str | None = None,
         cell_padding: float | None = None,
         cell_padding_top: float | None = None,
@@ -1250,9 +1250,9 @@ class Table(Block):
             border_color: Optional border color override.
             body_background_color: Optional body background color override.
             alternate_row_background_color: Optional alternating row background.
-            cell_horizontal_alignment: Optional body cell horizontal alignment.
+            cell_text_alignment: Optional body cell text alignment.
             cell_vertical_alignment: Optional body cell vertical alignment.
-            header_horizontal_alignment: Optional header horizontal alignment.
+            header_text_alignment: Optional header cell text alignment.
             header_vertical_alignment: Optional header vertical alignment.
             cell_padding: Optional padding override for all sides.
             cell_padding_top: Optional top padding override.
@@ -1292,9 +1292,9 @@ class Table(Block):
             border_color=border_color,
             body_background_color=body_background_color,
             alternate_row_background_color=alternate_row_background_color,
-            cell_horizontal_alignment=cell_horizontal_alignment,
+            cell_text_alignment=cell_text_alignment,
             cell_vertical_alignment=cell_vertical_alignment,
-            header_horizontal_alignment=header_horizontal_alignment,
+            header_text_alignment=header_text_alignment,
             header_vertical_alignment=header_vertical_alignment,
             cell_padding=cell_padding,
             cell_padding_top=cell_padding_top,

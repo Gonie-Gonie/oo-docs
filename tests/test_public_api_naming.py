@@ -263,6 +263,32 @@ def test_table_public_api_hides_renderer_helper_methods() -> None:
     assert expected <= members
 
 
+def test_table_alignment_fields_use_text_alignment_names() -> None:
+    cell_style_fields = {field.name for field in fields(oodocs.TableCellStyle)}
+    cell_fields = {field.name for field in fields(oodocs.TableCell)}
+    table_style_fields = {field.name for field in fields(oodocs.TableStyle)}
+    table_parameters = set(inspect.signature(oodocs.Table).parameters)
+    table_cell_parameters = set(inspect.signature(oodocs.TableCell).parameters)
+    dataframe_parameters = set(inspect.signature(oodocs.Table.from_dataframe).parameters)
+
+    assert "horizontal_alignment" not in cell_style_fields
+    assert "text_alignment" in cell_style_fields
+    assert "horizontal_alignment" not in cell_fields
+    assert "text_alignment" in cell_fields
+    assert "horizontal_alignment" not in table_cell_parameters
+    assert "text_alignment" in table_cell_parameters
+
+    forbidden_table_names = {"cell_horizontal_alignment", "header_horizontal_alignment"}
+    expected_table_names = {"cell_text_alignment", "header_text_alignment"}
+
+    assert forbidden_table_names.isdisjoint(table_style_fields)
+    assert expected_table_names <= table_style_fields
+    assert forbidden_table_names.isdisjoint(table_parameters)
+    assert expected_table_names <= table_parameters
+    assert forbidden_table_names.isdisjoint(dataframe_parameters)
+    assert expected_table_names <= dataframe_parameters
+
+
 def test_textbox_uses_explicit_alignment_field_names() -> None:
     field_names = {field.name for field in fields(oodocs.TextBox)}
     parameter_names = set(inspect.signature(oodocs.TextBox).parameters)

@@ -524,7 +524,7 @@ def test_common_block_styles_accept_direct_kwargs() -> None:
         headers=["A"],
         rows=[["B"]],
         header_background_color="#AABBCC",
-        cell_horizontal_alignment="center",
+        cell_text_alignment="center",
     )
     contents = TableOfContents(level_styles={1: {"bold": False, "space_after": 1}})
 
@@ -544,7 +544,7 @@ def test_common_block_styles_accept_direct_kwargs() -> None:
     assert box.style.padding == 8
     assert box.style.width == 3.0
     assert table.style.header_background_color == "AABBCC"
-    assert table.style.cell_horizontal_alignment == "center"
+    assert table.style.cell_text_alignment == "center"
     assert contents.style_for_level(1).bold is False
     assert contents.style_for_level(1).space_after == 1
 
@@ -1004,25 +1004,25 @@ def test_table_accepts_dataframe_like_inputs_and_spans() -> None:
 def test_table_cell_alignment_options_are_validated() -> None:
     cell = TableCell(
         "42",
-        horizontal_alignment="right",
+        text_alignment="right",
         vertical_alignment="center",
     )
     style = TableStyle(
-        cell_horizontal_alignment="center",
+        cell_text_alignment="center",
         cell_vertical_alignment="bottom",
-        header_horizontal_alignment="right",
+        header_text_alignment="right",
         header_vertical_alignment="middle",
     )
 
-    assert cell.horizontal_alignment == "right"
+    assert cell.text_alignment == "right"
     assert cell.vertical_alignment == "middle"
-    assert style.cell_horizontal_alignment == "center"
+    assert style.cell_text_alignment == "center"
     assert style.cell_vertical_alignment == "bottom"
-    assert style.header_horizontal_alignment == "right"
+    assert style.header_text_alignment == "right"
     assert style.header_vertical_alignment == "middle"
 
     try:
-        TableCell("bad", horizontal_alignment="diagonal")
+        TableCell("bad", text_alignment="diagonal")
     except ValueError as exc:
         assert "alignment" in str(exc)
     else:
@@ -1931,7 +1931,7 @@ def test_table_cell_alignment_renders_to_all_outputs(tmp_path: Path) -> None:
                 [
                     TableCell(
                         "Metric",
-                        horizontal_alignment="center",
+                        text_alignment="center",
                         vertical_alignment="middle",
                     ),
                     "Value",
@@ -1942,15 +1942,15 @@ def test_table_cell_alignment_renders_to_all_outputs(tmp_path: Path) -> None:
                     "Latency",
                     TableCell(
                         "14 ms",
-                        horizontal_alignment="right",
+                        text_alignment="right",
                         vertical_alignment="bottom",
                     ),
                 ],
             ],
             style=TableStyle(
-                header_horizontal_alignment="center",
+                header_text_alignment="center",
                 header_vertical_alignment="middle",
-                cell_horizontal_alignment="left",
+                cell_text_alignment="left",
                 cell_vertical_alignment="top",
             ),
         ),

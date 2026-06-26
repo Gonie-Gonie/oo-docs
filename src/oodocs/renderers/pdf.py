@@ -1931,14 +1931,14 @@ class PdfRenderer:
                 fontName=self._resolve_font(theme.body_font_name, cell_bold, cell_italic),
                 textColor=cell_text_color,
             )
-            cell_horizontal_alignment = self._table_cell_horizontal_alignment(
+            cell_text_alignment = self._table_cell_text_alignment(
                 placement,
                 block,
             ) or "left"
             paragraph_style = RLParagraphStyle(
-                f"{paragraph_style.name}Cell{cell_horizontal_alignment}",
+                f"{paragraph_style.name}Cell{cell_text_alignment}",
                 parent=paragraph_style,
-                alignment=ALIGNMENTS[cell_horizontal_alignment],
+                alignment=ALIGNMENTS[cell_text_alignment],
             )
             table_rows[placement.row][placement.column] = RLParagraph(
                 self._inline_markup(
@@ -1984,7 +1984,7 @@ class PdfRenderer:
                         placement.column + placement.cell.colspan - 1,
                         placement.row + placement.cell.rowspan - 1,
                     ),
-                    TABLE_CELL_ALIGNMENTS[cell_horizontal_alignment],
+                    TABLE_CELL_ALIGNMENTS[cell_text_alignment],
                 )
             )
             if effective_style.background_color is not None:
@@ -2084,12 +2084,12 @@ class PdfRenderer:
             return self._mark_float_story(story)
         return story
 
-    def _table_cell_horizontal_alignment(
+    def _table_cell_text_alignment(
         self,
         placement: object,
         block: Table,
     ) -> str | None:
-        return block._effective_cell_style(placement).horizontal_alignment
+        return block._effective_cell_style(placement).text_alignment
 
     def _table_cell_vertical_alignment(
         self,

@@ -2553,11 +2553,11 @@ class DocxRenderer:
 
             paragraph = target_cell.paragraphs[0]
             effective_style = table_block._effective_cell_style(cell_placement)
-            cell_horizontal_alignment = self._table_cell_horizontal_alignment(
+            cell_text_alignment = self._table_cell_text_alignment(
                 cell_placement,
                 table_block,
             ) or "left"
-            paragraph.alignment = ALIGNMENTS[cell_horizontal_alignment]
+            paragraph.alignment = ALIGNMENTS[cell_text_alignment]
             cell_vertical_alignment = self._table_cell_vertical_alignment(
                 cell_placement,
                 table_block,
@@ -2585,12 +2585,12 @@ class DocxRenderer:
             render_caption()
         self._apply_media_placement_after(container, word_document, media_placement)
 
-    def _table_cell_horizontal_alignment(
+    def _table_cell_text_alignment(
         self,
         placement: object,
         table_block: Table,
     ) -> str | None:
-        return table_block._effective_cell_style(placement).horizontal_alignment
+        return table_block._effective_cell_style(placement).text_alignment
 
     def _table_cell_vertical_alignment(
         self,
