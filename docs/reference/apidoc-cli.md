@@ -2,14 +2,14 @@
 
 All commands are available under `oodocs apidoc` or `python -m oodocs apidoc`.
 The CLI collects, checks, snapshots, and diffs API object data. Rendered API
-documents are created through the Python API with `ApiBuildConfig.save_all(...)`.
+documents are created through the Python API with `ApiHelpBookConfig.save_all(...)`.
 
 ## Initialize Config
 
 Create repository-local apidoc settings:
 
 ```powershell
-python -m oodocs apidoc init . --collector griffe --public-policy __all__ --presentation-profile website --outputs html --out-dir artifacts/api
+python -m oodocs apidoc init . --collector griffe --public-policy __all__ --presentation website --outputs html --out-dir artifacts/api
 ```
 
 `init` can validate custom parser styles registered by modules inside the
@@ -23,9 +23,9 @@ python -m oodocs apidoc init C:\work\mypkg --docstring-parser-module docs_parser
 Render from that config in Python:
 
 ```python
-from oodocs.apidoc import ApiBuildConfig
+from oodocs.apidoc import ApiHelpBookConfig
 
-build = ApiBuildConfig.from_pyproject(".")
+build = ApiHelpBookConfig.from_pyproject(".")
 outputs = build.save_all(".")
 ```
 
@@ -88,24 +88,24 @@ diff.to_document().save_all("artifacts/api-diff", stem="api-diff")
 
 ## Render API Documents
 
-Use `ApiBuildConfig` when API object data should be composed into OODocs
+Use `ApiHelpBookConfig` when API object data should be composed into OODocs
 documents:
 
 ```python
-from oodocs.apidoc import ApiBuildConfig
+from oodocs.apidoc import ApiHelpBookConfig
 
-build = ApiBuildConfig.from_pyproject(".")
+build = ApiHelpBookConfig.from_pyproject(".")
 outputs = build.save_all(".")
 ```
 
 For ad-hoc rendering without a config file:
 
 ```python
-from oodocs.apidoc import ApiBuildConfig, ApiCollectConfig
+from oodocs.apidoc import ApiHelpBookConfig, ApiCollectConfig
 
-build = ApiBuildConfig(
+build = ApiHelpBookConfig(
     collection=ApiCollectConfig(collector="griffe", public_policy="__all__"),
-    profile="reference",
+    presentation="reference",
     output_formats=("docx", "pdf", "html"),
     output_dir="artifacts/api",
     sidecars=True,

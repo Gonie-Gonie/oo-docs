@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Sequence
 
 from oodocs.apidoc.collect import collect_api
-from oodocs.apidoc.config import ApiBuildConfig, ApiCollectConfig
+from oodocs.apidoc.config import ApiHelpBookConfig, ApiCollectConfig
 from oodocs.apidoc.coverage import check_api_docs
 from oodocs.apidoc.diff import ApiSnapshot, diff_api
 from oodocs.apidoc.docstring import (
@@ -73,8 +73,8 @@ def _build_parser() -> argparse.ArgumentParser:
     init.add_argument("--outputs", default="docx,pdf,html", help="Default comma-separated output formats.")
     init.add_argument("--stem", help="Default output file stem.")
     init.add_argument(
-        "--presentation-profile",
-        default="reference",
+        "--presentation",
+        default="help",
         help="Default presentation profile.",
     )
     init.add_argument("--sidecars", action="store_true", default=True, help="Write sidecars by default.")
@@ -296,9 +296,9 @@ def _run_init(args: argparse.Namespace) -> int:
             object_include_patterns=args.object_include_patterns,
             object_exclude_patterns=args.object_exclude_patterns,
         )
-    config = ApiBuildConfig(
+    config = ApiHelpBookConfig(
         collection=collection,
-        profile=args.presentation_profile,
+        presentation=args.presentation,
         output_formats=_split_outputs(args.outputs),
         stem=args.stem,
         max_level=args.max_level,
@@ -376,20 +376,20 @@ def _collect_from_args(
     return collect_api(args.package, config=_collect_config_from_args(args, config))
 
 
-def _build_config_from_args(args: argparse.Namespace) -> ApiBuildConfig:
+def _build_config_from_args(args: argparse.Namespace) -> ApiHelpBookConfig:
     _load_docstring_parser_modules_from_args(args)
     if not args.config:
-        return ApiBuildConfig()
-    return ApiBuildConfig.load_file(args.config, target=_target_from_args(args))
+        return ApiHelpBookConfig()
+    return ApiHelpBookConfig.load_file(args.config, target=_target_from_args(args))
 
 
 def _effective_build_config_from_args(
     args: argparse.Namespace,
-) -> ApiBuildConfig:
+) -> ApiHelpBookConfig:
     base = _build_config_from_args(args)
-    return ApiBuildConfig(
+    return ApiHelpBookConfig(
         collection=_collect_config_from_args(args, base.collection),
-        profile=base.profile,
+        presentation=base.presentation,
         output_formats=base.output_formats,
         stem=base.stem,
         max_level=base.max_level,

@@ -18,7 +18,7 @@ from example_regression import (
 import pytest
 
 from oodocs.apidoc import (
-    ApiBuildConfig,
+    ApiHelpBookConfig,
     ApiCollectConfig,
     ApiCoverageResult,
     ApiDiffResult,
@@ -33,7 +33,7 @@ def test_apidoc_build_config_saves_html_and_sidecars_for_general_repo(tmp_path) 
     package_dir = write_sample_package(tmp_path)
     output_dir = tmp_path / "api"
 
-    ApiBuildConfig(
+    ApiHelpBookConfig(
         collection=ApiCollectConfig(collector="inspect", public_policy="__all__"),
         output_formats=("html",),
         output_dir=str(output_dir),
@@ -57,9 +57,9 @@ def test_apidoc_build_config_auto_collector_saves_full_bundle_for_general_repo(
     package_dir = write_sample_package(tmp_path)
     output_dir = tmp_path / "auto-api"
 
-    ApiBuildConfig(
+    ApiHelpBookConfig(
         collection=ApiCollectConfig(collector="auto", public_policy="__all__"),
-        profile="compact",
+        presentation="compact",
         output_formats=("docx", "pdf", "html"),
         output_dir=str(output_dir),
         sidecars=True,
@@ -78,10 +78,11 @@ def test_apidoc_build_config_auto_collector_saves_full_bundle_for_general_repo(
         docx_path,
         required_paragraphs=(
             "samplepkg API Reference",
-            "1 API Documentation Coverage",
-            "2 samplepkg",
+            "1 API Contents",
+            "2 Public API",
             "2.2 samplepkg.Widget",
             "2.3 samplepkg.make_widget",
+            "3 API Documentation Coverage",
         ),
         min_tables=4,
     )
@@ -121,12 +122,12 @@ def test_apidoc_build_config_saves_full_reference_bundle_from_json_config(tmp_pa
     package_dir = write_sample_package(tmp_path)
     output_dir = tmp_path / "reference-api"
     config_path = tmp_path / "apidoc-build.json"
-    ApiBuildConfig.from_dict(
+    ApiHelpBookConfig.from_dict(
         {
             "collector": "inspect",
             "public_policy": "__all__",
             "docstring_style": "google",
-            "profile": "compact",
+            "presentation": "compact",
             "formats": ["docx", "pdf", "html"],
             "out": str(output_dir),
             "stem": "sample-reference",
@@ -134,7 +135,7 @@ def test_apidoc_build_config_saves_full_reference_bundle_from_json_config(tmp_pa
         }
     ).save_json(config_path)
 
-    ApiBuildConfig.load_json(config_path).save_all(package_dir)
+    ApiHelpBookConfig.load_json(config_path).save_all(package_dir)
 
     docx_path = output_dir / "sample-reference.docx"
     pdf_path = output_dir / "sample-reference.pdf"
@@ -151,11 +152,12 @@ def test_apidoc_build_config_saves_full_reference_bundle_from_json_config(tmp_pa
         docx_path,
         required_paragraphs=(
             "samplepkg API Reference",
-            "1 API Documentation Coverage",
-            "2 samplepkg",
+            "1 API Contents",
+            "2 Public API",
             "2.1 samplepkg.CONSTANT",
             "2.2 samplepkg.Widget",
             "2.3 samplepkg.make_widget",
+            "3 API Documentation Coverage",
         ),
         min_tables=4,
     )
@@ -254,7 +256,7 @@ def test_apidoc_cli_json_config_loads_repo_local_parser_modules(tmp_path) -> Non
                 "public_policy": "__all__",
                 "docstring_style": "json-config-brief",
                 "docstring_parser_modules": ["json_config_parsers"],
-                "profile": "compact",
+                "presentation": "compact",
                 "formats": ["html"],
                 "out": str(output_dir),
                 "stem": "jsonpkg-api",
@@ -268,7 +270,7 @@ def test_apidoc_cli_json_config_loads_repo_local_parser_modules(tmp_path) -> Non
     )
 
     assert "json-config-brief" not in docstring_parser_names()
-    ApiBuildConfig.load_file(config_path, target=repo).save_all(repo)
+    ApiHelpBookConfig.load_file(config_path, target=repo).save_all(repo)
 
     html_path = output_dir / "jsonpkg-api.html"
     api_path = output_dir / "jsonpkg-api.json"
@@ -347,7 +349,7 @@ def test_apidoc_cli_external_json_config_loads_target_parser_modules(tmp_path) -
                 "public_policy": "__all__",
                 "docstring_style": "external-json-brief",
                 "docstring_parser_modules": ["external_json_parsers"],
-                "profile": "compact",
+                "presentation": "compact",
                 "formats": ["html"],
                 "out": str(output_dir),
                 "stem": "externaljsonpkg-api",
@@ -361,7 +363,7 @@ def test_apidoc_cli_external_json_config_loads_target_parser_modules(tmp_path) -
     )
 
     assert "external-json-brief" not in docstring_parser_names()
-    ApiBuildConfig.load_file(config_path, target=repo).save_all(repo)
+    ApiHelpBookConfig.load_file(config_path, target=repo).save_all(repo)
 
     html_path = output_dir / "externaljsonpkg-api.html"
     api = ApiPackage.load_json(output_dir / "externaljsonpkg-api.json")
@@ -440,7 +442,7 @@ def test_apidoc_cli_external_json_config_loads_griffe_target_parser_modules(
                 "public_policy": "__all__",
                 "docstring_style": "external-griffe-json-brief",
                 "docstring_parser_modules": ["external_griffe_parsers"],
-                "profile": "compact",
+                "presentation": "compact",
                 "formats": ["html"],
                 "out": str(output_dir),
                 "stem": "externalgriffepkg-api",
@@ -454,7 +456,7 @@ def test_apidoc_cli_external_json_config_loads_griffe_target_parser_modules(
     )
 
     assert "external-griffe-json-brief" not in docstring_parser_names()
-    ApiBuildConfig.load_file(config_path, target=repo).save_all(repo)
+    ApiHelpBookConfig.load_file(config_path, target=repo).save_all(repo)
 
     html_path = output_dir / "externalgriffepkg-api.html"
     api = ApiPackage.load_json(output_dir / "externalgriffepkg-api.json")
@@ -772,7 +774,7 @@ def test_apidoc_build_config_saves_setuptools_package_dir_repo(tmp_path) -> None
     repo = write_setuptools_package_dir_repo(tmp_path)
     output_dir = tmp_path / "api"
 
-    ApiBuildConfig(
+    ApiHelpBookConfig(
         collection=ApiCollectConfig(collector="inspect", public_policy="__all__"),
         output_formats=("html",),
         output_dir=str(output_dir),
@@ -790,7 +792,7 @@ def test_apidoc_build_config_respects_explicit_public_policy(tmp_path) -> None:
     package_dir = write_sample_package(tmp_path)
     output_dir = tmp_path / "explicit-api"
 
-    ApiBuildConfig(
+    ApiHelpBookConfig(
         collection=ApiCollectConfig(
             collector="inspect",
             public_policy="explicit",
@@ -1053,7 +1055,7 @@ def test_apidoc_cli_init_loads_repo_local_docstring_parser_module(
                 "init_brief_parsers",
                 "--docstring-style",
                 "init-brief",
-                "--presentation-profile",
+                "--presentation",
                 "compact",
                 "--outputs",
                 "html",
@@ -1064,7 +1066,7 @@ def test_apidoc_cli_init_loads_repo_local_docstring_parser_module(
         == 0
     )
 
-    build_config = ApiBuildConfig.from_pyproject(repo)
+    build_config = ApiHelpBookConfig.from_pyproject(repo)
 
     assert build_config.collection.docstring_parser_modules == ("init_brief_parsers",)
     assert build_config.collection.docstring_parser().style == "init-brief"

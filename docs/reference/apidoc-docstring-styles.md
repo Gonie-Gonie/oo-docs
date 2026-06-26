@@ -243,9 +243,9 @@ docstring-parser-modules = ["docs_parsers"]
 ```
 
 ```python
-from oodocs.apidoc import ApiBuildConfig
+from oodocs.apidoc import ApiHelpBookConfig
 
-ApiBuildConfig.from_pyproject(".").save_all(".")
+ApiHelpBookConfig.from_pyproject(".").save_all(".")
 ```
 
 JSON config files use the same keys, which is useful for generated build
@@ -263,10 +263,10 @@ profiles or repository-local automation:
 ```
 
 ```python
-from oodocs.apidoc import ApiBuildConfig
+from oodocs.apidoc import ApiHelpBookConfig
 
 repo = r"C:\work\mypkg"
-ApiBuildConfig.load_file(r"C:\work\mypkg\apidoc-build.json", target=repo).save_all(repo)
+ApiHelpBookConfig.load_file(r"C:\work\mypkg\apidoc-build.json", target=repo).save_all(repo)
 ```
 
 When the config is loaded from a repository path, OODocs temporarily adds the
@@ -283,10 +283,10 @@ modules. This lets a command target another checkout without changing into it
 first:
 
 ```python
-from oodocs.apidoc import ApiBuildConfig
+from oodocs.apidoc import ApiHelpBookConfig
 
 repo = r"C:\work\mypkg"
-ApiBuildConfig.load_file(r"C:\work\mypkg\pyproject.toml", target=repo).save_all(repo)
+ApiHelpBookConfig.load_file(r"C:\work\mypkg\pyproject.toml", target=repo).save_all(repo)
 ```
 
 The Python API uses the same target-local import path policy when
@@ -308,10 +308,10 @@ reader adds both the config directory and target repository import roots while
 validating parser modules:
 
 ```python
-from oodocs.apidoc import ApiBuildConfig
+from oodocs.apidoc import ApiHelpBookConfig
 
 repo = r"C:\work\mypkg"
-build = ApiBuildConfig.load_file(r"C:\configs\mypkg-apidoc.json", target=repo)
+build = ApiHelpBookConfig.load_file(r"C:\configs\mypkg-apidoc.json", target=repo)
 outputs = build.save_all(repo, output_dir=r"C:\work\mypkg\artifacts\api")
 assert outputs["docx"].exists()
 assert outputs["pdf"].exists()

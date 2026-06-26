@@ -996,8 +996,8 @@
           "category": "apidoc-collector",
           "kind": "class",
           "module": "oodocs.apidoc.config",
-          "name": "ApiBuildConfig",
-          "qualname": "oodocs.apidoc.config.ApiBuildConfig"
+          "name": "ApiHelpBookConfig",
+          "qualname": "oodocs.apidoc.config.ApiHelpBookConfig"
         },
         {
           "category": "apidoc-composition",

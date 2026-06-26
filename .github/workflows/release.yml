@@ -1,4 +1,4 @@
-﻿name: Release
+name: Release
 
 on:
   push:
@@ -80,9 +80,9 @@ jobs:
           python examples/style_cleanup_smoke/main.py
           python examples/template_presets/build_all.py
           python - <<'PY'
-          from oodocs.apidoc import ApiBuildConfig
+          from oodocs.apidoc import ApiHelpBookConfig
 
-          ApiBuildConfig.from_pyproject(".").save_all(".")
+          ApiHelpBookConfig.from_pyproject(".").save_all(".")
           PY
 
       - name: Build release evidence
@@ -181,5 +181,3 @@ jobs:
 
       - name: Publish distributions to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
-
-

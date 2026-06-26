@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import importlib.util
 import json
@@ -29,7 +29,7 @@ from example_regression import (
 )
 from oodocs import Chapter, Document, Paragraph
 from oodocs.apidoc import (
-    ApiBuildConfig,
+    ApiHelpBookConfig,
     ApiCollectConfig,
     ApiCoverageResult,
     ApiDocstringParser,
@@ -72,7 +72,7 @@ def _save_api_reference(
     docstring_style: object = "auto",
     sidecars: bool = True,
 ) -> None:
-    ApiBuildConfig(
+    ApiHelpBookConfig(
         collection=ApiCollectConfig(
             collector=collector,
             public_policy=public_policy,
@@ -519,13 +519,13 @@ def test_general_repo_auto_parser_object_survives_build_config_json_roundtrip(
     repo = write_mixed_docstring_repo(tmp_path)
     config_path = tmp_path / "mixed-apidoc-build.json"
     output_dir = tmp_path / "roundtrip-rendered"
-    build = ApiBuildConfig(
+    build = ApiHelpBookConfig(
         collection=ApiCollectConfig(
             collector="inspect",
             public_policy="__all__",
             docstring_style=ApiDocstringParser.auto(),
         ),
-        profile="compact",
+        presentation="compact",
         output_formats=("docx", "pdf", "html"),
         output_dir=str(output_dir),
         stem="mixed-roundtrip",
@@ -533,7 +533,7 @@ def test_general_repo_auto_parser_object_survives_build_config_json_roundtrip(
     )
 
     build.save_json(config_path)
-    readback = ApiBuildConfig.load_json(config_path, target=repo)
+    readback = ApiHelpBookConfig.load_json(config_path, target=repo)
     api = readback.collect(repo)
     method = api.find_object("mixedpkg.Client.connect")
     function = api.find_object("mixedpkg.connect")
@@ -559,9 +559,9 @@ def test_general_repo_auto_parser_object_survives_build_config_json_roundtrip(
         outputs["docx"],
         required_paragraphs=(
             "mixedpkg API Reference",
-            "1 API Documentation Coverage",
-            "2 mixedpkg",
-            "3 mixedpkg.core",
+            "1 API Contents",
+            "2 Public API",
+            "3 API Documentation Coverage",
         ),
         min_tables=6,
     )
@@ -886,7 +886,7 @@ def test_general_repo_api_objects_example_cli_targets_repo_path(tmp_path) -> Non
 
 def test_general_repo_pyproject_auto_parser_builds_cli_bundle(tmp_path) -> None:
     repo = write_mixed_docstring_repo(tmp_path)
-    build_config = ApiBuildConfig.from_pyproject(repo)
+    build_config = ApiHelpBookConfig.from_pyproject(repo)
     parser = build_config.collection.docstring_parser()
     output_dir = tmp_path / "bundle"
     example_output_dir = tmp_path / "example-config-bundle"
@@ -901,7 +901,7 @@ def test_general_repo_pyproject_auto_parser_builds_cli_bundle(tmp_path) -> None:
     assert method is not None
     assert method.metadata["docstring_style"] == "numpy"
 
-    ApiBuildConfig.from_pyproject(repo).save_all(repo, output_dir=output_dir)
+    ApiHelpBookConfig.from_pyproject(repo).save_all(repo, output_dir=output_dir)
 
     html_path = output_dir / "mixedpkg-api.html"
     api_path = output_dir / "mixedpkg-api.json"
@@ -1040,10 +1040,11 @@ def test_general_python_file_module_targets_build_reference_and_example(
         cli_docx,
         required_paragraphs=(
             "singlemod API Reference",
-            "1 API Documentation Coverage",
-            "2 singlemod",
+            "1 API Contents",
+            "2 Public API",
             "2.1 singlemod.Client",
             "2.2 singlemod.connect",
+            "3 API Documentation Coverage",
         ),
         min_tables=6,
     )
@@ -1439,8 +1440,9 @@ def test_general_packaging_variants_build_complete_cli_reference(
         docx_path,
         required_paragraphs=(
             f"{expected_package} API Reference",
-            "1 API Documentation Coverage",
-            f"2 {expected_package}",
+            "1 API Contents",
+            "2 Public API",
+            "3 API Documentation Coverage",
         ),
         min_tables=2,
     )
@@ -1471,7 +1473,7 @@ def test_api_objects_example_config_loads_repo_docstring_parser_modules(
     tmp_path: Path,
 ) -> None:
     repo = write_custom_docstring_parser_repo(tmp_path)
-    build_config = ApiBuildConfig.from_pyproject(repo)
+    build_config = ApiHelpBookConfig.from_pyproject(repo)
     output_dir = tmp_path / "custom-parser-example"
     example = _load_api_objects_example()
 
@@ -1572,7 +1574,7 @@ def test_api_objects_example_external_json_config_loads_target_parser_modules(
                 "public_policy": "__all__",
                 "docstring_style": "example-json-brief",
                 "docstring_parser_modules": ["example_json_parsers"],
-                "profile": "compact",
+                "presentation": "compact",
                 "formats": ["html"],
                 "sidecars": True,
             },
@@ -1627,7 +1629,7 @@ def test_build_config_save_all_targets_repo_with_parser_modules(
                 "public_policy": "__all__",
                 "docstring_style": "example-brief",
                 "docstring_parser_modules": ["example_brief_parsers"],
-                "profile": "compact",
+                "presentation": "compact",
                 "formats": ["docx", "pdf", "html"],
                 "out": str(output_dir),
                 "sidecars": True,
@@ -1639,12 +1641,12 @@ def test_build_config_save_all_targets_repo_with_parser_modules(
         encoding="utf-8",
     )
 
-    build = ApiBuildConfig.load_file(config_path, target=repo)
+    build = ApiHelpBookConfig.load_file(config_path, target=repo)
     api = build.collect(repo)
     coverage = build.check_docs(repo, fail_under=1.0)
     snapshot = build.snapshot(repo)
     snapshot_path = build.save_snapshot(repo, tmp_path / "brief-snapshot.json")
-    document = build.to_document(repo)
+    document = build.to_help_book(repo)
     outputs = build.save_all(repo)
     run = api.find_object("briefpkg.run")
 
@@ -1668,10 +1670,11 @@ def test_build_config_save_all_targets_repo_with_parser_modules(
         outputs["docx"],
         required_paragraphs=(
             "briefpkg API Reference",
-            "1 API Documentation Coverage",
-            "2 briefpkg",
+            "1 API Contents",
+            "2 Public API",
             "2.1 briefpkg.Runner",
             "2.2 briefpkg.run",
+            "3 API Documentation Coverage",
         ),
         min_tables=2,
     )
@@ -1735,5 +1738,3 @@ def test_collect_api_accepts_config_with_repo_local_parser_modules(
 
     assert run is not None
     assert run.summary == "brief:Run custom command."
-
-

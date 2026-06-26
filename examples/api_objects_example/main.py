@@ -8,7 +8,7 @@ from typing import Sequence
 
 from oodocs import Chapter, Document, Paragraph
 from oodocs.apidoc import (
-    ApiBuildConfig,
+    ApiHelpBookConfig,
     ApiCollectConfig,
     ApiCoverageResult,
     ApiDocstringParser,
@@ -78,9 +78,9 @@ def collect_target_api(
 
         ```python
         from examples.api_objects_example.main import collect_target_api
-        from oodocs.apidoc import ApiBuildConfig
+        from oodocs.apidoc import ApiHelpBookConfig
 
-        build = ApiBuildConfig.from_pyproject(".")
+        build = ApiHelpBookConfig.from_pyproject(".")
         api = collect_target_api(".", config=build.collection)
         ```
     """
@@ -312,7 +312,7 @@ def render_apidoc_example_bundle(
     output_dir: str | Path = ARTIFACT_DIR,
     *,
     target: str | Path = "oodocs",
-    config: ApiBuildConfig | ApiCollectConfig | None = None,
+    config: ApiHelpBookConfig | ApiCollectConfig | None = None,
     public_policy: str | None = None,
     collector: str | None = None,
     docstring_style: str | ApiDocstringParser | None = None,
@@ -354,12 +354,12 @@ def render_apidoc_example_bundle(
 
         ```python
         from examples.api_objects_example.main import render_apidoc_example_bundle
-        from oodocs.apidoc import ApiBuildConfig
+        from oodocs.apidoc import ApiHelpBookConfig
 
         outputs = render_apidoc_example_bundle(
             target=".",
             output_dir="artifacts/api-objects-example",
-            config=ApiBuildConfig.from_pyproject("."),
+            config=ApiHelpBookConfig.from_pyproject("."),
             verbose=True,
         )
         help_book_html = outputs["help_book_html"]
@@ -369,9 +369,9 @@ def render_apidoc_example_bundle(
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
 
-    build_config: ApiBuildConfig | None = None
+    build_config: ApiHelpBookConfig | None = None
     collect_config: ApiCollectConfig | None = None
-    if isinstance(config, ApiBuildConfig):
+    if isinstance(config, ApiHelpBookConfig):
         build_config = config
         collect_config = config.collection
     elif isinstance(config, ApiCollectConfig):
@@ -508,7 +508,7 @@ def main(argv: Sequence[str] | None = None) -> None:
 
     args = _parse_args(argv)
     build_config = (
-        ApiBuildConfig.load_file(args.config, target=args.target)
+        ApiHelpBookConfig.load_file(args.config, target=args.target)
         if args.config
         else None
     )

@@ -1,4 +1,4 @@
-﻿# API Objects Example
+# API Objects Example
 
 This example shows the composable API-documentation workflow for any Python
 package, module, file, or repository target:
@@ -22,7 +22,7 @@ python examples/api_objects_example/main.py . --config pyproject.toml
 `--config` accepts a project root, `pyproject.toml`, or JSON config produced by
 `oodocs apidoc init`. When supplied, the example reuses the same collector,
 public boundary, docstring parser modules, object filters, formats, and
-max-level settings as `ApiBuildConfig.save_all(...)`. JSON config files
+max-level settings as `ApiHelpBookConfig.save_all(...)`. JSON config files
 can live outside the target checkout; the example still adds the target root
 and configured source roots such as `src/`, `package-dir`, or
 `packages.find.where` entries, plus hatch/Poetry package roots, while loading
@@ -46,5 +46,3 @@ saved as DOCX, PDF, and HTML unless `--outputs` is supplied. The generated files
 can be reviewed, published, or attached to release evidence directly. The
 sidecars use the `oodocs-api-object-tree.json` and
 `oodocs-api-coverage.{json,csv}` filenames.
-
-

@@ -253,7 +253,7 @@ collector = "griffe"
 public-policy = "__all__"
 docstring-style = "auto"
 module-prefix = "mypkg"
-profile = "manual"
+presentation = "manual"
 formats = ["docx", "pdf", "html"]
 sidecars = true
 ```
@@ -265,9 +265,9 @@ should include several module families.
 Then build a full reference bundle or sidecars from Python:
 
 ```python
-from oodocs.apidoc import ApiBuildConfig
+from oodocs.apidoc import ApiHelpBookConfig
 
-ApiBuildConfig.from_pyproject(".").save_all(".")
+ApiHelpBookConfig.from_pyproject(".").save_all(".")
 ```
 
 ## Custom Parser Modules
@@ -292,5 +292,5 @@ docstring-parser-modules = ["docs_parsers"]
 ```
 
 `collect_api(...)`, `check_api_docs(...)`, and
-`ApiBuildConfig.from_pyproject(...).save_all(...)` will all use the registered
+`ApiHelpBookConfig.from_pyproject(...).save_all(...)` will all use the registered
 parser after the module is imported.

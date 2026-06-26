@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from pathlib import Path
 
@@ -14,7 +14,7 @@ def test_release_workflow_uploads_curated_assets_only() -> None:
     assert "python examples/api_objects_example/main.py . --config pyproject.toml" in workflow
     assert "python examples/style_cleanup_smoke/main.py" in workflow
     assert "python examples/template_presets/build_all.py" in workflow
-    assert 'ApiBuildConfig.from_pyproject(".").save_all(".")' in workflow
+    assert 'ApiHelpBookConfig.from_pyproject(".").save_all(".")' in workflow
     assert "artifacts/api-objects-example/oodocs-api-object-composition.pdf" in workflow
     assert "artifacts/native-benchmark-report/native-python-benchmark.pdf" in workflow
     assert "artifacts/template/journal-article-template.pdf" in workflow
@@ -37,5 +37,3 @@ def test_release_workflow_uploads_curated_assets_only() -> None:
     assert "artifacts/style-cleanup-smoke/style-cleanup-smoke.pdf" not in workflow
     assert "feature-coverage.csv" not in workflow
     assert "reproducibility-manifest.json" not in workflow
-
-

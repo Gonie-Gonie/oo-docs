@@ -14,7 +14,7 @@ from oodocs.apidoc.collect import collect_api, collect_module_api, collect_objec
 from oodocs.apidoc.builtin_categories import OODocs_API_CATEGORIES
 from oodocs.apidoc.categories import ApiCategory, GuideLink
 from oodocs.apidoc.config import (
-    ApiBuildConfig,
+    ApiHelpBookConfig,
     ApiCollectConfig,
     ApiCollectorName,
     ApiFallbackCollectorName,
@@ -78,7 +78,7 @@ from oodocs.apidoc.profiles import (
 
 __all__ = [
     "ApiCollectConfig",
-    "ApiBuildConfig",
+    "ApiHelpBookConfig",
     "ApiCategory",
     "ApiCollectorName",
     "ApiCoverageResult",

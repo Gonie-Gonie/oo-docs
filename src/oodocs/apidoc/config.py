@@ -59,7 +59,7 @@ _BUILD_CONFIG_KEYS = {
     "out",
     "output_dir",
     "output_formats",
-    "profile",
+    "presentation",
     "sidecars",
     "stem",
     "to",
@@ -758,12 +758,12 @@ class ApiCollectConfig:
 
 
 @dataclass(frozen=True, slots=True)
-class ApiBuildConfig:
-    """Reusable API reference rendering configuration.
+class ApiHelpBookConfig:
+    """Reusable API help-book rendering configuration.
 
     Attributes:
         collection: Collection settings used before rendering.
-        profile: Presentation profile name.
+        presentation: Presentation profile name.
         output_formats: Output formats passed to ``Document.save_all``.
         stem: Optional output file stem.
         max_level: Optional deepest nested API heading level.
@@ -777,15 +777,15 @@ class ApiBuildConfig:
         them from Python or the CLI:
 
         ```python
-        from oodocs.apidoc import ApiBuildConfig
+        from oodocs.apidoc import ApiHelpBookConfig
 
-        build = ApiBuildConfig.from_pyproject(".")
+        build = ApiHelpBookConfig.from_pyproject(".")
         outputs = build.save_all(".", output_dir="artifacts/api")
         ```
     """
 
     collection: ApiCollectConfig = field(default_factory=ApiCollectConfig)
-    profile: str = "reference"
+    presentation: str = "help"
     output_formats: tuple[str, ...] = ("docx", "pdf", "html")
     stem: str | None = None
     max_level: int | None = None
@@ -802,7 +802,7 @@ class ApiBuildConfig:
             if isinstance(self.collection, ApiCollectConfig)
             else ApiCollectConfig.from_dict(self.collection),  # type: ignore[arg-type]
         )
-        object.__setattr__(self, "profile", self.profile.strip().lower())
+        object.__setattr__(self, "presentation", self.presentation.strip().lower())
         object.__setattr__(self, "output_formats", normalize_output_formats(self.output_formats))
         object.__setattr__(self, "kind", _string_tuple(self.kind))
         if self.module_prefix is not None:
@@ -816,7 +816,7 @@ class ApiBuildConfig:
         self.validate()
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, object]) -> ApiBuildConfig:
+    def from_dict(cls, data: Mapping[str, object]) -> ApiHelpBookConfig:
         """Reconstruct build config from serialized data.
 
         Args:
@@ -827,15 +827,15 @@ class ApiBuildConfig:
 
         Examples:
             Build a config object from a deployment manifest and use it to
-            render a package reference:
+            render a package help book:
 
             ```python
-            from oodocs.apidoc import ApiBuildConfig
+            from oodocs.apidoc import ApiHelpBookConfig
 
-            build = ApiBuildConfig.from_dict({
+            build = ApiHelpBookConfig.from_dict({
                 "collector": "griffe",
                 "public_policy": "__all__",
-                "profile": "reference",
+                "presentation": "reference",
                 "formats": ["docx", "html"],
                 "out": "artifacts/api",
             })
@@ -852,7 +852,7 @@ class ApiBuildConfig:
         output_dir = normalized.get("output_dir", normalized.get("out"))
         return cls(
             collection=ApiCollectConfig.from_dict(normalized),
-            profile=str(normalized.get("profile", "reference")),
+            presentation=str(normalized.get("presentation", "help")),
             output_formats=_format_tuple(output_formats),
             stem=_optional_str(normalized.get("stem")),
             max_level=_optional_int(normalized.get("max_level")),
@@ -868,7 +868,7 @@ class ApiBuildConfig:
         path: PathLike = "pyproject.toml",
         *,
         target: object | None = None,
-    ) -> ApiBuildConfig:
+    ) -> ApiHelpBookConfig:
         """Read build config from ``pyproject.toml``.
 
         Args:
@@ -889,9 +889,9 @@ class ApiBuildConfig:
             Reuse the same build defaults stored in ``[tool.oodocs.apidoc]``:
 
             ```python
-            from oodocs.apidoc import ApiBuildConfig
+            from oodocs.apidoc import ApiHelpBookConfig
 
-            build = ApiBuildConfig.from_pyproject(".")
+            build = ApiHelpBookConfig.from_pyproject(".")
             outputs = build.save_all(".", output_dir="artifacts/api")
             ```
         """
@@ -913,7 +913,7 @@ class ApiBuildConfig:
         path: PathLike,
         *,
         target: object | None = None,
-    ) -> ApiBuildConfig:
+    ) -> ApiHelpBookConfig:
         """Read a build config JSON sidecar.
 
         Args:
@@ -926,12 +926,12 @@ class ApiBuildConfig:
             Validated build configuration.
 
         Examples:
-            Load a build config written by ``ApiBuildConfig.save_json(...)``:
+            Load a build config written by ``ApiHelpBookConfig.save_json(...)``:
 
             ```python
-            from oodocs.apidoc import ApiBuildConfig
+            from oodocs.apidoc import ApiHelpBookConfig
 
-            build = ApiBuildConfig.load_json("apidoc-build.json", target=".")
+            build = ApiHelpBookConfig.load_json("apidoc-build.json", target=".")
             outputs = build.save_all(".", output_dir="artifacts/api")
             ```
         """
@@ -946,7 +946,7 @@ class ApiBuildConfig:
         path: PathLike,
         *,
         target: object | None = None,
-    ) -> ApiBuildConfig:
+    ) -> ApiHelpBookConfig:
         """Load a build config from JSON or ``pyproject.toml``.
 
         Args:
@@ -962,10 +962,10 @@ class ApiBuildConfig:
             Let scripts accept either ``pyproject.toml`` or JSON config paths:
 
             ```python
-            from oodocs.apidoc import ApiBuildConfig
+            from oodocs.apidoc import ApiHelpBookConfig
 
-            build = ApiBuildConfig.load_file("pyproject.toml", target=".")
-            document = build.to_document(".")
+            build = ApiHelpBookConfig.load_file("pyproject.toml", target=".")
+            document = build.to_help_book(".")
             ```
         """
 
@@ -978,16 +978,16 @@ class ApiBuildConfig:
         """Validate build settings.
 
         Raises:
-            ValueError: If profile, formats, or heading depth are invalid.
+            ValueError: If presentation, formats, or heading depth are invalid.
 
         Examples:
             Validate build defaults before writing them into a repository:
 
             ```python
-            from oodocs.apidoc import ApiBuildConfig
+            from oodocs.apidoc import ApiHelpBookConfig
 
-            build = ApiBuildConfig(
-                profile="website",
+            build = ApiHelpBookConfig(
+                presentation="website",
                 output_formats=("html",),
             )
             build.validate()
@@ -996,7 +996,7 @@ class ApiBuildConfig:
 
         from oodocs.apidoc.profiles import resolve_presentation_profile
 
-        resolve_presentation_profile(self.profile)
+        resolve_presentation_profile(self.presentation)
         if self.max_level is not None and self.max_level < 1:
             raise ValueError("max_level must be >= 1")
         if not self.output_formats:
@@ -1018,9 +1018,9 @@ class ApiBuildConfig:
             repository with the configured parser object and object filters:
 
             ```python
-            from oodocs.apidoc import ApiBuildConfig
+            from oodocs.apidoc import ApiHelpBookConfig
 
-            build = ApiBuildConfig.load_file("apidoc-build.json", target=".")
+            build = ApiHelpBookConfig.load_file("apidoc-build.json", target=".")
             api = build.collect(".")
             assert api.modules
             ```
@@ -1035,7 +1035,7 @@ class ApiBuildConfig:
             module_prefix=self.module_prefix,
         )
 
-    def to_document(
+    def to_help_book(
         self,
         target: str | PathLike,
         title: str | None = None,
@@ -1043,7 +1043,7 @@ class ApiBuildConfig:
         settings: object | None = None,
         citations: object | None = None,
     ) -> Document:
-        """Collect a target and return a rendered API reference document.
+        """Collect a target and return a rendered API help-book document.
 
         Args:
             target: Importable package/module name, Python file, package
@@ -1058,18 +1058,18 @@ class ApiBuildConfig:
             ``save_html``, or ``save_all``.
 
         Examples:
-            Build a complete reference document from a repository config:
+            Build a complete help-book reference from a repository config:
 
             ```python
-            from oodocs.apidoc import ApiBuildConfig
+            from oodocs.apidoc import ApiHelpBookConfig
 
-            build = ApiBuildConfig.from_pyproject(".")
-            document = build.to_document(".")
+            build = ApiHelpBookConfig.from_pyproject(".")
+            document = build.to_help_book(".")
             document.save_all("artifacts/api", stem="mypkg-api")
             ```
         """
 
-        return _document_for_build(
+        return _help_book_for_build(
             self.collect(target),
             self,
             title=title,
@@ -1109,9 +1109,9 @@ class ApiBuildConfig:
             release script:
 
             ```python
-            from oodocs.apidoc import ApiBuildConfig
+            from oodocs.apidoc import ApiHelpBookConfig
 
-            build = ApiBuildConfig.from_pyproject(".")
+            build = ApiHelpBookConfig.from_pyproject(".")
             coverage = build.check_docs(".", fail_under=0.90)
             coverage.save_json("artifacts/api/coverage.json")
             ```
@@ -1143,9 +1143,9 @@ class ApiBuildConfig:
             builds:
 
             ```python
-            from oodocs.apidoc import ApiBuildConfig, diff_api
+            from oodocs.apidoc import ApiHelpBookConfig, diff_api
 
-            build = ApiBuildConfig.from_pyproject(".")
+            build = ApiHelpBookConfig.from_pyproject(".")
             base = build.snapshot(".")
             head = build.snapshot(".")
             diff = diff_api(base, head)
@@ -1171,9 +1171,9 @@ class ApiBuildConfig:
             Persist a release snapshot for later diffing:
 
             ```python
-            from oodocs.apidoc import ApiBuildConfig
+            from oodocs.apidoc import ApiHelpBookConfig
 
-            build = ApiBuildConfig.from_pyproject(".")
+            build = ApiHelpBookConfig.from_pyproject(".")
             snapshot_path = build.save_snapshot(".", "artifacts/api-head.json")
             ```
         """
@@ -1223,10 +1223,10 @@ class ApiBuildConfig:
             loaded when ``load_file(..., target=repo)`` validates the config:
 
             ```python
-            from oodocs.apidoc import ApiBuildConfig
+            from oodocs.apidoc import ApiHelpBookConfig
 
             repo = r"C:\\work\\mypkg"
-            build = ApiBuildConfig.load_file(r"C:\\configs\\mypkg-apidoc.json", target=repo)
+            build = ApiHelpBookConfig.load_file(r"C:\\configs\\mypkg-apidoc.json", target=repo)
             outputs = build.save_all(repo)
             assert outputs["html"].exists()
             assert outputs["api-json"].exists()
@@ -1236,12 +1236,12 @@ class ApiBuildConfig:
         api = self.collect(target)
         resolved_output_dir = output_dir if output_dir is not None else self.output_dir
         if resolved_output_dir is None:
-            raise ValueError("ApiBuildConfig.save_all requires output_dir or config output_dir")
+            raise ValueError("ApiHelpBookConfig.save_all requires output_dir or config output_dir")
         resolved_stem = stem or self.stem or f"{api.name.replace('.', '-')}-api"
         resolved_formats = normalize_output_formats(
             tuple(formats) if formats is not None else self.output_formats
         )
-        document = _document_for_build(
+        document = _help_book_for_build(
             api,
             self,
             title=title,
@@ -1269,10 +1269,10 @@ class ApiBuildConfig:
             Generate config data for a custom repository setup wizard:
 
             ```python
-            from oodocs.apidoc import ApiBuildConfig
+            from oodocs.apidoc import ApiHelpBookConfig
 
-            payload = ApiBuildConfig(
-                profile="website",
+            payload = ApiHelpBookConfig(
+                presentation="website",
                 output_formats=("html",),
                 output_dir="artifacts/api",
             ).to_dict()
@@ -1282,7 +1282,7 @@ class ApiBuildConfig:
         values = self.collection.to_dict()
         values.update(
             {
-                "profile": self.profile,
+                "presentation": self.presentation,
                 "output_formats": list(self.output_formats),
                 "stem": self.stem,
                 "max_level": self.max_level,
@@ -1307,10 +1307,10 @@ class ApiBuildConfig:
             Write build defaults for a repository-local automation script:
 
             ```python
-            from oodocs.apidoc import ApiBuildConfig
+            from oodocs.apidoc import ApiHelpBookConfig
 
-            build = ApiBuildConfig(
-                profile="reference",
+            build = ApiHelpBookConfig(
+                presentation="reference",
                 output_dir="artifacts/api",
                 sidecars=True,
             )
@@ -1336,9 +1336,9 @@ class ApiBuildConfig:
             Generate a repository-local config block:
 
             ```python
-            from oodocs.apidoc import ApiBuildConfig
+            from oodocs.apidoc import ApiHelpBookConfig
 
-            text = ApiBuildConfig(profile="website", output_formats=("html",)).to_toml_section()
+            text = ApiHelpBookConfig(presentation="website", output_formats=("html",)).to_toml_section()
             ```
         """
 
@@ -1366,10 +1366,10 @@ class ApiBuildConfig:
             same defaults:
 
             ```python
-            from oodocs.apidoc import ApiBuildConfig
+            from oodocs.apidoc import ApiHelpBookConfig
 
-            ApiBuildConfig(
-                profile="website",
+            ApiHelpBookConfig(
+                presentation="website",
                 output_formats=("html",),
                 output_dir="artifacts/api",
                 sidecars=True,
@@ -1404,9 +1404,9 @@ def _filter_api_for_build(
     return api.subset(kind=kind, module_prefix=module_prefix)
 
 
-def _document_for_build(
+def _help_book_for_build(
     api: ApiPackage,
-    config: ApiBuildConfig,
+    config: ApiHelpBookConfig,
     *,
     title: str | None = None,
     settings: object | None = None,
@@ -1424,12 +1424,12 @@ def _document_for_build(
                 api.to_summary_table(
                     selected,
                     caption="Selected public API objects",
-                    profile=config.profile,
+                    profile=config.presentation,
                 ),
                 *[
                     obj.to_section(
                         level=2,
-                        profile=config.profile,
+                        profile=config.presentation,
                         max_level=config.max_level,
                     )
                     for obj in selected
@@ -1438,11 +1438,12 @@ def _document_for_build(
             settings=settings,  # type: ignore[arg-type]
             citations=citations,  # type: ignore[arg-type]
         )
-    return api.to_document(
+    return api.to_help_book(
         title=title,
-        profile=config.profile,
+        presentation=config.presentation,
         settings=settings,
         citations=citations,
+        include_coverage=True,
         max_level=config.max_level,
     )
 
@@ -1870,7 +1871,7 @@ def _pyproject_path(path: PathLike) -> Path:
 
 
 __all__ = [
-    "ApiBuildConfig",
+    "ApiHelpBookConfig",
     "ApiCollectConfig",
     "ApiCollectorName",
     "ApiFallbackCollectorName",

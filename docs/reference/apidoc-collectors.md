@@ -278,8 +278,8 @@ api = collect_api(".", collector="griffe", public_policy=policy)
 curated boundary. Use `ApiCollectConfig.from_pyproject(...)` when a repository
 stores its policy in `pyproject.toml`, or `ApiCollectConfig.save_json(...)`
 when the full collection policy should be shared as a standalone sidecar.
-Use `ApiBuildConfig.from_pyproject(...)` when the same repository config should
-also supply rendered-document defaults such as profile, formats, filters, and
+Use `ApiHelpBookConfig.from_pyproject(...)` when the same repository config should
+also supply rendered-document defaults such as presentation, formats, filters, and
 sidecar generation.
 
 ```toml
@@ -290,15 +290,15 @@ docstring-style = "auto"
 class-signature-from-init = true
 module-exclude-patterns = ["mypkg.tests*"]
 object-exclude-patterns = ["render_to_docx", "render_to_pdf", "render_to_html"]
-profile = "website"
+presentation = "website"
 formats = ["html"]
 sidecars = true
 ```
 
 ```python
-from oodocs.apidoc import ApiBuildConfig
+from oodocs.apidoc import ApiHelpBookConfig
 
-build = ApiBuildConfig.from_pyproject(".")
+build = ApiHelpBookConfig.from_pyproject(".")
 outputs = build.save_all(".", output_dir="artifacts/api")
 api_json = outputs["api-json"]
 ```
@@ -316,15 +316,15 @@ docstring-parser-modules = ["mypkg.docs_parsers"]
 To create that config from Python instead of the CLI:
 
 ```python
-from oodocs.apidoc import ApiBuildConfig
+from oodocs.apidoc import ApiHelpBookConfig
 
-ApiBuildConfig(profile="website", output_formats=("html",), sidecars=True).save_pyproject(".")
+ApiHelpBookConfig(presentation="website", output_formats=("html",), sidecars=True).save_pyproject(".")
 ```
 
 ```python
-from oodocs.apidoc import ApiBuildConfig
+from oodocs.apidoc import ApiHelpBookConfig
 
-ApiBuildConfig.from_pyproject(".").save_all(".")
+ApiHelpBookConfig.from_pyproject(".").save_all(".")
 ```
 
 When griffe collection is used with a standard style (`auto`, `google`,

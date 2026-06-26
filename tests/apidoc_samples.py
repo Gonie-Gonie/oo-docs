@@ -887,7 +887,7 @@ def write_mixed_docstring_repo(tmp_path: Path) -> Path:
             public-policy = "__all__"
             docstring-style = "auto"
             module-prefix = "mixedpkg"
-            profile = "manual"
+            presentation = "manual"
             formats = ["html"]
             sidecars = true
             '''
@@ -1091,7 +1091,7 @@ def write_custom_docstring_parser_repo(tmp_path: Path) -> Path:
             public-policy = "__all__"
             docstring-style = "example-brief"
             docstring-parser-modules = ["example_brief_parsers"]
-            profile = "compact"
+            presentation = "compact"
             formats = ["html"]
             sidecars = true
             '''

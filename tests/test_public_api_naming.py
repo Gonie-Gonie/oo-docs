@@ -694,7 +694,7 @@ def test_apidoc_selection_and_json_api_use_canonical_names() -> None:
         apidoc.ApiDiffResult: {"write_json", "read_json"},
         apidoc.ApiCoverageResult: {"write_json", "read_json", "write_csv"},
         apidoc.ApiCollectConfig: {"write_json", "read_json", "read_file"},
-        apidoc.ApiBuildConfig: {
+        apidoc.ApiHelpBookConfig: {
             "write_json",
             "read_json",
             "read_file",
@@ -736,7 +736,7 @@ def test_apidoc_selection_and_json_api_use_canonical_names() -> None:
         apidoc.ApiDiffResult: {"save_json", "load_json"},
         apidoc.ApiCoverageResult: {"save_json", "load_json", "save_csv"},
         apidoc.ApiCollectConfig: {"save_json", "load_json", "load_file"},
-        apidoc.ApiBuildConfig: {
+        apidoc.ApiHelpBookConfig: {
             "save_json",
             "load_json",
             "load_file",

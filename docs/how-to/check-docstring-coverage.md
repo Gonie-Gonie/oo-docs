@@ -1,12 +1,12 @@
 # Check Docstring Coverage
 
-Use `ApiBuildConfig.check_docs(...)` when a repository stores apidoc settings
+Use `ApiHelpBookConfig.check_docs(...)` when a repository stores apidoc settings
 in `pyproject.toml` or a JSON sidecar:
 
 ```python
-from oodocs.apidoc import ApiBuildConfig
+from oodocs.apidoc import ApiHelpBookConfig
 
-build = ApiBuildConfig.from_pyproject(".")
+build = ApiHelpBookConfig.from_pyproject(".")
 coverage = build.check_docs(".", fail_under=0.90)
 coverage.save_json("artifacts/api-coverage.json")
 coverage.save_csv("artifacts/api-coverage.csv")
@@ -67,9 +67,9 @@ When a repository needs a rendered API reference and coverage evidence, render
 from the same config with sidecars:
 
 ```python
-from oodocs.apidoc import ApiBuildConfig
+from oodocs.apidoc import ApiHelpBookConfig
 
-ApiBuildConfig.from_pyproject(".").save_all(".")
+ApiHelpBookConfig.from_pyproject(".").save_all(".")
 ```
 
 For larger repositories, gate only the API area currently under review:

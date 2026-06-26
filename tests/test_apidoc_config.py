@@ -12,7 +12,7 @@ from apidoc_samples import (
     write_setuptools_find_repo,
 )
 from oodocs.apidoc import (
-    ApiBuildConfig,
+    ApiHelpBookConfig,
     ApiCollectConfig,
     ApiDocstringParser,
     ApiPublicPolicy,
@@ -22,7 +22,7 @@ from oodocs.apidoc import (
 
 
 def test_apidoc_config_roundtrip_supports_general_repo_policy(tmp_path) -> None:
-    config = ApiBuildConfig(
+    config = ApiHelpBookConfig(
         collection=ApiCollectConfig(
             collector="inspect",
             fallback_collector="none",
@@ -36,14 +36,14 @@ def test_apidoc_config_roundtrip_supports_general_repo_policy(tmp_path) -> None:
             module_exclude_patterns=("samplepkg.tests*",),
             object_exclude_patterns=("*.render_to_pdf", "*.render_to_html"),
         ),
-        profile="website",
+        presentation="website",
         output_formats=("html",),
         output_dir="artifacts/api",
         sidecars=True,
     )
 
     path = config.save_json(tmp_path / "apidoc-config.json")
-    readback = ApiBuildConfig.load_json(path)
+    readback = ApiHelpBookConfig.load_json(path)
 
     assert readback.collection.public_policy == "explicit"
     assert readback.collection.fallback_collector == "none"
@@ -64,7 +64,7 @@ def test_apidoc_config_roundtrip_supports_general_repo_policy(tmp_path) -> None:
 
 def test_apidoc_build_config_rejects_sequence_module_prefix() -> None:
     with pytest.raises(TypeError, match="module_prefix must be a string"):
-        ApiBuildConfig.from_dict({"module-prefix": ["samplepkg"]})
+        ApiHelpBookConfig.from_dict({"module-prefix": ["samplepkg"]})
 
 
 def test_apidoc_config_load_file_accepts_target_for_parser_modules(tmp_path) -> None:
@@ -197,7 +197,7 @@ def test_apidoc_build_config_load_file_accepts_target_for_parser_modules(tmp_pat
                 "public_policy": "__all__",
                 "docstring_style": "target-build-brief",
                 "docstring_parser_modules": ["target_build_parsers"],
-                "profile": "compact",
+                "presentation": "compact",
                 "formats": ["html"],
                 "sidecars": True,
             },
@@ -210,13 +210,13 @@ def test_apidoc_build_config_load_file_accepts_target_for_parser_modules(tmp_pat
 
     assert "target-build-brief" not in docstring_parser_names()
     with pytest.raises(ImportError):
-        ApiBuildConfig.load_file(config_path)
+        ApiHelpBookConfig.load_file(config_path)
 
-    build = ApiBuildConfig.load_file(config_path, target=repo)
+    build = ApiHelpBookConfig.load_file(config_path, target=repo)
     api = collect_api(repo, config=build.collection)
     run = api.find_object("targetbuildpkg.run")
 
-    assert build.profile == "compact"
+    assert build.presentation == "compact"
     assert build.output_formats == ("html",)
     assert run is not None
     assert run.summary == "target-build:Run through target-aware build config."
@@ -255,7 +255,7 @@ def test_apidoc_build_config_load_file_uses_setuptools_find_target_import_roots(
                 "public_policy": "__all__",
                 "docstring_style": "find-target-brief",
                 "docstring_parser_modules": ["findtargetpkg.docs_parsers"],
-                "profile": "compact",
+                "presentation": "compact",
                 "formats": ["html"],
                 "module_exclude_patterns": ["*.docs_parsers"],
                 "sidecars": True,
@@ -269,11 +269,11 @@ def test_apidoc_build_config_load_file_uses_setuptools_find_target_import_roots(
 
     assert "find-target-brief" not in docstring_parser_names()
     with pytest.raises(ImportError):
-        ApiBuildConfig.load_file(config_path)
+        ApiHelpBookConfig.load_file(config_path)
 
-    build = ApiBuildConfig.load_file(config_path, target=repo)
+    build = ApiHelpBookConfig.load_file(config_path, target=repo)
     api = build.collect(repo)
-    document = build.to_document(repo)
+    document = build.to_help_book(repo)
     run = api.find_object("findtargetpkg.run")
 
     assert document.validate(formats=("html",)).ok
@@ -314,7 +314,7 @@ def test_apidoc_build_config_load_file_uses_hatch_target_import_roots(tmp_path) 
                 "public_policy": "__all__",
                 "docstring_style": "hatch-target-brief",
                 "docstring_parser_modules": ["hatchtargetpkg.docs_parsers"],
-                "profile": "compact",
+                "presentation": "compact",
                 "formats": ["html"],
                 "module_exclude_patterns": ["*.docs_parsers"],
                 "sidecars": True,
@@ -328,11 +328,11 @@ def test_apidoc_build_config_load_file_uses_hatch_target_import_roots(tmp_path) 
 
     assert "hatch-target-brief" not in docstring_parser_names()
     with pytest.raises(ImportError):
-        ApiBuildConfig.load_file(config_path)
+        ApiHelpBookConfig.load_file(config_path)
 
-    build = ApiBuildConfig.load_file(config_path, target=repo)
+    build = ApiHelpBookConfig.load_file(config_path, target=repo)
     api = build.collect(repo)
-    document = build.to_document(repo)
+    document = build.to_help_book(repo)
     run = api.find_object("hatchtargetpkg.run")
 
     assert document.validate(formats=("html",)).ok
@@ -373,7 +373,7 @@ def test_apidoc_build_config_load_file_uses_pdm_target_import_roots(tmp_path) ->
                 "public_policy": "__all__",
                 "docstring_style": "pdm-target-brief",
                 "docstring_parser_modules": ["pdmtargetpkg.docs_parsers"],
-                "profile": "compact",
+                "presentation": "compact",
                 "formats": ["html"],
                 "module_exclude_patterns": ["*.docs_parsers"],
                 "sidecars": True,
@@ -387,11 +387,11 @@ def test_apidoc_build_config_load_file_uses_pdm_target_import_roots(tmp_path) ->
 
     assert "pdm-target-brief" not in docstring_parser_names()
     with pytest.raises(ImportError):
-        ApiBuildConfig.load_file(config_path)
+        ApiHelpBookConfig.load_file(config_path)
 
-    build = ApiBuildConfig.load_file(config_path, target=repo)
+    build = ApiHelpBookConfig.load_file(config_path, target=repo)
     api = build.collect(repo)
-    document = build.to_document(repo)
+    document = build.to_help_book(repo)
     run = api.find_object("pdmtargetpkg.run")
 
     assert document.validate(formats=("html",)).ok
@@ -432,7 +432,7 @@ def test_apidoc_build_config_load_file_uses_flit_target_import_roots(tmp_path) -
                 "public_policy": "__all__",
                 "docstring_style": "flit-target-brief",
                 "docstring_parser_modules": ["flittargetpkg.docs_parsers"],
-                "profile": "compact",
+                "presentation": "compact",
                 "formats": ["html"],
                 "module_exclude_patterns": ["*.docs_parsers"],
                 "sidecars": True,
@@ -446,11 +446,11 @@ def test_apidoc_build_config_load_file_uses_flit_target_import_roots(tmp_path) -
 
     assert "flit-target-brief" not in docstring_parser_names()
     with pytest.raises(ImportError):
-        ApiBuildConfig.load_file(config_path)
+        ApiHelpBookConfig.load_file(config_path)
 
-    build = ApiBuildConfig.load_file(config_path, target=repo)
+    build = ApiHelpBookConfig.load_file(config_path, target=repo)
     api = build.collect(repo)
-    document = build.to_document(repo)
+    document = build.to_help_book(repo)
     run = api.find_object("flittargetpkg.run")
 
     assert document.validate(formats=("html",)).ok
@@ -494,7 +494,7 @@ def test_apidoc_build_config_load_file_uses_import_names_target_import_roots(
                 "public_policy": "__all__",
                 "docstring_style": "import-names-target-brief",
                 "docstring_parser_modules": ["importnamestargetpkg.docs_parsers"],
-                "profile": "compact",
+                "presentation": "compact",
                 "formats": ["html"],
                 "module_exclude_patterns": ["*.docs_parsers"],
                 "sidecars": True,
@@ -508,11 +508,11 @@ def test_apidoc_build_config_load_file_uses_import_names_target_import_roots(
 
     assert "import-names-target-brief" not in docstring_parser_names()
     with pytest.raises(ImportError):
-        ApiBuildConfig.load_file(config_path)
+        ApiHelpBookConfig.load_file(config_path)
 
-    build = ApiBuildConfig.load_file(config_path, target=repo)
+    build = ApiHelpBookConfig.load_file(config_path, target=repo)
     api = build.collect(repo)
-    document = build.to_document(repo)
+    document = build.to_help_book(repo)
     run = api.find_object("importnamestargetpkg.run")
 
     assert document.validate(formats=("html",)).ok

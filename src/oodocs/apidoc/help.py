@@ -21,6 +21,7 @@ def api_object_to_help_section(
     *,
     level: int = 2,
     presentation: str | ApiPresentationProfile = "help",
+    max_level: int | None = None,
 ) -> Section:
     """Return one public symbol as a help-page section.
 
@@ -29,6 +30,7 @@ def api_object_to_help_section(
         level: Heading level for the returned section.
         presentation: Presentation profile name or object. The default
             ``"help"`` profile keeps a single symbol page concise.
+        max_level: Optional deepest heading level for nested member sections.
 
     Returns:
         Section containing the symbol signature, summary, parameters, examples,
@@ -47,7 +49,7 @@ def api_object_to_help_section(
     """
 
     profile = resolve_presentation_profile(presentation)
-    return obj.to_section(level=level, profile=profile)
+    return obj.to_section(level=level, profile=profile, max_level=max_level)
 
 
 def api_category_to_chapter(
@@ -100,6 +102,7 @@ def api_category_to_chapter(
             obj,
             level=2,
             presentation=presentation,
+            max_level=max_level,
         )
         for obj in objects
         if max_level is None or max_level >= 2

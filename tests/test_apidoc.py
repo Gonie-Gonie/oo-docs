@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import importlib
 import importlib.util
@@ -15,7 +15,7 @@ from example_regression import (
 )
 from oodocs import Chapter, Document
 from oodocs.apidoc import (
-    ApiBuildConfig,
+    ApiHelpBookConfig,
     ApiCollectConfig,
     ApiCoverageResult,
     ApiDiffResult,
@@ -406,7 +406,7 @@ def test_apidoc_cli_loads_custom_docstring_parser_modules_from_pyproject(
                 'public-policy = "underscore"',
                 'docstring-style = "repo-brief-cli"',
                 'docstring-parser-modules = ["repo_apidoc_parsers"]',
-                'profile = "compact"',
+                'presentation = "compact"',
                 'formats = ["html"]',
                 'out = "artifacts/api"',
                 "sidecars = true",
@@ -431,7 +431,7 @@ def test_apidoc_cli_loads_custom_docstring_parser_modules_from_pyproject(
     monkeypatch.chdir(repo)
     monkeypatch.syspath_prepend(str(repo))
 
-    config = ApiBuildConfig.from_pyproject(repo)
+    config = ApiHelpBookConfig.from_pyproject(repo)
     config.save_all(".")
     built_api = ApiPackage.load_json(repo / "artifacts" / "api" / "hookpkg-api.json")
     run = built_api.find_object("hookpkg.run")
@@ -487,7 +487,7 @@ def test_apidoc_cli_loads_pyproject_parser_modules_from_target_repo_path(
                 'public-policy = "underscore"',
                 'docstring-style = "external-brief-cli"',
                 'docstring-parser-modules = ["externalhookpkg.docs_parsers"]',
-                'profile = "compact"',
+                'presentation = "compact"',
                 'formats = ["html"]',
                 "sidecars = true",
                 "",
@@ -499,7 +499,7 @@ def test_apidoc_cli_loads_pyproject_parser_modules_from_target_repo_path(
 
     monkeypatch.chdir(tmp_path)
 
-    ApiBuildConfig.load_file(repo / "pyproject.toml", target=repo).save_all(
+    ApiHelpBookConfig.load_file(repo / "pyproject.toml", target=repo).save_all(
         repo,
         output_dir=output_dir,
     )
@@ -1149,7 +1149,7 @@ def test_collect_api_filters_modules_before_collection(tmp_path: Path) -> None:
                 'module-include-patterns = ["filtermods.*"]',
                 'module-exclude-patterns = ["filtermods.tests", "filtermods.experimental"]',
                 'object-exclude-patterns = ["filtermods.core.run"]',
-                'profile = "website"',
+                'presentation = "website"',
                 'formats = ["html"]',
                 "sidecars = true",
                 'kind = ["function"]',
@@ -1168,16 +1168,16 @@ def test_collect_api_filters_modules_before_collection(tmp_path: Path) -> None:
     )
     assert pyproject_config.object_exclude_patterns == ("filtermods.core.run",)
     assert ApiCollectConfig.load_file(pyproject_path) == pyproject_config
-    pyproject_build_config = ApiBuildConfig.from_pyproject(tmp_path)
+    pyproject_build_config = ApiHelpBookConfig.from_pyproject(tmp_path)
     assert pyproject_build_config.collection == pyproject_config
-    assert pyproject_build_config.profile == "website"
+    assert pyproject_build_config.presentation == "website"
     assert pyproject_build_config.output_formats == ("html",)
     assert pyproject_build_config.sidecars
     assert pyproject_build_config.kind == ("function",)
     assert pyproject_build_config.module_prefix == "filtermods.core"
     build_config_path = tmp_path / "apidoc-build-config.json"
     pyproject_build_config.save_json(build_config_path)
-    assert ApiBuildConfig.load_json(build_config_path) == pyproject_build_config
+    assert ApiHelpBookConfig.load_json(build_config_path) == pyproject_build_config
 
     if importlib.util.find_spec("griffe") is not None:
         griffe_api = collect_api(
@@ -1599,7 +1599,7 @@ def test_apidoc_cli_collect_check_build_snapshot_and_diff(tmp_path: Path, capsys
     assert api_coverage_csv.read_text(encoding="utf-8").startswith(
         "severity,code,qualname,module,source,path,line_number,message"
     )
-    ApiBuildConfig(
+    ApiHelpBookConfig(
         output_formats=("docx", "pdf", "html"),
         output_dir=str(build_dir),
         sidecars=True,
@@ -1679,7 +1679,7 @@ def test_apidoc_cli_init_writes_config_for_general_repo(tmp_path: Path) -> None:
             "inspect",
             "--public-policy",
             "__all__",
-            "--presentation-profile",
+            "--presentation",
             "website",
             "--outputs",
             "html",
@@ -1693,9 +1693,9 @@ def test_apidoc_cli_init_writes_config_for_general_repo(tmp_path: Path) -> None:
         ]
     ) == 0
 
-    config = ApiBuildConfig.from_pyproject(repo)
+    config = ApiHelpBookConfig.from_pyproject(repo)
     assert config.collection.collector == "inspect"
-    assert config.profile == "website"
+    assert config.presentation == "website"
     assert config.output_formats == ("html",)
     assert config.output_dir == str(build_dir)
     assert config.sidecars
@@ -1730,7 +1730,7 @@ def test_apidoc_cli_init_writes_config_for_general_repo(tmp_path: Path) -> None:
 
     json_config = tmp_path / "apidoc-build.json"
     assert main(["apidoc", "init", str(json_config), "--config-format", "json", "--outputs", "html"]) == 0
-    assert ApiBuildConfig.load_json(json_config).output_formats == ("html",)
+    assert ApiHelpBookConfig.load_json(json_config).output_formats == ("html",)
 
 
 def test_apidoc_cli_filters_check_and_snapshot(tmp_path: Path) -> None:
@@ -1791,7 +1791,7 @@ def test_apidoc_cli_filters_check_and_snapshot(tmp_path: Path) -> None:
                 'module-include-patterns = ["filterpkg.core"]',
                 'module-exclude-patterns = ["filterpkg.legacy"]',
                 'object-exclude-patterns = ["*.Worker.process"]',
-                'profile = "website"',
+                'presentation = "website"',
                 'formats = ["html"]',
                 f'out = "{configured_build_dir.as_posix()}"',
                 "sidecars = true",
@@ -1913,7 +1913,7 @@ def test_apidoc_cli_filters_check_and_snapshot(tmp_path: Path) -> None:
     pyproject_snapshot = json.loads(pyproject_snapshot_json.read_text(encoding="utf-8"))
     assert list(pyproject_snapshot["objects"]) == ["filterpkg.core.run"]
 
-    ApiBuildConfig.load_file(pyproject_config_path, target=package_dir).save_all(package_dir)
+    ApiHelpBookConfig.load_file(pyproject_config_path, target=package_dir).save_all(package_dir)
     configured_html = (configured_build_dir / "filterpkg-api.html").read_text(encoding="utf-8")
     assert 'id="filterpkg-core-run"' in configured_html
     assert 'id="filterpkg-core-worker"' not in configured_html
@@ -1923,8 +1923,8 @@ def test_apidoc_cli_filters_check_and_snapshot(tmp_path: Path) -> None:
     assert configured_build_api["modules"][0]["members"][0]["qualname"] == "filterpkg.core.run"
     assert (configured_build_dir / "filterpkg-api-coverage.csv").exists()
 
-    ApiBuildConfig(
-        profile="website",
+    ApiHelpBookConfig(
+        presentation="website",
         output_formats=("html",),
         output_dir=str(build_dir),
         sidecars=True,
@@ -1941,8 +1941,8 @@ def test_apidoc_cli_filters_check_and_snapshot(tmp_path: Path) -> None:
     assert filtered_build_api["modules"][0]["members"][0]["qualname"] == "filterpkg.core.run"
     assert (build_dir / "filterpkg-api-coverage.csv").exists()
 
-    ApiBuildConfig(
-        profile="website",
+    ApiHelpBookConfig(
+        presentation="website",
         output_formats=("html",),
         output_dir=str(max_level_build_dir),
         max_level=2,
@@ -2099,5 +2099,3 @@ def test_api_objects_example_builds_help_book_and_composable_document(
     assert "examplepkg.run" in object_composition_html
     assert "examplepkg.Widget" in cli_html
     assert_html_internal_links_resolve(cli_output / "oodocs-api-reference.html")
-
-
