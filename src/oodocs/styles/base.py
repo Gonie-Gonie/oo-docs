@@ -11,6 +11,10 @@ def _style_with_overrides(
     overrides: dict[str, object | None],
 ) -> object:
     values = {name: value for name, value in overrides.items() if value is not None}
+    if isinstance(style, str):
+        if values:
+            raise TypeError("Named styles cannot be combined with direct style overrides")
+        return style
     if style is None:
         return style_type(**values)
     if not values:

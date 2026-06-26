@@ -106,14 +106,14 @@ class Paragraph(Block):
     content: list[Text]
     title: list[Text] | None
     title_style: RunInTitleStyle | None
-    style: ParagraphStyle
+    style: ParagraphStyle | str
 
     def __init__(
         self,
         *content: InlineInput,
         title: InlineInput | None = None,
         title_style: RunInTitleStyle | None = None,
-        style: ParagraphStyle | None = None,
+        style: ParagraphStyle | str | None = None,
         text_alignment: str | None = None,
         space_before: float | None = None,
         space_after: float | None = None,
@@ -287,13 +287,13 @@ class ListBlock(Block):
     items: list[Paragraph]
     item_children: list[list["ListBlock"]]
     ordered: bool
-    style: ListStyle | None
+    style: ListStyle | str | None
 
     def __init__(
         self,
         *items: ListInput,
         ordered: bool = False,
-        style: ListStyle | None = None,
+        style: ListStyle | str | None = None,
         marker_counter_format: str | None = None,
         bullet: str | None = None,
         prefix: str | None = None,
@@ -401,7 +401,7 @@ class BulletList(ListBlock):
     def __init__(
         self,
         *items: ListInput,
-        style: ListStyle | None = None,
+        style: ListStyle | str | None = None,
         marker_counter_format: str | None = None,
         bullet: str | None = None,
         prefix: str | None = None,
@@ -453,7 +453,7 @@ class NumberedList(ListBlock):
     def __init__(
         self,
         *items: ListInput,
-        style: ListStyle | None = None,
+        style: ListStyle | str | None = None,
         marker_counter_format: str | None = None,
         bullet: str | None = None,
         prefix: str | None = None,
@@ -517,7 +517,7 @@ class CodeBlock(Block):
     language: str | None
     show_language: bool
     language_position: CodeLanguagePosition
-    style: ParagraphStyle
+    style: ParagraphStyle | str
 
     def __init__(
         self,
@@ -526,7 +526,7 @@ class CodeBlock(Block):
         *,
         show_language: bool = True,
         language_position: CodeLanguagePosition = "top-right",
-        style: ParagraphStyle | None = None,
+        style: ParagraphStyle | str | None = None,
         text_alignment: str | None = None,
         space_before: float | None = None,
         space_after: float | None = None,
@@ -636,13 +636,13 @@ class Equation(Block):
     """
 
     expression: str
-    style: ParagraphStyle
+    style: ParagraphStyle | str
 
     def __init__(
         self,
         expression: str,
         *,
-        style: ParagraphStyle | None = None,
+        style: ParagraphStyle | str | None = None,
         text_alignment: str | None = None,
         space_before: float | None = None,
         space_after: float | None = None,
@@ -1429,13 +1429,13 @@ class Box(Block):
 
     children: list[Block]
     title: list[Text] | None
-    style: BoxStyle
+    style: BoxStyle | str
 
     def __init__(
         self,
         *children: BlockInput,
         title: InlineInput | None = None,
-        style: BoxStyle | None = None,
+        style: BoxStyle | str | None = None,
         border: BorderStyle | None = None,
         background_color: str | None = None,
         title_background_color: str | None = None,

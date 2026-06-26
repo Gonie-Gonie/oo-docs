@@ -14,6 +14,7 @@ from oodocs.core import (
 )
 from oodocs.styles.blocks import BoxStyle, ParagraphStyle, RunInTitleStyle
 from oodocs.styles.counter import HeadingNumbering, ListStyle
+from oodocs.styles.sheet import StyleSheet
 from oodocs.styles.tables import TableStyle
 from oodocs.styles.text import TextStyle
 
@@ -321,6 +322,7 @@ class Theme:
         page_numbers: Optional page-number defaults group.
         title_matter: Optional title-matter defaults group.
         blocks: Optional block defaults group.
+        stylesheet: Optional named style registry.
 
     Attributes:
         typography: Resolved typography defaults group.
@@ -330,6 +332,7 @@ class Theme:
         page_numbers: Resolved page-number defaults group.
         title_matter: Resolved title-matter defaults group.
         blocks: Resolved block defaults group.
+        stylesheet: Resolved named style registry.
 
     Raises:
         TypeError: If a grouped defaults argument has the wrong type.
@@ -380,6 +383,7 @@ class Theme:
     page_numbers: PageNumberDefaults
     title_matter: TitleMatterDefaults
     blocks: BlockDefaults
+    stylesheet: StyleSheet
 
     def __init__(
         self,
@@ -391,6 +395,7 @@ class Theme:
         page_numbers: PageNumberDefaults | None = None,
         title_matter: TitleMatterDefaults | None = None,
         blocks: BlockDefaults | None = None,
+        stylesheet: StyleSheet | None = None,
     ) -> None:
         expected_types = {
             "typography": (typography, TypographyDefaults),
@@ -400,6 +405,7 @@ class Theme:
             "page_numbers": (page_numbers, PageNumberDefaults),
             "title_matter": (title_matter, TitleMatterDefaults),
             "blocks": (blocks, BlockDefaults),
+            "stylesheet": (stylesheet, StyleSheet),
         }
         for argument_name, (value, expected_type) in expected_types.items():
             if value is not None and not isinstance(value, expected_type):
@@ -414,6 +420,7 @@ class Theme:
         self.page_numbers = page_numbers or PageNumberDefaults()
         self.title_matter = title_matter or TitleMatterDefaults()
         self.blocks = blocks or BlockDefaults()
+        self.stylesheet = stylesheet or StyleSheet.default()
 
     def heading_size(self, level: int) -> float:
         """Return the configured font size for a heading level.

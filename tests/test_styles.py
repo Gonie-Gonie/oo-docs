@@ -4,10 +4,15 @@ import pytest
 
 from oodocs import (
     BorderStyle,
+    BoxStyle,
+    InlineChipStyle,
     Padding,
     ParagraphStyle,
     RunInTitleStyle,
     StrokeStyle,
+    StyleSheet,
+    TableCellStyle,
+    TableStyle,
     TextStyle,
 )
 
@@ -55,3 +60,30 @@ def test_stroke_style_factories_and_point_conversion() -> None:
     assert stroke.width_points() == 0.75
     assert StrokeStyle.none().color is None
     assert StrokeStyle.none().width == 0.0
+
+
+def test_stylesheet_resolves_prefixed_names_and_roundtrips() -> None:
+    styles = StyleSheet.default()
+    styles.register("paragraph", "lead", ParagraphStyle(space_after=10))
+    styles.register("box", "callout", BoxStyle(padding=Padding.all(8)))
+    styles.register("chip", "state.ok", InlineChipStyle(uppercase=True))
+
+    assert isinstance(styles.resolve("table", "table.compact"), TableStyle)
+    assert isinstance(styles.resolve("table_cell", "table_cell.numeric"), TableCellStyle)
+    assert styles.resolve("paragraph", "lead").space_after == 10
+    assert styles.resolve("chip", "chip.state.ok").uppercase is True
+
+    restored = StyleSheet.from_dict(styles.to_dict())
+
+    assert isinstance(restored.resolve("box", "callout"), BoxStyle)
+    assert restored.resolve("chip", "status.success").uppercase is True
+
+
+def test_stylesheet_rejects_unknown_or_wrong_category_styles() -> None:
+    styles = StyleSheet.default()
+
+    with pytest.raises(KeyError, match="Unknown table style"):
+        styles.resolve("table", "missing")
+
+    with pytest.raises(TypeError, match="BoxStyle"):
+        styles.register("box", "not-a-box", TableStyle())

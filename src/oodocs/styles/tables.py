@@ -137,10 +137,10 @@ class TableCellStyle:
         )
 
 
-TableCellStyleInput = TableCellStyle | Mapping[str, object]
+TableCellStyleInput = TableCellStyle | Mapping[str, object] | str
 
 
-def coerce_table_cell_style(value: TableCellStyleInput) -> TableCellStyle:
+def coerce_table_cell_style(value: TableCellStyleInput) -> TableCellStyle | str:
     """Normalize a table cell style object or mapping.
 
     Args:
@@ -159,6 +159,8 @@ def coerce_table_cell_style(value: TableCellStyleInput) -> TableCellStyle:
     """
 
     if isinstance(value, TableCellStyle):
+        return value
+    if isinstance(value, str):
         return value
     if isinstance(value, Mapping):
         return TableCellStyle(**dict(value))

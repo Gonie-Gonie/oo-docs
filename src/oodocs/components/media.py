@@ -322,7 +322,7 @@ class TableCell:
     background_color: str | None
     text_alignment: str | None
     vertical_alignment: str | None
-    style: TableCellStyle
+    style: TableCellStyle | str
 
     def __init__(
         self,
@@ -350,19 +350,36 @@ class TableCell:
             if style is not None
             else TableCellStyle()
         )
-        self.style = base_style.merged(
-            TableCellStyle(
-                background_color=background_color,
-                text_color=text_color,
-                bold=bold,
-                italic=italic,
-                text_alignment=text_alignment,
-                vertical_alignment=vertical_alignment,
-            )
+        overrides = TableCellStyle(
+            background_color=background_color,
+            text_color=text_color,
+            bold=bold,
+            italic=italic,
+            text_alignment=text_alignment,
+            vertical_alignment=vertical_alignment,
         )
-        self.background_color = self.style.background_color
-        self.text_alignment = self.style.text_alignment
-        self.vertical_alignment = self.style.vertical_alignment
+        if isinstance(base_style, str):
+            if any(
+                getattr(overrides, field_name) is not None
+                for field_name in (
+                    "background_color",
+                    "text_color",
+                    "bold",
+                    "italic",
+                    "text_alignment",
+                    "vertical_alignment",
+                )
+            ):
+                raise TypeError("Named table cell styles cannot be combined with direct style overrides")
+            self.style = base_style
+            self.background_color = None
+            self.text_alignment = None
+            self.vertical_alignment = None
+        else:
+            self.style = base_style.merged(overrides)
+            self.background_color = self.style.background_color
+            self.text_alignment = self.style.text_alignment
+            self.vertical_alignment = self.style.vertical_alignment
 
 
 TableCellInput = TableCell | CellInput
@@ -677,16 +694,27 @@ def _coerce_style_mapping(
     styles: Mapping[int, TableCellStyleInput] | None,
     *,
     name: str,
-) -> dict[int, TableCellStyle]:
+) -> dict[int, TableCellStyle | str]:
     if styles is None:
         return {}
-    normalized: dict[int, TableCellStyle] = {}
+    normalized: dict[int, TableCellStyle | str] = {}
     for key, value in styles.items():
         index = int(key)
         if index < 0:
             raise ValueError(f"{name} indexes must be >= 0")
         normalized[index] = coerce_table_cell_style(value)
     return normalized
+
+
+def _resolve_table_cell_style(
+    style: TableCellStyle | str | None,
+    stylesheet: object | None,
+) -> TableCellStyle | None:
+    if style is None or isinstance(style, TableCellStyle):
+        return style
+    if stylesheet is None:
+        raise TypeError("Named table cell styles require a stylesheet")
+    return stylesheet.resolve("table_cell", style)  # type: ignore[no-any-return]
 
 
 RecordFormatter = Callable[[object], object] | str
@@ -876,14 +904,14 @@ class Table(Block):
     column_widths: list[float] | None
     unit: str | None
     identifier: str | None
-    style: TableStyle
+    style: TableStyle | str
     include_index: bool
     split: TableSplit
     placement: MediaPlacement
     long_table_threshold: int | None
-    row_styles: dict[int, TableCellStyle]
-    column_styles: dict[int, TableCellStyle]
-    header_row_styles: dict[int, TableCellStyle]
+    row_styles: dict[int, TableCellStyle | str]
+    column_styles: dict[int, TableCellStyle | str]
+    header_row_styles: dict[int, TableCellStyle | str]
 
     def __init__(
         self,
@@ -894,7 +922,7 @@ class Table(Block):
         column_widths: Sequence[float] | None = None,
         unit: str | None = None,
         identifier: str | None = None,
-        style: TableStyle | None = None,
+        style: TableStyle | str | None = None,
         header_background_color: str | None = None,
         header_text_color: str | None = None,
         border: BorderStyle | None = None,
@@ -1003,7 +1031,13 @@ class Table(Block):
             return "float"
         return self.placement
 
-    def _effective_cell_style(self, placement: TablePlacement) -> TableCellStyle:
+    def _effective_cell_style(
+        self,
+        placement: TablePlacement,
+        *,
+        stylesheet: object | None = None,
+        table_style: TableStyle | None = None,
+    ) -> TableCellStyle:
         row_style = (
             self.header_row_styles.get(placement.row)
             if placement.header
@@ -1013,33 +1047,41 @@ class Table(Block):
                 else None
             )
         )
-        return self._base_cell_style(placement).merged(
-            self.column_styles.get(placement.column),
-            row_style,
-            placement.cell.style,
+        return self._base_cell_style(placement, table_style=table_style).merged(
+            _resolve_table_cell_style(self.column_styles.get(placement.column), stylesheet),
+            _resolve_table_cell_style(row_style, stylesheet),
+            _resolve_table_cell_style(placement.cell.style, stylesheet),
         )
 
-    def _base_cell_style(self, placement: TablePlacement) -> TableCellStyle:
+    def _base_cell_style(
+        self,
+        placement: TablePlacement,
+        *,
+        table_style: TableStyle | None = None,
+    ) -> TableCellStyle:
+        style = table_style or self.style
+        if isinstance(style, str):
+            raise TypeError("Named table styles must be resolved before cell styles are computed")
         if placement.header:
             return TableCellStyle(
-                background_color=self.style.header_background_color,
-                text_color=self.style.header_text_color,
+                background_color=style.header_background_color,
+                text_color=style.header_text_color,
                 bold=True,
-                text_alignment=self.style.header_text_alignment,
-                vertical_alignment=self.style.header_vertical_alignment,
+                text_alignment=style.header_text_alignment,
+                vertical_alignment=style.header_vertical_alignment,
             )
 
-        background_color = self.style.body_background_color
+        background_color = style.body_background_color
         if (
-            self.style.alternate_row_background_color is not None
+            style.alternate_row_background_color is not None
             and placement.body_row_index is not None
             and placement.body_row_index % 2 == 1
         ):
-            background_color = self.style.alternate_row_background_color
+            background_color = style.alternate_row_background_color
         return TableCellStyle(
             background_color=background_color,
-            text_alignment=self.style.cell_text_alignment,
-            vertical_alignment=self.style.cell_vertical_alignment,
+            text_alignment=style.cell_text_alignment,
+            vertical_alignment=style.cell_vertical_alignment,
         )
 
     def _column_widths_in_inches(self, default_unit: str) -> list[float] | None:
@@ -1057,7 +1099,7 @@ class Table(Block):
         column_widths: Sequence[float] | None = None,
         unit: str | None = None,
         identifier: str | None = None,
-        style: TableStyle | None = None,
+        style: TableStyle | str | None = None,
         header_background_color: str | None = None,
         header_text_color: str | None = None,
         border: BorderStyle | None = None,

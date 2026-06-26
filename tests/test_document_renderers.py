@@ -81,6 +81,7 @@ from oodocs import (
     Section,
     Shape,
     StrokeStyle,
+    StyleSheet,
     SubFigure,
     SubFigureGroup,
     Subsection,
@@ -824,6 +825,63 @@ def test_document_validate_returns_printable_result_with_format_scopes() -> None
     assert "Formats" in printable
     assert "HTML" in printable
     assert "html-toc-page-numbers" in printable
+
+
+def test_named_styles_validate_and_render_across_formats(tmp_path: Path) -> None:
+    styles = StyleSheet.default()
+    styles.register("paragraph", "lead", ParagraphStyle(space_after=4, text_alignment="center"))
+    styles.register("table_cell", "positive", TableCellStyle(text_color="166534", bold=True))
+
+    document = Document(
+        "Named Styles",
+        Paragraph("Centered lead paragraph.", style="lead"),
+        Box(
+            Paragraph("The box uses a named style from the theme stylesheet."),
+            title="Finding",
+            style="info",
+        ),
+        Table(
+            headers=[TableCell("Metric", style="emphasis"), "Value"],
+            rows=[["Accuracy", TableCell("98%", style="positive")]],
+            caption="Styled metrics.",
+            style="evidence",
+            row_styles={0: "muted"},
+            column_styles={1: "numeric"},
+        ),
+        Paragraph("Status: ", status("ready", chip_style="status.success")),
+        settings=DocumentSettings(theme=Theme(stylesheet=styles)),
+    )
+
+    result = document.validate()
+    assert result.errors == ()
+
+    outputs = document.save_all(tmp_path, stem="named-styles")
+    assert set(outputs) == {"docx", "html", "pdf"}
+    assert all(path.exists() for path in outputs.values())
+
+    html = outputs["html"].read_text(encoding="utf-8")
+    assert "READY" in html
+    assert "#ECFDF3" in html
+
+
+def test_document_validate_reports_unknown_and_wrong_named_styles() -> None:
+    document = Document(
+        "Named Style Errors",
+        Paragraph("Unknown paragraph style.", style="missing"),
+        Table(
+            headers=["A"],
+            rows=[[TableCell("B", style="info")]],
+            style="info",
+        ),
+    )
+
+    result = document.validate()
+    assert [issue.code for issue in result.errors] == [
+        "unknown-style-name",
+        "wrong-style-category",
+        "wrong-style-category",
+    ]
+    assert result.errors[0].path == "document.body.children[0].style"
 
 
 def test_document_validate_reports_authoring_errors_and_blocks_render(

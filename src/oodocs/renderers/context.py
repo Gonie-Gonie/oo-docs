@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from oodocs.layout.indexing import RenderIndex
-from oodocs.styles import RunInTitleStyle, Theme
+from oodocs.styles import RunInTitleStyle, StyleSheet, Theme
 from oodocs.settings import DocumentSettings
 
 
@@ -33,6 +33,12 @@ class DocxRenderContext:
     in_box: bool = False
     run_in_title_style: RunInTitleStyle | None = None
 
+    @property
+    def stylesheet(self) -> StyleSheet:
+        """Return the theme stylesheet."""
+
+        return self.theme.stylesheet
+
 
 @dataclass(slots=True)
 class PdfRenderContext:
@@ -57,6 +63,12 @@ class PdfRenderContext:
     in_box: bool = False
     run_in_title_style: RunInTitleStyle | None = None
 
+    @property
+    def stylesheet(self) -> StyleSheet:
+        """Return the theme stylesheet."""
+
+        return self.theme.stylesheet
+
 
 @dataclass(slots=True)
 class HtmlRenderContext:
@@ -78,3 +90,9 @@ class HtmlRenderContext:
     unit: str
     in_box: bool = False
     run_in_title_style: RunInTitleStyle | None = None
+
+    @property
+    def stylesheet(self) -> StyleSheet:
+        """Return the theme stylesheet."""
+
+        return self.theme.stylesheet

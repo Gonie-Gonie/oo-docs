@@ -502,6 +502,13 @@
           "qualname": "oodocs.styles.border.StrokeStyle"
         },
         {
+          "category": "style",
+          "kind": "class",
+          "module": "oodocs.styles.sheet",
+          "name": "StyleSheet",
+          "qualname": "oodocs.styles.sheet.StyleSheet"
+        },
+        {
           "category": "media",
           "kind": "class",
           "module": "oodocs.components.media",
@@ -1560,6 +1567,13 @@
           "module": "oodocs.styles.border",
           "name": "StrokeStyle",
           "qualname": "oodocs.styles.border.StrokeStyle"
+        },
+        {
+          "category": "style",
+          "kind": "class",
+          "module": "oodocs.styles.sheet",
+          "name": "StyleSheet",
+          "qualname": "oodocs.styles.sheet.StyleSheet"
         },
         {
           "category": "style",

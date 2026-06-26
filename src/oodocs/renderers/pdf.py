@@ -107,7 +107,7 @@ from oodocs.document import Document
 from oodocs.components.equations import SUBSCRIPT, SUPERSCRIPT, parse_latex_segments
 from oodocs.core import OODocsError, PathLike, length_to_inches
 from oodocs.layout.indexing import RenderIndex, build_render_index
-from oodocs.styles import ParagraphStyle, Theme
+from oodocs.styles import ParagraphStyle, TableStyle as OODocsTableStyle, Theme
 from oodocs.renderers.context import PdfRenderContext
 from oodocs.renderers.syntax import SyntaxToken, syntax_tokens
 
@@ -759,8 +759,9 @@ class PdfRenderer:
             Flowables representing the paragraph.
         """
 
+        block_style = context.stylesheet.resolve("paragraph", block.style, ParagraphStyle())
         paragraph_style = self._paragraph_style(
-            block.style,
+            block_style,
             context.theme,
             context.styles["BodyText"],
             default_unit=context.unit,
@@ -782,9 +783,9 @@ class PdfRenderer:
             paragraph_style,
         )
         flowables: list[object] = [paragraph]
-        if block.style.keep_together:
+        if block_style.keep_together:
             flowables = [KeepTogether(flowables)]
-        if block.style.page_break_before:
+        if block_style.page_break_before:
             flowables.insert(0, RLPageBreak())
         return flowables
 
@@ -1896,12 +1897,13 @@ class PdfRenderer:
         *,
         in_box: bool = False,
     ) -> list[object]:
+        table_style = theme.stylesheet.resolve("table", block.style, OODocsTableStyle())
         split_table = block._resolve_split()
         media_placement = block._resolve_placement()
         body_style = self._paragraph_style(ParagraphStyle(space_after=0), theme, styles["BodyText"])
         layout = build_table_layout(block.header_rows, block.rows)
         table_rows: list[list[object]] = [["" for _ in range(layout.column_count)] for _ in range(layout.row_count)]
-        top_padding, right_padding, bottom_padding, left_padding = block.style.cell_padding.to_points()
+        top_padding, right_padding, bottom_padding, left_padding = table_style.cell_padding.to_points()
         style_commands: list[tuple[str, tuple[int, int], tuple[int, int], object]] = [
             ("VALIGN", (0, 0), (-1, -1), "TOP"),
             ("LEFTPADDING", (0, 0), (-1, -1), left_padding),
@@ -1909,19 +1911,23 @@ class PdfRenderer:
             ("TOPPADDING", (0, 0), (-1, -1), top_padding),
             ("BOTTOMPADDING", (0, 0), (-1, -1), bottom_padding),
         ]
-        if block.style.border.color is not None and block.style.border.width > 0:
+        if table_style.border.color is not None and table_style.border.width > 0:
             style_commands.insert(
                 0,
                 (
                     "GRID",
                     (0, 0),
                     (-1, -1),
-                    block.style.border.width_points(),
-                    colors.HexColor(f"#{block.style.border.color}"),
+                    table_style.border.width_points(),
+                    colors.HexColor(f"#{table_style.border.color}"),
                 ),
             )
         for placement in layout.placements:
-            effective_style = block._effective_cell_style(placement)
+            effective_style = block._effective_cell_style(
+                placement,
+                stylesheet=theme.stylesheet,
+                table_style=table_style,
+            )
             cell_bold = bool(effective_style.bold)
             cell_italic = bool(effective_style.italic)
             cell_text_color = (
@@ -1938,6 +1944,8 @@ class PdfRenderer:
             cell_text_alignment = self._table_cell_text_alignment(
                 placement,
                 block,
+                theme.stylesheet,
+                table_style,
             ) or "left"
             paragraph_style = RLParagraphStyle(
                 f"{paragraph_style.name}Cell{cell_text_alignment}",
@@ -1967,7 +1975,12 @@ class PdfRenderer:
                         ),
                     )
                 )
-            cell_vertical_alignment = self._table_cell_vertical_alignment(placement, block)
+            cell_vertical_alignment = self._table_cell_vertical_alignment(
+                placement,
+                block,
+                theme.stylesheet,
+                table_style,
+            )
             if cell_vertical_alignment is not None:
                 style_commands.append(
                     (
@@ -2010,7 +2023,7 @@ class PdfRenderer:
             table_rows,
             colWidths=column_widths,
             hAlign=FLOWABLE_ALIGNMENTS[theme.blocks.table_block_alignment],
-            repeatRows=layout.header_row_count if split_table or block.style.repeat_header_rows else 0,
+            repeatRows=layout.header_row_count if split_table or table_style.repeat_header_rows else 0,
         )
         table.splitByRow = 1
         table.setStyle(TableStyle(style_commands))
@@ -2092,15 +2105,27 @@ class PdfRenderer:
         self,
         placement: object,
         block: Table,
+        stylesheet: object | None = None,
+        table_style: OODocsTableStyle | None = None,
     ) -> str | None:
-        return block._effective_cell_style(placement).text_alignment
+        return block._effective_cell_style(
+            placement,
+            stylesheet=stylesheet,
+            table_style=table_style,
+        ).text_alignment
 
     def _table_cell_vertical_alignment(
         self,
         placement: object,
         block: Table,
+        stylesheet: object | None = None,
+        table_style: OODocsTableStyle | None = None,
     ) -> str | None:
-        return block._effective_cell_style(placement).vertical_alignment
+        return block._effective_cell_style(
+            placement,
+            stylesheet=stylesheet,
+            table_style=table_style,
+        ).vertical_alignment
 
     def _render_list(
         self,
@@ -2113,8 +2138,13 @@ class PdfRenderer:
         depth: int = 0,
         add_trailing_spacer: bool = True,
     ) -> list[object]:
-        item_style = self._paragraph_style(
+        item_block_style = theme.stylesheet.resolve(
+            "paragraph",
             ParagraphStyle(space_after=3),
+            ParagraphStyle(space_after=3),
+        )
+        item_style = self._paragraph_style(
+            item_block_style,
             theme,
             styles["BodyText"],
             default_unit=unit,
@@ -2125,7 +2155,11 @@ class PdfRenderer:
             alignment=TA_RIGHT,
             spaceAfter=3,
         )
-        list_style = block.style or theme.list_style(ordered=isinstance(block, NumberedList))
+        list_style = theme.stylesheet.resolve(
+            "list",
+            block.style,
+            theme.list_style(ordered=isinstance(block, NumberedList)),
+        )
         if depth:
             list_style = replace(list_style, indent=list_style.indent + depth * 0.22)
         marker_width = max(list_style.indent * inch, 0.35 * inch)
@@ -2183,6 +2217,7 @@ class PdfRenderer:
         return flowables
 
     def _render_box(self, block: Box, theme: Theme, styles: object, render_index: RenderIndex, settings: object, unit: str) -> list[object]:
+        box_style = theme.stylesheet.resolve("box", block.style, None)
         body_style = self._paragraph_style(ParagraphStyle(space_after=0), theme, styles["BodyText"])
         rows: list[list[object]] = []
         row_styles: list[tuple[str, tuple[int, int], tuple[int, int], object]] = []
@@ -2192,7 +2227,7 @@ class PdfRenderer:
                 parent=body_style,
                 fontName=self._resolve_font(theme.typography.body_font_name, True, False),
                 spaceAfter=6,
-                textColor=colors.HexColor(f"#{block.style.title_text_color or '000000'}"),
+                textColor=colors.HexColor(f"#{box_style.title_text_color or '000000'}"),
             )
             rows.append(
                 [
@@ -2210,13 +2245,13 @@ class PdfRenderer:
                     )
                 ]
             )
-            if block.style.title_background_color is not None:
+            if box_style.title_background_color is not None:
                 row_styles.append(
                     (
                         "BACKGROUND",
                         (0, 0),
                         (0, 0),
-                        colors.HexColor(f"#{block.style.title_background_color}"),
+                        colors.HexColor(f"#{box_style.title_background_color}"),
                     )
                 )
         for child in block.children:
@@ -2238,32 +2273,32 @@ class PdfRenderer:
             rows.append([Spacer(1, 1)])
 
         column_widths = None
-        if block.style.width is not None:
-            column_widths = [length_to_inches(block.style.width, block.style.unit or unit) * inch]
+        if box_style.width is not None:
+            column_widths = [length_to_inches(box_style.width, box_style.unit or unit) * inch]
         table = RLTable(
             rows,
             colWidths=column_widths,
-            hAlign=FLOWABLE_ALIGNMENTS[block.style.block_alignment or theme.blocks.box_block_alignment],
+            hAlign=FLOWABLE_ALIGNMENTS[box_style.block_alignment or theme.blocks.box_block_alignment],
             repeatRows=0,
         )
-        top_padding, right_padding, bottom_padding, left_padding = block.style.padding.to_points()
+        top_padding, right_padding, bottom_padding, left_padding = box_style.padding.to_points()
         style_commands: list[tuple[str, tuple[int, int], tuple[int, int], object]] = [
-            ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor(f"#{block.style.background_color}")),
+            ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor(f"#{box_style.background_color}")),
             ("LEFTPADDING", (0, 0), (-1, -1), left_padding),
             ("RIGHTPADDING", (0, 0), (-1, -1), right_padding),
             ("TOPPADDING", (0, 0), (-1, -1), top_padding),
             ("BOTTOMPADDING", (0, 0), (-1, -1), bottom_padding),
             ("VALIGN", (0, 0), (-1, -1), "TOP"),
         ]
-        if block.style.border.color is not None and block.style.border.width > 0:
+        if box_style.border.color is not None and box_style.border.width > 0:
             style_commands.insert(
                 1,
                 (
                     "BOX",
                     (0, 0),
                     (-1, -1),
-                    block.style.border.width_points(),
-                    colors.HexColor(f"#{block.style.border.color}"),
+                    box_style.border.width_points(),
+                    colors.HexColor(f"#{box_style.border.color}"),
                 ),
             )
         style_commands.extend(row_styles)
@@ -2272,7 +2307,7 @@ class PdfRenderer:
         anchor = render_index.block_anchor(block)
         if anchor is not None:
             elements.append(RLParagraph(self._anchor_markup(anchor), body_style))
-        elements.extend([table, Spacer(1, block.style.space_after)])
+        elements.extend([table, Spacer(1, box_style.space_after)])
         return elements
 
     def _render_code_block(
@@ -2336,7 +2371,8 @@ class PdfRenderer:
             label_style.spaceBefore = 4
             cell_flowables.append(RLParagraph(escape(block.language.upper()), label_style))
 
-        block_alignment = theme.resolve_paragraph_text_alignment(block.style)
+        block_style = theme.stylesheet.resolve("paragraph", block.style, ParagraphStyle())
+        block_alignment = theme.resolve_paragraph_text_alignment(block_style)
         column_widths = None if in_box else [settings.text_width_in_inches() * inch]
         table = RLTable(
             [[cell_flowables]],
@@ -2356,7 +2392,7 @@ class PdfRenderer:
                 ]
             )
         )
-        return [KeepTogether([table, Spacer(1, block.style.space_after or 0)])]
+        return [KeepTogether([table, Spacer(1, block_style.space_after or 0)])]
 
     def _render_equation(
         self,
@@ -2365,14 +2401,15 @@ class PdfRenderer:
         styles: object,
         render_index: RenderIndex,
     ) -> list[object]:
+        block_style = theme.stylesheet.resolve("paragraph", block.style, ParagraphStyle())
         equation_style = RLParagraphStyle(
             "EquationBlock",
             parent=styles["BodyText"],
             fontName=self._resolve_font(theme.typography.body_font_name, False, False),
             fontSize=max(theme.typography.body_font_size + 1, 12),
             leading=max(theme.typography.body_font_size + 1, 12) * 1.3,
-            alignment=ALIGNMENTS[theme.resolve_paragraph_text_alignment(block.style)],
-            spaceAfter=block.style.space_after or 0,
+            alignment=ALIGNMENTS[theme.resolve_paragraph_text_alignment(block_style)],
+            spaceAfter=block_style.space_after or 0,
             textColor=colors.black,
         )
         equation_markup = self._anchor_markup(render_index.block_anchor(block)) + self._math_markup(
@@ -2794,7 +2831,7 @@ class PdfRenderer:
         base_font_name: str | None,
         base_size: float | None,
     ) -> str:
-        chip_style = fragment.chip_style
+        chip_style = theme.stylesheet.resolve("chip", fragment.chip_style, None)
         base_size = fragment.style.font_size or base_size or theme.typography.body_font_size
         size = max(base_size + chip_style.font_size_delta, 6.0)
         font_name = self._resolve_font(
@@ -2802,7 +2839,7 @@ class PdfRenderer:
             chip_style.bold,
             chip_style.italic,
         )
-        text = escape(fragment.display_text()).replace("\n", " ")
+        text = escape(fragment.display_text(chip_style)).replace("\n", " ")
         font_attrs = [
             f'face="{font_name}"',
             f'size="{size}"',

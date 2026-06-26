@@ -321,7 +321,7 @@ class InlineChip(Text):
         self,
         value: object,
         *,
-        chip_style: InlineChipStyle | None = None,
+        chip_style: InlineChipStyle | str | None = None,
         kind: str = "chip",
         style: TextStyle | None = None,
     ) -> None:
@@ -330,7 +330,7 @@ class InlineChip(Text):
         self.chip_style = chip_style or _default_chip_style(normalized_kind)
         self.kind = normalized_kind
 
-    def display_text(self) -> str:
+    def display_text(self, chip_style: InlineChipStyle | None = None) -> str:
         """Return display text after chip style transforms.
 
         Returns:
@@ -343,7 +343,8 @@ class InlineChip(Text):
             ```
         """
 
-        return self.value.upper() if self.chip_style.uppercase else self.value
+        style = chip_style or self.chip_style
+        return self.value.upper() if isinstance(style, InlineChipStyle) and style.uppercase else self.value
 
     def plain_text(self) -> str:
         """Return the chip display text for plain-text output.
@@ -1119,12 +1120,14 @@ def _chip(
     value: object,
     *,
     kind: str,
-    chip_style: InlineChipStyle | None = None,
+    chip_style: InlineChipStyle | str | None = None,
     style: TextStyle | None = None,
     **style_values: object,
 ) -> InlineChip:
     resolved_style = chip_style or _default_chip_style(kind)
     if style_values:
+        if isinstance(resolved_style, str):
+            raise TypeError("Named chip styles cannot be combined with direct style overrides")
         resolved_style = resolved_style.merged(**style_values)
     return InlineChip(value, chip_style=resolved_style, kind=kind, style=style)
 
@@ -1132,7 +1135,7 @@ def _chip(
 def tag(
     value: object,
     *,
-    chip_style: InlineChipStyle | None = None,
+    chip_style: InlineChipStyle | str | None = None,
     style: TextStyle | None = None,
     **style_values: object,
 ) -> InlineChip:
@@ -1159,7 +1162,7 @@ def tag(
 def badge(
     value: object,
     *,
-    chip_style: InlineChipStyle | None = None,
+    chip_style: InlineChipStyle | str | None = None,
     style: TextStyle | None = None,
     **style_values: object,
 ) -> InlineChip:
@@ -1187,7 +1190,7 @@ def status(
     value: object,
     *,
     state: str = "neutral",
-    chip_style: InlineChipStyle | None = None,
+    chip_style: InlineChipStyle | str | None = None,
     style: TextStyle | None = None,
     **style_values: object,
 ) -> InlineChip:
@@ -1214,6 +1217,8 @@ def status(
 
     resolved_style = chip_style or _default_status_chip_style(state)
     if style_values:
+        if isinstance(resolved_style, str):
+            raise TypeError("Named chip styles cannot be combined with direct style overrides")
         resolved_style = resolved_style.merged(**style_values)
     return InlineChip(value, chip_style=resolved_style, kind="status", style=style)
 
@@ -1221,7 +1226,7 @@ def status(
 def keyboard(
     value: object,
     *,
-    chip_style: InlineChipStyle | None = None,
+    chip_style: InlineChipStyle | str | None = None,
     style: TextStyle | None = None,
     **style_values: object,
 ) -> InlineChip:

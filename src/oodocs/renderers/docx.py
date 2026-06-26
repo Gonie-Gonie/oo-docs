@@ -90,7 +90,7 @@ from oodocs.document import Document
 from oodocs.components.equations import SUBSCRIPT, SUPERSCRIPT, parse_latex_segments
 from oodocs.core import OODocsError, PathLike, length_to_inches
 from oodocs.layout.indexing import RenderIndex, build_render_index
-from oodocs.styles import ParagraphStyle, TextStyle, Theme
+from oodocs.styles import ParagraphStyle, TableStyle, TextStyle, Theme
 from oodocs.renderers.context import DocxRenderContext
 from oodocs.renderers.syntax import SyntaxToken, syntax_tokens
 
@@ -361,13 +361,18 @@ class DocxRenderer:
         """
 
         paragraph = self._add_paragraph(container)
+        paragraph_style = context.stylesheet.resolve(
+            "paragraph",
+            paragraph_block.style,
+            ParagraphStyle(),
+        )
         title_style = context.theme.resolve_run_in_title_style(
             paragraph_block.title_style,
             context.run_in_title_style,
         )
         self._apply_paragraph_style(
             paragraph,
-            paragraph_block.style,
+            paragraph_style,
             context.theme,
             context.unit,
         )
@@ -1481,7 +1486,7 @@ class DocxRenderer:
         theme: Theme,
     ) -> tuple[BytesIO, float, float]:
         dpi = 192
-        chip_style = fragment.chip_style
+        chip_style = theme.stylesheet.resolve("chip", fragment.chip_style, None)
         base_size = style.font_size or default_size or theme.typography.body_font_size
         font_size = max(base_size + chip_style.font_size_delta, 6.0)
         font_px = max(int(round(font_size * dpi / 72)), 8)
@@ -1491,7 +1496,7 @@ class DocxRenderer:
             chip_style.italic,
             font_px,
         )
-        text = fragment.display_text()
+        text = fragment.display_text(chip_style)
         sample = Image.new("RGBA", (1, 1), (255, 255, 255, 0))
         draw = ImageDraw.Draw(sample)
         text_bbox = draw.textbbox((0, 0), text, font=font)
@@ -1859,12 +1864,17 @@ class DocxRenderer:
         word_document: WordDocument,
         depth: int = 0,
     ) -> None:
-        list_style = list_block.style or theme.list_style(ordered=isinstance(list_block, NumberedList))
+        list_style = theme.stylesheet.resolve(
+            "list",
+            list_block.style,
+            theme.list_style(ordered=isinstance(list_block, NumberedList)),
+        )
         if depth:
             list_style = replace(list_style, indent=list_style.indent + depth * 0.25)
         for index, item in enumerate(list_block.items):
             paragraph = self._add_paragraph(container)
-            self._apply_paragraph_style(paragraph, item.style, theme, unit)
+            item_style = theme.stylesheet.resolve("paragraph", item.style, ParagraphStyle())
+            self._apply_paragraph_style(paragraph, item_style, theme, unit)
             paragraph.paragraph_format.left_indent = Inches(list_style.indent)
             paragraph.paragraph_format.first_line_indent = Inches(-list_style.indent)
             anchor = render_index.block_anchor(item)
@@ -1897,7 +1907,8 @@ class DocxRenderer:
         anchor = render_index.block_anchor(code_block)
         show_label = bool(code_block.language and code_block.show_language)
         paragraph = self._add_paragraph(container)
-        self._apply_paragraph_style(paragraph, code_block.style, theme, unit)
+        code_style = theme.stylesheet.resolve("paragraph", code_block.style, ParagraphStyle())
+        self._apply_paragraph_style(paragraph, code_style, theme, unit)
         paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
         paragraph.paragraph_format.left_indent = Inches(0.25)
         paragraph.paragraph_format.right_indent = Inches(0.1)
@@ -1970,7 +1981,8 @@ class DocxRenderer:
         unit: str,
     ) -> None:
         paragraph = self._add_paragraph(container)
-        self._apply_paragraph_style(paragraph, equation.style, theme, unit)
+        equation_style = theme.stylesheet.resolve("paragraph", equation.style, ParagraphStyle())
+        self._apply_paragraph_style(paragraph, equation_style, theme, unit)
         if paragraph.alignment is None:
             paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
         anchor = render_index.block_anchor(equation)
@@ -1997,7 +2009,8 @@ class DocxRenderer:
         *,
         word_document: WordDocument,
     ) -> None:
-        alignment = box.style.block_alignment or theme.blocks.box_block_alignment
+        box_style = theme.stylesheet.resolve("box", box.style, None)
+        alignment = box_style.block_alignment or theme.blocks.box_block_alignment
         anchor = render_index.block_anchor(box)
         if anchor is not None:
             anchor_paragraph = self._add_paragraph(container)
@@ -2006,29 +2019,29 @@ class DocxRenderer:
             self._add_bookmark(anchor_paragraph, anchor)
         outer_table = container.add_table(rows=1, cols=1)
         outer_table.alignment = TABLE_ALIGNMENTS[alignment]
-        if box.style.width is not None:
-            width = length_to_inches(box.style.width, box.style.unit or unit)
+        if box_style.width is not None:
+            width = length_to_inches(box_style.width, box_style.unit or unit)
             outer_table.autofit = False
             self._set_table_width(outer_table, width)
             outer_table.columns[0].width = Inches(width)
         cell = outer_table.rows[0].cells[0]
         cell._tc.clear_content()
         self._initialized_cells.discard(id(cell))
-        if box.style.width is not None:
-            self._set_cell_width(cell, length_to_inches(box.style.width, box.style.unit or unit))
-        self._set_cell_shading(cell, box.style.background_color)
-        if box.style.border.color is not None and box.style.border.width > 0:
-            self._set_cell_borders(cell, box.style.border.color, box.style.border.width_points())
+        if box_style.width is not None:
+            self._set_cell_width(cell, length_to_inches(box_style.width, box_style.unit or unit))
+        self._set_cell_shading(cell, box_style.background_color)
+        if box_style.border.color is not None and box_style.border.width > 0:
+            self._set_cell_borders(cell, box_style.border.color, box_style.border.width_points())
         else:
             self._set_cell_borders_none(cell)
-        self._set_cell_margins(cell, *box.style.padding.to_points())
+        self._set_cell_margins(cell, *box_style.padding.to_points())
 
         if box.title is not None:
             title_paragraph = self._add_paragraph(cell)
             title_paragraph.paragraph_format.space_after = Pt(6)
-            if box.style.title_background_color is not None:
-                self._set_paragraph_shading(title_paragraph, box.style.title_background_color)
-            title_style = TextStyle(text_color=box.style.title_text_color, bold=True)
+            if box_style.title_background_color is not None:
+                self._set_paragraph_shading(title_paragraph, box_style.title_background_color)
+            title_style = TextStyle(text_color=box_style.title_text_color, bold=True)
             self._append_runs(
                 title_paragraph,
                 box.title,
@@ -2512,6 +2525,7 @@ class DocxRenderer:
         *,
         word_document: WordDocument,
     ) -> None:
+        table_style = theme.stylesheet.resolve("table", table_block.style, TableStyle())
         split_table = table_block._resolve_split()
         media_placement = table_block._resolve_placement()
         self._apply_media_placement_before(container, word_document, media_placement)
@@ -2548,7 +2562,7 @@ class DocxRenderer:
         table.style = "Table Grid"
         table.alignment = TABLE_ALIGNMENTS[theme.blocks.table_block_alignment]
         self._prevent_table_row_split(table)
-        if split_table or table_block.style.repeat_header_rows:
+        if split_table or table_style.repeat_header_rows:
             self._repeat_table_header_rows(table, layout.header_row_count)
         else:
             self._keep_table_together(table)
@@ -2568,15 +2582,23 @@ class DocxRenderer:
                 target_cell = start_cell.merge(end_cell)
 
             paragraph = target_cell.paragraphs[0]
-            effective_style = table_block._effective_cell_style(cell_placement)
+            effective_style = table_block._effective_cell_style(
+                cell_placement,
+                stylesheet=theme.stylesheet,
+                table_style=table_style,
+            )
             cell_text_alignment = self._table_cell_text_alignment(
                 cell_placement,
                 table_block,
+                theme.stylesheet,
+                table_style,
             ) or "left"
             paragraph.alignment = ALIGNMENTS[cell_text_alignment]
             cell_vertical_alignment = self._table_cell_vertical_alignment(
                 cell_placement,
                 table_block,
+                theme.stylesheet,
+                table_style,
             )
             if cell_vertical_alignment is not None:
                 target_cell.vertical_alignment = CELL_VERTICAL_ALIGNMENTS[cell_vertical_alignment]
@@ -2590,15 +2612,15 @@ class DocxRenderer:
             )
             if effective_style.background_color is not None:
                 self._set_cell_shading(target_cell, effective_style.background_color)
-            if table_block.style.border.color is not None and table_block.style.border.width > 0:
+            if table_style.border.color is not None and table_style.border.width > 0:
                 self._set_cell_borders(
                     target_cell,
-                    table_block.style.border.color,
-                    table_block.style.border.width_points(),
+                    table_style.border.color,
+                    table_style.border.width_points(),
                 )
             else:
                 self._set_cell_borders_none(target_cell)
-            self._set_cell_margins(target_cell, *table_block.style.cell_padding.to_points())
+            self._set_cell_margins(target_cell, *table_style.cell_padding.to_points())
 
         if table_block.caption is not None and theme.captions.table_caption_position == "below":
             render_caption()
@@ -2608,15 +2630,27 @@ class DocxRenderer:
         self,
         placement: object,
         table_block: Table,
+        stylesheet: object | None = None,
+        table_style: TableStyle | None = None,
     ) -> str | None:
-        return table_block._effective_cell_style(placement).text_alignment
+        return table_block._effective_cell_style(
+            placement,
+            stylesheet=stylesheet,
+            table_style=table_style,
+        ).text_alignment
 
     def _table_cell_vertical_alignment(
         self,
         placement: object,
         table_block: Table,
+        stylesheet: object | None = None,
+        table_style: TableStyle | None = None,
     ) -> str | None:
-        return table_block._effective_cell_style(placement).vertical_alignment
+        return table_block._effective_cell_style(
+            placement,
+            stylesheet=stylesheet,
+            table_style=table_style,
+        ).vertical_alignment
 
     def _render_figure(
         self,

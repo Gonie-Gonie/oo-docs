@@ -50,6 +50,7 @@ from oodocs.components.inline import (
     Comment,
     Footnote,
     Hyperlink,
+    InlineChip,
     Text,
 )
 from oodocs.components.media import Figure, ImageData, SubFigure, SubFigureGroup, Table
@@ -540,10 +541,12 @@ class _ValidationContext:
 
         if isinstance(block, Paragraph):
             self._register_referenceable(block, path)
+            self._validate_style_reference("paragraph", block.style, f"{path}.style")
             self._scan_inlines(block.content, f"{path}.content")
             return
 
         if isinstance(block, (BulletList, NumberedList)):
+            self._validate_style_reference("list", block.style, f"{path}.style")
             if len(block.item_children) != len(block.items):
                 self._add(
                     "error",
@@ -554,6 +557,7 @@ class _ValidationContext:
             for item_index, item in enumerate(block.items):
                 item_path = f"{path}.items[{item_index}]"
                 self._register_referenceable(item, item_path)
+                self._validate_style_reference("paragraph", item.style, f"{item_path}.style")
                 self._scan_inlines(item.content, f"{item_path}.content")
                 child_lists = (
                     block.item_children[item_index]
@@ -569,6 +573,10 @@ class _ValidationContext:
 
         if isinstance(block, (CodeBlock, Equation, Box)):
             self._register_referenceable(block, path)
+            if isinstance(block, Box):
+                self._validate_style_reference("box", block.style, f"{path}.style")
+            else:
+                self._validate_style_reference("paragraph", block.style, f"{path}.style")
             if isinstance(block, Box):
                 if block.title is not None:
                     self._scan_inlines(block.title, f"{path}.title")
@@ -653,6 +661,7 @@ class _ValidationContext:
 
         if isinstance(block, Table):
             self._register_referenceable(block, path)
+            self._validate_style_reference("table", block.style, f"{path}.style")
             self._validate_table(block, path)
             return
 
@@ -711,6 +720,9 @@ class _ValidationContext:
     def _scan_inlines(self, fragments: Sequence[Text], path: str) -> None:
         for index, fragment in enumerate(fragments):
             fragment_path = f"{path}[{index}]"
+            if isinstance(fragment, InlineChip):
+                self._validate_style_reference("chip", fragment.chip_style, f"{fragment_path}.chip_style")
+                continue
             if isinstance(fragment, BlockReference):
                 self.references.append((fragment, fragment_path))
                 if fragment.label is not None:
@@ -730,6 +742,57 @@ class _ValidationContext:
                 continue
             if isinstance(fragment, (TextBox, Shape, ImageBox)):
                 self._collect_positioned_item(fragment, fragment_path)
+
+    def _validate_style_reference(self, category: str, value: object, path: str) -> None:
+        if not isinstance(value, str):
+            return
+        stylesheet = self.document.settings.theme.stylesheet
+        try:
+            stylesheet.resolve(category, value)
+        except KeyError:
+            wrong_category = self._find_style_category(value, exclude=category)
+            if wrong_category is not None:
+                self._add(
+                    "error",
+                    "wrong-style-category",
+                    f"Style {value!r} is registered as a {wrong_category.replace('_', ' ')} "
+                    f"style, not a {category.replace('_', ' ')} style.",
+                    path,
+                )
+                return
+            self._add(
+                "error",
+                "unknown-style-name",
+                f"Unknown {category.replace('_', ' ')} style: {value!r}.",
+                path,
+            )
+        except TypeError as exc:
+            self._add("error", "wrong-style-category", str(exc), path)
+
+    def _find_style_category(self, name: str, *, exclude: str) -> str | None:
+        stylesheet = self.document.settings.theme.stylesheet
+        normalized_name = name.strip()
+        for category in (
+            "text",
+            "paragraph",
+            "run_in_title",
+            "list",
+            "box",
+            "table",
+            "table_cell",
+            "chip",
+        ):
+            if category == exclude:
+                continue
+            styles = getattr(stylesheet, category, None)
+            if not isinstance(styles, dict):
+                continue
+            if normalized_name in styles:
+                return category
+            prefixed_name = normalized_name.removeprefix(f"{category}.")
+            if prefixed_name in styles:
+                return category
+        return None
 
     def _validate_title(self, title: Sequence[Text], path: str, message: str) -> None:
         if not _plain_text(title).strip():
@@ -802,16 +865,40 @@ class _ValidationContext:
 
         for row_index, row in enumerate(table.header_rows):
             for cell_index, cell in enumerate(row):
+                cell_path = f"{path}.header_rows[{row_index}][{cell_index}]"
+                self._validate_style_reference("table_cell", cell.style, f"{cell_path}.style")
+                self._validate_style_reference(
+                    "paragraph",
+                    cell.content.style,
+                    f"{cell_path}.content.style",
+                )
                 self._scan_inlines(
                     cell.content.content,
-                    f"{path}.header_rows[{row_index}][{cell_index}].content",
+                    f"{cell_path}.content",
                 )
         for row_index, row in enumerate(table.rows):
             for cell_index, cell in enumerate(row):
+                cell_path = f"{path}.rows[{row_index}][{cell_index}]"
+                self._validate_style_reference("table_cell", cell.style, f"{cell_path}.style")
+                self._validate_style_reference(
+                    "paragraph",
+                    cell.content.style,
+                    f"{cell_path}.content.style",
+                )
                 self._scan_inlines(
                     cell.content.content,
-                    f"{path}.rows[{row_index}][{cell_index}].content",
+                    f"{cell_path}.content",
                 )
+        for index, style in table.row_styles.items():
+            self._validate_style_reference("table_cell", style, f"{path}.row_styles[{index}]")
+        for index, style in table.column_styles.items():
+            self._validate_style_reference("table_cell", style, f"{path}.column_styles[{index}]")
+        for index, style in table.header_row_styles.items():
+            self._validate_style_reference(
+                "table_cell",
+                style,
+                f"{path}.header_row_styles[{index}]",
+            )
         if table.caption is not None:
             self._scan_inlines(table.caption.content, f"{path}.caption")
 

@@ -66,7 +66,7 @@ from oodocs.core import OODocsError, PathLike, length_to_inches
 from oodocs.document import Document
 from oodocs.components.equations import SUBSCRIPT, SUPERSCRIPT, parse_latex_segments
 from oodocs.layout.indexing import RenderIndex, build_render_index
-from oodocs.styles import ParagraphStyle, Theme
+from oodocs.styles import BoxStyle, ParagraphStyle, TableStyle, Theme
 from oodocs.renderers.context import HtmlRenderContext
 from oodocs.renderers.syntax import syntax_html
 
@@ -182,8 +182,9 @@ class HtmlRenderer:
             block.title_style,
             context.run_in_title_style,
         )
+        paragraph_style = context.stylesheet.resolve("paragraph", block.style, ParagraphStyle())
         return (
-            f'<p{anchor_attr} class="oodocs-paragraph" style="{self._paragraph_style_css(block.style, context.theme, default_unit=context.unit)}">'
+            f'<p{anchor_attr} class="oodocs-paragraph" style="{self._paragraph_style_css(paragraph_style, context.theme, default_unit=context.unit)}">'
             + self._inline_html(
                 block.render_content(title_style),
                 context.theme,
@@ -265,8 +266,10 @@ class HtmlRenderer:
         *,
         depth: int,
     ) -> str:
-        list_style = block.style or context.theme.list_style(
-            ordered=isinstance(block, NumberedList)
+        list_style = context.stylesheet.resolve(
+            "list",
+            block.style,
+            context.theme.list_style(ordered=isinstance(block, NumberedList)),
         )
         if depth:
             list_style = replace(list_style, indent=list_style.indent + depth * 0.22)
@@ -279,13 +282,14 @@ class HtmlRenderer:
                 self._render_list(child_list, context, depth=depth + 1)
                 for child_list in block.item_children[index]
             )
+            item_style = context.stylesheet.resolve("paragraph", item.style, ParagraphStyle())
             items.append(
                 (
                     '<div class="oodocs-list-item" '
                     f'style="column-gap: {list_style.marker_gap:.2f}in; padding-left: {list_style.indent:.2f}in;">'
                     f'<div class="oodocs-list-marker">{marker}</div>'
                     '<div class="oodocs-list-content">'
-                    f'<p{anchor_attr} class="oodocs-paragraph" style="{self._paragraph_style_css(item.style, context.theme, default_space_after=3.0, default_unit=context.unit)}">'
+                    f'<p{anchor_attr} class="oodocs-paragraph" style="{self._paragraph_style_css(item_style, context.theme, default_space_after=3.0, default_unit=context.unit)}">'
                     + self._inline_html(
                         item.content,
                         context.theme,
@@ -327,10 +331,11 @@ class HtmlRenderer:
             code_classes.append(f"oodocs-code-has-label-{block.language_position.split('-', 1)[0]}")
         anchor = context.render_index.block_anchor(block)
         anchor_attr = f' id="{escape(anchor)}"' if anchor else ""
+        code_style = context.stylesheet.resolve("paragraph", block.style, ParagraphStyle())
         return (
             f'<section{anchor_attr} class="oodocs-code-block oodocs-code-label-{escape(block.language_position)}">'
             + label
-            + f'<pre class="{" ".join(code_classes)}" style="margin-bottom: {(block.style.space_after or 0):.1f}pt;">'
+            + f'<pre class="{" ".join(code_classes)}" style="margin-bottom: {(code_style.space_after or 0):.1f}pt;">'
             + syntax_html(block.code, block.language)
             + "</pre>"
             + "</section>"
@@ -351,14 +356,15 @@ class HtmlRenderer:
             HTML fragment for the equation.
         """
 
-        line_height = block.style.leading or max(context.theme.typography.body_font_size + 1, 12) * 1.3
+        equation_style = context.stylesheet.resolve("paragraph", block.style, ParagraphStyle())
+        line_height = equation_style.leading or max(context.theme.typography.body_font_size + 1, 12) * 1.3
         anchor = context.render_index.block_anchor(block)
         anchor_attr = f' id="{escape(anchor)}"' if anchor else ""
         number = context.render_index.equation_number(block)
         number_html = f'<span class="oodocs-equation-number">({number})</span>' if number is not None else ""
         return (
             f'<div{anchor_attr} class="oodocs-equation" '
-            f'style="text-align: {context.theme.resolve_paragraph_text_alignment(block.style)}; margin: 0 0 {(block.style.space_after or 0):.1f}pt; line-height: {line_height:.1f}pt;">'
+            f'style="text-align: {context.theme.resolve_paragraph_text_alignment(equation_style)}; margin: 0 0 {(equation_style.space_after or 0):.1f}pt; line-height: {line_height:.1f}pt;">'
             + self._math_html(
                 Math(block.expression),
                 context.theme,
@@ -441,11 +447,12 @@ class HtmlRenderer:
         """
 
         self._assert_box_children_supported(block.children)
+        box_style = context.stylesheet.resolve("box", block.style, None)
         title_html = ""
         if block.title is not None:
             title_html = (
                 '<div class="oodocs-box-title" '
-                f'style="{self._box_title_css(block, context.theme)}">'
+                f'style="{self._box_title_css(box_style, context.theme)}">'
                 + self._inline_html(
                     block.title,
                     context.theme,
@@ -471,7 +478,7 @@ class HtmlRenderer:
         anchor_attr = f' id="{escape(anchor)}"' if anchor else ""
         return (
             f'<section{anchor_attr} class="oodocs-box" '
-            f'style="{self._box_css(block, context.theme, context.unit)}">'
+            f'style="{self._box_css(box_style, context.theme, context.unit)}">'
             + title_html
             + children_html
             + "</section>"
@@ -675,6 +682,7 @@ class HtmlRenderer:
             HTML fragment for the table wrapper, caption, and table element.
         """
 
+        table_style = context.stylesheet.resolve("table", block.style, TableStyle())
         layout = build_table_layout(block.header_rows, block.rows)
         split_table = block._resolve_split()
         placement = block._resolve_placement()
@@ -692,12 +700,14 @@ class HtmlRenderer:
             header=True,
             block=block,
             context=context,
+            table_style=table_style,
         )
         tbody_html = self._table_section_html(
             layout,
             header=False,
             block=block,
             context=context,
+            table_style=table_style,
         )
         caption_html = (
             self._caption_html(
@@ -1321,6 +1331,7 @@ class HtmlRenderer:
         header: bool,
         block: Table,
         context: HtmlRenderContext,
+        table_style: TableStyle,
     ) -> str:
         rows: dict[int, list[TablePlacement]] = {}
         for placement in layout.placements:
@@ -1332,7 +1343,7 @@ class HtmlRenderer:
         for row_index in sorted(rows):
             cells = []
             for placement in sorted(rows[row_index], key=lambda value: value.column):
-                cells.append(self._table_cell_html(placement, tag, block, context))
+                cells.append(self._table_cell_html(placement, tag, block, context, table_style))
             html_rows.append("<tr>" + "".join(cells) + "</tr>")
         return "".join(html_rows)
 
@@ -1342,22 +1353,36 @@ class HtmlRenderer:
         tag: str,
         block: Table,
         context: HtmlRenderContext,
+        table_style: TableStyle,
     ) -> str:
-        style_parts = [
-        ]
-        if block.style.border.color is not None and block.style.border.width > 0:
+        style_parts = []
+        if table_style.border.color is not None and table_style.border.width > 0:
             style_parts.append(
-                f"border: {block.style.border.width_points():.2f}pt solid #{block.style.border.color}"
+                f"border: {table_style.border.width_points():.2f}pt solid #{table_style.border.color}"
             )
         else:
             style_parts.append("border: none")
-        top_padding, right_padding, bottom_padding, left_padding = block.style.cell_padding.to_points()
+        top_padding, right_padding, bottom_padding, left_padding = table_style.cell_padding.to_points()
         style_parts.append(
             f"padding: {top_padding:.1f}pt {right_padding:.1f}pt {bottom_padding:.1f}pt {left_padding:.1f}pt"
         )
-        effective_style = block._effective_cell_style(placement)
-        text_alignment = self._table_cell_text_alignment(placement, block) or "left"
-        vertical_alignment = self._table_cell_vertical_alignment(placement, block)
+        effective_style = block._effective_cell_style(
+            placement,
+            stylesheet=context.stylesheet,
+            table_style=table_style,
+        )
+        text_alignment = self._table_cell_text_alignment(
+            placement,
+            block,
+            context.stylesheet,
+            table_style,
+        ) or "left"
+        vertical_alignment = self._table_cell_vertical_alignment(
+            placement,
+            block,
+            context.stylesheet,
+            table_style,
+        )
         style_parts.append(f"text-align: {text_alignment}")
         style_parts.append(
             f"vertical-align: {vertical_alignment}" if vertical_alignment is not None else "vertical-align: top"
@@ -1375,9 +1400,14 @@ class HtmlRenderer:
             attrs.append(f' colspan="{placement.cell.colspan}"')
         if placement.cell.rowspan > 1:
             attrs.append(f' rowspan="{placement.cell.rowspan}"')
+        cell_paragraph_style = context.stylesheet.resolve(
+            "paragraph",
+            placement.cell.content.style,
+            ParagraphStyle(),
+        )
         paragraph_html = (
             '<p class="oodocs-paragraph" '
-            f'style="{self._paragraph_style_css(placement.cell.content.style, context.theme, default_unit=context.unit, alignment=text_alignment)}">'
+            f'style="{self._paragraph_style_css(cell_paragraph_style, context.theme, default_unit=context.unit, alignment=text_alignment)}">'
             + self._inline_html(
                 placement.cell.content.content,
                 context.theme,
@@ -1397,15 +1427,27 @@ class HtmlRenderer:
         self,
         placement: TablePlacement,
         block: Table,
+        stylesheet: object | None = None,
+        table_style: TableStyle | None = None,
     ) -> str | None:
-        return block._effective_cell_style(placement).text_alignment
+        return block._effective_cell_style(
+            placement,
+            stylesheet=stylesheet,
+            table_style=table_style,
+        ).text_alignment
 
     def _table_cell_vertical_alignment(
         self,
         placement: TablePlacement,
         block: Table,
+        stylesheet: object | None = None,
+        table_style: TableStyle | None = None,
     ) -> str | None:
-        return block._effective_cell_style(placement).vertical_alignment
+        return block._effective_cell_style(
+            placement,
+            stylesheet=stylesheet,
+            table_style=table_style,
+        ).vertical_alignment
 
     def _caption_html(
         self,
@@ -1732,8 +1774,8 @@ class HtmlRenderer:
         *,
         base_size: float | None,
     ) -> str:
-        chip_style = fragment.chip_style
-        text = escape(fragment.display_text()).replace("\n", " ")
+        chip_style = theme.stylesheet.resolve("chip", fragment.chip_style, None)
+        text = escape(fragment.display_text(chip_style)).replace("\n", " ")
         base_size = fragment.style.font_size or base_size or theme.typography.body_font_size
         font_size = max(base_size + chip_style.font_size_delta, 6.0)
         top_padding, right_padding, bottom_padding, left_padding = chip_style.padding.as_tuple()
@@ -2120,25 +2162,25 @@ class HtmlRenderer:
             f"{''.join(pagination_styles)}"
         )
 
-    def _box_css(self, block: Box, theme: Theme, unit: str) -> str:
-        top_padding, right_padding, bottom_padding, left_padding = block.style.padding.to_points()
+    def _box_css(self, style: BoxStyle, theme: Theme, unit: str) -> str:
+        top_padding, right_padding, bottom_padding, left_padding = style.padding.to_points()
         width = (
-            f" width: {length_to_inches(block.style.width, block.style.unit or unit):.4f}in;"
-            if block.style.width is not None
+            f" width: {length_to_inches(style.width, style.unit or unit):.4f}in;"
+            if style.width is not None
             else ""
         )
         border_css = (
-            f"{block.style.border.width_points():.2f}pt solid #{block.style.border.color}"
-            if block.style.border.color is not None and block.style.border.width > 0
+            f"{style.border.width_points():.2f}pt solid #{style.border.color}"
+            if style.border.color is not None and style.border.width > 0
             else "none"
         )
         return (
             f"border: {border_css};"
-            f" background: #{block.style.background_color};"
+            f" background: #{style.background_color};"
             f" padding: {top_padding:.1f}pt {right_padding:.1f}pt {bottom_padding:.1f}pt {left_padding:.1f}pt;"
-            f" margin: 0 0 {block.style.space_after:.1f}pt;"
+            f" margin: 0 0 {style.space_after:.1f}pt;"
             f"{width}"
-            f" {self._block_alignment_css(block.style.block_alignment or theme.blocks.box_block_alignment)}"
+            f" {self._block_alignment_css(style.block_alignment or theme.blocks.box_block_alignment)}"
         )
 
     def _table_wrapper_css(self, theme: Theme, *, in_box: bool = False) -> str:
@@ -2184,16 +2226,16 @@ class HtmlRenderer:
             return "margin-left: auto; margin-right: auto;"
         return "margin-left: 0; margin-right: auto;"
 
-    def _box_title_css(self, block: Box, theme: Theme) -> str:
+    def _box_title_css(self, style: BoxStyle, theme: Theme) -> str:
         parts = [
             "font-weight: 700",
             "margin: 0 0 6pt",
         ]
-        if block.style.title_background_color is not None:
-            parts.append(f"background: #{block.style.title_background_color}")
+        if style.title_background_color is not None:
+            parts.append(f"background: #{style.title_background_color}")
             parts.append("padding: 4pt 6pt")
-        if block.style.title_text_color is not None:
-            parts.append(f"color: #{block.style.title_text_color}")
+        if style.title_text_color is not None:
+            parts.append(f"color: #{style.title_text_color}")
         parts.append(f"font-size: {theme.typography.body_font_size:.1f}pt")
         return "; ".join(parts)
 
