@@ -1000,6 +1000,13 @@
           "qualname": "oodocs.apidoc.config.ApiBuildConfig"
         },
         {
+          "category": "apidoc-composition",
+          "kind": "class",
+          "module": "oodocs.apidoc.categories",
+          "name": "ApiCategory",
+          "qualname": "oodocs.apidoc.categories.ApiCategory"
+        },
+        {
           "category": "apidoc-collector",
           "kind": "type-alias",
           "module": "typing",
@@ -1168,6 +1175,20 @@
           "qualname": "typing.Literal"
         },
         {
+          "category": "apidoc-composition",
+          "kind": "class",
+          "module": "oodocs.apidoc.categories",
+          "name": "GuideLink",
+          "qualname": "oodocs.apidoc.categories.GuideLink"
+        },
+        {
+          "category": "apidoc-composition",
+          "kind": "constant",
+          "module": null,
+          "name": "OODocs_API_CATEGORIES",
+          "qualname": "OODocs_API_CATEGORIES"
+        },
+        {
           "category": "apidoc-parser",
           "kind": "class",
           "module": "oodocs.apidoc.docstring",
@@ -1201,6 +1222,27 @@
           "module": "oodocs.apidoc.render",
           "name": "api_objects_to_summary_table",
           "qualname": "oodocs.apidoc.render.api_objects_to_summary_table"
+        },
+        {
+          "category": "apidoc-composition",
+          "kind": "function",
+          "module": "oodocs.apidoc.help",
+          "name": "api_category_to_chapter",
+          "qualname": "oodocs.apidoc.help.api_category_to_chapter"
+        },
+        {
+          "category": "apidoc-composition",
+          "kind": "function",
+          "module": "oodocs.apidoc.help",
+          "name": "api_object_to_help_section",
+          "qualname": "oodocs.apidoc.help.api_object_to_help_section"
+        },
+        {
+          "category": "apidoc-composition",
+          "kind": "function",
+          "module": "oodocs.apidoc.help",
+          "name": "api_package_to_help_book",
+          "qualname": "oodocs.apidoc.help.api_package_to_help_book"
         },
         {
           "category": "apidoc-composition",

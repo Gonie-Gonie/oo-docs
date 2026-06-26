@@ -11,6 +11,8 @@ Attributes:
 """
 
 from oodocs.apidoc.collect import collect_api, collect_module_api, collect_object_api
+from oodocs.apidoc.builtin_categories import OODocs_API_CATEGORIES
+from oodocs.apidoc.categories import ApiCategory, GuideLink
 from oodocs.apidoc.config import (
     ApiBuildConfig,
     ApiCollectConfig,
@@ -61,6 +63,11 @@ from oodocs.apidoc.render import (
     api_objects_to_summary_table,
     api_package_to_document,
 )
+from oodocs.apidoc.help import (
+    api_category_to_chapter,
+    api_object_to_help_section,
+    api_package_to_help_book,
+)
 from oodocs.apidoc.profiles import (
     ApiPresentationProfile,
     presentation_profile_names,
@@ -72,6 +79,7 @@ from oodocs.apidoc.profiles import (
 __all__ = [
     "ApiCollectConfig",
     "ApiBuildConfig",
+    "ApiCategory",
     "ApiCollectorName",
     "ApiCoverageResult",
     "ApiDiffResult",
@@ -96,11 +104,16 @@ __all__ = [
     "ApiSeeAlso",
     "ApiSnapshot",
     "ApiVisibility",
+    "GuideLink",
+    "OODocs_API_CATEGORIES",
     "ParsedDocstring",
     "api_coverage_to_chapter",
     "api_diff_to_chapter",
     "api_objects_to_chapter",
     "api_objects_to_summary_table",
+    "api_category_to_chapter",
+    "api_object_to_help_section",
+    "api_package_to_help_book",
     "api_package_to_document",
     "check_api_docs",
     "check_doctest_examples",

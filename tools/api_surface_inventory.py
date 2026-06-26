@@ -55,10 +55,13 @@ APIDOC_MODULE_CATEGORIES = {
     "oodocs.apidoc.collect_griffe": "apidoc-collector",
     "oodocs.apidoc.collect_inspect": "apidoc-collector",
     "oodocs.apidoc.config": "apidoc-collector",
+    "oodocs.apidoc.builtin_categories": "apidoc-composition",
+    "oodocs.apidoc.categories": "apidoc-composition",
     "oodocs.apidoc.coverage": "apidoc-coverage",
     "oodocs.apidoc.diff": "apidoc-diff",
     "oodocs.apidoc.docstring": "apidoc-parser",
     "oodocs.apidoc.examples": "apidoc-parser",
+    "oodocs.apidoc.help": "apidoc-composition",
     "oodocs.apidoc.model": "apidoc-model",
     "oodocs.apidoc.render": "apidoc-composition",
     "oodocs.apidoc.profiles": "apidoc-composition",
@@ -81,6 +84,7 @@ EXACT_CATEGORIES = {
     "ApiPresentationProfileName": "apidoc-composition",
     "ApiPublicPolicyName": "apidoc-collector",
     "ApiVisibility": "apidoc-model",
+    "OODocs_API_CATEGORIES": "apidoc-composition",
     "ValidationSeverity": "validation",
 }
 

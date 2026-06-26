@@ -44,6 +44,7 @@ ApiDocstringStyleName = Literal[
 ]
 ApiPresentationProfileName = Literal[
     "reference",
+    "help",
     "compact",
     "manual",
     "evidence",
@@ -3645,6 +3646,60 @@ class ApiPackage:
             citations=citations,
             include_coverage=include_coverage,
             include_modules=include_modules,
+            max_level=max_level,
+        )
+
+    def to_help_book(
+        self,
+        title: str | None = None,
+        *,
+        presentation: object = "help",
+        categories: Sequence[object] | None = None,
+        settings: object | None = None,
+        citations: object | None = None,
+        include_coverage: bool = True,
+        max_level: int | None = None,
+    ):
+        """Return a category-based API help book document.
+
+        Args:
+            title: Optional document title. Defaults to
+                ``"{api.name} API Reference"``.
+            presentation: Presentation policy name or
+                ``ApiPresentationProfile`` object.
+            categories: Optional category definitions. Defaults to the OODocs
+                built-in API categories.
+            settings: Optional ``DocumentSettings`` passed to ``Document``.
+            citations: Optional citation library passed to ``Document``.
+            include_coverage: Whether to append coverage evidence at the end.
+            max_level: Optional deepest heading level for the table of
+                contents and object sections.
+
+        Returns:
+            OODocs ``Document`` ready to save as DOCX, PDF, or HTML.
+
+        Examples:
+            ```python
+            from oodocs.apidoc import ApiPresentationProfile, collect_api
+
+            api = collect_api("oodocs", public_policy="__all__")
+            reference = api.to_help_book(
+                title="OODocs API Reference",
+                presentation=ApiPresentationProfile.help(),
+            )
+            ```
+        """
+
+        from oodocs.apidoc.help import api_package_to_help_book
+
+        return api_package_to_help_book(
+            self,
+            title=title,
+            categories=categories,  # type: ignore[arg-type]
+            presentation=presentation,
+            settings=settings,
+            citations=citations,
+            include_coverage=include_coverage,
             max_level=max_level,
         )
 

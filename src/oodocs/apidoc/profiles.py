@@ -136,6 +136,42 @@ class ApiPresentationProfile:
         return cls(name="reference")
 
     @classmethod
+    def help(cls) -> ApiPresentationProfile:
+        """Return the per-symbol API help page profile.
+
+        Returns:
+            Profile that favors compact MATLAB-style help pages with one
+            runnable example, concise parameter tables, and source metadata as
+            supporting information.
+
+        Examples:
+            ```python
+            from oodocs.apidoc import ApiPresentationProfile, collect_api
+
+            api = collect_api("oodocs", public_policy="__all__")
+            doc = api.to_help_book(presentation=ApiPresentationProfile.help())
+            ```
+        """
+
+        return cls(
+            name="help",
+            include_description=True,
+            include_examples=True,
+            include_see_also=True,
+            include_notes=False,
+            include_warnings=True,
+            include_renderer_notes=False,
+            include_source=True,
+            include_member_summary=True,
+            include_member_sections=False,
+            parameter_columns=("name", "type", "default", "description"),
+            max_description_chars=360,
+            max_examples=1,
+            max_signature_width=88,
+            max_signature_lines=16,
+        )
+
+    @classmethod
     def compact(cls) -> ApiPresentationProfile:
         """Return a compact profile for summaries and indexes.
 
@@ -387,6 +423,7 @@ class ApiPresentationProfile:
 
 _PROFILES: dict[str, ApiPresentationProfile] = {
     "reference": ApiPresentationProfile.reference(),
+    "help": ApiPresentationProfile.help(),
     "compact": ApiPresentationProfile.compact(),
     "manual": ApiPresentationProfile.manual(),
     "evidence": ApiPresentationProfile.evidence(),
