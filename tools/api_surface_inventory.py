@@ -244,7 +244,7 @@ def category_for(
         return "validation"
     if module == "oodocs.workflows":
         return "workflow"
-    if module == "oodocs.styles.theme":
+    if module.startswith("oodocs.styles."):
         if export_name == "Theme":
             return "theme"
         if export_name.endswith("Defaults"):

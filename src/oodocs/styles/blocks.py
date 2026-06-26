@@ -1,0 +1,334 @@
+"""Block-level style objects."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+
+from oodocs.core import (
+    length_to_inches,
+    normalize_color,
+    normalize_length_unit,
+    normalize_text_alignment,
+)
+from oodocs.styles.base import _style_with_overrides
+from oodocs.styles.text import TextStyle
+
+
+def paragraph_style_with_overrides(
+    style: ParagraphStyle | None,
+    **overrides: object | None,
+) -> ParagraphStyle:
+    """Return a paragraph style with direct keyword overrides applied.
+
+    Args:
+        style: Base paragraph style or ``None``.
+        **overrides: Paragraph style fields to override when not ``None``.
+
+    Returns:
+        Existing style, copied style, or a new style with overrides applied.
+
+    Examples:
+        ```python
+        style = paragraph_style_with_overrides(None, text_alignment="center")
+        ```
+    """
+
+    return _style_with_overrides(style, ParagraphStyle, overrides)  # type: ignore[return-value]
+
+
+def box_style_with_overrides(
+    style: BoxStyle | None,
+    **overrides: object | None,
+) -> BoxStyle:
+    """Return a box style with direct keyword overrides applied.
+
+    Args:
+        style: Base box style or ``None``.
+        **overrides: Box style fields to override when not ``None``.
+
+    Returns:
+        Existing style, copied style, or a new style with overrides applied.
+
+    Examples:
+        ```python
+        style = box_style_with_overrides(None, background_color="F8FAFC")
+        ```
+    """
+
+    return _style_with_overrides(style, BoxStyle, overrides)  # type: ignore[return-value]
+
+
+@dataclass(slots=True)
+class ParagraphStyle:
+    """Block-level paragraph spacing and alignment settings.
+
+    Attributes:
+        text_alignment: Optional text alignment.
+        space_before: Optional spacing before the paragraph.
+        space_after: Optional spacing after the paragraph.
+        leading: Optional line spacing.
+        left_indent: Optional left indent.
+        right_indent: Optional right indent.
+        first_line_indent: Optional first-line indent.
+        keep_together: Optional keep-together flag.
+        keep_with_next: Optional keep-with-next flag.
+        page_break_before: Optional page-break-before flag.
+        widow_control: Optional widow-control flag.
+        unit: Unit for length values.
+
+    Examples:
+        ```python
+        from oodocs import Document, Paragraph, ParagraphStyle
+
+        paragraph = Paragraph("Indented text", style=ParagraphStyle.hanging())
+        document = Document("Notes", paragraph)
+        ```
+    """
+
+    text_alignment: str | None = None
+    space_before: float | None = None
+    space_after: float | None = 12.0
+    leading: float | None = None
+    left_indent: float | None = None
+    right_indent: float | None = None
+    first_line_indent: float | None = None
+    keep_together: bool | None = None
+    keep_with_next: bool | None = None
+    page_break_before: bool | None = None
+    widow_control: bool | None = None
+    unit: str | None = None
+
+    def __post_init__(self) -> None:
+        self.text_alignment = (
+            normalize_text_alignment(self.text_alignment)
+            if self.text_alignment is not None
+            else None
+        )
+        self.unit = normalize_length_unit(self.unit) if self.unit is not None else None
+        if self.space_before is not None and self.space_before < 0:
+            raise ValueError("ParagraphStyle.space_before must be >= 0")
+        if self.space_after is not None and self.space_after < 0:
+            raise ValueError("ParagraphStyle.space_after must be >= 0")
+        if self.leading is not None and self.leading <= 0:
+            raise ValueError("ParagraphStyle.leading must be > 0")
+        if self.left_indent is not None and self.left_indent < 0:
+            raise ValueError("ParagraphStyle.left_indent must be >= 0")
+        if self.right_indent is not None and self.right_indent < 0:
+            raise ValueError("ParagraphStyle.right_indent must be >= 0")
+
+    @classmethod
+    def hanging(
+        cls,
+        left: float = 0.5,
+        *,
+        by: float | None = None,
+        text_alignment: str | None = None,
+        space_before: float | None = None,
+        space_after: float | None = 12.0,
+        leading: float | None = None,
+        keep_together: bool | None = None,
+        keep_with_next: bool | None = None,
+        page_break_before: bool | None = None,
+        widow_control: bool | None = None,
+        unit: str | None = None,
+    ) -> ParagraphStyle:
+        """Create a hanging-indent paragraph style.
+
+        Args:
+            left: Left indent.
+            by: Hanging amount. Defaults to ``left``.
+            text_alignment: Optional text alignment.
+            space_before: Optional spacing before the paragraph.
+            space_after: Optional spacing after the paragraph.
+            leading: Optional line spacing.
+            keep_together: Optional keep-together flag.
+            keep_with_next: Optional keep-with-next flag.
+            page_break_before: Optional page-break-before flag.
+            widow_control: Optional widow-control flag.
+            unit: Unit for length values.
+
+        Returns:
+            Paragraph style with a negative first-line indent.
+
+        Raises:
+            ValueError: If ``by`` is negative.
+
+        Examples:
+            ```python
+            style = ParagraphStyle.hanging(left=0.5, by=0.25, unit="in")
+            ```
+        """
+
+        hanging_by = left if by is None else by
+        if hanging_by < 0:
+            raise ValueError("ParagraphStyle.hanging by must be >= 0")
+        return cls(
+            text_alignment=text_alignment,
+            space_before=space_before,
+            space_after=space_after,
+            leading=leading,
+            left_indent=left,
+            first_line_indent=-hanging_by,
+            keep_together=keep_together,
+            keep_with_next=keep_with_next,
+            page_break_before=page_break_before,
+            widow_control=widow_control,
+            unit=unit,
+        )
+
+    def left_indent_in_inches(self, default_unit: str) -> float | None:
+        """Return left indent in inches.
+
+        Args:
+            default_unit: Unit to use when this style has no explicit unit.
+
+        Returns:
+            Left indent in inches, or ``None``.
+        """
+
+        return self._indent_in_inches(self.left_indent, default_unit)
+
+    def right_indent_in_inches(self, default_unit: str) -> float | None:
+        """Return right indent in inches.
+
+        Args:
+            default_unit: Unit to use when this style has no explicit unit.
+
+        Returns:
+            Right indent in inches, or ``None``.
+        """
+
+        return self._indent_in_inches(self.right_indent, default_unit)
+
+    def first_line_indent_in_inches(self, default_unit: str) -> float | None:
+        """Return first-line indent in inches.
+
+        Args:
+            default_unit: Unit to use when this style has no explicit unit.
+
+        Returns:
+            First-line indent in inches, or ``None``.
+        """
+
+        return self._indent_in_inches(self.first_line_indent, default_unit)
+
+    def _indent_in_inches(self, value: float | None, default_unit: str) -> float | None:
+        if value is None:
+            return None
+        return length_to_inches(value, self.unit or default_unit)
+
+
+@dataclass(slots=True)
+class RunInTitleStyle:
+    """Run-in title styling for titled paragraphs.
+
+    Attributes:
+        text_style: Inline styling applied to the paragraph title.
+        separator: Text inserted between the title and paragraph body.
+
+    Examples:
+        ```python
+        from oodocs import Document, Paragraph, RunInTitleStyle, TextStyle
+
+        paragraph = Paragraph(
+            "The rollout completed successfully.",
+            title="Outcome",
+            title_style=RunInTitleStyle(TextStyle(bold=True, text_color="166534")),
+        )
+        document = Document("Release Notes", paragraph)
+        ```
+    """
+
+    text_style: TextStyle = field(default_factory=lambda: TextStyle(bold=True))
+    separator: str = " "
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.separator, str):
+            raise TypeError("RunInTitleStyle.separator must be a string")
+
+@dataclass(slots=True)
+class BoxStyle:
+    """Shared box styling for visually grouped content.
+
+    Attributes:
+        border_color: Hex border color.
+        background_color: Hex fill color.
+        title_background_color: Optional title band fill color.
+        title_text_color: Optional title text color.
+        border_width: Border width in points.
+        padding: Default inner padding in points.
+        padding_top: Optional top padding override in points.
+        padding_right: Optional right padding override in points.
+        padding_bottom: Optional bottom padding override in points.
+        padding_left: Optional left padding override in points.
+        space_after: Space after the box in points.
+        width: Optional box width in ``unit``.
+        unit: Unit for ``width`` when a physical width is set.
+        block_alignment: Optional block placement alignment override.
+
+    Examples:
+        ```python
+        from oodocs import Box, BoxStyle, Document
+
+        box = Box("Note body", title="Note", style=BoxStyle(background_color="F7FAFC"))
+        document = Document("Notes", box)
+        ```
+    """
+
+    border_color: str = "B7C2D0"
+    background_color: str = "F7FAFC"
+    title_background_color: str | None = None
+    title_text_color: str | None = None
+    border_width: float = 0.75
+    padding: float = 6.0
+    padding_top: float | None = None
+    padding_right: float | None = None
+    padding_bottom: float | None = None
+    padding_left: float | None = None
+    space_after: float = 12.0
+    width: float | None = None
+    unit: str | None = None
+    block_alignment: str | None = None
+
+    def __post_init__(self) -> None:
+        self.border_color = normalize_color(self.border_color) or "B7C2D0"
+        self.background_color = normalize_color(self.background_color) or "F7FAFC"
+        self.title_background_color = normalize_color(self.title_background_color)
+        self.title_text_color = normalize_color(self.title_text_color)
+        self.unit = normalize_length_unit(self.unit) if self.unit is not None else None
+        if self.border_width < 0:
+            raise ValueError("BoxStyle.border_width must be >= 0")
+        if self.padding < 0:
+            raise ValueError("BoxStyle.padding must be >= 0")
+        for field_name in ("padding_top", "padding_right", "padding_bottom", "padding_left"):
+            value = getattr(self, field_name)
+            if value is not None and value < 0:
+                raise ValueError(f"BoxStyle.{field_name} must be >= 0")
+        if self.space_after < 0:
+            raise ValueError("BoxStyle.space_after must be >= 0")
+        if self.width is not None and self.width <= 0:
+            raise ValueError("BoxStyle.width must be > 0")
+        if self.block_alignment is not None and self.block_alignment not in {"left", "center", "right"}:
+            raise ValueError(f"Unsupported BoxStyle block_alignment: {self.block_alignment!r}")
+
+    def resolved_padding(self) -> tuple[float, float, float, float]:
+        """Return top, right, bottom, and left padding in points.
+
+        Returns:
+            ``(top, right, bottom, left)`` padding values.
+        """
+
+        return (
+            self.padding if self.padding_top is None else self.padding_top,
+            self.padding if self.padding_right is None else self.padding_right,
+            self.padding if self.padding_bottom is None else self.padding_bottom,
+            self.padding if self.padding_left is None else self.padding_left,
+        )
+
+__all__ = [
+    "BoxStyle",
+    "ParagraphStyle",
+    "RunInTitleStyle",
+    "box_style_with_overrides",
+    "paragraph_style_with_overrides",
+]

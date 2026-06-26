@@ -56,9 +56,9 @@
         {
           "category": "style",
           "kind": "class",
-          "module": "oodocs.styles.theme",
+          "module": "oodocs.styles.blocks",
           "name": "BoxStyle",
-          "qualname": "oodocs.styles.theme.BoxStyle"
+          "qualname": "oodocs.styles.blocks.BoxStyle"
         },
         {
           "category": "block",
@@ -245,9 +245,9 @@
         {
           "category": "style",
           "kind": "class",
-          "module": "oodocs.styles.theme",
+          "module": "oodocs.styles.counter",
           "name": "HeadingNumbering",
-          "qualname": "oodocs.styles.theme.HeadingNumbering"
+          "qualname": "oodocs.styles.counter.HeadingNumbering"
         },
         {
           "category": "media",
@@ -308,9 +308,9 @@
         {
           "category": "style",
           "kind": "class",
-          "module": "oodocs.styles.theme",
+          "module": "oodocs.styles.counter",
           "name": "ListStyle",
-          "qualname": "oodocs.styles.theme.ListStyle"
+          "qualname": "oodocs.styles.counter.ListStyle"
         },
         {
           "category": "block",
@@ -434,16 +434,16 @@
         {
           "category": "style",
           "kind": "class",
-          "module": "oodocs.styles.theme",
+          "module": "oodocs.styles.blocks",
           "name": "ParagraphStyle",
-          "qualname": "oodocs.styles.theme.ParagraphStyle"
+          "qualname": "oodocs.styles.blocks.ParagraphStyle"
         },
         {
           "category": "style",
           "kind": "class",
-          "module": "oodocs.styles.theme",
+          "module": "oodocs.styles.blocks",
           "name": "RunInTitleStyle",
-          "qualname": "oodocs.styles.theme.RunInTitleStyle"
+          "qualname": "oodocs.styles.blocks.RunInTitleStyle"
         },
         {
           "category": "generated-page",
@@ -532,9 +532,9 @@
         {
           "category": "style",
           "kind": "class",
-          "module": "oodocs.styles.theme",
+          "module": "oodocs.styles.tables",
           "name": "TableStyle",
-          "qualname": "oodocs.styles.theme.TableStyle"
+          "qualname": "oodocs.styles.tables.TableStyle"
         },
         {
           "category": "generated-page",
@@ -567,9 +567,9 @@
         {
           "category": "style",
           "kind": "class",
-          "module": "oodocs.styles.theme",
+          "module": "oodocs.styles.text",
           "name": "TextStyle",
-          "qualname": "oodocs.styles.theme.TextStyle"
+          "qualname": "oodocs.styles.text.TextStyle"
         },
         {
           "category": "block",
@@ -1452,9 +1452,9 @@
         {
           "category": "style",
           "kind": "class",
-          "module": "oodocs.styles.theme",
+          "module": "oodocs.styles.blocks",
           "name": "BoxStyle",
-          "qualname": "oodocs.styles.theme.BoxStyle"
+          "qualname": "oodocs.styles.blocks.BoxStyle"
         },
         {
           "category": "theme",
@@ -1480,16 +1480,16 @@
         {
           "category": "style",
           "kind": "class",
-          "module": "oodocs.styles.theme",
+          "module": "oodocs.styles.counter",
           "name": "HeadingNumbering",
-          "qualname": "oodocs.styles.theme.HeadingNumbering"
+          "qualname": "oodocs.styles.counter.HeadingNumbering"
         },
         {
           "category": "style",
           "kind": "class",
-          "module": "oodocs.styles.theme",
+          "module": "oodocs.styles.counter",
           "name": "ListStyle",
-          "qualname": "oodocs.styles.theme.ListStyle"
+          "qualname": "oodocs.styles.counter.ListStyle"
         },
         {
           "category": "theme",
@@ -1501,30 +1501,30 @@
         {
           "category": "style",
           "kind": "class",
-          "module": "oodocs.styles.theme",
+          "module": "oodocs.styles.blocks",
           "name": "ParagraphStyle",
-          "qualname": "oodocs.styles.theme.ParagraphStyle"
+          "qualname": "oodocs.styles.blocks.ParagraphStyle"
         },
         {
           "category": "style",
           "kind": "class",
-          "module": "oodocs.styles.theme",
+          "module": "oodocs.styles.blocks",
           "name": "RunInTitleStyle",
-          "qualname": "oodocs.styles.theme.RunInTitleStyle"
+          "qualname": "oodocs.styles.blocks.RunInTitleStyle"
         },
         {
           "category": "style",
           "kind": "class",
-          "module": "oodocs.styles.theme",
+          "module": "oodocs.styles.tables",
           "name": "TableStyle",
-          "qualname": "oodocs.styles.theme.TableStyle"
+          "qualname": "oodocs.styles.tables.TableStyle"
         },
         {
           "category": "style",
           "kind": "class",
-          "module": "oodocs.styles.theme",
+          "module": "oodocs.styles.text",
           "name": "TextStyle",
-          "qualname": "oodocs.styles.theme.TextStyle"
+          "qualname": "oodocs.styles.text.TextStyle"
         },
         {
           "category": "theme",
@@ -1550,30 +1550,30 @@
         {
           "category": "style",
           "kind": "function",
-          "module": "oodocs.styles.theme",
+          "module": "oodocs.styles.blocks",
           "name": "box_style_with_overrides",
-          "qualname": "oodocs.styles.theme.box_style_with_overrides"
+          "qualname": "oodocs.styles.blocks.box_style_with_overrides"
         },
         {
           "category": "style",
           "kind": "function",
-          "module": "oodocs.styles.theme",
+          "module": "oodocs.styles.counter",
           "name": "list_style_with_overrides",
-          "qualname": "oodocs.styles.theme.list_style_with_overrides"
+          "qualname": "oodocs.styles.counter.list_style_with_overrides"
         },
         {
           "category": "style",
           "kind": "function",
-          "module": "oodocs.styles.theme",
+          "module": "oodocs.styles.blocks",
           "name": "paragraph_style_with_overrides",
-          "qualname": "oodocs.styles.theme.paragraph_style_with_overrides"
+          "qualname": "oodocs.styles.blocks.paragraph_style_with_overrides"
         },
         {
           "category": "style",
           "kind": "function",
-          "module": "oodocs.styles.theme",
+          "module": "oodocs.styles.tables",
           "name": "table_style_with_overrides",
-          "qualname": "oodocs.styles.theme.table_style_with_overrides"
+          "qualname": "oodocs.styles.tables.table_style_with_overrides"
         }
       ]
     },
