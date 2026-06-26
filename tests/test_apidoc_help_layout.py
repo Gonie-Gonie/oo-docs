@@ -71,7 +71,7 @@ def test_help_book_starts_with_category_contents_not_coverage() -> None:
     document = api.to_help_book(
         presentation=ApiPresentationProfile.help(),
         include_coverage=True,
-        max_level=2,
+        max_heading_level=2,
     )
 
     titles = _chapter_titles(document)
@@ -83,7 +83,7 @@ def test_help_book_starts_with_category_contents_not_coverage() -> None:
 
 def test_help_book_places_common_symbols_in_category_chapters() -> None:
     api = collect_api("oodocs", collector="auto", public_policy="__all__")
-    document = api.to_help_book(include_coverage=False, max_level=2)
+    document = api.to_help_book(include_coverage=False, max_heading_level=2)
     titles = _chapter_titles(document)
     all_titles = [
         title
@@ -136,13 +136,13 @@ def test_help_book_renders_uncategorized_api_appendix_from_category_gate() -> No
     document = api.to_help_book(
         categories=categories,
         include_coverage=False,
-        max_level=1,
+        max_heading_level=1,
     )
     without_appendix = api.to_help_book(
         categories=categories,
         include_coverage=False,
         include_uncategorized_appendix=False,
-        max_level=1,
+        max_heading_level=1,
     )
 
     assert [obj.qualname for obj in uncategorized] == ["samplepkg.save"]
@@ -182,7 +182,7 @@ def test_api_category_prefix_include_matches_rendering_and_gate() -> None:
         )
     ]
 
-    chapter = api_category_to_chapter(categories[0], api, max_level=1)
+    chapter = api_category_to_chapter(categories[0], api, max_heading_level=1)
     uncategorized = select_uncategorized_api_objects(api, categories)
 
     text = _all_plain_text(chapter)
@@ -369,7 +369,7 @@ def test_category_landing_page_summarizes_constants() -> None:
         order=10,
     )
 
-    chapter = api_category_to_chapter(category, api, max_level=1)
+    chapter = api_category_to_chapter(category, api, max_heading_level=1)
     text = _all_plain_text(chapter)
 
     assert "Constants" in text

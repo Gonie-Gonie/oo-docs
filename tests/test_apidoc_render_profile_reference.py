@@ -5,6 +5,6 @@ from apidoc_samples import collect_sample_api
 
 def test_reference_profile_builds_valid_document(tmp_path) -> None:
     api = collect_sample_api(tmp_path)
-    document = api.to_help_book(presentation="reference", max_level=2)
+    document = api.to_help_book(presentation="reference", max_heading_level=2)
 
     assert document.validate(formats=("html",)).ok

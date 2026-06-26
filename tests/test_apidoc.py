@@ -713,7 +713,7 @@ def test_collect_api_builds_queryable_object_tree_and_blocks(tmp_path: Path) -> 
     assert "Module warnings are rendered in module chapters." in module_blocks_html_text
     assert "Module renderer notes are visible in references." in module_blocks_html_text
 
-    limited_module_doc = Document("Limited Module API", module.to_chapter(max_level=2))
+    limited_module_doc = Document("Limited Module API", module.to_chapter(max_heading_level=2))
     limited_module_html = tmp_path / "limited-module-api.html"
     limited_module_doc.save_html(limited_module_html)
     limited_module_html_text = limited_module_html.read_text(encoding="utf-8")
@@ -1797,7 +1797,7 @@ def test_apidoc_cli_filters_check_and_snapshot(tmp_path: Path) -> None:
     snapshot_json = tmp_path / "filtered-snapshot.json"
     build_dir = tmp_path / "filtered-build"
     configured_build_dir = tmp_path / "configured-filtered-build"
-    max_level_build_dir = tmp_path / "max-level-build"
+    max_heading_level_build_dir = tmp_path / "max-heading-level-build"
     config_path = tmp_path / "apidoc-config.json"
     config_json = tmp_path / "configured-api.json"
     pyproject_config_path = tmp_path / "pyproject.toml"
@@ -1973,12 +1973,12 @@ def test_apidoc_cli_filters_check_and_snapshot(tmp_path: Path) -> None:
     ApiHelpBookConfig(
         presentation="website",
         output_formats=("html",),
-        output_dir=str(max_level_build_dir),
-        max_level=2,
+        output_dir=str(max_heading_level_build_dir),
+        max_heading_level=2,
     ).save_all(package_dir)
-    max_level_html = (max_level_build_dir / "filterpkg-api.html").read_text(encoding="utf-8")
-    assert 'id="filterpkg-core-worker"' in max_level_html
-    assert 'id="filterpkg-core-worker-process"' not in max_level_html
+    max_heading_level_html = (max_heading_level_build_dir / "filterpkg-api.html").read_text(encoding="utf-8")
+    assert 'id="filterpkg-core-worker"' in max_heading_level_html
+    assert 'id="filterpkg-core-worker-process"' not in max_heading_level_html
 
 
 def test_api_objects_example_builds_help_book_and_composable_document(

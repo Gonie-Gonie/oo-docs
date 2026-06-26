@@ -269,7 +269,7 @@ class ApiPresentationProfile:
                     "Public API",
                     *api.to_sections(
                         presentation=ApiPresentationProfile.evidence(),
-                        max_level=2,
+                        max_heading_level=2,
                     ),
                 ),
             )

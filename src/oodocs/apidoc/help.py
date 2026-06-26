@@ -22,7 +22,7 @@ def api_object_to_help_section(
     *,
     level: int = 2,
     presentation: str | ApiPresentationProfile = "help",
-    max_level: int | None = None,
+    max_heading_level: int | None = None,
 ) -> Section:
     """Return one public symbol as a help-page section.
 
@@ -31,7 +31,7 @@ def api_object_to_help_section(
         level: Heading level for the returned section.
         presentation: Presentation profile name or object. The default
             ``"help"`` profile keeps a single symbol page concise.
-        max_level: Optional deepest heading level for nested member sections.
+        max_heading_level: Optional deepest heading level for nested member sections.
 
     Returns:
         Section containing the symbol signature, summary, parameters, examples,
@@ -57,7 +57,7 @@ def api_object_to_help_section(
             level=level,
             anchor=obj.anchor_name(),
         )
-    return obj.to_section(level=level, presentation=profile, max_level=max_level)
+    return obj.to_section(level=level, presentation=profile, max_heading_level=max_heading_level)
 
 
 def _api_object_help_blocks(
@@ -332,7 +332,7 @@ def api_category_to_chapter(
     api: ApiPackage,
     *,
     presentation: str | ApiPresentationProfile = "help",
-    max_level: int | None = None,
+    max_heading_level: int | None = None,
 ) -> Chapter:
     """Return a category landing page and its symbol help sections.
 
@@ -341,7 +341,7 @@ def api_category_to_chapter(
         api: Collected package API containing the category symbols.
         presentation: Presentation profile name or object used for each symbol
             section.
-        max_level: Optional deepest heading level. Values below ``2`` render
+        max_heading_level: Optional deepest heading level. Values below ``2`` render
             the category landing page and index without per-symbol sections.
 
     Returns:
@@ -379,10 +379,10 @@ def api_category_to_chapter(
             obj,
             level=2,
             presentation=presentation,
-            max_level=max_level,
+            max_heading_level=max_heading_level,
         )
         for obj in objects
-        if max_level is None or max_level >= 2
+        if max_heading_level is None or max_heading_level >= 2
     )
     return Chapter(category.title, *blocks)
 
@@ -397,7 +397,7 @@ def api_package_to_help_book(
     citations: object | None = None,
     include_coverage: bool = True,
     include_uncategorized_appendix: bool = True,
-    max_level: int | None = None,
+    max_heading_level: int | None = None,
 ) -> Document:
     """Build a category-based API reference help book.
 
@@ -416,7 +416,7 @@ def api_package_to_help_book(
             after category pages.
         include_uncategorized_appendix: Whether to append public API objects
             not assigned to a category before coverage evidence.
-        max_level: Optional deepest heading level for the table of contents and
+        max_heading_level: Optional deepest heading level for the table of contents and
             generated symbol sections.
 
     Returns:
@@ -424,7 +424,7 @@ def api_package_to_help_book(
         help pages, and optional coverage appendix.
 
     Raises:
-        ValueError: If ``max_level`` is less than ``1``.
+        ValueError: If ``max_heading_level`` is less than ``1``.
 
     Examples:
         ```python
@@ -442,8 +442,8 @@ def api_package_to_help_book(
         ```
     """
 
-    if max_level is not None and max_level < 1:
-        raise ValueError("max_level must be >= 1")
+    if max_heading_level is not None and max_heading_level < 1:
+        raise ValueError("max_heading_level must be >= 1")
     category_list = tuple(categories) if categories is not None else _default_categories(api)
     visible_categories = tuple(
         sorted(
@@ -454,7 +454,7 @@ def api_package_to_help_book(
     uncategorized = tuple(select_uncategorized_api_objects(api, category_list))
     rendered_uncategorized = uncategorized if include_uncategorized_appendix else ()
     children: list[object] = [
-        TableOfContents(title="API Contents", max_level=max_level),
+        TableOfContents(title="API Contents", max_level=max_heading_level),
         _contents_chapter(api, visible_categories, rendered_uncategorized),
     ]
     children.extend(
@@ -462,7 +462,7 @@ def api_package_to_help_book(
             category,
             api,
             presentation=presentation,
-            max_level=max_level,
+            max_heading_level=max_heading_level,
         )
         for category in visible_categories
     )
@@ -471,7 +471,7 @@ def api_package_to_help_book(
             _uncategorized_chapter(
                 rendered_uncategorized,
                 presentation=presentation,
-                max_level=max_level,
+                max_heading_level=max_heading_level,
             )
         )
     if include_coverage:
@@ -523,7 +523,7 @@ def _uncategorized_chapter(
     objects: Sequence[ApiObject],
     *,
     presentation: str | ApiPresentationProfile = "help",
-    max_level: int | None = None,
+    max_heading_level: int | None = None,
 ) -> Chapter:
     from oodocs.apidoc.blocks import api_objects_to_summary_table
 
@@ -539,13 +539,13 @@ def _uncategorized_chapter(
             presentation=presentation,
         ),
     ]
-    if max_level is None or max_level >= 2:
+    if max_heading_level is None or max_heading_level >= 2:
         blocks.extend(
             api_object_to_help_section(
                 obj,
                 level=2,
                 presentation=presentation,
-                max_level=max_level,
+                max_heading_level=max_heading_level,
             )
             for obj in objects
         )

@@ -130,7 +130,7 @@ def build_help_book_document(
     *,
     title: str | None = None,
     presentation: str | ApiPresentationProfile = "help",
-    max_level: int | None = None,
+    max_heading_level: int | None = None,
 ) -> Document:
     """Build a MATLAB-style API help-book document.
 
@@ -140,7 +140,7 @@ def build_help_book_document(
         title: Optional document title. Defaults to ``"{api.name} API
             Reference"``.
         presentation: API presentation profile used for object help pages.
-        max_level: Optional deepest heading level to render.
+        max_heading_level: Optional deepest heading level to render.
 
     Returns:
         API help-book document built through ``ApiPackage.to_help_book``.
@@ -155,7 +155,7 @@ def build_help_book_document(
         )
 
         api = collect_oodocs_api()
-        document = build_help_book_document(api, presentation="help", max_level=3)
+        document = build_help_book_document(api, presentation="help", max_heading_level=3)
         document.save_all(
             "artifacts/api-objects-example",
             stem="oodocs-api-reference",
@@ -168,7 +168,7 @@ def build_help_book_document(
         title=title or f"{api.name} API Reference",
         presentation=presentation,
         include_coverage=True,
-        max_level=max_level,
+        max_heading_level=max_heading_level,
     )
 
 
@@ -226,7 +226,7 @@ def build_composition_demo_document(
             focused_module.to_chapter(
                 title=f"Focused Module: {focused_module.name}",
                 presentation="manual",
-                max_level=3,
+                max_heading_level=3,
             )
         )
     chapters.extend(
@@ -317,7 +317,7 @@ def render_apidoc_example_bundle(
     collector: str | None = None,
     docstring_style: str | ApiDocstringParser | None = None,
     presentation: str | ApiPresentationProfile | None = None,
-    max_level: int | None = None,
+    max_heading_level: int | None = None,
     output_formats: Sequence[str] | None = None,
     verbose: bool = False,
 ) -> dict[str, Path]:
@@ -338,7 +338,7 @@ def render_apidoc_example_bundle(
             when collecting ``target``.
         presentation: Optional presentation profile for the API help book.
             Defaults to ``"help"``.
-        max_level: Optional deepest heading level to render in the API help
+        max_heading_level: Optional deepest heading level to render in the API help
             book.
         output_formats: Optional subset of formats passed to
             ``Document.save_all``. Defaults to build config output formats or
@@ -379,12 +379,12 @@ def render_apidoc_example_bundle(
         collect_config = config
 
     effective_presentation = presentation or "help"
-    if max_level is not None:
-        effective_max_level = max_level
+    if max_heading_level is not None:
+        effective_max_heading_level = max_heading_level
     elif build_config is not None:
-        effective_max_level = build_config.max_level
+        effective_max_heading_level = build_config.max_heading_level
     else:
-        effective_max_level = None
+        effective_max_heading_level = None
     effective_formats = output_formats or (build_config.output_formats if build_config else None)
 
     if api is None:
@@ -408,7 +408,7 @@ def render_apidoc_example_bundle(
     help_book = build_help_book_document(
         api,
         presentation=effective_presentation,
-        max_level=effective_max_level,
+        max_heading_level=effective_max_heading_level,
     )
     _log("Rendering API help book...", verbose=verbose)
     help_book_outputs = help_book.save_all(

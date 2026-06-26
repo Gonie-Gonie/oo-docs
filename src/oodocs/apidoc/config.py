@@ -55,7 +55,7 @@ _BUILD_CONFIG_KEYS = {
     "include_coverage",
     "include_uncategorized_appendix",
     "kind",
-    "max_level",
+    "max_heading_level",
     "module_prefix",
     "output_dir",
     "output_formats",
@@ -765,7 +765,7 @@ class ApiHelpBookConfig:
         presentation: Presentation profile name.
         output_formats: Output formats passed to ``Document.save_all``.
         stem: Optional output file stem.
-        max_level: Optional deepest nested API heading level.
+        max_heading_level: Optional deepest nested API heading level.
         include_coverage: Whether rendered help books include coverage
             evidence as the final appendix.
         include_uncategorized_appendix: Whether rendered help books include
@@ -791,7 +791,7 @@ class ApiHelpBookConfig:
     presentation: str = "help"
     output_formats: tuple[str, ...] = ("docx", "pdf", "html")
     stem: str | None = None
-    max_level: int | None = None
+    max_heading_level: int | None = None
     include_coverage: bool = True
     include_uncategorized_appendix: bool = True
     sidecars: bool = False
@@ -857,7 +857,7 @@ class ApiHelpBookConfig:
             presentation=str(normalized.get("presentation", "help")),
             output_formats=_format_tuple(output_formats),
             stem=_optional_str(normalized.get("stem")),
-            max_level=_optional_int(normalized.get("max_level")),
+            max_heading_level=_optional_int(normalized.get("max_heading_level")),
             include_coverage=bool(normalized.get("include_coverage", True)),
             include_uncategorized_appendix=bool(
                 normalized.get("include_uncategorized_appendix", True)
@@ -1003,8 +1003,8 @@ class ApiHelpBookConfig:
         from oodocs.apidoc.profiles import resolve_presentation_profile
 
         resolve_presentation_profile(self.presentation)
-        if self.max_level is not None and self.max_level < 1:
-            raise ValueError("max_level must be >= 1")
+        if self.max_heading_level is not None and self.max_heading_level < 1:
+            raise ValueError("max_heading_level must be >= 1")
         if not self.output_formats:
             raise ValueError("output_formats must include at least one format")
 
@@ -1292,7 +1292,7 @@ class ApiHelpBookConfig:
                 "presentation": self.presentation,
                 "output_formats": list(self.output_formats),
                 "stem": self.stem,
-                "max_level": self.max_level,
+                "max_heading_level": self.max_heading_level,
                 "include_coverage": self.include_coverage,
                 "include_uncategorized_appendix": self.include_uncategorized_appendix,
                 "sidecars": self.sidecars,
@@ -1439,7 +1439,7 @@ def _help_book_for_build(
                     obj.to_section(
                         level=2,
                         presentation=config.presentation,
-                        max_level=config.max_level,
+                        max_heading_level=config.max_heading_level,
                     )
                     for obj in selected
                 ],
@@ -1454,7 +1454,7 @@ def _help_book_for_build(
         citations=citations,
         include_coverage=config.include_coverage,
         include_uncategorized_appendix=config.include_uncategorized_appendix,
-        max_level=config.max_level,
+        max_heading_level=config.max_heading_level,
     )
 
 

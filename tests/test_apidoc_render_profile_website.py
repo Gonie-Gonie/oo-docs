@@ -12,7 +12,7 @@ def test_website_profile_builds_anchor_linked_html_reference(tmp_path) -> None:
 
     assert widget is not None
     assert make_widget is not None
-    document = api.to_help_book(presentation="website", max_level=2)
+    document = api.to_help_book(presentation="website", max_heading_level=2)
 
     assert document.validate(formats=("html",)).ok
     document.save_html(html_path)

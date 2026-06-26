@@ -74,8 +74,8 @@ For package-wide querying, `ApiPackage` exposes `select_classes()`,
 `select_objects(...)` helper. `ApiModule` exposes matching module-local helpers
 for classes, functions, properties, and attributes.
 
-Use `max_level` when a large repository should render a shallower reference.
-For example, `api.to_help_book(presentation="reference", max_level=2)` renders category
+Use `max_heading_level` when a large repository should render a shallower reference.
+For example, `api.to_help_book(presentation="reference", max_heading_level=2)` renders category
 chapters and top-level object help sections while keeping deeper class members
 in summary tables instead of expanding them as their own headings.
 

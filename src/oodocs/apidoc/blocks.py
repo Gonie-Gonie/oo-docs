@@ -748,7 +748,7 @@ def api_member_summary_table(
     presentation: str | ApiPresentationProfile = "reference",
     *,
     level: int = 2,
-    max_level: int | None = None,
+    max_heading_level: int | None = None,
 ) -> Table | None:
     """Return a member summary table for class-like objects.
 
@@ -756,7 +756,7 @@ def api_member_summary_table(
         obj: API object whose members should be summarized.
         presentation: Presentation profile.
         level: Heading level of ``obj`` when the table is rendered.
-        max_level: Optional deepest heading level. Website links are emitted
+        max_heading_level: Optional deepest heading level. Website links are emitted
             only when member sections will also be rendered.
 
     Returns:
@@ -781,7 +781,7 @@ def api_member_summary_table(
     link_names = (
         resolved.name == "website"
         and resolved.include_member_sections
-        and _can_render_child_sections(level, _normalize_max_level(max_level))
+        and _can_render_child_sections(level, _normalize_max_heading_level(max_heading_level))
     )
     return api_objects_to_summary_table(
         obj.members,
@@ -796,7 +796,7 @@ def api_object_to_blocks(
     *,
     presentation: str | ApiPresentationProfile = "reference",
     level: int = 2,
-    max_level: int | None = None,
+    max_heading_level: int | None = None,
 ) -> list[Block]:
     """Convert one API object into renderer-neutral blocks.
 
@@ -804,7 +804,7 @@ def api_object_to_blocks(
         obj: API object to render.
         presentation: Presentation profile.
         level: Current heading level, used for nested member sections.
-        max_level: Optional deepest heading level to expand.
+        max_heading_level: Optional deepest heading level to expand.
 
     Returns:
         Renderer-neutral OODocs blocks for the object.
@@ -825,7 +825,7 @@ def api_object_to_blocks(
     """
 
     resolved = resolve_presentation_profile(presentation)
-    max_level = _normalize_max_level(max_level)
+    max_heading_level = _normalize_max_heading_level(max_heading_level)
     blocks: list[Block] = []
 
     if signature := api_signature_code_block(obj, resolved):
@@ -847,7 +847,7 @@ def api_object_to_blocks(
         obj,
         resolved,
         level=level,
-        max_level=max_level,
+        max_heading_level=max_heading_level,
     ):
         blocks.append(Paragraph(bold("Members")))
         blocks.append(member_summary)
@@ -856,14 +856,14 @@ def api_object_to_blocks(
     if review_note := api_review_note_paragraph(obj, resolved):
         blocks.append(review_note)
 
-    if resolved.include_member_sections and _can_render_child_sections(level, max_level):
+    if resolved.include_member_sections and _can_render_child_sections(level, max_heading_level):
         child_level = min(level + 1, 6)
         for member in obj.members:
             blocks.append(
                 member.to_section(
                     level=child_level,
                     presentation=resolved,
-                    max_level=max_level,
+                    max_heading_level=max_heading_level,
                 )
             )
     return blocks
@@ -875,7 +875,7 @@ def api_object_to_section(
     presentation: str | ApiPresentationProfile = "reference",
     level: int = 2,
     title: str | None = None,
-    max_level: int | None = None,
+    max_heading_level: int | None = None,
 ) -> Section:
     """Convert one API object into an OODocs section.
 
@@ -884,7 +884,7 @@ def api_object_to_section(
         presentation: Presentation profile.
         level: Heading level for the resulting section.
         title: Optional heading override.
-        max_level: Optional deepest heading level to expand.
+        max_heading_level: Optional deepest heading level to expand.
 
     Returns:
         OODocs section with stable API anchor.
@@ -910,7 +910,7 @@ def api_object_to_section(
             obj,
             presentation=presentation,
             level=level,
-            max_level=max_level,
+            max_heading_level=max_heading_level,
         ),
         level=level,
         anchor=obj.anchor_name(),
@@ -1010,7 +1010,7 @@ def api_module_to_blocks(
     *,
     presentation: str | ApiPresentationProfile = "reference",
     level: int = 2,
-    max_level: int | None = None,
+    max_heading_level: int | None = None,
 ) -> list[Block]:
     """Convert a module into renderer-neutral blocks.
 
@@ -1018,7 +1018,7 @@ def api_module_to_blocks(
         module: API module to render.
         presentation: Presentation profile.
         level: Heading level for contained object sections.
-        max_level: Optional deepest heading level to expand.
+        max_heading_level: Optional deepest heading level to expand.
 
     Returns:
         Renderer-neutral blocks for module prose, summaries, and objects.
@@ -1038,7 +1038,7 @@ def api_module_to_blocks(
     """
 
     resolved = resolve_presentation_profile(presentation)
-    max_level = _normalize_max_level(max_level)
+    max_heading_level = _normalize_max_heading_level(max_heading_level)
     blocks: list[Block] = []
     if module.summary:
         blocks.append(Paragraph(module.summary))
@@ -1067,7 +1067,7 @@ def api_module_to_blocks(
                 split=True,
             )
         )
-    render_member_sections = max_level is None or level <= max_level
+    render_member_sections = max_heading_level is None or level <= max_heading_level
     if module.members:
         blocks.append(
             api_objects_to_summary_table(
@@ -1082,7 +1082,7 @@ def api_module_to_blocks(
             module.to_sections(
                 presentation=resolved,
                 level=level,
-                max_level=max_level,
+                max_heading_level=max_heading_level,
             )
         )
     return blocks
@@ -1093,7 +1093,7 @@ def api_module_to_chapter(
     *,
     presentation: str | ApiPresentationProfile = "reference",
     title: str | None = None,
-    max_level: int | None = None,
+    max_heading_level: int | None = None,
 ):
     """Convert a module into an OODocs chapter.
 
@@ -1101,7 +1101,7 @@ def api_module_to_chapter(
         module: API module to render.
         presentation: Presentation profile.
         title: Optional chapter title override.
-        max_level: Optional deepest heading level to expand.
+        max_heading_level: Optional deepest heading level to expand.
 
     Returns:
         OODocs chapter for the module.
@@ -1128,7 +1128,7 @@ def api_module_to_chapter(
             module,
             presentation=presentation,
             level=2,
-            max_level=max_level,
+            max_heading_level=max_heading_level,
         ),
     )
 
@@ -1137,14 +1137,14 @@ def api_package_to_chapters(
     package: ApiPackage,
     *,
     presentation: str | ApiPresentationProfile = "reference",
-    max_level: int | None = None,
+    max_heading_level: int | None = None,
 ) -> list[object]:
     """Convert package modules into OODocs chapters.
 
     Args:
         package: API package to render.
         presentation: Presentation profile.
-        max_level: Optional deepest heading level to expand.
+        max_heading_level: Optional deepest heading level to expand.
 
     Returns:
         Chapter list, one per collected module.
@@ -1163,7 +1163,7 @@ def api_package_to_chapters(
     """
 
     return [
-        module.to_chapter(presentation=presentation, max_level=max_level)
+        module.to_chapter(presentation=presentation, max_heading_level=max_heading_level)
         for module in package.modules
     ]
 
@@ -1174,7 +1174,7 @@ def api_objects_to_chapter(
     *,
     presentation: str | ApiPresentationProfile = "manual",
     level: int = 2,
-    max_level: int | None = None,
+    max_heading_level: int | None = None,
 ):
     """Build a chapter from selected API objects.
 
@@ -1183,7 +1183,7 @@ def api_objects_to_chapter(
         objects: API objects to render as child sections.
         presentation: Presentation profile name or ``ApiPresentationProfile``.
         level: Heading level used for each object section.
-        max_level: Optional deepest heading level for nested member sections.
+        max_heading_level: Optional deepest heading level for nested member sections.
 
     Returns:
         OODocs chapter containing one section per selected API object.
@@ -1200,7 +1200,7 @@ def api_objects_to_chapter(
             "Widget API",
             api.select_objects(kind="class", module_prefix="mypkg.widgets"),
             presentation="manual",
-            max_level=3,
+            max_heading_level=3,
         )
         guide = Document("Widget Guide", Paragraph("Overview text."), chapter)
         ```
@@ -1214,20 +1214,20 @@ def api_objects_to_chapter(
             obj.to_section(
                 level=level,
                 presentation=presentation,
-                max_level=max_level,
+                max_heading_level=max_heading_level,
             )
             for obj in objects
         ],
     )
 
 
-def _normalize_max_level(max_level: int | None) -> int | None:
-    if max_level is None:
+def _normalize_max_heading_level(max_heading_level: int | None) -> int | None:
+    if max_heading_level is None:
         return None
-    max_level = int(max_level)
-    if max_level < 1:
-        raise ValueError("max_level must be >= 1")
-    return max_level
+    max_heading_level = int(max_heading_level)
+    if max_heading_level < 1:
+        raise ValueError("max_heading_level must be >= 1")
+    return max_heading_level
 
 
 def _source_location_text(
@@ -1252,8 +1252,8 @@ def _source_location_text(
     return display_path
 
 
-def _can_render_child_sections(level: int, max_level: int | None) -> bool:
-    return max_level is None or level < max_level
+def _can_render_child_sections(level: int, max_heading_level: int | None) -> bool:
+    return max_heading_level is None or level < max_heading_level
 
 
 def _column_header(column: str) -> str:

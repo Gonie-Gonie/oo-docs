@@ -23,7 +23,7 @@ def test_apidoc_renders_oodocs_public_api_reference_bundle(tmp_path) -> None:
     document = api.to_help_book(
         presentation="compact",
         include_coverage=True,
-        max_level=3,
+        max_heading_level=3,
     )
 
     outputs = document.save_all(

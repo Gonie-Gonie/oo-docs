@@ -755,6 +755,32 @@ def test_apidoc_selection_and_json_api_use_canonical_names() -> None:
         assert expected_by_class[cls] <= members, cls.__name__
 
 
+def test_apidoc_heading_depth_uses_explicit_parameter_name() -> None:
+    config_fields = {field.name for field in fields(apidoc.ApiHelpBookConfig)}
+    assert "max_level" not in config_fields
+    assert "max_heading_level" in config_fields
+
+    callables = (
+        apidoc.ApiObject.to_blocks,
+        apidoc.ApiObject.to_section,
+        apidoc.ApiModule.to_sections,
+        apidoc.ApiModule.to_chapter,
+        apidoc.ApiModule.to_blocks,
+        apidoc.ApiPackage.to_sections,
+        apidoc.ApiPackage.to_chapters,
+        apidoc.ApiPackage.to_blocks,
+        apidoc.ApiPackage.to_help_book,
+        apidoc.api_object_to_help_section,
+        apidoc.api_category_to_chapter,
+        apidoc.api_package_to_help_book,
+    )
+
+    for callable_obj in callables:
+        parameters = set(inspect.signature(callable_obj).parameters)
+        assert "max_level" not in parameters, callable_obj
+        assert "max_heading_level" in parameters, callable_obj
+
+
 def test_cli_help_uses_canonical_option_names(capsys) -> None:
     oodocs_parser = _build_oodocs_parser()
     oodocs_build_help = _subcommand_help(oodocs_parser, ["build"], capsys)
@@ -783,6 +809,7 @@ def test_cli_help_uses_canonical_option_names(capsys) -> None:
     assert "build" not in apidoc_help
     assert "--config-format" in apidoc_init_help
     assert "--outputs" in apidoc_init_help
+    assert "--max-heading-level" in apidoc_init_help
     assert "--save-json" in apidoc_collect_help
     assert "--report-format" in apidoc_check_help
     assert "--save-json" in apidoc_check_help
@@ -790,7 +817,16 @@ def test_cli_help_uses_canonical_option_names(capsys) -> None:
     assert "--save-json" in apidoc_snapshot_help
     assert "--save-json" in apidoc_diff_help
 
-    for old_option in ("--to", "--profile", "--format", "--out-json", "--out-csv", "--base", "--head"):
+    for old_option in (
+        "--to",
+        "--profile",
+        "--format",
+        "--max-level",
+        "--out-json",
+        "--out-csv",
+        "--base",
+        "--head",
+    ):
         assert old_option not in apidoc_init_help
         assert old_option not in apidoc_collect_help
         assert old_option not in apidoc_check_help

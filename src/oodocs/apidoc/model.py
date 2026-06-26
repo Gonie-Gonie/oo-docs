@@ -1971,14 +1971,14 @@ class ApiObject:
         *,
         presentation: object = "reference",
         level: int = 2,
-        max_level: int | None = None,
+        max_heading_level: int | None = None,
     ) -> list[object]:
         """Return OODocs blocks representing this object.
 
         Args:
             presentation: Presentation profile name or object.
             level: Heading level used for nested member sections.
-            max_level: Optional deepest heading level to render for nested
+            max_heading_level: Optional deepest heading level to render for nested
                 member sections.
 
         Returns:
@@ -2005,7 +2005,7 @@ class ApiObject:
             self,
             presentation=presentation,
             level=level,
-            max_level=max_level,
+            max_heading_level=max_heading_level,
         )
 
     def to_section(
@@ -2014,7 +2014,7 @@ class ApiObject:
         level: int = 2,
         presentation: object = "reference",
         title: str | None = None,
-        max_level: int | None = None,
+        max_heading_level: int | None = None,
     ):
         """Return this object as a section.
 
@@ -2022,7 +2022,7 @@ class ApiObject:
             level: Section heading level.
             presentation: Presentation profile name or object.
             title: Optional heading override.
-            max_level: Optional deepest heading level to render for nested
+            max_heading_level: Optional deepest heading level to render for nested
                 member sections.
 
         Returns:
@@ -2051,7 +2051,7 @@ class ApiObject:
             level=level,
             presentation=presentation,
             title=title,
-            max_level=max_level,
+            max_heading_level=max_heading_level,
         )
 
     def to_box(self, presentation: object = "compact"):
@@ -2553,14 +2553,14 @@ class ApiModule:
         *,
         presentation: object = "reference",
         level: int = 2,
-        max_level: int | None = None,
+        max_heading_level: int | None = None,
     ) -> list[object]:
         """Return module objects as OODocs sections.
 
         Args:
             presentation: Presentation profile name or object.
             level: Heading level for top-level module members.
-            max_level: Optional deepest heading level for nested API members.
+            max_heading_level: Optional deepest heading level for nested API members.
 
         Returns:
             OODocs sections for this module's top-level members.
@@ -2582,7 +2582,7 @@ class ApiModule:
         """
 
         return [
-            obj.to_section(level=level, presentation=presentation, max_level=max_level)
+            obj.to_section(level=level, presentation=presentation, max_heading_level=max_heading_level)
             for obj in self.members
         ]
 
@@ -2591,14 +2591,14 @@ class ApiModule:
         *,
         presentation: object = "reference",
         title: str | None = None,
-        max_level: int | None = None,
+        max_heading_level: int | None = None,
     ):
         """Return this module as an OODocs chapter.
 
         Args:
             presentation: Presentation profile name or object.
             title: Optional chapter title. Defaults to the module name.
-            max_level: Optional deepest heading level for nested API members.
+            max_heading_level: Optional deepest heading level for nested API members.
 
         Returns:
             OODocs chapter representing this module.
@@ -2622,7 +2622,7 @@ class ApiModule:
             self,
             presentation=presentation,
             title=title,
-            max_level=max_level,
+            max_heading_level=max_heading_level,
         )
 
     def to_blocks(
@@ -2630,14 +2630,14 @@ class ApiModule:
         *,
         presentation: object = "reference",
         level: int = 2,
-        max_level: int | None = None,
+        max_heading_level: int | None = None,
     ) -> list[object]:
         """Return this module as renderer-neutral blocks.
 
         Args:
             presentation: Presentation profile name or object.
             level: Heading level for the module title or top-level members.
-            max_level: Optional deepest heading level for nested API members.
+            max_heading_level: Optional deepest heading level for nested API members.
 
         Returns:
             Renderer-neutral OODocs blocks for insertion into an existing
@@ -2662,7 +2662,7 @@ class ApiModule:
             self,
             presentation=presentation,
             level=level,
-            max_level=max_level,
+            max_heading_level=max_heading_level,
         )
 
 
@@ -3523,14 +3523,14 @@ class ApiPackage:
         *,
         presentation: object = "reference",
         level: int = 1,
-        max_level: int | None = None,
+        max_heading_level: int | None = None,
     ) -> list[object]:
         """Return modules as OODocs sections.
 
         Args:
             presentation: Presentation profile name or object.
             level: Heading level for module sections. ``1`` returns chapters.
-            max_level: Optional deepest heading level for nested API members.
+            max_heading_level: Optional deepest heading level for nested API members.
 
         Returns:
             OODocs section or chapter blocks for collected modules.
@@ -3552,7 +3552,7 @@ class ApiPackage:
 
         if level == 1:
             return [
-                module.to_chapter(presentation=presentation, max_level=max_level)
+                module.to_chapter(presentation=presentation, max_heading_level=max_heading_level)
                 for module in self.modules
             ]
         sections: list[object] = []
@@ -3561,7 +3561,7 @@ class ApiPackage:
                 module.to_sections(
                     presentation=presentation,
                     level=level,
-                    max_level=max_level,
+                    max_heading_level=max_heading_level,
                 )
             )
         return sections
@@ -3570,13 +3570,13 @@ class ApiPackage:
         self,
         *,
         presentation: object = "reference",
-        max_level: int | None = None,
+        max_heading_level: int | None = None,
     ) -> list[object]:
         """Return modules as OODocs chapters.
 
         Args:
             presentation: Presentation profile name or object.
-            max_level: Optional deepest heading level for nested API members.
+            max_heading_level: Optional deepest heading level for nested API members.
 
         Returns:
             List of OODocs chapters, one per collected module.
@@ -3589,7 +3589,7 @@ class ApiPackage:
             from oodocs.apidoc import collect_api
 
             api = collect_api(".")
-            doc = Document("API Reference", *api.to_chapters(max_level=3))
+            doc = Document("API Reference", *api.to_chapters(max_heading_level=3))
             ```
         """
 
@@ -3598,20 +3598,20 @@ class ApiPackage:
         return api_package_to_chapters(
             self,
             presentation=presentation,
-            max_level=max_level,
+            max_heading_level=max_heading_level,
         )
 
     def to_blocks(
         self,
         *,
         presentation: object = "reference",
-        max_level: int | None = None,
+        max_heading_level: int | None = None,
     ) -> list[object]:
         """Return this package as renderer-neutral OODocs blocks.
 
         Args:
             presentation: Presentation profile name or object.
-            max_level: Optional deepest heading level for nested API members.
+            max_heading_level: Optional deepest heading level for nested API members.
 
         Returns:
             OODocs blocks suitable for insertion into an existing document.
@@ -3628,7 +3628,7 @@ class ApiPackage:
             ```
         """
 
-        return self.to_chapters(presentation=presentation, max_level=max_level)
+        return self.to_chapters(presentation=presentation, max_heading_level=max_heading_level)
 
     def to_help_book(
         self,
@@ -3640,7 +3640,7 @@ class ApiPackage:
         citations: object | None = None,
         include_coverage: bool = True,
         include_uncategorized_appendix: bool = True,
-        max_level: int | None = None,
+        max_heading_level: int | None = None,
     ):
         """Return a category-based API help book document.
 
@@ -3656,7 +3656,7 @@ class ApiPackage:
             include_coverage: Whether to append coverage evidence at the end.
             include_uncategorized_appendix: Whether to append public API
                 objects not assigned to a category before coverage evidence.
-            max_level: Optional deepest heading level for the table of
+            max_heading_level: Optional deepest heading level for the table of
                 contents and object sections.
 
         Returns:
@@ -3685,7 +3685,7 @@ class ApiPackage:
             citations=citations,
             include_coverage=include_coverage,
             include_uncategorized_appendix=include_uncategorized_appendix,
-            max_level=max_level,
+            max_heading_level=max_heading_level,
         )
 
 

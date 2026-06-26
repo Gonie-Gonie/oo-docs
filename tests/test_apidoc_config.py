@@ -39,14 +39,18 @@ def test_apidoc_config_roundtrip_supports_general_repo_policy(tmp_path) -> None:
         presentation="website",
         output_formats=("html",),
         output_dir="artifacts/api",
+        max_heading_level=3,
         include_coverage=False,
         include_uncategorized_appendix=False,
         sidecars=True,
     )
 
     path = config.save_json(tmp_path / "apidoc-config.json")
+    saved = json.loads(path.read_text(encoding="utf-8"))
     readback = ApiHelpBookConfig.load_json(path)
 
+    assert "max_heading_level" in saved
+    assert "max_level" not in saved
     assert readback.collection.public_policy == "explicit"
     assert readback.collection.fallback_collector == "none"
     assert readback.collection.explicit_names == ("samplepkg.Widget",)
@@ -61,8 +65,12 @@ def test_apidoc_config_roundtrip_supports_general_repo_policy(tmp_path) -> None:
         "*.render_to_html",
     )
     assert readback.output_formats == ("html",)
+    assert readback.max_heading_level == 3
     assert readback.include_coverage is False
     assert readback.include_uncategorized_appendix is False
+    assert ApiHelpBookConfig.from_dict({"max-heading-level": 2}).max_heading_level == 2
+    with pytest.raises(TypeError, match="Unsupported apidoc config key"):
+        ApiHelpBookConfig.from_dict({"max-level": 2})
     assert ApiCollectConfig.from_dict({"fallback-parser": "none"}).fallback_collector == "none"
 
 

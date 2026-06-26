@@ -21,8 +21,8 @@ python examples/api_objects_example/main.py . --config pyproject.toml
 
 `--config` accepts a project root, `pyproject.toml`, or JSON config produced by
 `oodocs apidoc init`. When supplied, the example reuses the same collector,
-public boundary, docstring parser modules, object filters, formats, and
-max-level settings as `ApiHelpBookConfig.save_all(...)`. JSON config files
+public boundary, docstring parser modules, object filters, output formats, and
+max-heading-level settings as `ApiHelpBookConfig.save_all(...)`. JSON config files
 can live outside the target checkout; the example still adds the target root
 and configured source roots such as `src/`, `package-dir`, or
 `packages.find.where` entries, plus hatch/Poetry package roots, while loading

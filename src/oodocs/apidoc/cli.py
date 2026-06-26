@@ -79,7 +79,7 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     init.add_argument("--sidecars", action="store_true", default=True, help="Write sidecars by default.")
     init.add_argument("--no-sidecars", action="store_false", dest="sidecars", help="Disable sidecars by default.")
-    init.add_argument("--max-level", type=int, help="Default deepest nested API heading level.")
+    init.add_argument("--max-heading-level", type=int, help="Default deepest nested API heading level.")
     _add_filter_options(init)
     _add_collect_options(init, include_config=False)
     init.set_defaults(func=_run_init)
@@ -301,7 +301,7 @@ def _run_init(args: argparse.Namespace) -> int:
         presentation=args.presentation,
         output_formats=_split_outputs(args.outputs),
         stem=args.stem,
-        max_level=args.max_level,
+        max_heading_level=args.max_heading_level,
         sidecars=args.sidecars,
         output_dir=args.out_dir,
         kind=tuple(args.kind) if args.kind else (),
@@ -392,7 +392,7 @@ def _effective_build_config_from_args(
         presentation=base.presentation,
         output_formats=base.output_formats,
         stem=base.stem,
-        max_level=base.max_level,
+        max_heading_level=base.max_heading_level,
         sidecars=base.sidecars,
         output_dir=base.output_dir,
         kind=tuple(args.kind) if args.kind else base.kind,

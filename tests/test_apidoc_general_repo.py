@@ -601,7 +601,7 @@ def test_general_repo_facades_select_module_and_object_from_target_path(
 
     module_document = Document(
         "Mixed Core Module API",
-        module.to_chapter(presentation="manual", max_level=3),
+        module.to_chapter(presentation="manual", max_heading_level=3),
     )
     object_document = Document(
         "Mixed Connect API",
@@ -687,7 +687,7 @@ def test_general_repo_render_helpers_compose_selected_api(tmp_path) -> None:
             "Client Classes",
             api.select_objects(kind="class", module_prefix="mixedpkg"),
             presentation="manual",
-            max_level=3,
+            max_heading_level=3,
         ),
         Chapter(
             "Function Summary",
@@ -747,7 +747,7 @@ def test_general_repo_package_help_book_helper_builds_complete_reference(tmp_pat
         docstring_style=ApiDocstringParser.auto(),
     )
 
-    document = api_package_to_help_book(api, presentation="compact", max_level=3)
+    document = api_package_to_help_book(api, presentation="compact", max_heading_level=3)
     outputs = document.save_all(
         tmp_path / "package-rendered",
         stem="mixedpkg-api",

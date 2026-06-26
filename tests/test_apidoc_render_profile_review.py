@@ -10,7 +10,7 @@ def test_review_profile_builds_editable_docx_review_copy(tmp_path) -> None:
     api = collect_sample_api(tmp_path)
     docx_path = tmp_path / "review-api.docx"
 
-    document = api.to_help_book(presentation="review", max_level=2)
+    document = api.to_help_book(presentation="review", max_heading_level=2)
 
     assert document.validate(formats=("docx",)).ok
     document.save_docx(docx_path)

@@ -25,7 +25,7 @@ doc = Document(
         "Selected API",
         classes[:5],
         presentation="manual",
-        max_level=3,
+        max_heading_level=3,
     ),
 )
 ```
@@ -82,7 +82,7 @@ coverage = check_api_docs(api, fail_under=0.90)
 document = api.to_help_book(
     title=f"{api.name} API Reference",
     presentation="reference",
-    max_level=3,
+    max_heading_level=3,
 )
 document.save_all(
     "artifacts/api",
