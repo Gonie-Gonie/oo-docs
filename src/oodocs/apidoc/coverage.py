@@ -614,9 +614,26 @@ def _issue(obj: ApiObject, severity: str, code: str, message: str) -> ApiDocIssu
         message,
         qualname=obj.qualname,
         module=obj.module,
-        path=obj.source_path,
+        path=_relative_source_path(obj),
         line_number=obj.line_number,
     )
+
+
+def _relative_source_path(obj: ApiObject) -> str | None:
+    if obj.source_path is None:
+        return None
+    source_root = obj.metadata.get("source_root")
+    if isinstance(source_root, str):
+        try:
+            return (
+                Path(obj.source_path)
+                .resolve(strict=False)
+                .relative_to(Path(source_root).resolve(strict=False))
+                .as_posix()
+            )
+        except (OSError, ValueError):
+            return obj.source_path
+    return obj.source_path
 
 
 __all__ = [

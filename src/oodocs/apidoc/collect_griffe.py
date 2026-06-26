@@ -114,6 +114,8 @@ def collect_package_griffe(
 
     modules: list[ApiModule] = []
     issues: list[ApiDocIssue] = []
+    from oodocs.apidoc.collect import _stamp_source_root
+
     for loaded in loaded_targets:
         for module_obj in _iter_griffe_modules(loaded):
             filepath = _object_filepath(module_obj)
@@ -123,6 +125,7 @@ def collect_package_griffe(
             if not _module_is_included(module_name, resolved):
                 continue
             module = _module_from_griffe(module_obj, module_name, config=resolved)
+            _stamp_source_root(module, root)
             modules.append(module)
             issues.extend(_module_issues(module))
 

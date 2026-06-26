@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Iterable, Sequence
 
 from oodocs.apidoc.model import ApiModule, ApiObject, ApiPackage
@@ -679,9 +680,12 @@ def api_source_location_paragraph(
     resolved = resolve_presentation_profile(presentation)
     if not resolved.include_source or not obj.source_path:
         return None
-    location = obj.source_path
-    if obj.line_number is not None:
-        location = f"{location}:{obj.line_number}"
+    source_root = obj.metadata.get("source_root")
+    location = _source_location_text(
+        obj.source_path,
+        obj.line_number,
+        source_root=source_root if isinstance(source_root, str) else None,
+    )
     return Paragraph(location, title="Source")
 
 
@@ -1210,6 +1214,28 @@ def _normalize_max_level(max_level: int | None) -> int | None:
     if max_level < 1:
         raise ValueError("max_level must be >= 1")
     return max_level
+
+
+def _source_location_text(
+    source_path: str,
+    line_number: int | None,
+    *,
+    source_root: str | None = None,
+) -> str:
+    display_path = source_path
+    if source_root:
+        try:
+            display_path = (
+                Path(source_path)
+                .resolve(strict=False)
+                .relative_to(Path(source_root).resolve(strict=False))
+                .as_posix()
+            )
+        except (OSError, ValueError):
+            display_path = source_path
+    if line_number is not None:
+        return f"{display_path}:{line_number}"
+    return display_path
 
 
 def _can_render_child_sections(level: int, max_level: int | None) -> bool:

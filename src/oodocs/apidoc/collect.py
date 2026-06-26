@@ -455,6 +455,7 @@ def _collect_package_source(
                 )
             )
             continue
+        _stamp_source_root(module, root)
         modules.append(module)
         issues.extend(_module_issues(module))
     _add_reexported_objects(modules)
@@ -646,6 +647,13 @@ def _strip_source_locations(api: ApiPackage) -> None:
             obj.line_number = None
             obj.end_line_number = None
             _strip_source_location_metadata(obj.metadata)
+
+
+def _stamp_source_root(module: ApiModule, source_root: Path) -> None:
+    source_root_text = str(source_root)
+    module.metadata.setdefault("source_root", source_root_text)
+    for obj in module.iter_objects(recursive=True):
+        obj.metadata.setdefault("source_root", source_root_text)
 
 
 def _strip_source_location_metadata(value: object) -> None:
@@ -1940,6 +1948,7 @@ def _add_imported_objects(
                     metadata={
                         "imported": True,
                         "imported_from": target_qualname,
+                        "source_root": module.metadata.get("source_root"),
                         "target_module": item.get("target_module"),
                         "target_name": item.get("target_name"),
                     },

@@ -16,6 +16,9 @@ def test_website_profile_builds_anchor_linked_html_reference(tmp_path) -> None:
 
     assert document.validate(formats=("html",)).ok
     document.save_html(html_path)
+    html = html_path.read_text(encoding="utf-8")
+    assert str(tmp_path) not in html
+    assert "samplepkg/__init__.py" in html
     assert_html_internal_links_resolve(
         html_path,
         required_hrefs=(widget.anchor_name(), make_widget.anchor_name()),
