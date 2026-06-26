@@ -1306,7 +1306,7 @@ class Table(Block):
             from oodocs import Table
 
             table = Table.from_mapping(
-                {"package": "oodocs", "version": "1.0.4"},
+                {"package": "oodocs", "version": "1.1.0"},
                 caption="Build metadata",
             )
             ```

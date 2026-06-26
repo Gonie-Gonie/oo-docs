@@ -27,7 +27,7 @@ def test_release_workflow_uploads_curated_assets_only() -> None:
     assert "artifacts/api/oodocs-api.docx" in workflow
     assert "artifacts/api/oodocs-api.pdf" in workflow
     assert "artifacts/api/oodocs-api.html" in workflow
-    assert "artifacts/api/oodocs-api.json" in workflow
+    assert "artifacts/api/oodocs-api-object-tree.json" in workflow
     assert "artifacts/api/oodocs-api-coverage.json" in workflow
     assert "artifacts/api/oodocs-api-coverage.csv" in workflow
     assert "artifacts/evidence/oodocs-evidence-report.pdf" in workflow

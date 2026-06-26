@@ -348,7 +348,7 @@ The main exported filenames are:
 - `artifacts/api/oodocs-api.docx`
 - `artifacts/api/oodocs-api.pdf`
 - `artifacts/api/oodocs-api.html`
-- `artifacts/api/oodocs-api.json`
+- `artifacts/api/oodocs-api-object-tree.json`
 - `artifacts/api/oodocs-api-coverage.json`
 - `artifacts/api/oodocs-api-coverage.csv`
 
@@ -405,12 +405,12 @@ OODocs versions are derived from git tags through `setuptools-scm`.
 Create and push a release tag like this:
 
 ```powershell
-.\scripts\release.ps1 1.0.4
+.\scripts\release.ps1 1.1.0
 ```
 
-That pushes `v1.0.4`, and the GitHub release workflow runs the test suite, enforces API documentation coverage with `oodocs apidoc check`, builds the wheel/sdist artifacts, renders the release documents, builds the release evidence bundle, attaches the curated documents and API evidence sidecars to the matching GitHub Release, and uploads the Python distributions to PyPI.
+That pushes `v1.1.0`, and the GitHub release workflow runs the test suite, enforces API documentation coverage with `oodocs apidoc check`, builds the wheel/sdist artifacts, renders the release documents, builds the release evidence bundle, attaches the curated documents and API evidence sidecars to the matching GitHub Release, and uploads the Python distributions to PyPI.
 
-If you want a curated release body instead of GitHub's generated notes, add a file such as `release-notes/v1.0.4.md` before pushing the tag.
+If you want a curated release body instead of GitHub's generated notes, add a file such as `release-notes/v1.1.0.md` before pushing the tag.
 
 The `examples/release_notes_digest/` script demonstrates the same convention as a document workflow: it scans the semantic-versioned Markdown files under `release-notes/`, builds an index, includes the version-management rules, and imports each release body into one DOCX/PDF/HTML bundle.
 

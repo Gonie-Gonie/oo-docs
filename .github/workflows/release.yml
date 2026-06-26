@@ -127,7 +127,7 @@ jobs:
             artifacts/api/oodocs-api.docx
             artifacts/api/oodocs-api.pdf
             artifacts/api/oodocs-api.html
-            artifacts/api/oodocs-api.json
+            artifacts/api/oodocs-api-object-tree.json
             artifacts/api/oodocs-api-coverage.json
             artifacts/api/oodocs-api-coverage.csv
             artifacts/evidence/oodocs-evidence-report.pdf
@@ -154,7 +154,7 @@ jobs:
             artifacts/api/oodocs-api.docx
             artifacts/api/oodocs-api.pdf
             artifacts/api/oodocs-api.html
-            artifacts/api/oodocs-api.json
+            artifacts/api/oodocs-api-object-tree.json
             artifacts/api/oodocs-api-coverage.json
             artifacts/api/oodocs-api-coverage.csv
             artifacts/evidence/oodocs-evidence-report.pdf

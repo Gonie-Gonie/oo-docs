@@ -76,7 +76,7 @@ where = ["src"]
 include = ["oodocs*"]
 
 [tool.setuptools_scm]
-fallback_version = "1.0.4"
+fallback_version = "1.1.0"
 tag_regex = "^v(?P<version>\\d+\\.\\d+\\.\\d+)$"
 
 [tool.pytest.ini_options]
