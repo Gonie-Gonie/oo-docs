@@ -61,5 +61,11 @@ def test_apidoc_renders_oodocs_public_api_reference_bundle(tmp_path) -> None:
             "oodocs.Document",
         ),
     )
+    html = outputs["html"].read_text(encoding="utf-8")
+    assert "Uncategorized API" not in html
+    assert "Renderer Extension API" not in html
+    assert "C:\\Users" not in html
+    assert not ("<th>Label</th>" in html and "See Also" in html)
+    assert html.find("API Contents") < html.find("API Documentation Coverage")
     assert ApiPackage.load_json(api_path).find_object("oodocs.Document") is not None
     assert ApiCoverageResult.load_json(coverage_json_path).public_object_count > 0
