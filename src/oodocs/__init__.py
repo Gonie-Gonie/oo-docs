@@ -57,7 +57,6 @@ from oodocs.components.media import (
     SubFigureGroup,
     Table,
     TableCell,
-    TableCellStyle,
 )
 from oodocs.components.markup import markup
 from oodocs.components.people import Affiliation, Author, AuthorLayout
@@ -80,7 +79,6 @@ from oodocs.components.inline import (
     Comment,
     Footnote,
     InlineChip,
-    InlineChipStyle,
     LineBreak,
     Math,
     Text,
@@ -118,10 +116,12 @@ from oodocs.styles import (
     CitationDefaults,
     GeneratedContentDefaults,
     HeadingNumbering,
+    InlineChipStyle,
     ListStyle,
     PageNumberDefaults,
     ParagraphStyle,
     RunInTitleStyle,
+    TableCellStyle,
     TableStyle,
     TextStyle,
     TitleMatterDefaults,

@@ -216,6 +216,10 @@ def category_for(
         return "workflow"
     if inventory_module == "oodocs.presets":
         return "preset"
+    if inventory_module == "oodocs.styles":
+        if export_name == "Theme" or export_name.endswith("Defaults"):
+            return "theme"
+        return "style"
 
     module = object_module or ""
     if module == "oodocs.core":

@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Mapping
 
 from oodocs.core import normalize_color, normalize_text_alignment, normalize_vertical_alignment
 from oodocs.styles.base import _style_with_overrides
+from oodocs.styles.text import TextStyle
 
 
 def table_style_with_overrides(
@@ -28,6 +30,137 @@ def table_style_with_overrides(
     """
 
     return _style_with_overrides(style, TableStyle, overrides)  # type: ignore[return-value]
+
+
+@dataclass(slots=True)
+class TableCellStyle:
+    """Cell-level table styling that can be applied to cells, rows, or columns.
+
+    Attributes:
+        background_color: Optional background color as a hex string.
+        text_color: Optional text color as a hex string.
+        bold: Optional bold override.
+        italic: Optional italic override.
+        text_alignment: Optional cell text alignment override.
+        vertical_alignment: Optional vertical alignment override.
+
+    Examples:
+        ```python
+        from oodocs import Document, Table, TableCellStyle
+
+        style = TableCellStyle(background_color="F8FAFC", bold=True)
+        table = Table(["Metric", "Value"], [["Latency", "42 ms"]], column_styles={0: style})
+        document = Document("Metrics", table)
+        ```
+    """
+
+    background_color: str | None = None
+    text_color: str | None = None
+    bold: bool | None = None
+    italic: bool | None = None
+    text_alignment: str | None = None
+    vertical_alignment: str | None = None
+
+    def __post_init__(self) -> None:
+        self.background_color = normalize_color(self.background_color)
+        self.text_color = normalize_color(self.text_color)
+        self.text_alignment = (
+            normalize_text_alignment(self.text_alignment)
+            if self.text_alignment is not None
+            else None
+        )
+        self.vertical_alignment = (
+            normalize_vertical_alignment(self.vertical_alignment)
+            if self.vertical_alignment is not None
+            else None
+        )
+
+    def merged(self, *others: TableCellStyle | None) -> TableCellStyle:
+        """Return a new style with later non-``None`` values overriding earlier ones.
+
+        Args:
+            *others: Styles to overlay from left to right.
+
+        Returns:
+            New merged table cell style.
+
+        Examples:
+            ```python
+            base = TableCellStyle(background_color="FFFFFF")
+            merged = base.merged(TableCellStyle(text_color="111827", bold=True))
+            ```
+        """
+
+        merged = TableCellStyle(
+            background_color=self.background_color,
+            text_color=self.text_color,
+            bold=self.bold,
+            italic=self.italic,
+            text_alignment=self.text_alignment,
+            vertical_alignment=self.vertical_alignment,
+        )
+        for other in others:
+            if other is None:
+                continue
+            for field_name in (
+                "background_color",
+                "text_color",
+                "bold",
+                "italic",
+                "text_alignment",
+                "vertical_alignment",
+            ):
+                value = getattr(other, field_name)
+                if value is not None:
+                    setattr(merged, field_name, value)
+        return merged
+
+    def text_style(self) -> TextStyle:
+        """Return the inline text defaults represented by this cell style.
+
+        Returns:
+            Text style containing text color, bold, and italic values.
+
+        Examples:
+            ```python
+            style = TableCellStyle(text_color="111827", bold=True)
+            text_style = style.text_style()
+            ```
+        """
+
+        return TextStyle(
+            text_color=self.text_color,
+            bold=self.bold,
+            italic=self.italic,
+        )
+
+
+TableCellStyleInput = TableCellStyle | Mapping[str, object]
+
+
+def coerce_table_cell_style(value: TableCellStyleInput) -> TableCellStyle:
+    """Normalize a table cell style object or mapping.
+
+    Args:
+        value: Existing style or mapping of ``TableCellStyle`` fields.
+
+    Returns:
+        A table cell style.
+
+    Raises:
+        TypeError: If ``value`` cannot be converted.
+
+    Examples:
+        ```python
+        style = coerce_table_cell_style({"background_color": "EEF2FF"})
+        ```
+    """
+
+    if isinstance(value, TableCellStyle):
+        return value
+    if isinstance(value, Mapping):
+        return TableCellStyle(**dict(value))
+    raise TypeError(f"Unsupported table cell style: {type(value)!r}")
 
 
 @dataclass(slots=True)
@@ -197,4 +330,10 @@ class TableStyle:
             self.cell_padding if self.cell_padding_left is None else self.cell_padding_left,
         )
 
-__all__ = ["TableStyle", "table_style_with_overrides"]
+__all__ = [
+    "TableCellStyle",
+    "TableCellStyleInput",
+    "TableStyle",
+    "coerce_table_cell_style",
+    "table_style_with_overrides",
+]

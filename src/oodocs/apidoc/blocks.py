@@ -8,7 +8,8 @@ from oodocs.apidoc.model import ApiModule, ApiObject, ApiPackage
 from oodocs.apidoc.profiles import ApiPresentationProfile, resolve_presentation_profile
 from oodocs.components.base import Block
 from oodocs.components.blocks import Box, CodeBlock, Paragraph, Section, section_for_level
-from oodocs.components.inline import InlineChip, InlineChipStyle, Text, bold, inline_code, comment, italic
+from oodocs.components.inline import InlineChip, Text, bold, inline_code, comment, italic
+from oodocs.styles import InlineChipStyle
 from oodocs.components.media import Table
 
 

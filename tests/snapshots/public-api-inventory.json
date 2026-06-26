@@ -292,11 +292,11 @@
           "qualname": "oodocs.components.inline.InlineChip"
         },
         {
-          "category": "inline",
+          "category": "style",
           "kind": "class",
-          "module": "oodocs.components.inline",
+          "module": "oodocs.styles.chips",
           "name": "InlineChipStyle",
-          "qualname": "oodocs.components.inline.InlineChipStyle"
+          "qualname": "oodocs.styles.chips.InlineChipStyle"
         },
         {
           "category": "inline",
@@ -523,11 +523,11 @@
           "qualname": "oodocs.components.media.TableCell"
         },
         {
-          "category": "media",
+          "category": "style",
           "kind": "class",
-          "module": "oodocs.components.media",
+          "module": "oodocs.styles.tables",
           "name": "TableCellStyle",
-          "qualname": "oodocs.components.media.TableCellStyle"
+          "qualname": "oodocs.styles.tables.TableCellStyle"
         },
         {
           "category": "style",
@@ -1487,6 +1487,13 @@
         {
           "category": "style",
           "kind": "class",
+          "module": "oodocs.styles.chips",
+          "name": "InlineChipStyle",
+          "qualname": "oodocs.styles.chips.InlineChipStyle"
+        },
+        {
+          "category": "style",
+          "kind": "class",
           "module": "oodocs.styles.counter",
           "name": "ListStyle",
           "qualname": "oodocs.styles.counter.ListStyle"
@@ -1511,6 +1518,20 @@
           "module": "oodocs.styles.blocks",
           "name": "RunInTitleStyle",
           "qualname": "oodocs.styles.blocks.RunInTitleStyle"
+        },
+        {
+          "category": "style",
+          "kind": "class",
+          "module": "oodocs.styles.tables",
+          "name": "TableCellStyle",
+          "qualname": "oodocs.styles.tables.TableCellStyle"
+        },
+        {
+          "category": "style",
+          "kind": "type-alias",
+          "module": "typing",
+          "name": "TableCellStyleInput",
+          "qualname": "typing.Union"
         },
         {
           "category": "style",
@@ -1553,6 +1574,13 @@
           "module": "oodocs.styles.blocks",
           "name": "box_style_with_overrides",
           "qualname": "oodocs.styles.blocks.box_style_with_overrides"
+        },
+        {
+          "category": "style",
+          "kind": "function",
+          "module": "oodocs.styles.tables",
+          "name": "coerce_table_cell_style",
+          "qualname": "oodocs.styles.tables.coerce_table_cell_style"
         },
         {
           "category": "style",
