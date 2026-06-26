@@ -4,15 +4,15 @@ Snapshots make API changes reviewable between releases. Write a baseline JSON
 file, collect a new snapshot, then render a diff document.
 
 ```powershell
-python -m oodocs apidoc snapshot oodocs --out artifacts/api-base.json
-python -m oodocs apidoc snapshot oodocs --out artifacts/api-head.json
-python -m oodocs apidoc diff --base artifacts/api-base.json --head artifacts/api-head.json --out artifacts/api-diff --outputs docx,pdf,html
+python -m oodocs apidoc snapshot oodocs --save-json artifacts/api-base.json
+python -m oodocs apidoc snapshot oodocs --save-json artifacts/api-head.json
+python -m oodocs apidoc diff artifacts/api-base.json artifacts/api-head.json --save-json artifacts/api-diff.json
 ```
 
 Snapshot only a subset when a package area has its own compatibility promise:
 
 ```powershell
-python -m oodocs apidoc snapshot . --kind function --module-prefix mypkg.adapters --out artifacts/adapter-api.json
+python -m oodocs apidoc snapshot . --kind function --module-prefix mypkg.adapters --save-json artifacts/adapter-api.json
 ```
 
 Python usage gives direct access to the diff object:

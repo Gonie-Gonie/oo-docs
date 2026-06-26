@@ -64,8 +64,8 @@ jobs:
           python -m oodocs apidoc check . \
             --config pyproject.toml \
             --fail-under 0.90 \
-            --out-json artifacts/api-objects-example/oodocs-api-coverage.json \
-            --out-csv artifacts/api-objects-example/oodocs-api-coverage.csv
+            --save-json artifacts/api-objects-example/oodocs-api-coverage.json \
+            --save-csv artifacts/api-objects-example/oodocs-api-coverage.csv
 
       - name: Build distributions
         run: python -m build
@@ -76,7 +76,11 @@ jobs:
           python examples/journal_paper_example/main.py
           python examples/release_notes_digest/main.py
           python examples/api_objects_example/main.py . --config pyproject.toml
-          python -m oodocs apidoc build . --config pyproject.toml
+          python - <<'PY'
+          from oodocs.apidoc import ApiBuildConfig
+
+          ApiBuildConfig.from_pyproject(".").save_all(".")
+          PY
 
       - name: Build release evidence
         run: python -m oodocs.evidence build --out artifacts/evidence

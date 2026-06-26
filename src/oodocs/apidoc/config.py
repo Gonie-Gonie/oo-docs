@@ -767,7 +767,7 @@ class ApiBuildConfig:
         output_formats: Output formats passed to ``Document.save_all``.
         stem: Optional output file stem.
         max_level: Optional deepest nested API heading level.
-        sidecars: Whether build commands write API and coverage sidecars.
+        sidecars: Whether ``save_all(...)`` writes API and coverage sidecars.
         output_dir: Optional default output directory.
         kind: Optional object kinds to render after collection.
         module_prefix: Optional module prefix filter after collection.
@@ -886,7 +886,7 @@ class ApiBuildConfig:
             tomllib.TOMLDecodeError: If the pyproject file is invalid TOML.
 
         Examples:
-            Reuse the same build defaults that ``oodocs apidoc build`` reads:
+            Reuse the same build defaults stored in ``[tool.oodocs.apidoc]``:
 
             ```python
             from oodocs.apidoc import ApiBuildConfig

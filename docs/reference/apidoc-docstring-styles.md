@@ -242,8 +242,10 @@ docstring-style = "brief"
 docstring-parser-modules = ["docs_parsers"]
 ```
 
-```powershell
-python -m oodocs apidoc build . --config pyproject.toml
+```python
+from oodocs.apidoc import ApiBuildConfig
+
+ApiBuildConfig.from_pyproject(".").save_all(".")
 ```
 
 JSON config files use the same keys, which is useful for generated build
@@ -260,8 +262,11 @@ profiles or repository-local automation:
 }
 ```
 
-```powershell
-python -m oodocs apidoc build C:\work\mypkg --config C:\work\mypkg\apidoc-build.json
+```python
+from oodocs.apidoc import ApiBuildConfig
+
+repo = r"C:\work\mypkg"
+ApiBuildConfig.load_file(r"C:\work\mypkg\apidoc-build.json", target=repo).save_all(repo)
 ```
 
 When the config is loaded from a repository path, OODocs temporarily adds the
@@ -277,8 +282,11 @@ live outside the target checkout and still load repository-local parser
 modules. This lets a command target another checkout without changing into it
 first:
 
-```powershell
-python -m oodocs apidoc build C:\work\mypkg --config C:\work\mypkg\pyproject.toml --out C:\work\mypkg\artifacts\api
+```python
+from oodocs.apidoc import ApiBuildConfig
+
+repo = r"C:\work\mypkg"
+ApiBuildConfig.load_file(r"C:\work\mypkg\pyproject.toml", target=repo).save_all(repo)
 ```
 
 The Python API uses the same target-local import path policy when

@@ -262,10 +262,12 @@ sidecars = true
 `module-include-patterns = ["mypkg.*", "plugins.*"]` when the collection step
 should include several module families.
 
-Then build a full reference bundle or sidecars from the command line:
+Then build a full reference bundle or sidecars from Python:
 
-```powershell
-python -m oodocs apidoc build . --config pyproject.toml --out artifacts/api
+```python
+from oodocs.apidoc import ApiBuildConfig
+
+ApiBuildConfig.from_pyproject(".").save_all(".")
 ```
 
 ## Custom Parser Modules
@@ -289,5 +291,6 @@ docstring-style = "brief"
 docstring-parser-modules = ["docs_parsers"]
 ```
 
-`collect_api(...)`, `check_api_docs(...)`, and `python -m oodocs apidoc build`
-will all use the registered parser after the module is imported.
+`collect_api(...)`, `check_api_docs(...)`, and
+`ApiBuildConfig.from_pyproject(...).save_all(...)` will all use the registered
+parser after the module is imported.

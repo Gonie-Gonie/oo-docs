@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 from pathlib import Path
 from typing import Sequence
 
@@ -14,7 +15,6 @@ from oodocs.apidoc.docstring import (
     docstring_parser_import_paths,
     load_docstring_parser_modules,
 )
-from oodocs.compatibility import normalize_output_formats
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -33,15 +33,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         from oodocs.apidoc.cli import main
 
         exit_code = main([
-            "build",
+            "collect",
             ".",
-            "--presentation-profile",
-            "reference",
-            "--out",
-            "artifacts/api",
-            "--outputs",
-            "html",
-            "--sidecars",
+            "--public-policy",
+            "__all__",
+            "--save-json",
+            "artifacts/api.json",
         ])
         assert exit_code == 0
         ```
@@ -55,7 +52,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="oodocs apidoc",
-        description="Collect, check, snapshot, diff, and render Python API documentation objects.",
+        description="Collect, check, snapshot, and diff Python API documentation objects.",
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
@@ -90,7 +87,7 @@ def _build_parser() -> argparse.ArgumentParser:
 
     collect = subparsers.add_parser("collect", help="Collect API objects to JSON.")
     collect.add_argument("package", help="Package/module name, Python file, or package directory.")
-    collect.add_argument("--out", required=True, help="Output API object JSON path.")
+    collect.add_argument("--save-json", required=True, help="Output API object JSON path.")
     _add_collect_options(collect)
     collect.set_defaults(func=_run_collect)
 
@@ -99,46 +96,24 @@ def _build_parser() -> argparse.ArgumentParser:
     check.add_argument("--fail-under", type=float, help="Minimum documented-object ratio.")
     check.add_argument("--require-examples", action="store_true", help="Require examples for public API objects.")
     check.add_argument("--require-renderer-notes", action="store_true", help="Require renderer notes for public API objects.")
-    check.add_argument("--out-json", help="Optional coverage result JSON path.")
-    check.add_argument("--out-csv", help="Optional coverage issues CSV path.")
+    check.add_argument("--report-format", choices=("text", "json"), default="text", help="Coverage report format.")
+    check.add_argument("--save-json", help="Optional coverage result JSON path.")
+    check.add_argument("--save-csv", help="Optional coverage issues CSV path.")
     _add_filter_options(check)
     _add_collect_options(check)
     check.set_defaults(func=_run_check)
 
-    build = subparsers.add_parser("build", help="Build rendered API documentation.")
-    build.add_argument("package", help="Package/module name, Python file, or package directory.")
-    build.add_argument("--out", help="Output directory.")
-    build.add_argument("--outputs", help="Comma-separated output formats.")
-    build.add_argument("--stem", help="Output file stem.")
-    build.add_argument("--presentation-profile", help="Presentation profile.")
-    build.add_argument(
-        "--sidecars",
-        action="store_true",
-        default=None,
-        help="Write API JSON and coverage JSON/CSV sidecars beside rendered documents.",
-    )
-    build.add_argument(
-        "--max-level",
-        type=int,
-        help="Deepest heading level to render for nested API sections.",
-    )
-    _add_filter_options(build)
-    _add_collect_options(build)
-    build.set_defaults(func=_run_build)
-
     snapshot = subparsers.add_parser("snapshot", help="Write a public API snapshot JSON.")
     snapshot.add_argument("package", help="Package/module name, Python file, or package directory.")
-    snapshot.add_argument("--out", required=True, help="Output snapshot JSON path.")
+    snapshot.add_argument("--save-json", required=True, help="Output snapshot JSON path.")
     _add_filter_options(snapshot)
     _add_collect_options(snapshot)
     snapshot.set_defaults(func=_run_snapshot)
 
-    diff = subparsers.add_parser("diff", help="Render differences between two API snapshots.")
-    diff.add_argument("--base", required=True, help="Base snapshot JSON path.")
-    diff.add_argument("--head", required=True, help="Head snapshot JSON path.")
-    diff.add_argument("--out", required=True, help="Output directory.")
-    diff.add_argument("--outputs", default="docx,pdf,html", help="Comma-separated output formats.")
-    diff.add_argument("--stem", default="api-diff", help="Output file stem.")
+    diff = subparsers.add_parser("diff", help="Write differences between two API snapshots.")
+    diff.add_argument("base", help="Base snapshot JSON path.")
+    diff.add_argument("head", help="Head snapshot JSON path.")
+    diff.add_argument("--save-json", required=True, help="Output diff JSON path.")
     diff.set_defaults(func=_run_diff)
     return parser
 
@@ -344,8 +319,8 @@ def _run_init(args: argparse.Namespace) -> int:
 
 def _run_collect(args: argparse.Namespace) -> int:
     api = _collect_from_args(args)
-    api.save_json(args.out)
-    print(f"Wrote api-json: {Path(args.out)}")
+    api.save_json(args.save_json)
+    print(f"Wrote api-json: {Path(args.save_json)}")
     return 0
 
 
@@ -357,35 +332,33 @@ def _run_check(args: argparse.Namespace) -> int:
         require_examples=args.require_examples,
         require_renderer_notes=args.require_renderer_notes,
     )
-    print(
-        f"{result.package}: {result.documented_object_count}/{result.public_object_count} "
-        f"public objects documented ({result.object_coverage:.1%})"
-    )
-    if args.out_json:
-        result.save_json(args.out_json)
-        print(f"Wrote coverage-json: {args.out_json}")
-    if args.out_csv:
-        result.save_csv(args.out_csv)
-        print(f"Wrote coverage-csv: {args.out_csv}")
-    if result.issues:
-        for issue in result.issues[:20]:
-            print(f"- {issue.severity.upper()} {issue.code}: {issue.qualname or issue.module or result.package} - {issue.message}")
-        if len(result.issues) > 20:
-            print(f"... {len(result.issues) - 20} more issue(s)")
+    if args.save_json:
+        result.save_json(args.save_json)
+    if args.save_csv:
+        result.save_csv(args.save_csv)
+    if args.report_format == "json":
+        print(json.dumps(result.to_dict(), indent=2, sort_keys=True))
+    else:
+        print(
+            f"{result.package}: {result.documented_object_count}/{result.public_object_count} "
+            f"public objects documented ({result.object_coverage:.1%})"
+        )
+        if args.save_json:
+            print(f"Wrote coverage-json: {args.save_json}")
+        if args.save_csv:
+            print(f"Wrote coverage-csv: {args.save_csv}")
+        if result.issues:
+            for issue in result.issues[:20]:
+                print(f"- {issue.severity.upper()} {issue.code}: {issue.qualname or issue.module or result.package} - {issue.message}")
+            if len(result.issues) > 20:
+                print(f"... {len(result.issues) - 20} more issue(s)")
     return 1 if any(issue.severity == "error" for issue in result.issues) else 0
-
-
-def _run_build(args: argparse.Namespace) -> int:
-    build_config = _effective_build_config_from_args(args, require_output_dir=True)
-    outputs = build_config.save_all(args.package)
-    _print_outputs(outputs)
-    return 0
 
 
 def _run_snapshot(args: argparse.Namespace) -> int:
     build_config = _effective_build_config_from_args(args)
-    build_config.save_snapshot(args.package, args.out)
-    print(f"Wrote api-snapshot: {Path(args.out)}")
+    build_config.save_snapshot(args.package, args.save_json)
+    print(f"Wrote api-snapshot: {Path(args.save_json)}")
     return 0
 
 
@@ -393,14 +366,8 @@ def _run_diff(args: argparse.Namespace) -> int:
     base = ApiSnapshot.load_json(args.base)
     head = ApiSnapshot.load_json(args.head)
     result = diff_api(base, head)
-    document = result.to_document()
-    outputs = document.save_all(
-        args.out,
-        stem=args.stem,
-        formats=normalize_output_formats(_split_outputs(args.outputs)),
-    )
-    outputs["diff-json"] = result.save_json(Path(args.out) / f"{args.stem}.json")
-    _print_outputs(outputs)
+    result.save_json(args.save_json)
+    print(f"Wrote api-diff: {Path(args.save_json)}")
     return 0
 
 
@@ -427,36 +394,16 @@ def _build_config_from_args(args: argparse.Namespace) -> ApiBuildConfig:
 
 def _effective_build_config_from_args(
     args: argparse.Namespace,
-    *,
-    require_output_dir: bool = False,
 ) -> ApiBuildConfig:
     base = _build_config_from_args(args)
-    is_build_command = getattr(args, "command", None) == "build"
-    output_dir = getattr(args, "out", None) if is_build_command else base.output_dir
-    output_dir = output_dir or base.output_dir
-    if require_output_dir and output_dir is None:
-        raise SystemExit("oodocs apidoc build requires --out or output-dir in config")
-    output_formats = (
-        normalize_output_formats(_split_outputs(args.outputs))
-        if is_build_command and getattr(args, "outputs", None)
-        else base.output_formats
-    )
     return ApiBuildConfig(
         collection=_collect_config_from_args(args, base.collection),
-        profile=getattr(args, "presentation_profile", None) or base.profile,
-        output_formats=output_formats,
-        stem=getattr(args, "stem", None) or base.stem,
-        max_level=(
-            args.max_level
-            if getattr(args, "max_level", None) is not None
-            else base.max_level
-        ),
-        sidecars=(
-            args.sidecars
-            if getattr(args, "sidecars", None) is not None
-            else base.sidecars
-        ),
-        output_dir=output_dir,
+        profile=base.profile,
+        output_formats=base.output_formats,
+        stem=base.stem,
+        max_level=base.max_level,
+        sidecars=base.sidecars,
+        output_dir=base.output_dir,
         kind=tuple(args.kind) if args.kind else base.kind,
         module_prefix=args.module_prefix or base.module_prefix,
     )
@@ -518,9 +465,6 @@ def _config_output_format(path: str | Path, requested: str) -> str:
     return "json" if target.suffix.lower() == ".json" else "pyproject"
 
 
-def _print_outputs(outputs: dict[object, Path]) -> None:
-    for output_format, path in outputs.items():
-        print(f"Wrote {output_format}: {path}")
 
 
 if __name__ == "__main__":

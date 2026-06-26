@@ -296,8 +296,10 @@ Run them directly from the repository checkout:
 The full package API reference can also be rendered directly from the
 repository-local `apidoc` config:
 
-```powershell
-.\.venv\Scripts\python.exe -m oodocs apidoc build . --config pyproject.toml
+```python
+from oodocs.apidoc import ApiBuildConfig
+
+ApiBuildConfig.from_pyproject(".").save_all(".")
 ```
 
 Direct example scripts print slow major render steps. Imported build functions stay quiet by default; pass `verbose=True` when you want the same progress messages.

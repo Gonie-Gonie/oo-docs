@@ -8,10 +8,10 @@ def test_release_workflow_uploads_curated_assets_only() -> None:
 
     assert "python -m oodocs apidoc check ." in workflow
     assert "--config pyproject.toml" in workflow
-    assert "--out-json artifacts/api-objects-example/oodocs-api-coverage.json" in workflow
-    assert "--out-csv artifacts/api-objects-example/oodocs-api-coverage.csv" in workflow
+    assert "--save-json artifacts/api-objects-example/oodocs-api-coverage.json" in workflow
+    assert "--save-csv artifacts/api-objects-example/oodocs-api-coverage.csv" in workflow
     assert "python examples/api_objects_example/main.py . --config pyproject.toml" in workflow
-    assert "python -m oodocs apidoc build . --config pyproject.toml" in workflow
+    assert 'ApiBuildConfig.from_pyproject(".").save_all(".")' in workflow
     assert "artifacts/api-objects-example/oodocs-api-objects.pdf" in workflow
     assert "artifacts/api-objects-example/oodocs-api-objects.json" in workflow
     assert "artifacts/api-objects-example/oodocs-api-coverage.json" in workflow

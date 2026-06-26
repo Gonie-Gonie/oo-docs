@@ -19,6 +19,7 @@ import pytest
 
 from oodocs.apidoc import (
     ApiBuildConfig,
+    ApiCollectConfig,
     ApiCoverageResult,
     ApiDiffResult,
     ApiPackage,
@@ -28,29 +29,16 @@ from oodocs.apidoc import (
 from oodocs.cli import main
 
 
-def test_apidoc_cli_builds_html_and_sidecars_for_general_repo(tmp_path) -> None:
+def test_apidoc_build_config_saves_html_and_sidecars_for_general_repo(tmp_path) -> None:
     package_dir = write_sample_package(tmp_path)
     output_dir = tmp_path / "api"
 
-    assert (
-        main(
-            [
-                "apidoc",
-                "build",
-                str(package_dir),
-                "--collector",
-                "inspect",
-                "--public-policy",
-                "__all__",
-                "--out",
-                str(output_dir),
-                "--outputs",
-                "html",
-                "--sidecars",
-            ]
-        )
-        == 0
-    )
+    ApiBuildConfig(
+        collection=ApiCollectConfig(collector="inspect", public_policy="__all__"),
+        output_formats=("html",),
+        output_dir=str(output_dir),
+        sidecars=True,
+    ).save_all(package_dir)
 
     assert (output_dir / "samplepkg-api.html").exists()
     api = ApiPackage.load_json(output_dir / "samplepkg-api.json")
@@ -63,33 +51,19 @@ def test_apidoc_cli_builds_html_and_sidecars_for_general_repo(tmp_path) -> None:
     assert render.examples[0].doctest_ok is True
 
 
-def test_apidoc_cli_auto_collector_builds_full_bundle_for_general_repo(
+def test_apidoc_build_config_auto_collector_saves_full_bundle_for_general_repo(
     tmp_path,
 ) -> None:
     package_dir = write_sample_package(tmp_path)
     output_dir = tmp_path / "auto-api"
 
-    assert (
-        main(
-            [
-                "apidoc",
-                "build",
-                str(package_dir),
-                "--collector",
-                "auto",
-                "--public-policy",
-                "__all__",
-                "--presentation-profile",
-                "compact",
-                "--out",
-                str(output_dir),
-                "--outputs",
-                "docx,pdf,html",
-                "--sidecars",
-            ]
-        )
-        == 0
-    )
+    ApiBuildConfig(
+        collection=ApiCollectConfig(collector="auto", public_policy="__all__"),
+        profile="compact",
+        output_formats=("docx", "pdf", "html"),
+        output_dir=str(output_dir),
+        sidecars=True,
+    ).save_all(package_dir)
 
     docx_path = output_dir / "samplepkg-api.docx"
     pdf_path = output_dir / "samplepkg-api.pdf"
@@ -143,7 +117,7 @@ def test_apidoc_cli_auto_collector_builds_full_bundle_for_general_repo(
     assert coverage.public_object_count >= 1
 
 
-def test_apidoc_cli_builds_full_reference_bundle_from_json_config(tmp_path) -> None:
+def test_apidoc_build_config_saves_full_reference_bundle_from_json_config(tmp_path) -> None:
     package_dir = write_sample_package(tmp_path)
     output_dir = tmp_path / "reference-api"
     config_path = tmp_path / "apidoc-build.json"
@@ -160,18 +134,7 @@ def test_apidoc_cli_builds_full_reference_bundle_from_json_config(tmp_path) -> N
         }
     ).save_json(config_path)
 
-    assert (
-        main(
-            [
-                "apidoc",
-                "build",
-                str(package_dir),
-                "--config",
-                str(config_path),
-            ]
-        )
-        == 0
-    )
+    ApiBuildConfig.load_json(config_path).save_all(package_dir)
 
     docx_path = output_dir / "sample-reference.docx"
     pdf_path = output_dir / "sample-reference.pdf"
@@ -305,7 +268,7 @@ def test_apidoc_cli_json_config_loads_repo_local_parser_modules(tmp_path) -> Non
     )
 
     assert "json-config-brief" not in docstring_parser_names()
-    assert main(["apidoc", "build", str(repo), "--config", str(config_path)]) == 0
+    ApiBuildConfig.load_file(config_path, target=repo).save_all(repo)
 
     html_path = output_dir / "jsonpkg-api.html"
     api_path = output_dir / "jsonpkg-api.json"
@@ -398,7 +361,7 @@ def test_apidoc_cli_external_json_config_loads_target_parser_modules(tmp_path) -
     )
 
     assert "external-json-brief" not in docstring_parser_names()
-    assert main(["apidoc", "build", str(repo), "--config", str(config_path)]) == 0
+    ApiBuildConfig.load_file(config_path, target=repo).save_all(repo)
 
     html_path = output_dir / "externaljsonpkg-api.html"
     api = ApiPackage.load_json(output_dir / "externaljsonpkg-api.json")
@@ -491,7 +454,7 @@ def test_apidoc_cli_external_json_config_loads_griffe_target_parser_modules(
     )
 
     assert "external-griffe-json-brief" not in docstring_parser_names()
-    assert main(["apidoc", "build", str(repo), "--config", str(config_path)]) == 0
+    ApiBuildConfig.load_file(config_path, target=repo).save_all(repo)
 
     html_path = output_dir / "externalgriffepkg-api.html"
     api = ApiPackage.load_json(output_dir / "externalgriffepkg-api.json")
@@ -587,7 +550,7 @@ def test_apidoc_cli_collect_external_json_config_loads_target_parser_modules(
                 str(repo),
                 "--config",
                 str(config_path),
-                "--out",
+                "--save-json",
                 str(output_path),
             ]
         )
@@ -678,9 +641,9 @@ def test_apidoc_cli_check_and_snapshot_external_json_config_load_target_parsers(
                 str(repo),
                 "--config",
                 str(config_path),
-                "--out-json",
+                "--save-json",
                 str(coverage_json),
-                "--out-csv",
+                "--save-csv",
                 str(coverage_csv),
             ]
         )
@@ -694,7 +657,7 @@ def test_apidoc_cli_check_and_snapshot_external_json_config_load_target_parsers(
                 str(repo),
                 "--config",
                 str(config_path),
-                "--out",
+                "--save-json",
                 str(snapshot_json),
             ]
         )
@@ -715,14 +678,14 @@ def test_apidoc_cli_check_and_snapshot_external_json_config_load_target_parsers(
     )
 
 
-def test_apidoc_cli_diff_renders_report_and_json_sidecar(tmp_path, capsys) -> None:
+def test_apidoc_cli_diff_saves_json_report(tmp_path, capsys) -> None:
     base_package = tmp_path / "base" / "diffpkg"
     head_package = tmp_path / "head" / "diffpkg"
     base_package.mkdir(parents=True)
     head_package.mkdir(parents=True)
     base_snapshot = tmp_path / "api-base.json"
     head_snapshot = tmp_path / "api-head.json"
-    output_dir = tmp_path / "api-diff"
+    diff_path = tmp_path / "api-diff.json"
 
     (base_package / "__init__.py").write_text(
         "\n".join(
@@ -760,7 +723,7 @@ def test_apidoc_cli_diff_renders_report_and_json_sidecar(tmp_path, capsys) -> No
                 "inspect",
                 "--public-policy",
                 "underscore",
-                "--out",
+                "--save-json",
                 str(base_snapshot),
             ]
         )
@@ -776,7 +739,7 @@ def test_apidoc_cli_diff_renders_report_and_json_sidecar(tmp_path, capsys) -> No
                 "inspect",
                 "--public-policy",
                 "underscore",
-                "--out",
+                "--save-json",
                 str(head_snapshot),
             ]
         )
@@ -787,91 +750,34 @@ def test_apidoc_cli_diff_renders_report_and_json_sidecar(tmp_path, capsys) -> No
             [
                 "apidoc",
                 "diff",
-                "--base",
                 str(base_snapshot),
-                "--head",
                 str(head_snapshot),
-                "--out",
-                str(output_dir),
-                "--outputs",
-                "docx,pdf,html",
-                "--stem",
-                "public-api-diff",
+                "--save-json",
+                str(diff_path),
             ]
         )
         == 0
     )
 
-    docx_path = output_dir / "public-api-diff.docx"
-    pdf_path = output_dir / "public-api-diff.pdf"
-    html_path = output_dir / "public-api-diff.html"
-    diff_path = output_dir / "public-api-diff.json"
-
-    assert_rendered_bundle(docx_path, pdf_path, html_path)
     assert diff_path.exists()
-    assert_docx_structure(
-        docx_path,
-        required_paragraphs=(
-            "API Diff",
-            "1 Summary",
-            "2 Coverage Delta",
-            "3 Added API",
-            "4 Changed Signatures",
-        ),
-        min_tables=5,
-    )
-    assert_pdf_text_and_pages(
-        pdf_path,
-        required_text=(
-            "API Diff",
-            "Coverage Delta",
-            "diffpkg.added",
-            "diffpkg.run",
-        ),
-        min_pages=1,
-    )
-    assert_html_internal_links_resolve(
-        html_path,
-        required_text=(
-            "API Diff",
-            "diffpkg -> diffpkg",
-            "Added API",
-            "Changed Signatures",
-            "diffpkg.added",
-            "diffpkg.run",
-        ),
-    )
 
     diff = ApiDiffResult.load_json(diff_path)
     assert [obj.qualname for obj in diff.added] == ["diffpkg.added"]
     assert diff.changed_signatures[0][0].qualname == "diffpkg.run"
     assert diff.changed_docstrings[0][1].summary == "Run task with force."
-    assert f"Wrote diff-json: {diff_path}" in capsys.readouterr().out
+    assert f"Wrote api-diff: {diff_path}" in capsys.readouterr().out
 
 
-def test_apidoc_cli_builds_setuptools_package_dir_repo(tmp_path) -> None:
+def test_apidoc_build_config_saves_setuptools_package_dir_repo(tmp_path) -> None:
     repo = write_setuptools_package_dir_repo(tmp_path)
     output_dir = tmp_path / "api"
 
-    assert (
-        main(
-            [
-                "apidoc",
-                "build",
-                str(repo),
-                "--collector",
-                "inspect",
-                "--public-policy",
-                "__all__",
-                "--out",
-                str(output_dir),
-                "--outputs",
-                "html",
-                "--sidecars",
-            ]
-        )
-        == 0
-    )
+    ApiBuildConfig(
+        collection=ApiCollectConfig(collector="inspect", public_policy="__all__"),
+        output_formats=("html",),
+        output_dir=str(output_dir),
+        sidecars=True,
+    ).save_all(repo)
 
     api = ApiPackage.load_json(output_dir / "samplepkg-api.json")
 
@@ -880,31 +786,20 @@ def test_apidoc_cli_builds_setuptools_package_dir_repo(tmp_path) -> None:
     assert api.find_object("lib.samplepkg.run") is None
 
 
-def test_apidoc_cli_build_respects_explicit_public_policy(tmp_path) -> None:
+def test_apidoc_build_config_respects_explicit_public_policy(tmp_path) -> None:
     package_dir = write_sample_package(tmp_path)
     output_dir = tmp_path / "explicit-api"
 
-    assert (
-        main(
-            [
-                "apidoc",
-                "build",
-                str(package_dir),
-                "--collector",
-                "inspect",
-                "--public-policy",
-                "explicit",
-                "--explicit-name",
-                "samplepkg.make_widget",
-                "--out",
-                str(output_dir),
-                "--outputs",
-                "html",
-                "--sidecars",
-            ]
-        )
-        == 0
-    )
+    ApiBuildConfig(
+        collection=ApiCollectConfig(
+            collector="inspect",
+            public_policy="explicit",
+            explicit_names=("samplepkg.make_widget",),
+        ),
+        output_formats=("html",),
+        output_dir=str(output_dir),
+        sidecars=True,
+    ).save_all(package_dir)
 
     api = ApiPackage.load_json(output_dir / "samplepkg-api.json")
     html = (output_dir / "samplepkg-api.html").read_text(encoding="utf-8")
@@ -942,7 +837,7 @@ def test_apidoc_cli_passes_fallback_collector_to_collection(
                 "none",
                 "--public-policy",
                 "underscore",
-                "--out",
+                "--save-json",
                 str(output_path),
             ]
         )
@@ -976,7 +871,7 @@ def test_apidoc_cli_can_exclude_member_kinds(tmp_path) -> None:
                 "--no-attributes",
                 "--no-properties",
                 "--no-methods",
-                "--out",
+                "--save-json",
                 str(output_path),
             ]
         )
@@ -1007,7 +902,7 @@ def test_apidoc_cli_can_strip_source_locations(tmp_path) -> None:
                 "--public-policy",
                 "__all__",
                 "--no-source-locations",
-                "--out",
+                "--save-json",
                 str(output_path),
             ]
         )
@@ -1039,7 +934,7 @@ def test_apidoc_cli_can_include_private_objects(tmp_path) -> None:
                 "--public-policy",
                 "__all__",
                 "--include-private",
-                "--out",
+                "--save-json",
                 str(output_path),
             ]
         )
@@ -1075,7 +970,7 @@ def test_apidoc_cli_loads_repo_local_docstring_parser_module_option(
                 "example_brief_parsers",
                 "--docstring-style",
                 "example-brief",
-                "--out",
+                "--save-json",
                 str(output_path),
             ]
         )
@@ -1173,18 +1068,7 @@ def test_apidoc_cli_init_loads_repo_local_docstring_parser_module(
 
     assert build_config.collection.docstring_parser_modules == ("init_brief_parsers",)
     assert build_config.collection.docstring_parser().style == "init-brief"
-    assert (
-        main(
-            [
-                "apidoc",
-                "build",
-                str(repo),
-                "--config",
-                str(repo / "pyproject.toml"),
-            ]
-        )
-        == 0
-    )
+    build_config.save_all(repo)
 
     api = ApiPackage.load_json(output_dir / "initbriefpkg-api.json")
     run = api.find_object("initbriefpkg.run")

@@ -431,8 +431,8 @@ def test_apidoc_cli_loads_custom_docstring_parser_modules_from_pyproject(
     monkeypatch.chdir(repo)
     monkeypatch.syspath_prepend(str(repo))
 
-    assert main(["apidoc", "build", ".", "--config", "pyproject.toml"]) == 0
     config = ApiBuildConfig.from_pyproject(repo)
+    config.save_all(".")
     built_api = ApiPackage.load_json(repo / "artifacts" / "api" / "hookpkg-api.json")
     run = built_api.find_object("hookpkg.run")
 
@@ -499,19 +499,9 @@ def test_apidoc_cli_loads_pyproject_parser_modules_from_target_repo_path(
 
     monkeypatch.chdir(tmp_path)
 
-    assert (
-        main(
-            [
-                "apidoc",
-                "build",
-                str(repo),
-                "--config",
-                str(repo / "pyproject.toml"),
-                "--out",
-                str(output_dir),
-            ]
-        )
-        == 0
+    ApiBuildConfig.load_file(repo / "pyproject.toml", target=repo).save_all(
+        repo,
+        output_dir=output_dir,
     )
     built_api = ApiPackage.load_json(output_dir / "externalhookpkg-api.json")
     run = built_api.find_object("externalhookpkg.run")
@@ -1096,7 +1086,7 @@ def test_source_collector_can_include_external_import_aliases(tmp_path: Path) ->
             "--collector",
             "inspect",
             "--include-imported",
-            "--out",
+            "--save-json",
             str(cli_json),
         ]
     ) == 0
@@ -1587,9 +1577,9 @@ def test_apidoc_cli_collect_check_build_snapshot_and_diff(tmp_path: Path, capsys
     coverage_csv = tmp_path / "coverage.csv"
     snapshot_json = tmp_path / "snapshot.json"
     build_dir = tmp_path / "build"
-    diff_dir = tmp_path / "diff"
+    diff_json = tmp_path / "diff.json"
 
-    assert main(["apidoc", "collect", str(package_dir), "--out", str(api_json)]) == 0
+    assert main(["apidoc", "collect", str(package_dir), "--save-json", str(api_json)]) == 0
     assert api_json.exists()
     assert (
         main(
@@ -1597,9 +1587,9 @@ def test_apidoc_cli_collect_check_build_snapshot_and_diff(tmp_path: Path, capsys
                 "apidoc",
                 "check",
                 str(package_dir),
-                "--out-json",
+                "--save-json",
                 str(coverage_json),
-                "--out-csv",
+                "--save-csv",
                 str(coverage_csv),
             ]
         )
@@ -1609,21 +1599,11 @@ def test_apidoc_cli_collect_check_build_snapshot_and_diff(tmp_path: Path, capsys
     assert coverage_csv.read_text(encoding="utf-8").startswith(
         "severity,code,qualname,module,path,line_number,message"
     )
-    assert (
-        main(
-            [
-                "apidoc",
-                "build",
-                str(package_dir),
-                "--out",
-                str(build_dir),
-                "--outputs",
-                "docx,pdf,html",
-                "--sidecars",
-            ]
-        )
-        == 0
-    )
+    ApiBuildConfig(
+        output_formats=("docx", "pdf", "html"),
+        output_dir=str(build_dir),
+        sidecars=True,
+    ).save_all(package_dir)
     assert (build_dir / "clipkg-api.docx").exists()
     assert (build_dir / "clipkg-api.pdf").exists()
     assert (build_dir / "clipkg-api.html").exists()
@@ -1635,23 +1615,19 @@ def test_apidoc_cli_collect_check_build_snapshot_and_diff(tmp_path: Path, capsys
     assert (build_dir / "clipkg-api-coverage.csv").exists()
     built_api = json.loads((build_dir / "clipkg-api.json").read_text(encoding="utf-8"))
     assert built_api["modules"][0]["name"] == "clipkg"
-    assert main(["apidoc", "snapshot", str(package_dir), "--out", str(snapshot_json)]) == 0
+    assert main(["apidoc", "snapshot", str(package_dir), "--save-json", str(snapshot_json)]) == 0
     assert snapshot_json.exists()
     assert main(
         [
             "apidoc",
             "diff",
-            "--base",
             str(snapshot_json),
-            "--head",
             str(snapshot_json),
-            "--out",
-            str(diff_dir),
-            "--outputs",
-            "html",
+            "--save-json",
+            str(diff_json),
         ]
     ) == 0
-    assert (diff_dir / "api-diff.html").exists()
+    assert ApiDiffResult.load_json(diff_json).added == []
 
     captured = capsys.readouterr()
     assert "Wrote api-json" in captured.out
@@ -1737,7 +1713,7 @@ def test_apidoc_cli_init_writes_config_for_general_repo(tmp_path: Path) -> None:
             "--public-policy",
             "__all__",
             "--no-class-signature-from-init",
-            "--out",
+            "--save-json",
             str(signature_json),
         ]
     ) == 0
@@ -1746,7 +1722,7 @@ def test_apidoc_cli_init_writes_config_for_general_repo(tmp_path: Path) -> None:
     assert widget is not None
     assert widget.signature == "initpkg.core.Widget"
 
-    assert main(["apidoc", "build", str(repo), "--config", str(repo / "pyproject.toml")]) == 0
+    config.save_all(repo)
     assert (build_dir / "initpkg-api.html").exists()
     assert (build_dir / "initpkg-api.json").exists()
     built_api = json.loads((build_dir / "initpkg-api.json").read_text(encoding="utf-8"))
@@ -1848,7 +1824,7 @@ def test_apidoc_cli_filters_check_and_snapshot(tmp_path: Path) -> None:
             "function",
             "--module-prefix",
             "filterpkg.core",
-            "--out",
+            "--save-json",
             str(snapshot_json),
         ]
     ) == 0
@@ -1868,7 +1844,7 @@ def test_apidoc_cli_filters_check_and_snapshot(tmp_path: Path) -> None:
             "filterpkg.legacy",
             "--object-exclude",
             "*.Worker.process",
-            "--out",
+            "--save-json",
             str(collected_json),
         ]
     ) == 0
@@ -1883,7 +1859,7 @@ def test_apidoc_cli_filters_check_and_snapshot(tmp_path: Path) -> None:
             str(package_dir),
             "--config",
             str(config_path),
-            "--out",
+            "--save-json",
             str(config_json),
         ]
     ) == 0
@@ -1899,7 +1875,7 @@ def test_apidoc_cli_filters_check_and_snapshot(tmp_path: Path) -> None:
             str(package_dir),
             "--config",
             str(pyproject_config_path),
-            "--out",
+            "--save-json",
             str(pyproject_config_json),
         ]
     ) == 0
@@ -1917,7 +1893,7 @@ def test_apidoc_cli_filters_check_and_snapshot(tmp_path: Path) -> None:
             str(pyproject_config_path),
             "--fail-under",
             "1.0",
-            "--out-json",
+            "--save-json",
             str(pyproject_coverage_json),
         ]
     ) == 0
@@ -1930,22 +1906,14 @@ def test_apidoc_cli_filters_check_and_snapshot(tmp_path: Path) -> None:
             str(package_dir),
             "--config",
             str(pyproject_config_path),
-            "--out",
+            "--save-json",
             str(pyproject_snapshot_json),
         ]
     ) == 0
     pyproject_snapshot = json.loads(pyproject_snapshot_json.read_text(encoding="utf-8"))
     assert list(pyproject_snapshot["objects"]) == ["filterpkg.core.run"]
 
-    assert main(
-        [
-            "apidoc",
-            "build",
-            str(package_dir),
-            "--config",
-            str(pyproject_config_path),
-        ]
-    ) == 0
+    ApiBuildConfig.load_file(pyproject_config_path, target=package_dir).save_all(package_dir)
     configured_html = (configured_build_dir / "filterpkg-api.html").read_text(encoding="utf-8")
     assert 'id="filterpkg-core-run"' in configured_html
     assert 'id="filterpkg-core-worker"' not in configured_html
@@ -1955,24 +1923,14 @@ def test_apidoc_cli_filters_check_and_snapshot(tmp_path: Path) -> None:
     assert configured_build_api["modules"][0]["members"][0]["qualname"] == "filterpkg.core.run"
     assert (configured_build_dir / "filterpkg-api-coverage.csv").exists()
 
-    assert main(
-        [
-            "apidoc",
-            "build",
-            str(package_dir),
-            "--kind",
-            "function",
-            "--module-prefix",
-            "filterpkg.core",
-            "--presentation-profile",
-            "website",
-            "--out",
-            str(build_dir),
-            "--outputs",
-            "html",
-            "--sidecars",
-        ]
-    ) == 0
+    ApiBuildConfig(
+        profile="website",
+        output_formats=("html",),
+        output_dir=str(build_dir),
+        sidecars=True,
+        kind=("function",),
+        module_prefix="filterpkg.core",
+    ).save_all(package_dir)
     html = (build_dir / "filterpkg-api.html").read_text(encoding="utf-8")
     assert 'href="#filterpkg-core-run"' in html
     assert 'id="filterpkg-core-run"' in html
@@ -1983,21 +1941,12 @@ def test_apidoc_cli_filters_check_and_snapshot(tmp_path: Path) -> None:
     assert filtered_build_api["modules"][0]["members"][0]["qualname"] == "filterpkg.core.run"
     assert (build_dir / "filterpkg-api-coverage.csv").exists()
 
-    assert main(
-        [
-            "apidoc",
-            "build",
-            str(package_dir),
-            "--presentation-profile",
-            "website",
-            "--max-level",
-            "2",
-            "--out",
-            str(max_level_build_dir),
-            "--outputs",
-            "html",
-        ]
-    ) == 0
+    ApiBuildConfig(
+        profile="website",
+        output_formats=("html",),
+        output_dir=str(max_level_build_dir),
+        max_level=2,
+    ).save_all(package_dir)
     max_level_html = (max_level_build_dir / "filterpkg-api.html").read_text(encoding="utf-8")
     assert 'id="filterpkg-core-worker"' in max_level_html
     assert 'id="filterpkg-core-worker-process"' not in max_level_html

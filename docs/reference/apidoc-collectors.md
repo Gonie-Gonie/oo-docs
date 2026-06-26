@@ -321,8 +321,10 @@ from oodocs.apidoc import ApiBuildConfig
 ApiBuildConfig(profile="website", output_formats=("html",), sidecars=True).save_pyproject(".")
 ```
 
-```powershell
-python -m oodocs apidoc build . --config pyproject.toml --out artifacts/api
+```python
+from oodocs.apidoc import ApiBuildConfig
+
+ApiBuildConfig.from_pyproject(".").save_all(".")
 ```
 
 When griffe collection is used with a standard style (`auto`, `google`,

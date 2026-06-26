@@ -670,17 +670,28 @@ def test_cli_help_uses_canonical_option_names(capsys) -> None:
         assert old_option not in oodocs_validate_help
 
     apidoc_parser = _build_apidoc_parser()
+    apidoc_help = _subcommand_help(apidoc_parser, [], capsys)
     apidoc_init_help = _subcommand_help(apidoc_parser, ["init"], capsys)
-    apidoc_build_help = _subcommand_help(apidoc_parser, ["build"], capsys)
+    apidoc_collect_help = _subcommand_help(apidoc_parser, ["collect"], capsys)
+    apidoc_check_help = _subcommand_help(apidoc_parser, ["check"], capsys)
+    apidoc_snapshot_help = _subcommand_help(apidoc_parser, ["snapshot"], capsys)
     apidoc_diff_help = _subcommand_help(apidoc_parser, ["diff"], capsys)
 
+    for command in ("collect", "check", "snapshot", "diff"):
+        assert command in apidoc_help
+    assert "build" not in apidoc_help
     assert "--config-format" in apidoc_init_help
     assert "--outputs" in apidoc_init_help
-    assert "--outputs" in apidoc_build_help
-    assert "--presentation-profile" in apidoc_build_help
-    assert "--outputs" in apidoc_diff_help
+    assert "--save-json" in apidoc_collect_help
+    assert "--report-format" in apidoc_check_help
+    assert "--save-json" in apidoc_check_help
+    assert "--save-csv" in apidoc_check_help
+    assert "--save-json" in apidoc_snapshot_help
+    assert "--save-json" in apidoc_diff_help
 
-    for old_option in ("--to", "--profile", "--format"):
+    for old_option in ("--to", "--profile", "--format", "--out-json", "--out-csv", "--base", "--head"):
         assert old_option not in apidoc_init_help
-        assert old_option not in apidoc_build_help
+        assert old_option not in apidoc_collect_help
+        assert old_option not in apidoc_check_help
+        assert old_option not in apidoc_snapshot_help
         assert old_option not in apidoc_diff_help

@@ -443,7 +443,7 @@ def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     )
     parser.add_argument(
         "--config",
-        help="Optional apidoc build config JSON, pyproject.toml, or project root.",
+        help="Optional apidoc rendering config JSON, pyproject.toml, or project root.",
     )
     parser.add_argument(
         "--collector",

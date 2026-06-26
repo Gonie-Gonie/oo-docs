@@ -45,7 +45,6 @@ from oodocs.apidoc import (
     collect_object_api,
     docstring_parser_import_paths,
 )
-from oodocs.apidoc.cli import main
 
 
 def _load_api_objects_example():
@@ -61,6 +60,28 @@ def _load_api_objects_example():
     example = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(example)
     return example
+
+
+def _save_api_reference(
+    target: Path,
+    output_dir: Path,
+    *,
+    output_formats: tuple[str, ...] = ("html",),
+    collector: str = "inspect",
+    public_policy: str = "__all__",
+    docstring_style: object = "auto",
+    sidecars: bool = True,
+) -> None:
+    ApiBuildConfig(
+        collection=ApiCollectConfig(
+            collector=collector,
+            public_policy=public_policy,
+            docstring_style=docstring_style,
+        ),
+        output_formats=output_formats,
+        output_dir=str(output_dir),
+        sidecars=sidecars,
+    ).save_all(target)
 
 
 def test_general_repo_auto_parser_objects_compose_into_document(tmp_path) -> None:
@@ -879,19 +900,7 @@ def test_general_repo_pyproject_auto_parser_builds_cli_bundle(tmp_path) -> None:
     assert method is not None
     assert method.metadata["docstring_style"] == "numpy"
 
-    assert (
-        main(
-            [
-                "build",
-                str(repo),
-                "--config",
-                str(repo / "pyproject.toml"),
-                "--out",
-                str(output_dir),
-            ]
-        )
-        == 0
-    )
+    ApiBuildConfig.from_pyproject(repo).save_all(repo, output_dir=output_dir)
 
     html_path = output_dir / "mixedpkg-api.html"
     api_path = output_dir / "mixedpkg-api.json"
@@ -1015,25 +1024,10 @@ def test_general_python_file_module_targets_build_reference_and_example(
     assert "singlemod.Client" in outputs["html"].read_text(encoding="utf-8")
     assert_html_internal_links_resolve(outputs["html"])
 
-    assert (
-        main(
-            [
-                "build",
-                str(module_path),
-                "--collector",
-                "inspect",
-                "--public-policy",
-                "__all__",
-                "--docstring-style",
-                "auto",
-                "--out",
-                str(cli_output),
-                "--outputs",
-                "docx,pdf,html",
-                "--sidecars",
-            ]
-        )
-        == 0
+    _save_api_reference(
+        module_path,
+        cli_output,
+        output_formats=("docx", "pdf", "html"),
     )
     cli_docx = cli_output / "singlemod-api.docx"
     cli_pdf = cli_output / "singlemod-api.pdf"
@@ -1121,26 +1115,7 @@ def test_general_py_modules_repo_targets_build_reference_and_example(
     assert api.find_object("src.singlemod.Client") is None
     assert coverage.object_coverage == 1.0
 
-    assert (
-        main(
-            [
-                "build",
-                str(repo),
-                "--collector",
-                "inspect",
-                "--public-policy",
-                "__all__",
-                "--docstring-style",
-                "auto",
-                "--out",
-                str(output_dir),
-                "--outputs",
-                "html",
-                "--sidecars",
-            ]
-        )
-        == 0
-    )
+    _save_api_reference(repo, output_dir)
     html_path = output_dir / "singlemod-api.html"
     api_path = output_dir / "singlemod-api.json"
     coverage_path = output_dir / "singlemod-api-coverage.json"
@@ -1203,26 +1178,7 @@ def test_general_hatch_multi_package_repo_builds_complete_reference(
     assert api.find_object("lib.alpha.run") is None
     assert coverage.object_coverage == 1.0
 
-    assert (
-        main(
-            [
-                "build",
-                str(repo),
-                "--collector",
-                "inspect",
-                "--public-policy",
-                "__all__",
-                "--docstring-style",
-                "auto",
-                "--out",
-                str(output_dir),
-                "--outputs",
-                "html",
-                "--sidecars",
-            ]
-        )
-        == 0
-    )
+    _save_api_reference(repo, output_dir)
     html_path = output_dir / "multi_hatch_project-api.html"
     api_path = output_dir / "multi_hatch_project-api.json"
     coverage_path = output_dir / "multi_hatch_project-api-coverage.json"
@@ -1262,26 +1218,7 @@ def test_general_hatch_only_include_repo_builds_complete_reference(
     assert api.find_object("straypkg.leak") is None
     assert coverage.object_coverage == 1.0
 
-    assert (
-        main(
-            [
-                "build",
-                str(repo),
-                "--collector",
-                "inspect",
-                "--public-policy",
-                "__all__",
-                "--docstring-style",
-                "auto",
-                "--out",
-                str(output_dir),
-                "--outputs",
-                "html",
-                "--sidecars",
-            ]
-        )
-        == 0
-    )
+    _save_api_reference(repo, output_dir)
     html_path = output_dir / "onlypkg-api.html"
     api_path = output_dir / "onlypkg-api.json"
     coverage_path = output_dir / "onlypkg-api-coverage.json"
@@ -1322,26 +1259,7 @@ def test_general_pdm_package_dir_repo_builds_complete_reference(
     assert api.find_object("lib.pdmpkg.run") is None
     assert coverage.object_coverage == 1.0
 
-    assert (
-        main(
-            [
-                "build",
-                str(repo),
-                "--collector",
-                "inspect",
-                "--public-policy",
-                "__all__",
-                "--docstring-style",
-                "auto",
-                "--out",
-                str(output_dir),
-                "--outputs",
-                "html",
-                "--sidecars",
-            ]
-        )
-        == 0
-    )
+    _save_api_reference(repo, output_dir)
     html_path = output_dir / "pdmpkg-api.html"
     api_path = output_dir / "pdmpkg-api.json"
     coverage_path = output_dir / "pdmpkg-api-coverage.json"
@@ -1379,26 +1297,7 @@ def test_general_flit_package_repo_builds_complete_reference(
     assert api.find_object("straypkg.leak") is None
     assert coverage.object_coverage == 1.0
 
-    assert (
-        main(
-            [
-                "build",
-                str(repo),
-                "--collector",
-                "inspect",
-                "--public-policy",
-                "__all__",
-                "--docstring-style",
-                "auto",
-                "--out",
-                str(output_dir),
-                "--outputs",
-                "html",
-                "--sidecars",
-            ]
-        )
-        == 0
-    )
+    _save_api_reference(repo, output_dir)
     html_path = output_dir / "flitpkg-api.html"
     api_path = output_dir / "flitpkg-api.json"
     coverage_path = output_dir / "flitpkg-api-coverage.json"
@@ -1437,26 +1336,7 @@ def test_general_import_names_package_repo_builds_complete_reference(
     assert api.find_object("straypkg.leak") is None
     assert coverage.object_coverage == 1.0
 
-    assert (
-        main(
-            [
-                "build",
-                str(repo),
-                "--collector",
-                "inspect",
-                "--public-policy",
-                "__all__",
-                "--docstring-style",
-                "auto",
-                "--out",
-                str(output_dir),
-                "--outputs",
-                "html",
-                "--sidecars",
-            ]
-        )
-        == 0
-    )
+    _save_api_reference(repo, output_dir)
     html_path = output_dir / "importnamedpkg-api.html"
     api_path = output_dir / "importnamedpkg-api.json"
     coverage_path = output_dir / "importnamedpkg-api-coverage.json"
@@ -1540,25 +1420,10 @@ def test_general_packaging_variants_build_complete_cli_reference(
         assert api.find_object(qualname) is None
     assert coverage.object_coverage == 1.0
 
-    assert (
-        main(
-            [
-                "build",
-                str(repo),
-                "--collector",
-                "inspect",
-                "--public-policy",
-                "__all__",
-                "--docstring-style",
-                "auto",
-                "--out",
-                str(output_dir),
-                "--outputs",
-                "docx,pdf,html",
-                "--sidecars",
-            ]
-        )
-        == 0
+    _save_api_reference(
+        repo,
+        output_dir,
+        output_formats=("docx", "pdf", "html"),
     )
     docx_path = output_dir / f"{expected_package}-api.docx"
     pdf_path = output_dir / f"{expected_package}-api.pdf"

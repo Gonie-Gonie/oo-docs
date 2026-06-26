@@ -56,18 +56,20 @@ doc = Document("API Evidence", Chapter("Coverage", coverage.to_table()))
 CLI equivalent:
 
 ```powershell
-python -m oodocs apidoc check oodocs --collector griffe --public-policy __all__ --fail-under 0.90 --out-json artifacts/api-coverage.json --out-csv artifacts/api-coverage.csv
+python -m oodocs apidoc check oodocs --collector griffe --public-policy __all__ --fail-under 0.90 --save-json artifacts/api-coverage.json --save-csv artifacts/api-coverage.csv
 ```
 
 The JSON sidecar stores the complete coverage result for later rendering. The
 CSV sidecar stores the coverage issue rows for CI artifacts and spreadsheet
 review.
 
-When a repository needs a rendered API reference and coverage evidence from one
-command, build with sidecars:
+When a repository needs a rendered API reference and coverage evidence, render
+from the same config with sidecars:
 
-```powershell
-python -m oodocs apidoc build . --config pyproject.toml --out artifacts/api --outputs docx,pdf,html --sidecars
+```python
+from oodocs.apidoc import ApiBuildConfig
+
+ApiBuildConfig.from_pyproject(".").save_all(".")
 ```
 
 For larger repositories, gate only the API area currently under review:
