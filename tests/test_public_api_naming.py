@@ -134,18 +134,22 @@ def test_citation_defaults_use_style_field_names() -> None:
     assert "normalize_reference_style" in references.__all__
 
 
-def test_list_style_uses_counter_format_field_name() -> None:
+def test_list_style_uses_counter_style_marker_field() -> None:
     field_names = {field.name for field in fields(oodocs.ListStyle)}
 
-    assert "marker_format" not in field_names
-    assert "marker_counter_format" in field_names
+    assert {"marker_format", "marker_counter_format", "bullet", "prefix", "suffix"}.isdisjoint(
+        field_names
+    )
+    assert "marker" in field_names
+    assert isinstance(oodocs.ListStyle().marker, oodocs.CounterStyle)
 
 
-def test_heading_numbering_uses_level_counter_format_field_name() -> None:
+def test_heading_numbering_uses_counter_style_level_fields() -> None:
     field_names = {field.name for field in fields(oodocs.HeadingNumbering)}
 
-    assert "formats" not in field_names
-    assert "level_counter_formats" in field_names
+    assert {"formats", "level_counter_formats"}.isdisjoint(field_names)
+    assert "level_styles" in field_names
+    assert all(isinstance(style, oodocs.CounterStyle) for style in oodocs.HeadingNumbering().level_styles)
 
 
 def test_page_and_part_numbering_use_template_and_counter_field_names() -> None:
@@ -157,21 +161,25 @@ def test_page_and_part_numbering_use_template_and_counter_field_names() -> None:
         "page_number_format",
         "front_matter_page_number_format",
         "main_matter_page_number_format",
+        "front_matter_counter_format",
+        "main_matter_counter_format",
     }
     expected_page_fields = {
         "page_number_template",
-        "front_matter_counter_format",
-        "main_matter_counter_format",
+        "front_matter_counter",
+        "main_matter_counter",
     }
 
     assert forbidden_page_fields.isdisjoint(page_number_fields)
     assert expected_page_fields <= page_number_fields
-    assert "part_number_format" not in block_fields
-    assert "part_counter_format" in block_fields
+    assert {"part_number_format", "part_counter_format"}.isdisjoint(block_fields)
+    assert "part_counter" in block_fields
     assert forbidden_page_fields.isdisjoint(theme_fields)
     assert expected_page_fields.isdisjoint(theme_fields)
     assert "part_number_format" not in theme_fields
     assert "part_counter_format" not in theme_fields
+    assert isinstance(oodocs.PageNumberDefaults().front_matter_counter, oodocs.CounterStyle)
+    assert isinstance(oodocs.BlockDefaults().part_counter, oodocs.CounterStyle)
 
 
 def test_generated_content_defaults_use_document_language_field_names() -> None:

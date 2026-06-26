@@ -7,13 +7,11 @@ from typing import Sequence
 
 from oodocs.components.references import normalize_citation_style, normalize_reference_style
 from oodocs.core import (
-    format_counter_value,
     normalize_color,
-    normalize_counter_format,
     normalize_text_alignment,
 )
 from oodocs.styles.blocks import BoxStyle, ParagraphStyle, RunInTitleStyle
-from oodocs.styles.counter import HeadingNumbering, ListStyle
+from oodocs.styles.counter import CounterStyle, HeadingNumbering, ListStyle
 from oodocs.styles.sheet import StyleSheet
 from oodocs.styles.tables import TableStyle
 from oodocs.styles.text import TextStyle
@@ -166,8 +164,8 @@ class PageNumberDefaults:
         show_page_numbers: Whether renderers should emit footer page numbers.
         page_number_alignment: Footer page-number alignment.
         page_number_template: Footer text template containing ``{page}``.
-        front_matter_counter_format: Front-matter page counter style.
-        main_matter_counter_format: Main-matter page counter style.
+        front_matter_counter: Front-matter page counter style.
+        main_matter_counter: Main-matter page counter style.
         page_number_font_size: Footer page-number font size in points.
 
     Examples:
@@ -182,8 +180,10 @@ class PageNumberDefaults:
     show_page_numbers: bool = False
     page_number_alignment: str = "center"
     page_number_template: str = "{page}"
-    front_matter_counter_format: str = "lower-roman"
-    main_matter_counter_format: str = "decimal"
+    front_matter_counter: CounterStyle = field(
+        default_factory=lambda: CounterStyle(counter_format="lower-roman")
+    )
+    main_matter_counter: CounterStyle = field(default_factory=CounterStyle)
     page_number_font_size: float = 9.0
 
     def __post_init__(self) -> None:
@@ -191,12 +191,10 @@ class PageNumberDefaults:
             raise ValueError(
                 f"Unsupported page number alignment: {self.page_number_alignment!r}"
             )
-        self.front_matter_counter_format = normalize_counter_format(
-            self.front_matter_counter_format
-        )
-        self.main_matter_counter_format = normalize_counter_format(
-            self.main_matter_counter_format
-        )
+        if not isinstance(self.front_matter_counter, CounterStyle):
+            raise TypeError("front_matter_counter must be a CounterStyle")
+        if not isinstance(self.main_matter_counter, CounterStyle):
+            raise TypeError("main_matter_counter must be a CounterStyle")
         if "{page}" not in self.page_number_template:
             raise ValueError("page_number_template must contain a '{page}' placeholder")
 
@@ -249,7 +247,7 @@ class BlockDefaults:
         figure_block_alignment: Default figure block placement alignment.
         box_block_alignment: Default box block placement alignment.
         part_label: Label used for numbered part pages.
-        part_counter_format: Counter format used for parts.
+        part_counter: Counter style used for parts.
         footnote_placement: Native or generated content footnote placement.
         auto_footnotes_page: Whether missing footnote pages are auto-rendered.
         run_in_title_style: Default style for run-in paragraph titles.
@@ -276,13 +274,17 @@ class BlockDefaults:
     figure_block_alignment: str = "center"
     box_block_alignment: str = "center"
     part_label: str = "Part"
-    part_counter_format: str = "upper-roman"
+    part_counter: CounterStyle = field(
+        default_factory=lambda: CounterStyle(counter_format="upper-roman")
+    )
     footnote_placement: str = "page"
     auto_footnotes_page: bool = True
     run_in_title_style: RunInTitleStyle = field(default_factory=RunInTitleStyle)
     heading_numbering: HeadingNumbering = field(default_factory=HeadingNumbering)
     bullet_list_style: ListStyle = field(
-        default_factory=lambda: ListStyle(marker_counter_format="bullet", suffix="")
+        default_factory=lambda: ListStyle(
+            marker=CounterStyle(counter_format="bullet", suffix="")
+        )
     )
     numbered_list_style: ListStyle = field(default_factory=ListStyle)
 
@@ -297,7 +299,8 @@ class BlockDefaults:
             value = getattr(self, field_name)
             if value not in {"left", "center", "right"}:
                 raise ValueError(f"Unsupported alignment for {field_name}: {value!r}")
-        self.part_counter_format = normalize_counter_format(self.part_counter_format)
+        if not isinstance(self.part_counter, CounterStyle):
+            raise TypeError("part_counter must be a CounterStyle")
         if self.footnote_placement not in {"page", "document"}:
             raise ValueError("footnote_placement must be 'page' or 'document'")
         if not isinstance(self.run_in_title_style, RunInTitleStyle):
@@ -626,12 +629,12 @@ class Theme:
             ```
         """
 
-        counter_format = (
-            self.page_numbers.front_matter_counter_format
+        counter = (
+            self.page_numbers.front_matter_counter
             if front_matter
-            else self.page_numbers.main_matter_counter_format
+            else self.page_numbers.main_matter_counter
         )
-        page_label = format_counter_value(page_number, counter_format)
+        page_label = counter.format_value(page_number)
         return self.page_numbers.page_number_template.format(page=page_label)
 
     def format_heading_label(self, counters: Sequence[int]) -> str | None:
@@ -670,7 +673,7 @@ class Theme:
 
         if not self.blocks.heading_numbering.enabled:
             return None
-        marker = format_counter_value(value, self.blocks.part_counter_format)
+        marker = self.blocks.part_counter.format_value(value)
         return f"{self.blocks.part_label} {marker}".strip()
 
     def list_style(self, *, ordered: bool) -> ListStyle:
@@ -695,6 +698,7 @@ __all__ = [
     "BoxStyle",
     "CaptionDefaults",
     "CitationDefaults",
+    "CounterStyle",
     "GeneratedContentDefaults",
     "HeadingNumbering",
     "ListStyle",

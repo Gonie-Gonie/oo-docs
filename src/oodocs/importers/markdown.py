@@ -28,7 +28,7 @@ from oodocs.components.media import Figure, Table
 from oodocs.components.references import CitationLibrary, CitationSource
 from oodocs.document import Document
 from oodocs.importers.results import ImportIssue, ImportResult, resolve_import_result
-from oodocs.styles import ListStyle
+from oodocs.styles import CounterStyle, ListStyle
 from oodocs.settings import DocumentSettings
 
 
@@ -603,7 +603,7 @@ class _MarkdownParser:
                 break
 
         if has_task_marker:
-            task_style = ListStyle(marker_counter_format="none", suffix="")
+            task_style = ListStyle(marker=CounterStyle(counter_format="none", suffix=""))
             return BulletList(*items, style=task_style, item_children=item_children), index
         if ordered:
             return NumberedList(*items, start=start, item_children=item_children), index

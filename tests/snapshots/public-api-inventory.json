@@ -89,6 +89,13 @@
           "qualname": "oodocs.styles.theme.CitationDefaults"
         },
         {
+          "category": "style",
+          "kind": "class",
+          "module": "oodocs.styles.counter",
+          "name": "CounterStyle",
+          "qualname": "oodocs.styles.counter.CounterStyle"
+        },
+        {
           "category": "document-core",
           "kind": "class",
           "module": "oodocs.components.references",
@@ -1504,6 +1511,13 @@
           "module": "oodocs.styles.theme",
           "name": "CitationDefaults",
           "qualname": "oodocs.styles.theme.CitationDefaults"
+        },
+        {
+          "category": "style",
+          "kind": "class",
+          "module": "oodocs.styles.counter",
+          "name": "CounterStyle",
+          "qualname": "oodocs.styles.counter.CounterStyle"
         },
         {
           "category": "theme",

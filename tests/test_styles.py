@@ -3,9 +3,14 @@ from __future__ import annotations
 import pytest
 
 from oodocs import (
+    BlockDefaults,
     BorderStyle,
     BoxStyle,
+    CounterStyle,
+    HeadingNumbering,
     InlineChipStyle,
+    ListStyle,
+    PageNumberDefaults,
     Padding,
     ParagraphStyle,
     RunInTitleStyle,
@@ -60,6 +65,39 @@ def test_stroke_style_factories_and_point_conversion() -> None:
     assert stroke.width_points() == 0.75
     assert StrokeStyle.none().color is None
     assert StrokeStyle.none().width == 0.0
+
+
+def test_counter_style_formats_values_and_sequences() -> None:
+    marker = CounterStyle(counter_format="upper-roman", prefix="(", suffix=")")
+    sequence = CounterStyle(counter_format="lower-alpha", separator="-")
+
+    assert marker.format_value(3) == "(III)"
+    assert sequence.format_sequence([1, 2, 3]) == "a-b-c"
+    assert CounterStyle(counter_format="bullet", bullet="*").format_value(1) == "*"
+
+    with pytest.raises(ValueError, match="start"):
+        CounterStyle(start=0)
+
+
+def test_counter_style_drives_list_heading_page_and_part_defaults() -> None:
+    list_style = ListStyle(marker=CounterStyle(counter_format="upper-alpha", suffix=")"))
+    heading_numbering = HeadingNumbering(
+        level_styles=(
+            CounterStyle(counter_format="upper-roman"),
+            CounterStyle(counter_format="lower-alpha"),
+        ),
+        prefix="[",
+        suffix="]",
+    )
+    page_numbers = PageNumberDefaults(
+        front_matter_counter=CounterStyle(counter_format="lower-roman")
+    )
+    blocks = BlockDefaults(part_counter=CounterStyle(counter_format="upper-roman"))
+
+    assert list_style.marker_for(1) == "B)"
+    assert heading_numbering.format_label([2, 3]) == "[II.c]"
+    assert page_numbers.front_matter_counter.format_value(4) == "iv"
+    assert blocks.part_counter.format_value(2) == "II"
 
 
 def test_stylesheet_resolves_prefixed_names_and_roundtrips() -> None:

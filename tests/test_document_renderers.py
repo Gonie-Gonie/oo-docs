@@ -44,6 +44,7 @@ from oodocs import (
     Conjecture,
     CountableBlock,
     Corollary,
+    CounterStyle,
     Definition,
     Document,
     DocumentSettings,
@@ -529,7 +530,7 @@ def test_common_block_styles_accept_direct_kwargs() -> None:
     code_block = CodeBlock("print('x')", language="python", left_indent=0.25)
     equation = Equation("x=1", space_after=2)
     bullet_list = BulletList("one", indent=0.4)
-    numbered_list = NumberedList("one", start=3, suffix=")")
+    numbered_list = NumberedList("one", marker=CounterStyle(start=3, suffix=")"))
     box = Box(Paragraph("inside"), background_color="#FFFFFF", padding=Padding.all(8), width=3.0)
     table = Table(
         headers=["A"],
@@ -546,11 +547,11 @@ def test_common_block_styles_accept_direct_kwargs() -> None:
     assert code_block.language_position == "top-right"
     assert equation.style.space_after == 2
     assert bullet_list.style is not None
-    assert bullet_list.style.marker_counter_format == "bullet"
+    assert bullet_list.style.marker.counter_format == "bullet"
     assert bullet_list.style.indent == 0.4
     assert numbered_list.style is not None
-    assert numbered_list.style.start == 3
-    assert numbered_list.style.suffix == ")"
+    assert numbered_list.style.marker.start == 3
+    assert numbered_list.style.marker.suffix == ")"
     assert box.style.background_color == "FFFFFF"
     assert box.style.padding == Padding.all(8)
     assert box.style.width == 3.0
@@ -839,7 +840,7 @@ def test_document_validate_returns_printable_result_with_format_scopes() -> None
 def test_named_styles_validate_and_render_across_formats(tmp_path: Path) -> None:
     styles = StyleSheet.default()
     styles.register("paragraph", "lead", ParagraphStyle(space_after=4, text_alignment="center"))
-    styles.register("list", "steps", ListStyle(marker_counter_format="decimal"))
+    styles.register("list", "steps", ListStyle(marker=CounterStyle()))
     styles.register("table_cell", "positive", TableCellStyle(text_color="166534", bold=True))
 
     document = Document(
@@ -1064,12 +1065,19 @@ def test_document_validate_treats_subfigure_group_caption_as_reference_target(
 
 def test_numbering_and_list_styles_are_customizable() -> None:
     heading_numbering = HeadingNumbering(
-        level_counter_formats=("upper-roman", "lower-alpha"),
+        level_styles=(
+            CounterStyle(counter_format="upper-roman"),
+            CounterStyle(counter_format="lower-alpha"),
+        ),
         prefix="[",
         suffix="]",
     )
-    ordered_style = ListStyle(marker_counter_format="upper-roman", prefix="(", suffix=")")
-    bullet_style = ListStyle(marker_counter_format="bullet", bullet="\u2022", suffix="")
+    ordered_style = ListStyle(
+        marker=CounterStyle(counter_format="upper-roman", prefix="(", suffix=")")
+    )
+    bullet_style = ListStyle(
+        marker=CounterStyle(counter_format="bullet", bullet="\u2022", suffix="")
+    )
 
     assert heading_numbering.format_label([2, 3]) == "[II.c]"
     assert ordered_style.marker_for(0) == "(I)"
@@ -3127,13 +3135,14 @@ def test_document_renders_to_docx_and_pdf(tmp_path: Path) -> None:
                     footnote_placement="document",
                     heading_numbering=HeadingNumbering(),
                     bullet_list_style=ListStyle(
-                        marker_counter_format="bullet",
-                        bullet="\u2022",
-                        suffix="",
+                        marker=CounterStyle(
+                            counter_format="bullet",
+                            bullet="\u2022",
+                            suffix="",
+                        ),
                     ),
                     numbered_list_style=ListStyle(
-                        marker_counter_format="decimal",
-                        suffix=".",
+                        marker=CounterStyle(suffix="."),
                     ),
                 ),
             ),

@@ -41,6 +41,7 @@ from oodocs.core import (
 from oodocs.styles import (
     BorderStyle,
     BoxStyle,
+    CounterStyle,
     ListStyle,
     Padding,
     ParagraphStyle,
@@ -271,11 +272,7 @@ class ListBlock(Block):
         *items: Paragraphs or inline values used as list items.
         ordered: Whether the list should use ordered markers.
         style: Base list style.
-        marker_counter_format: Optional marker counter format override.
-        bullet: Optional bullet glyph override.
-        prefix: Optional marker prefix.
-        suffix: Optional marker suffix.
-        start: Optional first ordered-list counter value.
+        marker: Optional marker counter style override.
         indent: Optional list indent.
         marker_gap: Optional gap between marker and item text.
         item_children: Optional nested lists for each list item.
@@ -294,11 +291,7 @@ class ListBlock(Block):
         *items: ListInput,
         ordered: bool = False,
         style: ListStyle | str | None = None,
-        marker_counter_format: str | None = None,
-        bullet: str | None = None,
-        prefix: str | None = None,
-        suffix: str | None = None,
-        start: int | None = None,
+        marker: CounterStyle | None = None,
         indent: float | None = None,
         marker_gap: float | None = None,
         item_children: Sequence[Sequence["ListBlock"]] | None = None,
@@ -314,11 +307,7 @@ class ListBlock(Block):
         self.style = list_style_with_overrides(
             style,
             ordered=ordered,
-            marker_counter_format=marker_counter_format,
-            bullet=bullet,
-            prefix=prefix,
-            suffix=suffix,
-            start=start,
+            marker=marker,
             indent=indent,
             marker_gap=marker_gap,
         )
@@ -380,11 +369,7 @@ class BulletList(ListBlock):
     Args:
         *items: Paragraphs or inline values used as list items.
         style: Base list style.
-        marker_counter_format: Optional marker counter format override.
-        bullet: Optional bullet glyph override.
-        prefix: Optional marker prefix.
-        suffix: Optional marker suffix.
-        start: Optional first counter value when a renderer uses counters.
+        marker: Optional marker counter style override.
         indent: Optional list indent.
         marker_gap: Optional gap between marker and item text.
         item_children: Optional nested lists for each list item.
@@ -402,11 +387,7 @@ class BulletList(ListBlock):
         self,
         *items: ListInput,
         style: ListStyle | str | None = None,
-        marker_counter_format: str | None = None,
-        bullet: str | None = None,
-        prefix: str | None = None,
-        suffix: str | None = None,
-        start: int | None = None,
+        marker: CounterStyle | None = None,
         indent: float | None = None,
         marker_gap: float | None = None,
         item_children: Sequence[Sequence[ListBlock]] | None = None,
@@ -415,11 +396,7 @@ class BulletList(ListBlock):
             *items,
             ordered=False,
             style=style,
-            marker_counter_format=marker_counter_format,
-            bullet=bullet,
-            prefix=prefix,
-            suffix=suffix,
-            start=start,
+            marker=marker,
             indent=indent,
             marker_gap=marker_gap,
             item_children=item_children,
@@ -432,11 +409,7 @@ class NumberedList(ListBlock):
     Args:
         *items: Paragraphs or inline values used as list items.
         style: Base list style.
-        marker_counter_format: Optional marker counter format override.
-        bullet: Optional bullet glyph override.
-        prefix: Optional marker prefix.
-        suffix: Optional marker suffix.
-        start: Optional first ordered-list counter value.
+        marker: Optional marker counter style override.
         indent: Optional list indent.
         marker_gap: Optional gap between marker and item text.
         item_children: Optional nested lists for each list item.
@@ -454,11 +427,7 @@ class NumberedList(ListBlock):
         self,
         *items: ListInput,
         style: ListStyle | str | None = None,
-        marker_counter_format: str | None = None,
-        bullet: str | None = None,
-        prefix: str | None = None,
-        suffix: str | None = None,
-        start: int | None = None,
+        marker: CounterStyle | None = None,
         indent: float | None = None,
         marker_gap: float | None = None,
         item_children: Sequence[Sequence[ListBlock]] | None = None,
@@ -467,11 +436,7 @@ class NumberedList(ListBlock):
             *items,
             ordered=True,
             style=style,
-            marker_counter_format=marker_counter_format,
-            bullet=bullet,
-            prefix=prefix,
-            suffix=suffix,
-            start=start,
+            marker=marker,
             indent=indent,
             marker_gap=marker_gap,
             item_children=item_children,

@@ -829,7 +829,7 @@ def build_usage_guide_document() -> Document:
             ["CaptionDefaults", "caption_text_alignment, table_caption_position, figure_caption_position, table_label, figure_label, caption/reference labels", "Caption placement and localized labels."],
             ["CitationDefaults", "citation_style, reference_style", "Inline citation labels and generated reference entry style."],
             ["GeneratedContentDefaults", "contents/list/comments/footnotes/references titles, generated_heading_level, generated_content_page_breaks", "Generated content titles and heading level."],
-            ["PageNumberDefaults", "show_page_numbers, page_number_alignment, page_number_template, front/main matter counter formats, page_number_font_size", "Footer page labels."],
+            ["PageNumberDefaults", "show_page_numbers, page_number_alignment, page_number_template, front/main matter counters, page_number_font_size", "Footer page labels."],
             ["TitleMatterDefaults", "title_text_alignment, subtitle_text_alignment, author_text_alignment, affiliation_text_alignment, author_detail_text_alignment", "Title-page and metadata alignment."],
             ["BlockDefaults", "page_background_color, paragraph_text_alignment, table_block_alignment, figure_block_alignment, box_block_alignment, footnote_placement, list styles, heading_numbering", "Document-wide defaults that individual blocks can override."],
         ],
@@ -841,7 +841,7 @@ def build_usage_guide_document() -> Document:
         rows=[
             ["Text and styled(...)", "font_name, font_size, text_color, highlight_color, bold, italic, underline, strikethrough, small_caps, uppercase, subscript, superscript", "Use TextStyle only when a reusable inline style needs a name."],
             ["Paragraph, CodeBlock, Equation", "text_alignment, space_before, space_after, leading, left_indent, right_indent, first_line_indent, keep_together, keep_with_next, page_break_before, widow_control, unit", "Use ParagraphStyle only for shared paragraph rhythm."],
-            ["BulletList, NumberedList", "marker_counter_format, bullet, prefix, suffix, start, indent, marker_gap", "Use ListStyle only for repeated list conventions."],
+            ["BulletList, NumberedList", "marker=CounterStyle(...), indent, marker_gap", "Use ListStyle only for repeated list conventions."],
             ["Box", "border, background_color, title colors, padding, space_after, width, unit, block_alignment", "Use BoxStyle only for named callout or report-panel designs."],
             ["Table", "header/body/alternate colors, border, cell/header alignment, cell_padding, repeat_header_rows", "row_styles, column_styles, and header_row_styles accept dictionaries for quick overrides."],
             ["TableCell", "colspan, rowspan, background_color, text_color, bold, italic, text_alignment, vertical_alignment", "Use TableCellStyle only for reusable row, column, or cell styling."],

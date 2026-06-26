@@ -3299,7 +3299,7 @@ class DocxRenderer:
         if has_front_matter:
             self._set_section_page_counter_format(
                 sections[0],
-                theme.page_numbers.front_matter_counter_format,
+                theme.page_numbers.front_matter_counter.counter_format,
                 start=1,
             )
             self._add_page_number_footer(
@@ -3311,7 +3311,7 @@ class DocxRenderer:
                 sections[1].footer.is_linked_to_previous = False
                 self._set_section_page_counter_format(
                     sections[1],
-                    theme.page_numbers.main_matter_counter_format,
+                    theme.page_numbers.main_matter_counter.counter_format,
                     start=1,
                 )
                 self._add_page_number_footer(
@@ -3323,7 +3323,7 @@ class DocxRenderer:
 
         self._set_section_page_counter_format(
             sections[0],
-            theme.page_numbers.main_matter_counter_format,
+            theme.page_numbers.main_matter_counter.counter_format,
             start=1,
         )
         self._add_page_number_footer(

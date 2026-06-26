@@ -10,6 +10,7 @@ from oodocs.styles.blocks import (
 from oodocs.styles.border import BorderStyle, StrokeStyle
 from oodocs.styles.chips import InlineChipStyle
 from oodocs.styles.counter import (
+    CounterStyle,
     HeadingNumbering,
     ListStyle,
     list_style_with_overrides,
@@ -41,6 +42,7 @@ __all__ = [
     "BoxStyle",
     "CaptionDefaults",
     "CitationDefaults",
+    "CounterStyle",
     "GeneratedContentDefaults",
     "HeadingNumbering",
     "InlineChipStyle",

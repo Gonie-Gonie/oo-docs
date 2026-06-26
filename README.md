@@ -171,7 +171,7 @@ The default behavior is intentionally conventional:
 - tables, figures, boxes, and their captions are centered by default
 - parts render on their own separator pages and do not reset chapter numbering
 - headings are numbered as `1`, `1.1`, `1.1.1`, and so on
-- ordered and bullet lists can be customized with direct kwargs such as `indent=...`, `marker_counter_format=...`, and `bullet=...`
+- ordered and bullet lists can be customized with direct kwargs such as `indent=...`, `marker=CounterStyle(...)`, and `marker_gap=...`
 - heading numbering can be customized with `HeadingNumbering(...)`
 - article-style front matter can be left unnumbered with `Section(..., numbered=False)`
 
