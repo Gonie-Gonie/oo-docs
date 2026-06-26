@@ -147,7 +147,7 @@ def test_parse_notebook_can_filter_code_markdown_and_outputs() -> None:
         _sample_notebook(),
         include_code=False,
         include_outputs=False,
-        include_raw=False,
+        include_raw_cells=False,
     )
 
     assert len(markdown_only) == 1

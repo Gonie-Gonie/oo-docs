@@ -96,7 +96,7 @@ def test_parse_notebook_options_filter_truncate_and_caption_outputs() -> None:
         options=NotebookImportOptions(
             exclude_tags=("skip-report",),
             max_output_lines=2,
-            image_caption="Output image from cell {cell_index}",
+            output_image_caption="Output image from cell {cell_index}",
         ),
         diagnostics=True,
     )

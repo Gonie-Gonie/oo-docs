@@ -37,11 +37,11 @@ class NotebookImportOptions:
         include_outputs: Whether code cell outputs should be imported.
         include_code: Whether code cell source should be imported.
         include_markdown: Whether Markdown cells should be imported.
-        include_raw: Whether raw cells should be imported as text code blocks.
-        code_language: Optional language override for imported code blocks.
+        include_raw_cells: Whether raw cells should be imported as text code blocks.
+        default_code_language: Optional language override for imported code blocks.
         exclude_tags: Notebook cell tags that should be skipped.
         max_output_lines: Optional maximum number of text output lines.
-        image_caption: Optional format string used for image output captions.
+        output_image_caption: Optional format string used for image output captions.
         include_error_outputs: Whether error outputs should be imported.
 
     Examples:
@@ -74,11 +74,11 @@ class NotebookImportOptions:
     include_outputs: bool = True
     include_code: bool = True
     include_markdown: bool = True
-    include_raw: bool = True
-    code_language: str | None = None
+    include_raw_cells: bool = True
+    default_code_language: str | None = None
     exclude_tags: tuple[str, ...] = ()
     max_output_lines: int | None = None
-    image_caption: str | None = None
+    output_image_caption: str | None = None
     include_error_outputs: bool = True
 
     def __post_init__(self) -> None:
@@ -90,7 +90,11 @@ class NotebookImportOptions:
 
         if self.max_output_lines is not None and self.max_output_lines < 1:
             raise ValueError("NotebookImportOptions.max_output_lines must be >= 1")
-        object.__setattr__(self, "exclude_tags", tuple(str(tag) for tag in self.exclude_tags))
+        object.__setattr__(
+            self,
+            "exclude_tags",
+            tuple(str(tag) for tag in self.exclude_tags),
+        )
 
 
 def parse_notebook(
@@ -100,8 +104,8 @@ def parse_notebook(
     include_outputs: bool | None = None,
     include_code: bool | None = None,
     include_markdown: bool | None = None,
-    include_raw: bool | None = None,
-    code_language: str | None = None,
+    include_raw_cells: bool | None = None,
+    default_code_language: str | None = None,
     numbered: bool = True,
     toc: bool | None = None,
     heading_level_shift: int = 0,
@@ -122,8 +126,8 @@ def parse_notebook(
         include_outputs: Optional override for output import.
         include_code: Optional override for code cell source import.
         include_markdown: Optional override for Markdown cell import.
-        include_raw: Optional override for raw cell import.
-        code_language: Optional language override for code blocks.
+        include_raw_cells: Optional override for raw cell import.
+        default_code_language: Optional language override for code blocks.
         numbered: Whether imported Markdown headings should be numbered.
         toc: Whether imported Markdown headings should appear in generated
             contents pages.
@@ -159,11 +163,15 @@ def parse_notebook(
         include_outputs=include_outputs,
         include_code=include_code,
         include_markdown=include_markdown,
-        include_raw=include_raw,
-        code_language=code_language,
+        include_raw_cells=include_raw_cells,
+        default_code_language=default_code_language,
     )
-    language = resolved_options.code_language or _notebook_language(notebook) or "python"
-    markdown_base_dir = Path(base_dir) if base_dir is not None else _source_base_dir(source)
+    language = (
+        resolved_options.default_code_language or _notebook_language(notebook) or "python"
+    )
+    markdown_base_dir = (
+        Path(base_dir) if base_dir is not None else _source_base_dir(source)
+    )
     blocks: list[Block] = []
     heading_stack: list[Section] = []
     issues: list[ImportIssue] = []
@@ -226,7 +234,7 @@ def parse_notebook(
                     _append_notebook_block(blocks, heading_stack, block)
             continue
 
-        if resolved_options.include_raw and cell_source.strip():
+        if resolved_options.include_raw_cells and cell_source.strip():
             _append_notebook_block(
                 blocks,
                 heading_stack,
@@ -255,8 +263,8 @@ def from_notebook(
     include_outputs: bool | None = None,
     include_code: bool | None = None,
     include_markdown: bool | None = None,
-    include_raw: bool | None = None,
-    code_language: str | None = None,
+    include_raw_cells: bool | None = None,
+    default_code_language: str | None = None,
     numbered: bool = True,
     toc: bool | None = None,
     heading_level_shift: int = 0,
@@ -279,8 +287,8 @@ def from_notebook(
         include_outputs: Optional override for output import.
         include_code: Optional override for code cell source import.
         include_markdown: Optional override for Markdown cell import.
-        include_raw: Optional override for raw cell import.
-        code_language: Optional language override for code blocks.
+        include_raw_cells: Optional override for raw cell import.
+        default_code_language: Optional language override for code blocks.
         numbered: Whether imported Markdown headings should be numbered.
         toc: Whether imported Markdown headings should appear in generated
             contents pages.
@@ -303,9 +311,9 @@ def from_notebook(
         doc = from_notebook(
             "analysis.ipynb",
             title="Analysis Report",
-            options=NotebookImportOptions(image_caption="Output {output_index}"),
+            options=NotebookImportOptions(output_image_caption="Output {output_index}"),
         )
-        doc.save_all("dist", formats=("pdf", "html"))
+        doc.save_all("dist", outputs=("pdf", "html"))
         ```
     """
 
@@ -317,8 +325,8 @@ def from_notebook(
         include_outputs=include_outputs,
         include_code=include_code,
         include_markdown=include_markdown,
-        include_raw=include_raw,
-        code_language=code_language,
+        include_raw_cells=include_raw_cells,
+        default_code_language=default_code_language,
         numbered=numbered,
         toc=toc,
         heading_level_shift=heading_level_shift,
@@ -371,19 +379,27 @@ def _resolve_options(
     include_outputs: bool | None,
     include_code: bool | None,
     include_markdown: bool | None,
-    include_raw: bool | None,
-    code_language: str | None,
+    include_raw_cells: bool | None,
+    default_code_language: str | None,
 ) -> NotebookImportOptions:
     base = options or NotebookImportOptions()
     return NotebookImportOptions(
         include_outputs=base.include_outputs if include_outputs is None else include_outputs,
         include_code=base.include_code if include_code is None else include_code,
         include_markdown=base.include_markdown if include_markdown is None else include_markdown,
-        include_raw=base.include_raw if include_raw is None else include_raw,
-        code_language=base.code_language if code_language is None else code_language,
+        include_raw_cells=(
+            base.include_raw_cells
+            if include_raw_cells is None
+            else include_raw_cells
+        ),
+        default_code_language=(
+            base.default_code_language
+            if default_code_language is None
+            else default_code_language
+        ),
         exclude_tags=base.exclude_tags,
         max_output_lines=base.max_output_lines,
-        image_caption=base.image_caption,
+        output_image_caption=base.output_image_caption,
         include_error_outputs=base.include_error_outputs,
     )
 
@@ -675,12 +691,12 @@ def _output_image(
         if not encoded.strip():
             return None
         caption = (
-            options.image_caption.format(
+            options.output_image_caption.format(
                 cell_index=cell_index,
                 output_index=output_index,
                 mime_type=mime_type,
             )
-            if options.image_caption
+            if options.output_image_caption
             else None
         )
         return Figure(

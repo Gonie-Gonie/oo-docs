@@ -404,6 +404,24 @@ def test_import_policy_names_describe_lossy_behavior() -> None:
             normalize_import_policy(old_policy)
 
 
+def test_notebook_import_options_use_explicit_field_names() -> None:
+    option_fields = {field.name for field in fields(oodocs.NotebookImportOptions)}
+    forbidden = {"include_raw", "code_language", "image_caption"}
+    expected = {"include_raw_cells", "default_code_language", "output_image_caption"}
+
+    assert forbidden.isdisjoint(option_fields)
+    assert expected <= option_fields
+
+    for callable_obj in (
+        oodocs.parse_notebook,
+        oodocs.from_notebook,
+        oodocs.Document.from_notebook,
+    ):
+        parameters = set(inspect.signature(callable_obj).parameters)
+        assert forbidden.isdisjoint(parameters)
+        assert {"include_raw_cells", "default_code_language"} <= parameters
+
+
 def test_apidoc_raw_value_helpers_use_as_prefix() -> None:
     forbidden_by_class = {
         apidoc.ApiParameter: {"to_row", "to_table_cell_values"},

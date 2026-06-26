@@ -244,8 +244,8 @@ class Document:
         include_outputs: bool | None = None,
         include_code: bool | None = None,
         include_markdown: bool | None = None,
-        include_raw: bool | None = None,
-        code_language: str | None = None,
+        include_raw_cells: bool | None = None,
+        default_code_language: str | None = None,
         base_dir: str | Path | None = None,
         numbered: bool = True,
         toc: bool | None = None,
@@ -263,8 +263,8 @@ class Document:
             include_outputs: Override for output cell inclusion.
             include_code: Override for code cell inclusion.
             include_markdown: Override for Markdown cell inclusion.
-            include_raw: Override for raw cell inclusion.
-            code_language: Language label for imported code blocks.
+            include_raw_cells: Override for raw cell inclusion.
+            default_code_language: Language label for imported code blocks.
             base_dir: Directory used to resolve relative media paths.
             numbered: Whether imported headings should be numbered by default.
             toc: Whether to add a table of contents.
@@ -296,8 +296,8 @@ class Document:
             include_outputs=include_outputs,
             include_code=include_code,
             include_markdown=include_markdown,
-            include_raw=include_raw,
-            code_language=code_language,
+            include_raw_cells=include_raw_cells,
+            default_code_language=default_code_language,
             base_dir=base_dir,
             numbered=numbered,
             toc=toc,
