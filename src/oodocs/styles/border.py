@@ -197,4 +197,105 @@ class BorderStyle:
         return length_to_inches(self.radius, unit) * 72.0
 
 
-__all__ = ["BorderStyle"]
+@dataclass(slots=True)
+class StrokeStyle:
+    """Vector stroke color, width, and unit.
+
+    Args:
+        color: Optional stroke color as a hex string. ``None`` disables the
+            stroke.
+        width: Stroke width.
+        unit: Unit for ``width``.
+
+    Examples:
+        Apply a stroke to a positioned shape:
+
+        ```python
+        from oodocs import Document, DocumentSettings, Shape, StrokeStyle
+
+        frame = Shape.rect(
+            width=2.0,
+            height=0.8,
+            stroke=StrokeStyle.solid("476172", width=1.2),
+            fill_color="EEF6FF",
+        )
+        document = Document("Cover", settings=DocumentSettings(page_items=[frame]))
+        ```
+    """
+
+    color: str | None = None
+    width: float = 0.0
+    unit: str = "pt"
+
+    def __post_init__(self) -> None:
+        self.color = normalize_color(self.color)
+        if self.width < 0:
+            raise ValueError("StrokeStyle.width must be >= 0")
+        normalized = self.unit.strip().lower()
+        self.unit = normalize_length_unit(normalized)
+
+    @classmethod
+    def none(cls) -> StrokeStyle:
+        """Create a stroke-free style.
+
+        Returns:
+            Stroke style with no color and zero width.
+
+        Examples:
+            ```python
+            from oodocs import Shape, StrokeStyle
+
+            shape = Shape.rect(width=2, height=1, stroke=StrokeStyle.none())
+            ```
+        """
+
+        return cls(color=None, width=0.0)
+
+    @classmethod
+    def solid(
+        cls,
+        color: str,
+        *,
+        width: float = 1.0,
+        unit: str = "pt",
+    ) -> StrokeStyle:
+        """Create a visible solid stroke.
+
+        Args:
+            color: Stroke color.
+            width: Stroke width.
+            unit: Unit for ``width``.
+
+        Returns:
+            Stroke style configured with a visible color.
+
+        Examples:
+            ```python
+            from oodocs import Shape, StrokeStyle
+
+            shape = Shape.line(width=3, height=0, stroke=StrokeStyle.solid("334155", width=0.75))
+            ```
+        """
+
+        return cls(color=color, width=width, unit=unit)
+
+    def width_points(self, default_unit: str = "pt") -> float:
+        """Return stroke width converted to points.
+
+        Args:
+            default_unit: Unit to use when the stroke unit is empty.
+
+        Returns:
+            Width in points.
+
+        Examples:
+            ```python
+            stroke = StrokeStyle.solid("334155", width=0.75)
+            width_points = stroke.width_points()
+            ```
+        """
+
+        return length_to_inches(self.width, self.unit or default_unit) * 72.0
+
+
+__all__ = ["BorderStyle", "StrokeStyle"]

@@ -49,6 +49,7 @@ from oodocs import (
     Remark,
     Section,
     Shape,
+    StrokeStyle,
     SubFigure,
     SubFigureGroup,
     Subsection,
@@ -240,7 +241,7 @@ comparison = SubFigureGroup(
 Paragraph("The post-calibration case is shown in ", after.reference(), ".")
 """
 
-POSITIONED_DRAWING_SNIPPET = """from oodocs import Document, DocumentSettings, ImageBox, Paragraph, Shape, TextBox
+POSITIONED_DRAWING_SNIPPET = """from oodocs import Document, DocumentSettings, ImageBox, Paragraph, Shape, StrokeStyle, TextBox
 
 frame = Shape.rect(
     name="approval-frame",
@@ -249,7 +250,7 @@ frame = Shape.rect(
     y=0,
     width=6.0,
     height=1.0,
-    stroke_color="#476172",
+    stroke=StrokeStyle.solid("#476172", width=1.0),
 )
 
 document = Document(

@@ -1802,13 +1802,13 @@ class PdfRenderer:
         page_height: float,
     ) -> None:
         y = page_height - y_top - height
-        if item.stroke_color is not None and item.stroke_width > 0:
-            canvas.setStrokeColor(colors.HexColor(f"#{item.stroke_color}"))
-            canvas.setLineWidth(item.stroke_width)
+        if item.stroke.color is not None and item.stroke.width > 0:
+            canvas.setStrokeColor(colors.HexColor(f"#{item.stroke.color}"))
+            canvas.setLineWidth(item.stroke.width_points())
         if item.fill_color is not None:
             canvas.setFillColor(colors.HexColor(f"#{item.fill_color}"))
         fill = 1 if item.fill_color is not None else 0
-        stroke = 1 if item.stroke_color is not None and item.stroke_width > 0 else 0
+        stroke = 1 if item.stroke.color is not None and item.stroke.width > 0 else 0
         if item.kind == "rect":
             canvas.rect(x, y, width, height, fill=fill, stroke=stroke)
         elif item.kind == "ellipse":
@@ -1901,7 +1901,7 @@ class PdfRenderer:
         body_style = self._paragraph_style(ParagraphStyle(space_after=0), theme, styles["BodyText"])
         layout = build_table_layout(block.header_rows, block.rows)
         table_rows: list[list[object]] = [["" for _ in range(layout.column_count)] for _ in range(layout.row_count)]
-        top_padding, right_padding, bottom_padding, left_padding = block.style.resolved_cell_padding()
+        top_padding, right_padding, bottom_padding, left_padding = block.style.cell_padding.to_points()
         style_commands: list[tuple[str, tuple[int, int], tuple[int, int], object]] = [
             ("VALIGN", (0, 0), (-1, -1), "TOP"),
             ("LEFTPADDING", (0, 0), (-1, -1), left_padding),
@@ -2246,7 +2246,7 @@ class PdfRenderer:
             hAlign=FLOWABLE_ALIGNMENTS[block.style.block_alignment or theme.blocks.box_block_alignment],
             repeatRows=0,
         )
-        top_padding, right_padding, bottom_padding, left_padding = block.style.resolved_padding()
+        top_padding, right_padding, bottom_padding, left_padding = block.style.padding.to_points()
         style_commands: list[tuple[str, tuple[int, int], tuple[int, int], object]] = [
             ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor(f"#{block.style.background_color}")),
             ("LEFTPADDING", (0, 0), (-1, -1), left_padding),

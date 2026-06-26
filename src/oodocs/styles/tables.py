@@ -296,15 +296,6 @@ class TableStyle:
             repeat_header_rows=True,
         )
 
-    def resolved_cell_padding(self) -> tuple[float, float, float, float]:
-        """Return top, right, bottom, and left cell padding in points.
-
-        Returns:
-            ``(top, right, bottom, left)`` cell padding values.
-        """
-
-        return self.cell_padding.to_points()
-
 __all__ = [
     "TableCellStyle",
     "TableCellStyleInput",

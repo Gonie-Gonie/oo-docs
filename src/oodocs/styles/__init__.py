@@ -7,7 +7,7 @@ from oodocs.styles.blocks import (
     box_style_with_overrides,
     paragraph_style_with_overrides,
 )
-from oodocs.styles.border import BorderStyle
+from oodocs.styles.border import BorderStyle, StrokeStyle
 from oodocs.styles.chips import (
     InlineChipStyle,
     _DEFAULT_CHIP_STYLES,
@@ -52,6 +52,7 @@ __all__ = [
     "Padding",
     "ParagraphStyle",
     "RunInTitleStyle",
+    "StrokeStyle",
     "TableCellStyle",
     "TableCellStyleInput",
     "TableStyle",

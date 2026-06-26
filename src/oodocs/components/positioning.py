@@ -17,6 +17,7 @@ from oodocs.components.base import Block
 from oodocs.components.inline import InlineInput, Text, coerce_inlines
 from oodocs.components.media import ImageData, coerce_image_source
 from oodocs.core import PathLike, normalize_color, normalize_length_unit
+from oodocs.styles import StrokeStyle
 
 if TYPE_CHECKING:
     from oodocs.renderers.context import DocxRenderContext, HtmlRenderContext, PdfRenderContext
@@ -222,9 +223,8 @@ class Shape(Block):
         anchor: Built-in anchor or named shape anchor.
         placement: ``"absolute"`` for page items or ``"inline"`` in content.
         name: Optional anchor name other items can target.
-        stroke_color: Optional stroke color as a hex string.
+        stroke: Optional stroke style.
         fill_color: Optional fill color as a hex string.
-        stroke_width: Stroke width.
         unit: Unit for coordinates and dimensions.
         z_index: Stacking order for page-positioned rendering.
 
@@ -233,7 +233,7 @@ class Shape(Block):
 
     Examples:
         ```python
-        from oodocs import Document, DocumentSettings, Paragraph, Shape
+        from oodocs import Document, DocumentSettings, Paragraph, Shape, StrokeStyle
 
         anchor = Shape.rect(
             width=2,
@@ -241,6 +241,7 @@ class Shape(Block):
             x=0.5,
             y=0.5,
             name="logo-area",
+            stroke=StrokeStyle.solid("CBD5E1", width=0.75),
             fill_color="F7FAFC",
         )
         settings = DocumentSettings(page_items=[anchor])
@@ -256,9 +257,8 @@ class Shape(Block):
     anchor: str
     placement: PositionPlacement
     name: str | None
-    stroke_color: str | None
+    stroke: StrokeStyle
     fill_color: str | None
-    stroke_width: float
     unit: str | None
     z_index: int
 
@@ -273,9 +273,8 @@ class Shape(Block):
         anchor: PositionAnchor = "page",
         placement: PositionPlacement = "absolute",
         name: str | None = None,
-        stroke_color: str | None = "000000",
+        stroke: StrokeStyle | None = None,
         fill_color: str | None = None,
-        stroke_width: float = 1.0,
         unit: str | None = None,
         z_index: int = 0,
     ) -> None:
@@ -285,8 +284,9 @@ class Shape(Block):
             raise ValueError(f"Unsupported Shape placement: {placement!r}")
         if kind != "line" and (width < 0 or height < 0):
             raise ValueError("Shape width and height must be >= 0")
-        if stroke_width < 0:
-            raise ValueError("Shape stroke_width must be >= 0")
+        resolved_stroke = stroke or StrokeStyle.solid("000000", width=1.0)
+        if not isinstance(resolved_stroke, StrokeStyle):
+            raise TypeError("Shape.stroke must be a StrokeStyle")
         if name is not None and not name.strip():
             raise ValueError("Shape name must not be empty")
         self.kind = kind
@@ -297,9 +297,8 @@ class Shape(Block):
         self.anchor = _normalize_anchor(anchor)
         self.placement = placement
         self.name = name.strip() if name is not None else None
-        self.stroke_color = normalize_color(stroke_color)
+        self.stroke = resolved_stroke
         self.fill_color = normalize_color(fill_color)
-        self.stroke_width = stroke_width
         self.unit = normalize_length_unit(unit) if unit is not None else None
         self.z_index = z_index
 
@@ -337,7 +336,7 @@ class Shape(Block):
 
         Examples:
             ```python
-            shape = Shape.ellipse(width=1, height=1, stroke_color="336699")
+            shape = Shape.ellipse(width=1, height=1, stroke=StrokeStyle.solid("336699"))
             ```
         """
 
@@ -357,7 +356,7 @@ class Shape(Block):
 
         Examples:
             ```python
-            shape = Shape.line(width=3, height=0, stroke_width=0.5)
+            shape = Shape.line(width=3, height=0, stroke=StrokeStyle.solid("334155", width=0.5))
             ```
         """
 

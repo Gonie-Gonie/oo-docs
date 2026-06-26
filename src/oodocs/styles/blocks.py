@@ -307,25 +307,6 @@ class BoxStyle:
         if self.block_alignment is not None and self.block_alignment not in {"left", "center", "right"}:
             raise ValueError(f"Unsupported BoxStyle block_alignment: {self.block_alignment!r}")
 
-    def resolved_padding(self) -> tuple[float, float, float, float]:
-        """Return top, right, bottom, and left padding in points.
-
-        Returns:
-            ``(top, right, bottom, left)`` padding values.
-
-        Raises:
-            ValueError: If the padding uses em units and cannot be converted
-                without font-size context.
-
-        Examples:
-            ```python
-            style = BoxStyle(padding=Padding.symmetric(vertical=8, horizontal=12))
-            top, right, bottom, left = style.resolved_padding()
-            ```
-        """
-
-        return self.padding.to_points()
-
 __all__ = [
     "BoxStyle",
     "ParagraphStyle",

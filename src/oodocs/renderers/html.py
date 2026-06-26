@@ -1351,7 +1351,7 @@ class HtmlRenderer:
             )
         else:
             style_parts.append("border: none")
-        top_padding, right_padding, bottom_padding, left_padding = block.style.resolved_cell_padding()
+        top_padding, right_padding, bottom_padding, left_padding = block.style.cell_padding.to_points()
         style_parts.append(
             f"padding: {top_padding:.1f}pt {right_padding:.1f}pt {bottom_padding:.1f}pt {left_padding:.1f}pt"
         )
@@ -1540,20 +1540,21 @@ class HtmlRenderer:
         item: Shape,
         box: PositionedBox,
     ) -> str:
-        stroke = f"#{item.stroke_color}" if item.stroke_color is not None else "transparent"
+        stroke = f"#{item.stroke.color}" if item.stroke.color is not None else "transparent"
+        stroke_points = item.stroke.width_points() if item.stroke.width > 0 else 0.0
         fill = f"#{item.fill_color}" if item.fill_color is not None else "transparent"
         if item.kind == "line":
             return (
                 '<svg class="oodocs-page-item oodocs-shape" '
                 f'style="{self._position_css(box)} overflow: visible;">'
-                f'<line x1="0" y1="0" x2="{box.width:.4f}in" y2="{box.height:.4f}in" stroke="{stroke}" stroke-width="{item.stroke_width:.2f}pt" />'
+                f'<line x1="0" y1="0" x2="{box.width:.4f}in" y2="{box.height:.4f}in" stroke="{stroke}" stroke-width="{stroke_points:.2f}pt" />'
                 "</svg>"
             )
         border_radius = "50%" if item.kind == "ellipse" else "0"
         return (
             '<div class="oodocs-page-item oodocs-shape" '
             f'style="{self._position_css(box)} '
-            f'border: {item.stroke_width:.2f}pt solid {stroke}; background: {fill}; border-radius: {border_radius}; box-sizing: border-box;"></div>'
+            f'border: {stroke_points:.2f}pt solid {stroke}; background: {fill}; border-radius: {border_radius}; box-sizing: border-box;"></div>'
         )
 
     def _image_box_html(
@@ -1735,11 +1736,11 @@ class HtmlRenderer:
         text = escape(fragment.display_text()).replace("\n", " ")
         base_size = fragment.style.font_size or base_size or theme.typography.body_font_size
         font_size = max(base_size + chip_style.font_size_delta, 6.0)
-        padding_top, padding_right, padding_bottom, padding_left = chip_style.padding.as_tuple()
+        top_padding, right_padding, bottom_padding, left_padding = chip_style.padding.as_tuple()
         if chip_style.padding.unit == "em":
             padding_css = (
-                f"{padding_top:.2f}em {padding_right:.2f}em "
-                f"{padding_bottom:.2f}em {padding_left:.2f}em"
+                f"{top_padding:.2f}em {right_padding:.2f}em "
+                f"{bottom_padding:.2f}em {left_padding:.2f}em"
             )
         else:
             top_pt, right_pt, bottom_pt, left_pt = chip_style.padding.to_points()
@@ -2120,7 +2121,7 @@ class HtmlRenderer:
         )
 
     def _box_css(self, block: Box, theme: Theme, unit: str) -> str:
-        top_padding, right_padding, bottom_padding, left_padding = block.style.resolved_padding()
+        top_padding, right_padding, bottom_padding, left_padding = block.style.padding.to_points()
         width = (
             f" width: {length_to_inches(block.style.width, block.style.unit or unit):.4f}in;"
             if block.style.width is not None

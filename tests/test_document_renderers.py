@@ -80,6 +80,7 @@ from oodocs import (
     Remark,
     Section,
     Shape,
+    StrokeStyle,
     SubFigure,
     SubFigureGroup,
     Subsection,
@@ -1453,8 +1454,7 @@ def test_page_items_render_without_affecting_document_flow(tmp_path: Path) -> No
             y=0.25,
             width=7.0,
             height=10.0,
-            stroke_color="#476172",
-            stroke_width=1.4,
+            stroke=StrokeStyle.solid("#476172", width=1.4),
         ),
         Shape.ellipse(
             anchor="frame",
@@ -1462,7 +1462,7 @@ def test_page_items_render_without_affecting_document_flow(tmp_path: Path) -> No
             y=0.25,
             width=0.7,
             height=0.7,
-            stroke_color="#B2783D",
+            stroke=StrokeStyle.solid("#B2783D"),
             fill_color="#FFF1D8",
         ),
         ImageBox(
@@ -1548,7 +1548,7 @@ def test_positioned_items_can_render_inline_like_text(tmp_path: Path) -> None:
             width=1.2,
             height=0.35,
             placement="inline",
-            stroke_color="#476172",
+            stroke=StrokeStyle.solid("#476172"),
             fill_color="#EEF6FF",
         ),
         ImageBox(
