@@ -121,7 +121,7 @@ def list_style_with_overrides(
 
     Examples:
         ```python
-        style = list_style_with_overrides(None, ordered=True, marker_format="lower-alpha")
+        style = list_style_with_overrides(None, ordered=True, marker_counter_format="lower-alpha")
         ```
     """
 
@@ -131,7 +131,7 @@ def list_style_with_overrides(
     base = style or (
         ListStyle()
         if ordered
-        else ListStyle(marker_format="bullet", suffix="")
+        else ListStyle(marker_counter_format="bullet", suffix="")
     )
     merged = {style_field.name: getattr(base, style_field.name) for style_field in fields(ListStyle)}
     merged.update(values)
@@ -482,11 +482,11 @@ class HeadingNumbering:
 
 @dataclass(slots=True)
 class ListStyle:
-    """Marker formatting for bullet and ordered lists.
+    """Marker counter formatting for bullet and ordered lists.
 
     Attributes:
-        marker_format: Counter format for markers.
-        bullet: Bullet glyph when ``marker_format`` is ``"bullet"``.
+        marker_counter_format: Counter format for markers.
+        bullet: Bullet glyph when ``marker_counter_format`` is ``"bullet"``.
         prefix: Marker prefix.
         suffix: Marker suffix.
         start: First counter value for ordered markers.
@@ -497,12 +497,12 @@ class ListStyle:
         ```python
         from oodocs import Document, NumberedList
 
-        list_block = NumberedList("Install", "Run", style=ListStyle(marker_format="lower-alpha"))
+        list_block = NumberedList("Install", "Run", style=ListStyle(marker_counter_format="lower-alpha"))
         document = Document("Procedure", list_block)
         ```
     """
 
-    marker_format: str = "decimal"
+    marker_counter_format: str = "decimal"
     bullet: str = "\u2022"
     prefix: str = ""
     suffix: str = "."
@@ -511,7 +511,7 @@ class ListStyle:
     marker_gap: float = 0.1
 
     def __post_init__(self) -> None:
-        self.marker_format = normalize_counter_format(self.marker_format)
+        self.marker_counter_format = normalize_counter_format(self.marker_counter_format)
         if self.start < 1:
             raise ValueError("ListStyle.start must be >= 1")
         if self.indent < 0:
@@ -529,12 +529,12 @@ class ListStyle:
             Rendered marker string.
         """
 
-        if self.marker_format == "none":
+        if self.marker_counter_format == "none":
             return ""
 
         marker_value = format_counter_value(
             index + self.start,
-            self.marker_format,
+            self.marker_counter_format,
             bullet=self.bullet,
         )
         return f"{self.prefix}{marker_value}{self.suffix}"
@@ -1016,7 +1016,7 @@ class BlockOptions:
     paragraph_title_style: ParagraphTitleStyle = field(default_factory=ParagraphTitleStyle)
     heading_numbering: HeadingNumbering = field(default_factory=HeadingNumbering)
     bullet_list_style: ListStyle = field(
-        default_factory=lambda: ListStyle(marker_format="bullet", suffix="")
+        default_factory=lambda: ListStyle(marker_counter_format="bullet", suffix="")
     )
     numbered_list_style: ListStyle = field(default_factory=ListStyle)
 
@@ -1190,7 +1190,7 @@ class Theme:
     author_detail_alignment: str = "center"
     heading_numbering: HeadingNumbering = field(default_factory=HeadingNumbering)
     bullet_list_style: ListStyle = field(
-        default_factory=lambda: ListStyle(marker_format="bullet", suffix="")
+        default_factory=lambda: ListStyle(marker_counter_format="bullet", suffix="")
     )
     numbered_list_style: ListStyle = field(default_factory=ListStyle)
 
@@ -1701,12 +1701,12 @@ class Theme:
             ```
         """
 
-        marker_format = (
+        counter_format = (
             self.front_matter_page_number_format
             if front_matter
             else self.main_matter_page_number_format
         )
-        page_label = format_counter_value(page_number, marker_format)
+        page_label = format_counter_value(page_number, counter_format)
         return self.page_number_format.format(page=page_label)
 
     def format_heading_label(self, counters: Sequence[int]) -> str | None:

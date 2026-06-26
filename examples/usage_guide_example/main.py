@@ -837,7 +837,7 @@ def build_usage_guide_document() -> Document:
         rows=[
             ["Text and styled(...)", "font_name, font_size, text_color, highlight_color, bold, italic, underline, strikethrough, small_caps, uppercase, subscript, superscript", "Use TextStyle only when a reusable inline style needs a name."],
             ["Paragraph, CodeBlock, Equation", "alignment, space_before, space_after, leading, left_indent, right_indent, first_line_indent, keep_together, keep_with_next, page_break_before, widow_control, unit", "Use ParagraphStyle only for shared paragraph rhythm."],
-            ["BulletList, NumberedList", "marker_format, bullet, prefix, suffix, start, indent, marker_gap", "Use ListStyle only for repeated list conventions."],
+            ["BulletList, NumberedList", "marker_counter_format, bullet, prefix, suffix, start, indent, marker_gap", "Use ListStyle only for repeated list conventions."],
             ["Box", "border_color, background_color, title colors, border_width, padding, per-side padding, space_after, width, unit, alignment", "Use BoxStyle only for named callout or report-panel designs."],
             ["Table", "header/body/alternate colors, border_color, border_width, cell/header alignment, cell_padding, per-side cell padding, repeat_header_rows", "row_styles, column_styles, and header_row_styles accept dictionaries for quick overrides."],
             ["TableCell", "colspan, rowspan, background_color, text_color, bold, italic, horizontal_alignment, vertical_alignment", "Use TableCellStyle only for reusable row, column, or cell styling."],

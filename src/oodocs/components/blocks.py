@@ -269,7 +269,7 @@ class ListBlock(Block):
         *items: Paragraphs or inline values used as list items.
         ordered: Whether the list should use ordered markers.
         style: Base list style.
-        marker_format: Optional marker format override.
+        marker_counter_format: Optional marker counter format override.
         bullet: Optional bullet glyph override.
         prefix: Optional marker prefix.
         suffix: Optional marker suffix.
@@ -292,7 +292,7 @@ class ListBlock(Block):
         *items: ListInput,
         ordered: bool = False,
         style: ListStyle | None = None,
-        marker_format: str | None = None,
+        marker_counter_format: str | None = None,
         bullet: str | None = None,
         prefix: str | None = None,
         suffix: str | None = None,
@@ -312,7 +312,7 @@ class ListBlock(Block):
         self.style = list_style_with_overrides(
             style,
             ordered=ordered,
-            marker_format=marker_format,
+            marker_counter_format=marker_counter_format,
             bullet=bullet,
             prefix=prefix,
             suffix=suffix,
@@ -378,7 +378,7 @@ class BulletList(ListBlock):
     Args:
         *items: Paragraphs or inline values used as list items.
         style: Base list style.
-        marker_format: Optional marker format override.
+        marker_counter_format: Optional marker counter format override.
         bullet: Optional bullet glyph override.
         prefix: Optional marker prefix.
         suffix: Optional marker suffix.
@@ -400,7 +400,7 @@ class BulletList(ListBlock):
         self,
         *items: ListInput,
         style: ListStyle | None = None,
-        marker_format: str | None = None,
+        marker_counter_format: str | None = None,
         bullet: str | None = None,
         prefix: str | None = None,
         suffix: str | None = None,
@@ -413,7 +413,7 @@ class BulletList(ListBlock):
             *items,
             ordered=False,
             style=style,
-            marker_format=marker_format,
+            marker_counter_format=marker_counter_format,
             bullet=bullet,
             prefix=prefix,
             suffix=suffix,
@@ -430,7 +430,7 @@ class NumberedList(ListBlock):
     Args:
         *items: Paragraphs or inline values used as list items.
         style: Base list style.
-        marker_format: Optional marker format override.
+        marker_counter_format: Optional marker counter format override.
         bullet: Optional bullet glyph override.
         prefix: Optional marker prefix.
         suffix: Optional marker suffix.
@@ -452,7 +452,7 @@ class NumberedList(ListBlock):
         self,
         *items: ListInput,
         style: ListStyle | None = None,
-        marker_format: str | None = None,
+        marker_counter_format: str | None = None,
         bullet: str | None = None,
         prefix: str | None = None,
         suffix: str | None = None,
@@ -465,7 +465,7 @@ class NumberedList(ListBlock):
             *items,
             ordered=True,
             style=style,
-            marker_format=marker_format,
+            marker_counter_format=marker_counter_format,
             bullet=bullet,
             prefix=prefix,
             suffix=suffix,

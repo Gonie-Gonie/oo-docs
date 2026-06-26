@@ -530,7 +530,7 @@ def test_common_block_styles_accept_direct_kwargs() -> None:
     assert code_block.language_position == "top-right"
     assert equation.style.space_after == 2
     assert bullet_list.style is not None
-    assert bullet_list.style.marker_format == "bullet"
+    assert bullet_list.style.marker_counter_format == "bullet"
     assert bullet_list.style.indent == 0.4
     assert numbered_list.style is not None
     assert numbered_list.style.start == 3
@@ -956,8 +956,8 @@ def test_document_validate_treats_subfigure_group_caption_as_reference_target(
 
 def test_numbering_and_list_styles_are_customizable() -> None:
     heading_numbering = HeadingNumbering(formats=("upper-roman", "lower-alpha"), prefix="[", suffix="]")
-    ordered_style = ListStyle(marker_format="upper-roman", prefix="(", suffix=")")
-    bullet_style = ListStyle(marker_format="bullet", bullet="\u2022", suffix="")
+    ordered_style = ListStyle(marker_counter_format="upper-roman", prefix="(", suffix=")")
+    bullet_style = ListStyle(marker_counter_format="bullet", bullet="\u2022", suffix="")
 
     assert heading_numbering.format_label([2, 3]) == "[II.c]"
     assert ordered_style.marker_for(0) == "(I)"
@@ -3009,8 +3009,8 @@ def test_document_renders_to_docx_and_pdf(tmp_path: Path) -> None:
                 page_number_alignment="center",
                 footnote_placement="document",
                 heading_numbering=HeadingNumbering(),
-                bullet_list_style=ListStyle(marker_format="bullet", bullet="\u2022", suffix=""),
-                numbered_list_style=ListStyle(marker_format="decimal", suffix="."),
+                bullet_list_style=ListStyle(marker_counter_format="bullet", bullet="\u2022", suffix=""),
+                numbered_list_style=ListStyle(marker_counter_format="decimal", suffix="."),
             ),
         ),
         citations=[registered_source, unused_source],

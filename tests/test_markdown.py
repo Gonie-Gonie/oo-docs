@@ -82,7 +82,7 @@ print("ok")
     task_list = added.children[0]
     assert isinstance(task_list, BulletList)
     assert task_list.style is not None
-    assert task_list.style.marker_format == "none"
+    assert task_list.style.marker_counter_format == "none"
     assert [item.plain_text() for item in task_list.items] == [
         "[x] Markdown parser",
         "[ ] User guide updates",

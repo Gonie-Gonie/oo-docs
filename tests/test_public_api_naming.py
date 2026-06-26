@@ -99,6 +99,13 @@ def test_citation_defaults_use_style_field_names() -> None:
     assert "normalize_reference_style" in references.__all__
 
 
+def test_list_style_uses_counter_format_field_name() -> None:
+    field_names = {field.name for field in fields(oodocs.ListStyle)}
+
+    assert "marker_format" not in field_names
+    assert "marker_counter_format" in field_names
+
+
 def test_apidoc_raw_value_helpers_use_as_prefix() -> None:
     forbidden_by_class = {
         apidoc.ApiParameter: {"to_row", "to_table_cell_values"},
