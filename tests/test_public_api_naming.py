@@ -174,6 +174,13 @@ def test_image_components_use_image_format_field_name() -> None:
         assert "image_format" in field_names, cls.__name__
 
 
+def test_api_renderer_note_uses_output_format_field_name() -> None:
+    field_names = {field.name for field in fields(apidoc.ApiRendererNote)}
+
+    assert "format" not in field_names
+    assert "output_format" in field_names
+
+
 def test_apidoc_raw_value_helpers_use_as_prefix() -> None:
     forbidden_by_class = {
         apidoc.ApiParameter: {"to_row", "to_table_cell_values"},

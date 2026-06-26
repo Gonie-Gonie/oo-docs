@@ -140,7 +140,7 @@ parsed = parse_docstring(
 
 assert [parameter.name for parameter in parsed.parameters] == ["path", "cache"]
 assert parsed.see_also[0].label == "open_data"
-assert parsed.renderer_notes[0].format == "html"
+assert parsed.renderer_notes[0].output_format == "html"
 ```
 
 Sphinx varargs names are preserved with their leading stars so they match
