@@ -1573,7 +1573,7 @@ class HtmlRenderer:
             image_bytes = image_source_to_bytes(
                 source,
                 image_format=image_box.image_format,
-                dpi=image_box.dpi,
+                image_dpi=image_box.image_dpi,
                 usage="HTML positioned image rendering",
             )
             mime_type = self._mime_type_for_format(image_box.image_format)
@@ -1954,7 +1954,7 @@ class HtmlRenderer:
             image_bytes = image_source_to_bytes(
                 source,
                 image_format=figure.image_format,
-                dpi=figure.dpi,
+                image_dpi=figure.image_dpi,
                 usage="HTML rendering",
             )
             mime_type = self._mime_type_for_format(figure.image_format)

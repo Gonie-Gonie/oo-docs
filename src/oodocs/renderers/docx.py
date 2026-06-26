@@ -3024,7 +3024,7 @@ class DocxRenderer:
         return image_source_to_buffer(
             source,
             image_format=figure.image_format,
-            dpi=figure.dpi,
+            image_dpi=figure.image_dpi,
             usage="DOCX rendering",
         )
 
@@ -3035,7 +3035,7 @@ class DocxRenderer:
         return image_source_to_buffer(
             source,
             image_format=image_box.image_format,
-            dpi=image_box.dpi,
+            image_dpi=image_box.image_dpi,
             usage="DOCX positioned image rendering",
         )
 

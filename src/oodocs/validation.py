@@ -839,12 +839,12 @@ class _ValidationContext:
                 f"{type(figure).__name__}.image_format must not be empty.",
                 f"{path}.image_format",
             )
-        if figure.dpi is not None and figure.dpi <= 0:
+        if figure.image_dpi is not None and figure.image_dpi <= 0:
             self._add(
                 "error",
                 "invalid-image-dpi",
-                f"{type(figure).__name__}.dpi must be greater than zero.",
-                f"{path}.dpi",
+                f"{type(figure).__name__}.image_dpi must be greater than zero.",
+                f"{path}.image_dpi",
             )
         self._validate_figure_size(figure, path)
         self._validate_image_source(figure.image_source, path)
@@ -930,12 +930,12 @@ class _ValidationContext:
                     "ImageBox.image_format must not be empty.",
                     f"{path}.image_format",
                 )
-            if item.dpi is not None and item.dpi <= 0:
+            if item.image_dpi is not None and item.image_dpi <= 0:
                 self._add(
                     "error",
                     "invalid-image-dpi",
-                    "ImageBox.dpi must be greater than zero.",
-                    f"{path}.dpi",
+                    "ImageBox.image_dpi must be greater than zero.",
+                    f"{path}.image_dpi",
                 )
             self._validate_image_source(item.image_source, path)
             return

@@ -186,6 +186,13 @@ def test_image_components_use_image_format_field_name() -> None:
         assert "image_format" in field_names, cls.__name__
 
 
+def test_image_components_use_image_dpi_field_name() -> None:
+    for cls in (oodocs.Figure, oodocs.SubFigure, oodocs.ImageBox):
+        field_names = {field.name for field in fields(cls)}
+        assert "dpi" not in field_names, cls.__name__
+        assert "image_dpi" in field_names, cls.__name__
+
+
 def test_table_public_api_hides_renderer_helper_methods() -> None:
     members = _public_members(oodocs.Table)
 

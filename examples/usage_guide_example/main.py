@@ -842,7 +842,7 @@ def build_usage_guide_document() -> Document:
             ["Table", "header/body/alternate colors, border_color, border_width, cell/header alignment, cell_padding, per-side cell padding, repeat_header_rows", "row_styles, column_styles, and header_row_styles accept dictionaries for quick overrides."],
             ["TableCell", "colspan, rowspan, background_color, text_color, bold, italic, horizontal_alignment, vertical_alignment", "Use TableCellStyle only for reusable row, column, or cell styling."],
             ["TableOfContents", "show_page_numbers, leader, max_level, level_styles", "TocLevelStyle per heading level; dictionaries are accepted for quick overrides."],
-            ["Figure, SubFigure, SubFigureGroup", "width, height, unit, placement, dpi, columns, column_gap, label_format", "Use caption Paragraphs when caption text needs inline styling."],
+            ["Figure, SubFigure, SubFigureGroup", "width, height, unit, placement, image_dpi, columns, column_gap, label_format", "Use caption Paragraphs when caption text needs inline styling."],
         ],
         caption="Block-level option scope from quick kwargs to reusable style objects.",
         column_widths=[1.8, 3.6, 2.0],

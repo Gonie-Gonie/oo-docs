@@ -127,7 +127,7 @@ def image_source_to_buffer(
     source: object,
     *,
     image_format: str,
-    dpi: int | None = None,
+    image_dpi: int | None = None,
     usage: str = "image rendering",
 ) -> BytesIO:
     """Render an in-memory or plot-like image source into a byte buffer.
@@ -135,7 +135,7 @@ def image_source_to_buffer(
     Args:
         source: ``ImageData`` or object with ``savefig``.
         image_format: Output image format for ``savefig`` sources.
-        dpi: Optional image DPI for ``savefig`` sources.
+        image_dpi: Optional image DPI for ``savefig`` sources.
         usage: Human-readable usage included in error messages.
 
     Returns:
@@ -156,8 +156,8 @@ def image_source_to_buffer(
     if hasattr(source, "savefig"):
         buffer = BytesIO()
         save_kwargs: dict[str, object] = {"format": image_format}
-        if dpi is not None:
-            save_kwargs["dpi"] = dpi
+        if image_dpi is not None:
+            save_kwargs["dpi"] = image_dpi
         source.savefig(buffer, **save_kwargs)
         buffer.seek(0)
         return buffer
@@ -168,7 +168,7 @@ def image_source_to_bytes(
     source: object,
     *,
     image_format: str,
-    dpi: int | None = None,
+    image_dpi: int | None = None,
     usage: str = "image rendering",
 ) -> bytes:
     """Return raw image bytes from an in-memory or plot-like image source.
@@ -176,7 +176,7 @@ def image_source_to_bytes(
     Args:
         source: ``ImageData`` or object with ``savefig``.
         image_format: Output image format for ``savefig`` sources.
-        dpi: Optional image DPI for ``savefig`` sources.
+        image_dpi: Optional image DPI for ``savefig`` sources.
         usage: Human-readable usage included in error messages.
 
     Returns:
@@ -196,7 +196,7 @@ def image_source_to_bytes(
     return image_source_to_buffer(
         source,
         image_format=image_format,
-        dpi=dpi,
+        image_dpi=image_dpi,
         usage=usage,
     ).getvalue()
 
@@ -1601,7 +1601,7 @@ class Figure(Block):
         identifier: Optional stable identifier.
         unit: Unit for width and height.
         image_format: Image format for plot-like sources.
-        dpi: Optional image DPI for plot-like sources.
+        image_dpi: Optional image DPI for plot-like sources.
         placement: Optional placement policy.
 
     Examples:
@@ -1628,7 +1628,7 @@ class Figure(Block):
     Notes:
         Paths are passed through to renderers, while bytes and ``BytesIO`` are
         wrapped as ``ImageData``. Plot-like objects are rendered through
-        ``savefig()`` using ``image_format`` and ``dpi``.
+        ``savefig()`` using ``image_format`` and ``image_dpi``.
 
     See Also:
         ``ImageData`` for in-memory images and ``SubFigureGroup`` for grouped
@@ -1642,7 +1642,7 @@ class Figure(Block):
     unit: str | None
     identifier: str | None
     image_format: str
-    dpi: int | None
+    image_dpi: int | None
     placement: MediaPlacement
 
     def __init__(
@@ -1655,7 +1655,7 @@ class Figure(Block):
         *,
         unit: str | None = None,
         image_format: str = "png",
-        dpi: int | None = 150,
+        image_dpi: int | None = 150,
         placement: str | None = None,
     ) -> None:
         self.image_source = coerce_image_source(image_source)
@@ -1669,7 +1669,7 @@ class Figure(Block):
             if isinstance(self.image_source, ImageData) and image_format == "png"
             else image_format
         )
-        self.dpi = dpi
+        self.image_dpi = image_dpi
         self.placement = normalize_media_placement(placement)
 
     @classmethod
@@ -1833,7 +1833,7 @@ class SubFigure:
         identifier: Optional stable identifier.
         unit: Unit for width and height.
         image_format: Image format for plot-like sources.
-        dpi: Optional image DPI for plot-like sources.
+        image_dpi: Optional image DPI for plot-like sources.
         label: Optional explicit subfigure label.
 
     Examples:
@@ -1853,7 +1853,7 @@ class SubFigure:
     unit: str | None
     identifier: str | None
     image_format: str
-    dpi: int | None
+    image_dpi: int | None
     label: str | None
 
     def __init__(
@@ -1866,7 +1866,7 @@ class SubFigure:
         *,
         unit: str | None = None,
         image_format: str = "png",
-        dpi: int | None = 150,
+        image_dpi: int | None = 150,
         label: str | None = None,
     ) -> None:
         self.image_source = coerce_image_source(image_source)
@@ -1880,7 +1880,7 @@ class SubFigure:
             if isinstance(self.image_source, ImageData) and image_format == "png"
             else image_format
         )
-        self.dpi = dpi
+        self.image_dpi = image_dpi
         self.label = label
 
     def width_in_inches(self, default_unit: str) -> float | None:
