@@ -12,7 +12,7 @@ from oodocs.compatibility import normalize_output_formats
 from oodocs.core import OODocsError
 from oodocs.importers.results import ImportResult
 from oodocs.validation import DocumentValidationError
-from oodocs.workflows import build_python_document, convert_source, validate_source
+from oodocs.workflows import build_source_outputs, validate_source_document
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -199,17 +199,17 @@ def _run_build(args: argparse.Namespace) -> int:
         args,
         formats=formats,
         source_type="python",
-        factory=args.factory,
+        document_factory=args.factory,
         chdir=not args.no_chdir,
     )
     if validation_exit != 0:
         return validation_exit
-    outputs = build_python_document(
+    outputs = build_source_outputs(
         args.source,
         args.out,
-        formats=formats,
+        outputs=formats,
         stem=args.stem,
-        factory=args.factory,
+        document_factory=args.factory,
         validate=not args.no_validate,
         chdir=not args.no_chdir,
         verbose=args.verbose,
@@ -230,10 +230,10 @@ def _run_convert(args: argparse.Namespace) -> int:
     )
     if validation_exit != 0:
         return validation_exit
-    outputs = convert_source(
+    outputs = build_source_outputs(
         args.source,
-        args.out,
-        formats=formats,
+        args.out or Path(args.source).parent,
+        outputs=formats,
         stem=args.stem,
         title=args.title,
         validate=not args.no_validate,
@@ -245,12 +245,12 @@ def _run_convert(args: argparse.Namespace) -> int:
 
 def _run_validate(args: argparse.Namespace) -> int:
     formats = _parse_formats(args.to)
-    result = validate_source(
+    result = validate_source_document(
         args.source,
         source_type=args.type,
         title=args.title,
-        factory=args.factory,
-        formats=formats,
+        document_factory=args.factory,
+        outputs=formats,
         chdir=not args.no_chdir,
     )
     if args.format == "json":
@@ -311,18 +311,18 @@ def _run_render_warning_policy(
     formats: tuple[str, ...],
     source_type: str | None = None,
     title: str | None = None,
-    factory: str | None = None,
+    document_factory: str | None = None,
     chdir: bool = True,
 ) -> int:
     if args.no_validate or not (args.show_warnings or args.fail_on_warning):
         return 0
 
-    result = validate_source(
+    result = validate_source_document(
         args.source,
         source_type=source_type,
         title=title,
-        factory=factory,
-        formats=formats,
+        document_factory=document_factory,
+        outputs=formats,
         chdir=chdir,
     )
     errors = result.errors_for(formats)

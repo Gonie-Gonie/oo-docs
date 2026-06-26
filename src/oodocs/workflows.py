@@ -26,7 +26,7 @@ PYTHON_FACTORY_NAMES = ("build_document", "build_report", "build")
 
 
 @dataclass(frozen=True, slots=True)
-class RenderedOutputs:
+class OutputBundle:
     """Paths written by a document rendering workflow.
 
     Attributes:
@@ -36,7 +36,7 @@ class RenderedOutputs:
         Render Markdown to one format and index the result by format:
 
         ```python
-        rendered = convert_source("notes.md", "dist", formats=("pdf",))
+        rendered = build_source_outputs("notes.md", "dist", outputs=("pdf",))
         print(rendered["pdf"])
         ```
 
@@ -52,12 +52,23 @@ class RenderedOutputs:
         extensions such as ``"pdf"`` or ``".pdf"`` when indexing the result.
 
     See Also:
-        ``render_document`` for rendering an existing ``Document``,
-        ``convert_source`` for Markdown or notebook conversion, and
-        ``build_python_document`` for Python-authored reports.
+        ``save_document_outputs`` for rendering an existing ``Document`` and
+        ``build_source_outputs`` for Python, Markdown, or notebook sources.
     """
 
     outputs: dict[OutputFormat, Path]
+
+    @property
+    def formats(self) -> tuple[OutputFormat, ...]:
+        """Return normalized output formats in bundle order."""
+
+        return tuple(self.outputs)
+
+    @property
+    def paths(self) -> tuple[Path, ...]:
+        """Return rendered output paths in bundle order."""
+
+        return tuple(self.outputs.values())
 
     def __iter__(self) -> Iterator[tuple[OutputFormat, Path]]:
         """Iterate over rendered output pairs.
@@ -85,13 +96,25 @@ class RenderedOutputs:
         normalized = normalize_output_formats((output_format,))
         return self.outputs[normalized[0]]
 
+    def by_format(self, output_format: str) -> Path:
+        """Return the rendered path for an output format.
 
-def load_document(
+        Args:
+            output_format: Output format name or extension.
+
+        Returns:
+            The path rendered for that format.
+        """
+
+        return self[output_format]
+
+
+def load_source_document(
     source: str | Path,
     *,
     source_type: str | None = None,
     title: str | None = None,
-    factory: str | None = None,
+    document_factory: str | None = None,
     chdir: bool = True,
 ) -> Document:
     """Load a document from Python, Markdown, or notebook source.
@@ -101,7 +124,7 @@ def load_document(
         source_type: Optional explicit type: ``"python"``, ``"markdown"``, or
             ``"notebook"``.
         title: Optional title override for imported Markdown or notebooks.
-        factory: Optional factory name for Python document sources.
+        document_factory: Optional factory name for Python document sources.
         chdir: Whether Python sources should execute with their directory as
             the current working directory.
 
@@ -114,18 +137,22 @@ def load_document(
 
     Examples:
         ```python
-        from oodocs.workflows import load_document
+        from oodocs.workflows import load_source_document
 
-        doc = load_document("report.md", title="Imported Report")
+        doc = load_source_document("report.md", title="Imported Report")
         ```
     """
 
     source_path = Path(source)
     resolved_type = _resolve_source_type(source_path, source_type)
-    if factory is not None and resolved_type != "python":
-        raise ValueError("--factory is only supported for Python document sources")
+    if document_factory is not None and resolved_type != "python":
+        raise ValueError("--document-factory is only supported for Python sources")
     if resolved_type == "python":
-        return load_python_document(source_path, factory=factory, chdir=chdir)
+        return load_document_from_python(
+            source_path,
+            document_factory=document_factory,
+            chdir=chdir,
+        )
     if resolved_type == "markdown":
         from oodocs.importers.markdown import from_markdown_file
 
@@ -137,17 +164,18 @@ def load_document(
     raise ValueError(f"Unsupported document source type: {resolved_type!r}")
 
 
-def load_python_document(
+def load_document_from_python(
     source: str | Path,
     *,
-    factory: str | None = None,
+    document_factory: str | None = None,
     chdir: bool = True,
 ) -> Document:
     """Load a document object from a Python file.
 
     Args:
         source: Python file path.
-        factory: Optional function or variable name to read from the module.
+        document_factory: Optional function or variable name to read from the
+            module.
         chdir: Whether to execute the module from its containing directory.
 
     Returns:
@@ -163,9 +191,12 @@ def load_python_document(
         Load a module-level ``document`` variable or explicit factory:
 
         ```python
-        from oodocs.workflows import load_python_document
+        from oodocs.workflows import load_document_from_python
 
-        doc = load_python_document("reports/monthly.py", factory="build")
+        doc = load_document_from_python(
+            "reports/monthly.py",
+            document_factory="build",
+        )
         ```
     """
 
@@ -176,32 +207,32 @@ def load_python_document(
     with _optional_chdir(source_path.parent, enabled=chdir):
         module = _load_python_module(source_path)
 
-    document = _document_from_module(module, factory=factory)
+    document = _document_from_module(module, document_factory=document_factory)
     if document is None:
         candidates = ", ".join(PYTHON_DOCUMENT_NAMES + PYTHON_FACTORY_NAMES)
         raise ValueError(
             f"{source_path} did not expose a Document. Define one of: {candidates}; "
-            "or pass --factory NAME."
+            "or pass --document-factory NAME."
         )
     return document
 
 
-def render_document(
+def save_document_outputs(
     document: Document,
     output_dir: str | Path,
     *,
     stem: str,
-    formats: Iterable[str] | None = None,
+    outputs: Iterable[str] | None = None,
     validate: bool = True,
     verbose: bool = False,
-) -> RenderedOutputs:
+) -> OutputBundle:
     """Render a document to one or more output formats.
 
     Args:
         document: Document to render.
         output_dir: Directory where rendered files are written.
         stem: Base output filename without extension.
-        formats: Output formats to render. Defaults to all supported formats.
+        outputs: Output formats to render. Defaults to all supported formats.
         validate: Whether to validate before rendering.
         verbose: Whether to print slow major rendering steps.
 
@@ -211,50 +242,56 @@ def render_document(
     Examples:
         ```python
         from oodocs import Document, Paragraph
-        from oodocs.workflows import render_document
+        from oodocs.workflows import save_document_outputs
 
-        rendered = render_document(
+        rendered = save_document_outputs(
             Document("Memo", Paragraph("Ready.")),
             "dist",
             stem="memo",
-            formats=("html",),
+            outputs=("html",),
         )
         ```
     """
 
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
-    normalized_formats = normalize_output_formats(formats)
-    outputs = document.save_all(
+    normalized_outputs = normalize_output_formats(outputs)
+    rendered = document.save_all(
         output_path,
         stem=stem,
-        formats=normalized_formats,
+        formats=normalized_outputs,
         validate=validate,
         verbose=verbose,
     )
-    return RenderedOutputs(outputs)
+    return OutputBundle(rendered)
 
 
-def build_python_document(
+def build_source_outputs(
     source: str | Path,
     output_dir: str | Path,
     *,
-    formats: Iterable[str] | None = None,
+    source_type: str | None = None,
+    title: str | None = None,
+    document_factory: str | None = None,
+    outputs: Iterable[str] | None = None,
     stem: str | None = None,
-    factory: str | None = None,
     validate: bool = True,
     chdir: bool = True,
     verbose: bool = False,
-) -> RenderedOutputs:
-    """Load a Python-authored document and render it.
+) -> OutputBundle:
+    """Load a source document and render it.
 
     Args:
-        source: Python source file path.
+        source: Python, Markdown, or notebook source file path.
         output_dir: Directory where rendered files are written.
-        formats: Output formats to render. Defaults to all supported formats.
+        source_type: Optional explicit type: ``"python"``, ``"markdown"``, or
+            ``"notebook"``.
+        title: Optional title override for imported Markdown or notebooks.
+        document_factory: Optional function or variable name for Python
+            sources.
+        outputs: Output formats to render. Defaults to all supported formats.
         stem: Base output filename without extension. Defaults to the source
             file stem.
-        factory: Optional function or variable name to read from the module.
         validate: Whether to validate before rendering.
         chdir: Whether to execute the source from its containing directory.
         verbose: Whether to print slow major rendering steps.
@@ -264,79 +301,55 @@ def build_python_document(
 
     Examples:
         ```python
-        from oodocs.workflows import build_python_document
+        from oodocs.workflows import build_source_outputs
 
-        outputs = build_python_document("reports/monthly.py", "dist", formats=("pdf",))
+        outputs = build_source_outputs(
+            "reports/monthly.py",
+            "dist",
+            outputs=("pdf",),
+        )
         ```
     """
 
     source_path = Path(source).resolve()
     output_path = Path(output_dir).resolve()
-    with _optional_chdir(source_path.parent, enabled=chdir):
-        document = load_python_document(source_path, factory=factory, chdir=False)
-        return render_document(
-            document,
-            output_path,
-            stem=stem or source_path.stem,
-            formats=formats,
-            validate=validate,
-            verbose=verbose,
-        )
+    resolved_type = _resolve_source_type(source_path, source_type)
+    if resolved_type == "python":
+        with _optional_chdir(source_path.parent, enabled=chdir):
+            document = load_document_from_python(
+                source_path,
+                document_factory=document_factory,
+                chdir=False,
+            )
+            return save_document_outputs(
+                document,
+                output_path,
+                stem=stem or source_path.stem,
+                outputs=outputs,
+                validate=validate,
+                verbose=verbose,
+            )
 
-
-def convert_source(
-    source: str | Path,
-    output_dir: str | Path | None = None,
-    *,
-    formats: Iterable[str] | None = None,
-    stem: str | None = None,
-    title: str | None = None,
-    validate: bool = True,
-    verbose: bool = False,
-) -> RenderedOutputs:
-    """Convert Markdown or notebook source into rendered document outputs.
-
-    Args:
-        source: Markdown or notebook source path.
-        output_dir: Directory where rendered files are written. Defaults to the
-            source file directory.
-        formats: Output formats to render. Defaults to all supported formats.
-        stem: Base output filename without extension. Defaults to the source
-            file stem.
-        title: Optional document title override.
-        validate: Whether to validate before rendering.
-        verbose: Whether to print slow major rendering steps.
-
-    Returns:
-        Paths written by the conversion workflow.
-
-    Examples:
-        ```python
-        from oodocs.workflows import convert_source
-
-        outputs = convert_source("notes.md", "dist", formats=("docx", "html"))
-        ```
-    """
-
-    source_path = Path(source)
-    document = load_document(source_path, title=title)
-    return render_document(
+    if document_factory is not None:
+        raise ValueError("--document-factory is only supported for Python sources")
+    document = load_source_document(source_path, source_type=resolved_type, title=title)
+    return save_document_outputs(
         document,
-        output_dir or source_path.parent,
+        output_path,
         stem=stem or source_path.stem,
-        formats=formats,
+        outputs=outputs,
         validate=validate,
         verbose=verbose,
     )
 
 
-def validate_source(
+def validate_source_document(
     source: str | Path,
     *,
     source_type: str | None = None,
     title: str | None = None,
-    factory: str | None = None,
-    formats: Iterable[str] | None = None,
+    document_factory: str | None = None,
+    outputs: Iterable[str] | None = None,
     chdir: bool = True,
 ) -> ValidationResult:
     """Load a source document and return its validation result.
@@ -346,8 +359,8 @@ def validate_source(
         source_type: Optional explicit type: ``"python"``, ``"markdown"``, or
             ``"notebook"``.
         title: Optional title override for imported Markdown or notebooks.
-        factory: Optional factory name for Python document sources.
-        formats: Output formats to validate for. Defaults to all formats.
+        document_factory: Optional factory name for Python document sources.
+        outputs: Output formats to validate for. Defaults to all formats.
         chdir: Whether Python sources should execute with their directory as
             the current working directory.
 
@@ -356,35 +369,35 @@ def validate_source(
 
     Examples:
         ```python
-        from oodocs.workflows import validate_source
+        from oodocs.workflows import validate_source_document
 
-        result = validate_source("notes.md", formats=("pdf",))
+        result = validate_source_document("notes.md", outputs=("pdf",))
         assert result.ok_for(("pdf",))
         ```
     """
 
     source_path = Path(source)
     resolved_type = _resolve_source_type(source_path, source_type)
-    if factory is not None and resolved_type != "python":
-        raise ValueError("--factory is only supported for Python document sources")
+    if document_factory is not None and resolved_type != "python":
+        raise ValueError("--document-factory is only supported for Python sources")
     if resolved_type == "python":
         resolved_source = source_path.resolve()
         with _optional_chdir(resolved_source.parent, enabled=chdir):
-            document = load_python_document(
+            document = load_document_from_python(
                 resolved_source,
-                factory=factory,
+                document_factory=document_factory,
                 chdir=False,
             )
-            return document.validate(formats=formats)
+            return document.validate(formats=outputs)
 
-    document = load_document(
+    document = load_source_document(
         source_path,
         source_type=resolved_type,
         title=title,
-        factory=None,
+        document_factory=None,
         chdir=chdir,
     )
-    return document.validate(formats=formats)
+    return document.validate(formats=outputs)
 
 
 def _resolve_source_type(source_path: Path, source_type: str | None) -> str:
@@ -431,12 +444,18 @@ def _load_python_module(source_path: Path) -> ModuleType:
     return module
 
 
-def _document_from_module(module: ModuleType, *, factory: str | None) -> Document | None:
-    if factory is not None:
-        value = getattr(module, factory, None)
+def _document_from_module(
+    module: ModuleType,
+    *,
+    document_factory: str | None,
+) -> Document | None:
+    if document_factory is not None:
+        value = getattr(module, document_factory, None)
         if value is None:
-            raise AttributeError(f"Python document source has no factory named {factory!r}")
-        return _coerce_document_candidate(value, name=factory)
+            raise AttributeError(
+                f"Python document source has no document factory named {document_factory!r}"
+            )
+        return _coerce_document_candidate(value, name=document_factory)
 
     for name in PYTHON_DOCUMENT_NAMES:
         if hasattr(module, name):
@@ -477,13 +496,12 @@ def _optional_chdir(directory: Path, *, enabled: bool) -> Iterator[None]:
 
 
 __all__ = [
+    "OutputBundle",
     "PYTHON_DOCUMENT_NAMES",
     "PYTHON_FACTORY_NAMES",
-    "RenderedOutputs",
-    "build_python_document",
-    "convert_source",
-    "load_document",
-    "load_python_document",
-    "render_document",
-    "validate_source",
+    "build_source_outputs",
+    "load_document_from_python",
+    "load_source_document",
+    "save_document_outputs",
+    "validate_source_document",
 ]

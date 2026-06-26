@@ -127,13 +127,12 @@ from oodocs.settings import (
 )
 from oodocs.validation import DocumentValidationError, ValidationIssue, ValidationResult
 from oodocs.workflows import (
-    RenderedOutputs,
-    build_python_document,
-    convert_source,
-    load_document,
-    load_python_document,
-    render_document,
-    validate_source,
+    OutputBundle,
+    build_source_outputs,
+    load_source_document,
+    load_document_from_python,
+    save_document_outputs,
+    validate_source_document,
 )
 
 
@@ -222,7 +221,7 @@ __all__ = [
     "ParagraphStyle",
     "ParagraphTitleStyle",
     "ReferencesPage",
-    "RenderedOutputs",
+    "OutputBundle",
     "Remark",
     "Section",
     "Shape",
@@ -251,11 +250,10 @@ __all__ = [
     "__version__",
     "badge",
     "bold",
-    "build_python_document",
+    "build_source_outputs",
     "cite",
     "comment",
     "countable_kind",
-    "convert_source",
     "footnote",
     "from_markdown",
     "from_markdown_file",
@@ -266,12 +264,12 @@ __all__ = [
     "keyboard",
     "link",
     "line_break",
-    "load_document",
-    "load_python_document",
+    "load_source_document",
+    "load_document_from_python",
     "math",
     "prescript",
     "reference",
-    "render_document",
+    "save_document_outputs",
     "status",
     "strikethrough",
     "markup",
@@ -286,7 +284,7 @@ __all__ = [
     "superscript",
     "tag",
     "text_color",
-    "validate_source",
+    "validate_source_document",
 ]
 
 for _module_name in ("components", "core", "document", "layout", "settings"):

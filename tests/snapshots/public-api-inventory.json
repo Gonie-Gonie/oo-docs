@@ -449,8 +449,8 @@
           "category": "workflow",
           "kind": "class",
           "module": "oodocs.workflows",
-          "name": "RenderedOutputs",
-          "qualname": "oodocs.workflows.RenderedOutputs"
+          "name": "OutputBundle",
+          "qualname": "oodocs.workflows.OutputBundle"
         },
         {
           "category": "block",
@@ -652,8 +652,8 @@
           "category": "workflow",
           "kind": "function",
           "module": "oodocs.workflows",
-          "name": "build_python_document",
-          "qualname": "oodocs.workflows.build_python_document"
+          "name": "build_source_outputs",
+          "qualname": "oodocs.workflows.build_source_outputs"
         },
         {
           "category": "inline",
@@ -675,13 +675,6 @@
           "module": "oodocs.components.blocks",
           "name": "countable_kind",
           "qualname": "oodocs.components.blocks.countable_kind"
-        },
-        {
-          "category": "workflow",
-          "kind": "function",
-          "module": "oodocs.workflows",
-          "name": "convert_source",
-          "qualname": "oodocs.workflows.convert_source"
         },
         {
           "category": "inline",
@@ -757,15 +750,15 @@
           "category": "workflow",
           "kind": "function",
           "module": "oodocs.workflows",
-          "name": "load_document",
-          "qualname": "oodocs.workflows.load_document"
+          "name": "load_source_document",
+          "qualname": "oodocs.workflows.load_source_document"
         },
         {
           "category": "workflow",
           "kind": "function",
           "module": "oodocs.workflows",
-          "name": "load_python_document",
-          "qualname": "oodocs.workflows.load_python_document"
+          "name": "load_document_from_python",
+          "qualname": "oodocs.workflows.load_document_from_python"
         },
         {
           "category": "inline",
@@ -792,8 +785,8 @@
           "category": "workflow",
           "kind": "function",
           "module": "oodocs.workflows",
-          "name": "render_document",
-          "qualname": "oodocs.workflows.render_document"
+          "name": "save_document_outputs",
+          "qualname": "oodocs.workflows.save_document_outputs"
         },
         {
           "category": "inline",
@@ -897,8 +890,8 @@
           "category": "workflow",
           "kind": "function",
           "module": "oodocs.workflows",
-          "name": "validate_source",
-          "qualname": "oodocs.workflows.validate_source"
+          "name": "validate_source_document",
+          "qualname": "oodocs.workflows.validate_source_document"
         }
       ]
     },
@@ -1483,6 +1476,13 @@
       "exports": [
         {
           "category": "workflow",
+          "kind": "class",
+          "module": "oodocs.workflows",
+          "name": "OutputBundle",
+          "qualname": "oodocs.workflows.OutputBundle"
+        },
+        {
+          "category": "workflow",
           "kind": "constant",
           "module": null,
           "name": "PYTHON_DOCUMENT_NAMES",
@@ -1497,52 +1497,38 @@
         },
         {
           "category": "workflow",
-          "kind": "class",
+          "kind": "function",
           "module": "oodocs.workflows",
-          "name": "RenderedOutputs",
-          "qualname": "oodocs.workflows.RenderedOutputs"
+          "name": "build_source_outputs",
+          "qualname": "oodocs.workflows.build_source_outputs"
         },
         {
           "category": "workflow",
           "kind": "function",
           "module": "oodocs.workflows",
-          "name": "build_python_document",
-          "qualname": "oodocs.workflows.build_python_document"
+          "name": "load_document_from_python",
+          "qualname": "oodocs.workflows.load_document_from_python"
         },
         {
           "category": "workflow",
           "kind": "function",
           "module": "oodocs.workflows",
-          "name": "convert_source",
-          "qualname": "oodocs.workflows.convert_source"
+          "name": "load_source_document",
+          "qualname": "oodocs.workflows.load_source_document"
         },
         {
           "category": "workflow",
           "kind": "function",
           "module": "oodocs.workflows",
-          "name": "load_document",
-          "qualname": "oodocs.workflows.load_document"
+          "name": "save_document_outputs",
+          "qualname": "oodocs.workflows.save_document_outputs"
         },
         {
           "category": "workflow",
           "kind": "function",
           "module": "oodocs.workflows",
-          "name": "load_python_document",
-          "qualname": "oodocs.workflows.load_python_document"
-        },
-        {
-          "category": "workflow",
-          "kind": "function",
-          "module": "oodocs.workflows",
-          "name": "render_document",
-          "qualname": "oodocs.workflows.render_document"
-        },
-        {
-          "category": "workflow",
-          "kind": "function",
-          "module": "oodocs.workflows",
-          "name": "validate_source",
-          "qualname": "oodocs.workflows.validate_source"
+          "name": "validate_source_document",
+          "qualname": "oodocs.workflows.validate_source_document"
         }
       ]
     }

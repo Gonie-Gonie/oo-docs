@@ -17,6 +17,13 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "color",
         "from_ipynb",
         "parse_ipynb",
+        "RenderedOutputs",
+        "build_python_document",
+        "convert_source",
+        "load_document",
+        "load_python_document",
+        "render_document",
+        "validate_source",
     }
     expected = {
         "strikethrough",
@@ -24,6 +31,12 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "text_color",
         "from_notebook",
         "parse_notebook",
+        "OutputBundle",
+        "build_source_outputs",
+        "load_document_from_python",
+        "load_source_document",
+        "save_document_outputs",
+        "validate_source_document",
     }
 
     assert forbidden.isdisjoint(oodocs.__all__)

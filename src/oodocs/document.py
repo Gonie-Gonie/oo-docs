@@ -66,7 +66,7 @@ class Document:
 
     See Also:
         ``DocumentSettings`` for metadata and layout configuration,
-        ``render_document`` for workflow-oriented rendering, and
+        ``save_document_outputs`` for workflow-oriented rendering, and
         ``from_markdown`` for importing Markdown into a document.
     """
 

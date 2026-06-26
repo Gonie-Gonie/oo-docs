@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from oodocs import convert_source, validate_source
+from oodocs import build_source_outputs, validate_source_document
 from oodocs.cli import main
 
 
@@ -70,7 +70,7 @@ def test_cli_convert_notebook_to_pdf(tmp_path: Path, capsys) -> None:
     assert "Wrote pdf:" in captured.out
 
 
-def test_cli_build_python_document(tmp_path: Path, capsys) -> None:
+def test_cli_build_source_outputs(tmp_path: Path, capsys) -> None:
     script_path = tmp_path / "report.py"
     script_path.write_text(
         "\n".join(
@@ -135,11 +135,11 @@ def test_workflow_api_converts_and_validates_sources(tmp_path: Path) -> None:
     markdown_path = tmp_path / "notes.md"
     markdown_path.write_text("# Workflow API\n\nBody paragraph.\n", encoding="utf-8")
 
-    result = validate_source(markdown_path, formats=("html",))
-    outputs = convert_source(
+    result = validate_source_document(markdown_path, outputs=("html",))
+    outputs = build_source_outputs(
         markdown_path,
         tmp_path / "outputs",
-        formats=("html",),
+        outputs=("html",),
     )
 
     assert result.ok
