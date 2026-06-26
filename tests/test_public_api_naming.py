@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import fields
 import inspect
 
 import pytest
@@ -74,6 +75,13 @@ def test_apidoc_namespace_uses_canonical_exports() -> None:
     assert forbidden.isdisjoint(apidoc.__all__)
     assert not any(hasattr(apidoc, name) for name in forbidden)
     assert expected <= set(apidoc.__all__)
+
+
+def test_text_style_uses_canonical_field_names() -> None:
+    field_names = {field.name for field in fields(oodocs.TextStyle)}
+
+    assert {"color", "all_caps"}.isdisjoint(field_names)
+    assert {"text_color", "uppercase"} <= field_names
 
 
 def test_apidoc_raw_value_helpers_use_as_prefix() -> None:

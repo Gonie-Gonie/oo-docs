@@ -2810,7 +2810,7 @@ class PdfRenderer:
         base_bold: bool,
         base_italic: bool,
     ) -> str:
-        rendered_text = text_value.upper() if fragment.style.all_caps else text_value
+        rendered_text = text_value.upper() if fragment.style.uppercase else text_value
         text = escape(rendered_text).replace("\n", "<br/>")
         bold = base_bold if fragment.style.bold is None else fragment.style.bold
         italic = base_italic if fragment.style.italic is None else fragment.style.italic
@@ -2822,8 +2822,8 @@ class PdfRenderer:
             font_attrs.append(f'face="{font_name}"')
         if base_size is None or size != base_size:
             font_attrs.append(f'size="{size}"')
-        if fragment.style.color is not None:
-            font_attrs.append(f'color="#{fragment.style.color}"')
+        if fragment.style.text_color is not None:
+            font_attrs.append(f'color="#{fragment.style.text_color}"')
         if fragment.style.highlight_color is not None:
             font_attrs.append(f'backColor="#{fragment.style.highlight_color}"')
         wrapped = text if not font_attrs else f"<font {' '.join(font_attrs)}>{text}</font>"

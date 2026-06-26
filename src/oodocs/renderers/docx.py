@@ -1000,7 +1000,7 @@ class DocxRenderer:
                 TextStyle(
                     font_name=fragment.style.font_name,
                     font_size=fragment.style.font_size,
-                    color=fragment.style.color,
+                    text_color=fragment.style.text_color,
                     bold=fragment.style.bold,
                     italic=fragment.style.italic,
                     underline=fragment.style.underline,
@@ -1642,9 +1642,9 @@ class DocxRenderer:
             if not style.italic:
                 italic.set(qn("w:val"), "0")
             run_properties.append(italic)
-        if style.color is not None:
+        if style.text_color is not None:
             color = OxmlElement("w:color")
-            color.set(qn("w:val"), style.color)
+            color.set(qn("w:val"), style.text_color)
             run_properties.append(color)
         if style.underline:
             underline = OxmlElement("w:u")
@@ -1658,9 +1658,9 @@ class DocxRenderer:
             if not style.small_caps:
                 small_caps.set(qn("w:val"), "0")
             run_properties.append(small_caps)
-        if style.all_caps is not None:
+        if style.uppercase is not None:
             caps = OxmlElement("w:caps")
-            if not style.all_caps:
+            if not style.uppercase:
                 caps.set(qn("w:val"), "0")
             run_properties.append(caps)
         if style.subscript:
@@ -1726,14 +1726,18 @@ class DocxRenderer:
             font.italic = style.italic
         if style.underline is not None:
             font.underline = style.underline
-        if style.color is not None:
-            font.color.rgb = RGBColor.from_string(style.color)
+        if style.text_color is not None:
+            font.color.rgb = RGBColor.from_string(style.text_color)
         if style.strikethrough is not None:
             font.strike = style.strikethrough
         if style.small_caps is not None:
             font.small_caps = style.small_caps
-        if style.all_caps is not None:
-            font.all_caps = style.all_caps
+        if style.uppercase is not None:
+            run_properties = run._r.get_or_add_rPr()
+            caps = OxmlElement("w:caps")
+            if not style.uppercase:
+                caps.set(qn("w:val"), "0")
+            run_properties.append(caps)
         if style.subscript is not None:
             font.subscript = style.subscript
         if style.superscript is not None:
@@ -2008,7 +2012,7 @@ class DocxRenderer:
             title_paragraph.paragraph_format.space_after = Pt(6)
             if box.style.title_background_color is not None:
                 self._set_paragraph_shading(title_paragraph, box.style.title_background_color)
-            title_style = TextStyle(color=box.style.title_text_color, bold=True)
+            title_style = TextStyle(text_color=box.style.title_text_color, bold=True)
             self._append_runs(
                 title_paragraph,
                 box.title,
@@ -2455,8 +2459,8 @@ class DocxRenderer:
             properties.append("<w:b/>")
         if style.italic:
             properties.append("<w:i/>")
-        if style.color is not None:
-            properties.append(f'<w:color w:val="{style.color}"/>')
+        if style.text_color is not None:
+            properties.append(f'<w:color w:val="{style.text_color}"/>')
         text = xml_escape(fragment.value)
         return (
             '<w:r>'

@@ -366,7 +366,7 @@ class TableCellStyle:
         """
 
         return TextStyle(
-            color=self.text_color,
+            text_color=self.text_color,
             bold=self.bold,
             italic=self.italic,
         )

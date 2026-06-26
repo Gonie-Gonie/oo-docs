@@ -147,14 +147,14 @@ class TextStyle:
     Attributes:
         font_name: Optional font family.
         font_size: Optional font size.
-        color: Optional text color as a hex string.
+        text_color: Optional text color as a hex string.
         highlight_color: Optional highlight color as a hex string.
         bold: Optional bold override.
         italic: Optional italic override.
         underline: Optional underline override.
         strikethrough: Optional strikethrough override.
         small_caps: Optional small-caps override.
-        all_caps: Optional all-caps override.
+        uppercase: Optional uppercase override.
         subscript: Optional subscript override.
         superscript: Optional superscript override.
 
@@ -169,19 +169,19 @@ class TextStyle:
 
     font_name: str | None = None
     font_size: float | None = None
-    color: str | None = None
+    text_color: str | None = None
     highlight_color: str | None = None
     bold: bool | None = None
     italic: bool | None = None
     underline: bool | None = None
     strikethrough: bool | None = None
     small_caps: bool | None = None
-    all_caps: bool | None = None
+    uppercase: bool | None = None
     subscript: bool | None = None
     superscript: bool | None = None
 
     def __post_init__(self) -> None:
-        self.color = normalize_color(self.color)
+        self.text_color = normalize_color(self.text_color)
         self.highlight_color = normalize_color(self.highlight_color)
         if self.subscript and self.superscript:
             raise ValueError("TextStyle cannot set both subscript and superscript")
@@ -202,14 +202,14 @@ class TextStyle:
         merged = TextStyle(
             font_name=self.font_name,
             font_size=self.font_size,
-            color=self.color,
+            text_color=self.text_color,
             highlight_color=self.highlight_color,
             bold=self.bold,
             italic=self.italic,
             underline=self.underline,
             strikethrough=self.strikethrough,
             small_caps=self.small_caps,
-            all_caps=self.all_caps,
+            uppercase=self.uppercase,
             subscript=self.subscript,
             superscript=self.superscript,
         )
@@ -219,14 +219,14 @@ class TextStyle:
             for field_name in (
                 "font_name",
                 "font_size",
-                "color",
+                "text_color",
                 "highlight_color",
                 "bold",
                 "italic",
                 "underline",
                 "strikethrough",
                 "small_caps",
-                "all_caps",
+                "uppercase",
                 "subscript",
                 "superscript",
             ):
@@ -413,7 +413,7 @@ class ParagraphTitleStyle:
         paragraph = Paragraph(
             "The rollout completed successfully.",
             title="Outcome",
-            title_style=ParagraphTitleStyle(TextStyle(bold=True, color="166534")),
+            title_style=ParagraphTitleStyle(TextStyle(bold=True, text_color="166534")),
         )
         document = Document("Release Notes", paragraph)
         ```

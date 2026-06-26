@@ -1762,7 +1762,7 @@ class HtmlRenderer:
         base_italic: bool = False,
         base_size: float | None = None,
     ) -> str:
-        rendered_text = text_value.upper() if fragment.style.all_caps else text_value
+        rendered_text = text_value.upper() if fragment.style.uppercase else text_value
         text = escape(rendered_text).replace("\n", "<br/>")
         styles: list[str] = []
         effective_bold = base_bold if fragment.style.bold is None else fragment.style.bold
@@ -1782,13 +1782,13 @@ class HtmlRenderer:
             decorations.append("line-through")
         if decorations:
             styles.append(f"text-decoration: {' '.join(decorations)}")
-        if fragment.style.color is not None:
-            styles.append(f"color: #{fragment.style.color}")
+        if fragment.style.text_color is not None:
+            styles.append(f"color: #{fragment.style.text_color}")
         if fragment.style.highlight_color is not None:
             styles.append(f"background-color: #{fragment.style.highlight_color}")
         if fragment.style.small_caps:
             styles.append("font-variant: small-caps")
-        if fragment.style.all_caps:
+        if fragment.style.uppercase:
             styles.append("text-transform: uppercase")
         if fragment.style.superscript:
             styles.append("vertical-align: super")

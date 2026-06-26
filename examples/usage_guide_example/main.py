@@ -483,7 +483,7 @@ Paragraph(
     "Continue with ",
     Text.styled("small caps", small_caps=True),
     ", ",
-    Text.styled("uppercase", all_caps=True),
+    Text.styled("uppercase", uppercase=True),
     ", H",
     Text.styled("2", subscript=True),
     "O, and x",
@@ -835,7 +835,7 @@ def build_usage_guide_document() -> Document:
     block_options_table = Table(
         headers=["Block", "Direct kwargs", "Style object when needed"],
         rows=[
-            ["Text and styled(...)", "font_name, font_size, color, highlight_color, bold, italic, underline, strikethrough, small_caps, all_caps, subscript, superscript", "Use TextStyle only when a reusable inline style needs a name."],
+            ["Text and styled(...)", "font_name, font_size, text_color, highlight_color, bold, italic, underline, strikethrough, small_caps, uppercase, subscript, superscript", "Use TextStyle only when a reusable inline style needs a name."],
             ["Paragraph, CodeBlock, Equation", "alignment, space_before, space_after, leading, left_indent, right_indent, first_line_indent, keep_together, keep_with_next, page_break_before, widow_control, unit", "Use ParagraphStyle only for shared paragraph rhythm."],
             ["BulletList, NumberedList", "marker_format, bullet, prefix, suffix, start, indent, marker_gap", "Use ListStyle only for repeated list conventions."],
             ["Box", "border_color, background_color, title colors, border_width, padding, per-side padding, space_after, width, unit, alignment", "Use BoxStyle only for named callout or report-panel designs."],
@@ -1223,7 +1223,7 @@ def build_usage_guide_document() -> Document:
                     " also accepts Word-native inline features such as ",
                     inline_code("small_caps"),
                     ", ",
-                    inline_code("all_caps"),
+                    inline_code("uppercase"),
                     ", ",
                     inline_code("subscript"),
                     ", and ",

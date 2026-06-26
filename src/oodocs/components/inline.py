@@ -55,7 +55,7 @@ class Text:
 
         Examples:
             ```python
-            fragment = Text.styled("Approved", color="008000", bold=True)
+            fragment = Text.styled("Approved", text_color="008000", bold=True)
             ```
         """
 
@@ -123,7 +123,7 @@ class Text:
 
         return cls(
             value=value,
-            style=TextStyle(color=text_color).merged(style),
+            style=TextStyle(text_color=text_color).merged(style),
         )
 
     @classmethod
@@ -806,7 +806,7 @@ class Hyperlink(Text):
     ) -> None:
         super().__init__(
             value="",
-            style=TextStyle(color="0563C1", underline=True).merged(style),
+            style=TextStyle(text_color="0563C1", underline=True).merged(style),
         )
         self.target = target
         self.label = coerce_inlines(label or (target,))
@@ -1126,7 +1126,7 @@ def styled(value: str, **style_values: object) -> Text:
 
     Examples:
         ```python
-        fragment = styled("Green", color="008000", bold=True)
+        fragment = styled("Green", text_color="008000", bold=True)
         ```
     """
 

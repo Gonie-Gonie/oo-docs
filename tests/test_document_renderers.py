@@ -394,7 +394,7 @@ def test_method_style_inline_actions_create_renderable_fragments() -> None:
     assert Text.bold("important").style.bold is True
     assert Text.italic("note").style.italic is True
     assert Text.inline_code("x = 1").style.font_name == "Courier New"
-    assert Text.text_color("accent", "#0066AA").style.color == "0066AA"
+    assert Text.text_color("accent", "#0066AA").style.text_color == "0066AA"
     assert Text.highlight("marked", "#FFF2CC").style.highlight_color == "FFF2CC"
     assert Text.strikethrough("old").style.strikethrough is True
     assert Text.superscript("2").style.superscript is True
@@ -406,7 +406,7 @@ def test_method_style_inline_actions_create_renderable_fragments() -> None:
     assert bold("important").style.bold is True
     assert italic("note").style.italic is True
     assert inline_code("x = 1").style.font_name == "Courier New"
-    assert text_color("accent", "#0066AA").style.color == "0066AA"
+    assert text_color("accent", "#0066AA").style.text_color == "0066AA"
     assert highlight("marked", "#FFF2CC").style.highlight_color == "FFF2CC"
     assert strikethrough("old").style.strikethrough is True
     assert superscript("2").style.superscript is True
@@ -613,7 +613,7 @@ def test_paragraph_titles_render_and_inherit_styles(tmp_path: Path) -> None:
                 "Direct body.",
                 title="Direct",
                 title_style=ParagraphTitleStyle(
-                    TextStyle(bold=True, color="991B1B"),
+                    TextStyle(bold=True, text_color="991B1B"),
                     separator=" - ",
                 ),
             ),
@@ -626,7 +626,7 @@ def test_paragraph_titles_render_and_inherit_styles(tmp_path: Path) -> None:
             "Individual body.",
             title="Individual",
             title_style=ParagraphTitleStyle(
-                TextStyle(bold=True, color="166534"),
+                TextStyle(bold=True, text_color="166534"),
                 separator=". ",
             ),
         ),
@@ -1709,7 +1709,7 @@ def test_inline_caps_and_vertical_align_render_to_all_outputs(tmp_path: Path) ->
         Paragraph(
             Text.styled("small caps", small_caps=True),
             " ",
-            Text.styled("upper", all_caps=True),
+            Text.styled("upper", uppercase=True),
             " H",
             Text.styled("2", subscript=True),
             " x",
