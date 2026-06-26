@@ -190,7 +190,7 @@ The default behavior is intentionally conventional:
 - Use `reference(obj)` or `obj.reference()` for cross-references to captioned media, headings, equations, paragraphs, code blocks, and boxes. Passing the raw object inside `Paragraph(...)` is rejected so insertion and citation are not confused.
 - Use `Definition(...)`, `Lemma(...)`, `Proposition(...)`, `Theorem(...)`, `Corollary(...)`, `Example(...)`, `Remark(...)`, `Assumption(...)`, `Axiom(...)`, `Claim(...)`, and `Conjecture(...)` for theorem-like blocks that share a document-wide counter; `Proof(...)` is unnumbered by default. Use `create_countable_block_type("Exercise", counter="exercise")` to create custom countable block classes without subclassing, or pass `counter="theorem"` when a custom block should join the same sequence.
 - Use `Table(...)` for small authored tables, `Table.from_records(...)` or `Table.from_mapping(...)` for ordinary Python data, `Table.from_csv(...)` or `Table.from_tsv(...)` for delimited files, and `Table.from_dataframe(...)` when the data already lives in pandas.
-- Use `TableStyle.plain()`, `TableStyle.compact()`, or `TableStyle.evidence()` when several tables should share a preset without repeating style kwargs.
+- Use named table styles such as `Table(..., style="plain")`, `Table(..., style="compact")`, or `Table(..., style="evidence")` when several tables should share a preset without repeating style kwargs. Pass a concrete `TableStyle(...)` only for one-off local styling or when registering a custom stylesheet entry.
 - Use `TableCell(text_alignment=..., vertical_alignment=...)` or table-wide `Table(..., cell_text_alignment=..., cell_vertical_alignment=...)` when a table needs Word-like cell alignment. Use dictionaries in `row_styles`, `header_row_styles`, or `column_styles` when rows or columns need background color, text color, bold, or italic formatting.
 - Use `Table(split=True)` when a table should render in source order and may break across pages. Leave `split=False` when the table should stay together when possible; very long tables are automatically rendered as split repeated-header tables.
 - Use `Figure(...)` for image files or `savefig()`-compatible Python figure objects. Use `Figure.from_bytes(...)` or `Figure.from_buffer(...)` when image bytes are already in memory.
@@ -358,7 +358,8 @@ The package is organized by responsibility:
 - `src/oodocs/components/` for the concrete authoring model (`base.py`, `blocks.py`, `equations.py`, `generated.py`, `inline.py`, `markup.py`, `media.py`, `people.py`, `positioning.py`, and `references.py`)
 - `src/oodocs/importers/` for adapters that convert external formats such as Markdown into OODocs objects
 - `src/oodocs/adapters/` and `src/oodocs/evidence.py` for repository artefact adapters and release evidence bundles
-- `src/oodocs/layout/` for low-level theme and indexing support
+- `src/oodocs/styles/` for reusable visual styles, grouped theme defaults, and stylesheets
+- `src/oodocs/layout/` for low-level render indexing support
 - `src/oodocs/renderers/docx.py`, `src/oodocs/renderers/pdf.py`, and `src/oodocs/renderers/html.py` for format-specific layout
 
 ## Development
