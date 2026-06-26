@@ -106,7 +106,7 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "8 Component Presets" in paragraph_texts
     assert "9 Template Presets" in paragraph_texts
     assert any("AuthorLayout(mode='stacked')" in text for text in paragraph_texts)
-    assert any("Theme(footnote_placement='document')" in text for text in paragraph_texts)
+    assert any("Theme(blocks=BlockDefaults(footnote_placement='document'))" in text for text in paragraph_texts)
     assert any("PageMargins" in text for text in paragraph_texts)
     assert any("PageBreak()" in text for text in paragraph_texts)
     assert any("settings.get_text_width(0.75)" in text for text in paragraph_texts)
@@ -131,7 +131,7 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert any("Page layout controls shared across renderers." in text for text in paragraph_texts)
     assert any("Table-of-contents defaults and customization options." in text for text in paragraph_texts)
     assert any("Document-level configuration options." in text for text in paragraph_texts)
-    assert any("Grouped Theme options" in text for text in paragraph_texts)
+    assert any("Grouped Theme defaults" in text for text in paragraph_texts)
     assert any("Block-level option scope" in text for text in paragraph_texts)
     assert any("Component presets wrap ordinary blocks" in text for text in paragraph_texts)
     assert any("Template presets build full Document objects" in text for text in paragraph_texts)
@@ -198,7 +198,7 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "References" in pdf_text
     assert "Guide Cover" in pdf_text
     assert "AuthorLayout(mode='stacked')" in pdf_text
-    assert "Theme(footnote_placement='document')" in pdf_text
+    assert "Theme(blocks=BlockDefaults(footnote_placement='document'))" in pdf_text
     assert "PageMargins" in pdf_text
     assert "PageBreak()" in pdf_text
     assert "settings.get_text_width(0.75)" in pdf_text
@@ -224,7 +224,7 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "Page layout controls shared across renderers." in pdf_text
     assert "Table-of-contents defaults and customization options." in pdf_text
     assert "Document-level configuration options." in pdf_text
-    assert "Grouped Theme options" in pdf_text
+    assert "Grouped Theme defaults" in pdf_text
     assert "Block-level option scope" in pdf_text
     assert "Component presets wrap ordinary blocks" in pdf_text
     assert "Template presets build full Document objects" in pdf_text
@@ -278,7 +278,7 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "Comments" in normalized_html_text
     assert "References" in normalized_html_text
     assert "AuthorLayout(mode='stacked')" in normalized_html_text
-    assert "Theme(footnote_placement='document')" in normalized_html_text
+    assert "Theme(blocks=BlockDefaults(footnote_placement='document'))" in normalized_html_text
     assert "PageMargins" in normalized_html_text
     assert "PageBreak()" in normalized_html_text
     assert "settings.get_text_width(0.75)" in normalized_html_text
@@ -304,7 +304,7 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "Page layout controls shared across renderers." in normalized_html_text
     assert "Table-of-contents defaults and customization options." in normalized_html_text
     assert "Document-level configuration options." in normalized_html_text
-    assert "Grouped Theme options" in normalized_html_text
+    assert "Grouped Theme defaults" in normalized_html_text
     assert "Block-level option scope" in normalized_html_text
     assert "Component presets wrap ordinary blocks" in normalized_html_text
     assert "Template presets build full Document objects" in normalized_html_text

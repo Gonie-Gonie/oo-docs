@@ -13,6 +13,7 @@ from oodocs import (
     Document,
     DocumentSettings,
     NumberedList,
+    PageNumberDefaults,
     Paragraph,
     Section,
     Table,
@@ -240,7 +241,12 @@ def build_benchmark_document() -> Document:
             metadata_author="OODocs Contributors",
             subtitle="Documenting measured Python work without leaving Python",
             summary="Example report generated from native Python benchmark data",
-            theme=Theme(show_page_numbers=True, page_number_template="{page}"),
+            theme=Theme(
+                page_numbers=PageNumberDefaults(
+                    show_page_numbers=True,
+                    page_number_template="{page}",
+                )
+            ),
         ),
     )
 

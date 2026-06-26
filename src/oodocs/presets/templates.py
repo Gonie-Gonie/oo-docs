@@ -33,34 +33,34 @@ def _default_journal_theme() -> Theme:
     """Return manuscript defaults suitable for a conventional journal draft."""
 
     return Theme(
-        TypographyDefaults(
+        typography=TypographyDefaults(
             body_font_name="Times New Roman",
             body_font_size=11.0,
             title_font_size=16.0,
             heading_sizes=(13.0, 12.0, 11.0, 11.0),
             caption_font_size=10.0,
         ),
-        CaptionDefaults(
+        captions=CaptionDefaults(
             caption_text_alignment="left",
             table_caption_position="above",
             figure_caption_position="below",
         ),
-        GeneratedContentDefaults(
+        generated_content=GeneratedContentDefaults(
             generated_heading_level=1,
             generated_content_page_breaks=False,
         ),
-        PageNumberDefaults(
+        page_numbers=PageNumberDefaults(
             show_page_numbers=True,
             page_number_alignment="center",
         ),
-        TitleMatterDefaults(
+        title_matter=TitleMatterDefaults(
             title_text_alignment="center",
             subtitle_text_alignment="center",
             author_text_alignment="center",
             affiliation_text_alignment="center",
             author_detail_text_alignment="center",
         ),
-        BlockDefaults(
+        blocks=BlockDefaults(
             paragraph_text_alignment="justify",
             table_block_alignment="center",
             figure_block_alignment="center",

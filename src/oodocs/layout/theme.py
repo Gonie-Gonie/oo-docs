@@ -19,9 +19,6 @@ from oodocs.components.references import (
     normalize_reference_style,
 )
 
-_UNSET = object()
-
-
 def _style_with_overrides(
     style: object | None,
     style_type: type,
@@ -443,7 +440,7 @@ class HeadingNumbering:
         from oodocs import Document, DocumentSettings, Section, Theme
 
         numbering = HeadingNumbering(level_counter_formats=("upper-roman", "decimal"))
-        theme = Theme(heading_numbering=numbering)
+        theme = Theme(blocks=BlockDefaults(heading_numbering=numbering))
         document = Document("Report", Section("Methods"), settings=DocumentSettings(theme=theme))
         ```
     """
@@ -811,7 +808,7 @@ class TypographyDefaults:
         ```python
         from oodocs import Document, DocumentSettings, Paragraph, Theme, TypographyDefaults
 
-        theme = Theme(TypographyDefaults(body_font_name="Arial", body_font_size=10.5))
+        theme = Theme(typography=TypographyDefaults(body_font_name="Arial", body_font_size=10.5))
         document = Document("Report", Paragraph("Body"), settings=DocumentSettings(theme=theme))
         ```
     """
@@ -843,7 +840,7 @@ class CaptionDefaults:
         ```python
         from oodocs import CaptionDefaults, Document, DocumentSettings, Table, Theme
 
-        theme = Theme(CaptionDefaults(table_caption_position="below"))
+        theme = Theme(captions=CaptionDefaults(table_caption_position="below"))
         document = Document(
             "Metrics",
             Table(["Metric"], [["Latency"]], caption="Runtime metric"),
@@ -875,7 +872,7 @@ class CitationDefaults:
         ```python
         from oodocs import CitationDefaults, CitationSource, Document, DocumentSettings, Paragraph, Theme, cite
 
-        theme = Theme(CitationDefaults(citation_style="author-year"))
+        theme = Theme(citations=CitationDefaults(citation_style="author-year"))
         source = CitationSource("Reliable APIs", key="api2024", authors=("Jane Doe",))
         document = Document(
             "Paper",
@@ -909,7 +906,7 @@ class GeneratedContentDefaults:
         ```python
         from oodocs import Document, DocumentSettings, GeneratedContentDefaults, ReferenceList, Theme
 
-        theme = Theme(GeneratedContentDefaults(reference_list_title="Bibliography"))
+        theme = Theme(generated_content=GeneratedContentDefaults(reference_list_title="Bibliography"))
         document = Document("Paper", ReferenceList(), settings=DocumentSettings(theme=theme))
         ```
     """
@@ -940,7 +937,7 @@ class PageNumberDefaults:
         ```python
         from oodocs import Document, DocumentSettings, PageNumberDefaults, Paragraph, Theme
 
-        theme = Theme(PageNumberDefaults(show_page_numbers=True))
+        theme = Theme(page_numbers=PageNumberDefaults(show_page_numbers=True))
         document = Document("Report", Paragraph("Body"), settings=DocumentSettings(theme=theme))
         ```
     """
@@ -968,7 +965,7 @@ class TitleMatterDefaults:
         ```python
         from oodocs import Document, DocumentSettings, Paragraph, Theme, TitleMatterDefaults
 
-        theme = Theme(TitleMatterDefaults(title_text_alignment="left"))
+        theme = Theme(title_matter=TitleMatterDefaults(title_text_alignment="left"))
         document = Document("Report", Paragraph("Body"), settings=DocumentSettings(theme=theme))
         ```
     """
@@ -1003,7 +1000,7 @@ class BlockDefaults:
         ```python
         from oodocs import BlockDefaults, Document, DocumentSettings, HeadingNumbering, Paragraph, Section, Theme
 
-        theme = Theme(BlockDefaults(heading_numbering=HeadingNumbering(enabled=False)))
+        theme = Theme(blocks=BlockDefaults(heading_numbering=HeadingNumbering(enabled=False)))
         document = Document(
             "Report",
             Section("Unnumbered", Paragraph("Body", title="Scope")),
@@ -1034,10 +1031,6 @@ class Theme:
     """Document-wide renderer defaults.
 
     Args:
-        *defaults: Optional grouped defaults objects. Supported types are
-            ``TypographyDefaults``, ``CaptionDefaults``, ``CitationDefaults``,
-            ``GeneratedContentDefaults``, ``PageNumberDefaults``,
-            ``TitleMatterDefaults``, and ``BlockDefaults``.
         typography: Optional typography defaults group.
         captions: Optional caption defaults group.
         citations: Optional citation defaults group.
@@ -1106,17 +1099,20 @@ class Theme:
         numbered_list_style: Default numbered list style.
 
     Raises:
-        TypeError: If a positional defaults group is not supported.
+        TypeError: If a grouped defaults argument has the wrong type.
         ValueError: If alignment, format, numbering, or color values are
             invalid.
 
     Examples:
-        Configure typography and a direct paragraph default:
+        Configure typography and paragraph defaults:
 
         ```python
-        from oodocs import Document, DocumentSettings, Paragraph, Theme, TypographyDefaults
+        from oodocs import BlockDefaults, Document, DocumentSettings, Paragraph, Theme, TypographyDefaults
 
-        theme = Theme(TypographyDefaults(body_font_name="Arial"), paragraph_text_alignment="left")
+        theme = Theme(
+            typography=TypographyDefaults(body_font_name="Arial"),
+            blocks=BlockDefaults(paragraph_text_alignment="left"),
+        )
         document = Document("Report", Paragraph("Body"), settings=DocumentSettings(theme=theme))
         ```
 
@@ -1126,17 +1122,17 @@ class Theme:
         from oodocs import Document, DocumentSettings, GeneratedContentDefaults, PageNumberDefaults, ReferenceList, Theme
 
         theme = Theme(
-            GeneratedContentDefaults(reference_list_title="Bibliography"),
-            PageNumberDefaults(show_page_numbers=True, page_number_template="Page {page}"),
+            generated_content=GeneratedContentDefaults(reference_list_title="Bibliography"),
+            page_numbers=PageNumberDefaults(show_page_numbers=True, page_number_template="Page {page}"),
         )
         document = Document("Paper", ReferenceList(), settings=DocumentSettings(theme=theme))
         ```
 
     Notes:
-        Positional defaults groups are merged with keyword defaults groups, then
-        direct keyword overrides are applied last. This lets applications keep
-        reusable presets while still overriding one or two fields per document.
-        Direct keyword overrides use the field names listed in ``Attributes``.
+        Theme construction is grouped by concern. Put font values in
+        ``TypographyDefaults``, caption labels and positions in
+        ``CaptionDefaults``, page-number settings in ``PageNumberDefaults``,
+        and block-level defaults in ``BlockDefaults``.
 
     See Also:
         ``TypographyDefaults``, ``CaptionDefaults``, ``CitationDefaults``,
@@ -1205,7 +1201,7 @@ class Theme:
 
     def __init__(
         self,
-        *defaults: object,
+        *,
         typography: TypographyDefaults | None = None,
         captions: CaptionDefaults | None = None,
         citations: CitationDefaults | None = None,
@@ -1213,106 +1209,29 @@ class Theme:
         page_numbers: PageNumberDefaults | None = None,
         title_matter: TitleMatterDefaults | None = None,
         blocks: BlockDefaults | None = None,
-        page_background_color: str | object = _UNSET,
-        body_font_name: str | object = _UNSET,
-        monospace_font_name: str | object = _UNSET,
-        title_font_size: float | object = _UNSET,
-        body_font_size: float | object = _UNSET,
-        paragraph_text_alignment: str | object = _UNSET,
-        run_in_title_style: RunInTitleStyle | object = _UNSET,
-        heading_sizes: tuple[float, ...] | object = _UNSET,
-        caption_font_size: float | None | object = _UNSET,
-        caption_text_alignment: str | object = _UNSET,
-        table_block_alignment: str | object = _UNSET,
-        figure_block_alignment: str | object = _UNSET,
-        box_block_alignment: str | object = _UNSET,
-        table_caption_position: str | object = _UNSET,
-        figure_caption_position: str | object = _UNSET,
-        table_label: str | object = _UNSET,
-        figure_label: str | object = _UNSET,
-        part_label: str | object = _UNSET,
-        part_counter_format: str | object = _UNSET,
-        table_caption_label: str | None | object = _UNSET,
-        figure_caption_label: str | None | object = _UNSET,
-        table_reference_label: str | None | object = _UNSET,
-        figure_reference_label: str | None | object = _UNSET,
-        citation_style: str | object = _UNSET,
-        reference_style: str | object = _UNSET,
-        list_of_tables_title: str | object = _UNSET,
-        list_of_figures_title: str | object = _UNSET,
-        comment_list_title: str | object = _UNSET,
-        footnote_list_title: str | object = _UNSET,
-        reference_list_title: str | object = _UNSET,
-        table_of_contents_title: str | object = _UNSET,
-        generated_heading_level: int | object = _UNSET,
-        generated_content_page_breaks: bool | object = _UNSET,
-        footnote_placement: str | object = _UNSET,
-        auto_footnotes_page: bool | object = _UNSET,
-        show_page_numbers: bool | object = _UNSET,
-        page_number_alignment: str | object = _UNSET,
-        page_number_template: str | object = _UNSET,
-        front_matter_counter_format: str | object = _UNSET,
-        main_matter_counter_format: str | object = _UNSET,
-        page_number_font_size: float | object = _UNSET,
-        title_text_alignment: str | object = _UNSET,
-        subtitle_text_alignment: str | object = _UNSET,
-        author_text_alignment: str | object = _UNSET,
-        affiliation_text_alignment: str | object = _UNSET,
-        author_detail_text_alignment: str | object = _UNSET,
-        heading_numbering: HeadingNumbering | object = _UNSET,
-        bullet_list_style: ListStyle | object = _UNSET,
-        numbered_list_style: ListStyle | object = _UNSET,
     ) -> None:
-        default_groups = {
-            TypographyDefaults: None,
-            CaptionDefaults: None,
-            CitationDefaults: None,
-            GeneratedContentDefaults: None,
-            PageNumberDefaults: None,
-            TitleMatterDefaults: None,
-            BlockDefaults: None,
+        expected_types = {
+            "typography": (typography, TypographyDefaults),
+            "captions": (captions, CaptionDefaults),
+            "citations": (citations, CitationDefaults),
+            "generated_content": (generated_content, GeneratedContentDefaults),
+            "page_numbers": (page_numbers, PageNumberDefaults),
+            "title_matter": (title_matter, TitleMatterDefaults),
+            "blocks": (blocks, BlockDefaults),
         }
-        for defaults_group in defaults:
-            matching_type = next(
-                (
-                    defaults_type
-                    for defaults_type in default_groups
-                    if isinstance(defaults_group, defaults_type)
-                ),
-                None,
-            )
-            if matching_type is None:
+        for argument_name, (value, expected_type) in expected_types.items():
+            if value is not None and not isinstance(value, expected_type):
                 raise TypeError(
-                    "Theme positional defaults must be TypographyDefaults, "
-                    "CaptionDefaults, CitationDefaults, GeneratedContentDefaults, "
-                    "PageNumberDefaults, TitleMatterDefaults, or BlockDefaults"
+                    f"Theme.{argument_name} must be a {expected_type.__name__}"
                 )
-            default_groups[matching_type] = defaults_group
 
-        keyword_defaults = {
-            TypographyDefaults: typography,
-            CaptionDefaults: captions,
-            CitationDefaults: citations,
-            GeneratedContentDefaults: generated_content,
-            PageNumberDefaults: page_numbers,
-            TitleMatterDefaults: title_matter,
-            BlockDefaults: blocks,
-        }
-        default_groups.update(
-            {
-                defaults_type: defaults_group
-                for defaults_type, defaults_group in keyword_defaults.items()
-                if defaults_group is not None
-            }
-        )
-
-        self.typography = default_groups[TypographyDefaults] or TypographyDefaults()
-        self.captions = default_groups[CaptionDefaults] or CaptionDefaults()
-        self.citations = default_groups[CitationDefaults] or CitationDefaults()
-        self.generated_content = default_groups[GeneratedContentDefaults] or GeneratedContentDefaults()
-        self.page_numbers = default_groups[PageNumberDefaults] or PageNumberDefaults()
-        self.title_matter = default_groups[TitleMatterDefaults] or TitleMatterDefaults()
-        self.blocks = default_groups[BlockDefaults] or BlockDefaults()
+        self.typography = typography or TypographyDefaults()
+        self.captions = captions or CaptionDefaults()
+        self.citations = citations or CitationDefaults()
+        self.generated_content = generated_content or GeneratedContentDefaults()
+        self.page_numbers = page_numbers or PageNumberDefaults()
+        self.title_matter = title_matter or TitleMatterDefaults()
+        self.blocks = blocks or BlockDefaults()
 
         grouped_values: dict[str, object] = {}
         for group_type, group in (
@@ -1330,65 +1249,6 @@ class Theme:
                     for group_field in fields(group_type)
                 }
             )
-
-        direct_values = {
-            "page_background_color": page_background_color,
-            "body_font_name": body_font_name,
-            "monospace_font_name": monospace_font_name,
-            "title_font_size": title_font_size,
-            "body_font_size": body_font_size,
-            "paragraph_text_alignment": paragraph_text_alignment,
-            "run_in_title_style": run_in_title_style,
-            "heading_sizes": heading_sizes,
-            "caption_font_size": caption_font_size,
-            "caption_text_alignment": caption_text_alignment,
-            "table_block_alignment": table_block_alignment,
-            "figure_block_alignment": figure_block_alignment,
-            "box_block_alignment": box_block_alignment,
-            "table_caption_position": table_caption_position,
-            "figure_caption_position": figure_caption_position,
-            "table_label": table_label,
-            "figure_label": figure_label,
-            "part_label": part_label,
-            "part_counter_format": part_counter_format,
-            "table_caption_label": table_caption_label,
-            "figure_caption_label": figure_caption_label,
-            "table_reference_label": table_reference_label,
-            "figure_reference_label": figure_reference_label,
-            "citation_style": citation_style,
-            "reference_style": reference_style,
-            "list_of_tables_title": list_of_tables_title,
-            "list_of_figures_title": list_of_figures_title,
-            "comment_list_title": comment_list_title,
-            "footnote_list_title": footnote_list_title,
-            "reference_list_title": reference_list_title,
-            "table_of_contents_title": table_of_contents_title,
-            "generated_heading_level": generated_heading_level,
-            "generated_content_page_breaks": generated_content_page_breaks,
-            "footnote_placement": footnote_placement,
-            "auto_footnotes_page": auto_footnotes_page,
-            "show_page_numbers": show_page_numbers,
-            "page_number_alignment": page_number_alignment,
-            "page_number_template": page_number_template,
-            "front_matter_counter_format": front_matter_counter_format,
-            "main_matter_counter_format": main_matter_counter_format,
-            "page_number_font_size": page_number_font_size,
-            "title_text_alignment": title_text_alignment,
-            "subtitle_text_alignment": subtitle_text_alignment,
-            "author_text_alignment": author_text_alignment,
-            "affiliation_text_alignment": affiliation_text_alignment,
-            "author_detail_text_alignment": author_detail_text_alignment,
-            "heading_numbering": heading_numbering,
-            "bullet_list_style": bullet_list_style,
-            "numbered_list_style": numbered_list_style,
-        }
-        grouped_values.update(
-            {
-                name: value
-                for name, value in direct_values.items()
-                if value is not _UNSET
-            }
-        )
         for name, value in grouped_values.items():
             setattr(self, name, value)
 
@@ -1526,7 +1386,7 @@ class Theme:
 
         Examples:
             ```python
-            assert Theme(heading_sizes=(20.0, 16.0)).heading_size(3) == 16.0
+            assert Theme(typography=TypographyDefaults(heading_sizes=(20.0, 16.0))).heading_size(3) == 16.0
             ```
         """
 
@@ -1585,7 +1445,7 @@ class Theme:
 
         Examples:
             ```python
-            theme = Theme(paragraph_text_alignment="left")
+            theme = Theme(blocks=BlockDefaults(paragraph_text_alignment="left"))
             assert theme.resolve_paragraph_text_alignment(ParagraphStyle()) == "left"
             ```
         """
@@ -1627,7 +1487,8 @@ class Theme:
 
         Examples:
             ```python
-            assert Theme(table_caption_label="Tbl.").table_caption_label_text() == "Tbl."
+            theme = Theme(captions=CaptionDefaults(table_caption_label="Tbl."))
+            assert theme.table_caption_label_text() == "Tbl."
             ```
         """
 
@@ -1641,7 +1502,8 @@ class Theme:
 
         Examples:
             ```python
-            assert Theme(figure_caption_label="Fig.").figure_caption_label_text() == "Fig."
+            theme = Theme(captions=CaptionDefaults(figure_caption_label="Fig."))
+            assert theme.figure_caption_label_text() == "Fig."
             ```
         """
 
@@ -1655,7 +1517,8 @@ class Theme:
 
         Examples:
             ```python
-            assert Theme(table_reference_label="Tbl.").table_reference_label_text() == "Tbl."
+            theme = Theme(captions=CaptionDefaults(table_reference_label="Tbl."))
+            assert theme.table_reference_label_text() == "Tbl."
             ```
         """
 
@@ -1669,7 +1532,8 @@ class Theme:
 
         Examples:
             ```python
-            assert Theme(figure_reference_label="Fig.").figure_reference_label_text() == "Fig."
+            theme = Theme(captions=CaptionDefaults(figure_reference_label="Fig."))
+            assert theme.figure_reference_label_text() == "Fig."
             ```
         """
 
@@ -1683,7 +1547,7 @@ class Theme:
 
         Examples:
             ```python
-            assert Theme(body_font_size=11.0).caption_size() == 11.0
+            assert Theme(typography=TypographyDefaults(body_font_size=11.0)).caption_size() == 11.0
             ```
         """
 
@@ -1706,7 +1570,7 @@ class Theme:
 
         Examples:
             ```python
-            theme = Theme(page_number_template="Page {page}")
+            theme = Theme(page_numbers=PageNumberDefaults(page_number_template="Page {page}"))
             assert theme.format_page_number(3) == "Page 3"
             ```
         """

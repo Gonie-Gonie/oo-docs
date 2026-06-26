@@ -439,13 +439,19 @@ def test_method_style_inline_actions_create_renderable_fragments() -> None:
 
 
 def test_theme_validates_page_number_configuration() -> None:
-    theme = Theme(show_page_numbers=True, page_number_template="Page {page}", page_number_alignment="right")
+    theme = Theme(
+        page_numbers=PageNumberDefaults(
+            show_page_numbers=True,
+            page_number_template="Page {page}",
+            page_number_alignment="right",
+        )
+    )
 
     assert theme.format_page_number(3) == "Page 3"
     assert theme.format_page_number(3, front_matter=True) == "Page iii"
 
     try:
-        Theme(page_number_template="Page")
+        Theme(page_numbers=PageNumberDefaults(page_number_template="Page"))
     except ValueError as exc:
         assert "{page}" in str(exc)
     else:
@@ -454,18 +460,17 @@ def test_theme_validates_page_number_configuration() -> None:
 
 def test_theme_accepts_grouped_defaults_objects() -> None:
     theme = Theme(
-        TypographyDefaults(body_font_name="Arial", body_font_size=10.0),
-        CaptionDefaults(figure_label="Fig.", table_caption_position="below"),
-        CitationDefaults(citation_style="apa", reference_style="apa"),
-        GeneratedContentDefaults(table_of_contents_title="Outline"),
-        PageNumberDefaults(show_page_numbers=True, page_number_template="p. {page}"),
-        TitleMatterDefaults(title_text_alignment="left"),
-        BlockDefaults(
+        typography=TypographyDefaults(body_font_name="Calibri", body_font_size=10.0),
+        captions=CaptionDefaults(figure_label="Fig.", table_caption_position="below"),
+        citations=CitationDefaults(citation_style="apa", reference_style="apa"),
+        generated_content=GeneratedContentDefaults(table_of_contents_title="Outline"),
+        page_numbers=PageNumberDefaults(show_page_numbers=True, page_number_template="p. {page}"),
+        title_matter=TitleMatterDefaults(title_text_alignment="left"),
+        blocks=BlockDefaults(
             paragraph_text_alignment="left",
             table_block_alignment="right",
             run_in_title_style=RunInTitleStyle(TextStyle(italic=True), separator=": "),
         ),
-        body_font_name="Calibri",
     )
 
     assert theme.body_font_name == "Calibri"
@@ -485,12 +490,13 @@ def test_theme_accepts_grouped_defaults_objects() -> None:
     assert theme.blocks.run_in_title_style.separator == ": "
     assert theme.table_block_alignment == "right"
 
-    direct_title_style = Theme(
-        BlockDefaults(run_in_title_style=RunInTitleStyle(TextStyle(italic=True))),
-        run_in_title_style=RunInTitleStyle(TextStyle(bold=True), separator=". "),
+    title_style_theme = Theme(
+        blocks=BlockDefaults(
+            run_in_title_style=RunInTitleStyle(TextStyle(bold=True), separator=". ")
+        ),
     )
-    assert direct_title_style.run_in_title_style.text_style.bold is True
-    assert direct_title_style.run_in_title_style.separator == ". "
+    assert title_style_theme.run_in_title_style.text_style.bold is True
+    assert title_style_theme.run_in_title_style.separator == ". "
 
     keyword_group = Theme(typography=TypographyDefaults(body_font_name="Aptos"))
     assert keyword_group.body_font_name == "Aptos"
@@ -499,18 +505,12 @@ def test_theme_accepts_grouped_defaults_objects() -> None:
     )
     assert generated_keyword_group.generated_content.reference_list_title == "Bibliography"
     assert generated_keyword_group.reference_list_title == "Bibliography"
-    keyword_group_override = Theme(
-        TypographyDefaults(body_font_name="Arial"),
-        typography=TypographyDefaults(body_font_name="Aptos"),
-    )
-    assert keyword_group_override.body_font_name == "Aptos"
-
     try:
-        Theme(object())
+        Theme(typography=object())  # type: ignore[arg-type]
     except TypeError as exc:
-        assert "Theme positional defaults" in str(exc)
+        assert "Theme.typography" in str(exc)
     else:
-        raise AssertionError("Expected unknown Theme positional option to fail")
+        raise AssertionError("Expected invalid Theme defaults group to fail")
 
 
 def test_common_block_styles_accept_direct_kwargs() -> None:
@@ -575,7 +575,9 @@ def test_document_and_paragraph_text_alignment_options_render(tmp_path: Path) ->
             "Paragraph-level right paragraph.",
             style=ParagraphStyle(text_alignment="right"),
         ),
-        settings=DocumentSettings(theme=Theme(paragraph_text_alignment="center")),
+        settings=DocumentSettings(
+            theme=Theme(blocks=BlockDefaults(paragraph_text_alignment="center"))
+        ),
     )
 
     docx_path = tmp_path / "alignment.docx"
@@ -637,9 +639,11 @@ def test_paragraph_titles_render_and_inherit_styles(tmp_path: Path) -> None:
         ),
         settings=DocumentSettings(
             theme=Theme(
-                run_in_title_style=RunInTitleStyle(
-                    TextStyle(bold=True),
-                    separator=" ",
+                blocks=BlockDefaults(
+                    run_in_title_style=RunInTitleStyle(
+                        TextStyle(bold=True),
+                        separator=" ",
+                    )
                 )
             )
         ),
@@ -725,7 +729,9 @@ def test_page_background_color_renders_to_all_outputs(tmp_path: Path) -> None:
     document = Document(
         "Color Test",
         Paragraph("Tinted page."),
-        settings=DocumentSettings(theme=Theme(page_background_color="#F4F8FC")),
+        settings=DocumentSettings(
+            theme=Theme(blocks=BlockDefaults(page_background_color="#F4F8FC"))
+        ),
     )
     docx_path = tmp_path / "color.docx"
     pdf_path = tmp_path / "color.pdf"
@@ -1496,7 +1502,7 @@ def test_page_items_render_without_affecting_document_flow(tmp_path: Path) -> No
         settings=DocumentSettings(
             page_size=PageSize.letter(),
             page_items=page_items,
-            theme=Theme(show_page_numbers=True),
+            theme=Theme(page_numbers=PageNumberDefaults(show_page_numbers=True)),
         ),
     )
 
@@ -1984,7 +1990,9 @@ def test_default_table_cell_alignment_is_left_in_all_outputs(tmp_path: Path) -> 
             headers=["Area", "Status"],
             rows=[["Release notes", "Compatibility notes wrap cleanly in narrow cells."]],
         ),
-        settings=DocumentSettings(theme=Theme(paragraph_text_alignment="justify")),
+        settings=DocumentSettings(
+            theme=Theme(blocks=BlockDefaults(paragraph_text_alignment="justify"))
+        ),
     )
 
     docx_path = tmp_path / "default-table-alignment.docx"
@@ -2248,10 +2256,12 @@ def test_caption_and_reference_labels_can_differ_by_theme(tmp_path: Path) -> Non
         ListOfFigures(),
         settings=DocumentSettings(
             theme=Theme(
-                table_caption_label="Table",
-                table_reference_label="Tbl.",
-                figure_caption_label="Figure",
-                figure_reference_label="Fig.",
+                captions=CaptionDefaults(
+                    table_caption_label="Table",
+                    table_reference_label="Tbl.",
+                    figure_caption_label="Figure",
+                    figure_reference_label="Fig.",
+                )
             )
         ),
     )
@@ -2586,7 +2596,7 @@ def test_citation_and_reference_styles_can_be_configured(tmp_path: Path) -> None
         Paragraph("Prior work ", cite("knuth"), " remains relevant."),
         ReferenceList(),
         settings=DocumentSettings(
-            theme=Theme(citation_style="apa", reference_style="apa"),
+            theme=Theme(citations=CitationDefaults(citation_style="apa", reference_style="apa")),
         ),
         citations=[source],
     )
@@ -2637,7 +2647,7 @@ def test_document_accepts_document_settings() -> None:
         author_layout=AuthorLayout(mode="stacked"),
         cover_page=True,
         unit="cm",
-        theme=Theme(show_page_numbers=True),
+        theme=Theme(page_numbers=PageNumberDefaults(show_page_numbers=True)),
     )
 
     document = Document("Configured", Paragraph("Body"), settings=settings)
@@ -2783,8 +2793,10 @@ def test_auto_footnotes_page_can_be_disabled(tmp_path: Path) -> None:
         ),
         settings=DocumentSettings(
             theme=Theme(
-                auto_footnotes_page=False,
-                footnote_placement="document",
+                blocks=BlockDefaults(
+                    auto_footnotes_page=False,
+                    footnote_placement="document",
+                )
             )
         ),
     )
@@ -3013,13 +3025,24 @@ def test_document_renders_to_docx_and_pdf(tmp_path: Path) -> None:
             metadata_author="pytest",
             summary="Renderer integration test",
             theme=Theme(
-                show_page_numbers=True,
-                page_number_template="Page {page}",
-                page_number_alignment="center",
-                footnote_placement="document",
-                heading_numbering=HeadingNumbering(),
-                bullet_list_style=ListStyle(marker_counter_format="bullet", bullet="\u2022", suffix=""),
-                numbered_list_style=ListStyle(marker_counter_format="decimal", suffix="."),
+                page_numbers=PageNumberDefaults(
+                    show_page_numbers=True,
+                    page_number_template="Page {page}",
+                    page_number_alignment="center",
+                ),
+                blocks=BlockDefaults(
+                    footnote_placement="document",
+                    heading_numbering=HeadingNumbering(),
+                    bullet_list_style=ListStyle(
+                        marker_counter_format="bullet",
+                        bullet="\u2022",
+                        suffix="",
+                    ),
+                    numbered_list_style=ListStyle(
+                        marker_counter_format="decimal",
+                        suffix=".",
+                    ),
+                ),
             ),
         ),
         citations=[registered_source, unused_source],

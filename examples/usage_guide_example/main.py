@@ -193,19 +193,21 @@ settings = DocumentSettings(
 )
 """
 
-LAYOUT_CONTROL_SNIPPET = """from oodocs import DocumentSettings, PageMargins, PageSize, Theme
+LAYOUT_CONTROL_SNIPPET = """from oodocs import BlockDefaults, CaptionDefaults, DocumentSettings, GeneratedContentDefaults, PageMargins, PageSize, Theme
 
 settings = DocumentSettings(
     unit="cm",
     page_size=PageSize.a4(),
     page_margins=PageMargins.symmetric(vertical=2.0, horizontal=2.4, unit="cm"),
     theme=Theme(
-        footnote_placement="document",
-        generated_content_page_breaks=True,
-        table_caption_position="above",
-        figure_caption_position="below",
-        table_reference_label="Tbl.",
-        figure_reference_label="Fig.",
+        blocks=BlockDefaults(footnote_placement="document"),
+        generated_content=GeneratedContentDefaults(generated_content_page_breaks=True),
+        captions=CaptionDefaults(
+            table_caption_position="above",
+            figure_caption_position="below",
+            table_reference_label="Tbl.",
+            figure_reference_label="Fig.",
+        ),
     ),
 )
 """
@@ -311,10 +313,10 @@ CONFIGURATION_OPTIONS_SNIPPET = """from oodocs import (
 settings = DocumentSettings(
     unit="cm",
     theme=Theme(
-        TypographyDefaults(body_font_name="Arial", body_font_size=10.5),
-        CaptionDefaults(figure_label="Fig."),
-        PageNumberDefaults(show_page_numbers=True, page_number_template="p. {page}"),
-        BlockDefaults(paragraph_text_alignment="left"),
+        typography=TypographyDefaults(body_font_name="Arial", body_font_size=10.5),
+        captions=CaptionDefaults(figure_label="Fig."),
+        page_numbers=PageNumberDefaults(show_page_numbers=True, page_number_template="p. {page}"),
+        blocks=BlockDefaults(paragraph_text_alignment="left"),
     ),
 )
 
@@ -534,9 +536,11 @@ YAML_SNIPPET = """report:
     - html
 """
 
-PARAGRAPH_INDENT_SNIPPET = """from oodocs import DocumentSettings, Paragraph, Theme
+PARAGRAPH_INDENT_SNIPPET = """from oodocs import BlockDefaults, DocumentSettings, Paragraph, Theme
 
-settings = DocumentSettings(theme=Theme(paragraph_text_alignment="left"))
+settings = DocumentSettings(
+    theme=Theme(blocks=BlockDefaults(paragraph_text_alignment="left"))
+)
 
 Paragraph(
     "This paragraph inherits the document-wide left alignment."
@@ -829,7 +833,7 @@ def build_usage_guide_document() -> Document:
             ["TitleMatterDefaults", "title_text_alignment, subtitle_text_alignment, author_text_alignment, affiliation_text_alignment, author_detail_text_alignment", "Title-page and metadata alignment."],
             ["BlockDefaults", "page_background_color, paragraph_text_alignment, table_block_alignment, figure_block_alignment, box_block_alignment, footnote_placement, list styles, heading_numbering", "Document-wide defaults that individual blocks can override."],
         ],
-        caption="Grouped Theme options; pass them positionally to Theme(...) or override the same names directly.",
+        caption="Grouped Theme defaults are passed as keyword groups to Theme(...).",
         column_widths=[1.7, 3.7, 1.8],
     )
     block_options_table = Table(
@@ -1264,7 +1268,7 @@ def build_usage_guide_document() -> Document:
                     "Paragraph-level Word features are also part of the authored source. ",
                     inline_code("Paragraph(...)"),
                     " accepts explicit alignment, spacing before and after, left and right indents, first-line indents, hanging indents, and keep/page-break controls for reference-like blocks that should not be simulated with spaces. Use ",
-                    inline_code("Theme(paragraph_text_alignment=...)"),
+                    inline_code("Theme(blocks=BlockDefaults(...))"),
                     " for the document-wide default and direct kwargs such as ",
                     inline_code("text_alignment='right'"),
                     " only where one paragraph should diverge."
@@ -1377,7 +1381,7 @@ def build_usage_guide_document() -> Document:
                 ),
                 Paragraph(
                     "If you want the explicit collected-notes behavior everywhere, set ",
-                    inline_code("Theme(footnote_placement='document')"),
+                    inline_code("Theme(blocks=BlockDefaults(footnote_placement='document'))"),
                     ".",
                 ),
                 CodeBlock(LAYOUT_CONTROL_SNIPPET, language="python"),
@@ -1394,7 +1398,7 @@ def build_usage_guide_document() -> Document:
                 ),
                 Paragraph(
                     "The visible style is configured on the theme: ",
-                    inline_code('Theme(citation_style="apa", reference_style="apa")'),
+                    inline_code('Theme(citations=CitationDefaults(...))'),
                     " switches inline citations to author-year labels and formats the generated references entries in APA-style order."
                 ),
             ),
@@ -1447,7 +1451,7 @@ def build_usage_guide_document() -> Document:
                     "Explicit pagination is a block-level decision. Insert ",
                     inline_code("PageBreak()"),
                     " where the authored flow should move to the next page; generated pages can still use ",
-                    inline_code("Theme(generated_content_page_breaks=True)"),
+                    inline_code("Theme(generated_content=GeneratedContentDefaults(...))"),
                     " for automatic separation."
                 ),
                 CodeBlock(LAYOUT_CONTROL_SNIPPET, language="python"),
@@ -1723,9 +1727,11 @@ def build_usage_guide_document() -> Document:
             author_layout=AuthorLayout(mode="stacked"),
             page_margins=PageMargins.symmetric(vertical=2.0, horizontal=2.2, unit="cm"),
             theme=Theme(
-                show_page_numbers=True,
-                page_number_template="{page}",
-                footnote_placement="page",
+                page_numbers=PageNumberDefaults(
+                    show_page_numbers=True,
+                    page_number_template="{page}",
+                ),
+                blocks=BlockDefaults(footnote_placement="page"),
             ),
         ),
         citations=RELATED_WORK,

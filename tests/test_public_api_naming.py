@@ -211,6 +211,35 @@ def test_run_in_title_style_uses_canonical_names() -> None:
     assert "run_in_title_style" in theme_fields
 
 
+def test_theme_constructor_uses_grouped_defaults_only() -> None:
+    theme_parameters = set(inspect.signature(oodocs.Theme).parameters)
+    grouped_parameters = {
+        "typography",
+        "captions",
+        "citations",
+        "generated_content",
+        "page_numbers",
+        "title_matter",
+        "blocks",
+    }
+    direct_parameters = {
+        "page_background_color",
+        "body_font_name",
+        "paragraph_text_alignment",
+        "run_in_title_style",
+        "caption_text_alignment",
+        "table_block_alignment",
+        "citation_style",
+        "reference_style",
+        "show_page_numbers",
+        "page_number_template",
+        "title_text_alignment",
+    }
+
+    assert grouped_parameters <= theme_parameters
+    assert direct_parameters.isdisjoint(theme_parameters)
+
+
 def test_paragraph_style_uses_text_alignment_names() -> None:
     paragraph_style_fields = {field.name for field in fields(oodocs.ParagraphStyle)}
     block_fields = {field.name for field in fields(oodocs.BlockDefaults)}
@@ -240,7 +269,7 @@ def test_theme_caption_and_title_matter_use_text_alignment_names() -> None:
     assert "caption_alignment" not in theme_fields
     assert "caption_text_alignment" in theme_fields
     assert "caption_alignment" not in theme_parameters
-    assert "caption_text_alignment" in theme_parameters
+    assert "caption_text_alignment" not in theme_parameters
 
     forbidden = {
         "title_alignment",
@@ -262,7 +291,7 @@ def test_theme_caption_and_title_matter_use_text_alignment_names() -> None:
     assert forbidden.isdisjoint(theme_fields)
     assert expected <= theme_fields
     assert forbidden.isdisjoint(theme_parameters)
-    assert expected <= theme_parameters
+    assert expected.isdisjoint(theme_parameters)
 
 
 def test_image_components_use_image_format_field_name() -> None:
@@ -352,7 +381,7 @@ def test_block_alignment_fields_use_block_alignment_names() -> None:
     assert forbidden.isdisjoint(theme_fields)
     assert expected <= theme_fields
     assert forbidden.isdisjoint(theme_parameters)
-    assert expected <= theme_parameters
+    assert expected.isdisjoint(theme_parameters)
 
 
 def test_textbox_uses_explicit_alignment_field_names() -> None:

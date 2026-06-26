@@ -178,10 +178,10 @@ The default behavior is intentionally conventional:
 ## What To Use When
 
 - Use `Paragraph(...)` for prose. Pass strings and inline helpers directly; you do not need to pre-build `Text(...)` objects for normal writing.
-- Use `Paragraph(..., title="Outcome")` for run-in paragraph titles such as LaTeX-style bold labels before body text. Override one paragraph with `title_style=RunInTitleStyle(...)`, set a section/chapter scope with `Section(..., run_in_title_style=...)`, or set the document default with `Theme(run_in_title_style=...)`.
+- Use `Paragraph(..., title="Outcome")` for run-in paragraph titles such as LaTeX-style bold labels before body text. Override one paragraph with `title_style=RunInTitleStyle(...)`, set a section/chapter scope with `Section(..., run_in_title_style=...)`, or set the document default with `Theme(blocks=BlockDefaults(run_in_title_style=...))`.
 - Use `tag(...)`, `badge(...)`, `status(...)`, and `keyboard(...)` for compact inline labels. They share the `InlineChip(...)` model; DOCX emits small inline images, while PDF and HTML keep styled text.
 - Use `highlight(...)`, `strikethrough(...)`, and `line_break()` for Word-style emphasis and manual line breaks inside one paragraph.
-- Use `Theme(paragraph_text_alignment=...)` for the document-wide paragraph default, and direct paragraph kwargs such as `text_alignment=...` when one paragraph should override it.
+- Use `Theme(blocks=BlockDefaults(paragraph_text_alignment=...))` for the document-wide paragraph default, and direct paragraph kwargs such as `text_alignment=...` when one paragraph should override it.
 - Use `Paragraph(left_indent=..., right_indent=..., first_line_indent=..., unit=...)` when you need Word-like first-line or hanging indents. If `unit` is omitted, indent values follow `DocumentSettings(unit=...)`.
 - Use `subscript(...)`, `superscript(...)`, and `prescript(...)` for ordinary prose. Use `Math(...)` or `Equation(...)` for lightweight LaTeX-style math, including ordinary `x^2` / `x_0` scripts and front scripts such as `\prescript{14}{6}{C}`.
 - Use `Part(...)` for book-like divisions above chapters; each part gets a separator page, while chapter numbers continue across parts by default.
@@ -195,8 +195,8 @@ The default behavior is intentionally conventional:
 - Use `Table(split=True)` when a table should render in source order and may break across pages. Leave `split=False` when the table should stay together when possible; very long tables are automatically rendered as split repeated-header tables.
 - Use `Figure(...)` for image files or `savefig()`-compatible Python figure objects. Use `Figure.from_bytes(...)` or `Figure.from_buffer(...)` when image bytes are already in memory.
 - Use `SubFigureGroup(SubFigure(...), SubFigure(...), caption=...)` when related images should share one figure number and expose `(a)`, `(b)`, and similar subfigure references.
-- Use `Theme(table_caption_label=..., table_reference_label=..., figure_caption_label=..., figure_reference_label=...)` when captions and in-text references should use different labels such as `Figure`, `Fig.`, or localized terms.
-- Use `Theme(citation_style="apa", reference_style="apa")` when inline citations and the generated references page should follow an author-year style. Numeric citation output remains the default.
+- Use `Theme(captions=CaptionDefaults(table_caption_label=..., table_reference_label=..., figure_caption_label=..., figure_reference_label=...))` when captions and in-text references should use different labels such as `Figure`, `Fig.`, or localized terms.
+- Use `Theme(citations=CitationDefaults(citation_style="apa", reference_style="apa"))` when inline citations and the generated references page should follow an author-year style. Numeric citation output remains the default.
 - Use advanced `placement=...` hints on tables and figures only when needed. Supported values include `here`, `tbp`/`float`, `top`, `bottom`, and `page`.
 - Use `Box(...)` for callouts, evidence panels, and tcolorbox-like report sections that should stay editable in Word.
 - Use `Shape(...)`, `TextBox(...)`, and `ImageBox(...)` with `DocumentSettings(page_items=[...])` for page-positioned overlays that do not move the body text. Use `placement="inline"` when the same objects should sit in the text flow like Word's inline drawing mode.
@@ -256,7 +256,7 @@ doc = Document(
 - Pygments-backed syntax highlighting for code blocks across Python, JavaScript, SQL, YAML, shell, and other supported languages
 - editable report panels with `Box(...)` kwargs for width, block alignment, title color, and per-side padding
 - portable comments and footnotes that stay stable across DOCX, PDF, and HTML
-- footnotes target page-bottom placement by default when the renderer supports it; `Theme(footnote_placement="document")` keeps the collected-notes pattern
+- footnotes target page-bottom placement by default when the renderer supports it; `Theme(blocks=BlockDefaults(footnote_placement="document"))` keeps the collected-notes pattern
 - captioned tables and figures with automatic numbering and in-text references
 - independent document-level labels for table/figure captions and in-text references
 - table support for `TableCell(...)`, `rowspan`, `colspan`, banded rows, ordinary Python records, CSV/TSV files, dataframe-like inputs, and cell/row/column styling

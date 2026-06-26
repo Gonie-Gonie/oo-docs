@@ -12,6 +12,7 @@ from oodocs import (
     DocumentSettings,
     Figure,
     NumberedList,
+    PageNumberDefaults,
     Paragraph,
     Section,
     Table,
@@ -288,7 +289,12 @@ def build_release_notes_document(
             metadata_author="OODocs Contributors",
             summary="Release-note digest generated from repository Markdown files",
             subtitle="Markdown import, semantic sorting, and release workflow documentation",
-            theme=Theme(show_page_numbers=True, page_number_template="{page}"),
+            theme=Theme(
+                page_numbers=PageNumberDefaults(
+                    show_page_numbers=True,
+                    page_number_template="{page}",
+                )
+            ),
         ),
     )
 
