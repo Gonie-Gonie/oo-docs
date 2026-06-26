@@ -149,10 +149,10 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert any("CountableBlock" in text for text in paragraph_texts)
     assert any("Theorem 3. Stable references" in text for text in paragraph_texts)
     assert any("Exercise 1." in text for text in paragraph_texts)
-    assert any("Build, convert, and validate from the CLI" in text for text in paragraph_texts)
+    assert any("Build and validate from the CLI" in text for text in paragraph_texts)
     assert any("oodocs build report.py --out artifacts" in text for text in paragraph_texts)
     assert any("Validation results are structured objects" in text for text in paragraph_texts)
-    assert any("Command-line builds, conversions, and validation all call the same high-level workflow API." in text for text in paragraph_texts)
+    assert any("Command-line builds and validation all call the same high-level workflow API." in text for text in paragraph_texts)
     assert any("portable footnotes exactly where the text appears." in text for text in paragraph_texts)
     assert any("github.com/Gonie-Gonie/oo-docs" in text for text in paragraph_texts)
     assert any("The journal example at examples/journal_paper_example/main.py" in text for text in paragraph_texts)
@@ -244,10 +244,10 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "CountableBlock" in pdf_text
     assert "Theorem 3. Stable references" in pdf_text
     assert "Exercise 1." in pdf_text
-    assert "Build, convert, and validate from the CLI" in pdf_text
+    assert "Build and validate from the CLI" in pdf_text
     assert "oodocs build report.py --out artifacts" in pdf_text
     assert "Validation results are structured objects" in pdf_text
-    assert "Command-line builds, conversions, and validation all call the same high-level workflow API." in pdf_text
+    assert "Command-line builds and validation all call the same high-level workflow API." in pdf_text
     assert "Portable footnotes are authored inline" in pdf_text
     assert "github.com/Gonie-Gonie/oo-docs" in pdf_text
     assert "Document.from_markdown(...)" in pdf_text
@@ -323,10 +323,10 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "CountableBlock" in normalized_html_text
     assert "Theorem 3. Stable references" in normalized_html_text
     assert "Exercise 1." in normalized_html_text
-    assert "Build, convert, and validate from the CLI" in normalized_html_text
+    assert "Build and validate from the CLI" in normalized_html_text
     assert "oodocs build report.py --out artifacts" in normalized_html_text
     assert "Validation results are structured objects" in normalized_html_text
-    assert "Command-line builds, conversions, and validation all call the same high-level workflow API." in normalized_html_text
+    assert "Command-line builds and validation all call the same high-level workflow API." in normalized_html_text
     assert "Portable footnotes are authored inline" in normalized_html_text
     assert "github.com/Gonie-Gonie/oo-docs" in normalized_html_text
     assert "Document.from_markdown(...)" in normalized_html_text
@@ -342,7 +342,7 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert_html_internal_links_resolve(
         html_path,
         required_hrefs=("#table_1", "#figure_1"),
-        required_text=("OODocs User Guide", "Build, convert, and validate from the CLI"),
+        required_text=("OODocs User Guide", "Build and validate from the CLI"),
     )
     assert 'class="oodocs-toc-entry oodocs-toc-entry-no-page oodocs-toc-entry-level-1"' in html_text
     assert 'class="oodocs-toc-entry oodocs-toc-entry-no-page oodocs-toc-entry-level-2"' in html_text

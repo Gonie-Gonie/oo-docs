@@ -128,15 +128,15 @@ def test_document_from_notebook_accepts_options() -> None:
     assert document.body.children == []
 
 
-def test_cli_convert_can_show_and_strictly_fail_import_warnings(tmp_path, capsys) -> None:
+def test_cli_build_can_show_and_strictly_fail_import_warnings(tmp_path, capsys) -> None:
     markdown_path = tmp_path / "remote.md"
     markdown_path.write_text("# Remote\n\n![Plot](https://example.com/plot.png)\n", encoding="utf-8")
 
     exit_code = main(
         [
-            "convert",
+            "build",
             str(markdown_path),
-            "--to",
+            "--outputs",
             "html",
             "--out",
             str(tmp_path / "out"),
@@ -149,9 +149,9 @@ def test_cli_convert_can_show_and_strictly_fail_import_warnings(tmp_path, capsys
 
     strict_exit_code = main(
         [
-            "convert",
+            "build",
             str(markdown_path),
-            "--to",
+            "--outputs",
             "html",
             "--out",
             str(tmp_path / "strict"),

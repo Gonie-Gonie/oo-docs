@@ -117,20 +117,20 @@ print(paths["docx"], paths["pdf"], paths["html"])
 
 ## Command Line
 
-The installed package exposes a `oodocs` command for common build and conversion workflows:
+The installed package exposes a `oodocs` command for common build and validation workflows:
 
 ```powershell
 oodocs build report.py --out artifacts
-oodocs convert README.md --to docx,pdf,html
-oodocs convert notebook.ipynb --to pdf
+oodocs build README.md --outputs docx,pdf,html --out artifacts
+oodocs build notebook.ipynb --outputs pdf --out artifacts
 oodocs validate report.py
 ```
 
-`build` expects a Python file that exposes a `Document` as `document`, `doc`, or `report`, or a zero-argument factory such as `build_document()`. Use `--factory NAME` when the document object or builder has a different name. `convert` imports Markdown and Jupyter notebooks through the same parser APIs available in Python. Both commands validate before rendering by default and stop before writing outputs when validation errors are found.
+`build` accepts Python, Markdown, and Jupyter notebook sources. Python sources expose a `Document` as `document`, `doc`, or `report`, or a zero-argument factory such as `build_document()`. Use `--document-factory NAME` when the document object or builder has a different name. Markdown and notebook sources import through the same parser APIs available in Python. Builds validate before rendering by default and stop before writing outputs when validation errors are found.
 
-For CI and release evidence, `oodocs validate --format json` emits a machine-readable validation summary. `oodocs build ... --fail-on-warning` and `oodocs convert ... --fail-on-warning` treat validation warnings as failures, while `--show-warnings` prints warning tables without changing the default success path. Add `--traceback` to any command when debugging needs the full Python stack trace.
+For CI and release evidence, `oodocs validate --report-format json` emits a machine-readable validation summary. `oodocs build ... --fail-on-warning` treats validation warnings as failures, while `--show-warnings` prints warning tables without changing the default success path. Add `--traceback` to any command when debugging needs the full Python stack trace.
 
-For imported Markdown or notebooks, `oodocs convert ... --show-import-warnings` prints diagnostics for lossy source features, and `--strict-import` fails on those diagnostics. Release evidence bundles can be generated with `python -m oodocs.evidence build --out artifacts/evidence`.
+For imported Markdown or notebooks, `oodocs build ... --show-import-warnings` prints diagnostics for lossy source features, and `--strict-import` fails on those diagnostics. Release evidence bundles can be generated with `python -m oodocs.evidence build --out artifacts/evidence`.
 
 ## Why Not Just LaTeX?
 

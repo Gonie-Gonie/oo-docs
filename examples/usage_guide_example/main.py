@@ -364,15 +364,15 @@ PROJECT_LAYOUT_SNIPPET = """my-report/
 """
 
 CLI_WORKFLOW_SNIPPET = """# Build a Python-authored document that exposes build_document(), document, doc, or report.
-oodocs build report.py --out artifacts --to docx,pdf,html
+oodocs build report.py --out artifacts --outputs docx,pdf,html
 
-# Convert existing authored sources through the same import APIs used in Python.
-oodocs convert README.md --to docx,pdf,html
-oodocs convert notebook.ipynb --to pdf
+# Build imported sources through the same import APIs used in Python.
+oodocs build README.md --outputs docx,pdf,html --out artifacts
+oodocs build notebook.ipynb --outputs pdf --out artifacts
 
-# Validate without writing outputs; use --strict when warnings should fail CI.
+# Validate without writing outputs; use --fail-on-warning when warnings should fail CI.
 oodocs validate report.py
-oodocs validate report.py --to pdf --strict
+oodocs validate report.py --outputs pdf --fail-on-warning
 """
 
 PYTHON_BUILD_SOURCE_SNIPPET = """from oodocs import Chapter, Document, Paragraph, Section
@@ -689,7 +689,7 @@ def build_usage_guide_document() -> Document:
     cli_workflow_figure = Figure(
         CLI_WORKFLOW_DIAGRAM_PATH,
         caption=Paragraph(
-            "Command-line builds, conversions, and validation all call the same high-level workflow API."
+            "Command-line builds and validation all call the same high-level workflow API."
         ),
         width=6.5,
     )
@@ -903,8 +903,8 @@ def build_usage_guide_document() -> Document:
         headers=["Command", "Input expectation", "Use it when"],
         rows=[
             ["oodocs build report.py --out artifacts", "A Python file exposing document, doc, report, or build_document().", "The source of record is a Python-authored Document."],
-            ["oodocs convert README.md --to docx,pdf,html", "Markdown source imported with the same parser used by Document.from_markdown(...).", "A README, changelog, release note, or generated Markdown file should become a rendered bundle."],
-            ["oodocs convert notebook.ipynb --to pdf", "A notebook imported with the same parser used by Document.from_notebook(...).", "A notebook-backed analysis needs a quick PDF export or an appendix source."],
+            ["oodocs build README.md --outputs docx,pdf,html --out artifacts", "Markdown source imported with the same parser used by Document.from_markdown(...).", "A README, changelog, release note, or generated Markdown file should become a rendered bundle."],
+            ["oodocs build notebook.ipynb --outputs pdf --out artifacts", "A notebook imported with the same parser used by Document.from_notebook(...).", "A notebook-backed analysis needs a quick PDF export or an appendix source."],
             ["oodocs validate report.py", "Any Python, Markdown, or notebook source that can be loaded as a Document.", "CI should fail before rendering when authoring mistakes are present."],
         ],
         caption="CLI commands and the source shapes they expect.",
@@ -1553,7 +1553,7 @@ def build_usage_guide_document() -> Document:
                 ),
             ),
             Section(
-                "Build, convert, and validate from the CLI",
+                "Build and validate from the CLI",
                 Paragraph(
                     "The command-line interface is for the point where a document becomes part of a release process, CI job, or repeatable local workflow. It deliberately stays thin over the same workflow API that Python callers can import, so command behavior and library behavior do not drift apart."
                 ),
@@ -1571,9 +1571,9 @@ def build_usage_guide_document() -> Document:
                     inline_code("report"),
                     ", or a zero-argument factory such as ",
                     inline_code("build_document()"),
-                    ". Use ",
-                    inline_code("oodocs convert"),
-                    " when the source is Markdown or a notebook. Use ",
+                    ". The same ",
+                    inline_code("oodocs build"),
+                    " command also imports Markdown and notebooks. Use ",
                     inline_code("oodocs validate"),
                     " when CI should stop before any renderer writes files."
                 ),

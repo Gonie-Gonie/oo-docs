@@ -37,7 +37,9 @@ def test_cli_validate_can_emit_json(tmp_path: Path, capsys) -> None:
         encoding="utf-8",
     )
 
-    exit_code = main(["validate", str(script_path), "--to", "pdf", "--format", "json"])
+    exit_code = main(
+        ["validate", str(script_path), "--outputs", "pdf", "--report-format", "json"]
+    )
 
     captured = capsys.readouterr()
     payload = json.loads(captured.out)
@@ -67,7 +69,7 @@ def test_cli_build_can_fail_on_validation_warning(tmp_path: Path, capsys) -> Non
         [
             "build",
             str(script_path),
-            "--to",
+            "--outputs",
             "html",
             "--out",
             str(output_dir),

@@ -54,18 +54,24 @@ def main(argv: Sequence[str] | None = None) -> int:
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="oodocs",
-        description="Build, convert, and validate OODocs documents.",
+        description="Build and validate OODocs documents.",
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     build = subparsers.add_parser(
         "build",
-        help="Build a Python-authored OODocs document.",
+        help="Build a Python, Markdown, or notebook OODocs source.",
     )
-    build.add_argument("source", help="Python file exposing a Document or build function.")
+    build.add_argument("source", help="Python, Markdown, or notebook source file.")
     _add_render_options(build, default_out=".")
     build.add_argument(
-        "--factory",
+        "--source-type",
+        choices=("python", "markdown", "notebook"),
+        help="Override source type inference.",
+    )
+    build.add_argument("--title", help="Override imported Markdown/notebook title.")
+    build.add_argument(
+        "--document-factory",
         help="Document variable or zero-argument function to use from the Python source.",
     )
     build.add_argument(
@@ -73,26 +79,17 @@ def _build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Do not run the Python source with its directory as the working directory.",
     )
-    build.set_defaults(func=_run_build)
-
-    convert = subparsers.add_parser(
-        "convert",
-        help="Convert Markdown or notebook source to rendered outputs.",
-    )
-    convert.add_argument("source", help="Markdown (.md) or notebook (.ipynb) file.")
-    _add_render_options(convert, default_out=None)
-    convert.add_argument("--title", help="Override the imported document title.")
-    convert.add_argument(
+    build.add_argument(
         "--show-import-warnings",
         action="store_true",
         help="Print lossy Markdown/notebook import warnings before rendering.",
     )
-    convert.add_argument(
+    build.add_argument(
         "--strict-import",
         action="store_true",
         help="Fail when Markdown/notebook import reports lossy or unsupported content.",
     )
-    convert.set_defaults(func=_run_convert)
+    build.set_defaults(func=_run_build)
 
     validate = subparsers.add_parser(
         "validate",
@@ -100,27 +97,27 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     validate.add_argument("source", help="Source file to validate.")
     validate.add_argument(
-        "--to",
+        "--outputs",
         default="docx,pdf,html",
         help="Comma-separated output formats to validate for. Defaults to docx,pdf,html.",
     )
     validate.add_argument(
-        "--type",
-        choices=("python", "py", "markdown", "md", "notebook"),
+        "--source-type",
+        choices=("python", "markdown", "notebook"),
         help="Override source type inference.",
     )
     validate.add_argument("--title", help="Override imported Markdown/notebook title.")
     validate.add_argument(
-        "--factory",
+        "--document-factory",
         help="Document variable or zero-argument function for Python sources.",
     )
     validate.add_argument(
-        "--strict",
+        "--fail-on-warning",
         action="store_true",
         help="Return a non-zero exit code when warnings are present.",
     )
     validate.add_argument(
-        "--format",
+        "--report-format",
         choices=("text", "json"),
         default="text",
         help="Validation output format. Defaults to text.",
@@ -152,12 +149,11 @@ def _add_render_options(
         "--out",
         default=default_out,
         help=(
-            "Output directory. Defaults to the current directory for build and "
-            "the source directory for convert."
+            "Output directory. Defaults to the current directory for build."
         ),
     )
     parser.add_argument(
-        "--to",
+        "--outputs",
         default="docx,pdf,html",
         help="Comma-separated output formats. Defaults to docx,pdf,html.",
     )
@@ -194,12 +190,16 @@ def _add_traceback_option(parser: argparse.ArgumentParser) -> None:
 
 
 def _run_build(args: argparse.Namespace) -> int:
-    formats = _parse_formats(args.to)
+    formats = _parse_outputs(args.outputs)
+    import_exit = _run_import_warning_policy(args)
+    if import_exit != 0:
+        return import_exit
     validation_exit = _run_render_warning_policy(
         args,
         formats=formats,
-        source_type="python",
-        document_factory=args.factory,
+        source_type=args.source_type,
+        title=args.title,
+        document_factory=args.document_factory,
         chdir=not args.no_chdir,
     )
     if validation_exit != 0:
@@ -207,36 +207,13 @@ def _run_build(args: argparse.Namespace) -> int:
     outputs = build_source_outputs(
         args.source,
         args.out,
+        source_type=args.source_type,
+        title=args.title,
         outputs=formats,
         stem=args.stem,
-        document_factory=args.factory,
+        document_factory=args.document_factory,
         validate=not args.no_validate,
         chdir=not args.no_chdir,
-        verbose=args.verbose,
-    )
-    _print_outputs(outputs.outputs)
-    return 0
-
-
-def _run_convert(args: argparse.Namespace) -> int:
-    formats = _parse_formats(args.to)
-    import_exit = _run_import_warning_policy(args)
-    if import_exit != 0:
-        return import_exit
-    validation_exit = _run_render_warning_policy(
-        args,
-        formats=formats,
-        title=args.title,
-    )
-    if validation_exit != 0:
-        return validation_exit
-    outputs = build_source_outputs(
-        args.source,
-        args.out or Path(args.source).parent,
-        outputs=formats,
-        stem=args.stem,
-        title=args.title,
-        validate=not args.no_validate,
         verbose=args.verbose,
     )
     _print_outputs(outputs.outputs)
@@ -244,22 +221,22 @@ def _run_convert(args: argparse.Namespace) -> int:
 
 
 def _run_validate(args: argparse.Namespace) -> int:
-    formats = _parse_formats(args.to)
+    formats = _parse_outputs(args.outputs)
     result = validate_source_document(
         args.source,
-        source_type=args.type,
+        source_type=args.source_type,
         title=args.title,
-        document_factory=args.factory,
+        document_factory=args.document_factory,
         outputs=formats,
         chdir=not args.no_chdir,
     )
-    if args.format == "json":
+    if args.report_format == "json":
         print(result.to_json(formats=formats))
     else:
         print(result.format_table(formats=formats))
     if result.errors_for(formats):
         return 1
-    if args.strict and result.warnings_for(formats):
+    if args.fail_on_warning and result.warnings_for(formats):
         return 1
     return 0
 
@@ -339,10 +316,10 @@ def _run_render_warning_policy(
     return 0
 
 
-def _parse_formats(value: str) -> tuple[str, ...]:
+def _parse_outputs(value: str) -> tuple[str, ...]:
     pieces = tuple(piece.strip() for piece in value.split(",") if piece.strip())
     if not pieces:
-        raise ValueError("--to must include at least one output format")
+        raise ValueError("--outputs must include at least one output format")
     return normalize_output_formats(pieces)
 
 

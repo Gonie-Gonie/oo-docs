@@ -7,7 +7,7 @@ from oodocs import build_source_outputs, validate_source_document
 from oodocs.cli import main
 
 
-def test_cli_convert_markdown_outputs_selected_formats(
+def test_cli_build_markdown_outputs_selected_formats(
     tmp_path: Path,
     capsys,
 ) -> None:
@@ -17,9 +17,9 @@ def test_cli_convert_markdown_outputs_selected_formats(
 
     exit_code = main(
         [
-            "convert",
+            "build",
             str(markdown_path),
-            "--to",
+            "--outputs",
             "html",
             "--out",
             str(output_dir),
@@ -32,7 +32,7 @@ def test_cli_convert_markdown_outputs_selected_formats(
     assert "Wrote html:" in captured.out
 
 
-def test_cli_convert_notebook_to_pdf(tmp_path: Path, capsys) -> None:
+def test_cli_build_notebook_to_pdf(tmp_path: Path, capsys) -> None:
     notebook_path = tmp_path / "notebook.ipynb"
     notebook_path.write_text(
         json.dumps(
@@ -55,9 +55,9 @@ def test_cli_convert_notebook_to_pdf(tmp_path: Path, capsys) -> None:
 
     exit_code = main(
         [
-            "convert",
+            "build",
             str(notebook_path),
-            "--to",
+            "--outputs",
             "pdf",
             "--out",
             str(output_dir),
@@ -92,7 +92,7 @@ def test_cli_build_source_outputs(tmp_path: Path, capsys) -> None:
             str(script_path),
             "--out",
             str(output_dir),
-            "--to",
+            "--outputs",
             "html",
             "--verbose",
         ]
@@ -122,7 +122,7 @@ def test_cli_validate_blocks_invalid_python_document(
         encoding="utf-8",
     )
 
-    exit_code = main(["validate", str(script_path), "--to", "pdf"])
+    exit_code = main(["validate", str(script_path), "--outputs", "pdf"])
 
     captured = capsys.readouterr()
     assert exit_code == 1
