@@ -7,7 +7,7 @@ from oodocs.apidoc import ApiModule, ApiObject, ApiRendererNote, ApiSeeAlso
 
 def test_apidoc_object_converts_to_blocks(tmp_path) -> None:
     api = collect_sample_api(tmp_path)
-    obj = api.find("samplepkg.make_widget")
+    obj = api.find_object("samplepkg.make_widget")
 
     assert obj is not None
     blocks = obj.to_blocks(profile="reference")

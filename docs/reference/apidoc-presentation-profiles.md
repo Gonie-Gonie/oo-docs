@@ -26,7 +26,7 @@ doc = Document(
     "API Review",
     Chapter("Classes", *[
         obj.to_section(level=2, profile="review")
-        for obj in api.select(kind="class")[:3]
+        for obj in api.select_objects(kind="class")[:3]
     ]),
 )
 ```

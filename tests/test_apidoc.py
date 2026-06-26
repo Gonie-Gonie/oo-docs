@@ -368,7 +368,7 @@ def test_reusable_docstring_parser_object_and_custom_registry(tmp_path: Path) ->
         docstring_style=ApiDocstringParser("brief-test"),
     )
 
-    run = api.find("briefpkg.run")
+    run = api.find_object("briefpkg.run")
     assert run is not None
     assert run.summary == "Brief function."
 
@@ -434,7 +434,7 @@ def test_apidoc_cli_loads_custom_docstring_parser_modules_from_pyproject(
     assert main(["apidoc", "build", ".", "--config", "pyproject.toml"]) == 0
     config = ApiBuildConfig.from_pyproject(repo)
     built_api = ApiPackage.read_json(repo / "artifacts" / "api" / "hookpkg-api.json")
-    run = built_api.find("hookpkg.run")
+    run = built_api.find_object("hookpkg.run")
 
     assert config.collection.docstring_parser_modules == ("repo_apidoc_parsers",)
     assert run is not None
@@ -514,7 +514,7 @@ def test_apidoc_cli_loads_pyproject_parser_modules_from_target_repo_path(
         == 0
     )
     built_api = ApiPackage.read_json(output_dir / "externalhookpkg-api.json")
-    run = built_api.find("externalhookpkg.run")
+    run = built_api.find_object("externalhookpkg.run")
 
     assert run is not None
     assert run.summary == "external:Run external command."
@@ -593,9 +593,9 @@ def test_collect_api_builds_queryable_object_tree_and_blocks(tmp_path: Path) -> 
     )
 
     api = collect_api(package_dir, public_policy="__all__", collector="auto")
-    classes = api.select(kind="class")
-    functions = api.select(kind="function")
-    module = api.modules_by_name()["samplepkg"]
+    classes = api.select_objects(kind="class")
+    functions = api.select_objects(kind="function")
+    module = api.module_map()["samplepkg"]
 
     assert isinstance(api, ApiPackage)
     assert module.notes == ["Module notes survive API collection."]
@@ -603,9 +603,9 @@ def test_collect_api_builds_queryable_object_tree_and_blocks(tmp_path: Path) -> 
     assert module.renderer_notes[0].output_format == "html"
     assert [obj.qualname for obj in classes] == ["samplepkg.Widget"]
     assert [obj.qualname for obj in functions] == ["samplepkg.make_widget"]
-    assert api.find("samplepkg.Widget") is classes[0]
-    assert classes[0].select(kind="method")[0].name == "render"
-    label = classes[0].find("label")
+    assert api.find_object("samplepkg.Widget") is classes[0]
+    assert classes[0].select_members(kind="method")[0].name == "render"
+    label = classes[0].find_member("label")
     assert label is not None
     assert label.summary == "User-facing label shown in summaries."
     assert isinstance(classes[0].to_section(level=2, profile="compact"), Section)
@@ -644,8 +644,8 @@ def test_collect_api_builds_queryable_object_tree_and_blocks(tmp_path: Path) -> 
     assert website_name.target == classes[0].anchor_name()
     website_section = classes[0].to_section(level=2, profile="website")
     assert website_section.anchor == website_name.target
-    filtered = api.filtered(kind="class", module_prefix="samplepkg")
-    assert [obj.qualname for obj in filtered.public_objects() if obj.kind == "class"] == ["samplepkg.Widget"]
+    filtered = api.subset(kind="class", module_prefix="samplepkg")
+    assert [obj.qualname for obj in filtered.select_public_objects() if obj.kind == "class"] == ["samplepkg.Widget"]
     assert filtered.metadata["filters"]["kind"] == ["class"]
 
     document = Document(
@@ -673,8 +673,8 @@ def test_collect_api_builds_queryable_object_tree_and_blocks(tmp_path: Path) -> 
     sidecar = tmp_path / "api.json"
     api.write_json(sidecar)
     readback = ApiPackage.read_json(sidecar)
-    assert readback.find("samplepkg.Widget") is not None
-    assert readback.modules_by_name()["samplepkg"].warnings == module.warnings
+    assert readback.find_object("samplepkg.Widget") is not None
+    assert readback.module_map()["samplepkg"].warnings == module.warnings
 
     module_doc = Document("Module API", module.to_chapter(profile="reference"))
     module_html = tmp_path / "module-api.html"
@@ -699,7 +699,7 @@ def test_collect_api_builds_queryable_object_tree_and_blocks(tmp_path: Path) -> 
     limited_module_html = tmp_path / "limited-module-api.html"
     limited_module_doc.save_html(limited_module_html)
     limited_module_html_text = limited_module_html.read_text(encoding="utf-8")
-    method_anchor = classes[0].select(kind="method")[0].anchor_name()
+    method_anchor = classes[0].select_members(kind="method")[0].anchor_name()
     assert f'id="{classes[0].anchor_name()}"' in limited_module_html_text
     assert f'id="{method_anchor}"' not in limited_module_html_text
 
@@ -813,7 +813,7 @@ def test_collect_api_exposes_docstring_parser_issues_in_issue_table(tmp_path: Pa
         row[1].content.plain_text() == "docstring-style-mismatch"
         for row in issue_table.rows
     )
-    function = api.find("stylepkg.load")
+    function = api.find_object("stylepkg.load")
     assert function is not None
     assert any(row[1] == "docstring-style-mismatch" for row in function.as_issue_rows())
 
@@ -888,9 +888,9 @@ def test_collect_api_supports_src_layout_repo_reexports_and_deep_object_lookup(
 
     assert api.name == "widgetlib"
     assert {module.name for module in api.modules} == {"widgetlib", "widgetlib.core"}
-    assert api.find("widgetlib.Widget") is not None
-    assert api.find("widgetlib.core.Widget.render") is not None
-    assert [obj.qualname for obj in api.select(kind="class", module="widgetlib")] == [
+    assert api.find_object("widgetlib.Widget") is not None
+    assert api.find_object("widgetlib.core.Widget.render") is not None
+    assert [obj.qualname for obj in api.select_objects(kind="class", module="widgetlib")] == [
         "widgetlib.Widget"
     ]
 
@@ -900,7 +900,7 @@ def test_collect_api_supports_src_layout_repo_reexports_and_deep_object_lookup(
         collector="inspect",
     )
     assert core_module.name == "widgetlib.core"
-    assert core_module.find("widgetlib.core.Widget.render") is not None
+    assert core_module.find_object("widgetlib.core.Widget.render") is not None
     assert Document("Core API", core_module.to_chapter(profile="manual")).validate().ok
 
     looked_up = collect_object_api(
@@ -978,13 +978,13 @@ def test_collect_api_supports_src_layout_namespace_package_repo(tmp_path: Path) 
 
     assert api.name == "ns_pkg"
     assert [module.name for module in api.modules] == ["ns_pkg.core"]
-    run = api.find("ns_pkg.core.run")
+    run = api.find_object("ns_pkg.core.run")
     assert run is not None
     assert run.parameters[0].description == "Input path."
 
     if importlib.util.find_spec("griffe") is not None:
         griffe_api = collect_api(repo, public_policy="underscore", collector="griffe")
-        assert griffe_api.find("ns_pkg.core.run") is not None
+        assert griffe_api.find_object("ns_pkg.core.run") is not None
 
 
 def test_collect_api_accepts_reusable_public_policy_object(tmp_path: Path) -> None:
@@ -1025,13 +1025,13 @@ def test_collect_api_accepts_reusable_public_policy_object(tmp_path: Path) -> No
     api = collect_api(package_dir, public_policy=policy, collector="inspect")
 
     assert api.metadata["public_policy"] == "explicit"
-    assert api.find("pkg.Widget") is not None
-    secret = api.find("pkg.Widget._secret")
+    assert api.find_object("pkg.Widget") is not None
+    secret = api.find_object("pkg.Widget._secret")
     assert secret is not None
     assert secret.kind == "method"
-    assert api.find("pkg.core.Extra") is not None
-    assert api.find("pkg.Extra") is None
-    assert api.find("pkg.helper") is None
+    assert api.find_object("pkg.core.Extra") is not None
+    assert api.find_object("pkg.Extra") is None
+    assert api.find_object("pkg.helper") is None
     assert ApiPublicPolicy.from_dict(policy.to_dict()) == policy
 
 
@@ -1069,13 +1069,13 @@ def test_source_collector_can_include_external_import_aliases(tmp_path: Path) ->
         include_imported=True,
     )
 
-    assert default_api.find("importpkg.Widget") is not None
-    assert default_api.find("importpkg.Path") is None
-    assert default_api.find("importpkg.json_module") is None
+    assert default_api.find_object("importpkg.Widget") is not None
+    assert default_api.find_object("importpkg.Path") is None
+    assert default_api.find_object("importpkg.json_module") is None
 
-    widget = imported_api.find("importpkg.Widget")
-    path_alias = imported_api.find("importpkg.Path")
-    json_alias = imported_api.find("importpkg.json_module")
+    widget = imported_api.find_object("importpkg.Widget")
+    path_alias = imported_api.find_object("importpkg.Path")
+    json_alias = imported_api.find_object("importpkg.json_module")
 
     assert widget is not None
     assert widget.kind == "class"
@@ -1101,7 +1101,7 @@ def test_source_collector_can_include_external_import_aliases(tmp_path: Path) ->
         ]
     ) == 0
     cli_api = ApiPackage.read_json(cli_json)
-    assert cli_api.find("importpkg.Path") is not None
+    assert cli_api.find_object("importpkg.Path") is not None
 
 
 def test_collect_api_filters_modules_before_collection(tmp_path: Path) -> None:
@@ -1139,9 +1139,9 @@ def test_collect_api_filters_modules_before_collection(tmp_path: Path) -> None:
 
     assert api.metadata["file_count"] == 1
     assert api.modules == []
-    assert api.find("filtermods.core.run") is None
-    assert api.find("filtermods.experimental.preview") is None
-    assert api.find("filtermods.tests.helper") is None
+    assert api.find_object("filtermods.core.run") is None
+    assert api.find_object("filtermods.experimental.preview") is None
+    assert api.find_object("filtermods.tests.helper") is None
     assert config.to_dict()["module_include_patterns"] == ["filtermods.*"]
     assert config.to_dict()["object_exclude_patterns"] == ["filtermods.core.run"]
     assert ApiCollectConfig.from_dict(config.to_dict()) == config
@@ -1208,8 +1208,8 @@ def test_collect_api_filters_modules_before_collection(tmp_path: Path) -> None:
         object_include_patterns=("filtermods.core.run",),
     )
     assert [module.name for module in include_api.modules] == ["filtermods.core"]
-    assert include_api.find("filtermods.core.run") is not None
-    assert include_api.find("filtermods.experimental.preview") is None
+    assert include_api.find_object("filtermods.core.run") is not None
+    assert include_api.find_object("filtermods.experimental.preview") is None
 
 
 def test_collect_api_accepts_utf8_bom_pyproject_and_sources(tmp_path: Path) -> None:
@@ -1246,7 +1246,7 @@ def test_collect_api_accepts_utf8_bom_pyproject_and_sources(tmp_path: Path) -> N
     config = ApiCollectConfig.from_pyproject(tmp_path)
     api = collect_api(tmp_path, config=config)
 
-    assert api.find("bompkg.run") is not None
+    assert api.find_object("bompkg.run") is not None
 
 
 def test_griffe_collector_matches_inspect_schema_on_src_layout_repo(
@@ -1329,21 +1329,21 @@ def test_griffe_collector_matches_inspect_schema_on_src_layout_repo(
     griffe_api = collect_api(repo, public_policy="__all__", collector="griffe")
 
     assert griffe_api.metadata["collector"] == "griffe"
-    assert len(griffe_api.public_objects()) >= len(inspect_api.public_objects())
-    assert griffe_api.find("pkg.Widget") is not None
-    assert griffe_api.find("pkg.core.Widget.render") is not None
-    property_obj = griffe_api.find("pkg.core.Widget.title")
+    assert len(griffe_api.select_public_objects()) >= len(inspect_api.select_public_objects())
+    assert griffe_api.find_object("pkg.Widget") is not None
+    assert griffe_api.find_object("pkg.core.Widget.render") is not None
+    property_obj = griffe_api.find_object("pkg.core.Widget.title")
     assert property_obj is not None
     assert getattr(property_obj, "kind") == "property"
-    label_obj = griffe_api.find("pkg.core.Widget.label")
+    label_obj = griffe_api.find_object("pkg.core.Widget.label")
     assert label_obj is not None
     assert label_obj.summary == "User-facing label."
-    constructor_only = griffe_api.find("pkg.core.ConstructorOnly")
+    constructor_only = griffe_api.find_object("pkg.core.ConstructorOnly")
     assert constructor_only is not None
     assert constructor_only.parameters[0].name == "path"
     assert constructor_only.parameters[0].description == "Input path."
     assert constructor_only.parameters[0].documented
-    method = griffe_api.find("pkg.core.Widget.render")
+    method = griffe_api.find_object("pkg.core.Widget.render")
     assert method is not None
     assert method.parameters[0].name == "path"
     assert method.returns and method.returns.annotation == "str"
@@ -1424,9 +1424,9 @@ def test_collectors_detect_deprecated_decorators_and_warning_bodies(
     )
 
     inspect_api = collect_api(package_dir, public_policy="underscore", collector="inspect")
-    old_class = inspect_api.find("deppkg.OldWidget")
-    old_run = inspect_api.find("deppkg.old_run")
-    keyword_old = inspect_api.find("deppkg.keyword_old")
+    old_class = inspect_api.find_object("deppkg.OldWidget")
+    old_run = inspect_api.find_object("deppkg.old_run")
+    keyword_old = inspect_api.find_object("deppkg.keyword_old")
 
     assert old_class is not None and old_class.deprecated
     assert old_run is not None and old_run.deprecated
@@ -1436,9 +1436,9 @@ def test_collectors_detect_deprecated_decorators_and_warning_bodies(
 
     if importlib.util.find_spec("griffe") is not None:
         griffe_api = collect_api(package_dir, public_policy="underscore", collector="griffe")
-        assert griffe_api.find("deppkg.OldWidget").deprecated
-        assert griffe_api.find("deppkg.old_run").deprecated
-        assert griffe_api.find("deppkg.old_run").deprecation_message == "Use new_run instead."
+        assert griffe_api.find_object("deppkg.OldWidget").deprecated
+        assert griffe_api.find_object("deppkg.old_run").deprecated
+        assert griffe_api.find_object("deppkg.old_run").deprecation_message == "Use new_run instead."
 
 
 def test_api_coverage_and_diff_detect_doc_changes(tmp_path: Path) -> None:
@@ -1742,7 +1742,7 @@ def test_apidoc_cli_init_writes_config_for_general_repo(tmp_path: Path) -> None:
         ]
     ) == 0
     signature_api = ApiPackage.read_json(signature_json)
-    widget = signature_api.find("initpkg.core.Widget")
+    widget = signature_api.find_object("initpkg.core.Widget")
     assert widget is not None
     assert widget.signature == "initpkg.core.Widget"
 
@@ -2095,7 +2095,7 @@ def test_api_objects_example_builds_full_reference_and_composable_document(
         min_pages=1,
     )
     assert target_api.name == "examplepkg"
-    assert target_api.find("examplepkg.Widget") is not None
+    assert target_api.find_object("examplepkg.Widget") is not None
     assert ApiPackage.read_json(bundle_outputs["api_json"]).name == "examplepkg"
     assert (
         ApiCoverageResult.read_json(bundle_outputs["coverage_json"]).package

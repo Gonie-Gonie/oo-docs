@@ -13,8 +13,8 @@ def test_apidoc_collects_oodocs_public_api_for_self_reference() -> None:
     api = collect_api("oodocs", collector="auto", public_policy="__all__")
 
     assert api.name == "oodocs"
-    assert api.find("oodocs.Document") is not None
-    assert api.public_objects()
+    assert api.find_object("oodocs.Document") is not None
+    assert api.select_public_objects()
 
 
 def test_apidoc_renders_oodocs_public_api_reference_bundle(tmp_path) -> None:
@@ -62,5 +62,5 @@ def test_apidoc_renders_oodocs_public_api_reference_bundle(tmp_path) -> None:
             "oodocs.Document",
         ),
     )
-    assert ApiPackage.read_json(api_path).find("oodocs.Document") is not None
+    assert ApiPackage.read_json(api_path).find_object("oodocs.Document") is not None
     assert ApiCoverageResult.read_json(coverage_json_path).public_object_count > 0

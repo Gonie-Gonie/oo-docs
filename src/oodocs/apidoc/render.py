@@ -116,7 +116,7 @@ def api_objects_to_summary_table(
         from oodocs.apidoc import collect_api, api_objects_to_summary_table
 
         api = collect_api("mypkg")
-        functions = api.select(kind="function")
+        functions = api.select_objects(kind="function")
         doc = Document(
             "Release Notes",
             Chapter(

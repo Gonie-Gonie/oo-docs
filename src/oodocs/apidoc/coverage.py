@@ -415,7 +415,7 @@ def check_api_docs(
         ```
     """
 
-    objects = api.public_objects()
+    objects = api.select_public_objects()
     issues: list[ApiDocIssue] = list(api.issues)
     documented_objects = 0
     parameter_count = 0

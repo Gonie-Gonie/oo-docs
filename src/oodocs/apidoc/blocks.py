@@ -162,7 +162,7 @@ def api_object_summary_paragraph(obj: ApiObject) -> Paragraph:
         from oodocs.apidoc.blocks import api_object_summary_paragraph
 
         api = collect_api(".")
-        obj = api.functions()[0]
+        obj = api.select_functions()[0]
         doc = Document(
             "API Notes",
             Chapter("Selected Object", api_object_summary_paragraph(obj)),
@@ -203,7 +203,7 @@ def api_signature_code_block(
         from oodocs.apidoc.blocks import api_signature_code_block
 
         api = collect_api(".")
-        obj = api.functions()[0]
+        obj = api.select_functions()[0]
         block = api_signature_code_block(obj, profile="reference")
         doc = Document("API Appendix", Chapter("Signature", block))
         ```
@@ -243,7 +243,7 @@ def api_description_blocks(
         from oodocs.apidoc.blocks import api_description_blocks
 
         api = collect_api(".")
-        obj = api.classes()[0]
+        obj = api.select_classes()[0]
         doc = Document(
             "API Notes",
             Chapter("Class Notes", *api_description_blocks(obj), Paragraph("Review complete.")),
@@ -298,7 +298,7 @@ def api_parameter_table(
         from oodocs.apidoc.blocks import api_parameter_table
 
         api = collect_api(".")
-        obj = api.functions()[0]
+        obj = api.select_functions()[0]
         table = api_parameter_table(obj, profile="review", caption="Parameters")
         doc = Document("API Review", Chapter("Parameter Review", table))
         ```
@@ -335,7 +335,7 @@ def api_returns_blocks(
         from oodocs.apidoc.blocks import api_returns_blocks
 
         api = collect_api(".")
-        obj = api.functions()[0]
+        obj = api.select_functions()[0]
         doc = Document("API Notes", Chapter("Returns", *api_returns_blocks(obj)))
         ```
     """
@@ -377,7 +377,7 @@ def api_exceptions_table(
         from oodocs.apidoc.blocks import api_exceptions_table
 
         api = collect_api(".")
-        obj = api.functions()[0]
+        obj = api.select_functions()[0]
         table = api_exceptions_table(obj, caption="Raises")
         ```
     """
@@ -415,7 +415,7 @@ def api_examples_blocks(
         from oodocs.apidoc.blocks import api_examples_blocks
 
         api = collect_api(".")
-        obj = api.functions()[0]
+        obj = api.select_functions()[0]
         tutorial = Document("Tutorial", Chapter("Examples", *api_examples_blocks(obj)))
         ```
     """
@@ -458,7 +458,7 @@ def api_see_also_blocks(
         from oodocs.apidoc.blocks import api_see_also_blocks
 
         api = collect_api(".")
-        obj = api.functions()[0]
+        obj = api.select_functions()[0]
         doc = Document("API Notes", Chapter("Related API", *api_see_also_blocks(obj)))
         ```
     """
@@ -508,7 +508,7 @@ def api_notes_blocks(
         from oodocs.apidoc.blocks import api_notes_blocks
 
         api = collect_api(".")
-        obj = api.functions()[0]
+        obj = api.select_functions()[0]
         doc = Document("API Review", Chapter("Notes", *api_notes_blocks(obj)))
         ```
     """
@@ -544,7 +544,7 @@ def api_warnings_blocks(
         from oodocs.apidoc.blocks import api_warnings_blocks
 
         api = collect_api(".")
-        obj = api.functions()[0]
+        obj = api.select_functions()[0]
         doc = Document("API Evidence", Chapter("Warnings", *api_warnings_blocks(obj)))
         ```
     """
@@ -588,7 +588,7 @@ def api_output_notes_table(
         from oodocs.apidoc.blocks import api_output_notes_table
 
         api = collect_api(".")
-        obj = api.functions()[0]
+        obj = api.select_functions()[0]
         table = api_output_notes_table(obj, profile="reference")
         doc = Document("Renderer Notes", Chapter("API", table))
         ```
@@ -632,7 +632,7 @@ def api_output_notes_blocks(
         from oodocs.apidoc.blocks import api_output_notes_blocks
 
         api = collect_api(".")
-        obj = api.functions()[0]
+        obj = api.select_functions()[0]
         doc = Document(
             "Renderer Evidence",
             Chapter("Notes", *api_output_notes_blocks(obj)),
@@ -665,7 +665,7 @@ def api_source_location_paragraph(
         from oodocs.apidoc.blocks import api_source_location_paragraph
 
         api = collect_api(".")
-        obj = api.functions()[0]
+        obj = api.select_functions()[0]
         source = api_source_location_paragraph(obj, profile="evidence")
         ```
     """
@@ -701,7 +701,7 @@ def api_review_note_paragraph(
         from oodocs.apidoc.blocks import api_review_note_paragraph
 
         api = collect_api(".")
-        obj = api.functions()[0]
+        obj = api.select_functions()[0]
         note = api_review_note_paragraph(obj, profile="review")
         ```
     """
@@ -749,7 +749,7 @@ def api_member_summary_table(
         from oodocs.apidoc.blocks import api_member_summary_table
 
         api = collect_api(".")
-        cls = api.classes()[0]
+        cls = api.select_classes()[0]
         table = api_member_summary_table(cls, profile="reference")
         ```
     """
@@ -798,7 +798,7 @@ def api_object_to_blocks(
         from oodocs.apidoc.blocks import api_object_to_blocks
 
         api = collect_api(".")
-        obj = api.functions()[0]
+        obj = api.select_functions()[0]
         doc = Document("API Notes", Chapter("load", *api_object_to_blocks(obj)))
         ```
     """
@@ -874,7 +874,7 @@ def api_object_to_section(
         from oodocs.apidoc.blocks import api_object_to_section
 
         api = collect_api(".")
-        obj = api.classes()[0]
+        obj = api.select_classes()[0]
         doc = Document("API", Chapter("Classes", api_object_to_section(obj)))
         ```
     """
@@ -917,7 +917,7 @@ def api_object_to_box(
         from oodocs.apidoc.blocks import api_object_to_box
 
         api = collect_api(".")
-        obj = api.functions()[0]
+        obj = api.select_functions()[0]
         doc = Document("Guide", Chapter("Related API", api_object_to_box(obj)))
         ```
     """
@@ -963,7 +963,7 @@ def api_objects_to_summary_table(
 
         api = collect_api(".")
         table = api_objects_to_summary_table(
-            api.functions(),
+            api.select_functions(),
             profile="compact",
             caption="Public functions",
         )
@@ -1174,7 +1174,7 @@ def api_objects_to_chapter(
         api = collect_api("mypkg")
         chapter = api_objects_to_chapter(
             "Widget API",
-            api.select(kind="class", module_prefix="mypkg.widgets"),
+            api.select_objects(kind="class", module_prefix="mypkg.widgets"),
             profile="manual",
             max_level=3,
         )

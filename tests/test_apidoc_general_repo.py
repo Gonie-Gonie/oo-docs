@@ -73,10 +73,10 @@ def test_general_repo_auto_parser_objects_compose_into_document(tmp_path) -> Non
         public_policy="__all__",
         docstring_style=parser,
     )
-    client = api.find("mixedpkg.Client")
-    method = api.find("mixedpkg.Client.connect")
-    function = api.find("mixedpkg.connect")
-    stream = api.find("mixedpkg.stream")
+    client = api.find_object("mixedpkg.Client")
+    method = api.find_object("mixedpkg.Client.connect")
+    function = api.find_object("mixedpkg.connect")
+    stream = api.find_object("mixedpkg.stream")
     coverage = check_api_docs(api, fail_under=1.0)
 
     assert api.name == "mixedpkg"
@@ -104,7 +104,7 @@ def test_general_repo_auto_parser_objects_compose_into_document(tmp_path) -> Non
         ),
         Chapter(
             "Function Index",
-            api.to_summary_table(api.functions(), profile="compact"),
+            api.to_summary_table(api.select_functions(), profile="compact"),
         ),
         Chapter("Coverage", coverage.to_table()),
     )
@@ -196,7 +196,7 @@ def test_general_repo_sphinx_seealso_directives_compose_into_reference(
         public_policy="__all__",
         docstring_style=ApiDocstringParser.auto(),
     )
-    obj = api.find("sphinxpkg.load_widget")
+    obj = api.find_object("sphinxpkg.load_widget")
     assert obj is not None
     assert obj.metadata["docstring_style"] == "sphinx"
     assert obj.see_also[0].label == "open_widget"
@@ -308,10 +308,10 @@ def test_general_repo_auto_parser_extended_parameter_sections_render(
         public_policy="__all__",
         docstring_style=ApiDocstringParser.auto(),
     )
-    google = api.find("kwpkg.load_google")
-    numpy = api.find("kwpkg.load_numpy")
-    sphinx = api.find("kwpkg.load_sphinx")
-    markdown = api.find("kwpkg.load_markdown")
+    google = api.find_object("kwpkg.load_google")
+    numpy = api.find_object("kwpkg.load_numpy")
+    sphinx = api.find_object("kwpkg.load_sphinx")
+    markdown = api.find_object("kwpkg.load_markdown")
 
     assert google is not None
     assert google.metadata["docstring_style"] == "google"
@@ -383,7 +383,7 @@ def test_general_repo_sphinx_varargs_match_signature_and_render(
         public_policy="__all__",
         docstring_style=ApiDocstringParser.auto(),
     )
-    obj = api.find("varpkg.call_hook")
+    obj = api.find_object("varpkg.call_hook")
     coverage = check_api_docs(api, fail_under=1.0)
 
     assert obj is not None
@@ -458,8 +458,8 @@ def test_general_repo_auto_parser_singular_sections_render(
         public_policy="__all__",
         docstring_style=ApiDocstringParser.auto(),
     )
-    google = api.find("singularpkg.load_google")
-    markdown = api.find("singularpkg.load_markdown")
+    google = api.find_object("singularpkg.load_google")
+    markdown = api.find_object("singularpkg.load_markdown")
 
     assert google is not None
     assert google.metadata["docstring_style"] == "google"
@@ -514,9 +514,9 @@ def test_general_repo_auto_parser_object_survives_build_config_json_roundtrip(
     build.write_json(config_path)
     readback = ApiBuildConfig.read_json(config_path, target=repo)
     api = readback.collect(repo)
-    method = api.find("mixedpkg.Client.connect")
-    function = api.find("mixedpkg.connect")
-    stream = api.find("mixedpkg.stream")
+    method = api.find_object("mixedpkg.Client.connect")
+    function = api.find_object("mixedpkg.connect")
+    stream = api.find_object("mixedpkg.stream")
     outputs = readback.save_all(repo)
 
     assert readback.collection.docstring_style == "auto"
@@ -532,7 +532,7 @@ def test_general_repo_auto_parser_object_survives_build_config_json_roundtrip(
     assert outputs["api-json"].exists()
     assert outputs["coverage-json"].exists()
     assert outputs["coverage-csv"].exists()
-    assert ApiPackage.read_json(outputs["api-json"]).find("mixedpkg.Client.connect") is not None
+    assert ApiPackage.read_json(outputs["api-json"]).find_object("mixedpkg.Client.connect") is not None
     assert ApiCoverageResult.read_json(outputs["coverage-json"]).object_coverage == 1.0
     assert_docx_structure(
         outputs["docx"],
@@ -571,7 +571,7 @@ def test_general_repo_facades_select_module_and_object_from_target_path(
     reexported_class = collect_object_api("mixedpkg.Client", target=repo, **kwargs)
 
     assert module.name == "mixedpkg.core"
-    assert module.find("mixedpkg.core.Client.connect") is not None
+    assert module.find_object("mixedpkg.core.Client.connect") is not None
     assert method.kind == "method"
     assert method.parameters[0].name == "timeout"
     assert method.parameters[0].description == "Timeout in seconds."
@@ -664,14 +664,14 @@ def test_general_repo_render_helpers_compose_selected_api(tmp_path) -> None:
         "Mixed Package API Helper Notes",
         api_objects_to_chapter(
             "Client Classes",
-            api.select(kind="class", module_prefix="mixedpkg"),
+            api.select_objects(kind="class", module_prefix="mixedpkg"),
             profile="manual",
             max_level=3,
         ),
         Chapter(
             "Function Summary",
             api_objects_to_summary_table(
-                api.functions(),
+                api.select_functions(),
                 profile="compact",
                 caption="Mixed package functions.",
             ),
@@ -844,7 +844,7 @@ def test_general_repo_api_objects_example_cli_targets_repo_path(tmp_path) -> Non
         min_pages=1,
     )
     rendered_api = ApiPackage.read_json(api_json)
-    rendered_method = rendered_api.find("mixedpkg.Client.connect")
+    rendered_method = rendered_api.find_object("mixedpkg.Client.connect")
     assert rendered_api.name == "mixedpkg"
     assert rendered_method is not None
     assert rendered_method.metadata["docstring_style"] == "numpy"
@@ -875,7 +875,7 @@ def test_general_repo_pyproject_auto_parser_builds_cli_bundle(tmp_path) -> None:
     assert build_config.module_prefix == "mixedpkg"
 
     api = collect_api(repo, config=build_config.collection)
-    method = api.find("mixedpkg.Client.connect")
+    method = api.find_object("mixedpkg.Client.connect")
     assert method is not None
     assert method.metadata["docstring_style"] == "numpy"
 
@@ -907,7 +907,7 @@ def test_general_repo_pyproject_auto_parser_builds_cli_bundle(tmp_path) -> None:
     assert_html_internal_links_resolve(html_path)
 
     rendered_api = ApiPackage.read_json(api_path)
-    rendered_method = rendered_api.find("mixedpkg.Client.connect")
+    rendered_method = rendered_api.find_object("mixedpkg.Client.connect")
     assert rendered_method is not None
     assert rendered_method.metadata["docstring_style"] == "numpy"
     assert ApiCoverageResult.read_json(coverage_path).object_coverage == 1.0
@@ -934,7 +934,7 @@ def test_general_repo_pyproject_auto_parser_builds_cli_bundle(tmp_path) -> None:
     assert_html_internal_links_resolve(example_html)
 
     example_api = ApiPackage.read_json(example_api_path)
-    example_method = example_api.find("mixedpkg.Client.connect")
+    example_method = example_api.find_object("mixedpkg.Client.connect")
     assert example_method is not None
     assert example_method.metadata["docstring_style"] == "numpy"
     assert ApiCoverageResult.read_json(example_coverage_path).object_coverage == 1.0
@@ -951,10 +951,10 @@ def test_general_python_file_module_targets_build_reference_and_example(
         public_policy="__all__",
         docstring_style=parser,
     )
-    client = api.find("singlemod.Client")
-    method = api.find("singlemod.Client.connect")
-    function = api.find("singlemod.connect")
-    stream = api.find("singlemod.stream")
+    client = api.find_object("singlemod.Client")
+    method = api.find_object("singlemod.Client.connect")
+    function = api.find_object("singlemod.connect")
+    stream = api.find_object("singlemod.stream")
     coverage = check_api_docs(api, fail_under=1.0)
     composed_output = tmp_path / "single-file-composed"
     cli_output = tmp_path / "single-file-cli"
@@ -982,7 +982,7 @@ def test_general_python_file_module_targets_build_reference_and_example(
         ),
         Chapter(
             "Function Index",
-            api.to_summary_table(api.functions(), profile="compact"),
+            api.to_summary_table(api.select_functions(), profile="compact"),
         ),
     )
     outputs = document.save_all(
@@ -1067,7 +1067,7 @@ def test_general_python_file_module_targets_build_reference_and_example(
     assert cli_coverage_json.exists()
     assert_html_internal_links_resolve(cli_html)
     assert (
-        ApiPackage.read_json(cli_api_json).find("singlemod.Client.connect")
+        ApiPackage.read_json(cli_api_json).find_object("singlemod.Client.connect")
         is not None
     )
     assert ApiCoverageResult.read_json(cli_coverage_json).object_coverage == 1.0
@@ -1094,7 +1094,7 @@ def test_general_python_file_module_targets_build_reference_and_example(
     assert example_api_json.exists()
     assert "singlemod.Client" in example_html.read_text(encoding="utf-8")
     assert_html_internal_links_resolve(example_html)
-    assert ApiPackage.read_json(example_api_json).find("singlemod.stream") is not None
+    assert ApiPackage.read_json(example_api_json).find_object("singlemod.stream") is not None
 
 
 def test_general_py_modules_repo_targets_build_reference_and_example(
@@ -1115,10 +1115,10 @@ def test_general_py_modules_repo_targets_build_reference_and_example(
 
     assert api.name == "singlemod"
     assert [module.name for module in api.modules] == ["singlemod"]
-    assert api.find("singlemod.Client.connect") is not None
-    assert api.find("singlemod.connect") is not None
-    assert api.find("singlemod.stream") is not None
-    assert api.find("src.singlemod.Client") is None
+    assert api.find_object("singlemod.Client.connect") is not None
+    assert api.find_object("singlemod.connect") is not None
+    assert api.find_object("singlemod.stream") is not None
+    assert api.find_object("src.singlemod.Client") is None
     assert coverage.object_coverage == 1.0
 
     assert (
@@ -1152,7 +1152,7 @@ def test_general_py_modules_repo_targets_build_reference_and_example(
     assert "singlemod.Client" in html
     assert "src.singlemod" not in html
     assert_html_internal_links_resolve(html_path)
-    assert ApiPackage.read_json(api_path).find("singlemod.Client.connect") is not None
+    assert ApiPackage.read_json(api_path).find_object("singlemod.Client.connect") is not None
     assert ApiCoverageResult.read_json(coverage_path).object_coverage == 1.0
 
     example.main(
@@ -1180,7 +1180,7 @@ def test_general_py_modules_repo_targets_build_reference_and_example(
     assert "singlemod.Client" in rendered_example
     assert "src.singlemod" not in rendered_example
     assert_html_internal_links_resolve(example_html)
-    assert ApiPackage.read_json(example_api_json).find("singlemod.stream") is not None
+    assert ApiPackage.read_json(example_api_json).find_object("singlemod.stream") is not None
 
 
 def test_general_hatch_multi_package_repo_builds_complete_reference(
@@ -1198,9 +1198,9 @@ def test_general_hatch_multi_package_repo_builds_complete_reference(
     coverage = check_api_docs(api, fail_under=1.0)
 
     assert api.name == "multi_hatch_project"
-    assert api.find("alpha.run") is not None
-    assert api.find("beta.run") is not None
-    assert api.find("lib.alpha.run") is None
+    assert api.find_object("alpha.run") is not None
+    assert api.find_object("beta.run") is not None
+    assert api.find_object("lib.alpha.run") is None
     assert coverage.object_coverage == 1.0
 
     assert (
@@ -1236,8 +1236,8 @@ def test_general_hatch_multi_package_repo_builds_complete_reference(
     assert "lib.alpha" not in html
     assert_html_internal_links_resolve(html_path)
     rendered_api = ApiPackage.read_json(api_path)
-    assert rendered_api.find("alpha.run") is not None
-    assert rendered_api.find("beta.run") is not None
+    assert rendered_api.find_object("alpha.run") is not None
+    assert rendered_api.find_object("beta.run") is not None
     assert ApiCoverageResult.read_json(coverage_path).object_coverage == 1.0
 
 
@@ -1256,10 +1256,10 @@ def test_general_hatch_only_include_repo_builds_complete_reference(
     coverage = check_api_docs(api, fail_under=1.0)
 
     assert api.name == "onlypkg"
-    assert api.find("onlypkg.run") is not None
-    assert api.find("onlypkg.core.run") is not None
-    assert api.find("lib.onlypkg.run") is None
-    assert api.find("straypkg.leak") is None
+    assert api.find_object("onlypkg.run") is not None
+    assert api.find_object("onlypkg.core.run") is not None
+    assert api.find_object("lib.onlypkg.run") is None
+    assert api.find_object("straypkg.leak") is None
     assert coverage.object_coverage == 1.0
 
     assert (
@@ -1295,10 +1295,10 @@ def test_general_hatch_only_include_repo_builds_complete_reference(
     assert "straypkg" not in html
     assert_html_internal_links_resolve(html_path)
     rendered_api = ApiPackage.read_json(api_path)
-    assert rendered_api.find("onlypkg.run") is not None
-    assert rendered_api.find("onlypkg.core.run") is not None
-    assert rendered_api.find("lib.onlypkg.run") is None
-    assert rendered_api.find("straypkg.leak") is None
+    assert rendered_api.find_object("onlypkg.run") is not None
+    assert rendered_api.find_object("onlypkg.core.run") is not None
+    assert rendered_api.find_object("lib.onlypkg.run") is None
+    assert rendered_api.find_object("straypkg.leak") is None
     assert ApiCoverageResult.read_json(coverage_path).object_coverage == 1.0
 
 
@@ -1317,9 +1317,9 @@ def test_general_pdm_package_dir_repo_builds_complete_reference(
     coverage = check_api_docs(api, fail_under=1.0)
 
     assert api.name == "pdmpkg"
-    assert api.find("pdmpkg.run") is not None
-    assert api.find("pdmpkg.core.run") is not None
-    assert api.find("lib.pdmpkg.run") is None
+    assert api.find_object("pdmpkg.run") is not None
+    assert api.find_object("pdmpkg.core.run") is not None
+    assert api.find_object("lib.pdmpkg.run") is None
     assert coverage.object_coverage == 1.0
 
     assert (
@@ -1354,8 +1354,8 @@ def test_general_pdm_package_dir_repo_builds_complete_reference(
     assert "lib.pdmpkg" not in html
     assert_html_internal_links_resolve(html_path)
     rendered_api = ApiPackage.read_json(api_path)
-    assert rendered_api.find("pdmpkg.run") is not None
-    assert rendered_api.find("pdmpkg.core.run") is not None
+    assert rendered_api.find_object("pdmpkg.run") is not None
+    assert rendered_api.find_object("pdmpkg.core.run") is not None
     assert ApiCoverageResult.read_json(coverage_path).object_coverage == 1.0
 
 
@@ -1374,9 +1374,9 @@ def test_general_flit_package_repo_builds_complete_reference(
     coverage = check_api_docs(api, fail_under=1.0)
 
     assert api.name == "flitpkg"
-    assert api.find("flitpkg.run") is not None
-    assert api.find("flitpkg.core.Runner.run") is not None
-    assert api.find("straypkg.leak") is None
+    assert api.find_object("flitpkg.run") is not None
+    assert api.find_object("flitpkg.core.Runner.run") is not None
+    assert api.find_object("straypkg.leak") is None
     assert coverage.object_coverage == 1.0
 
     assert (
@@ -1411,9 +1411,9 @@ def test_general_flit_package_repo_builds_complete_reference(
     assert "straypkg" not in html
     assert_html_internal_links_resolve(html_path)
     rendered_api = ApiPackage.read_json(api_path)
-    assert rendered_api.find("flitpkg.run") is not None
-    assert rendered_api.find("flitpkg.core.Runner.run") is not None
-    assert rendered_api.find("straypkg.leak") is None
+    assert rendered_api.find_object("flitpkg.run") is not None
+    assert rendered_api.find_object("flitpkg.core.Runner.run") is not None
+    assert rendered_api.find_object("straypkg.leak") is None
     assert ApiCoverageResult.read_json(coverage_path).object_coverage == 1.0
 
 
@@ -1432,9 +1432,9 @@ def test_general_import_names_package_repo_builds_complete_reference(
     coverage = check_api_docs(api, fail_under=1.0)
 
     assert api.name == "importnamedpkg"
-    assert api.find("importnamedpkg.run") is not None
-    assert api.find("lib.importnamedpkg.run") is None
-    assert api.find("straypkg.leak") is None
+    assert api.find_object("importnamedpkg.run") is not None
+    assert api.find_object("lib.importnamedpkg.run") is None
+    assert api.find_object("straypkg.leak") is None
     assert coverage.object_coverage == 1.0
 
     assert (
@@ -1469,9 +1469,9 @@ def test_general_import_names_package_repo_builds_complete_reference(
     assert "straypkg" not in html
     assert_html_internal_links_resolve(html_path)
     rendered_api = ApiPackage.read_json(api_path)
-    assert rendered_api.find("importnamedpkg.run") is not None
-    assert rendered_api.find("lib.importnamedpkg.run") is None
-    assert rendered_api.find("straypkg.leak") is None
+    assert rendered_api.find_object("importnamedpkg.run") is not None
+    assert rendered_api.find_object("lib.importnamedpkg.run") is None
+    assert rendered_api.find_object("straypkg.leak") is None
     assert ApiCoverageResult.read_json(coverage_path).object_coverage == 1.0
 
 
@@ -1535,9 +1535,9 @@ def test_general_packaging_variants_build_complete_cli_reference(
 
     assert api.name == expected_package
     for qualname in expected_qualnames:
-        assert api.find(qualname) is not None
+        assert api.find_object(qualname) is not None
     for qualname in forbidden_qualnames:
-        assert api.find(qualname) is None
+        assert api.find_object(qualname) is None
     assert coverage.object_coverage == 1.0
 
     assert (
@@ -1595,9 +1595,9 @@ def test_general_packaging_variants_build_complete_cli_reference(
     assert_html_internal_links_resolve(html_path)
     rendered_api = ApiPackage.read_json(api_path)
     for qualname in expected_qualnames:
-        assert rendered_api.find(qualname) is not None
+        assert rendered_api.find_object(qualname) is not None
     for qualname in forbidden_qualnames:
-        assert rendered_api.find(qualname) is None
+        assert rendered_api.find_object(qualname) is None
     assert ApiCoverageResult.read_json(coverage_path).object_coverage == 1.0
 
 
@@ -1634,8 +1634,8 @@ def test_api_objects_example_config_loads_repo_docstring_parser_modules(
     assert not (output_dir / "oodocs-full-api-reference.docx").exists()
 
     api = ApiPackage.read_json(api_json)
-    runner = api.find("briefpkg.Runner")
-    run = api.find("briefpkg.run")
+    runner = api.find_object("briefpkg.Runner")
+    run = api.find_object("briefpkg.run")
     assert runner is not None
     assert runner.summary == "brief:Runner class."
     assert run is not None
@@ -1737,7 +1737,7 @@ def test_api_objects_example_external_json_config_loads_target_parser_modules(
     assert coverage_json.exists()
 
     api = ApiPackage.read_json(api_json)
-    run = api.find("examplejsonpkg.run")
+    run = api.find_object("examplejsonpkg.run")
 
     assert run is not None
     assert run.summary == "example-json:Run from the example external config."
@@ -1780,7 +1780,7 @@ def test_build_config_save_all_targets_repo_with_parser_modules(
     snapshot_path = build.write_snapshot(repo, tmp_path / "brief-snapshot.json")
     document = build.to_document(repo)
     outputs = build.save_all(repo)
-    run = api.find("briefpkg.run")
+    run = api.find_object("briefpkg.run")
 
     assert build.collection.docstring_parser().style == "example-brief"
     assert run is not None
@@ -1824,7 +1824,7 @@ def test_build_config_save_all_targets_repo_with_parser_modules(
         required_text=("brief:Run custom command.",),
     )
     saved_api = ApiPackage.read_json(outputs["api-json"])
-    saved_run = saved_api.find("briefpkg.run")
+    saved_run = saved_api.find_object("briefpkg.run")
     assert saved_run is not None
     assert saved_run.summary == "brief:Run custom command."
     assert ApiCoverageResult.read_json(outputs["coverage-json"]).object_coverage == coverage.object_coverage
@@ -1842,8 +1842,8 @@ def test_collect_api_loads_repo_local_docstring_parser_modules(
         docstring_parser_modules=("example_brief_parsers",),
         docstring_style="example-brief",
     )
-    runner = api.find("briefpkg.Runner")
-    run = api.find("briefpkg.run")
+    runner = api.find_object("briefpkg.Runner")
+    run = api.find_object("briefpkg.run")
 
     assert runner is not None
     assert runner.summary == "brief:Runner class."
@@ -1865,7 +1865,7 @@ def test_collect_api_accepts_config_with_repo_local_parser_modules(
         )
 
     api = collect_api(repo, config=config)
-    run = api.find("briefpkg.run")
+    run = api.find_object("briefpkg.run")
 
     assert run is not None
     assert run.summary == "brief:Run custom command."

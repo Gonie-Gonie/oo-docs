@@ -6,7 +6,7 @@ from oodocs import Chapter, Document
 
 def test_manual_profile_embeds_selected_sections_in_document(tmp_path) -> None:
     api = collect_sample_api(tmp_path)
-    classes = api.select(kind="class")
+    classes = api.select_objects(kind="class")
     document = Document(
         "Manual API Notes",
         Chapter("Selected Classes", *[obj.to_section(profile="manual") for obj in classes]),
@@ -17,8 +17,8 @@ def test_manual_profile_embeds_selected_sections_in_document(tmp_path) -> None:
 
 def test_hand_composed_api_document_saves_all_formats(tmp_path) -> None:
     api = collect_sample_api(tmp_path)
-    classes = api.select(kind="class")[:1]
-    functions = api.select(kind="function")[:1]
+    classes = api.select_objects(kind="class")[:1]
+    functions = api.select_objects(kind="function")[:1]
     parameter_table = functions[0].to_parameters_table(profile="reference")
 
     assert parameter_table is not None

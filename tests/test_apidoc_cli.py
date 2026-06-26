@@ -54,7 +54,7 @@ def test_apidoc_cli_builds_html_and_sidecars_for_general_repo(tmp_path) -> None:
 
     assert (output_dir / "samplepkg-api.html").exists()
     api = ApiPackage.read_json(output_dir / "samplepkg-api.json")
-    render = api.find("samplepkg.Widget.render")
+    render = api.find_object("samplepkg.Widget.render")
 
     assert api.name == "samplepkg"
     assert render is not None
@@ -131,12 +131,12 @@ def test_apidoc_cli_auto_collector_builds_full_bundle_for_general_repo(
 
     api = ApiPackage.read_json(api_path)
     coverage = ApiCoverageResult.read_json(coverage_path)
-    render = api.find("samplepkg.Widget.render")
+    render = api.find_object("samplepkg.Widget.render")
 
     assert api.metadata["collector"] in {"griffe", "inspect"}
     if importlib.util.find_spec("griffe") is not None:
         assert api.metadata["collector"] == "griffe"
-    assert api.find("samplepkg.Widget") is not None
+    assert api.find_object("samplepkg.Widget") is not None
     assert render is not None
     assert render.examples
     assert coverage.package == "samplepkg"
@@ -216,10 +216,10 @@ def test_apidoc_cli_builds_full_reference_bundle_from_json_config(tmp_path) -> N
 
     api = ApiPackage.read_json(api_path)
     coverage = ApiCoverageResult.read_json(coverage_json_path)
-    render = api.find("samplepkg.Widget.render")
+    render = api.find_object("samplepkg.Widget.render")
 
     assert api.name == "samplepkg"
-    assert api.find("samplepkg.Widget") is not None
+    assert api.find_object("samplepkg.Widget") is not None
     assert render is not None
     assert render.examples[0].syntax_ok is True
     assert render.examples[0].doctest_ok is True
@@ -319,7 +319,7 @@ def test_apidoc_cli_json_config_loads_repo_local_parser_modules(tmp_path) -> Non
     )
 
     api = ApiPackage.read_json(api_path)
-    run = api.find("jsonpkg.run")
+    run = api.find_object("jsonpkg.run")
     coverage = ApiCoverageResult.read_json(coverage_path)
 
     assert run is not None
@@ -402,7 +402,7 @@ def test_apidoc_cli_external_json_config_loads_target_parser_modules(tmp_path) -
 
     html_path = output_dir / "externaljsonpkg-api.html"
     api = ApiPackage.read_json(output_dir / "externaljsonpkg-api.json")
-    run = api.find("externaljsonpkg.run")
+    run = api.find_object("externaljsonpkg.run")
 
     assert_html_internal_links_resolve(
         html_path,
@@ -495,7 +495,7 @@ def test_apidoc_cli_external_json_config_loads_griffe_target_parser_modules(
 
     html_path = output_dir / "externalgriffepkg-api.html"
     api = ApiPackage.read_json(output_dir / "externalgriffepkg-api.json")
-    run = api.find("externalgriffepkg.run")
+    run = api.find_object("externalgriffepkg.run")
 
     assert api.metadata["collector"] == "griffe"
     assert_html_internal_links_resolve(
@@ -595,7 +595,7 @@ def test_apidoc_cli_collect_external_json_config_loads_target_parser_modules(
     )
 
     api = ApiPackage.read_json(output_path)
-    run = api.find("collectjsonpkg.run")
+    run = api.find_object("collectjsonpkg.run")
 
     assert run is not None
     assert run.summary == "collect:Collect from external JSON config."
@@ -876,8 +876,8 @@ def test_apidoc_cli_builds_setuptools_package_dir_repo(tmp_path) -> None:
     api = ApiPackage.read_json(output_dir / "samplepkg-api.json")
 
     assert (output_dir / "samplepkg-api.html").exists()
-    assert api.find("samplepkg.run") is not None
-    assert api.find("lib.samplepkg.run") is None
+    assert api.find_object("samplepkg.run") is not None
+    assert api.find_object("lib.samplepkg.run") is None
 
 
 def test_apidoc_cli_build_respects_explicit_public_policy(tmp_path) -> None:
@@ -910,9 +910,9 @@ def test_apidoc_cli_build_respects_explicit_public_policy(tmp_path) -> None:
     html = (output_dir / "samplepkg-api.html").read_text(encoding="utf-8")
 
     assert api.metadata["public_policy"] == "explicit"
-    assert api.find("samplepkg.make_widget") is not None
-    assert api.find("samplepkg.Widget") is None
-    assert api.find("samplepkg.CONSTANT") is None
+    assert api.find_object("samplepkg.make_widget") is not None
+    assert api.find_object("samplepkg.Widget") is None
+    assert api.find_object("samplepkg.CONSTANT") is None
     assert 'id="samplepkg-make_widget"' in html
     assert 'id="samplepkg-widget"' not in html
 
@@ -984,12 +984,12 @@ def test_apidoc_cli_can_exclude_member_kinds(tmp_path) -> None:
     )
 
     api = ApiPackage.read_json(output_path)
-    assert api.find("samplepkg.Widget") is not None
-    assert api.find("samplepkg.make_widget") is not None
-    assert api.find("samplepkg.CONSTANT") is None
-    assert api.find("samplepkg.Widget.label") is None
-    assert api.find("samplepkg.Widget.title") is None
-    assert api.find("samplepkg.Widget.render") is None
+    assert api.find_object("samplepkg.Widget") is not None
+    assert api.find_object("samplepkg.make_widget") is not None
+    assert api.find_object("samplepkg.CONSTANT") is None
+    assert api.find_object("samplepkg.Widget.label") is None
+    assert api.find_object("samplepkg.Widget.title") is None
+    assert api.find_object("samplepkg.Widget.render") is None
 
 
 def test_apidoc_cli_can_strip_source_locations(tmp_path) -> None:
@@ -1015,7 +1015,7 @@ def test_apidoc_cli_can_strip_source_locations(tmp_path) -> None:
     )
 
     api = ApiPackage.read_json(output_path)
-    widget = api.find("samplepkg.Widget")
+    widget = api.find_object("samplepkg.Widget")
 
     assert api.metadata.get("source_root") is None
     assert api.modules[0].source_path is None
@@ -1047,8 +1047,8 @@ def test_apidoc_cli_can_include_private_objects(tmp_path) -> None:
     )
 
     api = ApiPackage.read_json(output_path)
-    helper = api.find("privatepkg._helper")
-    debug = api.find("privatepkg.PublicWidget._debug")
+    helper = api.find_object("privatepkg._helper")
+    debug = api.find_object("privatepkg.PublicWidget._debug")
     assert helper is not None
     assert helper.visibility == "protected"
     assert debug is not None
@@ -1083,8 +1083,8 @@ def test_apidoc_cli_loads_repo_local_docstring_parser_module_option(
     )
 
     api = ApiPackage.read_json(output_path)
-    runner = api.find("briefpkg.Runner")
-    function = api.find("briefpkg.run")
+    runner = api.find_object("briefpkg.Runner")
+    function = api.find_object("briefpkg.run")
 
     assert runner is not None
     assert runner.summary == "brief:Runner class."
@@ -1187,7 +1187,7 @@ def test_apidoc_cli_init_loads_repo_local_docstring_parser_module(
     )
 
     api = ApiPackage.read_json(output_dir / "initbriefpkg-api.json")
-    run = api.find("initbriefpkg.run")
+    run = api.find_object("initbriefpkg.run")
 
     assert run is not None
     assert run.summary == "init:Run through initialized config."

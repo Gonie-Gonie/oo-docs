@@ -14,23 +14,25 @@ from oodocs.apidoc import collect_api
 
 api = collect_api("oodocs", public_policy="__all__")
 
-for obj in api.select(kind="class"):
+for obj in api.select_objects(kind="class"):
     print(obj.qualname, obj.summary)
 ```
 
-Use `ApiPackage.select(...)` when you need a subset and `find(...)` when you
-need one exact module or object. Rendering helpers live on the objects
-themselves, so the parsed metadata stays useful outside a full API reference.
-For common package-wide subsets, use `classes()`, `functions()`, `methods()`,
-`properties()`, or `attributes()` before passing the objects into a table or
-chapter.
+Use `ApiPackage.select_objects(...)` when you need matching objects and
+`ApiPackage.subset(...)` when you need a new package containing only those
+objects. Use `find_module(...)` or `find_object(...)` when you need one exact
+item. Rendering helpers live on the objects themselves, so the parsed metadata
+stays useful outside a full API reference. For common package-wide subsets, use
+`select_classes()`, `select_functions()`, `select_methods()`,
+`select_properties()`, or `select_attributes()` before passing the objects into
+a table or chapter.
 
 ```python
 from oodocs import Chapter, Document
 from oodocs.apidoc import collect_api
 
 api = collect_api("oodocs", public_policy="__all__")
-classes = api.select(kind="class", module_prefix="oodocs.components")
+classes = api.select_objects(kind="class", module_prefix="oodocs.components")
 
 doc = Document(
     "Selected Component API",

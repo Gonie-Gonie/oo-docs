@@ -1192,7 +1192,7 @@ class ApiObject:
         from oodocs.apidoc import collect_api
 
         api = collect_api("oodocs", public_policy="__all__")
-        classes = api.select(kind="class", module_prefix="oodocs.components")
+        classes = api.select_objects(kind="class", module_prefix="oodocs.components")
         doc = Document("Component API", Chapter("Classes", *[
             obj.to_section(level=2, profile="manual") for obj in classes[:3]
         ]))
@@ -1234,7 +1234,7 @@ class ApiObject:
             from oodocs.apidoc import collect_api
 
             api = collect_api(".")
-            missing = [obj for obj in api.public_objects() if not obj.documented]
+            missing = [obj for obj in api.select_public_objects() if not obj.documented]
             ```
         """
 
@@ -1253,7 +1253,7 @@ class ApiObject:
             from oodocs.apidoc import collect_api
 
             api = collect_api(".")
-            payload = api.functions()[0].to_dict()
+            payload = api.select_functions()[0].to_dict()
             ```
         """
 
@@ -1363,7 +1363,7 @@ class ApiObject:
             from oodocs.apidoc import collect_api
 
             api = collect_api(".")
-            rows = [(obj.qualname, obj.summary_text()) for obj in api.public_objects()]
+            rows = [(obj.qualname, obj.summary_text()) for obj in api.select_public_objects()]
             ```
         """
 
@@ -1452,7 +1452,7 @@ class ApiObject:
             from oodocs.apidoc import collect_api
 
             api = collect_api(".")
-            parameterized = [obj for obj in api.functions() if obj.has_parameters()]
+            parameterized = [obj for obj in api.select_functions() if obj.has_parameters()]
             ```
         """
 
@@ -1471,7 +1471,7 @@ class ApiObject:
             from oodocs.apidoc import collect_api
 
             api = collect_api(".")
-            with_examples = [obj for obj in api.public_objects() if obj.has_examples()]
+            with_examples = [obj for obj in api.select_public_objects() if obj.has_examples()]
             ```
         """
 
@@ -1490,7 +1490,7 @@ class ApiObject:
             from oodocs.apidoc import collect_api
 
             api = collect_api(".")
-            documented_classes = [obj for obj in api.classes() if obj.has_members()]
+            documented_classes = [obj for obj in api.select_classes() if obj.has_members()]
             ```
         """
 
@@ -1518,7 +1518,7 @@ class ApiObject:
             from oodocs.apidoc import collect_api
 
             api = collect_api(".")
-            cls = api.classes()[0]
+            cls = api.select_classes()[0]
             methods = list(cls.iter_members(kind="method", recursive=True))
             ```
         """
@@ -1530,7 +1530,7 @@ class ApiObject:
             if recursive:
                 yield from member.iter_members(kind, recursive=True)
 
-    def select(
+    def select_members(
         self,
         *,
         kind: str | Iterable[str] | None = None,
@@ -1558,8 +1558,8 @@ class ApiObject:
             from oodocs.apidoc import collect_api
 
             api = collect_api(".")
-            cls = api.classes()[0]
-            methods = cls.select(kind="method", visibility="public", documented=True)
+            cls = api.select_classes()[0]
+            methods = cls.select_members(kind="method", visibility="public", documented=True)
             ```
         """
 
@@ -1575,7 +1575,7 @@ class ApiObject:
             )
         ]
 
-    def find(self, qualname_or_name: str) -> ApiObject | None:
+    def find_member(self, qualname_or_name: str) -> ApiObject | None:
         """Find a child object by qualname or local name.
 
         Args:
@@ -1591,8 +1591,8 @@ class ApiObject:
             from oodocs.apidoc import collect_api
 
             api = collect_api(".")
-            cls = api.classes()[0]
-            method = cls.find(f"{cls.qualname}.render")
+            cls = api.select_classes()[0]
+            method = cls.find_member(f"{cls.qualname}.render")
             ```
         """
 
@@ -1627,7 +1627,7 @@ class ApiObject:
             from oodocs.apidoc import collect_api
 
             api = collect_api(".")
-            obj = api.functions()[0]
+            obj = api.select_functions()[0]
             table = Table(["Kind", "Module", "Name", "Summary"], [obj.as_summary_row()])
             ```
         """
@@ -1657,7 +1657,7 @@ class ApiObject:
             from oodocs.apidoc import collect_api
 
             api = collect_api(".")
-            obj = api.functions()[0]
+            obj = api.select_functions()[0]
             doc = Document("API Notes", Chapter("Selected API", obj.to_summary_paragraph()))
             ```
         """
@@ -1685,7 +1685,7 @@ class ApiObject:
             from oodocs.apidoc import collect_api
 
             api = collect_api(".")
-            obj = api.functions()[0]
+            obj = api.select_functions()[0]
             block = obj.to_signature_code_block(profile="reference")
             doc = Document("API", Chapter("Signature", block))
             ```
@@ -1714,7 +1714,7 @@ class ApiObject:
             from oodocs.apidoc import collect_api
 
             api = collect_api(".")
-            fn = api.functions()[0]
+            fn = api.select_functions()[0]
             table = fn.to_parameters_table(profile="review")
             doc = Document(
                 "API Review",
@@ -1745,7 +1745,7 @@ class ApiObject:
             from oodocs.apidoc import collect_api
 
             api = collect_api(".")
-            obj = api.functions()[0]
+            obj = api.select_functions()[0]
             doc = Document("API", Chapter("Returns", *obj.to_returns_blocks()))
             ```
         """
@@ -1772,7 +1772,7 @@ class ApiObject:
             from oodocs.apidoc import collect_api
 
             api = collect_api(".")
-            obj = api.functions()[0]
+            obj = api.select_functions()[0]
             table = obj.to_exceptions_table(profile="review")
             doc = Document("API Review", Chapter("Raises", table))
             ```
@@ -1800,7 +1800,7 @@ class ApiObject:
             from oodocs.apidoc import collect_api
 
             api = collect_api(".")
-            obj = api.functions()[0]
+            obj = api.select_functions()[0]
             doc = Document("Tutorial", Chapter("Examples", *obj.to_examples_blocks()))
             ```
         """
@@ -1826,7 +1826,7 @@ class ApiObject:
             from oodocs.apidoc import collect_api
 
             api = collect_api(".")
-            obj = api.functions()[0]
+            obj = api.select_functions()[0]
             doc = Document("API", Chapter("Related", *obj.to_see_also_blocks()))
             ```
         """
@@ -1852,7 +1852,7 @@ class ApiObject:
             from oodocs.apidoc import collect_api
 
             api = collect_api(".")
-            obj = api.functions()[0]
+            obj = api.select_functions()[0]
             doc = Document("API Review", Chapter("Notes", *obj.to_notes_blocks()))
             ```
         """
@@ -1878,7 +1878,7 @@ class ApiObject:
             from oodocs.apidoc import collect_api
 
             api = collect_api(".")
-            obj = api.functions()[0]
+            obj = api.select_functions()[0]
             doc = Document("Evidence", Chapter("Warnings", *obj.to_warnings_blocks()))
             ```
         """
@@ -1904,7 +1904,7 @@ class ApiObject:
             from oodocs.apidoc import collect_api
 
             api = collect_api(".")
-            obj = api.functions()[0]
+            obj = api.select_functions()[0]
             doc = Document(
                 "Compatibility",
                 Chapter("Renderer Notes", *obj.to_output_notes_blocks()),
@@ -1943,7 +1943,7 @@ class ApiObject:
             from oodocs.apidoc import collect_api
 
             api = collect_api(".")
-            obj = api.find("mypkg.load")
+            obj = api.find_object("mypkg.load")
             assert obj is not None
             doc = Document("API Notes", Chapter("load", *obj.to_blocks(profile="manual")))
             ```
@@ -1986,7 +1986,7 @@ class ApiObject:
             from oodocs.apidoc import collect_api
 
             api = collect_api(".")
-            classes = api.select(kind="class", module_prefix="mypkg.widgets")
+            classes = api.select_objects(kind="class", module_prefix="mypkg.widgets")
             doc = Document(
                 "Widget API",
                 Chapter("Classes", *[item.to_section(level=2) for item in classes]),
@@ -2021,7 +2021,7 @@ class ApiObject:
             from oodocs.apidoc import collect_api
 
             api = collect_api(".")
-            obj = api.functions()[0]
+            obj = api.select_functions()[0]
             doc = Document("Guide", Chapter("Related API", obj.to_box()))
             ```
         """
@@ -2044,7 +2044,7 @@ class ApiObject:
             from oodocs.apidoc import collect_api
 
             api = collect_api(".")
-            rows = [obj.as_index_row() for obj in api.public_objects()]
+            rows = [obj.as_index_row() for obj in api.select_public_objects()]
             table = Table(["Kind", "Name", "Module", "Location", "Summary"], rows)
             ```
         """
@@ -2070,7 +2070,7 @@ class ApiObject:
             from oodocs.apidoc import collect_api
 
             api = collect_api(".", docstring_style="google")
-            obj = api.functions()[0]
+            obj = api.select_functions()[0]
             issue_rows = obj.as_issue_rows()
             ```
         """
@@ -2107,7 +2107,7 @@ class ApiModule:
         from oodocs.apidoc import collect_api
 
         api = collect_api(".")
-        module = api.modules_by_name()["mypkg.widgets"]
+        module = api.module_map()["mypkg.widgets"]
         doc = Document("Widget API", module.to_chapter(profile="reference"))
         ```
     """
@@ -2139,7 +2139,7 @@ class ApiModule:
             from oodocs.apidoc import collect_api
 
             api = collect_api(".")
-            module = api.modules_by_name()["mypkg.widgets"]
+            module = api.module_map()["mypkg.widgets"]
             doc = Document("Module Summary", Chapter("Objects", module.to_summary_table(module.objects)))
             ```
         """
@@ -2187,7 +2187,7 @@ class ApiModule:
             from oodocs.apidoc import collect_api
 
             api = collect_api(".")
-            module = api.modules_by_name()["mypkg.widgets"]
+            module = api.module_map()["mypkg.widgets"]
             Path("build/widgets-api.json").write_text(
                 json.dumps(module.to_dict(), indent=2),
                 encoding="utf-8",
@@ -2255,7 +2255,7 @@ class ApiModule:
             metadata=dict(data.get("metadata", {})),  # type: ignore[arg-type]
         )
 
-    def classes(self) -> list[ApiObject]:
+    def select_classes(self) -> list[ApiObject]:
         """Return module-level classes.
 
         Returns:
@@ -2270,17 +2270,17 @@ class ApiModule:
             from oodocs.apidoc import collect_api
 
             api = collect_api(".")
-            module = api.modules_by_name()["mypkg.widgets"]
+            module = api.module_map()["mypkg.widgets"]
             doc = Document(
                 "Widget Classes",
-                Chapter("Classes", *[cls.to_section(level=2) for cls in module.classes()]),
+                Chapter("Classes", *[cls.to_section(level=2) for cls in module.select_classes()]),
             )
             ```
         """
 
-        return self.select(kind="class", recursive=False)
+        return self.select_objects(kind="class", recursive=False)
 
-    def functions(self) -> list[ApiObject]:
+    def select_functions(self) -> list[ApiObject]:
         """Return module-level functions.
 
         Returns:
@@ -2294,15 +2294,15 @@ class ApiModule:
             from oodocs.apidoc import collect_api
 
             api = collect_api(".")
-            module = api.modules_by_name()["mypkg.widgets"]
-            functions = module.functions()
+            module = api.module_map()["mypkg.widgets"]
+            functions = module.select_functions()
             doc = Document("Widget Functions", Chapter("Index", module.to_summary_table(functions)))
             ```
         """
 
-        return self.select(kind="function", recursive=False)
+        return self.select_objects(kind="function", recursive=False)
 
-    def attributes(self) -> list[ApiObject]:
+    def select_attributes(self) -> list[ApiObject]:
         """Return module-level attributes and data objects.
 
         Returns:
@@ -2316,17 +2316,17 @@ class ApiModule:
             from oodocs.apidoc import collect_api
 
             api = collect_api(".")
-            module = api.modules_by_name()["mypkg.settings"]
+            module = api.module_map()["mypkg.settings"]
             doc = Document(
                 "Settings API",
-                Chapter("Constants", module.to_summary_table(module.attributes())),
+                Chapter("Constants", module.to_summary_table(module.select_attributes())),
             )
             ```
         """
 
-        return self.select(kind=("attribute", "data"), recursive=False)
+        return self.select_objects(kind=("attribute", "data"), recursive=False)
 
-    def properties(self) -> list[ApiObject]:
+    def select_properties(self) -> list[ApiObject]:
         """Return properties from module classes.
 
         Returns:
@@ -2340,13 +2340,13 @@ class ApiModule:
             from oodocs.apidoc import collect_api
 
             api = collect_api(".")
-            module = api.modules_by_name()["mypkg.widgets"]
-            properties = module.properties()
+            module = api.module_map()["mypkg.widgets"]
+            properties = module.select_properties()
             doc = Document("Widget Properties", Chapter("Properties", module.to_summary_table(properties)))
             ```
         """
 
-        return self.select(kind="property", recursive=True)
+        return self.select_objects(kind="property", recursive=True)
 
     def iter_objects(
         self,
@@ -2371,7 +2371,7 @@ class ApiModule:
             from oodocs.apidoc import collect_api
 
             api = collect_api(".")
-            module = api.modules_by_name()["mypkg.widgets"]
+            module = api.module_map()["mypkg.widgets"]
             sections = [
                 obj.to_section(level=2)
                 for obj in module.iter_objects(kind=("class", "method"))
@@ -2387,7 +2387,7 @@ class ApiModule:
             if recursive:
                 yield from member.iter_members(kind, recursive=True)
 
-    def select(
+    def select_objects(
         self,
         *,
         kind: str | Iterable[str] | None = None,
@@ -2416,8 +2416,8 @@ class ApiModule:
             from oodocs.apidoc import collect_api
 
             api = collect_api(".")
-            module = api.modules_by_name()["mypkg.widgets"]
-            public_classes = module.select(kind="class", visibility="public")
+            module = api.module_map()["mypkg.widgets"]
+            public_classes = module.select_objects(kind="class", visibility="public")
             doc = Document("Widget Classes", Chapter("Summary", module.to_summary_table(public_classes)))
             ```
         """
@@ -2433,7 +2433,7 @@ class ApiModule:
             )
         ]
 
-    def find(self, qualname_or_name: str) -> ApiObject | None:
+    def find_object(self, qualname_or_name: str) -> ApiObject | None:
         """Find an object by qualname or name.
 
         Args:
@@ -2452,8 +2452,8 @@ class ApiModule:
             from oodocs.apidoc import collect_api
 
             api = collect_api(".")
-            module = api.modules_by_name()["mypkg.widgets"]
-            widget = module.find("Widget")
+            module = api.module_map()["mypkg.widgets"]
+            widget = module.find_object("Widget")
             doc = Document("Widget", widget.to_section(level=1)) if widget else None
             ```
         """
@@ -2485,7 +2485,7 @@ class ApiModule:
             from oodocs.apidoc import collect_api
 
             api = collect_api(".")
-            module = api.modules_by_name()["mypkg.widgets"]
+            module = api.module_map()["mypkg.widgets"]
             doc = Document(
                 "Widget API",
                 Chapter("Index", module.to_summary_table(caption="Widget symbols")),
@@ -2523,7 +2523,7 @@ class ApiModule:
             from oodocs.apidoc import collect_api
 
             api = collect_api(".")
-            module = api.modules_by_name()["mypkg.widgets"]
+            module = api.module_map()["mypkg.widgets"]
             doc = Document(
                 "Developer Guide",
                 Chapter("Widget API", Paragraph("Public widget surface."), *module.to_sections(level=2)),
@@ -2561,7 +2561,7 @@ class ApiModule:
             from oodocs.apidoc import collect_api
 
             api = collect_api(".")
-            module = api.modules_by_name()["mypkg.widgets"]
+            module = api.module_map()["mypkg.widgets"]
             doc = Document("Widget Module", module.to_chapter(title="mypkg.widgets"))
             ```
         """
@@ -2601,7 +2601,7 @@ class ApiModule:
             from oodocs.apidoc import collect_api
 
             api = collect_api(".")
-            module = api.modules_by_name()["mypkg.widgets"]
+            module = api.module_map()["mypkg.widgets"]
             doc = Document("Widget Guide", Paragraph("Usage notes."), *module.to_blocks(level=2))
             ```
         """
@@ -2635,7 +2635,7 @@ class ApiPackage:
         from oodocs.apidoc import collect_api
 
         api = collect_api("oodocs", public_policy="__all__")
-        functions = api.select(kind="function")
+        functions = api.select_objects(kind="function")
         doc = Document(
             "Function API",
             Chapter("Summary", api.to_summary_table(functions)),
@@ -2817,7 +2817,7 @@ class ApiPackage:
         for module in self.modules:
             yield from module.iter_objects(kind, recursive=recursive)
 
-    def select(
+    def select_objects(
         self,
         *,
         kind: str | Iterable[str] | None = None,
@@ -2850,7 +2850,7 @@ class ApiPackage:
             from oodocs.apidoc import collect_api
 
             api = collect_api(".")
-            widgets = api.select(
+            widgets = api.select_objects(
                 kind=("class", "function"),
                 module_prefix="mypkg.widgets",
                 visibility="public",
@@ -2866,7 +2866,7 @@ class ApiPackage:
             if module_prefix is not None and not api_module.name.startswith(module_prefix):
                 continue
             selected.extend(
-                api_module.select(
+                api_module.select_objects(
                     kind=kind,
                     visibility=visibility,
                     documented=documented,
@@ -2876,7 +2876,7 @@ class ApiPackage:
             )
         return selected
 
-    def filtered(
+    def subset(
         self,
         *,
         kind: str | Iterable[str] | None = None,
@@ -2909,12 +2909,12 @@ class ApiPackage:
 
             api = collect_api(".")
             coverage = check_api_docs(
-                api.filtered(kind="class", module_prefix="mypkg.widgets")
+                api.subset(kind="class", module_prefix="mypkg.widgets")
             )
             ```
         """
 
-        selected = self.select(
+        selected = self.select_objects(
             kind=kind,
             module=module,
             module_prefix=module_prefix,
@@ -2924,7 +2924,7 @@ class ApiPackage:
             recursive=recursive,
         )
         selected = _drop_descendants_of_selected_objects(selected)
-        modules_by_name = self.modules_by_name()
+        modules = self.module_map()
         grouped: dict[str, list[ApiObject]] = {}
         selected_qualnames: set[str] = set()
         for obj in selected:
@@ -2933,7 +2933,7 @@ class ApiPackage:
             selected_qualnames.update(member.qualname for member in obj.iter_members(recursive=True))
         filtered_modules: list[ApiModule] = []
         for module_name in sorted(grouped):
-            source_module = modules_by_name.get(module_name)
+            source_module = modules.get(module_name)
             filtered_modules.append(
                 ApiModule(
                     name=module_name,
@@ -2973,15 +2973,41 @@ class ApiPackage:
             metadata=metadata,
         )
 
-    def find(self, qualname_or_name: str) -> ApiObject | ApiModule | None:
-        """Find a module or object by qualname or local name.
+    def find_module(self, name: str) -> ApiModule | None:
+        """Find a collected module by name.
 
         Args:
-            qualname_or_name: Fully qualified module/object name or local
-                object name.
+            name: Fully qualified module name.
 
         Returns:
-            Matching module or API object, or ``None`` when no item matches.
+            Matching module, or ``None``.
+
+        Examples:
+            Locate one module and render only that module:
+
+            ```python
+            from oodocs import Document
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            module = api.find_module("mypkg.widgets")
+            doc = Document("Widgets", module.to_chapter()) if module else None
+            ```
+        """
+
+        for module in self.modules:
+            if module.name == name:
+                return module
+        return None
+
+    def find_object(self, qualname_or_name: str) -> ApiObject | None:
+        """Find an API object by qualname or local name.
+
+        Args:
+            qualname_or_name: Fully qualified object name or local object name.
+
+        Returns:
+            Matching API object, or ``None`` when no object matches.
 
         Examples:
             Locate one object and render only its reference section:
@@ -2991,19 +3017,75 @@ class ApiPackage:
             from oodocs.apidoc import collect_api
 
             api = collect_api(".")
-            item = api.find("mypkg.widgets.Widget")
+            item = api.find_object("mypkg.widgets.Widget")
             doc = Document("Widget", item.to_section(level=1)) if item else None
             ```
         """
 
         for module in self.modules:
-            if module.name == qualname_or_name:
-                return module
-            if found := module.find(qualname_or_name):
+            if found := module.find_object(qualname_or_name):
                 return found
         return None
 
-    def modules_by_name(self) -> dict[str, ApiModule]:
+    def require_module(self, name: str) -> ApiModule:
+        """Return a collected module or raise ``LookupError``.
+
+        Args:
+            name: Fully qualified module name.
+
+        Returns:
+            Matching module.
+
+        Raises:
+            LookupError: If no module matches ``name``.
+
+        Examples:
+            Render a module when absence should fail a build:
+
+            ```python
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            module = api.require_module("mypkg.widgets")
+            chapter = module.to_chapter()
+            ```
+        """
+
+        module = self.find_module(name)
+        if module is None:
+            raise LookupError(f"API module not found: {name}")
+        return module
+
+    def require_object(self, qualname_or_name: str) -> ApiObject:
+        """Return an API object or raise ``LookupError``.
+
+        Args:
+            qualname_or_name: Fully qualified object name or local object name.
+
+        Returns:
+            Matching API object.
+
+        Raises:
+            LookupError: If no object matches ``qualname_or_name``.
+
+        Examples:
+            Fail early when a guide depends on a specific public object:
+
+            ```python
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            widget = api.require_object("mypkg.widgets.Widget")
+            section = widget.to_section(level=2)
+            ```
+        """
+
+        obj = self.find_object(qualname_or_name)
+        if obj is None:
+            raise LookupError(f"API object not found: {qualname_or_name}")
+        return obj
+
+    def module_map(self) -> dict[str, ApiModule]:
         """Return modules keyed by module name.
 
         Returns:
@@ -3017,7 +3099,7 @@ class ApiPackage:
             from oodocs.apidoc import collect_api
 
             api = collect_api(".")
-            module = api.modules_by_name()["mypkg.widgets"]
+            module = api.module_map()["mypkg.widgets"]
             Document("Widgets API", module.to_chapter(profile="reference")).save_html(
                 "widgets.html"
             )
@@ -3026,7 +3108,7 @@ class ApiPackage:
 
         return {module.name: module for module in self.modules}
 
-    def classes(self) -> list[ApiObject]:
+    def select_classes(self) -> list[ApiObject]:
         """Return public classes.
 
         Returns:
@@ -3042,14 +3124,14 @@ class ApiPackage:
             api = collect_api(".")
             doc = Document(
                 "Class Guide",
-                Chapter("Classes", *[item.to_section(level=2) for item in api.classes()]),
+                Chapter("Classes", *[item.to_section(level=2) for item in api.select_classes()]),
             )
             ```
         """
 
-        return self.select(kind="class")
+        return self.select_objects(kind="class")
 
-    def functions(self) -> list[ApiObject]:
+    def select_functions(self) -> list[ApiObject]:
         """Return public functions.
 
         Returns:
@@ -3065,14 +3147,14 @@ class ApiPackage:
             api = collect_api(".")
             doc = Document(
                 "Function Reference",
-                Chapter("Functions", api.to_summary_table(api.functions())),
+                Chapter("Functions", api.to_summary_table(api.select_functions())),
             )
             ```
         """
 
-        return self.select(kind="function")
+        return self.select_objects(kind="function")
 
-    def methods(self) -> list[ApiObject]:
+    def select_methods(self) -> list[ApiObject]:
         """Return public methods.
 
         Returns:
@@ -3086,14 +3168,14 @@ class ApiPackage:
             from oodocs.apidoc import collect_api
 
             api = collect_api(".")
-            methods = api.methods()
+            methods = api.select_methods()
             doc = Document("Method API", Chapter("Methods", api.to_summary_table(methods)))
             ```
         """
 
-        return self.select(kind="method")
+        return self.select_objects(kind="method")
 
-    def attributes(self) -> list[ApiObject]:
+    def select_attributes(self) -> list[ApiObject]:
         """Return public attributes and data objects.
 
         Returns:
@@ -3109,14 +3191,14 @@ class ApiPackage:
             api = collect_api(".")
             doc = Document(
                 "Data API",
-                Chapter("Attributes", api.to_summary_table(api.attributes())),
+                Chapter("Attributes", api.to_summary_table(api.select_attributes())),
             )
             ```
         """
 
-        return self.select(kind=("attribute", "data"))
+        return self.select_objects(kind=("attribute", "data"))
 
-    def properties(self) -> list[ApiObject]:
+    def select_properties(self) -> list[ApiObject]:
         """Return public properties.
 
         Returns:
@@ -3130,7 +3212,7 @@ class ApiPackage:
             from oodocs.apidoc import collect_api
 
             api = collect_api(".")
-            properties = api.properties()
+            properties = api.select_properties()
             doc = Document(
                 "Property API",
                 Chapter("Properties", api.to_summary_table(properties)),
@@ -3138,9 +3220,9 @@ class ApiPackage:
             ```
         """
 
-        return self.select(kind="property")
+        return self.select_objects(kind="property")
 
-    def public_objects(self) -> list[ApiObject]:
+    def select_public_objects(self) -> list[ApiObject]:
         """Return all public API objects.
 
         Returns:
@@ -3156,14 +3238,14 @@ class ApiPackage:
             api = collect_api(".", public_policy="__all__")
             doc = Document(
                 "Public API",
-                Chapter("Index", api.to_summary_table(api.public_objects())),
+                Chapter("Index", api.to_summary_table(api.select_public_objects())),
             )
             ```
         """
 
-        return self.select(visibility="public")
+        return self.select_objects(visibility="public")
 
-    def private_objects(self) -> list[ApiObject]:
+    def select_private_objects(self) -> list[ApiObject]:
         """Return private or protected API objects.
 
         Returns:
@@ -3177,7 +3259,7 @@ class ApiPackage:
             from oodocs.apidoc import collect_api
 
             api = collect_api(".")
-            private_api = api.private_objects()
+            private_api = api.select_private_objects()
             doc = Document("Internal API Review", Chapter("Private Objects", api.to_summary_table(private_api)))
             ```
         """
@@ -3188,7 +3270,7 @@ class ApiPackage:
             if obj.visibility in {"private", "protected", "internal"}
         ]
 
-    def undocumented_public_objects(self) -> list[ApiObject]:
+    def select_undocumented_public_objects(self) -> list[ApiObject]:
         """Return public API objects without docstring summary or description.
 
         Returns:
@@ -3203,12 +3285,12 @@ class ApiPackage:
             from oodocs.apidoc import collect_api
 
             api = collect_api(".")
-            missing = api.undocumented_public_objects()
+            missing = api.select_undocumented_public_objects()
             doc = Document("Doc Review", Chapter("Missing Docs", api.to_summary_table(missing)))
             ```
         """
 
-        return self.select(visibility="public", documented=False)
+        return self.select_objects(visibility="public", documented=False)
 
     def iter_issues(self, *, include_object_issues: bool = True) -> Iterator[ApiDocIssue]:
         """Iterate package and object-level diagnostics.
@@ -3266,7 +3348,7 @@ class ApiPackage:
             from oodocs.apidoc import collect_api
 
             api = collect_api(".")
-            functions = api.select(kind="function")
+            functions = api.select_objects(kind="function")
             doc = Document(
                 "Release Evidence",
                 Chapter(
@@ -3279,7 +3361,7 @@ class ApiPackage:
 
         from oodocs.apidoc.blocks import api_objects_to_summary_table
 
-        return api_objects_to_summary_table(objects or self.public_objects(), **kwargs)
+        return api_objects_to_summary_table(objects or self.select_public_objects(), **kwargs)
 
     def to_modules_table(self, *, caption: str | None = None):
         """Return a table summarizing collected modules.

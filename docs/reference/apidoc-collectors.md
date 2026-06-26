@@ -32,7 +32,7 @@ package-dir = {"" = "lib"}
 from oodocs.apidoc import collect_api
 
 api = collect_api(".", collector="inspect", public_policy="__all__")
-assert api.find("samplepkg.run") is not None
+assert api.find_object("samplepkg.run") is not None
 ```
 
 PDM projects with a custom source directory can be targeted the same way:
@@ -53,7 +53,7 @@ package-dir = "lib"
 from oodocs.apidoc import collect_api
 
 api = collect_api(".", collector="griffe", public_policy="__all__")
-assert api.find("samplepkg.run") is not None
+assert api.find_object("samplepkg.run") is not None
 ```
 
 Hatch projects that publish a package through `only-include` are also resolved
@@ -77,8 +77,8 @@ only-include = ["lib/samplepkg"]
 from oodocs.apidoc import collect_api
 
 api = collect_api(".", collector="inspect", public_policy="__all__")
-assert api.find("samplepkg.run") is not None
-assert api.find("lib.samplepkg.run") is None
+assert api.find_object("samplepkg.run") is not None
+assert api.find_object("lib.samplepkg.run") is None
 ```
 
 For backend-independent import metadata, declare the import names directly in
@@ -94,7 +94,7 @@ import-names = ["import_name"]
 from oodocs.apidoc import collect_api
 
 api = collect_api(".", collector="griffe", public_policy="__all__")
-assert api.find("import_name.run") is not None
+assert api.find_object("import_name.run") is not None
 ```
 
 Flit projects that publish a different import name can also be targeted by the
@@ -117,7 +117,7 @@ name = "import_name"
 from oodocs.apidoc import collect_api
 
 api = collect_api(".", collector="inspect", public_policy="__all__")
-assert api.find("import_name.run") is not None
+assert api.find_object("import_name.run") is not None
 ```
 
 For a single-module project, pass the repository root. OODocs uses the declared
@@ -137,7 +137,7 @@ py-modules = ["reporting"]
 from oodocs.apidoc import collect_api
 
 api = collect_api(".", collector="inspect", public_policy="__all__")
-assert api.find("reporting.build_report") is not None
+assert api.find_object("reporting.build_report") is not None
 ```
 
 PDM module-file repositories can declare the module through `includes`:
@@ -163,7 +163,7 @@ api = collect_api(
     public_policy="underscore",
     docstring_style=ApiDocstringParser.auto(),
 )
-assert api.find("reporting.build_report") is not None
+assert api.find_object("reporting.build_report") is not None
 api.to_document(profile="reference").save_all(
     "artifacts/api",
     stem="reporting-api",
@@ -208,7 +208,7 @@ objects and store their signatures in `ApiObject.metadata["overloads"]`:
 
 ```python
 api = collect_api(".", collector="griffe", public_policy="__all__")
-parse = api.find("mypkg.parse")
+parse = api.find_object("mypkg.parse")
 for overload in parse.metadata.get("overloads", []):
     print(overload["signature"])
 ```
@@ -249,8 +249,8 @@ sets.
 
 Use `include_private=True` when an internal reference should collect
 underscore-prefixed objects in addition to the normal public boundary. Collected
-objects keep their original `visibility`, so `api.public_objects()` still
-returns only public entries while `api.private_objects()` can be used for an
+objects keep their original `visibility`, so `api.select_public_objects()` still
+returns only public entries while `api.select_private_objects()` can be used for an
 internal appendix.
 
 ```python
@@ -260,7 +260,7 @@ api = collect_api(
     public_policy="__all__",
     include_private=True,
 )
-internal = api.private_objects()
+internal = api.select_private_objects()
 ```
 
 For repeated runs against a general development repository, create an

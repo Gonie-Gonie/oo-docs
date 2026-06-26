@@ -137,7 +137,7 @@ def collect_api(
             module_exclude_patterns=("mypkg.tests*",),
             object_exclude_patterns=("render_to_pdf", "render_to_html"),
         )
-        classes = api.select(kind="class", module_prefix="mypkg")
+        classes = api.select_objects(kind="class", module_prefix="mypkg")
 
         doc = Document(
             "Selected API",
@@ -297,8 +297,8 @@ def collect_module_api(
 
     if target is not None:
         api = collect_api(target, config=config, **kwargs)
-        found = api.find(str(module))
-        if isinstance(found, ApiModule):
+        found = api.find_module(str(module))
+        if found is not None:
             return found
         raise LookupError(f"API module not found in target: {module}")
 
@@ -386,7 +386,7 @@ def collect_object_api(
     qualname, preferred_module = _object_lookup_target(obj_or_qualname)
     if target is not None:
         api = collect_api(target, config=config, **kwargs)
-        found = api.find(qualname)
+        found = api.find_object(qualname)
         if isinstance(found, ApiObject):
             return found
         raise LookupError(f"API object not found in target: {qualname}")
@@ -401,7 +401,7 @@ def collect_object_api(
         except Exception as exc:
             errors.append(exc)
             continue
-        found = api.find(qualname)
+        found = api.find_object(qualname)
         if isinstance(found, ApiObject):
             return found
     if errors:

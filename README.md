@@ -228,8 +228,8 @@ api = collect_api("oodocs", public_policy="__all__")
 # ApiCollectConfig.from_pyproject(".") can load [tool.oodocs.apidoc], and
 # ApiCollectConfig.write_json("apidoc-config.json") stores the same policy so
 # CLI commands can reuse it with --config.
-classes = api.select(kind="class", module_prefix="oodocs.components")
-functions = api.select(kind="function")
+classes = api.select_objects(kind="class", module_prefix="oodocs.components")
+functions = api.select_objects(kind="function")
 
 doc = Document(
     "Selected API Notes",

@@ -22,7 +22,7 @@ Core objects:
 from oodocs.apidoc import ApiPackage, collect_api
 
 api: ApiPackage = collect_api("oodocs", public_policy="__all__")
-obj = api.find("oodocs.Document")
+obj = api.find_object("oodocs.Document")
 
 if obj is not None:
     print(obj.signature_text())
@@ -50,7 +50,7 @@ from oodocs import Chapter, Document, Table
 from oodocs.apidoc import collect_api
 
 api = collect_api(".")
-obj = api.functions()[0]
+obj = api.select_functions()[0]
 rows = [item.as_exception_row() for item in obj.exceptions]
 doc = Document(
     "API Review",
@@ -68,10 +68,11 @@ them before the module API summary table so overview-level guidance is not lost
 when a repository uses module docstrings as reference introductions or embeds a
 module reference inside a larger hand-authored document.
 
-For package-wide querying, `ApiPackage` exposes `classes()`, `functions()`,
-`methods()`, `properties()`, `attributes()`, `public_objects()`, and the more
-general `select(...)` helper. `ApiModule` exposes matching module-local
-helpers for classes, functions, properties, and attributes.
+For package-wide querying, `ApiPackage` exposes `select_classes()`,
+`select_functions()`, `select_methods()`, `select_properties()`,
+`select_attributes()`, `select_public_objects()`, and the more general
+`select_objects(...)` helper. `ApiModule` exposes matching module-local helpers
+for classes, functions, properties, and attributes.
 
 Use `max_level` when a large repository should render a shallower reference.
 For example, `api.to_document(profile="reference", max_level=2)` renders module

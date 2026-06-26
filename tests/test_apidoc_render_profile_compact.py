@@ -8,4 +8,4 @@ def test_compact_profile_builds_valid_document(tmp_path) -> None:
     document = api.to_document(profile="compact", max_level=2)
 
     assert document.validate(formats=("html",)).ok
-    assert api.find("samplepkg.Widget").to_section(profile="compact") is not None
+    assert api.find_object("samplepkg.Widget").to_section(profile="compact") is not None

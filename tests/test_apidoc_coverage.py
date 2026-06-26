@@ -59,7 +59,7 @@ def test_apidoc_coverage_uses_dataclass_attribute_docs_for_constructor_parameter
     )
 
     api = collect_api(package_dir, collector="griffe", public_policy="__all__")
-    settings = api.find("datapkg.Settings")
+    settings = api.find_object("datapkg.Settings")
     coverage = check_api_docs(api)
 
     assert settings is not None
@@ -176,8 +176,8 @@ def test_apidoc_coverage_can_execute_doctest_examples() -> None:
 
     coverage = check_api_docs(api, doctest_namespace={"echo": echo})
     issue_codes = {issue.code for issue in coverage.issues}
-    good = api.find("doctestexecpkg.good")
-    bad = api.find("doctestexecpkg.bad")
+    good = api.find_object("doctestexecpkg.good")
+    bad = api.find_object("doctestexecpkg.bad")
 
     assert coverage.example_count == 2
     assert coverage.syntax_checked_example_count == 2

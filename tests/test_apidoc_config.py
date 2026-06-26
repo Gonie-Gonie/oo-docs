@@ -136,7 +136,7 @@ def test_apidoc_config_read_file_accepts_target_for_parser_modules(tmp_path) -> 
 
     config = ApiCollectConfig.read_file(config_path, target=repo)
     api = collect_api(repo, config=config)
-    run = api.find("targetconfigpkg.run")
+    run = api.find_object("targetconfigpkg.run")
 
     assert run is not None
     assert run.summary == "target-config:Run through target-aware config."
@@ -214,7 +214,7 @@ def test_apidoc_build_config_read_file_accepts_target_for_parser_modules(tmp_pat
 
     build = ApiBuildConfig.read_file(config_path, target=repo)
     api = collect_api(repo, config=build.collection)
-    run = api.find("targetbuildpkg.run")
+    run = api.find_object("targetbuildpkg.run")
 
     assert build.profile == "compact"
     assert build.output_formats == ("html",)
@@ -274,7 +274,7 @@ def test_apidoc_build_config_read_file_uses_setuptools_find_target_import_roots(
     build = ApiBuildConfig.read_file(config_path, target=repo)
     api = build.collect(repo)
     document = build.to_document(repo)
-    run = api.find("findtargetpkg.run")
+    run = api.find_object("findtargetpkg.run")
 
     assert document.validate(formats=("html",)).ok
     assert run is not None
@@ -333,7 +333,7 @@ def test_apidoc_build_config_read_file_uses_hatch_target_import_roots(tmp_path) 
     build = ApiBuildConfig.read_file(config_path, target=repo)
     api = build.collect(repo)
     document = build.to_document(repo)
-    run = api.find("hatchtargetpkg.run")
+    run = api.find_object("hatchtargetpkg.run")
 
     assert document.validate(formats=("html",)).ok
     assert run is not None
@@ -392,7 +392,7 @@ def test_apidoc_build_config_read_file_uses_pdm_target_import_roots(tmp_path) ->
     build = ApiBuildConfig.read_file(config_path, target=repo)
     api = build.collect(repo)
     document = build.to_document(repo)
-    run = api.find("pdmtargetpkg.run")
+    run = api.find_object("pdmtargetpkg.run")
 
     assert document.validate(formats=("html",)).ok
     assert run is not None
@@ -451,12 +451,12 @@ def test_apidoc_build_config_read_file_uses_flit_target_import_roots(tmp_path) -
     build = ApiBuildConfig.read_file(config_path, target=repo)
     api = build.collect(repo)
     document = build.to_document(repo)
-    run = api.find("flittargetpkg.run")
+    run = api.find_object("flittargetpkg.run")
 
     assert document.validate(formats=("html",)).ok
     assert run is not None
     assert run.summary == "flit-target:Run from a Flit-layout repository."
-    assert api.find("straypkg.leak") is None
+    assert api.find_object("straypkg.leak") is None
 
 
 def test_apidoc_build_config_read_file_uses_import_names_target_import_roots(
@@ -513,9 +513,9 @@ def test_apidoc_build_config_read_file_uses_import_names_target_import_roots(
     build = ApiBuildConfig.read_file(config_path, target=repo)
     api = build.collect(repo)
     document = build.to_document(repo)
-    run = api.find("importnamestargetpkg.run")
+    run = api.find_object("importnamestargetpkg.run")
 
     assert document.validate(formats=("html",)).ok
     assert run is not None
     assert run.summary == "import-names-target:Run from a declared import-name repository."
-    assert api.find("straypkg.leak") is None
+    assert api.find_object("straypkg.leak") is None

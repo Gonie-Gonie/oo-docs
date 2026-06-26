@@ -113,7 +113,7 @@ def collect_oodocs_api() -> ApiPackage:
 
         api = collect_oodocs_api()
         full_reference = api.to_document("OODocs Full API Reference")
-        composable_classes = api.select(kind="class", module_prefix="oodocs.components")
+        composable_classes = api.select_objects(kind="class", module_prefix="oodocs.components")
         ```
     """
 
@@ -198,10 +198,10 @@ def build_document(
 
     api = api or collect_oodocs_api()
     coverage = coverage or check_api_docs(api)
-    classes = api.select(kind="class", module_prefix="oodocs.components")[:3]
+    classes = api.select_objects(kind="class", module_prefix="oodocs.components")[:3]
     if not classes:
-        classes = api.select(kind="class")[:3]
-    functions = api.select(kind="function")[:10]
+        classes = api.select_objects(kind="class")[:3]
+    functions = api.select_objects(kind="function")[:10]
     focused_module = _focused_module_for_example(api)
 
     chapters = [

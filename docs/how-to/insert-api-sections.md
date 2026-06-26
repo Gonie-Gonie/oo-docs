@@ -17,7 +17,7 @@ api = collect_api(
     docstring_style=parser,
 )
 
-classes = api.select(kind="class", module_prefix="mypkg")
+classes = api.select_objects(kind="class", module_prefix="mypkg")
 
 doc = Document(
     "Developer Notes",
@@ -57,7 +57,7 @@ api = collect_api(
     public_policy="underscore",
     docstring_style=ApiDocstringParser.auto(),
 )
-section = api.find("reporting.build_report").to_section(profile="manual")
+section = api.find_object("reporting.build_report").to_section(profile="manual")
 ```
 
 ## Build A Full Reference Bundle
@@ -104,7 +104,7 @@ from oodocs import Chapter, Document, Paragraph
 from oodocs.apidoc import ApiDocstringParser, collect_api
 
 api = collect_api(".", collector="griffe", docstring_style=ApiDocstringParser.auto())
-client = api.find("mypkg.Client")
+client = api.find_object("mypkg.Client")
 
 doc = Document(
     "Client Integration Guide",
@@ -208,7 +208,7 @@ from oodocs import Chapter, Document, Paragraph
 from oodocs.apidoc import collect_api
 
 api = collect_api(".", collector="griffe", public_policy="__all__")
-functions = api.select(kind="function", module_prefix="mypkg.adapters")
+functions = api.select_objects(kind="function", module_prefix="mypkg.adapters")
 
 doc = Document(
     "Adapter Release Notes",
@@ -235,7 +235,7 @@ coverage = check_api_docs(api, fail_under=0.90)
 
 doc = Document(
     "API Review",
-    Chapter("Selected API", *[obj.to_section(level=2) for obj in api.classes()[:3]]),
+    Chapter("Selected API", *[obj.to_section(level=2) for obj in api.select_classes()[:3]]),
     Chapter("Coverage", coverage.to_table()),
 )
 

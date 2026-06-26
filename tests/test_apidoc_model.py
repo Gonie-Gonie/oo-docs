@@ -28,7 +28,7 @@ def test_apidoc_model_roundtrip_preserves_object_tree() -> None:
     api = ApiPackage("samplepkg", modules=[ApiModule("samplepkg", [obj])])
 
     readback = ApiPackage.from_dict(api.to_dict())
-    found = readback.find("samplepkg.run")
+    found = readback.find_object("samplepkg.run")
 
     assert isinstance(found, ApiObject)
     assert found.parameters[0].annotation == "str"

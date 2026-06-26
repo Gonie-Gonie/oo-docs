@@ -1400,7 +1400,7 @@ def _filter_api_for_build(
 ) -> ApiPackage:
     if not _has_build_filters(kind, module_prefix):
         return api
-    return api.filtered(kind=kind, module_prefix=module_prefix)
+    return api.subset(kind=kind, module_prefix=module_prefix)
 
 
 def _document_for_build(

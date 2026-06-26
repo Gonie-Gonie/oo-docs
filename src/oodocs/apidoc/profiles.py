@@ -70,7 +70,7 @@ class ApiPresentationProfile:
         from oodocs.apidoc.profiles import ApiPresentationProfile
 
         api = collect_api("oodocs", collector="auto")
-        section = api.find("oodocs.Document").to_section(
+        section = api.find_object("oodocs.Document").to_section(
             profile=ApiPresentationProfile.compact()
         )
         ```
@@ -152,7 +152,7 @@ class ApiPresentationProfile:
             from oodocs.apidoc.profiles import ApiPresentationProfile
 
             api = collect_api(".")
-            functions = api.functions()
+            functions = api.select_functions()
             doc = Document(
                 "Release Evidence",
                 Chapter(
@@ -194,7 +194,7 @@ class ApiPresentationProfile:
             from oodocs.apidoc.profiles import ApiPresentationProfile
 
             api = collect_api(".")
-            classes = api.select(kind="class", module_prefix="mypkg.widgets")
+            classes = api.select_objects(kind="class", module_prefix="mypkg.widgets")
             doc = Document(
                 "Widget Guide",
                 Chapter(

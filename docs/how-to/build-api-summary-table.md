@@ -8,7 +8,7 @@ from oodocs import Chapter, Document
 from oodocs.apidoc import collect_api
 
 api = collect_api("oodocs", public_policy="__all__")
-functions = api.select(kind="function")
+functions = api.select_objects(kind="function")
 
 doc = Document(
     "Function Index",

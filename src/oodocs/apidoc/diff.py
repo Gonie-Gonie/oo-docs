@@ -62,7 +62,7 @@ class ApiSnapshot:
         return cls(
             api.name,
             version=api.version,
-            objects={obj.qualname: obj.to_dict() for obj in api.public_objects()},
+            objects={obj.qualname: obj.to_dict() for obj in api.select_public_objects()},
         )
 
     def to_dict(self) -> dict[str, object]:
