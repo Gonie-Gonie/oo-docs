@@ -10,7 +10,7 @@ from oodocs.components.inline import (
     Hyperlink,
     Italic,
     LineBreak,
-    Monospace,
+    InlineCode,
     Strikethrough,
     Text,
 )
@@ -199,8 +199,8 @@ def _rebase(fragments: list[Text], style: TextStyle) -> list[Text]:
             rebased.append(Bold(fragment.value, style=style.merged(fragment.style)))
         elif isinstance(fragment, Italic):
             rebased.append(Italic(fragment.value, style=style.merged(fragment.style)))
-        elif isinstance(fragment, Monospace):
-            rebased.append(Monospace(fragment.value, style=style.merged(fragment.style)))
+        elif isinstance(fragment, InlineCode):
+            rebased.append(InlineCode(fragment.value, style=style.merged(fragment.style)))
         elif isinstance(fragment, Strikethrough):
             rebased.append(Strikethrough(fragment.value, style=style.merged(fragment.style)))
         elif isinstance(fragment, Hyperlink):
@@ -223,7 +223,7 @@ def _parse_code_span(
     source: str,
     cursor: int,
     base_style: TextStyle,
-) -> tuple[Monospace, int] | None:
+) -> tuple[InlineCode, int] | None:
     if source[cursor] != "`":
         return None
     marker_end = cursor
@@ -236,7 +236,7 @@ def _parse_code_span(
     value = source[marker_end:end].replace("\n", " ")
     if len(value) >= 2 and value[:1] == value[-1:] == " " and value.strip(" "):
         value = value[1:-1]
-    return Monospace(value, style=base_style), end + len(marker)
+    return InlineCode(value, style=base_style), end + len(marker)
 
 
 def _parse_markdown_link(

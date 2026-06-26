@@ -140,9 +140,9 @@ Common translations:
 
 - LaTeX `\part` -> `Part(...)` separator pages above chapters
 - LaTeX `\section` / `\subsection` -> `Chapter(...)`, `Section(...)`, `Subsection(...)`
-- LaTeX `\textbf{...}` / `\emph{...}` / `\texttt{...}` -> `bold(...)`, `italic(...)`, `code(...)`
+- LaTeX `\textbf{...}` / `\emph{...}` / `\texttt{...}` -> `bold(...)`, `italic(...)`, `inline_code(...)`
 - LaTeX tag chips / compact inline labels -> `tag(...)`, `badge(...)`, `status(...)`, and `keyboard(...)`
-- Word highlight / strikethrough / manual line break -> `highlight(...)`, `strike(...)`, `line_break()`
+- Word highlight / strikethrough / manual line break -> `highlight(...)`, `strikethrough(...)`, `line_break()`
 - LaTeX `\vspace{...}` / `\hrule` and Notion-style separators -> `VerticalSpace(...)` or `Divider(...)`
 - LaTeX `\includegraphics` -> `Figure(path_or_matplotlib_figure, caption=...)`
 - LaTeX subfigures -> `SubFigure(...)` children inside a captioned `SubFigureGroup(...)`
@@ -158,7 +158,7 @@ The main payoff is fewer manual handoffs: a benchmark CSV can become a table, a 
 OODocs tries to keep the source readable:
 
 - create objects with classes such as `Document`, `Part`, `Chapter`, `Section`, `Paragraph`, `Table`, and `Figure`
-- apply inline actions with helpers such as `bold(...)`, `italic(...)`, `code(...)`, `tag(...)`, `badge(...)`, `status(...)`, `keyboard(...)`, `Text.from_markup(...)`, `Comment.annotated(...)`, `Footnote.annotated(...)`, and `CitationSource.cite()`
+- apply inline actions with helpers such as `bold(...)`, `italic(...)`, `inline_code(...)`, `tag(...)`, `badge(...)`, `status(...)`, `keyboard(...)`, `Text.from_markup(...)`, `Comment.annotated(...)`, `Footnote.annotated(...)`, and `CitationSource.cite()`
 - import existing Markdown with `parse_markdown(...)`, `from_markdown(...)`, or `Document.from_markdown(...)` when release notes, README fragments, or generated Markdown should become editable OODocs objects
 - import Jupyter notebooks with `parse_ipynb(...)`, `from_ipynb(...)`, or `Document.from_ipynb(...)` when notebook markdown, code cells, and textual outputs should become OODocs blocks
 - collect Python API metadata with `oodocs.apidoc.collect_api(...)` when public classes, functions, methods, parameters, examples, and docstring coverage should become queryable objects before they become document blocks
@@ -180,7 +180,7 @@ The default behavior is intentionally conventional:
 - Use `Paragraph(...)` for prose. Pass strings and inline helpers directly; you do not need to pre-build `Text(...)` objects for normal writing.
 - Use `Paragraph(..., title="Outcome")` for run-in paragraph titles such as LaTeX-style bold labels before body text. Override one paragraph with `title_style=ParagraphTitleStyle(...)`, set a section/chapter scope with `Section(..., paragraph_title_style=...)`, or set the document default with `Theme(paragraph_title_style=...)`.
 - Use `tag(...)`, `badge(...)`, `status(...)`, and `keyboard(...)` for compact inline labels. They share the `InlineChip(...)` model; DOCX emits small inline images, while PDF and HTML keep styled text.
-- Use `highlight(...)`, `strike(...)`, and `line_break()` for Word-style emphasis and manual line breaks inside one paragraph.
+- Use `highlight(...)`, `strikethrough(...)`, and `line_break()` for Word-style emphasis and manual line breaks inside one paragraph.
 - Use `Theme(paragraph_alignment=...)` for the document-wide paragraph default, and direct paragraph kwargs such as `alignment=...` when one paragraph should override it.
 - Use `Paragraph(left_indent=..., right_indent=..., first_line_indent=..., unit=...)` when you need Word-like first-line or hanging indents. If `unit` is omitted, indent values follow `DocumentSettings(unit=...)`.
 - Use `subscript(...)`, `superscript(...)`, and `prescript(...)` for ordinary prose. Use `Math(...)` or `Equation(...)` for lightweight LaTeX-style math, including ordinary `x^2` / `x_0` scripts and front scripts such as `\prescript{14}{6}{C}`.

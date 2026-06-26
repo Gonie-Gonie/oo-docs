@@ -20,7 +20,7 @@ from typing import Iterable
 
 from oodocs.components.blocks import Chapter, CodeBlock, Paragraph, Section
 from oodocs.components.generated import TableOfContents
-from oodocs.components.inline import code
+from oodocs.components.inline import inline_code
 from oodocs.components.media import Table
 from oodocs.core import PathLike
 from oodocs.document import Document
@@ -327,7 +327,7 @@ def _iter_checksum_files(output_dir: Path) -> Iterable[Path]:
 def _section_from_csv(path: Path) -> Section:
     return Section(
         path.stem.replace("-", " ").title(),
-        Paragraph("Read from ", code(path.as_posix()), "."),
+        Paragraph("Read from ", inline_code(path.as_posix()), "."),
         Table.from_csv(
             path,
             caption=f"Evidence rows from {path.name}.",
@@ -341,7 +341,7 @@ def _section_from_csv(path: Path) -> Section:
 def _section_from_checksums(path: Path) -> Section:
     return Section(
         "Artifact checksums",
-        Paragraph("Read from ", code(path.as_posix()), "."),
+        Paragraph("Read from ", inline_code(path.as_posix()), "."),
         CodeBlock(path.read_text(encoding="utf-8").strip(), language="text"),
         numbered=False,
         toc=True,

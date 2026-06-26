@@ -27,7 +27,7 @@ from oodocs import (
     Section,
     Table,
     Theme,
-    code,
+    inline_code,
     italic,
 )
 
@@ -198,9 +198,9 @@ def build_journal_paper_document() -> Document:
             "Abstract",
             Paragraph(
                 "This example models a journal submission workflow in which prose, tables, figures, and citations are assembled from ordinary Python code. Benchmark tables are loaded from CSV files with ",
-                code("pandas.read_csv"),
+                inline_code("pandas.read_csv"),
                 ", benchmark figures are generated with ",
-                code("matplotlib"),
+                inline_code("matplotlib"),
                 ", and DOCX, PDF, and HTML outputs are rendered from the same source document. The workflow follows the reproducibility discipline discussed in ",
                 manuscript_sources.cite("reproducible-research"),
                 ".",

@@ -6,7 +6,7 @@ from pathlib import Path
 import tomllib
 
 from oodocs.components.blocks import Paragraph, Section
-from oodocs.components.inline import code
+from oodocs.components.inline import inline_code
 from oodocs.components.media import Table
 from oodocs.core import PathLike
 from oodocs.layout.theme import TableStyle
@@ -48,7 +48,7 @@ def section_from_pyproject(path: PathLike = "pyproject.toml") -> Section:
     ]
     return Section(
         "Package metadata",
-        Paragraph("Read from ", code(source_path.as_posix()), "."),
+        Paragraph("Read from ", inline_code(source_path.as_posix()), "."),
         Table(
             ["Field", "Value"],
             rows,

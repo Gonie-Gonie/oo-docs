@@ -64,8 +64,8 @@ from oodocs import (
     VerticalSpace,
     badge,
     bold,
-    code,
-    color,
+    inline_code,
+    text_color,
     countable_kind,
     highlight,
     link,
@@ -73,7 +73,7 @@ from oodocs import (
     keyboard,
     prescript,
     status,
-    strike,
+    strikethrough,
     subscript,
     superscript,
     tag,
@@ -451,7 +451,7 @@ report = Document(
 report.save_all("artifacts/notebook-report", stem="analysis")
 """
 
-LATEX_COMPARISON_SNIPPET = """from oodocs import Box, Divider, Figure, Paragraph, Table, VerticalSpace, bold, code
+LATEX_COMPARISON_SNIPPET = """from oodocs import Box, Divider, Figure, Paragraph, Table, VerticalSpace, bold, inline_code
 
 summary = Box(
     Paragraph(bold("Takeaway. "), "The result table and figure are normal document blocks."),
@@ -472,13 +472,13 @@ summary = Box(
 Paragraph("See ", summary.reference(), " for the editable evidence package.")
 """
 
-INLINE_WORD_FEATURES_SNIPPET = """from oodocs import Paragraph, Text, highlight, line_break, prescript, strike, subscript, superscript
+INLINE_WORD_FEATURES_SNIPPET = """from oodocs import Paragraph, Text, highlight, line_break, prescript, strikethrough, subscript, superscript
 
 Paragraph(
     "Keep ",
     highlight("review focus", "#FFF2CC"),
     ", remove ",
-    strike("old value"),
+    strikethrough("old value"),
     line_break(),
     "Continue with ",
     Text.styled("small caps", small_caps=True),
@@ -713,7 +713,7 @@ def build_usage_guide_document() -> Document:
         rows=[
             ["\\part", "Part(...)", "Parts render on their own separator pages and do not reset chapter numbering, matching the usual LaTeX book/report behavior."],
             ["\\section, \\subsection", "Chapter, Section, Subsection", "The Python object tree is also the document outline, so headings, contents, and anchors stay synchronized."],
-            ["\\textbf, \\emph, \\texttt", "bold(...), italic(...), code(...)", "Inline styling stays attached to the words being styled and works in DOCX, PDF, and HTML."],
+            ["\\textbf, \\emph, \\texttt", "bold(...), italic(...), inline_code(...)", "Inline styling stays attached to the words being styled and works in DOCX, PDF, and HTML."],
             ["\\includegraphics", "Figure(path_or_matplotlib_figure, caption=...)", "Static images and Python-generated figures use the same captioning and referencing model."],
             ["\\vspace{...}, \\hrule", "VerticalSpace(...), Divider()", "Vertical spacing and separators remain explicit document blocks, including a Notion-like divider for lightweight visual breaks."],
             ["tabular or booktabs", "Table(...), Table.from_dataframe(...)", "Tables can be created directly from Python data instead of being copied into markup."],
@@ -1073,20 +1073,20 @@ def build_usage_guide_document() -> Document:
                 "The smallest working document",
                 Paragraph(
                     "A first document only needs a title, a chapter, a section, a paragraph, and one save call per output format. The quick-start example below intentionally uses ",
-                    code("bold(...)"),
+                    inline_code("bold(...)"),
                     " rather than older method-style emphasis so the current preferred inline API stays visible."
                 ),
                 CodeBlock(QUICK_START_SNIPPET, language="python"),
                 Paragraph(
                     "For the common case where you want all three outputs together, call ",
-                    code("document.save_all('artifacts')"),
+                    inline_code("document.save_all('artifacts')"),
                     ". It uses a filename-safe version of the document title by default, or you can pass ",
-                    code("stem='my-report'"),
+                    inline_code("stem='my-report'"),
                     " to choose the base filename."
                 ),
                 NumberedList(
                     "Author the structure with Document, Part, Chapter, and Section objects.",
-                    "Write prose with Paragraph plus explicit inline helpers such as bold(...), code(...), and links.",
+                    "Write prose with Paragraph plus explicit inline helpers such as bold(...), inline_code(...), and links.",
                     "Call document.save(...) with a .docx, .pdf, or .html path; use the explicit save_docx(...), save_pdf(...), and save_html(...) methods when that reads better.",
                 ),
             ),
@@ -1109,12 +1109,12 @@ def build_usage_guide_document() -> Document:
                 "Structured authors as the default path",
                 Paragraph(
                     "The default structured-author path is now journal-friendly without forcing every document to look like a journal submission. If you provide ",
-                    code("Author(...)"),
+                    inline_code("Author(...)"),
                     " objects, oodocs groups names, affiliations, and correspondence information into a compact title block by default."
                 ),
                 Paragraph(
                     "That default fits papers well, but guides often read better with stacked author profiles. This guide therefore uses ",
-                    code("AuthorLayout(mode='stacked')"),
+                    inline_code("AuthorLayout(mode='stacked')"),
                     " while the journal example relies on the default journal-style arrangement."
                 ),
                 author_layout_figure,
@@ -1128,7 +1128,7 @@ def build_usage_guide_document() -> Document:
                 CodeBlock(AUTHOR_LAYOUT_SNIPPET, language="python"),
                 Paragraph(
                     "If even the stacked layout is still too opinionated, keep ",
-                    code("DocumentSettings(metadata_author='Team Name')"),
+                    inline_code("DocumentSettings(metadata_author='Team Name')"),
                     " for metadata and author the visible cover with ordinary unnumbered sections instead. That preserves a clean file property string while leaving the page design fully under document control."
                 ),
             ),
@@ -1139,24 +1139,24 @@ def build_usage_guide_document() -> Document:
                 "Blocks define the visible structure",
                 Paragraph(
                     "A good rule is: use classes for visible structure and helpers for inline emphasis. Blocks such as ",
-                    code("Part"),
+                    inline_code("Part"),
                     ", ",
-                    code("Chapter"),
+                    inline_code("Chapter"),
                     ", ",
-                    code("Section"),
+                    inline_code("Section"),
                     ", ",
-                    code("Table"),
+                    inline_code("Table"),
                     ", and ",
-                    code("Figure"),
+                    inline_code("Figure"),
                     " make the document outline obvious when reading the source."
                 ),
                 Paragraph(
                     "That explicitness matters most in large edits. During review, a collaborator can skim the object tree and understand where a figure belongs or where a generated page is inserted without first running the script."
                 ),
                 Paragraph(
-                    code("Part"),
+                    inline_code("Part"),
                     " is for book-like divisions above chapters. It gets its own separator page and a Roman label such as ",
-                    code("Part I"),
+                    inline_code("Part I"),
                     ", while chapter numbering continues as 1, 2, 3 across later parts."
                 ),
                 CodeBlock(PART_STRUCTURE_SNIPPET, language="python"),
@@ -1169,13 +1169,13 @@ def build_usage_guide_document() -> Document:
                 ),
                 Paragraph(
                     "OODocs handles those cases with ",
-                    code("CountableBlock"),
+                    inline_code("CountableBlock"),
                     " and the factory ",
-                    code("countable_kind(...)"),
+                    inline_code("countable_kind(...)"),
                     ". The built-in theorem-like classes share the ",
-                    code("theorem"),
+                    inline_code("theorem"),
                     " counter, while ",
-                    code("Proof(...)"),
+                    inline_code("Proof(...)"),
                     " is unnumbered by default. If an unnumbered block needs a reference, give the reference an explicit label."
                 ),
                 counted_definition,
@@ -1199,9 +1199,9 @@ def build_usage_guide_document() -> Document:
                 "Inline annotations stay local to the prose",
                 Paragraph(
                     "Inline helpers are deliberately direct. Use ",
-                    code("bold(...)"),
+                    inline_code("bold(...)"),
                     ", ",
-                    code("code(...)"),
+                    inline_code("inline_code(...)"),
                     ", hyperlinks, comments such as ",
                     Comment.annotated("reviewable phrases", "This note will show up again on the generated comments page."),
                     ", and notes such as ",
@@ -1213,23 +1213,23 @@ def build_usage_guide_document() -> Document:
                 ),
                 Paragraph(
                     "Word-style direct formatting is available without leaving the document tree. Use ",
-                    code("highlight(...)"),
+                    inline_code("highlight(...)"),
                     " for reviewer focus, ",
-                    code("strike(...)"),
+                    inline_code("strikethrough(...)"),
                     " for deleted or superseded language, and ",
-                    code("line_break()"),
+                    inline_code("line_break()"),
                     " for a Shift+Enter-style break inside the same paragraph. ",
-                    code("Text.styled(...)"),
+                    inline_code("Text.styled(...)"),
                     " also accepts Word-native inline features such as ",
-                    code("small_caps"),
+                    inline_code("small_caps"),
                     ", ",
-                    code("all_caps"),
+                    inline_code("all_caps"),
                     ", ",
-                    code("subscript"),
+                    inline_code("subscript"),
                     ", and ",
-                    code("superscript"),
+                    inline_code("superscript"),
                     ". For front scripts in ordinary prose, use ",
-                    code("prescript(...)"),
+                    inline_code("prescript(...)"),
                     " instead of wrapping the sentence in math."
                 ),
                 Paragraph(
@@ -1262,25 +1262,25 @@ def build_usage_guide_document() -> Document:
                 CodeBlock(YAML_SNIPPET, language="yaml"),
                 Paragraph(
                     "Paragraph-level Word features are also part of the authored source. ",
-                    code("Paragraph(...)"),
+                    inline_code("Paragraph(...)"),
                     " accepts explicit alignment, spacing before and after, left and right indents, first-line indents, hanging indents, and keep/page-break controls for reference-like blocks that should not be simulated with spaces. Use ",
-                    code("Theme(paragraph_alignment=...)"),
+                    inline_code("Theme(paragraph_alignment=...)"),
                     " for the document-wide default and direct kwargs such as ",
-                    code("alignment='right'"),
+                    inline_code("alignment='right'"),
                     " only where one paragraph should diverge."
                 ),
                 CodeBlock(PARAGRAPH_INDENT_SNIPPET, language="python"),
                 Paragraph(
                     "Table cells can use the same sort of explicit alignment that authors expect from Word. Put one-off alignment on ",
-                    code("TableCell"),
+                    inline_code("TableCell"),
                     ", or use ",
-                    code("Table(...)"),
+                    inline_code("Table(...)"),
                     " kwargs to set table-wide body and header defaults including borders, per-side cell padding, repeated headers, and alignment. For row, header-row, or column formatting, pass small dictionaries to ",
-                    code("row_styles"),
+                    inline_code("row_styles"),
                     ", ",
-                    code("header_row_styles"),
+                    inline_code("header_row_styles"),
                     ", or ",
-                    code("column_styles"),
+                    inline_code("column_styles"),
                     "."
                 ),
                 CodeBlock(TABLE_ALIGNMENT_SNIPPET, language="python"),
@@ -1305,22 +1305,22 @@ def build_usage_guide_document() -> Document:
                 ),
                 Paragraph(
                     "Document-wide labels are configurable separately for captions and prose references. For example, a document can caption blocks as ",
-                    code("Figure"),
+                    inline_code("Figure"),
                     " while referring to them as ",
-                    code("Fig."),
+                    inline_code("Fig."),
                     ", or use localized labels such as ",
-                    code("그림"),
+                    inline_code("그림"),
                     "."
                 ),
                 Paragraph(
                     "When several related images should share one figure number, use ",
-                    code("SubFigure"),
+                    inline_code("SubFigure"),
                     " children inside a ",
-                    code("SubFigureGroup"),
+                    inline_code("SubFigureGroup"),
                     ". Each child receives an automatic ",
-                    code("(a)"),
+                    inline_code("(a)"),
                     ", ",
-                    code("(b)"),
+                    inline_code("(b)"),
                     " label and can be referenced from prose."
                 ),
                 CodeBlock(SUBFIGURE_SNIPPET, language="python"),
@@ -1345,20 +1345,20 @@ def build_usage_guide_document() -> Document:
                 "Advanced placement and long tables",
                 Paragraph(
                     "Authors normally decide whether a table may be split, not whether it is a normal table or a long table. With ",
-                    code("Table(split=False)"),
+                    inline_code("Table(split=False)"),
                     ", oodocs keeps a short table together and lets PDF place following prose before the table when that avoids an awkward blank page. Very long tables automatically switch to repeated-header split rendering. With ",
-                    code("Table(split=True)"),
+                    inline_code("Table(split=True)"),
                     ", the table behaves like a here-placed object that can break in source order."
                 ),
                 Paragraph(
                     "Tables and figures also accept advanced ",
-                    code("placement"),
+                    inline_code("placement"),
                     " hints such as ",
-                    code("'tbp'"),
+                    inline_code("'tbp'"),
                     ", ",
-                    code("'top'"),
+                    inline_code("'top'"),
                     ", and ",
-                    code("'page'"),
+                    inline_code("'page'"),
                     " for users who need more direct control over renderer placement."
                 ),
                 media_placement_table,
@@ -1377,7 +1377,7 @@ def build_usage_guide_document() -> Document:
                 ),
                 Paragraph(
                     "If you want the explicit collected-notes behavior everywhere, set ",
-                    code("Theme(footnote_placement='document')"),
+                    inline_code("Theme(footnote_placement='document')"),
                     ".",
                 ),
                 CodeBlock(LAYOUT_CONTROL_SNIPPET, language="python"),
@@ -1394,7 +1394,7 @@ def build_usage_guide_document() -> Document:
                 ),
                 Paragraph(
                     "The visible style is configured on the theme: ",
-                    code('Theme(citation_format="apa", reference_format="apa")'),
+                    inline_code('Theme(citation_format="apa", reference_format="apa")'),
                     " switches inline citations to author-year labels and formats the generated references entries in APA-style order."
                 ),
             ),
@@ -1408,7 +1408,7 @@ def build_usage_guide_document() -> Document:
                 ),
                 Paragraph(
                     "The common override path is intentionally shallow: pass a direct keyword argument to the block when the choice is local, use a reusable style object when the same visual treatment repeats, and use a grouped ",
-                    code("Theme"),
+                    inline_code("Theme"),
                     " option object when the default should apply across the whole document."
                 ),
                 renderer_rules_table,
@@ -1417,11 +1417,11 @@ def build_usage_guide_document() -> Document:
                 "Configuration option reference",
                 Paragraph(
                     "Most author-facing options are available as ordinary keyword arguments. Style objects remain available for reusable patterns, and grouped ",
-                    code("Theme"),
+                    inline_code("Theme"),
                     " option objects keep document-wide defaults readable when many settings change together. Pass those option objects positionally to ",
-                    code("Theme"),
+                    inline_code("Theme"),
                     ", and use direct ",
-                    code("Theme(...)"),
+                    inline_code("Theme(...)"),
                     " keyword arguments for one-off overrides."
                 ),
                 settings_options_table,
@@ -1433,21 +1433,21 @@ def build_usage_guide_document() -> Document:
                 "Page size, margins, and explicit breaks",
                 Paragraph(
                     "Page geometry belongs in ",
-                    code("DocumentSettings"),
+                    inline_code("DocumentSettings"),
                     " rather than in individual renderer calls. Use ",
-                    code("PageSize"),
+                    inline_code("PageSize"),
                     " for the physical page, ",
-                    code("PageMargins"),
+                    inline_code("PageMargins"),
                     " for the printable area, and ",
-                    code("unit"),
+                    inline_code("unit"),
                     " to make numeric dimensions read naturally for the document."
                 ),
                 page_layout_table,
                 Paragraph(
                     "Explicit pagination is a block-level decision. Insert ",
-                    code("PageBreak()"),
+                    inline_code("PageBreak()"),
                     " where the authored flow should move to the next page; generated pages can still use ",
-                    code("Theme(generated_page_breaks=True)"),
+                    inline_code("Theme(generated_page_breaks=True)"),
                     " for automatic separation."
                 ),
                 CodeBlock(LAYOUT_CONTROL_SNIPPET, language="python"),
@@ -1459,7 +1459,7 @@ def build_usage_guide_document() -> Document:
                 ),
                 Paragraph(
                     "Use ",
-                    code("TableOfContents"),
+                    inline_code("TableOfContents"),
                     " options when the document needs a shorter outline, no page numbers, or a different per-level visual rhythm."
                 ),
                 contents_style_table,
@@ -1481,14 +1481,14 @@ def build_usage_guide_document() -> Document:
                 "Figure sizing from document geometry",
                 Paragraph(
                     "Figures accept ",
-                    code("width"),
+                    inline_code("width"),
                     ", ",
-                    code("height"),
+                    inline_code("height"),
                     ", or both. If only one dimension is set, renderers preserve the image aspect ratio. If both are set, the figure is placed into the explicit box."
                 ),
                 Paragraph(
                     "For LaTeX-like sizing relative to the text block, compute the length before constructing the figure. The common pattern is ",
-                    code("width=settings.get_text_width(0.75)"),
+                    inline_code("width=settings.get_text_width(0.75)"),
                     ", which reads as '75 percent of the current text width' while still producing a plain numeric width."
                 ),
                 figure_sizing_table,
@@ -1498,9 +1498,9 @@ def build_usage_guide_document() -> Document:
                 "Positioned and inline drawing objects",
                 Paragraph(
                     "Use ",
-                    code("DocumentSettings(page_items=...)"),
+                    inline_code("DocumentSettings(page_items=...)"),
                     " for page-positioned shapes, text boxes, and image boxes that should not push body text around. Use ",
-                    code("placement='inline'"),
+                    inline_code("placement='inline'"),
                     " when the same object should behave more like directly inserted Word media."
                 ),
                 Paragraph(
@@ -1515,7 +1515,7 @@ def build_usage_guide_document() -> Document:
                 "Report panels for structured forms",
                 Paragraph(
                     "Most report layouts should remain editable document structure. For tcolorbox-like panels, callouts, and form sections, use ",
-                    code("Box"),
+                    inline_code("Box"),
                     " with explicit width, padding, colors, and alignment before reaching for fixed-position page graphics. That keeps Word output reviewable while PDF and HTML keep the same grouping intent."
                 ),
                 contributor_certificate,
@@ -1548,7 +1548,7 @@ def build_usage_guide_document() -> Document:
                 CodeBlock(PROJECT_LAYOUT_SNIPPET, language="text", show_language=False),
                 Paragraph(
                     "The journal example at ",
-                    code("examples/journal_paper_example/main.py"),
+                    inline_code("examples/journal_paper_example/main.py"),
                     " follows the same pattern with CSV-backed tables, generated figures, and a manuscript body authored from one readable script."
                 ),
             ),
@@ -1560,39 +1560,39 @@ def build_usage_guide_document() -> Document:
                 cli_workflow_figure,
                 Paragraph(
                     "Use ",
-                    code("oodocs build"),
+                    inline_code("oodocs build"),
                     " when the source file is Python and exposes a ",
-                    code("Document"),
+                    inline_code("Document"),
                     " as ",
-                    code("document"),
+                    inline_code("document"),
                     ", ",
-                    code("doc"),
+                    inline_code("doc"),
                     ", ",
-                    code("report"),
+                    inline_code("report"),
                     ", or a zero-argument factory such as ",
-                    code("build_document()"),
+                    inline_code("build_document()"),
                     ". Use ",
-                    code("oodocs convert"),
+                    inline_code("oodocs convert"),
                     " when the source is Markdown or a notebook. Use ",
-                    code("oodocs validate"),
+                    inline_code("oodocs validate"),
                     " when CI should stop before any renderer writes files."
                 ),
                 cli_command_table,
                 CodeBlock(CLI_WORKFLOW_SNIPPET, language="powershell"),
                 Paragraph(
                     "A Python source file for ",
-                    code("oodocs build"),
+                    inline_code("oodocs build"),
                     " should keep construction and rendering separate. That makes the same source easy to import from tests, validate in CI, or render locally."
                 ),
                 CodeBlock(PYTHON_BUILD_SOURCE_SNIPPET, language="python"),
                 validation_table,
                 Paragraph(
                     "Validation returns a structured result object. Printing it produces a table for humans, while code can still branch on ",
-                    code("result.ok"),
+                    inline_code("result.ok"),
                     ", ",
-                    code("result.errors_for(('pdf',))"),
+                    inline_code("result.errors_for(('pdf',))"),
                     ", or ",
-                    code("result.warnings_for(('html',))"),
+                    inline_code("result.warnings_for(('html',))"),
                     ". Rendering methods call validation by default and stop before writing outputs when errors apply to the requested formats."
                 ),
                 CodeBlock(VALIDATION_SNIPPET, language="python"),
@@ -1601,16 +1601,16 @@ def build_usage_guide_document() -> Document:
                 "Import Markdown when it is already the source of record",
                 Paragraph(
                     "Markdown import is meant for handoff points: release notes, README fragments, generated changelog sections, and issue summaries that already exist as Markdown. Use ",
-                    code("Document.from_markdown(...)"),
+                    inline_code("Document.from_markdown(...)"),
                     " when the Markdown should become a document, and ",
-                    code("parse_markdown(...)"),
+                    inline_code("parse_markdown(...)"),
                     " when the imported blocks should be rearranged inside a larger Python-authored report."
                 ),
                 Paragraph(
                     "Because parsed Markdown becomes normal OODocs objects, several release-note bodies can be collected, counted, wrapped in ",
-                    code("Section"),
+                    inline_code("Section"),
                     " objects, combined with a summary ",
-                    code("Table"),
+                    inline_code("Table"),
                     ", and exported with the same DOCX, PDF, and HTML renderers as hand-authored content."
                 ),
                 CodeBlock(MARKDOWN_RELEASE_NOTES_SNIPPET, language="python"),
@@ -1619,11 +1619,11 @@ def build_usage_guide_document() -> Document:
                 "Import notebooks without turning them into screenshots",
                 Paragraph(
                     "Jupyter notebooks can enter the same workflow through ",
-                    code("Document.from_ipynb(...)"),
+                    inline_code("Document.from_ipynb(...)"),
                     " or ",
-                    code("parse_ipynb(...)"),
+                    inline_code("parse_ipynb(...)"),
                     ". Markdown cells become normal document structure, code cells become ",
-                    code("CodeBlock"),
+                    inline_code("CodeBlock"),
                     " objects, and textual outputs can be included for audit trails or omitted when the report should only carry the authored code."
                 ),
                 Paragraph(
@@ -1641,21 +1641,21 @@ def build_usage_guide_document() -> Document:
                     "Reusable components keep the core API visible",
                     Paragraph(
                         "Component presets live under ",
-                        code("oodocs.presets.components"),
+                        inline_code("oodocs.presets.components"),
                         ". They are intentionally thin wrappers around ordinary blocks, so a user can start with ",
-                        code("CalloutBox"),
+                        inline_code("CalloutBox"),
                         ", ",
-                        code("KeyValueTable"),
+                        inline_code("KeyValueTable"),
                         ", or ",
-                        code("Nomenclature"),
+                        inline_code("Nomenclature"),
                         " and still pass familiar kwargs such as ",
-                        code("padding"),
+                        inline_code("padding"),
                         ", ",
-                        code("cell_padding"),
+                        inline_code("cell_padding"),
                         ", ",
-                        code("border_width"),
+                        inline_code("border_width"),
                         ", and ",
-                        code("column_widths"),
+                        inline_code("column_widths"),
                         ".",
                     ),
                     component_presets_table,
@@ -1671,7 +1671,7 @@ def build_usage_guide_document() -> Document:
                     "Templates build complete documents from manuscript-shaped input",
                     Paragraph(
                         "Template presets live under ",
-                        code("oodocs.presets.templates"),
+                        inline_code("oodocs.presets.templates"),
                         ". The generic journal template owns the routine article scaffolding so callers usually fill content fields rather than theme details. The build input stays small: title, authors, abstract, keywords, body sections, optional acknowledgement and data availability statements, and citation data. Publisher-specific presets are intentionally not included because broad public guidance is not the same thing as a journal-specific template. The included example uses common manuscript elements that appear in Elsevier's general Your Paper Your Way guidance ",
                         RELATED_WORK.cite("elsevier-your-paper-your-way"),
                         " and Taylor & Francis Author Services guidance ",
@@ -1681,13 +1681,13 @@ def build_usage_guide_document() -> Document:
                         "."
                     ),
                     Paragraph(
-                        code("JournalArticleTemplate"),
+                        inline_code("JournalArticleTemplate"),
                         " accepts existing ",
-                        code("Section"),
+                        inline_code("Section"),
                         " blocks, compact ",
-                        code("ManuscriptSection"),
+                        inline_code("ManuscriptSection"),
                         " descriptors, or simple ",
-                        code("(title, children)"),
+                        inline_code("(title, children)"),
                         " tuples for the body."
                     ),
                     template_presets_table,

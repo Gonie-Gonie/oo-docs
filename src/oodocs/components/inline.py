@@ -90,7 +90,7 @@ class Text:
         return Italic(value, style=style)
 
     @classmethod
-    def code(cls, value: str, style: TextStyle | None = None) -> Monospace:
+    def inline_code(cls, value: str, style: TextStyle | None = None) -> InlineCode:
         """Create a monospace text fragment.
 
         Args:
@@ -98,23 +98,23 @@ class Text:
             style: Additional style values to merge.
 
         Returns:
-            Monospace text fragment.
+            InlineCode text fragment.
         """
 
-        return Monospace(value, style=style)
+        return InlineCode(value, style=style)
 
     @classmethod
-    def color(
+    def text_color(
         cls,
         value: str,
-        color: str,
+        text_color: str,
         style: TextStyle | None = None,
     ) -> Text:
         """Create a colored text fragment.
 
         Args:
             value: Literal text content.
-            color: Text color as a hex string.
+            text_color: Text color as a hex string.
             style: Additional style values to merge.
 
         Returns:
@@ -123,7 +123,7 @@ class Text:
 
         return cls(
             value=value,
-            style=TextStyle(color=color).merged(style),
+            style=TextStyle(color=text_color).merged(style),
         )
 
     @classmethod
@@ -267,8 +267,8 @@ class Italic(Text):
         super().__init__(value=value, style=TextStyle(italic=True).merged(style))
 
 
-class Monospace(Text):
-    """Monospace inline text.
+class InlineCode(Text):
+    """Inline code text.
 
     Args:
         value: Literal text content.
@@ -277,9 +277,9 @@ class Monospace(Text):
     Examples:
         ```python
         from oodocs import Document, Paragraph
-        from oodocs.components.inline import Monospace
+        from oodocs.components.inline import InlineCode
 
-        document = Document("Install", Paragraph("Run ", Monospace("pip install oodocs"), "."))
+        document = Document("Install", Paragraph("Run ", InlineCode("pip install oodocs"), "."))
         ```
     """
 
@@ -1171,7 +1171,7 @@ def italic(value: str, *, style: TextStyle | None = None) -> Italic:
     return Text.italic(value, style=style)
 
 
-def code(value: str, *, style: TextStyle | None = None) -> Monospace:
+def inline_code(value: str, *, style: TextStyle | None = None) -> InlineCode:
     """Create a monospace text fragment.
 
     Args:
@@ -1179,15 +1179,15 @@ def code(value: str, *, style: TextStyle | None = None) -> Monospace:
         style: Additional style values to merge.
 
     Returns:
-        Monospace text fragment.
+        InlineCode text fragment.
 
     Examples:
         ```python
-        fragment = code("pip install oodocs")
+        fragment = inline_code("pip install oodocs")
         ```
     """
 
-    return Text.code(value, style=style)
+    return Text.inline_code(value, style=style)
 
 
 def superscript(value: object, *, style: TextStyle | None = None) -> Text:
@@ -1411,9 +1411,9 @@ def keyboard(
     return _chip(value, kind="keyboard", chip_style=chip_style, style=style, **style_values)
 
 
-def color(
+def text_color(
     value: str,
-    color: str,
+    text_color: str,
     *,
     style: TextStyle | None = None,
 ) -> Text:
@@ -1421,7 +1421,7 @@ def color(
 
     Args:
         value: Literal text content.
-        color: Text color as a hex string.
+        text_color: Text color as a hex string.
         style: Additional style values to merge.
 
     Returns:
@@ -1429,11 +1429,11 @@ def color(
 
     Examples:
         ```python
-        fragment = color("Alert", "C00000")
+        fragment = text_color("Alert", "C00000")
         ```
     """
 
-    return Text.color(value, color, style=style)
+    return Text.text_color(value, text_color, style=style)
 
 
 def highlight(
@@ -1459,25 +1459,6 @@ def highlight(
     """
 
     return Text.highlight(value, color=color, style=style)
-
-
-def strike(value: str, *, style: TextStyle | None = None) -> Strikethrough:
-    """Create a strikethrough text fragment.
-
-    Args:
-        value: Literal text content.
-        style: Additional style values to merge.
-
-    Returns:
-        Strikethrough text fragment.
-
-    Examples:
-        ```python
-        fragment = strike("deprecated")
-        ```
-    """
-
-    return Text.strikethrough(value, style=style)
 
 
 def strikethrough(value: str, *, style: TextStyle | None = None) -> Strikethrough:
@@ -1641,14 +1622,12 @@ __all__ = [
     "Italic",
     "LineBreak",
     "Math",
-    "Monospace",
+    "InlineCode",
     "Strikethrough",
     "Text",
     "_BlockReference",
     "badge",
     "bold",
-    "code",
-    "color",
     "coerce_inlines",
     "cite",
     "comment",
@@ -1662,10 +1641,11 @@ __all__ = [
     "prescript",
     "reference",
     "status",
-    "strike",
+    "inline_code",
     "strikethrough",
     "styled",
     "subscript",
     "superscript",
     "tag",
+    "text_color",
 ]

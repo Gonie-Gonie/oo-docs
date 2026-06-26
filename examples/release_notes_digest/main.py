@@ -17,7 +17,7 @@ from oodocs import (
     Table,
     TableOfContents,
     Theme,
-    code,
+    inline_code,
 )
 
 
@@ -165,7 +165,7 @@ def build_release_notes_document(
                 Paragraph("Release date: ", release_date, "."),
                 Paragraph(
                     "Imported from ",
-                    code(repo_relative(path)),
+                    inline_code(repo_relative(path)),
                     " after semantic-version sorting.",
                 ),
                 imported_release.body.children,
@@ -236,9 +236,9 @@ def build_release_notes_document(
             "Release Note Index",
             Paragraph(
                 "This example gathers Markdown files from ",
-                code(repo_relative(Path(release_notes_dir))),
+                inline_code(repo_relative(Path(release_notes_dir))),
                 ", reads version metadata from filenames such as ",
-                code("v0.9.1.md"),
+                inline_code("v0.9.1.md"),
                 ", reads release dates from matching git tags, and sorts the "
                 "imported notes from newest to oldest.",
             ),
@@ -256,15 +256,15 @@ def build_release_notes_document(
             Section(
                 "Release runbook",
                 NumberedList(
-                    Paragraph("Write or update ", code("release-notes/vX.Y.Z.md"), "."),
+                    Paragraph("Write or update ", inline_code("release-notes/vX.Y.Z.md"), "."),
                     Paragraph(
                         "Check the version follows ",
-                        code("vMAJOR.MINOR.PATCH"),
+                        inline_code("vMAJOR.MINOR.PATCH"),
                         " and describe compatibility notes explicitly.",
                     ),
                     Paragraph(
                         "Run ",
-                        code(".\\scripts\\release.ps1 X.Y.Z"),
+                        inline_code(".\\scripts\\release.ps1 X.Y.Z"),
                         " to create and push the matching tag.",
                     ),
                     Paragraph(

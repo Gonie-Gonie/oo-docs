@@ -20,7 +20,7 @@ from oodocs import (
     TableOfContents,
     Theme,
     bold,
-    code,
+    inline_code,
 )
 
 
@@ -188,7 +188,7 @@ def build_benchmark_document() -> Document:
                 "Implementation candidates",
                 Paragraph(
                     "The candidates are ordinary functions. They are listed once in ",
-                    code("NORMALIZERS"),
+                    inline_code("NORMALIZERS"),
                     ", then used by both the benchmark and the document narrative."
                 ),
                 CodeBlock(
@@ -207,9 +207,9 @@ def build_benchmark_document() -> Document:
                 "The fastest candidate in this run was ",
                 bold(str(best["name"])),
                 " at ",
-                code(f"{float(best['median_ms']):.3f}"),
+                inline_code(f"{float(best['median_ms']):.3f}"),
                 " ms per measured batch. The slowest candidate took about ",
-                code(f"{speedup:.2f}x"),
+                inline_code(f"{speedup:.2f}x"),
                 " as long on the same payload."
             ),
             result_table,

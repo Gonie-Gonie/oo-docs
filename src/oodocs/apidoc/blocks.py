@@ -8,7 +8,7 @@ from oodocs.apidoc.model import ApiModule, ApiObject, ApiPackage
 from oodocs.apidoc.profiles import ApiPresentationProfile, resolve_presentation_profile
 from oodocs.components.base import Block
 from oodocs.components.blocks import Box, CodeBlock, Paragraph, Section, section_for_level
-from oodocs.components.inline import InlineChip, InlineChipStyle, Text, bold, code, comment, italic
+from oodocs.components.inline import InlineChip, InlineChipStyle, Text, bold, inline_code, comment, italic
 from oodocs.components.media import Table
 
 
@@ -173,7 +173,7 @@ def api_object_summary_paragraph(obj: ApiObject) -> Paragraph:
     pieces: list[object] = [
         api_kind_chip(obj),
         " ",
-        code(obj.display_name()),
+        inline_code(obj.display_name()),
     ]
     summary = obj.plain_summary()
     if summary:
@@ -345,7 +345,7 @@ def api_returns_blocks(
         return []
     parts: list[object] = []
     if obj.returns.annotation:
-        parts.extend([code(obj.returns.annotation), ": "])
+        parts.extend([inline_code(obj.returns.annotation), ": "])
     if obj.returns.description:
         parts.append(obj.returns.description)
     if not parts:

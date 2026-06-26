@@ -659,20 +659,6 @@
           "category": "inline",
           "kind": "function",
           "module": "oodocs.components.inline",
-          "name": "code",
-          "qualname": "oodocs.components.inline.code"
-        },
-        {
-          "category": "inline",
-          "kind": "function",
-          "module": "oodocs.components.inline",
-          "name": "color",
-          "qualname": "oodocs.components.inline.color"
-        },
-        {
-          "category": "inline",
-          "kind": "function",
-          "module": "oodocs.components.inline",
           "name": "cite",
           "qualname": "oodocs.components.inline.cite"
         },
@@ -738,6 +724,13 @@
           "module": "oodocs.components.inline",
           "name": "highlight",
           "qualname": "oodocs.components.inline.highlight"
+        },
+        {
+          "category": "inline",
+          "kind": "function",
+          "module": "oodocs.components.inline",
+          "name": "inline_code",
+          "qualname": "oodocs.components.inline.inline_code"
         },
         {
           "category": "inline",
@@ -815,13 +808,6 @@
           "module": "oodocs.components.inline",
           "name": "status",
           "qualname": "oodocs.components.inline.status"
-        },
-        {
-          "category": "inline",
-          "kind": "function",
-          "module": "oodocs.components.inline",
-          "name": "strike",
-          "qualname": "oodocs.components.inline.strike"
         },
         {
           "category": "inline",
@@ -913,6 +899,13 @@
           "module": "oodocs.components.inline",
           "name": "tag",
           "qualname": "oodocs.components.inline.tag"
+        },
+        {
+          "category": "inline",
+          "kind": "function",
+          "module": "oodocs.components.inline",
+          "name": "text_color",
+          "qualname": "oodocs.components.inline.text_color"
         },
         {
           "category": "workflow",

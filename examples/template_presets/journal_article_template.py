@@ -11,7 +11,7 @@ from oodocs import (
     CitationSource,
     Paragraph,
     Table,
-    code,
+    inline_code,
 )
 from oodocs.presets.templates import JournalArticleTemplate, ManuscriptSection
 
@@ -148,7 +148,7 @@ BODY_SECTIONS = [
         [
             Paragraph(
                 "The example builds the article with ",
-                code("JournalArticleTemplate.build(...)"),
+                inline_code("JournalArticleTemplate.build(...)"),
                 ". The caller supplies the content surface directly and lets the template decide ordinary journal defaults such as title matter placement, page numbering, caption alignment, declaration ordering, and reference placement.",
             ),
             INPUT_RESPONSIBILITY_TABLE,
@@ -159,16 +159,16 @@ BODY_SECTIONS = [
         [
             Paragraph(
                 "The body remains explicit because manuscript arguments are domain-specific. Authors can pass ",
-                code("ManuscriptSection"),
+                inline_code("ManuscriptSection"),
                 " descriptors, existing ",
-                code("Section"),
+                inline_code("Section"),
                 " blocks, or compact ",
-                code("(title, children)"),
+                inline_code("(title, children)"),
                 " tuples, while the preset handles generated article structure around those blocks.",
             ),
             Paragraph(
                 "Optional acknowledgement and data availability statements behave like normal manuscript declarations: pass content to include the section, or pass ",
-                code("None"),
+                inline_code("None"),
                 " to omit it without leaving an empty heading.",
             ),
         ],

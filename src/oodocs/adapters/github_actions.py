@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Mapping
 
 from oodocs.components.blocks import Paragraph, Section
-from oodocs.components.inline import code
+from oodocs.components.inline import inline_code
 from oodocs.components.media import Table
 from oodocs.core import PathLike
 from oodocs.layout.theme import TableStyle
@@ -66,7 +66,7 @@ def section_from_github_workflow(path: PathLike) -> Section:
 
     return Section(
         "GitHub Actions workflow",
-        Paragraph("Read from ", code(source_path.as_posix()), "."),
+        Paragraph("Read from ", inline_code(source_path.as_posix()), "."),
         Table.from_records(
             rows,
             columns=["job", "runs-on", "needs", "steps"],

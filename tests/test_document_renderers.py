@@ -100,8 +100,8 @@ from oodocs import (
     VerticalSpace,
     badge,
     bold,
-    code,
-    color,
+    inline_code,
+    text_color,
     cite,
     comment,
     countable_kind,
@@ -116,7 +116,6 @@ from oodocs import (
     prescript,
     reference,
     status,
-    strike,
     strikethrough,
     styled,
     subscript,
@@ -394,8 +393,8 @@ def test_method_style_inline_actions_create_renderable_fragments() -> None:
 
     assert Text.bold("important").style.bold is True
     assert Text.italic("note").style.italic is True
-    assert Text.code("x = 1").style.font_name == "Courier New"
-    assert Text.color("accent", "#0066AA").style.color == "0066AA"
+    assert Text.inline_code("x = 1").style.font_name == "Courier New"
+    assert Text.text_color("accent", "#0066AA").style.color == "0066AA"
     assert Text.highlight("marked", "#FFF2CC").style.highlight_color == "FFF2CC"
     assert Text.strikethrough("old").style.strikethrough is True
     assert Text.superscript("2").style.superscript is True
@@ -406,10 +405,9 @@ def test_method_style_inline_actions_create_renderable_fragments() -> None:
     ]
     assert bold("important").style.bold is True
     assert italic("note").style.italic is True
-    assert code("x = 1").style.font_name == "Courier New"
-    assert color("accent", "#0066AA").style.color == "0066AA"
+    assert inline_code("x = 1").style.font_name == "Courier New"
+    assert text_color("accent", "#0066AA").style.color == "0066AA"
     assert highlight("marked", "#FFF2CC").style.highlight_color == "FFF2CC"
-    assert strike("old").style.strikethrough is True
     assert strikethrough("old").style.strikethrough is True
     assert superscript("2").style.superscript is True
     assert subscript("0").style.subscript is True
@@ -1273,12 +1271,12 @@ def test_public_api_prefers_classes_for_structural_nodes() -> None:
     assert not hasattr(oodocs, "Bold")
     assert not hasattr(oodocs, "Hyperlink")
     assert not hasattr(oodocs, "Italic")
-    assert not hasattr(oodocs, "Monospace")
+    assert not hasattr(oodocs, "InlineCode")
     assert not hasattr(oodocs, "FootnotesPage")
     assert hasattr(inline_components, "Bold")
     assert hasattr(inline_components, "Hyperlink")
     assert hasattr(inline_components, "Italic")
-    assert hasattr(inline_components, "Monospace")
+    assert hasattr(inline_components, "InlineCode")
     assert hasattr(generated_components, "FootnotesPage")
     assert not hasattr(oodocs, "ListBlock")
     assert not hasattr(oodocs, "Citation")
@@ -1301,14 +1299,16 @@ def test_public_api_prefers_classes_for_structural_nodes() -> None:
     assert hasattr(oodocs, "reference")
     assert hasattr(oodocs, "bold")
     assert hasattr(oodocs, "italic")
-    assert hasattr(oodocs, "code")
-    assert hasattr(oodocs, "color")
+    assert hasattr(oodocs, "inline_code")
+    assert hasattr(oodocs, "text_color")
+    assert not hasattr(oodocs, "code")
+    assert not hasattr(oodocs, "color")
     assert hasattr(oodocs, "highlight")
     assert hasattr(oodocs, "link")
     assert hasattr(oodocs, "line_break")
     assert not hasattr(oodocs, "vspace")
     assert not hasattr(oodocs, "hrule")
-    assert hasattr(oodocs, "strike")
+    assert not hasattr(oodocs, "strike")
     assert hasattr(oodocs, "strikethrough")
     assert hasattr(oodocs, "tag")
     assert hasattr(oodocs, "badge")
@@ -1675,7 +1675,7 @@ def test_inline_highlight_strike_and_line_break_render_to_all_outputs(tmp_path: 
             "Keep ",
             highlight("review focus", "#FFF2CC"),
             ", remove ",
-            strike("old value"),
+            strikethrough("old value"),
             line_break(),
             "Continue same paragraph.",
         ),
@@ -2938,9 +2938,9 @@ def test_document_renders_to_docx_and_pdf(tmp_path: Path) -> None:
                     " pipeline supports ",
                     italic("styled"),
                     " text, ",
-                    code("code"),
+                    inline_code("code"),
                     ", and ",
-                        color("custom color", "#0066AA", style=TextStyle(bold=True)),
+                    text_color("custom color", "#0066AA", style=TextStyle(bold=True)),
                     ".",
                     style=ParagraphStyle(space_after=14),
                 ),

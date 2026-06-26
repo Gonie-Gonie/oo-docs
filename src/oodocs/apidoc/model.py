@@ -281,11 +281,11 @@ class ApiParameter:
         """
 
         from oodocs.components.blocks import Paragraph
-        from oodocs.components.inline import code
+        from oodocs.components.inline import inline_code
 
-        pieces: list[object] = [code(self.name)]
+        pieces: list[object] = [inline_code(self.name)]
         if self.annotation:
-            pieces.extend([" (", code(self.display_annotation()), ")"])
+            pieces.extend([" (", inline_code(self.display_annotation()), ")"])
         if self.description:
             pieces.extend([": ", self.description])
         return Paragraph(*pieces)
@@ -415,11 +415,11 @@ class ApiReturn:
         """
 
         from oodocs.components.blocks import Paragraph
-        from oodocs.components.inline import code
+        from oodocs.components.inline import inline_code
 
         pieces: list[object] = ["Returns"]
         if self.annotation:
-            pieces.extend([" ", code(_display_annotation(self.annotation))])
+            pieces.extend([" ", inline_code(_display_annotation(self.annotation))])
         if self.description:
             pieces.extend([": ", self.description])
         if not self.annotation and not self.description:
@@ -550,9 +550,9 @@ class ApiRaises:
         """
 
         from oodocs.components.blocks import Paragraph
-        from oodocs.components.inline import code
+        from oodocs.components.inline import inline_code
 
-        pieces: list[object] = [code(self.exception)]
+        pieces: list[object] = [inline_code(self.exception)]
         if self.description:
             pieces.extend([": ", self.description])
         return Paragraph(*pieces)
@@ -724,9 +724,9 @@ class ApiExample:
         """
 
         from oodocs.components.blocks import Paragraph
-        from oodocs.components.inline import code
+        from oodocs.components.inline import inline_code
 
-        pieces: list[object] = [code(self.language or "text"), " example"]
+        pieces: list[object] = [inline_code(self.language or "text"), " example"]
         if self.caption:
             pieces.extend([": ", self.caption])
         if self.source:
@@ -871,9 +871,9 @@ class ApiSeeAlso:
         """
 
         from oodocs.components.blocks import Paragraph
-        from oodocs.components.inline import code
+        from oodocs.components.inline import inline_code
 
-        pieces: list[object] = [code(self.target or self.label)]
+        pieces: list[object] = [inline_code(self.target or self.label)]
         if self.target and self.label != self.target:
             pieces.extend([" (", self.label, ")"])
         if self.description:
@@ -1013,10 +1013,10 @@ class ApiRendererNote:
         """
 
         from oodocs.components.blocks import Paragraph
-        from oodocs.components.inline import code
+        from oodocs.components.inline import inline_code
 
         return Paragraph(
-            code(self.format or "all"),
+            inline_code(self.format or "all"),
             " ",
             self.severity,
             ": ",
