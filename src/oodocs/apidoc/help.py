@@ -7,9 +7,10 @@ from typing import Sequence
 from oodocs.apidoc.builtin_categories import OODocs_API_CATEGORIES
 from oodocs.apidoc.categories import ApiCategory, select_uncategorized_api_objects
 from oodocs.apidoc.coverage import check_api_docs
-from oodocs.apidoc.model import ApiObject, ApiPackage
+from oodocs.apidoc.model import ApiObject, ApiPackage, ApiParameter
 from oodocs.apidoc.profiles import ApiPresentationProfile, resolve_presentation_profile
-from oodocs.components.blocks import Chapter, Paragraph, Section
+from oodocs.components.base import Block
+from oodocs.components.blocks import Chapter, CodeBlock, Paragraph, Section, section_for_level
 from oodocs.components.generated import TableOfContents
 from oodocs.components.inline import bold
 from oodocs.components.media import Table
@@ -49,7 +50,278 @@ def api_object_to_help_section(
     """
 
     profile = resolve_presentation_profile(presentation)
+    if profile.name == "help":
+        return section_for_level(
+            obj.heading_text(),
+            *_api_object_help_blocks(obj, presentation=profile),
+            level=level,
+            anchor=obj.anchor_name(),
+        )
     return obj.to_section(level=level, presentation=profile, max_level=max_level)
+
+
+def _api_object_help_blocks(
+    obj: ApiObject,
+    *,
+    presentation: ApiPresentationProfile,
+) -> list[Block]:
+    if obj.kind == "class":
+        return _class_help_blocks(obj, presentation=presentation)
+    if obj.kind in {"function", "method"}:
+        return _function_help_blocks(obj, presentation=presentation)
+    return _value_help_blocks(obj, presentation=presentation)
+
+
+def _function_help_blocks(
+    obj: ApiObject,
+    *,
+    presentation: ApiPresentationProfile,
+) -> list[Block]:
+    blocks: list[Block] = []
+    if presentation.include_description:
+        blocks.extend(_summary_blocks(obj))
+    if presentation.include_signature and (syntax := _syntax_block(obj)):
+        blocks.extend([_subheading("Syntax"), syntax])
+    if presentation.include_description:
+        blocks.extend(_description_section(obj))
+    if presentation.include_parameters:
+        blocks.extend(_argument_sections(obj, input_title="Input Arguments"))
+    if presentation.include_returns:
+        blocks.extend(_returns_section(obj))
+    blocks.extend(_examples_section(obj, presentation))
+    blocks.extend(_exceptions_section(obj, presentation))
+    blocks.extend(_see_also_section(obj, presentation))
+    blocks.extend(_source_section(obj, presentation))
+    return blocks
+
+
+def _class_help_blocks(
+    obj: ApiObject,
+    *,
+    presentation: ApiPresentationProfile,
+) -> list[Block]:
+    blocks: list[Block] = []
+    if presentation.include_description:
+        blocks.extend(_summary_blocks(obj))
+    if presentation.include_signature and (creation := _creation_block(obj)):
+        blocks.extend([_subheading("Creation"), creation])
+    if presentation.include_description:
+        blocks.extend(_description_section(obj))
+    if presentation.include_parameters:
+        blocks.extend(_argument_sections(obj, input_title="Constructor Arguments"))
+    if presentation.include_member_summary:
+        if properties := _properties_table(obj):
+            blocks.extend([_subheading("Properties"), properties])
+        if methods := _methods_table(obj):
+            blocks.extend([_subheading("Common Methods"), methods])
+    blocks.extend(_examples_section(obj, presentation))
+    blocks.extend(_exceptions_section(obj, presentation))
+    blocks.extend(_see_also_section(obj, presentation))
+    blocks.extend(_source_section(obj, presentation))
+    return blocks
+
+
+def _value_help_blocks(
+    obj: ApiObject,
+    *,
+    presentation: ApiPresentationProfile,
+) -> list[Block]:
+    blocks: list[Block] = []
+    if presentation.include_description:
+        blocks.extend(_summary_blocks(obj))
+        blocks.extend(_description_section(obj))
+    blocks.extend(_examples_section(obj, presentation))
+    blocks.extend(_see_also_section(obj, presentation))
+    blocks.extend(_source_section(obj, presentation))
+    return blocks
+
+
+def _summary_blocks(obj: ApiObject) -> list[Block]:
+    return [Paragraph(obj.summary)] if obj.summary else []
+
+
+def _description_section(obj: ApiObject) -> list[Block]:
+    if not obj.description or obj.description == obj.summary:
+        return []
+    return [_subheading("Description"), Paragraph(obj.description)]
+
+
+def _argument_sections(obj: ApiObject, *, input_title: str) -> list[Block]:
+    positional, keyword_only = _split_help_parameters(obj.parameters)
+    blocks: list[Block] = []
+    if positional:
+        blocks.extend([_subheading(input_title), _parameter_table(positional)])
+    if keyword_only:
+        blocks.extend([_subheading("Name-Value Arguments"), _parameter_table(keyword_only)])
+    return blocks
+
+
+def _returns_section(obj: ApiObject) -> list[Block]:
+    if obj.returns is None:
+        return []
+    annotation = obj.returns.annotation or ""
+    description = obj.returns.description or ""
+    if not annotation and not description:
+        return []
+    return [
+        _subheading("Output Arguments"),
+        Table(["Type", "Description"], [[annotation, description]], caption=None, split=True),
+    ]
+
+
+def _examples_section(
+    obj: ApiObject,
+    presentation: ApiPresentationProfile,
+) -> list[Block]:
+    from oodocs.apidoc.blocks import api_examples_blocks
+
+    examples = api_examples_blocks(obj, presentation)
+    if not examples:
+        return []
+    return [_subheading("Examples"), *examples]
+
+
+def _exceptions_section(
+    obj: ApiObject,
+    presentation: ApiPresentationProfile,
+) -> list[Block]:
+    from oodocs.apidoc.blocks import api_exceptions_table
+
+    table = api_exceptions_table(obj, presentation, caption=None)
+    return [_subheading("Errors"), table] if table is not None else []
+
+
+def _see_also_section(
+    obj: ApiObject,
+    presentation: ApiPresentationProfile,
+) -> list[Block]:
+    from oodocs.apidoc.blocks import api_see_also_blocks
+
+    return api_see_also_blocks(obj, presentation)
+
+
+def _source_section(
+    obj: ApiObject,
+    presentation: ApiPresentationProfile,
+) -> list[Block]:
+    from oodocs.apidoc.blocks import api_source_location_paragraph
+
+    paragraph = api_source_location_paragraph(obj, presentation)
+    return [paragraph] if paragraph is not None else []
+
+
+def _subheading(text: str) -> Paragraph:
+    return Paragraph(bold(text))
+
+
+def _syntax_block(obj: ApiObject) -> CodeBlock | None:
+    if not obj.signature:
+        return None
+    syntax = obj.signature_text()
+    if obj.kind in {"function", "method"} and obj.returns and obj.returns.annotation:
+        syntax = f"result = {syntax}"
+    return CodeBlock(syntax, language="python")
+
+
+def _creation_block(obj: ApiObject) -> CodeBlock | None:
+    if obj.kind != "class":
+        return _syntax_block(obj)
+    if obj.signature:
+        signature = obj.signature_text()
+        if "(" in signature and ")" in signature:
+            arguments = signature.split("(", 1)[1].rsplit(")", 1)[0]
+            syntax = f"obj = {obj.name}({arguments})"
+        else:
+            syntax = f"obj = {obj.name}()"
+    else:
+        syntax = f"obj = {obj.name}()"
+    return CodeBlock(syntax, language="python")
+
+
+def _split_help_parameters(
+    parameters: Sequence[ApiParameter],
+) -> tuple[list[ApiParameter], list[ApiParameter]]:
+    positional: list[ApiParameter] = []
+    keyword_only: list[ApiParameter] = []
+    for parameter in parameters:
+        if parameter.name in {"self", "cls"}:
+            continue
+        if parameter.kind == "keyword-only":
+            keyword_only.append(parameter)
+        else:
+            positional.append(parameter)
+    return positional, keyword_only
+
+
+def _parameter_table(parameters: Sequence[ApiParameter]) -> Table:
+    return Table(
+        ["Name", "Type", "Default", "Description"],
+        [
+            [
+                parameter.name,
+                parameter.annotation_text(),
+                _parameter_default_text(parameter),
+                parameter.description or "",
+            ]
+            for parameter in parameters
+        ],
+        caption=None,
+        split=True,
+    )
+
+
+def _parameter_default_text(parameter: ApiParameter) -> str:
+    if parameter.default:
+        return parameter.default_text()
+    return "Required" if parameter.required else ""
+
+
+def _properties_table(obj: ApiObject) -> Table | None:
+    properties = [
+        member
+        for member in obj.members
+        if member.kind in {"property", "attribute"} and member.visibility == "public"
+    ]
+    if not properties:
+        return None
+    return Table(
+        ["Property", "Type", "Description"],
+        [
+            [
+                member.name,
+                member.returns.annotation if member.returns and member.returns.annotation else "",
+                member.summary_text(),
+            ]
+            for member in properties
+        ],
+        caption=None,
+        split=True,
+    )
+
+
+def _methods_table(obj: ApiObject) -> Table | None:
+    methods = [
+        member
+        for member in obj.members
+        if member.kind == "method"
+        and member.visibility == "public"
+        and not member.name.startswith("render_to_")
+    ]
+    if not methods:
+        return None
+    return Table(
+        ["Method", "Syntax", "Purpose"],
+        [
+            [
+                member.name,
+                member.signature_text(),
+                member.summary_text(),
+            ]
+            for member in methods
+        ],
+        caption=None,
+        split=True,
+    )
 
 
 def api_category_to_chapter(

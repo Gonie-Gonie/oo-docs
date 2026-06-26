@@ -2,10 +2,16 @@ from __future__ import annotations
 
 from oodocs.apidoc import (
     ApiCategory,
+    ApiException,
+    ApiExample,
     ApiModule,
     ApiObject,
     ApiPackage,
+    ApiParameter,
     ApiPresentationProfile,
+    ApiReturn,
+    ApiSeeAlso,
+    api_object_to_help_section,
     check_api_help_categories,
     collect_api,
     select_uncategorized_api_objects,
@@ -43,6 +49,7 @@ def _all_titles(block: object) -> list[str]:
 def _all_plain_text(block: object) -> str:
     plain_text = getattr(block, "plain_text", None)
     text = plain_text() if callable(plain_text) else ""
+    code_text = getattr(block, "code", "")
     child_text = "".join(_all_plain_text(child) for child in getattr(block, "children", ()))
     rows = getattr(block, "rows", ())
     row_text = "".join(
@@ -50,7 +57,12 @@ def _all_plain_text(block: object) -> str:
         for row in rows
         for cell in row
     )
-    return text + child_text + row_text
+    return text + str(code_text) + child_text + row_text
+
+
+def _assert_text_order(text: str, *phrases: str) -> None:
+    positions = [text.index(phrase) for phrase in phrases]
+    assert positions == sorted(positions)
 
 
 def test_help_book_starts_with_category_contents_not_coverage() -> None:
@@ -133,3 +145,114 @@ def test_help_book_renders_uncategorized_api_appendix_from_category_gate() -> No
     assert "Uncategorized API" in _chapter_titles(document)
     assert "samplepkg.save" in _all_plain_text(document.body)
     assert "Uncategorized API" not in _chapter_titles(without_appendix)
+
+
+def test_help_function_section_uses_matlab_style_argument_layout() -> None:
+    obj = ApiObject(
+        "function",
+        "make_widget",
+        "samplepkg.make_widget",
+        "samplepkg",
+        signature="make_widget(name: str, *, enabled: bool = True) -> Widget",
+        summary="Create a widget.",
+        description="Use this helper when a widget instance is needed.",
+        parameters=[
+            ApiParameter("name", "str", description="Widget name."),
+            ApiParameter(
+                "enabled",
+                "bool",
+                default="True",
+                kind="keyword-only",
+                description="Whether the widget starts enabled.",
+                required=False,
+            ),
+        ],
+        returns=ApiReturn("Widget", "Created widget.", documented=True),
+        exceptions=[ApiException("ValueError", "If the name is blank.")],
+        examples=[ApiExample('make_widget("demo")')],
+        see_also=[ApiSeeAlso("Widget", target="samplepkg.Widget")],
+    )
+
+    section = api_object_to_help_section(obj, level=2)
+    text = _all_plain_text(section)
+
+    _assert_text_order(
+        text,
+        "Create a widget.",
+        "Syntax",
+        "Description",
+        "Input Arguments",
+        "Name-Value Arguments",
+        "Output Arguments",
+        "Examples",
+        "Errors",
+        "See also",
+    )
+    assert "result = make_widget" in text
+    assert "enabled" in text
+    assert "Created widget." in text
+    assert "ValueError" in text
+
+
+def test_help_class_section_separates_creation_properties_and_methods() -> None:
+    obj = ApiObject(
+        "class",
+        "Widget",
+        "samplepkg.Widget",
+        "samplepkg",
+        signature="Widget(name: str)",
+        summary="Runtime widget.",
+        description="Wraps rendered widget state.",
+        parameters=[ApiParameter("name", "str", description="Widget name.")],
+        members=[
+            ApiObject(
+                "attribute",
+                "label",
+                "samplepkg.Widget.label",
+                "samplepkg",
+                summary="User-facing label.",
+            ),
+            ApiObject(
+                "property",
+                "title",
+                "samplepkg.Widget.title",
+                "samplepkg",
+                summary="Display title.",
+                returns=ApiReturn("str", "Title text.", documented=True),
+            ),
+            ApiObject(
+                "method",
+                "render",
+                "samplepkg.Widget.render",
+                "samplepkg",
+                signature="render(path: str) -> str",
+                summary="Render the widget.",
+            ),
+            ApiObject(
+                "method",
+                "render_to_html",
+                "samplepkg.Widget.render_to_html",
+                "samplepkg",
+                signature="render_to_html(context)",
+                summary="Renderer hook.",
+            ),
+        ],
+    )
+
+    section = api_object_to_help_section(obj, level=2)
+    text = _all_plain_text(section)
+
+    _assert_text_order(
+        text,
+        "Runtime widget.",
+        "Creation",
+        "Description",
+        "Constructor Arguments",
+        "Properties",
+        "Common Methods",
+    )
+    assert "obj = Widget(name: str)" in text
+    assert "label" in text
+    assert "title" in text
+    assert "render(path: str) -> str" in text
+    assert "render_to_html" not in text
