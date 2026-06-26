@@ -47,41 +47,41 @@ class ImageData:
 
     Args:
         data: Image bytes or a ``BytesIO`` object.
-        format: Image format name or extension.
+        image_format: Image format name or extension.
 
     Raises:
-        ValueError: If image data or format is empty.
+        ValueError: If image data or image format is empty.
 
     Examples:
         ```python
         from oodocs import Document, Figure, ImageData
 
-        image = ImageData(png_bytes, format="png")
+        image = ImageData(png_bytes, image_format="png")
         figure = Figure(image, caption="Generated chart")
         document = Document("Chart Report", figure)
         ```
     """
 
     data: bytes
-    format: str
+    image_format: str
 
     def __init__(
         self,
         data: bytes | bytearray | memoryview | BytesIO,
         *,
-        format: str = "png",
+        image_format: str = "png",
     ) -> None:
         if isinstance(data, BytesIO):
             image_bytes = data.getvalue()
         else:
             image_bytes = bytes(data)
-        normalized_format = format.strip().lower().lstrip(".")
+        normalized_image_format = image_format.strip().lower().lstrip(".")
         if not image_bytes:
             raise ValueError("ImageData requires non-empty image bytes")
-        if not normalized_format:
-            raise ValueError("ImageData format must not be empty")
+        if not normalized_image_format:
+            raise ValueError("ImageData.image_format must not be empty")
         object.__setattr__(self, "data", image_bytes)
-        object.__setattr__(self, "format", normalized_format)
+        object.__setattr__(self, "image_format", normalized_image_format)
 
     def savefig(self, target: object, **_: object) -> None:
         """Write the image bytes to a file-like target.
@@ -1642,7 +1642,7 @@ class Figure(Block):
         height: Optional rendered height.
         identifier: Optional stable identifier.
         unit: Unit for width and height.
-        format: Image format for plot-like sources.
+        image_format: Image format for plot-like sources.
         dpi: Optional image DPI for plot-like sources.
         placement: Optional placement policy.
 
@@ -1670,7 +1670,7 @@ class Figure(Block):
     Notes:
         Paths are passed through to renderers, while bytes and ``BytesIO`` are
         wrapped as ``ImageData``. Plot-like objects are rendered through
-        ``savefig()`` using ``format`` and ``dpi``.
+        ``savefig()`` using ``image_format`` and ``dpi``.
 
     See Also:
         ``ImageData`` for in-memory images and ``SubFigureGroup`` for grouped
@@ -1683,7 +1683,7 @@ class Figure(Block):
     height: float | None
     unit: str | None
     identifier: str | None
-    format: str
+    image_format: str
     dpi: int | None
     placement: MediaPlacement
 
@@ -1696,7 +1696,7 @@ class Figure(Block):
         identifier: str | None = None,
         *,
         unit: str | None = None,
-        format: str = "png",
+        image_format: str = "png",
         dpi: int | None = 150,
         placement: str | None = None,
     ) -> None:
@@ -1706,10 +1706,10 @@ class Figure(Block):
         self.height = height
         self.unit = normalize_length_unit(unit) if unit is not None else None
         self.identifier = identifier
-        self.format = (
-            self.image_source.format
-            if isinstance(self.image_source, ImageData) and format == "png"
-            else format
+        self.image_format = (
+            self.image_source.image_format
+            if isinstance(self.image_source, ImageData) and image_format == "png"
+            else image_format
         )
         self.dpi = dpi
         self.placement = normalize_media_placement(placement)
@@ -1719,14 +1719,14 @@ class Figure(Block):
         cls,
         data: bytes | bytearray | memoryview,
         *,
-        format: str = "png",
+        image_format: str = "png",
         **figure_kwargs: object,
     ) -> Figure:
         """Create a figure from in-memory image bytes.
 
         Args:
             data: Image bytes.
-            format: Image format name or extension.
+            image_format: Image format name or extension.
             **figure_kwargs: Additional arguments forwarded to ``Figure``.
 
         Returns:
@@ -1738,21 +1738,25 @@ class Figure(Block):
             ```
         """
 
-        return cls(ImageData(data, format=format), format=format, **figure_kwargs)
+        return cls(
+            ImageData(data, image_format=image_format),
+            image_format=image_format,
+            **figure_kwargs,
+        )
 
     @classmethod
     def from_buffer(
         cls,
         buffer: BytesIO | object,
         *,
-        format: str = "png",
+        image_format: str = "png",
         **figure_kwargs: object,
     ) -> Figure:
         """Create a figure from a readable or ``getvalue``-compatible buffer.
 
         Args:
             buffer: Object providing ``getvalue()`` or ``read()``.
-            format: Image format name or extension.
+            image_format: Image format name or extension.
             **figure_kwargs: Additional arguments forwarded to ``Figure``.
 
         Returns:
@@ -1765,7 +1769,7 @@ class Figure(Block):
             ```python
             from io import BytesIO
 
-            figure = Figure.from_buffer(BytesIO(png_bytes), format="png")
+            figure = Figure.from_buffer(BytesIO(png_bytes), image_format="png")
             ```
         """
 
@@ -1775,7 +1779,7 @@ class Figure(Block):
             data = buffer.read()
         else:
             raise TypeError("buffer must provide getvalue() or read()")
-        return cls.from_bytes(data, format=format, **figure_kwargs)
+        return cls.from_bytes(data, image_format=image_format, **figure_kwargs)
 
     def width_in_inches(self, default_unit: str) -> float | None:
         """Return figure width converted through the figure or document unit.
@@ -1870,7 +1874,7 @@ class SubFigure:
         height: Optional rendered height.
         identifier: Optional stable identifier.
         unit: Unit for width and height.
-        format: Image format for plot-like sources.
+        image_format: Image format for plot-like sources.
         dpi: Optional image DPI for plot-like sources.
         label: Optional explicit subfigure label.
 
@@ -1890,7 +1894,7 @@ class SubFigure:
     height: float | None
     unit: str | None
     identifier: str | None
-    format: str
+    image_format: str
     dpi: int | None
     label: str | None
 
@@ -1903,7 +1907,7 @@ class SubFigure:
         identifier: str | None = None,
         *,
         unit: str | None = None,
-        format: str = "png",
+        image_format: str = "png",
         dpi: int | None = 150,
         label: str | None = None,
     ) -> None:
@@ -1913,10 +1917,10 @@ class SubFigure:
         self.height = height
         self.unit = normalize_length_unit(unit) if unit is not None else None
         self.identifier = identifier
-        self.format = (
-            self.image_source.format
-            if isinstance(self.image_source, ImageData) and format == "png"
-            else format
+        self.image_format = (
+            self.image_source.image_format
+            if isinstance(self.image_source, ImageData) and image_format == "png"
+            else image_format
         )
         self.dpi = dpi
         self.label = label

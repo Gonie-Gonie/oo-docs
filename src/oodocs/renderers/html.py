@@ -1567,16 +1567,16 @@ class HtmlRenderer:
         if isinstance(source, Path):
             image_bytes = source.read_bytes()
             mime_type = guess_type(source.name)[0] or self._mime_type_for_format(
-                source.suffix.lstrip(".") or image_box.format
+                source.suffix.lstrip(".") or image_box.image_format
             )
         else:
             image_bytes = image_source_to_bytes(
                 source,
-                image_format=image_box.format,
+                image_format=image_box.image_format,
                 dpi=image_box.dpi,
                 usage="HTML positioned image rendering",
             )
-            mime_type = self._mime_type_for_format(image_box.format)
+            mime_type = self._mime_type_for_format(image_box.image_format)
         return f"data:{mime_type};base64,{b64encode(image_bytes).decode('ascii')}"
 
     def _fragment_html(
@@ -1948,16 +1948,16 @@ class HtmlRenderer:
         if isinstance(source, Path):
             image_bytes = source.read_bytes()
             mime_type = guess_type(source.name)[0] or self._mime_type_for_format(
-                source.suffix.lstrip(".") or figure.format
+                source.suffix.lstrip(".") or figure.image_format
             )
         else:
             image_bytes = image_source_to_bytes(
                 source,
-                image_format=figure.format,
+                image_format=figure.image_format,
                 dpi=figure.dpi,
                 usage="HTML rendering",
             )
-            mime_type = self._mime_type_for_format(figure.format)
+            mime_type = self._mime_type_for_format(figure.image_format)
         return f"data:{mime_type};base64,{b64encode(image_bytes).decode('ascii')}"
 
     def _mime_type_for_format(self, image_format: str) -> str:

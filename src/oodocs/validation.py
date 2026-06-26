@@ -832,12 +832,12 @@ class _ValidationContext:
                     "zero when supplied.",
                     f"{path}.{field_name}",
                 )
-        if not isinstance(figure.format, str) or not figure.format.strip():
+        if not isinstance(figure.image_format, str) or not figure.image_format.strip():
             self._add(
                 "error",
                 "invalid-image-format",
-                f"{type(figure).__name__}.format must not be empty.",
-                f"{path}.format",
+                f"{type(figure).__name__}.image_format must not be empty.",
+                f"{path}.image_format",
             )
         if figure.dpi is not None and figure.dpi <= 0:
             self._add(
@@ -923,12 +923,12 @@ class _ValidationContext:
             self._scan_inlines(item.content, f"{path}.content")
             return
         if isinstance(item, ImageBox):
-            if not isinstance(item.format, str) or not item.format.strip():
+            if not isinstance(item.image_format, str) or not item.image_format.strip():
                 self._add(
                     "error",
                     "invalid-image-format",
-                    "ImageBox.format must not be empty.",
-                    f"{path}.format",
+                    "ImageBox.image_format must not be empty.",
+                    f"{path}.image_format",
                 )
             if item.dpi is not None and item.dpi <= 0:
                 self._add(

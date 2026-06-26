@@ -99,8 +99,8 @@ def test_table_from_csv_and_tsv(tmp_path) -> None:
 
 
 def test_figure_from_bytes_and_buffer_use_image_data() -> None:
-    from_bytes = Figure.from_bytes(_TINY_PNG, format="png", caption="Pixel.")
-    from_buffer = Figure.from_buffer(BytesIO(_TINY_PNG), format="png", caption="Pixel.")
+    from_bytes = Figure.from_bytes(_TINY_PNG, image_format="png", caption="Pixel.")
+    from_buffer = Figure.from_buffer(BytesIO(_TINY_PNG), image_format="png", caption="Pixel.")
 
     assert isinstance(from_bytes.image_source, ImageData)
     assert from_bytes.image_source.data == _TINY_PNG
@@ -108,4 +108,4 @@ def test_figure_from_bytes_and_buffer_use_image_data() -> None:
     assert from_buffer.image_source.data == _TINY_PNG
 
     with pytest.raises(ValueError, match="non-empty"):
-        Figure.from_bytes(b"", format="png")
+        Figure.from_bytes(b"", image_format="png")

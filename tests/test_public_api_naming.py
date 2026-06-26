@@ -167,6 +167,13 @@ def test_run_in_title_style_uses_canonical_names() -> None:
     assert "run_in_title_style" in theme_fields
 
 
+def test_image_components_use_image_format_field_name() -> None:
+    for cls in (oodocs.ImageData, oodocs.Figure, oodocs.SubFigure, oodocs.ImageBox):
+        field_names = {field.name for field in fields(cls)}
+        assert "format" not in field_names, cls.__name__
+        assert "image_format" in field_names, cls.__name__
+
+
 def test_apidoc_raw_value_helpers_use_as_prefix() -> None:
     forbidden_by_class = {
         apidoc.ApiParameter: {"to_row", "to_table_cell_values"},

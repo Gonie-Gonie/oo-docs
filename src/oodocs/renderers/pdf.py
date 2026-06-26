@@ -2582,7 +2582,7 @@ class PdfRenderer:
             return str(source)
         return image_source_to_buffer(
             source,
-            image_format=block.format,
+            image_format=block.image_format,
             dpi=block.dpi,
             usage="PDF rendering",
         )
@@ -2594,7 +2594,7 @@ class PdfRenderer:
         return ImageReader(
             image_source_to_buffer(
                 source,
-                image_format=image_box.format,
+                image_format=image_box.image_format,
                 dpi=image_box.dpi,
                 usage="PDF positioned image rendering",
             )

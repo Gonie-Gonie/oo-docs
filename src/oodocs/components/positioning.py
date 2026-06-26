@@ -428,7 +428,7 @@ class ImageBox(Block):
         anchor: Built-in anchor or named shape anchor.
         placement: ``"absolute"`` for page items or ``"inline"`` in content.
         fit: Whether to contain the image or stretch it to the box.
-        format: Image format for plot-like sources.
+        image_format: Image format for plot-like sources.
         dpi: Optional image DPI for plot-like sources.
         unit: Unit for coordinates and dimensions.
         z_index: Stacking order for page-positioned rendering.
@@ -454,7 +454,7 @@ class ImageBox(Block):
     anchor: str
     placement: PositionPlacement
     fit: ImageFit
-    format: str
+    image_format: str
     dpi: int | None
     unit: str | None
     z_index: int
@@ -470,7 +470,7 @@ class ImageBox(Block):
         anchor: PositionAnchor = "page",
         placement: PositionPlacement = "absolute",
         fit: ImageFit = "contain",
-        format: str = "png",
+        image_format: str = "png",
         dpi: int | None = 150,
         unit: str | None = None,
         z_index: int = 0,
@@ -489,10 +489,10 @@ class ImageBox(Block):
         self.anchor = _normalize_anchor(anchor)
         self.placement = placement
         self.fit = fit
-        self.format = (
-            self.image_source.format
-            if isinstance(self.image_source, ImageData) and format == "png"
-            else format
+        self.image_format = (
+            self.image_source.image_format
+            if isinstance(self.image_source, ImageData) and image_format == "png"
+            else image_format
         )
         self.dpi = dpi
         self.unit = normalize_length_unit(unit) if unit is not None else None

@@ -684,9 +684,9 @@ def _output_image(
             else None
         )
         return Figure(
-            ImageData(b64decode(encoded), format=image_format),
+            ImageData(b64decode(encoded), image_format=image_format),
             caption=caption,
-            format=image_format,
+            image_format=image_format,
         )
     return None
 

@@ -207,4 +207,4 @@ def test_parse_notebook_imports_markdown_and_image_outputs_as_editable_blocks() 
     assert isinstance(figure, Figure)
     assert isinstance(figure.image_source, ImageData)
     assert figure.image_source.data == _TINY_PNG
-    assert figure.format == "png"
+    assert figure.image_format == "png"
