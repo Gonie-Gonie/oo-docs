@@ -962,7 +962,7 @@ class HtmlRenderer:
             for entry in context.render_index.comments
         )
         return self._generated_page_html(
-            title=block.title or [Text(context.theme.comments_title)],
+            title=block.title or [Text(context.theme.comment_list_title)],
             body=entries,
             context=context,
             section_class="oodocs-generated-page oodocs-comments-page",
@@ -997,7 +997,7 @@ class HtmlRenderer:
             for entry in context.render_index.footnotes
         )
         return self._generated_page_html(
-            title=block.title or [Text(context.theme.footnotes_title)],
+            title=block.title or [Text(context.theme.footnote_list_title)],
             body=entries,
             context=context,
             section_class="oodocs-generated-page oodocs-footnotes-page",
@@ -1040,7 +1040,7 @@ class HtmlRenderer:
             for entry in context.render_index.citations
         )
         return self._generated_page_html(
-            title=block.title or [Text(context.theme.references_title)],
+            title=block.title or [Text(context.theme.reference_list_title)],
             body=entries,
             context=context,
             section_class="oodocs-generated-page oodocs-references-page",
@@ -1067,7 +1067,7 @@ class HtmlRenderer:
             if block.includes_level(entry.level)
         )
         return self._generated_page_html(
-            title=block.title or [Text(context.theme.contents_title)],
+            title=block.title or [Text(context.theme.table_of_contents_title)],
             body='<nav class="oodocs-toc">' + entries + "</nav>",
             context=context,
             section_class="oodocs-generated-page oodocs-toc-page",
@@ -1298,7 +1298,7 @@ class HtmlRenderer:
         context: HtmlRenderContext,
         section_class: str,
     ) -> str:
-        level = context.theme.generated_section_level
+        level = context.theme.generated_heading_level
         heading_tag = self._heading_tag(level)
         heading_html = (
             f"<{heading_tag} class=\"oodocs-generated-title\" style=\"{self._heading_css(level, context.theme)}\">"
@@ -2206,7 +2206,7 @@ class HtmlRenderer:
         text_width = settings.text_width_in_inches()
         page_break_before = (
             "break-before: page; page-break-before: always;"
-            if theme.generated_page_breaks
+            if theme.generated_content_page_breaks
             else ""
         )
         return f"""

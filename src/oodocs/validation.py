@@ -467,7 +467,7 @@ class _ValidationContext:
         self.referenceable_paths: dict[int, str] = {}
         self.references: list[tuple[BlockReference, str]] = []
         self.citations: list[tuple[Citation, str]] = []
-        self.generated_pages: list[tuple[object, str]] = []
+        self.generated_content: list[tuple[object, str]] = []
 
     def validate(self) -> list[ValidationIssue]:
         """Collect validation issues for the configured document."""
@@ -493,7 +493,7 @@ class _ValidationContext:
         render_index = self._build_render_index_if_possible()
         self._validate_references(render_index)
         if render_index is not None:
-            self._validate_generated_pages(render_index)
+            self._validate_generated_content(render_index)
         return self.issues
 
     def _add(
@@ -646,7 +646,7 @@ class _ValidationContext:
                 TableOfContents,
             ),
         ):
-            self.generated_pages.append((block, path))
+            self.generated_content.append((block, path))
             if block.title is not None:
                 self._scan_inlines(block.title, f"{path}.title")
             return
@@ -1076,8 +1076,8 @@ class _ValidationContext:
             path,
         )
 
-    def _validate_generated_pages(self, render_index: RenderIndex) -> None:
-        for page, path in self.generated_pages:
+    def _validate_generated_content(self, render_index: RenderIndex) -> None:
+        for page, path in self.generated_content:
             if isinstance(page, TableOfContents):
                 if page.show_page_numbers:
                     self._add_compatibility_warning("html-toc-page-numbers", path)

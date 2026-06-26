@@ -239,8 +239,8 @@
           "category": "style",
           "kind": "class",
           "module": "oodocs.layout.theme",
-          "name": "GeneratedPageDefaults",
-          "qualname": "oodocs.layout.theme.GeneratedPageDefaults"
+          "name": "GeneratedContentDefaults",
+          "qualname": "oodocs.layout.theme.GeneratedContentDefaults"
         },
         {
           "category": "style",

@@ -1431,7 +1431,7 @@ class PdfRenderer:
                 if not child.children and index < len(children) - 1:
                     story.append(RLPageBreak())
                 continue
-            if self._is_paginated_generated_page(child) and context.theme.generated_page_breaks:
+            if self._is_paginated_generated_page(child) and context.theme.generated_content_page_breaks:
                 story.extend(self._pop_pending_float_flowables())
                 if story and not isinstance(story[-1], RLPageBreak):
                     story.append(RLPageBreak())
@@ -3048,7 +3048,7 @@ class PdfRenderer:
         default_title: str,
         label: str,
     ) -> list[object]:
-        level = theme.generated_section_level
+        level = theme.generated_heading_level
         bold, italic = theme.heading_emphasis(level)
         title_style = RLParagraphStyle(
             "GeneratedCaptionListTitle",
@@ -3108,7 +3108,7 @@ class PdfRenderer:
         styles: object,
         render_index: RenderIndex,
     ) -> list[object]:
-        level = theme.generated_section_level
+        level = theme.generated_heading_level
         bold, italic = theme.heading_emphasis(level)
         title_style = RLParagraphStyle(
             "CommentListTitle",
@@ -3136,7 +3136,7 @@ class PdfRenderer:
             RLPageBreak(),
             RLParagraph(
                 self._inline_markup(
-                    title or [Text(theme.comments_title)],
+                    title or [Text(theme.comment_list_title)],
                     theme,
                     render_index,
                     base_font_name=title_style.fontName,
@@ -3169,7 +3169,7 @@ class PdfRenderer:
         styles: object,
         render_index: RenderIndex,
     ) -> list[object]:
-        level = theme.generated_section_level
+        level = theme.generated_heading_level
         bold, italic = theme.heading_emphasis(level)
         title_style = RLParagraphStyle(
             "FootnoteListTitle",
@@ -3197,7 +3197,7 @@ class PdfRenderer:
             RLPageBreak(),
             RLParagraph(
                 self._inline_markup(
-                    title or [Text(theme.footnotes_title)],
+                    title or [Text(theme.footnote_list_title)],
                     theme,
                     render_index,
                     base_font_name=title_style.fontName,
@@ -3230,7 +3230,7 @@ class PdfRenderer:
         styles: object,
         render_index: RenderIndex,
     ) -> list[object]:
-        level = theme.generated_section_level
+        level = theme.generated_heading_level
         bold, italic = theme.heading_emphasis(level)
         title_style = RLParagraphStyle(
             "ReferenceListTitle",
@@ -3258,7 +3258,7 @@ class PdfRenderer:
             RLPageBreak(),
             RLParagraph(
                 self._inline_markup(
-                    title or [Text(theme.references_title)],
+                    title or [Text(theme.reference_list_title)],
                     theme,
                     render_index,
                     base_font_name=title_style.fontName,
@@ -3301,7 +3301,7 @@ class PdfRenderer:
         theme = context.theme
         styles = context.styles
         render_index = context.render_index
-        level = theme.generated_section_level
+        level = theme.generated_heading_level
         bold, italic = theme.heading_emphasis(level)
         title_style = RLParagraphStyle(
             "TableOfContentsTitle",
@@ -3317,7 +3317,7 @@ class PdfRenderer:
         story: list[object] = [
             RLParagraph(
                 self._inline_markup(
-                    block.title or [Text(theme.contents_title)],
+                    block.title or [Text(theme.table_of_contents_title)],
                     theme,
                     render_index,
                     base_font_name=title_style.fontName,

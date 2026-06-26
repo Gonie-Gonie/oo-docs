@@ -36,6 +36,7 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "convert_source",
         "FigureList",
         "FootnotesPage",
+        "GeneratedPageDefaults",
         "load_document",
         "load_python_document",
         "ReferencesPage",
@@ -69,7 +70,7 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "BlockDefaults",
         "CaptionDefaults",
         "CitationDefaults",
-        "GeneratedPageDefaults",
+        "GeneratedContentDefaults",
         "PageNumberDefaults",
         "RunInTitleStyle",
         "ReferenceList",
@@ -167,6 +168,34 @@ def test_page_and_part_numbering_use_template_and_counter_field_names() -> None:
     assert expected_page_fields <= theme_fields
     assert "part_number_format" not in theme_fields
     assert "part_counter_format" in theme_fields
+
+
+def test_generated_content_defaults_use_document_language_field_names() -> None:
+    generated_fields = {field.name for field in fields(oodocs.GeneratedContentDefaults)}
+    theme_fields = {field.name for field in fields(oodocs.Theme)}
+    forbidden_fields = {
+        "comments_title",
+        "footnotes_title",
+        "references_title",
+        "contents_title",
+        "generated_section_level",
+        "generated_page_breaks",
+    }
+    expected_fields = {
+        "comment_list_title",
+        "footnote_list_title",
+        "reference_list_title",
+        "table_of_contents_title",
+        "generated_heading_level",
+        "generated_content_page_breaks",
+    }
+
+    assert forbidden_fields.isdisjoint(generated_fields)
+    assert expected_fields <= generated_fields
+    assert forbidden_fields.isdisjoint(theme_fields)
+    assert expected_fields <= theme_fields
+    assert "generated_pages" not in theme_fields
+    assert "generated_content" in theme_fields
 
 
 def test_run_in_title_style_uses_canonical_names() -> None:

@@ -15,7 +15,7 @@ from oodocs.document import Document
 from oodocs.layout.theme import (
     BlockDefaults,
     CaptionDefaults,
-    GeneratedPageDefaults,
+    GeneratedContentDefaults,
     PageNumberDefaults,
     TitleMatterDefaults,
     TypographyDefaults,
@@ -45,9 +45,9 @@ def _default_journal_theme() -> Theme:
             table_caption_position="above",
             figure_caption_position="below",
         ),
-        GeneratedPageDefaults(
-            generated_section_level=1,
-            generated_page_breaks=False,
+        GeneratedContentDefaults(
+            generated_heading_level=1,
+            generated_content_page_breaks=False,
         ),
         PageNumberDefaults(
             show_page_numbers=True,

@@ -53,7 +53,7 @@ from oodocs import (
     Figure,
     ListOfFigures,
     Footnote,
-    GeneratedPageDefaults,
+    GeneratedContentDefaults,
     HeadingNumbering,
     ImageBox,
     ImageData,
@@ -457,7 +457,7 @@ def test_theme_accepts_grouped_defaults_objects() -> None:
         TypographyDefaults(body_font_name="Arial", body_font_size=10.0),
         CaptionDefaults(figure_label="Fig.", table_caption_position="below"),
         CitationDefaults(citation_style="apa", reference_style="apa"),
-        GeneratedPageDefaults(contents_title="Outline"),
+        GeneratedContentDefaults(table_of_contents_title="Outline"),
         PageNumberDefaults(show_page_numbers=True, page_number_template="p. {page}"),
         TitleMatterDefaults(title_alignment="left"),
         BlockDefaults(
@@ -476,7 +476,7 @@ def test_theme_accepts_grouped_defaults_objects() -> None:
     assert theme.citation_style == "apa"
     assert theme.reference_style == "apa"
     assert theme.citations.citation_style == "apa"
-    assert theme.contents_title == "Outline"
+    assert theme.table_of_contents_title == "Outline"
     assert theme.show_page_numbers is True
     assert theme.format_page_number(4) == "p. 4"
     assert theme.title_alignment == "left"
@@ -494,6 +494,11 @@ def test_theme_accepts_grouped_defaults_objects() -> None:
 
     keyword_group = Theme(typography=TypographyDefaults(body_font_name="Aptos"))
     assert keyword_group.body_font_name == "Aptos"
+    generated_keyword_group = Theme(
+        generated_content=GeneratedContentDefaults(reference_list_title="Bibliography")
+    )
+    assert generated_keyword_group.generated_content.reference_list_title == "Bibliography"
+    assert generated_keyword_group.reference_list_title == "Bibliography"
     keyword_group_override = Theme(
         TypographyDefaults(body_font_name="Arial"),
         typography=TypographyDefaults(body_font_name="Aptos"),

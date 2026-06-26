@@ -33,7 +33,7 @@ from oodocs import (
     Figure,
     ListOfFigures,
     Footnote,
-    GeneratedPageDefaults,
+    GeneratedContentDefaults,
     ImageBox,
     Lemma,
     NumberedList,
@@ -201,7 +201,7 @@ settings = DocumentSettings(
     page_margins=PageMargins.symmetric(vertical=2.0, horizontal=2.4, unit="cm"),
     theme=Theme(
         footnote_placement="document",
-        generated_page_breaks=True,
+        generated_content_page_breaks=True,
         table_caption_position="above",
         figure_caption_position="below",
         table_reference_label="Tbl.",
@@ -735,7 +735,7 @@ def build_usage_guide_document() -> Document:
         caption="Author-display options from most automated to most manual.",
         column_widths=[1.8, 2.5, 2.3],
     )
-    generated_pages_table = Table(
+    generated_content_table = Table(
         headers=["Generated object", "Why it exists", "What triggers it"],
         rows=[
             ["TableOfContents()", "Creates a navigable outline from authored headings.", "Place the block where the contents page should appear."],
@@ -824,7 +824,7 @@ def build_usage_guide_document() -> Document:
             ["TypographyDefaults", "body_font_name, monospace_font_name, title_font_size, body_font_size, heading_sizes, caption_font_size", "Fonts and type scale."],
             ["CaptionDefaults", "caption_alignment, table_caption_position, figure_caption_position, table_label, figure_label, caption/reference labels", "Caption placement and localized labels."],
             ["CitationDefaults", "citation_style, reference_style", "Inline citation labels and generated reference entry style."],
-            ["GeneratedPageDefaults", "contents/list/comments/footnotes/references titles, generated_section_level, generated_page_breaks", "Generated pages and their heading level."],
+            ["GeneratedContentDefaults", "contents/list/comments/footnotes/references titles, generated_heading_level, generated_content_page_breaks", "Generated content titles and heading level."],
             ["PageNumberDefaults", "show_page_numbers, page_number_alignment, page_number_template, front/main matter counter formats, page_number_font_size", "Footer page labels."],
             ["TitleMatterDefaults", "title_alignment, subtitle_alignment, author_alignment, affiliation_alignment, author_detail_alignment", "Title-page and metadata alignment."],
             ["BlockDefaults", "page_background_color, paragraph_alignment, table/figure/box alignment, footnote_placement, list styles, heading_numbering", "Document-wide defaults that individual blocks can override."],
@@ -1160,7 +1160,7 @@ def build_usage_guide_document() -> Document:
                     ", while chapter numbering continues as 1, 2, 3 across later parts."
                 ),
                 CodeBlock(PART_STRUCTURE_SNIPPET, language="python"),
-                generated_pages_table,
+                generated_content_table,
             ),
             Section(
                 "Numbered statements, proofs, and custom counters",
@@ -1447,7 +1447,7 @@ def build_usage_guide_document() -> Document:
                     "Explicit pagination is a block-level decision. Insert ",
                     inline_code("PageBreak()"),
                     " where the authored flow should move to the next page; generated pages can still use ",
-                    inline_code("Theme(generated_page_breaks=True)"),
+                    inline_code("Theme(generated_content_page_breaks=True)"),
                     " for automatic separation."
                 ),
                 CodeBlock(LAYOUT_CONTROL_SNIPPET, language="python"),

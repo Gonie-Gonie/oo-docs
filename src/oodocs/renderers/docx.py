@@ -934,7 +934,7 @@ class DocxRenderer:
         context: DocxRenderContext,
     ) -> None:
         for index, child in enumerate(children):
-            if self._is_paginated_generated_page(child) and context.theme.generated_page_breaks:
+            if self._is_paginated_generated_page(child) and context.theme.generated_content_page_breaks:
                 if word_document.paragraphs and not self._ends_with_page_break(word_document):
                     self._ensure_page_break(word_document)
                 child.render_to_docx(self, word_document, context)
@@ -2981,7 +2981,7 @@ class DocxRenderer:
         default_title: str,
         label: str,
     ) -> None:
-        self._add_heading(word_document, title or [Text(default_title)], level=theme.generated_section_level, theme=theme, number_label=None)
+        self._add_heading(word_document, title or [Text(default_title)], level=theme.generated_heading_level, theme=theme, number_label=None)
         for entry in entries:
             paragraph = word_document.add_paragraph()
             paragraph.paragraph_format.left_indent = Inches(0.25)
@@ -3003,7 +3003,7 @@ class DocxRenderer:
         render_index: RenderIndex,
     ) -> None:
         word_document.add_page_break()
-        self._add_heading(word_document, title or [Text(theme.comments_title)], level=theme.generated_section_level, theme=theme, number_label=None)
+        self._add_heading(word_document, title or [Text(theme.comment_list_title)], level=theme.generated_heading_level, theme=theme, number_label=None)
         for entry in render_index.comments:
             paragraph = word_document.add_paragraph()
             paragraph.paragraph_format.left_indent = Inches(0.3)
@@ -3057,7 +3057,7 @@ class DocxRenderer:
         render_index: RenderIndex,
     ) -> None:
         word_document.add_page_break()
-        self._add_heading(word_document, title or [Text(theme.footnotes_title)], level=theme.generated_section_level, theme=theme, number_label=None)
+        self._add_heading(word_document, title or [Text(theme.footnote_list_title)], level=theme.generated_heading_level, theme=theme, number_label=None)
         for entry in render_index.footnotes:
             paragraph = word_document.add_paragraph()
             paragraph.paragraph_format.left_indent = Inches(0.3)
@@ -3079,7 +3079,7 @@ class DocxRenderer:
         render_index: RenderIndex,
     ) -> None:
         word_document.add_page_break()
-        self._add_heading(word_document, title or [Text(theme.references_title)], level=theme.generated_section_level, theme=theme, number_label=None)
+        self._add_heading(word_document, title or [Text(theme.reference_list_title)], level=theme.generated_heading_level, theme=theme, number_label=None)
         for entry in render_index.citations:
             paragraph = word_document.add_paragraph()
             paragraph.paragraph_format.left_indent = Inches(0.3)
@@ -3112,8 +3112,8 @@ class DocxRenderer:
         render_index = context.render_index
         self._add_generated_page_title(
             word_document,
-            block.title or [Text(theme.contents_title)],
-            level=theme.generated_section_level,
+            block.title or [Text(theme.table_of_contents_title)],
+            level=theme.generated_heading_level,
             theme=theme,
         )
         if block.show_page_numbers:

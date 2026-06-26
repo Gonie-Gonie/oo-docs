@@ -891,36 +891,37 @@ class CitationDefaults:
 
 
 @dataclass(slots=True)
-class GeneratedPageDefaults:
-    """Grouped generated-page titles and generated-page layout defaults.
+class GeneratedContentDefaults:
+    """Grouped generated-content titles and layout defaults.
 
     Attributes:
         list_of_tables_title: Default title for generated table lists.
         list_of_figures_title: Default title for generated figure lists.
-        comments_title: Default title for generated comments pages.
-        footnotes_title: Default title for generated footnotes pages.
-        references_title: Default title for generated references pages.
-        contents_title: Default title for generated contents pages.
-        generated_section_level: Heading level used by generated pages.
-        generated_page_breaks: Whether generated pages start on new pages.
+        comment_list_title: Default title for generated comment lists.
+        footnote_list_title: Default title for generated footnote lists.
+        reference_list_title: Default title for generated reference lists.
+        table_of_contents_title: Default title for generated tables of contents.
+        generated_heading_level: Heading level used by generated content.
+        generated_content_page_breaks: Whether generated content starts on new
+            pages when supported.
 
     Examples:
         ```python
-        from oodocs import Document, DocumentSettings, GeneratedPageDefaults, ReferenceList, Theme
+        from oodocs import Document, DocumentSettings, GeneratedContentDefaults, ReferenceList, Theme
 
-        theme = Theme(GeneratedPageDefaults(references_title="Bibliography"))
+        theme = Theme(GeneratedContentDefaults(reference_list_title="Bibliography"))
         document = Document("Paper", ReferenceList(), settings=DocumentSettings(theme=theme))
         ```
     """
 
     list_of_tables_title: str = "List of Tables"
     list_of_figures_title: str = "List of Figures"
-    comments_title: str = "Comments"
-    footnotes_title: str = "Footnotes"
-    references_title: str = "References"
-    contents_title: str = "Contents"
-    generated_section_level: int = 2
-    generated_page_breaks: bool = True
+    comment_list_title: str = "Comments"
+    footnote_list_title: str = "Footnotes"
+    reference_list_title: str = "References"
+    table_of_contents_title: str = "Contents"
+    generated_heading_level: int = 2
+    generated_content_page_breaks: bool = True
 
 
 @dataclass(slots=True)
@@ -991,7 +992,7 @@ class BlockDefaults:
         box_alignment: Default box alignment.
         part_label: Label used for numbered part pages.
         part_counter_format: Counter format used for parts.
-        footnote_placement: Native or generated-page footnote placement.
+        footnote_placement: Native or generated content footnote placement.
         auto_footnotes_page: Whether missing footnote pages are auto-rendered.
         run_in_title_style: Default style for run-in paragraph titles.
         heading_numbering: Heading numbering configuration.
@@ -1035,12 +1036,12 @@ class Theme:
     Args:
         *defaults: Optional grouped defaults objects. Supported types are
             ``TypographyDefaults``, ``CaptionDefaults``, ``CitationDefaults``,
-            ``GeneratedPageDefaults``, ``PageNumberDefaults``,
+            ``GeneratedContentDefaults``, ``PageNumberDefaults``,
             ``TitleMatterDefaults``, and ``BlockDefaults``.
         typography: Optional typography defaults group.
         captions: Optional caption defaults group.
         citations: Optional citation defaults group.
-        generated_pages: Optional generated-page defaults group.
+        generated_content: Optional generated-content defaults group.
         page_numbers: Optional page-number defaults group.
         title_matter: Optional title-matter defaults group.
         blocks: Optional block defaults group.
@@ -1049,7 +1050,7 @@ class Theme:
         typography: Resolved typography defaults group.
         captions: Resolved caption defaults group.
         citations: Resolved citation defaults group.
-        generated_pages: Resolved generated-page defaults group.
+        generated_content: Resolved generated-content defaults group.
         page_numbers: Resolved page-number defaults group.
         title_matter: Resolved title-matter defaults group.
         blocks: Resolved block defaults group.
@@ -1080,13 +1081,14 @@ class Theme:
         reference_style: Reference list style identifier.
         list_of_tables_title: Default title for generated table lists.
         list_of_figures_title: Default title for generated figure lists.
-        comments_title: Default title for generated comments pages.
-        footnotes_title: Default title for generated footnotes pages.
-        references_title: Default title for generated references pages.
-        contents_title: Default title for generated contents pages.
-        generated_section_level: Heading level used by generated pages.
-        generated_page_breaks: Whether generated pages start on new pages.
-        footnote_placement: Native or generated-page footnote placement.
+        comment_list_title: Default title for generated comment lists.
+        footnote_list_title: Default title for generated footnote lists.
+        reference_list_title: Default title for generated reference lists.
+        table_of_contents_title: Default title for generated tables of contents.
+        generated_heading_level: Heading level used by generated content.
+        generated_content_page_breaks: Whether generated content starts on new
+            pages when supported.
+        footnote_placement: Native or generated content footnote placement.
         auto_footnotes_page: Whether missing footnote pages are auto-rendered.
         show_page_numbers: Whether renderers should emit footer page numbers.
         page_number_alignment: Footer page-number alignment.
@@ -1118,13 +1120,13 @@ class Theme:
         document = Document("Report", Paragraph("Body"), settings=DocumentSettings(theme=theme))
         ```
 
-        Customize generated page titles and page numbers together:
+        Customize generated content titles and page numbers together:
 
         ```python
-        from oodocs import Document, DocumentSettings, GeneratedPageDefaults, PageNumberDefaults, ReferenceList, Theme
+        from oodocs import Document, DocumentSettings, GeneratedContentDefaults, PageNumberDefaults, ReferenceList, Theme
 
         theme = Theme(
-            GeneratedPageDefaults(references_title="Bibliography"),
+            GeneratedContentDefaults(reference_list_title="Bibliography"),
             PageNumberDefaults(show_page_numbers=True, page_number_template="Page {page}"),
         )
         document = Document("Paper", ReferenceList(), settings=DocumentSettings(theme=theme))
@@ -1138,14 +1140,14 @@ class Theme:
 
     See Also:
         ``TypographyDefaults``, ``CaptionDefaults``, ``CitationDefaults``,
-        ``GeneratedPageDefaults``, ``PageNumberDefaults``, ``TitleMatterDefaults``,
+        ``GeneratedContentDefaults``, ``PageNumberDefaults``, ``TitleMatterDefaults``,
         and ``BlockDefaults`` for grouped configuration.
     """
 
     typography: TypographyDefaults
     captions: CaptionDefaults
     citations: CitationDefaults
-    generated_pages: GeneratedPageDefaults
+    generated_content: GeneratedContentDefaults
     page_numbers: PageNumberDefaults
     title_matter: TitleMatterDefaults
     blocks: BlockDefaults
@@ -1176,12 +1178,12 @@ class Theme:
     reference_style: str = "plain"
     list_of_tables_title: str = "List of Tables"
     list_of_figures_title: str = "List of Figures"
-    comments_title: str = "Comments"
-    footnotes_title: str = "Footnotes"
-    references_title: str = "References"
-    contents_title: str = "Contents"
-    generated_section_level: int = 2
-    generated_page_breaks: bool = True
+    comment_list_title: str = "Comments"
+    footnote_list_title: str = "Footnotes"
+    reference_list_title: str = "References"
+    table_of_contents_title: str = "Contents"
+    generated_heading_level: int = 2
+    generated_content_page_breaks: bool = True
     footnote_placement: str = "page"
     auto_footnotes_page: bool = True
     show_page_numbers: bool = False
@@ -1207,7 +1209,7 @@ class Theme:
         typography: TypographyDefaults | None = None,
         captions: CaptionDefaults | None = None,
         citations: CitationDefaults | None = None,
-        generated_pages: GeneratedPageDefaults | None = None,
+        generated_content: GeneratedContentDefaults | None = None,
         page_numbers: PageNumberDefaults | None = None,
         title_matter: TitleMatterDefaults | None = None,
         blocks: BlockDefaults | None = None,
@@ -1238,12 +1240,12 @@ class Theme:
         reference_style: str | object = _UNSET,
         list_of_tables_title: str | object = _UNSET,
         list_of_figures_title: str | object = _UNSET,
-        comments_title: str | object = _UNSET,
-        footnotes_title: str | object = _UNSET,
-        references_title: str | object = _UNSET,
-        contents_title: str | object = _UNSET,
-        generated_section_level: int | object = _UNSET,
-        generated_page_breaks: bool | object = _UNSET,
+        comment_list_title: str | object = _UNSET,
+        footnote_list_title: str | object = _UNSET,
+        reference_list_title: str | object = _UNSET,
+        table_of_contents_title: str | object = _UNSET,
+        generated_heading_level: int | object = _UNSET,
+        generated_content_page_breaks: bool | object = _UNSET,
         footnote_placement: str | object = _UNSET,
         auto_footnotes_page: bool | object = _UNSET,
         show_page_numbers: bool | object = _UNSET,
@@ -1265,7 +1267,7 @@ class Theme:
             TypographyDefaults: None,
             CaptionDefaults: None,
             CitationDefaults: None,
-            GeneratedPageDefaults: None,
+            GeneratedContentDefaults: None,
             PageNumberDefaults: None,
             TitleMatterDefaults: None,
             BlockDefaults: None,
@@ -1282,7 +1284,7 @@ class Theme:
             if matching_type is None:
                 raise TypeError(
                     "Theme positional defaults must be TypographyDefaults, "
-                    "CaptionDefaults, CitationDefaults, GeneratedPageDefaults, "
+                    "CaptionDefaults, CitationDefaults, GeneratedContentDefaults, "
                     "PageNumberDefaults, TitleMatterDefaults, or BlockDefaults"
                 )
             default_groups[matching_type] = defaults_group
@@ -1291,7 +1293,7 @@ class Theme:
             TypographyDefaults: typography,
             CaptionDefaults: captions,
             CitationDefaults: citations,
-            GeneratedPageDefaults: generated_pages,
+            GeneratedContentDefaults: generated_content,
             PageNumberDefaults: page_numbers,
             TitleMatterDefaults: title_matter,
             BlockDefaults: blocks,
@@ -1307,7 +1309,7 @@ class Theme:
         self.typography = default_groups[TypographyDefaults] or TypographyDefaults()
         self.captions = default_groups[CaptionDefaults] or CaptionDefaults()
         self.citations = default_groups[CitationDefaults] or CitationDefaults()
-        self.generated_pages = default_groups[GeneratedPageDefaults] or GeneratedPageDefaults()
+        self.generated_content = default_groups[GeneratedContentDefaults] or GeneratedContentDefaults()
         self.page_numbers = default_groups[PageNumberDefaults] or PageNumberDefaults()
         self.title_matter = default_groups[TitleMatterDefaults] or TitleMatterDefaults()
         self.blocks = default_groups[BlockDefaults] or BlockDefaults()
@@ -1318,7 +1320,7 @@ class Theme:
             (TypographyDefaults, self.typography),
             (CaptionDefaults, self.captions),
             (CitationDefaults, self.citations),
-            (GeneratedPageDefaults, self.generated_pages),
+            (GeneratedContentDefaults, self.generated_content),
             (PageNumberDefaults, self.page_numbers),
             (TitleMatterDefaults, self.title_matter),
         ):
@@ -1357,12 +1359,12 @@ class Theme:
             "reference_style": reference_style,
             "list_of_tables_title": list_of_tables_title,
             "list_of_figures_title": list_of_figures_title,
-            "comments_title": comments_title,
-            "footnotes_title": footnotes_title,
-            "references_title": references_title,
-            "contents_title": contents_title,
-            "generated_section_level": generated_section_level,
-            "generated_page_breaks": generated_page_breaks,
+            "comment_list_title": comment_list_title,
+            "footnote_list_title": footnote_list_title,
+            "reference_list_title": reference_list_title,
+            "table_of_contents_title": table_of_contents_title,
+            "generated_heading_level": generated_heading_level,
+            "generated_content_page_breaks": generated_content_page_breaks,
             "footnote_placement": footnote_placement,
             "auto_footnotes_page": auto_footnotes_page,
             "show_page_numbers": show_page_numbers,
@@ -1472,15 +1474,15 @@ class Theme:
             citation_style=self.citation_style,
             reference_style=self.reference_style,
         )
-        self.generated_pages = GeneratedPageDefaults(
+        self.generated_content = GeneratedContentDefaults(
             list_of_tables_title=self.list_of_tables_title,
             list_of_figures_title=self.list_of_figures_title,
-            comments_title=self.comments_title,
-            footnotes_title=self.footnotes_title,
-            references_title=self.references_title,
-            contents_title=self.contents_title,
-            generated_section_level=self.generated_section_level,
-            generated_page_breaks=self.generated_page_breaks,
+            comment_list_title=self.comment_list_title,
+            footnote_list_title=self.footnote_list_title,
+            reference_list_title=self.reference_list_title,
+            table_of_contents_title=self.table_of_contents_title,
+            generated_heading_level=self.generated_heading_level,
+            generated_content_page_breaks=self.generated_content_page_breaks,
         )
         self.page_numbers = PageNumberDefaults(
             show_page_numbers=self.show_page_numbers,
@@ -1779,7 +1781,7 @@ __all__ = [
     "BoxStyle",
     "CaptionDefaults",
     "CitationDefaults",
-    "GeneratedPageDefaults",
+    "GeneratedContentDefaults",
     "HeadingNumbering",
     "ListStyle",
     "PageNumberDefaults",
