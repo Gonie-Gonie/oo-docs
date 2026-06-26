@@ -41,6 +41,7 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "CitationOptions",
         "GeneratedPageOptions",
         "PageNumberOptions",
+        "ParagraphTitleStyle",
         "TitleMatterOptions",
         "TypographyOptions",
         "validate_source",
@@ -60,6 +61,7 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "CitationDefaults",
         "GeneratedPageDefaults",
         "PageNumberDefaults",
+        "RunInTitleStyle",
         "TitleMatterDefaults",
         "TypographyDefaults",
         "save_document_outputs",
@@ -153,6 +155,16 @@ def test_page_and_part_numbering_use_template_and_counter_field_names() -> None:
     assert expected_page_fields <= theme_fields
     assert "part_number_format" not in theme_fields
     assert "part_counter_format" in theme_fields
+
+
+def test_run_in_title_style_uses_canonical_names() -> None:
+    block_fields = {field.name for field in fields(oodocs.BlockDefaults)}
+    theme_fields = {field.name for field in fields(oodocs.Theme)}
+
+    assert "paragraph_title_style" not in block_fields
+    assert "run_in_title_style" in block_fields
+    assert "paragraph_title_style" not in theme_fields
+    assert "run_in_title_style" in theme_fields
 
 
 def test_apidoc_raw_value_helpers_use_as_prefix() -> None:

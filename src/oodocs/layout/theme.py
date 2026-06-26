@@ -399,7 +399,7 @@ class ParagraphStyle:
 
 
 @dataclass(slots=True)
-class ParagraphTitleStyle:
+class RunInTitleStyle:
     """Run-in title styling for titled paragraphs.
 
     Attributes:
@@ -408,12 +408,12 @@ class ParagraphTitleStyle:
 
     Examples:
         ```python
-        from oodocs import Document, Paragraph, ParagraphTitleStyle, TextStyle
+        from oodocs import Document, Paragraph, RunInTitleStyle, TextStyle
 
         paragraph = Paragraph(
             "The rollout completed successfully.",
             title="Outcome",
-            title_style=ParagraphTitleStyle(TextStyle(bold=True, text_color="166534")),
+            title_style=RunInTitleStyle(TextStyle(bold=True, text_color="166534")),
         )
         document = Document("Release Notes", paragraph)
         ```
@@ -424,7 +424,7 @@ class ParagraphTitleStyle:
 
     def __post_init__(self) -> None:
         if not isinstance(self.separator, str):
-            raise TypeError("ParagraphTitleStyle.separator must be a string")
+            raise TypeError("RunInTitleStyle.separator must be a string")
 
 
 @dataclass(slots=True)
@@ -993,7 +993,7 @@ class BlockDefaults:
         part_counter_format: Counter format used for parts.
         footnote_placement: Native or generated-page footnote placement.
         auto_footnotes_page: Whether missing footnote pages are auto-rendered.
-        paragraph_title_style: Default style for paragraph titles.
+        run_in_title_style: Default style for run-in paragraph titles.
         heading_numbering: Heading numbering configuration.
         bullet_list_style: Default bullet list style.
         numbered_list_style: Default numbered list style.
@@ -1020,7 +1020,7 @@ class BlockDefaults:
     part_counter_format: str = "upper-roman"
     footnote_placement: str = "page"
     auto_footnotes_page: bool = True
-    paragraph_title_style: ParagraphTitleStyle = field(default_factory=ParagraphTitleStyle)
+    run_in_title_style: RunInTitleStyle = field(default_factory=RunInTitleStyle)
     heading_numbering: HeadingNumbering = field(default_factory=HeadingNumbering)
     bullet_list_style: ListStyle = field(
         default_factory=lambda: ListStyle(marker_counter_format="bullet", suffix="")
@@ -1059,7 +1059,7 @@ class Theme:
         title_font_size: Title font size in points.
         body_font_size: Body font size in points.
         paragraph_alignment: Default paragraph alignment.
-        paragraph_title_style: Default style for paragraph titles.
+        run_in_title_style: Default style for run-in paragraph titles.
         heading_sizes: Heading font sizes by level.
         caption_font_size: Optional caption font size override.
         caption_alignment: Caption paragraph alignment.
@@ -1155,7 +1155,7 @@ class Theme:
     title_font_size: float = 22.0
     body_font_size: float = 11.0
     paragraph_alignment: str = "justify"
-    paragraph_title_style: ParagraphTitleStyle = field(default_factory=ParagraphTitleStyle)
+    run_in_title_style: RunInTitleStyle = field(default_factory=RunInTitleStyle)
     heading_sizes: tuple[float, ...] = (18.0, 15.0, 13.0, 11.5)
     caption_font_size: float | None = None
     caption_alignment: str = "center"
@@ -1217,7 +1217,7 @@ class Theme:
         title_font_size: float | object = _UNSET,
         body_font_size: float | object = _UNSET,
         paragraph_alignment: str | object = _UNSET,
-        paragraph_title_style: ParagraphTitleStyle | object = _UNSET,
+        run_in_title_style: RunInTitleStyle | object = _UNSET,
         heading_sizes: tuple[float, ...] | object = _UNSET,
         caption_font_size: float | None | object = _UNSET,
         caption_alignment: str | object = _UNSET,
@@ -1336,7 +1336,7 @@ class Theme:
             "title_font_size": title_font_size,
             "body_font_size": body_font_size,
             "paragraph_alignment": paragraph_alignment,
-            "paragraph_title_style": paragraph_title_style,
+            "run_in_title_style": run_in_title_style,
             "heading_sizes": heading_sizes,
             "caption_font_size": caption_font_size,
             "caption_alignment": caption_alignment,
@@ -1396,8 +1396,8 @@ class Theme:
     def __post_init__(self) -> None:
         self.page_background_color = normalize_color(self.page_background_color) or "FFFFFF"
         self.paragraph_alignment = normalize_text_alignment(self.paragraph_alignment)
-        if not isinstance(self.paragraph_title_style, ParagraphTitleStyle):
-            raise TypeError("paragraph_title_style must be a ParagraphTitleStyle")
+        if not isinstance(self.run_in_title_style, RunInTitleStyle):
+            raise TypeError("run_in_title_style must be a RunInTitleStyle")
         if self.caption_alignment not in {"left", "center", "right", "justify"}:
             raise ValueError(
                 f"Unsupported caption alignment: {self.caption_alignment!r}"
@@ -1507,7 +1507,7 @@ class Theme:
             part_counter_format=self.part_counter_format,
             footnote_placement=self.footnote_placement,
             auto_footnotes_page=self.auto_footnotes_page,
-            paragraph_title_style=self.paragraph_title_style,
+            run_in_title_style=self.run_in_title_style,
             heading_numbering=self.heading_numbering,
             bullet_list_style=self.bullet_list_style,
             numbered_list_style=self.numbered_list_style,
@@ -1590,31 +1590,32 @@ class Theme:
 
         return style.alignment or self.paragraph_alignment
 
-    def resolve_paragraph_title_style(
+    def resolve_run_in_title_style(
         self,
-        paragraph_style: ParagraphTitleStyle | None = None,
-        section_style: ParagraphTitleStyle | None = None,
-    ) -> ParagraphTitleStyle:
-        """Return the effective paragraph-title style.
+        paragraph_override: RunInTitleStyle | None = None,
+        scope_style: RunInTitleStyle | None = None,
+    ) -> RunInTitleStyle:
+        """Return the effective run-in title style.
 
         Args:
-            paragraph_style: Title style set directly on a paragraph.
-            section_style: Title style inherited from the nearest section.
+            paragraph_override: Title style set directly on a paragraph.
+            scope_style: Title style inherited from the nearest section or
+                chapter.
 
         Returns:
-            Effective paragraph title style.
+            Effective run-in title style.
 
         Examples:
             ```python
-            from oodocs import ParagraphTitleStyle, TextStyle, Theme
+            from oodocs import RunInTitleStyle, TextStyle, Theme
 
-            style = Theme().resolve_paragraph_title_style(
-                ParagraphTitleStyle(TextStyle(bold=True, italic=True))
+            style = Theme().resolve_run_in_title_style(
+                RunInTitleStyle(TextStyle(bold=True, italic=True))
             )
             ```
         """
 
-        return paragraph_style or section_style or self.paragraph_title_style
+        return paragraph_override or scope_style or self.run_in_title_style
 
     def table_caption_label_text(self) -> str:
         """Return the label used in table captions and generated table lists.
@@ -1783,7 +1784,7 @@ __all__ = [
     "ListStyle",
     "PageNumberDefaults",
     "ParagraphStyle",
-    "ParagraphTitleStyle",
+    "RunInTitleStyle",
     "TableStyle",
     "TextStyle",
     "TitleMatterDefaults",

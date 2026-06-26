@@ -42,7 +42,7 @@ from oodocs.layout.theme import (
     BoxStyle,
     ListStyle,
     ParagraphStyle,
-    ParagraphTitleStyle,
+    RunInTitleStyle,
     TextStyle,
     box_style_with_overrides,
     list_style_with_overrides,
@@ -86,7 +86,7 @@ class Paragraph(Block):
 
     Examples:
         ```python
-        from oodocs import Document, Paragraph, ParagraphTitleStyle, TextStyle, bold, link
+        from oodocs import Document, Paragraph, RunInTitleStyle, TextStyle, bold, link
 
         paragraph = Paragraph(
             "Read the ",
@@ -95,7 +95,7 @@ class Paragraph(Block):
             bold("production"),
             ".",
             title="Action",
-            title_style=ParagraphTitleStyle(TextStyle(bold=True), separator=": "),
+            title_style=RunInTitleStyle(TextStyle(bold=True), separator=": "),
         )
         document = Document("Approval Notes", paragraph)
         ```
@@ -103,14 +103,14 @@ class Paragraph(Block):
 
     content: list[Text]
     title: list[Text] | None
-    title_style: ParagraphTitleStyle | None
+    title_style: RunInTitleStyle | None
     style: ParagraphStyle
 
     def __init__(
         self,
         *content: InlineInput,
         title: InlineInput | None = None,
-        title_style: ParagraphTitleStyle | None = None,
+        title_style: RunInTitleStyle | None = None,
         style: ParagraphStyle | None = None,
         alignment: str | None = None,
         space_before: float | None = None,
@@ -153,11 +153,11 @@ class Paragraph(Block):
 
         if self.title is not None:
             title_text = "".join(fragment.plain_text() for fragment in self.title)
-            separator = (self.title_style or ParagraphTitleStyle()).separator
+            separator = (self.title_style or RunInTitleStyle()).separator
             return title_text + separator + "".join(fragment.plain_text() for fragment in self.content)
         return "".join(fragment.plain_text() for fragment in self.content)
 
-    def render_content(self, title_style: ParagraphTitleStyle) -> list[Text]:
+    def render_content(self, title_style: RunInTitleStyle) -> list[Text]:
         """Return inline fragments with the effective run-in title prepended.
 
         Args:
@@ -1803,7 +1803,7 @@ class Section(Block):
             Defaults to ``numbered``.
         anchor: Optional stable heading anchor used by renderers for internal
             links.
-        paragraph_title_style: Optional paragraph-title style inherited by
+        run_in_title_style: Optional run-in title style inherited by
             paragraphs in this section subtree.
 
     Raises:
@@ -1811,13 +1811,13 @@ class Section(Block):
 
     Examples:
         ```python
-        from oodocs import Document, Paragraph, ParagraphTitleStyle, Section, TextStyle
+        from oodocs import Document, Paragraph, RunInTitleStyle, Section, TextStyle
 
         section = Section(
             "Results",
             Paragraph("The benchmark passed.", title="Outcome"),
             level=2,
-            paragraph_title_style=ParagraphTitleStyle(TextStyle(bold=True), separator=". "),
+            run_in_title_style=RunInTitleStyle(TextStyle(bold=True), separator=". "),
         )
         document = Document("Benchmark", section)
         ```
@@ -1829,7 +1829,7 @@ class Section(Block):
     numbered: bool
     toc: bool
     anchor: str | None
-    paragraph_title_style: ParagraphTitleStyle | None
+    run_in_title_style: RunInTitleStyle | None
 
     def __init__(
         self,
@@ -1839,7 +1839,7 @@ class Section(Block):
         numbered: bool = True,
         toc: bool | None = None,
         anchor: str | None = None,
-        paragraph_title_style: ParagraphTitleStyle | None = None,
+        run_in_title_style: RunInTitleStyle | None = None,
     ) -> None:
         if level < 1:
             raise ValueError("Section level must be >= 1")
@@ -1849,7 +1849,7 @@ class Section(Block):
         self.numbered = numbered
         self.toc = numbered if toc is None else bool(toc)
         self.anchor = anchor
-        self.paragraph_title_style = paragraph_title_style
+        self.run_in_title_style = run_in_title_style
 
     def add(self, *children: BlockInput) -> Section:
         """Append child blocks.
@@ -1914,8 +1914,8 @@ class Section(Block):
             toc=self.toc,
         )
         child_context = context
-        if self.paragraph_title_style is not None:
-            child_context = replace(context, paragraph_title_style=self.paragraph_title_style)
+        if self.run_in_title_style is not None:
+            child_context = replace(context, run_in_title_style=self.run_in_title_style)
         for child in self.children:
             child.render_to_docx(renderer, container, child_context)
 
@@ -1956,7 +1956,7 @@ class Chapter(Section):
         toc: Whether the chapter should appear in generated tables of contents.
         anchor: Optional stable heading anchor used by renderers for internal
             links.
-        paragraph_title_style: Optional paragraph-title style inherited by
+        run_in_title_style: Optional run-in title style inherited by
             paragraphs in this chapter subtree.
 
     Examples:
@@ -1975,7 +1975,7 @@ class Chapter(Section):
         numbered: bool = True,
         toc: bool | None = None,
         anchor: str | None = None,
-        paragraph_title_style: ParagraphTitleStyle | None = None,
+        run_in_title_style: RunInTitleStyle | None = None,
     ) -> None:
         super().__init__(
             title,
@@ -1984,7 +1984,7 @@ class Chapter(Section):
             numbered=numbered,
             toc=toc,
             anchor=anchor,
-            paragraph_title_style=paragraph_title_style,
+            run_in_title_style=run_in_title_style,
         )
 
 
@@ -1999,7 +1999,7 @@ class Subsection(Section):
             contents.
         anchor: Optional stable heading anchor used by renderers for internal
             links.
-        paragraph_title_style: Optional paragraph-title style inherited by
+        run_in_title_style: Optional run-in title style inherited by
             paragraphs in this subsection subtree.
 
     Examples:
@@ -2018,7 +2018,7 @@ class Subsection(Section):
         numbered: bool = True,
         toc: bool | None = None,
         anchor: str | None = None,
-        paragraph_title_style: ParagraphTitleStyle | None = None,
+        run_in_title_style: RunInTitleStyle | None = None,
     ) -> None:
         super().__init__(
             title,
@@ -2027,7 +2027,7 @@ class Subsection(Section):
             numbered=numbered,
             toc=toc,
             anchor=anchor,
-            paragraph_title_style=paragraph_title_style,
+            run_in_title_style=run_in_title_style,
         )
 
 
@@ -2042,7 +2042,7 @@ class Subsubsection(Section):
             contents.
         anchor: Optional stable heading anchor used by renderers for internal
             links.
-        paragraph_title_style: Optional paragraph-title style inherited by
+        run_in_title_style: Optional run-in title style inherited by
             paragraphs in this subsubsection subtree.
 
     Examples:
@@ -2061,7 +2061,7 @@ class Subsubsection(Section):
         numbered: bool = True,
         toc: bool | None = None,
         anchor: str | None = None,
-        paragraph_title_style: ParagraphTitleStyle | None = None,
+        run_in_title_style: RunInTitleStyle | None = None,
     ) -> None:
         super().__init__(
             title,
@@ -2070,7 +2070,7 @@ class Subsubsection(Section):
             numbered=numbered,
             toc=toc,
             anchor=anchor,
-            paragraph_title_style=paragraph_title_style,
+            run_in_title_style=run_in_title_style,
         )
 
 
@@ -2083,7 +2083,7 @@ def section_for_level(
     min_level: int = MIN_SECTION_LEVEL,
     max_level: int = MAX_SECTION_LEVEL,
     anchor: str | None = None,
-    paragraph_title_style: ParagraphTitleStyle | None = None,
+    run_in_title_style: RunInTitleStyle | None = None,
 ) -> Section:
     """Create the section-like object that best matches a heading level.
 
@@ -2097,7 +2097,7 @@ def section_for_level(
         max_level: Highest accepted heading level.
         anchor: Optional stable heading anchor used by renderers for internal
             links.
-        paragraph_title_style: Optional paragraph-title style inherited by
+        run_in_title_style: Optional run-in title style inherited by
             paragraphs in this section subtree.
 
     Returns:
@@ -2123,7 +2123,7 @@ def section_for_level(
             numbered=numbered,
             toc=toc,
             anchor=anchor,
-            paragraph_title_style=paragraph_title_style,
+            run_in_title_style=run_in_title_style,
         )
     if level == 3:
         return Subsection(
@@ -2132,7 +2132,7 @@ def section_for_level(
             numbered=numbered,
             toc=toc,
             anchor=anchor,
-            paragraph_title_style=paragraph_title_style,
+            run_in_title_style=run_in_title_style,
         )
     if level == 4:
         return Subsubsection(
@@ -2141,7 +2141,7 @@ def section_for_level(
             numbered=numbered,
             toc=toc,
             anchor=anchor,
-            paragraph_title_style=paragraph_title_style,
+            run_in_title_style=run_in_title_style,
         )
     return Section(
         title,
@@ -2150,7 +2150,7 @@ def section_for_level(
         numbered=numbered,
         toc=toc,
         anchor=anchor,
-        paragraph_title_style=paragraph_title_style,
+        run_in_title_style=run_in_title_style,
     )
 
 
@@ -2248,7 +2248,7 @@ def shift_heading_level(
         min_level=min_level,
         max_level=max_level,
         anchor=block.anchor,
-        paragraph_title_style=block.paragraph_title_style,
+        run_in_title_style=block.run_in_title_style,
     )
 
 

@@ -70,7 +70,7 @@ from oodocs import (
     PageBreak,
     Paragraph,
     ParagraphStyle,
-    ParagraphTitleStyle,
+    RunInTitleStyle,
     Part,
     Proof,
     Proposition,
@@ -463,7 +463,7 @@ def test_theme_accepts_grouped_defaults_objects() -> None:
         BlockDefaults(
             paragraph_alignment="left",
             table_alignment="right",
-            paragraph_title_style=ParagraphTitleStyle(TextStyle(italic=True), separator=": "),
+            run_in_title_style=RunInTitleStyle(TextStyle(italic=True), separator=": "),
         ),
         body_font_name="Calibri",
     )
@@ -481,16 +481,16 @@ def test_theme_accepts_grouped_defaults_objects() -> None:
     assert theme.format_page_number(4) == "p. 4"
     assert theme.title_alignment == "left"
     assert theme.paragraph_alignment == "left"
-    assert theme.paragraph_title_style.text_style.italic is True
-    assert theme.blocks.paragraph_title_style.separator == ": "
+    assert theme.run_in_title_style.text_style.italic is True
+    assert theme.blocks.run_in_title_style.separator == ": "
     assert theme.table_alignment == "right"
 
     direct_title_style = Theme(
-        BlockDefaults(paragraph_title_style=ParagraphTitleStyle(TextStyle(italic=True))),
-        paragraph_title_style=ParagraphTitleStyle(TextStyle(bold=True), separator=". "),
+        BlockDefaults(run_in_title_style=RunInTitleStyle(TextStyle(italic=True))),
+        run_in_title_style=RunInTitleStyle(TextStyle(bold=True), separator=". "),
     )
-    assert direct_title_style.paragraph_title_style.text_style.bold is True
-    assert direct_title_style.paragraph_title_style.separator == ". "
+    assert direct_title_style.run_in_title_style.text_style.bold is True
+    assert direct_title_style.run_in_title_style.separator == ". "
 
     keyword_group = Theme(typography=TypographyDefaults(body_font_name="Aptos"))
     assert keyword_group.body_font_name == "Aptos"
@@ -612,12 +612,12 @@ def test_paragraph_titles_render_and_inherit_styles(tmp_path: Path) -> None:
             Paragraph(
                 "Direct body.",
                 title="Direct",
-                title_style=ParagraphTitleStyle(
+                title_style=RunInTitleStyle(
                     TextStyle(bold=True, text_color="991B1B"),
                     separator=" - ",
                 ),
             ),
-            paragraph_title_style=ParagraphTitleStyle(
+            run_in_title_style=RunInTitleStyle(
                 TextStyle(bold=True, italic=True),
                 separator=": ",
             ),
@@ -625,14 +625,14 @@ def test_paragraph_titles_render_and_inherit_styles(tmp_path: Path) -> None:
         Paragraph(
             "Individual body.",
             title="Individual",
-            title_style=ParagraphTitleStyle(
+            title_style=RunInTitleStyle(
                 TextStyle(bold=True, text_color="166534"),
                 separator=". ",
             ),
         ),
         settings=DocumentSettings(
             theme=Theme(
-                paragraph_title_style=ParagraphTitleStyle(
+                run_in_title_style=RunInTitleStyle(
                     TextStyle(bold=True),
                     separator=" ",
                 )

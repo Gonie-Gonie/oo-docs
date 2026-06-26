@@ -361,9 +361,9 @@ class DocxRenderer:
         """
 
         paragraph = self._add_paragraph(container)
-        title_style = context.theme.resolve_paragraph_title_style(
+        title_style = context.theme.resolve_run_in_title_style(
             paragraph_block.title_style,
-            context.paragraph_title_style,
+            context.run_in_title_style,
         )
         self._apply_paragraph_style(
             paragraph,

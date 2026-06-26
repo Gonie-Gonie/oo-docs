@@ -765,9 +765,9 @@ class PdfRenderer:
             context.styles["BodyText"],
             default_unit=context.unit,
         )
-        title_style = context.theme.resolve_paragraph_title_style(
+        title_style = context.theme.resolve_run_in_title_style(
             block.title_style,
-            context.paragraph_title_style,
+            context.run_in_title_style,
         )
         paragraph = RLParagraph(
             self._anchor_markup(context.render_index.block_anchor(block))
@@ -873,8 +873,8 @@ class PdfRenderer:
         """
 
         child_context = (
-            replace(context, paragraph_title_style=block.paragraph_title_style)
-            if block.paragraph_title_style is not None
+            replace(context, run_in_title_style=block.run_in_title_style)
+            if block.run_in_title_style is not None
             else context
         )
         return [self.make_section_heading(block, context)] + self._render_flow_children(
