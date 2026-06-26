@@ -133,7 +133,7 @@ def build_inventory(*, branch: str | None = None) -> dict[str, object]:
 
             obj = getattr(module, export_name)
             kind = object_kind(obj)
-            object_module = getattr(obj, "__module__", None)
+            object_module = object_module_name(obj, kind)
             category = category_for(module_name, export_name, object_module)
             if category is None:
                 uncategorized.append(f"{module_name}:{export_name}")
@@ -189,9 +189,19 @@ def object_kind(obj: Any) -> str:
     return "unknown"
 
 
+def object_module_name(obj: Any, kind: str) -> str | None:
+    """Return a stable module label for an exported object."""
+
+    if kind == "type-alias":
+        return "typing"
+    return getattr(obj, "__module__", None)
+
+
 def object_qualname(export_name: str, obj: Any) -> str:
     """Return the best stable qualified name for an exported object."""
 
+    if object_kind(obj) == "type-alias":
+        return export_name
     module_name = getattr(obj, "__module__", None)
     qualname = getattr(obj, "__qualname__", None)
     if module_name and qualname:

@@ -387,7 +387,7 @@
           "kind": "type-alias",
           "module": "typing",
           "name": "OutputFormat",
-          "qualname": "typing.Literal"
+          "qualname": "OutputFormat"
         },
         {
           "category": "theme",
@@ -1011,7 +1011,7 @@
           "kind": "type-alias",
           "module": "typing",
           "name": "ApiCollectorName",
-          "qualname": "typing.Literal"
+          "qualname": "ApiCollectorName"
         },
         {
           "category": "apidoc-coverage",
@@ -1039,7 +1039,7 @@
           "kind": "type-alias",
           "module": "typing",
           "name": "ApiDocIssueSeverity",
-          "qualname": "typing.Literal"
+          "qualname": "ApiDocIssueSeverity"
         },
         {
           "category": "apidoc-composition",
@@ -1060,14 +1060,14 @@
           "kind": "type-alias",
           "module": "typing",
           "name": "ApiDocstringStyleName",
-          "qualname": "typing.Literal"
+          "qualname": "ApiDocstringStyleName"
         },
         {
           "category": "apidoc-collector",
           "kind": "type-alias",
           "module": "typing",
           "name": "ApiFallbackCollectorName",
-          "qualname": "typing.Literal"
+          "qualname": "ApiFallbackCollectorName"
         },
         {
           "category": "apidoc-model",
@@ -1081,7 +1081,7 @@
           "kind": "type-alias",
           "module": "typing",
           "name": "ApiKind",
-          "qualname": "typing.Literal"
+          "qualname": "ApiKind"
         },
         {
           "category": "apidoc-model",
@@ -1116,7 +1116,7 @@
           "kind": "type-alias",
           "module": "typing",
           "name": "ApiPresentationProfileName",
-          "qualname": "typing.Literal"
+          "qualname": "ApiPresentationProfileName"
         },
         {
           "category": "apidoc-collector",
@@ -1130,7 +1130,7 @@
           "kind": "type-alias",
           "module": "typing",
           "name": "ApiPublicPolicyName",
-          "qualname": "typing.Literal"
+          "qualname": "ApiPublicPolicyName"
         },
         {
           "category": "apidoc-model",
@@ -1172,7 +1172,7 @@
           "kind": "type-alias",
           "module": "typing",
           "name": "ApiVisibility",
-          "qualname": "typing.Literal"
+          "qualname": "ApiVisibility"
         },
         {
           "category": "apidoc-composition",
@@ -1430,7 +1430,7 @@
         {
           "category": "importer",
           "kind": "type-alias",
-          "module": "types",
+          "module": "typing",
           "name": "NotebookSource",
           "qualname": "NotebookSource"
         },
@@ -1657,7 +1657,7 @@
           "kind": "type-alias",
           "module": "typing",
           "name": "TableCellStyleInput",
-          "qualname": "typing.Union"
+          "qualname": "TableCellStyleInput"
         },
         {
           "category": "style",
@@ -1766,7 +1766,7 @@
           "kind": "type-alias",
           "module": "typing",
           "name": "ValidationSeverity",
-          "qualname": "typing.Literal"
+          "qualname": "ValidationSeverity"
         },
         {
           "category": "validation",
