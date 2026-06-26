@@ -149,7 +149,7 @@ Common translations:
 - LaTeX `tabular` or copied tables -> `Table(...)` or `Table.from_dataframe(...)`
 - LaTeX `\label` / `\ref` -> use `reference(obj)` or `obj.reference()` inside `Paragraph(...)`
 - LaTeX `tcolorbox`-style report panels -> editable `Box(..., background_color=..., padding=...)`
-- BibTeX-style references -> `CitationLibrary`, `CitationSource.cite(...)`, and `ReferencesPage()`
+- BibTeX-style references -> `CitationLibrary`, `CitationSource.cite(...)`, and `ReferenceList()`
 
 The main payoff is fewer manual handoffs: a benchmark CSV can become a table, a matplotlib object can become a figure, and the same authored structure can render to DOCX for review, PDF for release, and HTML for lightweight sharing.
 

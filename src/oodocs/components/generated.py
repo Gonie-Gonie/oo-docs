@@ -75,7 +75,7 @@ def coerce_toc_level_style(value: TocLevelStyleInput) -> TocLevelStyle:
 
 
 @dataclass(slots=True, init=False)
-class TableList(Block):
+class ListOfTables(Block):
     """Generated list of captioned tables.
 
     Args:
@@ -84,9 +84,9 @@ class TableList(Block):
 
     Examples:
         ```python
-        from oodocs import Document, TableList
+        from oodocs import Document, ListOfTables
 
-        doc = Document("Report", TableList("Tables"))
+        doc = Document("Report", ListOfTables("Tables"))
         ```
     """
 
@@ -109,7 +109,7 @@ class TableList(Block):
             context: Shared DOCX render context.
         """
 
-        renderer.render_table_list(self, context)
+        renderer.render_list_of_tables(self, context)
 
     def render_to_pdf(
         self,
@@ -122,7 +122,7 @@ class TableList(Block):
             ReportLab flowables for the generated table list.
         """
 
-        return renderer.render_table_list(self, context)
+        return renderer.render_list_of_tables(self, context)
 
     def render_to_html(
         self,
@@ -135,11 +135,11 @@ class TableList(Block):
             HTML markup for the generated table list.
         """
 
-        return renderer.render_table_list(self, context)
+        return renderer.render_list_of_tables(self, context)
 
 
 @dataclass(slots=True, init=False)
-class FigureList(Block):
+class ListOfFigures(Block):
     """Generated list of captioned figures.
 
     Args:
@@ -148,9 +148,9 @@ class FigureList(Block):
 
     Examples:
         ```python
-        from oodocs import Document, FigureList
+        from oodocs import Document, ListOfFigures
 
-        doc = Document("Report", FigureList("Figures"))
+        doc = Document("Report", ListOfFigures("Figures"))
         ```
     """
 
@@ -173,7 +173,7 @@ class FigureList(Block):
             context: Shared DOCX render context.
         """
 
-        renderer.render_figure_list(self, context)
+        renderer.render_list_of_figures(self, context)
 
     def render_to_pdf(
         self,
@@ -186,7 +186,7 @@ class FigureList(Block):
             ReportLab flowables for the generated figure list.
         """
 
-        return renderer.render_figure_list(self, context)
+        return renderer.render_list_of_figures(self, context)
 
     def render_to_html(
         self,
@@ -199,11 +199,11 @@ class FigureList(Block):
             HTML markup for the generated figure list.
         """
 
-        return renderer.render_figure_list(self, context)
+        return renderer.render_list_of_figures(self, context)
 
 
 @dataclass(slots=True, init=False)
-class ReferencesPage(Block):
+class ReferenceList(Block):
     """Generated reference list for cited bibliography entries.
 
     Args:
@@ -212,9 +212,9 @@ class ReferencesPage(Block):
 
     Examples:
         ```python
-        from oodocs import Document, ReferencesPage
+        from oodocs import Document, ReferenceList
 
-        doc = Document("Paper", ReferencesPage("Bibliography"))
+        doc = Document("Paper", ReferenceList("Bibliography"))
         ```
     """
 
@@ -229,7 +229,7 @@ class ReferencesPage(Block):
         container: object,
         context: DocxRenderContext,
     ) -> None:
-        """Render this references page into a DOCX container.
+        """Render this reference list into a DOCX container.
 
         Args:
             renderer: DOCX renderer instance.
@@ -237,38 +237,38 @@ class ReferencesPage(Block):
             context: Shared DOCX render context.
         """
 
-        renderer.render_references_page(self, context)
+        renderer.render_reference_list(self, context)
 
     def render_to_pdf(
         self,
         renderer: object,
         context: PdfRenderContext,
     ) -> list[object]:
-        """Render this references page into PDF flowables.
+        """Render this reference list into PDF flowables.
 
         Returns:
-            ReportLab flowables for the generated references page.
+            ReportLab flowables for the generated reference list.
         """
 
-        return renderer.render_references_page(self, context)
+        return renderer.render_reference_list(self, context)
 
     def render_to_html(
         self,
         renderer: object,
         context: HtmlRenderContext,
     ) -> str:
-        """Render this references page into HTML markup.
+        """Render this reference list into HTML markup.
 
         Returns:
-            HTML markup for the generated references page.
+            HTML markup for the generated reference list.
         """
 
-        return renderer.render_references_page(self, context)
+        return renderer.render_reference_list(self, context)
 
 
 @dataclass(slots=True, init=False)
-class CommentsPage(Block):
-    """Generated page listing numbered inline comments.
+class CommentList(Block):
+    """Generated list of numbered inline comments.
 
     Args:
         title: Optional page title. Renderers use their default title when
@@ -276,9 +276,9 @@ class CommentsPage(Block):
 
     Examples:
         ```python
-        from oodocs import CommentsPage, Document
+        from oodocs import CommentList, Document
 
-        doc = Document("Review", CommentsPage("Reviewer Notes"))
+        doc = Document("Review", CommentList("Reviewer Notes"))
         ```
     """
 
@@ -293,7 +293,7 @@ class CommentsPage(Block):
         container: object,
         context: DocxRenderContext,
     ) -> None:
-        """Render this comments page into a DOCX container.
+        """Render this comment list into a DOCX container.
 
         Args:
             renderer: DOCX renderer instance.
@@ -301,38 +301,38 @@ class CommentsPage(Block):
             context: Shared DOCX render context.
         """
 
-        renderer.render_comments_page(self, context)
+        renderer.render_comment_list(self, context)
 
     def render_to_pdf(
         self,
         renderer: object,
         context: PdfRenderContext,
     ) -> list[object]:
-        """Render this comments page into PDF flowables.
+        """Render this comment list into PDF flowables.
 
         Returns:
-            ReportLab flowables for the generated comments page.
+            ReportLab flowables for the generated comment list.
         """
 
-        return renderer.render_comments_page(self, context)
+        return renderer.render_comment_list(self, context)
 
     def render_to_html(
         self,
         renderer: object,
         context: HtmlRenderContext,
     ) -> str:
-        """Render this comments page into HTML markup.
+        """Render this comment list into HTML markup.
 
         Returns:
-            HTML markup for the generated comments page.
+            HTML markup for the generated comment list.
         """
 
-        return renderer.render_comments_page(self, context)
+        return renderer.render_comment_list(self, context)
 
 
 @dataclass(slots=True, init=False)
-class FootnotesPage(Block):
-    """Generated page listing numbered portable footnotes.
+class FootnoteList(Block):
+    """Generated list of numbered portable footnotes.
 
     Args:
         title: Optional page title. Renderers use their default title when
@@ -340,9 +340,9 @@ class FootnotesPage(Block):
 
     Examples:
         ```python
-        from oodocs import Document, FootnotesPage
+        from oodocs import Document, FootnoteList
 
-        doc = Document("Report", FootnotesPage())
+        doc = Document("Report", FootnoteList())
         ```
     """
 
@@ -357,7 +357,7 @@ class FootnotesPage(Block):
         container: object,
         context: DocxRenderContext,
     ) -> None:
-        """Render this footnotes page into a DOCX container.
+        """Render this footnote list into a DOCX container.
 
         Args:
             renderer: DOCX renderer instance.
@@ -365,33 +365,33 @@ class FootnotesPage(Block):
             context: Shared DOCX render context.
         """
 
-        renderer.render_footnotes_page(self, context)
+        renderer.render_footnote_list(self, context)
 
     def render_to_pdf(
         self,
         renderer: object,
         context: PdfRenderContext,
     ) -> list[object]:
-        """Render this footnotes page into PDF flowables.
+        """Render this footnote list into PDF flowables.
 
         Returns:
-            ReportLab flowables for the generated footnotes page.
+            ReportLab flowables for the generated footnote list.
         """
 
-        return renderer.render_footnotes_page(self, context)
+        return renderer.render_footnote_list(self, context)
 
     def render_to_html(
         self,
         renderer: object,
         context: HtmlRenderContext,
     ) -> str:
-        """Render this footnotes page into HTML markup.
+        """Render this footnote list into HTML markup.
 
         Returns:
-            HTML markup for the generated footnotes page.
+            HTML markup for the generated footnote list.
         """
 
-        return renderer.render_footnotes_page(self, context)
+        return renderer.render_footnote_list(self, context)
 
 
 @dataclass(slots=True, init=False)
@@ -518,11 +518,11 @@ class TableOfContents(Block):
 
 
 __all__ = [
-    "CommentsPage",
-    "FigureList",
-    "FootnotesPage",
-    "ReferencesPage",
-    "TableList",
+    "CommentList",
+    "ListOfFigures",
+    "FootnoteList",
+    "ReferenceList",
+    "ListOfTables",
     "TableOfContents",
     "TocLevelStyleInput",
     "TocLevelStyle",

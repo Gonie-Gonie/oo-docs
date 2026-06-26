@@ -37,11 +37,11 @@ from oodocs.components.blocks import (
     VerticalSpace,
 )
 from oodocs.components.generated import (
-    CommentsPage,
-    FigureList,
-    FootnotesPage,
-    ReferencesPage,
-    TableList,
+    CommentList,
+    ListOfFigures,
+    FootnoteList,
+    ReferenceList,
+    ListOfTables,
     TableOfContents,
 )
 from oodocs.components.inline import (
@@ -638,11 +638,11 @@ class _ValidationContext:
         if isinstance(
             block,
             (
-                TableList,
-                FigureList,
-                ReferencesPage,
-                CommentsPage,
-                FootnotesPage,
+                ListOfTables,
+                ListOfFigures,
+                ReferenceList,
+                CommentList,
+                FootnoteList,
                 TableOfContents,
             ),
         ):
@@ -1089,43 +1089,43 @@ class _ValidationContext:
                         path,
                     )
                 continue
-            if isinstance(page, TableList) and not render_index.tables:
+            if isinstance(page, ListOfTables) and not render_index.tables:
                 self._add(
                     "warning",
                     "empty-table-list",
-                    "TableList has no captioned tables to display.",
+                    "ListOfTables has no captioned tables to display.",
                     path,
                 )
                 continue
-            if isinstance(page, FigureList) and not render_index.figures:
+            if isinstance(page, ListOfFigures) and not render_index.figures:
                 self._add(
                     "warning",
                     "empty-figure-list",
-                    "FigureList has no captioned figures to display.",
+                    "ListOfFigures has no captioned figures to display.",
                     path,
                 )
                 continue
-            if isinstance(page, ReferencesPage) and not render_index.citations:
+            if isinstance(page, ReferenceList) and not render_index.citations:
                 self._add(
                     "warning",
                     "empty-references-page",
-                    "ReferencesPage has no cited sources to display.",
+                    "ReferenceList has no cited sources to display.",
                     path,
                 )
                 continue
-            if isinstance(page, CommentsPage) and not render_index.comments:
+            if isinstance(page, CommentList) and not render_index.comments:
                 self._add(
                     "warning",
                     "empty-comments-page",
-                    "CommentsPage has no comments to display.",
+                    "CommentList has no comments to display.",
                     path,
                 )
                 continue
-            if isinstance(page, FootnotesPage) and not render_index.footnotes:
+            if isinstance(page, FootnoteList) and not render_index.footnotes:
                 self._add(
                     "warning",
                     "empty-footnotes-page",
-                    "FootnotesPage has no footnotes to display.",
+                    "FootnoteList has no footnotes to display.",
                     path,
                 )
 

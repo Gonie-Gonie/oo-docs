@@ -37,7 +37,7 @@ from oodocs import (
     Chapter,
     Claim,
     Comment,
-    CommentsPage,
+    CommentList,
     CodeBlock,
     ColumnSpan,
     Conjecture,
@@ -51,7 +51,7 @@ from oodocs import (
     Equation,
     Example,
     Figure,
-    FigureList,
+    ListOfFigures,
     Footnote,
     GeneratedPageDefaults,
     HeadingNumbering,
@@ -74,7 +74,7 @@ from oodocs import (
     Part,
     Proof,
     Proposition,
-    ReferencesPage,
+    ReferenceList,
     Remark,
     Section,
     Shape,
@@ -87,7 +87,7 @@ from oodocs import (
     TableCellStyle,
     TableStyle,
     TableOfContents,
-    TableList,
+    ListOfTables,
     Text,
     TextStyle,
     TextBox,
@@ -1242,8 +1242,8 @@ def test_public_api_prefers_classes_for_structural_nodes() -> None:
     assert hasattr(oodocs, "PageBreak")
     assert hasattr(oodocs, "PageMargins")
     assert hasattr(oodocs, "PageSize")
-    assert hasattr(oodocs, "TableList")
-    assert hasattr(oodocs, "FigureList")
+    assert hasattr(oodocs, "ListOfTables")
+    assert hasattr(oodocs, "ListOfFigures")
     assert hasattr(oodocs, "cite")
     assert hasattr(oodocs, "Box")
     assert hasattr(oodocs, "BoxStyle")
@@ -1259,8 +1259,9 @@ def test_public_api_prefers_classes_for_structural_nodes() -> None:
     assert hasattr(oodocs, "TableOfContents")
     assert hasattr(oodocs, "TocLevelStyle")
     assert hasattr(oodocs, "Comment")
-    assert hasattr(oodocs, "CommentsPage")
+    assert hasattr(oodocs, "CommentList")
     assert hasattr(oodocs, "Footnote")
+    assert hasattr(oodocs, "FootnoteList")
     assert hasattr(oodocs, "Equation")
     assert hasattr(oodocs, "Math")
     assert hasattr(oodocs, "InlineChip")
@@ -1276,12 +1277,11 @@ def test_public_api_prefers_classes_for_structural_nodes() -> None:
     assert not hasattr(oodocs, "Hyperlink")
     assert not hasattr(oodocs, "Italic")
     assert not hasattr(oodocs, "InlineCode")
-    assert not hasattr(oodocs, "FootnotesPage")
     assert hasattr(inline_components, "Bold")
     assert hasattr(inline_components, "Hyperlink")
     assert hasattr(inline_components, "Italic")
     assert hasattr(inline_components, "InlineCode")
-    assert hasattr(generated_components, "FootnotesPage")
+    assert hasattr(generated_components, "FootnoteList")
     assert not hasattr(oodocs, "ListBlock")
     assert not hasattr(oodocs, "Citation")
     assert not hasattr(oodocs, "TableReference")
@@ -2239,8 +2239,8 @@ def test_caption_and_reference_labels_can_differ_by_theme(tmp_path: Path) -> Non
         Paragraph("See ", table.reference(), " and ", figure.reference(), "."),
         table,
         figure,
-        TableList(),
-        FigureList(),
+        ListOfTables(),
+        ListOfFigures(),
         settings=DocumentSettings(
             theme=Theme(
                 table_caption_label="Table",
@@ -2579,7 +2579,7 @@ def test_citation_and_reference_styles_can_be_configured(tmp_path: Path) -> None
     document = Document(
         "Citation Style Test",
         Paragraph("Prior work ", cite("knuth"), " remains relevant."),
-        ReferencesPage(),
+        ReferenceList(),
         settings=DocumentSettings(
             theme=Theme(citation_style="apa", reference_style="apa"),
         ),
@@ -3000,10 +3000,10 @@ def test_document_renders_to_docx_and_pdf(tmp_path: Path) -> None:
                 ),
             ),
         ),
-        TableList(),
-        FigureList(),
-        CommentsPage(),
-        ReferencesPage(),
+        ListOfTables(),
+        ListOfFigures(),
+        CommentList(),
+        ReferenceList(),
         settings=DocumentSettings(
             metadata_author="pytest",
             summary="Renderer integration test",

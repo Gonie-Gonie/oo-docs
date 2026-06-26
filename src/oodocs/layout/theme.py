@@ -906,10 +906,10 @@ class GeneratedPageDefaults:
 
     Examples:
         ```python
-        from oodocs import Document, DocumentSettings, GeneratedPageDefaults, ReferencesPage, Theme
+        from oodocs import Document, DocumentSettings, GeneratedPageDefaults, ReferenceList, Theme
 
         theme = Theme(GeneratedPageDefaults(references_title="Bibliography"))
-        document = Document("Paper", ReferencesPage(), settings=DocumentSettings(theme=theme))
+        document = Document("Paper", ReferenceList(), settings=DocumentSettings(theme=theme))
         ```
     """
 
@@ -1121,13 +1121,13 @@ class Theme:
         Customize generated page titles and page numbers together:
 
         ```python
-        from oodocs import Document, DocumentSettings, GeneratedPageDefaults, PageNumberDefaults, ReferencesPage, Theme
+        from oodocs import Document, DocumentSettings, GeneratedPageDefaults, PageNumberDefaults, ReferenceList, Theme
 
         theme = Theme(
             GeneratedPageDefaults(references_title="Bibliography"),
             PageNumberDefaults(show_page_numbers=True, page_number_template="Page {page}"),
         )
-        document = Document("Paper", ReferencesPage(), settings=DocumentSettings(theme=theme))
+        document = Document("Paper", ReferenceList(), settings=DocumentSettings(theme=theme))
         ```
 
     Notes:

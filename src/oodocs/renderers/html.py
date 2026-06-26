@@ -25,11 +25,11 @@ from oodocs.components.blocks import (
     VerticalSpace,
 )
 from oodocs.components.generated import (
-    CommentsPage,
-    FigureList,
-    FootnotesPage,
-    ReferencesPage,
-    TableList,
+    CommentList,
+    ListOfFigures,
+    FootnoteList,
+    ReferenceList,
+    ListOfTables,
     TableOfContents,
     TocLevelStyle,
 )
@@ -137,8 +137,8 @@ class HtmlRenderer:
                 + "</section>"
             )
 
-        if self._should_auto_render_footnotes_page(document, render_index):
-            body_parts.append(self.render_footnotes_page(FootnotesPage(), context))
+        if self._should_auto_render_footnote_list(document, render_index):
+            body_parts.append(self.render_footnote_list(FootnoteList(), context))
 
         body_parts.append("</div>")
         body_parts.append("</div>")
@@ -885,9 +885,9 @@ class HtmlRenderer:
             + "</figure>"
         )
 
-    def render_table_list(
+    def render_list_of_tables(
         self,
-        block: TableList,
+        block: ListOfTables,
         context: HtmlRenderContext,
     ) -> str:
         """Render the generated list of tables into HTML.
@@ -909,9 +909,9 @@ class HtmlRenderer:
             section_class="oodocs-generated-page oodocs-table-list",
         )
 
-    def render_figure_list(
+    def render_list_of_figures(
         self,
-        block: FigureList,
+        block: ListOfFigures,
         context: HtmlRenderContext,
     ) -> str:
         """Render the generated list of figures into HTML.
@@ -933,9 +933,9 @@ class HtmlRenderer:
             section_class="oodocs-generated-page oodocs-figure-list",
         )
 
-    def render_comments_page(
+    def render_comment_list(
         self,
-        block: CommentsPage,
+        block: CommentList,
         context: HtmlRenderContext,
     ) -> str:
         """Render the generated comments page into HTML.
@@ -968,9 +968,9 @@ class HtmlRenderer:
             section_class="oodocs-generated-page oodocs-comments-page",
         )
 
-    def render_footnotes_page(
+    def render_footnote_list(
         self,
-        block: FootnotesPage,
+        block: FootnoteList,
         context: HtmlRenderContext,
     ) -> str:
         """Render the generated footnotes page into HTML.
@@ -1003,9 +1003,9 @@ class HtmlRenderer:
             section_class="oodocs-generated-page oodocs-footnotes-page",
         )
 
-    def render_references_page(
+    def render_reference_list(
         self,
-        block: ReferencesPage,
+        block: ReferenceList,
         context: HtmlRenderContext,
     ) -> str:
         """Render the generated references page into HTML.
@@ -1127,7 +1127,7 @@ class HtmlRenderer:
             + "</div>"
         )
 
-    def _should_auto_render_footnotes_page(
+    def _should_auto_render_footnote_list(
         self,
         document: Document,
         render_index: RenderIndex,
@@ -1135,7 +1135,7 @@ class HtmlRenderer:
         return (
             document.settings.theme.auto_footnotes_page
             and bool(render_index.footnotes)
-            and not any(isinstance(child, FootnotesPage) for child in document.body.children)
+            and not any(isinstance(child, FootnoteList) for child in document.body.children)
         )
 
     def _render_title_matter(
@@ -2170,12 +2170,12 @@ class HtmlRenderer:
 
     def _assert_box_children_supported(self, children: list[object]) -> None:
         unsupported = (
-            CommentsPage,
-            FootnotesPage,
-            ReferencesPage,
+            CommentList,
+            FootnoteList,
+            ReferenceList,
             TableOfContents,
-            TableList,
-            FigureList,
+            ListOfTables,
+            ListOfFigures,
             Part,
         )
         for child in children:

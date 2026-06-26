@@ -67,11 +67,11 @@ from oodocs.components.blocks import (
     VerticalSpace,
 )
 from oodocs.components.generated import (
-    CommentsPage,
-    FigureList,
-    FootnotesPage,
-    ReferencesPage,
-    TableList,
+    CommentList,
+    ListOfFigures,
+    FootnoteList,
+    ReferenceList,
+    ListOfTables,
     TableOfContents,
     TocLevelStyle,
 )
@@ -668,8 +668,8 @@ class PdfRenderer:
                 )
             )
 
-        if self._should_auto_render_footnotes_page(document, render_index):
-            story.extend(self.render_footnotes_page(FootnotesPage(), context))
+        if self._should_auto_render_footnote_list(document, render_index):
+            story.extend(self.render_footnote_list(FootnoteList(), context))
 
         page_callback = self._page_callback(
             document,
@@ -1267,9 +1267,9 @@ class PdfRenderer:
             in_box=context.in_box,
         )
 
-    def render_table_list(
+    def render_list_of_tables(
         self,
-        block: TableList,
+        block: ListOfTables,
         context: PdfRenderContext,
     ) -> list[object]:
         """Render the generated list of tables into PDF flowables.
@@ -1292,9 +1292,9 @@ class PdfRenderer:
             context.theme.table_caption_label_text(),
         )
 
-    def render_figure_list(
+    def render_list_of_figures(
         self,
-        block: FigureList,
+        block: ListOfFigures,
         context: PdfRenderContext,
     ) -> list[object]:
         """Render the generated list of figures into PDF flowables.
@@ -1317,9 +1317,9 @@ class PdfRenderer:
             context.theme.figure_caption_label_text(),
         )
 
-    def render_comments_page(
+    def render_comment_list(
         self,
-        block: CommentsPage,
+        block: CommentList,
         context: PdfRenderContext,
     ) -> list[object]:
         """Render the generated comments page into PDF flowables.
@@ -1332,16 +1332,16 @@ class PdfRenderer:
             Flowables representing the generated comments page.
         """
 
-        return self._render_comments_page(
+        return self._render_comment_list(
             block.title,
             context.theme,
             context.styles,
             context.render_index,
         )
 
-    def render_footnotes_page(
+    def render_footnote_list(
         self,
-        block: FootnotesPage,
+        block: FootnoteList,
         context: PdfRenderContext,
     ) -> list[object]:
         """Render the generated footnotes page into PDF flowables.
@@ -1354,16 +1354,16 @@ class PdfRenderer:
             Flowables representing the generated footnotes page.
         """
 
-        return self._render_footnotes_page(
+        return self._render_footnote_list(
             block.title,
             context.theme,
             context.styles,
             context.render_index,
         )
 
-    def render_references_page(
+    def render_reference_list(
         self,
-        block: ReferencesPage,
+        block: ReferenceList,
         context: PdfRenderContext,
     ) -> list[object]:
         """Render the generated references page into PDF flowables.
@@ -1376,7 +1376,7 @@ class PdfRenderer:
             Flowables representing the generated references page.
         """
 
-        return self._render_references_page(
+        return self._render_reference_list(
             block.title,
             context.theme,
             context.styles,
@@ -1680,9 +1680,9 @@ class PdfRenderer:
         )
 
     def _is_paginated_generated_page(self, block: object) -> bool:
-        return isinstance(block, (TableList, FigureList, TableOfContents))
+        return isinstance(block, (ListOfTables, ListOfFigures, TableOfContents))
 
-    def _should_auto_render_footnotes_page(
+    def _should_auto_render_footnote_list(
         self,
         document: Document,
         render_index: RenderIndex,
@@ -1690,7 +1690,7 @@ class PdfRenderer:
         return (
             document.settings.theme.auto_footnotes_page
             and bool(render_index.footnotes)
-            and not any(isinstance(child, FootnotesPage) for child in document.body.children)
+            and not any(isinstance(child, FootnoteList) for child in document.body.children)
         )
 
     def _story_has_indexing_flowable(self, story: list[object]) -> bool:
@@ -1873,12 +1873,12 @@ class PdfRenderer:
         if isinstance(
             child,
             (
-                CommentsPage,
-                FootnotesPage,
-                ReferencesPage,
+                CommentList,
+                FootnoteList,
+                ReferenceList,
                 TableOfContents,
-                TableList,
-                FigureList,
+                ListOfTables,
+                ListOfFigures,
                 Part,
             ),
         ):
@@ -3101,7 +3101,7 @@ class PdfRenderer:
             story.append(Spacer(1, 6))
         return story
 
-    def _render_comments_page(
+    def _render_comment_list(
         self,
         title: list[Text] | None,
         theme: Theme,
@@ -3111,7 +3111,7 @@ class PdfRenderer:
         level = theme.generated_section_level
         bold, italic = theme.heading_emphasis(level)
         title_style = RLParagraphStyle(
-            "CommentsPageTitle",
+            "CommentListTitle",
             parent=styles["Heading1"],
             fontName=self._resolve_font(theme.body_font_name, bold, italic),
             fontSize=theme.heading_size(level),
@@ -3162,7 +3162,7 @@ class PdfRenderer:
             )
         return story
 
-    def _render_footnotes_page(
+    def _render_footnote_list(
         self,
         title: list[Text] | None,
         theme: Theme,
@@ -3172,7 +3172,7 @@ class PdfRenderer:
         level = theme.generated_section_level
         bold, italic = theme.heading_emphasis(level)
         title_style = RLParagraphStyle(
-            "FootnotesPageTitle",
+            "FootnoteListTitle",
             parent=styles["Heading1"],
             fontName=self._resolve_font(theme.body_font_name, bold, italic),
             fontSize=theme.heading_size(level),
@@ -3223,7 +3223,7 @@ class PdfRenderer:
             )
         return story
 
-    def _render_references_page(
+    def _render_reference_list(
         self,
         title: list[Text] | None,
         theme: Theme,
@@ -3233,7 +3233,7 @@ class PdfRenderer:
         level = theme.generated_section_level
         bold, italic = theme.heading_emphasis(level)
         title_style = RLParagraphStyle(
-            "ReferencesPageTitle",
+            "ReferenceListTitle",
             parent=styles["Heading1"],
             fontName=self._resolve_font(theme.body_font_name, bold, italic),
             fontSize=theme.heading_size(level),

@@ -120,8 +120,8 @@
           "category": "generated-page",
           "kind": "class",
           "module": "oodocs.components.generated",
-          "name": "CommentsPage",
-          "qualname": "oodocs.components.generated.CommentsPage"
+          "name": "CommentList",
+          "qualname": "oodocs.components.generated.CommentList"
         },
         {
           "category": "block",
@@ -218,8 +218,8 @@
           "category": "generated-page",
           "kind": "class",
           "module": "oodocs.components.generated",
-          "name": "FigureList",
-          "qualname": "oodocs.components.generated.FigureList"
+          "name": "ListOfFigures",
+          "qualname": "oodocs.components.generated.ListOfFigures"
         },
         {
           "category": "inline",
@@ -227,6 +227,13 @@
           "module": "oodocs.components.inline",
           "name": "Footnote",
           "qualname": "oodocs.components.inline.Footnote"
+        },
+        {
+          "category": "generated-page",
+          "kind": "class",
+          "module": "oodocs.components.generated",
+          "name": "FootnoteList",
+          "qualname": "oodocs.components.generated.FootnoteList"
         },
         {
           "category": "style",
@@ -442,8 +449,8 @@
           "category": "generated-page",
           "kind": "class",
           "module": "oodocs.components.generated",
-          "name": "ReferencesPage",
-          "qualname": "oodocs.components.generated.ReferencesPage"
+          "name": "ReferenceList",
+          "qualname": "oodocs.components.generated.ReferenceList"
         },
         {
           "category": "workflow",
@@ -540,8 +547,8 @@
           "category": "generated-page",
           "kind": "class",
           "module": "oodocs.components.generated",
-          "name": "TableList",
-          "qualname": "oodocs.components.generated.TableList"
+          "name": "ListOfTables",
+          "qualname": "oodocs.components.generated.ListOfTables"
         },
         {
           "category": "inline",

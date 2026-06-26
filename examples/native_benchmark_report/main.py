@@ -16,7 +16,7 @@ from oodocs import (
     Paragraph,
     Section,
     Table,
-    TableList,
+    ListOfTables,
     TableOfContents,
     Theme,
     bold,
@@ -156,7 +156,7 @@ def build_benchmark_document() -> Document:
     return Document(
         "Native Python Benchmark Report",
         TableOfContents(max_level=2),
-        TableList(),
+        ListOfTables(),
         Chapter(
             "Benchmark as a Document Workflow",
             Paragraph(

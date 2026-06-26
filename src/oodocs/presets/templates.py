@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 
 from oodocs.components.base import Block, BlockInput, coerce_blocks
 from oodocs.components.blocks import Paragraph, Section
-from oodocs.components.generated import ReferencesPage, TableOfContents
+from oodocs.components.generated import ReferenceList, TableOfContents
 from oodocs.components.inline import InlineInput, Text, bold
 from oodocs.components.people import AuthorInput, AuthorLayout
 from oodocs.components.references import CitationLibrary, CitationSource
@@ -256,7 +256,7 @@ class JournalArticleTemplate:
         if data_availability is not None:
             children.append(self._statement_section("Data Availability", data_availability))
         if include_references_value:
-            children.append(ReferencesPage())
+            children.append(ReferenceList())
 
         settings = DocumentSettings(
             authors=authors,

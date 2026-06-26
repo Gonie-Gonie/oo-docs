@@ -20,11 +20,11 @@ from oodocs.components.blocks import (
     Section,
 )
 from oodocs.components.generated import (
-    CommentsPage,
-    FigureList,
-    FootnotesPage,
-    ReferencesPage,
-    TableList,
+    CommentList,
+    ListOfFigures,
+    FootnoteList,
+    ReferenceList,
+    ListOfTables,
     TableOfContents,
 )
 from oodocs.components.inline import BlockReference, Citation, Comment, Footnote, Hyperlink, Text
@@ -758,11 +758,11 @@ def _index_blocks(
         if isinstance(
             block,
             (
-                TableList,
-                FigureList,
-                ReferencesPage,
-                CommentsPage,
-                FootnotesPage,
+                ListOfTables,
+                ListOfFigures,
+                ReferenceList,
+                CommentList,
+                FootnoteList,
                 TableOfContents,
             ),
         ):

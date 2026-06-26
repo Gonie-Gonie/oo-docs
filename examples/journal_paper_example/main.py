@@ -23,7 +23,7 @@ from oodocs import (
     Figure,
     MultiColumn,
     Paragraph,
-    ReferencesPage,
+    ReferenceList,
     Section,
     Table,
     Theme,
@@ -384,7 +384,7 @@ def build_journal_paper_document() -> Document:
             level=2,
             numbered=False,
         ),
-        ReferencesPage(),
+        ReferenceList(),
         settings=DocumentSettings(
             summary="Journal-style development philosophy paper",
             authors=[
