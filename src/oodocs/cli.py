@@ -234,7 +234,7 @@ def _run_validate(args: argparse.Namespace) -> int:
     if args.report_format == "json":
         print(result.to_json(formats=formats))
     else:
-        print(result.format_table(formats=formats))
+        print(result.format_text(formats=formats))
     if result.errors_for(formats):
         return 1
     if args.fail_on_warning and result.warnings_for(formats):
@@ -279,7 +279,7 @@ def _run_import_warning_policy(args: argparse.Namespace) -> int:
 
     assert isinstance(result, ImportResult)
     if args.show_import_warnings and result.issues:
-        print(result.format_issues())
+        print(result.format_text())
     return 0
 
 
@@ -306,13 +306,13 @@ def _run_render_warning_policy(
     errors = result.errors_for(formats)
     warnings = result.warnings_for(formats)
     if args.show_warnings and warnings:
-        print(result.format_table(formats=formats))
+        print(result.format_text(formats=formats))
     if errors:
-        print(result.format_table(formats=formats), file=sys.stderr)
+        print(result.format_text(formats=formats), file=sys.stderr)
         return 1
     if args.fail_on_warning and warnings:
         if not args.show_warnings:
-            print(result.format_table(formats=formats), file=sys.stderr)
+            print(result.format_text(formats=formats), file=sys.stderr)
         return 1
     return 0
 

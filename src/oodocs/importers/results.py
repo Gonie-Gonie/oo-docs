@@ -78,7 +78,7 @@ class ImportResult:
 
         result = parse_markdown("# Title", diagnostics=True)
         if result.warnings():
-            print(result.format_issues())
+            print(result.format_text())
         ```
 
         Reuse imported blocks in a document:
@@ -121,8 +121,8 @@ class ImportResult:
 
         return tuple(issue for issue in self.issues if issue.severity == "error")
 
-    def format_issues(self) -> str:
-        """Format diagnostics for CLI or exception output.
+    def format_text(self) -> str:
+        """Format diagnostics as human-readable console text.
 
         Returns:
             Multi-line summary of all import diagnostics.
@@ -169,7 +169,7 @@ class ImportPolicyError(OODocsError):
         """
 
         self.issues = tuple(issues)
-        super().__init__(ImportResult((), self.issues).format_issues())
+        super().__init__(ImportResult((), self.issues).format_text())
 
 
 def normalize_import_policy(value: str) -> ImportPolicy:

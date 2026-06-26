@@ -320,15 +320,15 @@ class ValidationResult:
             indent=indent,
         )
 
-    def format_table(self, *, formats: Iterable[str] | None = None) -> str:
-        """Format validation issues as a fixed-width table.
+    def format_text(self, *, formats: Iterable[str] | None = None) -> str:
+        """Format validation issues as human-readable console text.
 
         Args:
             formats: Output formats to include. Defaults to all formats.
 
         Returns:
-            A human-readable table, or a single status line when no issues
-            match.
+            A human-readable text table, or a single status line when no
+            issues match.
         """
 
         issues = self.issues_for(formats)
@@ -356,7 +356,7 @@ class ValidationResult:
         return "\n".join([heading, _format_issue_table(rows)])
 
     def __str__(self) -> str:
-        return self.format_table()
+        return self.format_text()
 
 
 class DocumentValidationError(OODocsError):
@@ -391,7 +391,7 @@ class DocumentValidationError(OODocsError):
             else ValidationResult(tuple(result))
         )
         self.formats = normalize_output_formats(formats)
-        super().__init__(self.result.format_table(formats=self.formats))
+        super().__init__(self.result.format_text(formats=self.formats))
 
     @property
     def issues(self) -> tuple[ValidationIssue, ...]:
@@ -449,7 +449,7 @@ def validate_document(
         from oodocs.validation import validate_document
 
         result = validate_document(doc, formats=("html",))
-        print(result.format_table())
+        print(result.format_text())
         ```
     """
 

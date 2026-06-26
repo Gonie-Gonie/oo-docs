@@ -351,7 +351,7 @@ class Document:
             ```python
             result = doc.validate(formats=("pdf", "html"))
             if not result.ok:
-                print(result.format_table())
+                print(result.format_text())
             ```
         """
 

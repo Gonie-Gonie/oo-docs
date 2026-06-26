@@ -371,6 +371,13 @@ def test_api_renderer_note_uses_output_format_field_name() -> None:
     assert "output_format" in field_names
 
 
+def test_result_objects_use_format_text_names() -> None:
+    assert "format_table" not in _public_members(oodocs.ValidationResult)
+    assert "format_issues" not in _public_members(oodocs.ImportResult)
+    assert "format_text" in _public_members(oodocs.ValidationResult)
+    assert "format_text" in _public_members(oodocs.ImportResult)
+
+
 def test_apidoc_raw_value_helpers_use_as_prefix() -> None:
     forbidden_by_class = {
         apidoc.ApiParameter: {"to_row", "to_table_cell_values"},

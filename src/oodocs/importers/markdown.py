@@ -116,7 +116,7 @@ def parse_markdown(
 
         result = parse_markdown("# Intro\\n\\nRaw <span>HTML</span>", diagnostics=True)
         assert isinstance(result, ImportResult)
-        print(result.format_issues())
+        print(result.format_text())
         ```
     """
 
