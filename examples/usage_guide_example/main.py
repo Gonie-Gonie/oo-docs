@@ -285,7 +285,7 @@ panel = Box(
     padding_left=12,
     width=18.0,
     unit="cm",
-    alignment="center",
+    block_alignment="center",
 )
 """
 
@@ -466,7 +466,7 @@ summary = Box(
     title="Report-ready evidence",
     width=16,
     unit="cm",
-    alignment="center",
+    block_alignment="center",
 )
 
 Paragraph("See ", summary.reference(), " for the editable evidence package.")
@@ -827,7 +827,7 @@ def build_usage_guide_document() -> Document:
             ["GeneratedContentDefaults", "contents/list/comments/footnotes/references titles, generated_heading_level, generated_content_page_breaks", "Generated content titles and heading level."],
             ["PageNumberDefaults", "show_page_numbers, page_number_alignment, page_number_template, front/main matter counter formats, page_number_font_size", "Footer page labels."],
             ["TitleMatterDefaults", "title_text_alignment, subtitle_text_alignment, author_text_alignment, affiliation_text_alignment, author_detail_text_alignment", "Title-page and metadata alignment."],
-            ["BlockDefaults", "page_background_color, paragraph_text_alignment, table/figure/box alignment, footnote_placement, list styles, heading_numbering", "Document-wide defaults that individual blocks can override."],
+            ["BlockDefaults", "page_background_color, paragraph_text_alignment, table_block_alignment, figure_block_alignment, box_block_alignment, footnote_placement, list styles, heading_numbering", "Document-wide defaults that individual blocks can override."],
         ],
         caption="Grouped Theme options; pass them positionally to Theme(...) or override the same names directly.",
         column_widths=[1.7, 3.7, 1.8],
@@ -836,9 +836,9 @@ def build_usage_guide_document() -> Document:
         headers=["Block", "Direct kwargs", "Style object when needed"],
         rows=[
             ["Text and styled(...)", "font_name, font_size, text_color, highlight_color, bold, italic, underline, strikethrough, small_caps, uppercase, subscript, superscript", "Use TextStyle only when a reusable inline style needs a name."],
-            ["Paragraph, CodeBlock, Equation", "alignment, space_before, space_after, leading, left_indent, right_indent, first_line_indent, keep_together, keep_with_next, page_break_before, widow_control, unit", "Use ParagraphStyle only for shared paragraph rhythm."],
+            ["Paragraph, CodeBlock, Equation", "text_alignment, space_before, space_after, leading, left_indent, right_indent, first_line_indent, keep_together, keep_with_next, page_break_before, widow_control, unit", "Use ParagraphStyle only for shared paragraph rhythm."],
             ["BulletList, NumberedList", "marker_counter_format, bullet, prefix, suffix, start, indent, marker_gap", "Use ListStyle only for repeated list conventions."],
-            ["Box", "border_color, background_color, title colors, border_width, padding, per-side padding, space_after, width, unit, alignment", "Use BoxStyle only for named callout or report-panel designs."],
+            ["Box", "border_color, background_color, title colors, border_width, padding, per-side padding, space_after, width, unit, block_alignment", "Use BoxStyle only for named callout or report-panel designs."],
             ["Table", "header/body/alternate colors, border_color, border_width, cell/header alignment, cell_padding, per-side cell padding, repeat_header_rows", "row_styles, column_styles, and header_row_styles accept dictionaries for quick overrides."],
             ["TableCell", "colspan, rowspan, background_color, text_color, bold, italic, text_alignment, vertical_alignment", "Use TableCellStyle only for reusable row, column, or cell styling."],
             ["TableOfContents", "show_page_numbers, leader, max_level, level_styles", "TocLevelStyle per heading level; dictionaries are accepted for quick overrides."],
@@ -850,7 +850,7 @@ def build_usage_guide_document() -> Document:
     component_presets_table = Table(
         headers=["Preset", "What it builds", "Common customizations"],
         rows=[
-            ["CalloutBox", "A styled Box with info, note, success, or warning variants.", "variant, title, padding, border/background colors, width, alignment."],
+            ["CalloutBox", "A styled Box with info, note, success, or warning variants.", "variant, title, padding, border/background colors, width, block_alignment."],
             ["KeyValueTable", "A compact two-column Table for metadata and option lists.", "headers, caption, cell padding, border width, column widths."],
             ["Nomenclature", "A heavy-outlined Box containing a symbol, meaning, and optional unit table with no internal rules.", "double_column, headers, padding, border width, title."],
             ["CompactTable", "A denser Table baseline for small reports and appendices.", "Any normal Table kwarg, with style objects still available for reusable designs."],
@@ -1019,7 +1019,7 @@ def build_usage_guide_document() -> Document:
         padding_left=12,
         width=18.0,
         unit="cm",
-        alignment="center",
+        block_alignment="center",
     )
 
     return Document(

@@ -254,7 +254,7 @@ doc = Document(
 - Jupyter notebook import for markdown cells, code cells, raw cells, textual stream/result/error outputs, tag filtering, output truncation, image captions, and optional import diagnostics
 - block objects for paragraphs, lists, code blocks, equations, boxes, tables, figures, and generated pages
 - Pygments-backed syntax highlighting for code blocks across Python, JavaScript, SQL, YAML, shell, and other supported languages
-- editable report panels with `Box(...)` kwargs for width, alignment, title color, and per-side padding
+- editable report panels with `Box(...)` kwargs for width, block alignment, title color, and per-side padding
 - portable comments and footnotes that stay stable across DOCX, PDF, and HTML
 - footnotes target page-bottom placement by default when the renderer supports it; `Theme(footnote_placement="document")` keeps the collected-notes pattern
 - captioned tables and figures with automatic numbering and in-text references

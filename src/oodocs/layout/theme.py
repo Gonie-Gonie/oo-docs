@@ -565,7 +565,7 @@ class BoxStyle:
         space_after: Space after the box in points.
         width: Optional box width in ``unit``.
         unit: Unit for ``width`` when a physical width is set.
-        alignment: Optional horizontal alignment override.
+        block_alignment: Optional block placement alignment override.
 
     Examples:
         ```python
@@ -589,7 +589,7 @@ class BoxStyle:
     space_after: float = 12.0
     width: float | None = None
     unit: str | None = None
-    alignment: str | None = None
+    block_alignment: str | None = None
 
     def __post_init__(self) -> None:
         self.border_color = normalize_color(self.border_color) or "B7C2D0"
@@ -609,8 +609,8 @@ class BoxStyle:
             raise ValueError("BoxStyle.space_after must be >= 0")
         if self.width is not None and self.width <= 0:
             raise ValueError("BoxStyle.width must be > 0")
-        if self.alignment is not None and self.alignment not in {"left", "center", "right"}:
-            raise ValueError(f"Unsupported BoxStyle alignment: {self.alignment!r}")
+        if self.block_alignment is not None and self.block_alignment not in {"left", "center", "right"}:
+            raise ValueError(f"Unsupported BoxStyle block_alignment: {self.block_alignment!r}")
 
     def resolved_padding(self) -> tuple[float, float, float, float]:
         """Return top, right, bottom, and left padding in points.
@@ -987,9 +987,9 @@ class BlockDefaults:
     Attributes:
         page_background_color: Hex page background color.
         paragraph_text_alignment: Default paragraph alignment.
-        table_alignment: Default table alignment.
-        figure_alignment: Default figure alignment.
-        box_alignment: Default box alignment.
+        table_block_alignment: Default table block placement alignment.
+        figure_block_alignment: Default figure block placement alignment.
+        box_block_alignment: Default box block placement alignment.
         part_label: Label used for numbered part pages.
         part_counter_format: Counter format used for parts.
         footnote_placement: Native or generated content footnote placement.
@@ -1014,9 +1014,9 @@ class BlockDefaults:
 
     page_background_color: str = "FFFFFF"
     paragraph_text_alignment: str = "justify"
-    table_alignment: str = "center"
-    figure_alignment: str = "center"
-    box_alignment: str = "center"
+    table_block_alignment: str = "center"
+    figure_block_alignment: str = "center"
+    box_block_alignment: str = "center"
     part_label: str = "Part"
     part_counter_format: str = "upper-roman"
     footnote_placement: str = "page"
@@ -1064,9 +1064,9 @@ class Theme:
         heading_sizes: Heading font sizes by level.
         caption_font_size: Optional caption font size override.
         caption_text_alignment: Caption paragraph text alignment.
-        table_alignment: Default table alignment.
-        figure_alignment: Default figure alignment.
-        box_alignment: Default box alignment.
+        table_block_alignment: Default table block placement alignment.
+        figure_block_alignment: Default figure block placement alignment.
+        box_block_alignment: Default box block placement alignment.
         table_caption_position: Table caption position.
         figure_caption_position: Figure caption position.
         table_label: Default table label text.
@@ -1161,9 +1161,9 @@ class Theme:
     heading_sizes: tuple[float, ...] = (18.0, 15.0, 13.0, 11.5)
     caption_font_size: float | None = None
     caption_text_alignment: str = "center"
-    table_alignment: str = "center"
-    figure_alignment: str = "center"
-    box_alignment: str = "center"
+    table_block_alignment: str = "center"
+    figure_block_alignment: str = "center"
+    box_block_alignment: str = "center"
     table_caption_position: str = "above"
     figure_caption_position: str = "below"
     table_label: str = "Table"
@@ -1223,9 +1223,9 @@ class Theme:
         heading_sizes: tuple[float, ...] | object = _UNSET,
         caption_font_size: float | None | object = _UNSET,
         caption_text_alignment: str | object = _UNSET,
-        table_alignment: str | object = _UNSET,
-        figure_alignment: str | object = _UNSET,
-        box_alignment: str | object = _UNSET,
+        table_block_alignment: str | object = _UNSET,
+        figure_block_alignment: str | object = _UNSET,
+        box_block_alignment: str | object = _UNSET,
         table_caption_position: str | object = _UNSET,
         figure_caption_position: str | object = _UNSET,
         table_label: str | object = _UNSET,
@@ -1342,9 +1342,9 @@ class Theme:
             "heading_sizes": heading_sizes,
             "caption_font_size": caption_font_size,
             "caption_text_alignment": caption_text_alignment,
-            "table_alignment": table_alignment,
-            "figure_alignment": figure_alignment,
-            "box_alignment": box_alignment,
+            "table_block_alignment": table_block_alignment,
+            "figure_block_alignment": figure_block_alignment,
+            "box_block_alignment": box_block_alignment,
             "table_caption_position": table_caption_position,
             "figure_caption_position": figure_caption_position,
             "table_label": table_label,
@@ -1405,9 +1405,9 @@ class Theme:
                 f"Unsupported caption_text_alignment: {self.caption_text_alignment!r}"
             )
         for field_name in (
-            "table_alignment",
-            "figure_alignment",
-            "box_alignment",
+            "table_block_alignment",
+            "figure_block_alignment",
+            "box_block_alignment",
         ):
             value = getattr(self, field_name)
             if value not in {"left", "center", "right"}:
@@ -1502,9 +1502,9 @@ class Theme:
         self.blocks = BlockDefaults(
             page_background_color=self.page_background_color,
             paragraph_text_alignment=self.paragraph_text_alignment,
-            table_alignment=self.table_alignment,
-            figure_alignment=self.figure_alignment,
-            box_alignment=self.box_alignment,
+            table_block_alignment=self.table_block_alignment,
+            figure_block_alignment=self.figure_block_alignment,
+            box_block_alignment=self.box_block_alignment,
             part_label=self.part_label,
             part_counter_format=self.part_counter_format,
             footnote_placement=self.footnote_placement,

@@ -462,7 +462,7 @@ def test_theme_accepts_grouped_defaults_objects() -> None:
         TitleMatterDefaults(title_text_alignment="left"),
         BlockDefaults(
             paragraph_text_alignment="left",
-            table_alignment="right",
+            table_block_alignment="right",
             run_in_title_style=RunInTitleStyle(TextStyle(italic=True), separator=": "),
         ),
         body_font_name="Calibri",
@@ -483,7 +483,7 @@ def test_theme_accepts_grouped_defaults_objects() -> None:
     assert theme.paragraph_text_alignment == "left"
     assert theme.run_in_title_style.text_style.italic is True
     assert theme.blocks.run_in_title_style.separator == ": "
-    assert theme.table_alignment == "right"
+    assert theme.table_block_alignment == "right"
 
     direct_title_style = Theme(
         BlockDefaults(run_in_title_style=RunInTitleStyle(TextStyle(italic=True))),
@@ -716,9 +716,9 @@ def test_theme_defaults_center_media_objects_and_captions() -> None:
 
     assert theme.page_background_color == "FFFFFF"
     assert theme.caption_text_alignment == "center"
-    assert theme.table_alignment == "center"
-    assert theme.figure_alignment == "center"
-    assert theme.box_alignment == "center"
+    assert theme.table_block_alignment == "center"
+    assert theme.figure_block_alignment == "center"
+    assert theme.box_block_alignment == "center"
 
 
 def test_page_background_color_renders_to_all_outputs(tmp_path: Path) -> None:
@@ -1624,7 +1624,7 @@ def test_box_style_supports_tcolorbox_like_layout_controls(tmp_path: Path) -> No
                 padding_left=7,
                 width=10,
                 unit="cm",
-                alignment="left",
+                block_alignment="left",
             ),
         ),
     )

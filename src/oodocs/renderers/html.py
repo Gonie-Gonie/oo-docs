@@ -879,7 +879,7 @@ class HtmlRenderer:
             )
         alt_text = subfigure.caption.plain_text() if subfigure.caption is not None else "Subfigure"
         return (
-            f'<figure{container_anchor} class="oodocs-subfigure" style="margin: 0; text-align: {context.theme.figure_alignment};">'
+            f'<figure{container_anchor} class="oodocs-subfigure" style="margin: 0; text-align: {context.theme.figure_block_alignment};">'
             f'<img class="oodocs-figure-image" src="{self._figure_src(subfigure)}" alt="{escape(alt_text)}"{image_style} />'
             + caption_html
             + "</figure>"
@@ -2111,7 +2111,7 @@ class HtmlRenderer:
             f" padding: {top_padding:.1f}pt {right_padding:.1f}pt {bottom_padding:.1f}pt {left_padding:.1f}pt;"
             f" margin: 0 0 {block.style.space_after:.1f}pt;"
             f"{width}"
-            f" {self._block_alignment_css(block.style.alignment or theme.box_alignment)}"
+            f" {self._block_alignment_css(block.style.block_alignment or theme.box_block_alignment)}"
         )
 
     def _table_wrapper_css(self, theme: Theme, *, in_box: bool = False) -> str:
@@ -2123,7 +2123,7 @@ class HtmlRenderer:
             " overflow-x: auto;"
             f" padding: {padding};"
             f" margin: {margin};"
-            f" {self._block_alignment_css(theme.table_alignment)}"
+            f" {self._block_alignment_css(theme.table_block_alignment)}"
         )
 
     def _figure_css(self, theme: Theme, *, in_box: bool = False) -> str:
@@ -2131,10 +2131,10 @@ class HtmlRenderer:
         margin = "4pt 0" if in_box else "0 0 12pt"
         return (
             f"padding: {padding};"
-            f" text-align: {theme.figure_alignment};"
+            f" text-align: {theme.figure_block_alignment};"
             f" margin: {margin};"
             + (" background: transparent; box-shadow: none;" if in_box else "")
-            + f" {self._block_alignment_css(theme.figure_alignment)}"
+            + f" {self._block_alignment_css(theme.figure_block_alignment)}"
         )
 
     def _media_placement_css(self, placement: str, *, in_box: bool = False) -> str:

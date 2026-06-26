@@ -1984,7 +1984,7 @@ class DocxRenderer:
         *,
         word_document: WordDocument,
     ) -> None:
-        alignment = box.style.alignment or theme.box_alignment
+        alignment = box.style.block_alignment or theme.box_block_alignment
         anchor = render_index.block_anchor(box)
         if anchor is not None:
             anchor_paragraph = self._add_paragraph(container)
@@ -2530,7 +2530,7 @@ class DocxRenderer:
         layout = build_table_layout(table_block.header_rows, table_block.rows)
         table = container.add_table(rows=layout.row_count, cols=layout.column_count)
         table.style = "Table Grid"
-        table.alignment = TABLE_ALIGNMENTS[theme.table_alignment]
+        table.alignment = TABLE_ALIGNMENTS[theme.table_block_alignment]
         self._prevent_table_row_split(table)
         if split_table or table_block.style.repeat_header_rows:
             self._repeat_table_header_rows(table, layout.header_row_count)
@@ -2642,7 +2642,7 @@ class DocxRenderer:
             render_caption()
 
         paragraph = self._add_paragraph(container)
-        paragraph.alignment = ALIGNMENTS[theme.figure_alignment]
+        paragraph.alignment = ALIGNMENTS[theme.figure_block_alignment]
         paragraph.paragraph_format.space_before = Pt(0)
         paragraph.paragraph_format.space_after = Pt(0 if in_box else 12)
         if figure.caption is not None and theme.figure_caption_position == "below":
@@ -2702,7 +2702,7 @@ class DocxRenderer:
 
         row_count = (len(group.subfigures) + group.columns - 1) // group.columns
         table = container.add_table(rows=row_count, cols=group.columns)
-        table.alignment = TABLE_ALIGNMENTS[theme.figure_alignment]
+        table.alignment = TABLE_ALIGNMENTS[theme.figure_block_alignment]
         gap_points = length_to_inches(group.column_gap, group.unit or unit) * 72
 
         for index, subfigure in enumerate(group.subfigures):
@@ -2717,7 +2717,7 @@ class DocxRenderer:
                 gap_points / 2 if column_index > 0 else 0,
             )
             image_paragraph = cell.paragraphs[0]
-            image_paragraph.alignment = ALIGNMENTS[theme.figure_alignment]
+            image_paragraph.alignment = ALIGNMENTS[theme.figure_block_alignment]
             image_paragraph.paragraph_format.space_after = Pt(2)
             run = image_paragraph.add_run()
             resolved_width = subfigure.width_in_inches(unit)

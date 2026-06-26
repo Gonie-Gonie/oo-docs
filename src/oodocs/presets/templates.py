@@ -62,8 +62,8 @@ def _default_journal_theme() -> Theme:
         ),
         BlockDefaults(
             paragraph_text_alignment="justify",
-            table_alignment="center",
-            figure_alignment="center",
+            table_block_alignment="center",
+            figure_block_alignment="center",
         ),
     )
 

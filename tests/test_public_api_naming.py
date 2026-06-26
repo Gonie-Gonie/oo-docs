@@ -299,7 +299,7 @@ def test_table_public_api_hides_renderer_helper_methods() -> None:
     assert expected <= members
 
 
-def test_table_alignment_fields_use_text_alignment_names() -> None:
+def test_table_cell_alignment_fields_use_text_alignment_names() -> None:
     cell_style_fields = {field.name for field in fields(oodocs.TableCellStyle)}
     cell_fields = {field.name for field in fields(oodocs.TableCell)}
     table_style_fields = {field.name for field in fields(oodocs.TableStyle)}
@@ -323,6 +323,33 @@ def test_table_alignment_fields_use_text_alignment_names() -> None:
     assert expected_table_names <= table_parameters
     assert forbidden_table_names.isdisjoint(dataframe_parameters)
     assert expected_table_names <= dataframe_parameters
+
+
+def test_block_alignment_fields_use_block_alignment_names() -> None:
+    box_style_fields = {field.name for field in fields(oodocs.BoxStyle)}
+    block_fields = {field.name for field in fields(oodocs.BlockDefaults)}
+    theme_fields = {field.name for field in fields(oodocs.Theme)}
+    box_parameters = set(inspect.signature(oodocs.Box).parameters)
+    theme_parameters = set(inspect.signature(oodocs.Theme).parameters)
+
+    assert "alignment" not in box_style_fields
+    assert "block_alignment" in box_style_fields
+    assert "alignment" not in box_parameters
+    assert "block_alignment" in box_parameters
+
+    forbidden = {"table_alignment", "figure_alignment", "box_alignment"}
+    expected = {
+        "table_block_alignment",
+        "figure_block_alignment",
+        "box_block_alignment",
+    }
+
+    assert forbidden.isdisjoint(block_fields)
+    assert expected <= block_fields
+    assert forbidden.isdisjoint(theme_fields)
+    assert expected <= theme_fields
+    assert forbidden.isdisjoint(theme_parameters)
+    assert expected <= theme_parameters
 
 
 def test_textbox_uses_explicit_alignment_field_names() -> None:

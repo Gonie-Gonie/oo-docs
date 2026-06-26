@@ -1412,7 +1412,7 @@ class Box(Block):
         space_after: Optional spacing after the box.
         width: Optional preferred box width.
         unit: Unit for length overrides.
-        alignment: Optional horizontal alignment.
+        block_alignment: Optional block placement alignment.
 
     Examples:
         ```python
@@ -1445,7 +1445,7 @@ class Box(Block):
         space_after: float | None = None,
         width: float | None = None,
         unit: str | None = None,
-        alignment: str | None = None,
+        block_alignment: str | None = None,
     ) -> None:
         self.children = coerce_blocks(children)
         self.title = coerce_inlines((title,)) if title is not None else None
@@ -1464,7 +1464,7 @@ class Box(Block):
             space_after=space_after,
             width=width,
             unit=unit,
-            alignment=alignment,
+            block_alignment=block_alignment,
         )
 
     def add(self, *children: BlockInput) -> Box:

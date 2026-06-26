@@ -2005,7 +2005,7 @@ class PdfRenderer:
         table = RLTable(
             table_rows,
             colWidths=column_widths,
-            hAlign=FLOWABLE_ALIGNMENTS[theme.table_alignment],
+            hAlign=FLOWABLE_ALIGNMENTS[theme.table_block_alignment],
             repeatRows=layout.header_row_count if split_table or block.style.repeat_header_rows else 0,
         )
         table.splitByRow = 1
@@ -2239,7 +2239,7 @@ class PdfRenderer:
         table = RLTable(
             rows,
             colWidths=column_widths,
-            hAlign=FLOWABLE_ALIGNMENTS[block.style.alignment or theme.box_alignment],
+            hAlign=FLOWABLE_ALIGNMENTS[block.style.block_alignment or theme.box_block_alignment],
             repeatRows=0,
         )
         top_padding, right_padding, bottom_padding, left_padding = block.style.resolved_padding()
@@ -2501,7 +2501,7 @@ class PdfRenderer:
         gap_points = length_to_inches(block.column_gap, block.unit or unit) * inch
         subfigure_table = RLTable(
             table_rows,
-            hAlign=FLOWABLE_ALIGNMENTS[theme.figure_alignment],
+            hAlign=FLOWABLE_ALIGNMENTS[theme.figure_block_alignment],
             repeatRows=0,
         )
         subfigure_table.setStyle(
@@ -2558,7 +2558,7 @@ class PdfRenderer:
 
     def _figure_image(self, block: Figure | SubFigure, theme: Theme, unit: str) -> RLImage:
         image = RLImage(self._figure_image_source(block))
-        image.hAlign = FLOWABLE_ALIGNMENTS[theme.figure_alignment]
+        image.hAlign = FLOWABLE_ALIGNMENTS[theme.figure_block_alignment]
         resolved_width = block.width_in_inches(unit)
         resolved_height = block.height_in_inches(unit)
         if resolved_width is not None and resolved_height is not None:
