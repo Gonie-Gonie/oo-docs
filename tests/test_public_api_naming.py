@@ -310,6 +310,7 @@ def test_image_components_use_image_dpi_field_name() -> None:
 
 def test_table_public_api_hides_renderer_helper_methods() -> None:
     members = _public_members(oodocs.Table)
+    from_records_parameters = set(inspect.signature(oodocs.Table.from_records).parameters)
 
     forbidden = {
         "layout",
@@ -329,6 +330,8 @@ def test_table_public_api_hides_renderer_helper_methods() -> None:
 
     assert forbidden.isdisjoint(members)
     assert expected <= members
+    assert "strict" not in from_records_parameters
+    assert "fail_on_missing" in from_records_parameters
 
 
 def test_table_cell_alignment_fields_use_text_alignment_names() -> None:

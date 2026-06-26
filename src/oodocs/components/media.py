@@ -775,14 +775,14 @@ def _record_value(
     record: object,
     column: object,
     *,
-    strict: bool,
+    fail_on_missing: bool,
     missing: object,
 ) -> object:
     mapping = _record_mapping(record)
     if mapping is not None:
         if column in mapping:
             return mapping[column]
-        if strict:
+        if fail_on_missing:
             raise ValueError(f"Record is missing column {column!r}")
         return missing
 
@@ -796,7 +796,7 @@ def _record_value(
         values = list(record)  # type: ignore[arg-type]
         if 0 <= index < len(values):
             return values[index]
-        if strict:
+        if fail_on_missing:
             raise ValueError(f"Record is missing column index {index}")
         return missing
 
@@ -1194,7 +1194,7 @@ class Table(Block):
         headers: Sequence[TableCellInput] | None = None,
         formatters: Mapping[object, RecordFormatter] | None = None,
         missing: object = "",
-        strict: bool = False,
+        fail_on_missing: bool = False,
         **table_kwargs: object,
     ) -> Table:
         """Create a table from mappings, dataclasses, or sequence records.
@@ -1205,8 +1205,8 @@ class Table(Block):
             headers: Optional visible header cells.
             formatters: Optional per-column callable or format-spec strings.
             missing: Value used when a record is missing a column and
-                ``strict`` is false.
-            strict: Whether missing columns raise errors.
+                ``fail_on_missing`` is false.
+            fail_on_missing: Whether missing columns raise errors.
             **table_kwargs: Additional arguments forwarded to ``Table``.
 
         Returns:
@@ -1262,7 +1262,7 @@ class Table(Block):
                     _record_value(
                         record,
                         column,
-                        strict=strict,
+                        fail_on_missing=fail_on_missing,
                         missing=missing,
                     ),
                     column=column,

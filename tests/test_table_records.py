@@ -62,7 +62,7 @@ def test_table_from_records_supports_sequence_records() -> None:
         Table.from_records([("docx", 1)])
 
     with pytest.raises(ValueError, match="missing column"):
-        Table.from_records([{"a": 1}], columns=["a", "b"], strict=True)
+        Table.from_records([{"a": 1}], columns=["a", "b"], fail_on_missing=True)
 
 
 def test_table_from_mapping_stringifies_nested_values() -> None:
