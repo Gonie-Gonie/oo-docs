@@ -249,6 +249,30 @@ def test_theme_constructor_uses_grouped_defaults_only() -> None:
     assert direct_parameters.isdisjoint(theme_parameters)
 
 
+def test_theme_resolver_methods_use_explicit_resolve_names() -> None:
+    members = _public_members(oodocs.Theme)
+    forbidden = {
+        "heading_size",
+        "heading_emphasis",
+        "heading_alignment",
+        "table_caption_label_text",
+        "figure_caption_label_text",
+        "table_reference_label_text",
+        "figure_reference_label_text",
+    }
+    expected = {
+        "resolve_heading_size",
+        "resolve_heading_emphasis",
+        "resolve_heading_text_alignment",
+        "resolve_paragraph_text_alignment",
+        "resolve_caption_label",
+        "resolve_run_in_title_style",
+    }
+
+    assert forbidden.isdisjoint(members)
+    assert expected <= members
+
+
 def test_paragraph_style_uses_text_alignment_names() -> None:
     paragraph_style_fields = {field.name for field in fields(oodocs.ParagraphStyle)}
     block_fields = {field.name for field in fields(oodocs.BlockDefaults)}

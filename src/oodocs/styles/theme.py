@@ -425,7 +425,7 @@ class Theme:
         self.blocks = blocks or BlockDefaults()
         self.stylesheet = stylesheet or StyleSheet.default()
 
-    def heading_size(self, level: int) -> float:
+    def resolve_heading_size(self, level: int) -> float:
         """Return the configured font size for a heading level.
 
         Args:
@@ -436,14 +436,14 @@ class Theme:
 
         Examples:
             ```python
-            assert Theme(typography=TypographyDefaults(heading_sizes=(20.0, 16.0))).heading_size(3) == 16.0
+            assert Theme(typography=TypographyDefaults(heading_sizes=(20.0, 16.0))).resolve_heading_size(3) == 16.0
             ```
         """
 
         index = min(max(level - 1, 0), len(self.typography.heading_sizes) - 1)
         return self.typography.heading_sizes[index]
 
-    def heading_emphasis(self, level: int) -> tuple[bool, bool]:
+    def resolve_heading_emphasis(self, level: int) -> tuple[bool, bool]:
         """Return heading emphasis for a heading level.
 
         Args:
@@ -454,7 +454,7 @@ class Theme:
 
         Examples:
             ```python
-            assert Theme().heading_emphasis(1) == (True, False)
+            assert Theme().resolve_heading_emphasis(1) == (True, False)
             ```
         """
 
@@ -467,7 +467,7 @@ class Theme:
         index = min(max(level - 1, 0), len(emphasis) - 1)
         return emphasis[index]
 
-    def heading_alignment(self, level: int) -> str:
+    def resolve_heading_text_alignment(self, level: int) -> str:
         """Return the alignment to use for the given heading level.
 
         Args:
@@ -478,7 +478,7 @@ class Theme:
 
         Examples:
             ```python
-            assert Theme().heading_alignment(2) == "left"
+            assert Theme().resolve_heading_text_alignment(2) == "left"
             ```
         """
 
@@ -529,64 +529,36 @@ class Theme:
 
         return paragraph_override or scope_style or self.blocks.run_in_title_style
 
-    def table_caption_label_text(self) -> str:
-        """Return the label used in table captions and generated table lists.
+    def resolve_caption_label(self, kind: str, context: str) -> str:
+        """Return the effective label for captions or inline references.
+
+        Args:
+            kind: Label target, either ``"table"`` or ``"figure"``.
+            context: Label context, either ``"caption"`` or ``"reference"``.
 
         Returns:
-            Effective table caption label.
+            Effective caption or reference label.
+
+        Raises:
+            ValueError: If ``kind`` or ``context`` is unsupported.
 
         Examples:
             ```python
             theme = Theme(captions=CaptionDefaults(table_caption_label="Tbl."))
-            assert theme.table_caption_label_text() == "Tbl."
+            assert theme.resolve_caption_label("table", "caption") == "Tbl."
             ```
         """
 
-        return self.captions.table_caption_label or self.captions.table_label
-
-    def figure_caption_label_text(self) -> str:
-        """Return the label used in figure captions and generated figure lists.
-
-        Returns:
-            Effective figure caption label.
-
-        Examples:
-            ```python
-            theme = Theme(captions=CaptionDefaults(figure_caption_label="Fig."))
-            assert theme.figure_caption_label_text() == "Fig."
-            ```
-        """
-
-        return self.captions.figure_caption_label or self.captions.figure_label
-
-    def table_reference_label_text(self) -> str:
-        """Return the label used for inline table references.
-
-        Returns:
-            Effective table reference label.
-
-        Examples:
-            ```python
-            theme = Theme(captions=CaptionDefaults(table_reference_label="Tbl."))
-            assert theme.table_reference_label_text() == "Tbl."
-            ```
-        """
-
-        return self.captions.table_reference_label or self.captions.table_label
-
-    def figure_reference_label_text(self) -> str:
-        """Return the label used for inline figure and subfigure references.
-
-        Returns:
-            Effective figure reference label.
-
-        Examples:
-            ```python
-            theme = Theme(captions=CaptionDefaults(figure_reference_label="Fig."))
-            assert theme.figure_reference_label_text() == "Fig."
-            ```
-        """
-
+        if kind not in {"table", "figure"}:
+            raise ValueError("caption label kind must be 'table' or 'figure'")
+        if context not in {"caption", "reference"}:
+            raise ValueError("caption label context must be 'caption' or 'reference'")
+        if kind == "table" and context == "caption":
+            return self.captions.table_caption_label or self.captions.table_label
+        if kind == "table":
+            return self.captions.table_reference_label or self.captions.table_label
+        if context == "caption":
+            return self.captions.figure_caption_label or self.captions.figure_label
         return self.captions.figure_reference_label or self.captions.figure_label
 
     def caption_size(self) -> float:

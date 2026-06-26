@@ -324,7 +324,7 @@ class DocxRenderer:
         title_paragraph = self._add_title_line(
             word_document,
             block.title,
-            font_size=max(context.theme.typography.title_font_size, context.theme.heading_size(1) + 2),
+            font_size=max(context.theme.typography.title_font_size, context.theme.resolve_heading_size(1) + 2),
             alignment="center",
             bold=True,
             space_after=0,
@@ -757,7 +757,7 @@ class DocxRenderer:
             context.theme,
             context.render_index,
             context.theme.generated_content.list_of_tables_title,
-            context.theme.table_caption_label_text(),
+            context.theme.resolve_caption_label("table", "caption"),
         )
 
     def render_list_of_figures(
@@ -779,7 +779,7 @@ class DocxRenderer:
             context.theme,
             context.render_index,
             context.theme.generated_content.list_of_figures_title,
-            context.theme.figure_caption_label_text(),
+            context.theme.resolve_caption_label("figure", "caption"),
         )
 
     def render_table(
@@ -885,12 +885,12 @@ class DocxRenderer:
             italic=False,
         )
         for level in range(1, 5):
-            bold, italic = theme.heading_emphasis(level)
+            bold, italic = theme.resolve_heading_emphasis(level)
             self._configure_named_style(
                 word_document,
                 f"Heading {level}",
                 font_name=theme.typography.body_font_name,
-                font_size=theme.heading_size(level),
+                font_size=theme.resolve_heading_size(level),
                 bold=bold,
                 italic=italic,
             )
@@ -1207,14 +1207,14 @@ class DocxRenderer:
         if level == 0:
             paragraph.alignment = ALIGNMENTS[theme.title_matter.title_text_alignment]
         else:
-            paragraph.alignment = ALIGNMENTS[theme.heading_alignment(level)]
+            paragraph.alignment = ALIGNMENTS[theme.resolve_heading_text_alignment(level)]
             paragraph.paragraph_format.space_before = Pt(18 if level == 1 else 12)
             paragraph.paragraph_format.space_after = Pt(10 if level == 1 else 6)
         heading_fragments = self._heading_fragments(title, number_label)
         self._append_runs(
             paragraph,
             heading_fragments,
-            default_size=theme.typography.title_font_size if level == 0 else theme.heading_size(level),
+            default_size=theme.typography.title_font_size if level == 0 else theme.resolve_heading_size(level),
             theme=theme,
             render_index=render_index,
         )
@@ -2539,7 +2539,7 @@ class DocxRenderer:
             self._append_runs(
                 caption,
                 self._caption_fragments(
-                    theme.table_caption_label_text(),
+                    theme.resolve_caption_label("table", "caption"),
                     render_index.table_number(table_block),
                     table_block.caption,
                 ),
@@ -2676,7 +2676,7 @@ class DocxRenderer:
             self._append_runs(
                 caption,
                 self._caption_fragments(
-                    theme.figure_caption_label_text(),
+                    theme.resolve_caption_label("figure", "caption"),
                     render_index.figure_number(figure),
                     figure.caption,
                 ),
@@ -2735,7 +2735,7 @@ class DocxRenderer:
             self._append_runs(
                 caption,
                 self._caption_fragments(
-                    theme.figure_caption_label_text(),
+                    theme.resolve_caption_label("figure", "caption"),
                     render_index.figure_number(group),
                     group.caption,
                 ),
@@ -2959,7 +2959,8 @@ class DocxRenderer:
             number = render_index.table_number(target)
             if number is None:
                 raise OODocsError("Table references require the target table to have a caption and be included in the document")
-            return f"{theme.table_reference_label_text()} {number}"
+            label = theme.resolve_caption_label("table", "reference")
+            return f"{label} {number}"
 
         if isinstance(target, (Figure, SubFigure, SubFigureGroup)):
             number = render_index.figure_number(target)
@@ -2969,8 +2970,10 @@ class DocxRenderer:
                 label = render_index.subfigure_label(target)
                 if label is None:
                     raise OODocsError("Subfigure references require the target subfigure to belong to a captioned SubFigureGroup")
-                return f"{theme.figure_reference_label_text()} {number}({label})"
-            return f"{theme.figure_reference_label_text()} {number}"
+                figure_label = theme.resolve_caption_label("figure", "reference")
+                return f"{figure_label} {number}({label})"
+            label = theme.resolve_caption_label("figure", "reference")
+            return f"{label} {number}"
 
         if isinstance(target, Part):
             number_label = render_index.heading_number(target)
@@ -3215,14 +3218,14 @@ class DocxRenderer:
         level: int,
         theme: Theme,
     ) -> None:
-        font_size = theme.typography.title_font_size if level == 0 else theme.heading_size(level)
+        font_size = theme.typography.title_font_size if level == 0 else theme.resolve_heading_size(level)
         self._add_title_line(
             container,
             title,
             font_size=font_size,
-            alignment=theme.title_matter.title_text_alignment if level == 0 else theme.heading_alignment(level),
-            bold=theme.heading_emphasis(level)[0] if level > 0 else True,
-            italic=theme.heading_emphasis(level)[1] if level > 0 else False,
+            alignment=theme.title_matter.title_text_alignment if level == 0 else theme.resolve_heading_text_alignment(level),
+            bold=theme.resolve_heading_emphasis(level)[0] if level > 0 else True,
+            italic=theme.resolve_heading_emphasis(level)[1] if level > 0 else False,
             space_after=10 if level <= 1 else 6,
         )
 

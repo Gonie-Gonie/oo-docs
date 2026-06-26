@@ -703,16 +703,16 @@ class PdfRenderer:
         theme = context.theme
         styles = context.styles
         render_index = context.render_index
-        bold, italic = theme.heading_emphasis(block.level)
+        bold, italic = theme.resolve_heading_emphasis(block.level)
         title_style = RLParagraphStyle(
             f"Heading{block.level}",
             parent=styles["Heading1"],
             fontName=self._resolve_font(theme.typography.body_font_name, bold, italic),
-            fontSize=theme.heading_size(block.level),
-            leading=theme.heading_size(block.level) * 1.2,
+            fontSize=theme.resolve_heading_size(block.level),
+            leading=theme.resolve_heading_size(block.level) * 1.2,
             spaceBefore=18 if block.level == 1 else 12,
             spaceAfter=10 if block.level == 1 else 6,
-            alignment=ALIGNMENTS[theme.heading_alignment(block.level)],
+            alignment=ALIGNMENTS[theme.resolve_heading_text_alignment(block.level)],
             textColor=colors.black,
         )
         anchor = render_index.heading_anchor(block)
@@ -828,7 +828,7 @@ class PdfRenderer:
             block.title,
             context,
             style_name="OODocsPartTitle",
-            font_size=max(theme.typography.title_font_size, theme.heading_size(1) + 2),
+            font_size=max(theme.typography.title_font_size, theme.resolve_heading_size(1) + 2),
             bold=True,
             space_after=0,
             anchor=anchor,
@@ -1290,7 +1290,7 @@ class PdfRenderer:
             context.styles,
             context.render_index,
             context.theme.generated_content.list_of_tables_title,
-            context.theme.table_caption_label_text(),
+            context.theme.resolve_caption_label("table", "caption"),
         )
 
     def render_list_of_figures(
@@ -1315,7 +1315,7 @@ class PdfRenderer:
             context.styles,
             context.render_index,
             context.theme.generated_content.list_of_figures_title,
-            context.theme.figure_caption_label_text(),
+            context.theme.resolve_caption_label("figure", "caption"),
         )
 
     def render_comment_list(
@@ -2042,7 +2042,7 @@ class PdfRenderer:
                 RLParagraph(
                     self._anchor_markup(render_index.table_anchor(block))
                     + self._inline_markup(
-                        self._caption_fragments(theme.table_caption_label_text(), render_index.table_number(block), block.caption),
+                        self._caption_fragments(theme.resolve_caption_label("table", "caption"), render_index.table_number(block), block.caption),
                         theme,
                         render_index,
                         base_font_name=caption_style.fontName,
@@ -2066,7 +2066,7 @@ class PdfRenderer:
                     self._anchor_markup(render_index.table_anchor(block))
                     + self._inline_markup(
                         self._caption_fragments(
-                            theme.table_caption_label_text(),
+                            theme.resolve_caption_label("table", "caption"),
                             render_index.table_number(block),
                             block.caption,
                         ),
@@ -2451,7 +2451,7 @@ class PdfRenderer:
                 RLParagraph(
                     self._anchor_markup(render_index.figure_anchor(block))
                     + self._inline_markup(
-                        self._caption_fragments(theme.figure_caption_label_text(), render_index.figure_number(block), block.caption),
+                        self._caption_fragments(theme.resolve_caption_label("figure", "caption"), render_index.figure_number(block), block.caption),
                         theme,
                         render_index,
                         base_font_name=caption_style.fontName,
@@ -2473,7 +2473,7 @@ class PdfRenderer:
                 RLParagraph(
                     self._anchor_markup(render_index.figure_anchor(block))
                     + self._inline_markup(
-                        self._caption_fragments(theme.figure_caption_label_text(), render_index.figure_number(block), block.caption),
+                        self._caption_fragments(theme.resolve_caption_label("figure", "caption"), render_index.figure_number(block), block.caption),
                         theme,
                         render_index,
                         base_font_name=caption_style.fontName,
@@ -2573,7 +2573,7 @@ class PdfRenderer:
                 RLParagraph(
                     self._anchor_markup(render_index.figure_anchor(block))
                     + self._inline_markup(
-                        self._caption_fragments(theme.figure_caption_label_text(), render_index.figure_number(block), block.caption),
+                        self._caption_fragments(theme.resolve_caption_label("figure", "caption"), render_index.figure_number(block), block.caption),
                         theme,
                         render_index,
                         base_font_name=caption_style.fontName,
@@ -2594,7 +2594,7 @@ class PdfRenderer:
                 RLParagraph(
                     self._anchor_markup(render_index.figure_anchor(block))
                     + self._inline_markup(
-                        self._caption_fragments(theme.figure_caption_label_text(), render_index.figure_number(block), block.caption),
+                        self._caption_fragments(theme.resolve_caption_label("figure", "caption"), render_index.figure_number(block), block.caption),
                         theme,
                         render_index,
                         base_font_name=below_caption_style.fontName,
@@ -3020,7 +3020,8 @@ class PdfRenderer:
             number = render_index.table_number(target)
             if number is None:
                 raise OODocsError("Table references require the target table to have a caption and be included in the document")
-            return f"{theme.table_reference_label_text()} {number}"
+            label = theme.resolve_caption_label("table", "reference")
+            return f"{label} {number}"
 
         if isinstance(target, (Figure, SubFigure, SubFigureGroup)):
             number = render_index.figure_number(target)
@@ -3030,8 +3031,10 @@ class PdfRenderer:
                 label = render_index.subfigure_label(target)
                 if label is None:
                     raise OODocsError("Subfigure references require the target subfigure to belong to a captioned SubFigureGroup")
-                return f"{theme.figure_reference_label_text()} {number}({label})"
-            return f"{theme.figure_reference_label_text()} {number}"
+                figure_label = theme.resolve_caption_label("figure", "reference")
+                return f"{figure_label} {number}({label})"
+            label = theme.resolve_caption_label("figure", "reference")
+            return f"{label} {number}"
 
         if isinstance(target, Part):
             number_label = render_index.heading_number(target)
@@ -3100,16 +3103,16 @@ class PdfRenderer:
         label: str,
     ) -> list[object]:
         level = theme.generated_content.generated_heading_level
-        bold, italic = theme.heading_emphasis(level)
+        bold, italic = theme.resolve_heading_emphasis(level)
         title_style = RLParagraphStyle(
             "GeneratedCaptionListTitle",
             parent=styles["Heading1"],
             fontName=self._resolve_font(theme.typography.body_font_name, bold, italic),
-            fontSize=theme.heading_size(level),
-            leading=theme.heading_size(level) * 1.2,
+            fontSize=theme.resolve_heading_size(level),
+            leading=theme.resolve_heading_size(level) * 1.2,
             spaceBefore=12,
             spaceAfter=6,
-            alignment=ALIGNMENTS[theme.heading_alignment(level)],
+            alignment=ALIGNMENTS[theme.resolve_heading_text_alignment(level)],
             textColor=colors.black,
         )
         entry_style = self._paragraph_style(ParagraphStyle(space_after=3), theme, styles["BodyText"])
@@ -3160,16 +3163,16 @@ class PdfRenderer:
         render_index: RenderIndex,
     ) -> list[object]:
         level = theme.generated_content.generated_heading_level
-        bold, italic = theme.heading_emphasis(level)
+        bold, italic = theme.resolve_heading_emphasis(level)
         title_style = RLParagraphStyle(
             "CommentListTitle",
             parent=styles["Heading1"],
             fontName=self._resolve_font(theme.typography.body_font_name, bold, italic),
-            fontSize=theme.heading_size(level),
-            leading=theme.heading_size(level) * 1.2,
+            fontSize=theme.resolve_heading_size(level),
+            leading=theme.resolve_heading_size(level) * 1.2,
             spaceBefore=0,
             spaceAfter=10,
-            alignment=ALIGNMENTS[theme.heading_alignment(level)],
+            alignment=ALIGNMENTS[theme.resolve_heading_text_alignment(level)],
             textColor=colors.black,
         )
         entry_style = RLParagraphStyle(
@@ -3221,16 +3224,16 @@ class PdfRenderer:
         render_index: RenderIndex,
     ) -> list[object]:
         level = theme.generated_content.generated_heading_level
-        bold, italic = theme.heading_emphasis(level)
+        bold, italic = theme.resolve_heading_emphasis(level)
         title_style = RLParagraphStyle(
             "FootnoteListTitle",
             parent=styles["Heading1"],
             fontName=self._resolve_font(theme.typography.body_font_name, bold, italic),
-            fontSize=theme.heading_size(level),
-            leading=theme.heading_size(level) * 1.2,
+            fontSize=theme.resolve_heading_size(level),
+            leading=theme.resolve_heading_size(level) * 1.2,
             spaceBefore=0,
             spaceAfter=10,
-            alignment=ALIGNMENTS[theme.heading_alignment(level)],
+            alignment=ALIGNMENTS[theme.resolve_heading_text_alignment(level)],
             textColor=colors.black,
         )
         entry_style = RLParagraphStyle(
@@ -3282,16 +3285,16 @@ class PdfRenderer:
         render_index: RenderIndex,
     ) -> list[object]:
         level = theme.generated_content.generated_heading_level
-        bold, italic = theme.heading_emphasis(level)
+        bold, italic = theme.resolve_heading_emphasis(level)
         title_style = RLParagraphStyle(
             "ReferenceListTitle",
             parent=styles["Heading1"],
             fontName=self._resolve_font(theme.typography.body_font_name, bold, italic),
-            fontSize=theme.heading_size(level),
-            leading=theme.heading_size(level) * 1.2,
+            fontSize=theme.resolve_heading_size(level),
+            leading=theme.resolve_heading_size(level) * 1.2,
             spaceBefore=0,
             spaceAfter=10,
-            alignment=ALIGNMENTS[theme.heading_alignment(level)],
+            alignment=ALIGNMENTS[theme.resolve_heading_text_alignment(level)],
             textColor=colors.black,
         )
         entry_style = RLParagraphStyle(
@@ -3353,16 +3356,16 @@ class PdfRenderer:
         styles = context.styles
         render_index = context.render_index
         level = theme.generated_content.generated_heading_level
-        bold, italic = theme.heading_emphasis(level)
+        bold, italic = theme.resolve_heading_emphasis(level)
         title_style = RLParagraphStyle(
             "TableOfContentsTitle",
             parent=styles["Heading1"],
             fontName=self._resolve_font(theme.typography.body_font_name, bold, italic),
-            fontSize=theme.heading_size(level),
-            leading=theme.heading_size(level) * 1.2,
+            fontSize=theme.resolve_heading_size(level),
+            leading=theme.resolve_heading_size(level) * 1.2,
             spaceBefore=12,
             spaceAfter=6,
-            alignment=ALIGNMENTS[theme.heading_alignment(level)],
+            alignment=ALIGNMENTS[theme.resolve_heading_text_alignment(level)],
             textColor=colors.black,
         )
         story: list[object] = [

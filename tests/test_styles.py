@@ -6,6 +6,7 @@ from oodocs import (
     BlockDefaults,
     BorderStyle,
     BoxStyle,
+    CaptionDefaults,
     CounterStyle,
     HeadingNumbering,
     InlineChipStyle,
@@ -19,6 +20,8 @@ from oodocs import (
     TableCellStyle,
     TableStyle,
     TextStyle,
+    Theme,
+    TypographyDefaults,
 )
 
 
@@ -98,6 +101,25 @@ def test_counter_style_drives_list_heading_page_and_part_defaults() -> None:
     assert heading_numbering.format_label([2, 3]) == "[II.c]"
     assert page_numbers.front_matter_counter.format_value(4) == "iv"
     assert blocks.part_counter.format_value(2) == "II"
+
+
+def test_theme_resolves_heading_and_caption_defaults() -> None:
+    theme = Theme(
+        typography=TypographyDefaults(heading_sizes=(20.0, 16.0)),
+        captions=CaptionDefaults(table_caption_label="Tbl.", figure_reference_label="Fig."),
+    )
+
+    assert theme.resolve_heading_size(3) == 16.0
+    assert theme.resolve_heading_emphasis(1) == (True, False)
+    assert theme.resolve_heading_text_alignment(2) == "left"
+    assert theme.resolve_caption_label("table", "caption") == "Tbl."
+    assert theme.resolve_caption_label("figure", "reference") == "Fig."
+
+    with pytest.raises(ValueError, match="caption label kind"):
+        theme.resolve_caption_label("equation", "caption")
+
+    with pytest.raises(ValueError, match="caption label context"):
+        theme.resolve_caption_label("table", "inline")
 
 
 def test_stylesheet_resolves_prefixed_names_and_roundtrips() -> None:

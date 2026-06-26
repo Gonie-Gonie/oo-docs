@@ -228,7 +228,7 @@ class HtmlRenderer:
                 context.theme,
                 context.render_index,
                 base_bold=True,
-                base_size=max(context.theme.typography.title_font_size, context.theme.heading_size(1) + 2),
+                base_size=max(context.theme.typography.title_font_size, context.theme.resolve_heading_size(1) + 2),
             )
             + "</h1>"
         )
@@ -660,9 +660,9 @@ class HtmlRenderer:
                 self._heading_fragments(block.title, number_label),
                 context.theme,
                 context.render_index,
-                base_bold=context.theme.heading_emphasis(block.level)[0],
-                base_italic=context.theme.heading_emphasis(block.level)[1],
-                base_size=context.theme.heading_size(block.level),
+                base_bold=context.theme.resolve_heading_emphasis(block.level)[0],
+                base_italic=context.theme.resolve_heading_emphasis(block.level)[1],
+                base_size=context.theme.resolve_heading_size(block.level),
             )
             + f"</{heading_tag}>"
         )
@@ -714,7 +714,7 @@ class HtmlRenderer:
         caption_html = (
             self._caption_html(
                 block.caption,
-                label=context.theme.table_caption_label_text(),
+                label=context.theme.resolve_caption_label("table", "caption"),
                 number=context.render_index.table_number(block),
                 anchor=context.render_index.table_anchor(block),
                 context=context,
@@ -783,7 +783,7 @@ class HtmlRenderer:
         caption_html = (
             self._caption_html(
                 block.caption,
-                label=context.theme.figure_caption_label_text(),
+                label=context.theme.resolve_caption_label("figure", "caption"),
                 number=context.render_index.figure_number(block),
                 anchor=context.render_index.figure_anchor(block),
                 context=context,
@@ -820,7 +820,7 @@ class HtmlRenderer:
         caption_html = (
             self._caption_html(
                 block.caption,
-                label=context.theme.figure_caption_label_text(),
+                label=context.theme.resolve_caption_label("figure", "caption"),
                 number=context.render_index.figure_number(block),
                 anchor=context.render_index.figure_anchor(block),
                 context=context,
@@ -917,7 +917,7 @@ class HtmlRenderer:
             title=block.title,
             entries=context.render_index.tables,
             default_title=context.theme.generated_content.list_of_tables_title,
-            label=context.theme.table_caption_label_text(),
+            label=context.theme.resolve_caption_label("table", "caption"),
             context=context,
             section_class="oodocs-generated-page oodocs-table-list",
         )
@@ -941,7 +941,7 @@ class HtmlRenderer:
             title=block.title,
             entries=context.render_index.figures,
             default_title=context.theme.generated_content.list_of_figures_title,
-            label=context.theme.figure_caption_label_text(),
+            label=context.theme.resolve_caption_label("figure", "caption"),
             context=context,
             section_class="oodocs-generated-page oodocs-figure-list",
         )
@@ -1319,9 +1319,9 @@ class HtmlRenderer:
                 title,
                 context.theme,
                 context.render_index,
-                base_bold=context.theme.heading_emphasis(level)[0],
-                base_italic=context.theme.heading_emphasis(level)[1],
-                base_size=context.theme.heading_size(level),
+                base_bold=context.theme.resolve_heading_emphasis(level)[0],
+                base_italic=context.theme.resolve_heading_emphasis(level)[1],
+                base_size=context.theme.resolve_heading_size(level),
             )
             + f"</{heading_tag}>"
         )
@@ -1938,7 +1938,8 @@ class HtmlRenderer:
                 raise OODocsError(
                     "Table references require the target table to have a caption and be included in the document"
                 )
-            return f"{theme.table_reference_label_text()} {number}"
+            label = theme.resolve_caption_label("table", "reference")
+            return f"{label} {number}"
 
         if isinstance(target, (Figure, SubFigure, SubFigureGroup)):
             number = render_index.figure_number(target)
@@ -1952,8 +1953,10 @@ class HtmlRenderer:
                     raise OODocsError(
                         "Subfigure references require the target subfigure to belong to a captioned SubFigureGroup"
                     )
-                return f"{theme.figure_reference_label_text()} {number}({label})"
-            return f"{theme.figure_reference_label_text()} {number}"
+                figure_label = theme.resolve_caption_label("figure", "reference")
+                return f"{figure_label} {number}({label})"
+            label = theme.resolve_caption_label("figure", "reference")
+            return f"{label} {number}"
 
         if isinstance(target, Part):
             number_label = render_index.heading_number(target)
@@ -2067,10 +2070,10 @@ class HtmlRenderer:
         return f"h{min(level + 1, 6)}"
 
     def _heading_css(self, level: int, theme: Theme) -> str:
-        bold, italic = theme.heading_emphasis(level)
+        bold, italic = theme.resolve_heading_emphasis(level)
         styles = [
-            f"font-size: {theme.heading_size(level):.1f}pt",
-            f"text-align: {theme.heading_alignment(level)}",
+            f"font-size: {theme.resolve_heading_size(level):.1f}pt",
+            f"text-align: {theme.resolve_heading_text_alignment(level)}",
             f"margin: {'18' if level == 1 else '12'}pt 0 {'10' if level == 1 else '6'}pt",
         ]
         if bold:
@@ -2380,7 +2383,7 @@ body {{
 }}
 .oodocs-part-title {{
   margin: 0;
-  font-size: {max(theme.typography.title_font_size, theme.heading_size(1) + 2):.1f}pt;
+  font-size: {max(theme.typography.title_font_size, theme.resolve_heading_size(1) + 2):.1f}pt;
   font-weight: 700;
 }}
 .oodocs-page-break-after {{
