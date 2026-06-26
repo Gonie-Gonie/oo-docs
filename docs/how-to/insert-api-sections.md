@@ -262,7 +262,7 @@ sidecars = true
 `module-include-patterns = ["mypkg.*", "plugins.*"]` when the collection step
 should include several module families.
 
-Then build a full reference bundle or sidecars from Python:
+Then build a help-book reference bundle or sidecars from Python:
 
 ```python
 from oodocs.apidoc import ApiHelpBookConfig

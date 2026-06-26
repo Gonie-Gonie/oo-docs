@@ -118,7 +118,7 @@ def test_apidoc_build_config_auto_collector_saves_full_bundle_for_general_repo(
     assert coverage.public_object_count >= 1
 
 
-def test_apidoc_build_config_saves_full_reference_bundle_from_json_config(tmp_path) -> None:
+def test_apidoc_build_config_saves_help_book_bundle_from_json_config(tmp_path) -> None:
     package_dir = write_sample_package(tmp_path)
     output_dir = tmp_path / "reference-api"
     config_path = tmp_path / "apidoc-build.json"
