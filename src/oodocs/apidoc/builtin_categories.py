@@ -31,6 +31,8 @@ OODocs_API_CATEGORIES: tuple[ApiCategory, ...] = (
             "oodocs.Section",
             "oodocs.Subsection",
             "oodocs.SubSubsection",
+            "oodocs.MIN_SECTION_LEVEL",
+            "oodocs.MAX_SECTION_LEVEL",
             "oodocs.Paragraph",
             "oodocs.BulletList",
             "oodocs.NumberedList",
@@ -115,6 +117,8 @@ OODocs_API_CATEGORIES: tuple[ApiCategory, ...] = (
         title="Imports and Workflows",
         summary="Load, parse, validate, and render authored Python, Markdown, and notebook sources.",
         include=(
+            "oodocs.OutputFormat",
+            "oodocs.OUTPUT_FORMATS",
             "oodocs.parse_markdown",
             "oodocs.parse_markdown_file",
             "oodocs.from_markdown",

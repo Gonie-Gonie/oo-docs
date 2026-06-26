@@ -11,6 +11,7 @@ from oodocs.apidoc import (
     ApiPresentationProfile,
     ApiReturn,
     ApiSeeAlso,
+    api_category_to_chapter,
     api_object_to_help_section,
     check_api_help_categories,
     collect_api,
@@ -97,6 +98,8 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "oodocs.Paragraph" in all_titles
     assert "oodocs.Table" in all_titles
     assert "oodocs.Figure" in all_titles
+    assert "oodocs.OUTPUT_FORMATS" in all_titles
+    assert "oodocs.MIN_SECTION_LEVEL" in all_titles
     assert "oodocs.Theme" in all_titles
     assert "oodocs.ValidationResult" in all_titles
     assert "API Documentation Coverage" not in titles
@@ -210,6 +213,7 @@ def test_help_class_section_separates_creation_properties_and_methods() -> None:
                 "label",
                 "samplepkg.Widget.label",
                 "samplepkg",
+                signature="label: LabelText",
                 summary="User-facing label.",
             ),
             ApiObject(
@@ -253,9 +257,83 @@ def test_help_class_section_separates_creation_properties_and_methods() -> None:
     )
     assert "obj = Widget(name: str)" in text
     assert "label" in text
+    assert "LabelText" in text
     assert "title" in text
     assert "render(path: str) -> str" in text
     assert "render_to_html" not in text
+
+
+def test_help_value_section_uses_compact_definition_layout() -> None:
+    obj = ApiObject(
+        "data",
+        "OUTPUT_FORMATS",
+        "samplepkg.OUTPUT_FORMATS",
+        "samplepkg",
+        signature="OUTPUT_FORMATS: tuple[str, ...]",
+        summary="Supported output formats.",
+        description="Used by save helpers when no explicit output set is provided.",
+        metadata={"default": "('docx', 'pdf', 'html')"},
+    )
+
+    section = api_object_to_help_section(obj, level=2)
+    text = _all_plain_text(section)
+
+    _assert_text_order(
+        text,
+        "Supported output formats.",
+        "Definition",
+        "OUTPUT_FORMATS",
+        "tuple[str, ...]",
+        "('docx', 'pdf', 'html')",
+        "Description",
+    )
+    assert "Syntax" not in text
+    assert "Input Arguments" not in text
+
+
+def test_category_landing_page_summarizes_constants() -> None:
+    api = ApiPackage(
+        "samplepkg",
+        modules=[
+            ApiModule(
+                "samplepkg",
+                [
+                    ApiObject(
+                        "data",
+                        "OUTPUT_FORMATS",
+                        "samplepkg.OUTPUT_FORMATS",
+                        "samplepkg",
+                        signature="OUTPUT_FORMATS: tuple[str, ...]",
+                        summary="Supported output formats.",
+                        metadata={"default": "('docx', 'pdf')"},
+                    ),
+                    ApiObject(
+                        "function",
+                        "save",
+                        "samplepkg.save",
+                        "samplepkg",
+                        signature="save(path: str) -> None",
+                        summary="Save outputs.",
+                    ),
+                ],
+            )
+        ],
+    )
+    category = ApiCategory(
+        id="outputs",
+        title="Output API",
+        summary="Save documents and inspect supported outputs.",
+        include=("samplepkg.OUTPUT_FORMATS", "samplepkg.save"),
+        order=10,
+    )
+
+    chapter = api_category_to_chapter(category, api, max_level=1)
+    text = _all_plain_text(chapter)
+
+    assert "Constants" in text
+    assert "OUTPUT_FORMATS" in text
+    assert "('docx', 'pdf') / tuple[str, ...]" in text
+    assert "Supported output formats." in text
 
 
 def test_help_examples_use_basic_role_and_preview_long_code() -> None:

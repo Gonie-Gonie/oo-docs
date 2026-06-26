@@ -129,6 +129,9 @@ def _value_help_blocks(
     blocks: list[Block] = []
     if presentation.include_description:
         blocks.extend(_summary_blocks(obj))
+    if definition := _value_definition_table(obj):
+        blocks.extend([_subheading("Definition"), definition])
+    if presentation.include_description:
         blocks.extend(_description_section(obj))
     blocks.extend(_examples_section(obj, presentation))
     blocks.extend(_see_also_section(obj, presentation))
@@ -289,7 +292,7 @@ def _properties_table(obj: ApiObject) -> Table | None:
         [
             [
                 member.name,
-                member.returns.annotation if member.returns and member.returns.annotation else "",
+                _value_type_text(member),
                 member.summary_text(),
             ]
             for member in properties
@@ -369,6 +372,8 @@ def api_category_to_chapter(
         blocks.append(Paragraph(bold("Related User Guide pages")))
         blocks.extend(link.to_paragraph() for link in category.guide_links)
     blocks.append(_category_index_table(category, objects))
+    if constants := _constants_table(objects):
+        blocks.extend([Paragraph(bold("Constants")), constants])
     blocks.extend(
         api_object_to_help_section(
             obj,
@@ -584,6 +589,25 @@ def _category_index_table(category: ApiCategory, objects: Sequence[ApiObject]) -
     )
 
 
+def _constants_table(objects: Sequence[ApiObject]) -> Table | None:
+    constants = [obj for obj in objects if obj.kind in {"data", "attribute"}]
+    if not constants:
+        return None
+    return Table(
+        ["Name", "Value / Type", "Meaning"],
+        [
+            [
+                obj.name,
+                _value_summary_text(obj),
+                obj.summary_text(),
+            ]
+            for obj in constants
+        ],
+        caption=None,
+        split=True,
+    )
+
+
 def _objects_for_category(api: ApiPackage, category: ApiCategory) -> tuple[ApiObject, ...]:
     found: list[ApiObject] = []
     seen: set[str] = set()
@@ -606,6 +630,55 @@ def _common_use(obj: ApiObject) -> str:
     if obj.kind in {"attribute", "data"}:
         return "Use as a constant or configuration value."
     return "Use from the documented API surface."
+
+
+def _value_definition_table(obj: ApiObject) -> Table | None:
+    type_text = _value_type_text(obj)
+    value_text = _value_default_text(obj)
+    if not type_text and not value_text and obj.kind not in {"data", "attribute", "property"}:
+        return None
+    return Table(
+        ["Name", "Type", "Value"],
+        [[obj.name, type_text, value_text]],
+        caption=None,
+        split=True,
+    )
+
+
+def _value_summary_text(obj: ApiObject) -> str:
+    value_text = _value_default_text(obj)
+    type_text = _value_type_text(obj)
+    if value_text and type_text:
+        return f"{value_text} / {type_text}"
+    return value_text or type_text
+
+
+def _value_type_text(obj: ApiObject) -> str:
+    if obj.returns and obj.returns.annotation:
+        return obj.returns.annotation
+    annotation = obj.metadata.get("annotation")
+    if annotation:
+        return str(annotation)
+    signature = obj.signature_text()
+    if ":" not in signature:
+        return ""
+    annotation_text = signature.split(":", 1)[1].strip()
+    if "=" in annotation_text:
+        annotation_text = annotation_text.split("=", 1)[0].strip()
+    return annotation_text
+
+
+def _value_default_text(obj: ApiObject) -> str:
+    if "default" not in obj.metadata:
+        return ""
+    return _preview_text(obj.metadata["default"], max_chars=120)
+
+
+def _preview_text(value: object, *, max_chars: int) -> str:
+    text = " ".join(str(value).split())
+    if len(text) <= max_chars:
+        return text
+    return f"{text[: max_chars - 3].rstrip()}..."
 
 
 __all__ = [
