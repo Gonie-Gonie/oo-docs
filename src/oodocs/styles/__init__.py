@@ -8,11 +8,7 @@ from oodocs.styles.blocks import (
     paragraph_style_with_overrides,
 )
 from oodocs.styles.border import BorderStyle, StrokeStyle
-from oodocs.styles.chips import (
-    InlineChipStyle,
-    _DEFAULT_CHIP_STYLES,
-    _STATUS_CHIP_STYLES,
-)
+from oodocs.styles.chips import InlineChipStyle
 from oodocs.styles.counter import (
     HeadingNumbering,
     ListStyle,

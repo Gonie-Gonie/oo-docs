@@ -435,10 +435,11 @@ def test_method_style_inline_actions_create_renderable_fragments() -> None:
     assert Footnote.annotated("term", "Portable footnote note").plain_text() == "term[?]"
     assert Math.inline(r"\alpha^2").plain_text() == "alpha2"
     assert InlineChip("base").kind == "chip"
+    assert tag("api").chip_style == "tag"
     assert tag("api", background_color="#EEF2FF").chip_style.background_color == "EEF2FF"
-    assert badge(3).plain_text() == "3"
-    assert status("ready", state="success").plain_text() == "READY"
-    assert keyboard("Ctrl+Enter").kind == "keyboard"
+    assert badge(3).chip_style == "badge"
+    assert status("ready", state="success").chip_style == "status.success"
+    assert keyboard("Ctrl+Enter").chip_style == "keyboard"
     assert isinstance(tag("api"), InlineChip)
     assert isinstance(InlineChipStyle(text_color="#111827"), InlineChipStyle)
 

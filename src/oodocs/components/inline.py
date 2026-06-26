@@ -8,9 +8,8 @@ from typing import Iterable, Sequence, TYPE_CHECKING
 from oodocs.components.equations import equation_plain_text
 from oodocs.styles import (
     InlineChipStyle,
+    StyleSheet,
     TextStyle,
-    _DEFAULT_CHIP_STYLES,
-    _STATUS_CHIP_STYLES,
 )
 
 if TYPE_CHECKING:
@@ -1101,19 +1100,38 @@ def _normalize_chip_kind(kind: str) -> str:
     return normalized
 
 
-def _default_chip_style(kind: str) -> InlineChipStyle:
+_STATUS_STYLE_NAMES = {
+    "neutral",
+    "success",
+    "info",
+    "warning",
+    "danger",
+    "muted",
+}
+
+
+def _default_chip_style(kind: str) -> str:
     normalized = _normalize_chip_kind(kind)
-    style = _DEFAULT_CHIP_STYLES.get(normalized, _DEFAULT_CHIP_STYLES["chip"])
-    return style.merged()
+    if normalized in {"tag", "badge", "keyboard"}:
+        return normalized
+    if normalized == "status":
+        return "status.neutral"
+    return "tag"
 
 
-def _default_status_chip_style(state: str) -> InlineChipStyle:
+def _default_status_chip_style(state: str) -> str:
     normalized = state.strip().lower().replace("_", "-")
-    style = _STATUS_CHIP_STYLES.get(normalized)
-    if style is None:
-        allowed = ", ".join(sorted(_STATUS_CHIP_STYLES))
+    if normalized not in _STATUS_STYLE_NAMES:
+        allowed = ", ".join(sorted(_STATUS_STYLE_NAMES))
         raise ValueError(f"Unsupported status state: {state!r}; expected one of {allowed}")
-    return style.merged()
+    return f"status.{normalized}"
+
+
+def _default_chip_style_object(style_name: str) -> InlineChipStyle:
+    style = StyleSheet.default().resolve("chip", style_name)
+    if not isinstance(style, InlineChipStyle):
+        raise TypeError(f"Default chip style {style_name!r} did not resolve to InlineChipStyle")
+    return style
 
 
 def _chip(
@@ -1124,9 +1142,12 @@ def _chip(
     style: TextStyle | None = None,
     **style_values: object,
 ) -> InlineChip:
-    resolved_style = chip_style or _default_chip_style(kind)
+    default_style_name = _default_chip_style(kind)
+    resolved_style = chip_style or default_style_name
     if style_values:
-        if isinstance(resolved_style, str):
+        if chip_style is None:
+            resolved_style = _default_chip_style_object(default_style_name)
+        elif isinstance(resolved_style, str):
             raise TypeError("Named chip styles cannot be combined with direct style overrides")
         resolved_style = resolved_style.merged(**style_values)
     return InlineChip(value, chip_style=resolved_style, kind=kind, style=style)
@@ -1215,9 +1236,12 @@ def status(
         ```
     """
 
-    resolved_style = chip_style or _default_status_chip_style(state)
+    default_style_name = _default_status_chip_style(state)
+    resolved_style = chip_style or default_style_name
     if style_values:
-        if isinstance(resolved_style, str):
+        if chip_style is None:
+            resolved_style = _default_chip_style_object(default_style_name)
+        elif isinstance(resolved_style, str):
             raise TypeError("Named chip styles cannot be combined with direct style overrides")
         resolved_style = resolved_style.merged(**style_values)
     return InlineChip(value, chip_style=resolved_style, kind="status", style=style)
