@@ -26,12 +26,12 @@ from oodocs import (
     Author,
     AuthorLayout,
     Axiom,
-    BlockOptions,
+    BlockDefaults,
     Box,
     BoxStyle,
     BulletList,
-    CaptionOptions,
-    CitationOptions,
+    CaptionDefaults,
+    CitationDefaults,
     CitationLibrary,
     CitationSource,
     Chapter,
@@ -53,7 +53,7 @@ from oodocs import (
     Figure,
     FigureList,
     Footnote,
-    GeneratedPageOptions,
+    GeneratedPageDefaults,
     HeadingNumbering,
     ImageBox,
     ImageData,
@@ -64,7 +64,7 @@ from oodocs import (
     Math,
     MultiColumn,
     NumberedList,
-    PageNumberOptions,
+    PageNumberDefaults,
     PageMargins,
     PageSize,
     PageBreak,
@@ -93,9 +93,9 @@ from oodocs import (
     TextBox,
     Theorem,
     Theme,
-    TitleMatterOptions,
+    TitleMatterDefaults,
     TocLevelStyle,
-    TypographyOptions,
+    TypographyDefaults,
     ValidationResult,
     VerticalSpace,
     badge,
@@ -452,15 +452,15 @@ def test_theme_validates_page_number_configuration() -> None:
         raise AssertionError("Expected page_number_template validation to fail")
 
 
-def test_theme_accepts_grouped_option_objects() -> None:
+def test_theme_accepts_grouped_defaults_objects() -> None:
     theme = Theme(
-        TypographyOptions(body_font_name="Arial", body_font_size=10.0),
-        CaptionOptions(figure_label="Fig.", table_caption_position="below"),
-        CitationOptions(citation_style="apa", reference_style="apa"),
-        GeneratedPageOptions(contents_title="Outline"),
-        PageNumberOptions(show_page_numbers=True, page_number_template="p. {page}"),
-        TitleMatterOptions(title_alignment="left"),
-        BlockOptions(
+        TypographyDefaults(body_font_name="Arial", body_font_size=10.0),
+        CaptionDefaults(figure_label="Fig.", table_caption_position="below"),
+        CitationDefaults(citation_style="apa", reference_style="apa"),
+        GeneratedPageDefaults(contents_title="Outline"),
+        PageNumberDefaults(show_page_numbers=True, page_number_template="p. {page}"),
+        TitleMatterDefaults(title_alignment="left"),
+        BlockDefaults(
             paragraph_alignment="left",
             table_alignment="right",
             paragraph_title_style=ParagraphTitleStyle(TextStyle(italic=True), separator=": "),
@@ -475,7 +475,7 @@ def test_theme_accepts_grouped_option_objects() -> None:
     assert theme.table_caption_position == "below"
     assert theme.citation_style == "apa"
     assert theme.reference_style == "apa"
-    assert theme.citation_options.citation_style == "apa"
+    assert theme.citations.citation_style == "apa"
     assert theme.contents_title == "Outline"
     assert theme.show_page_numbers is True
     assert theme.format_page_number(4) == "p. 4"
@@ -486,24 +486,24 @@ def test_theme_accepts_grouped_option_objects() -> None:
     assert theme.table_alignment == "right"
 
     direct_title_style = Theme(
-        BlockOptions(paragraph_title_style=ParagraphTitleStyle(TextStyle(italic=True))),
+        BlockDefaults(paragraph_title_style=ParagraphTitleStyle(TextStyle(italic=True))),
         paragraph_title_style=ParagraphTitleStyle(TextStyle(bold=True), separator=". "),
     )
     assert direct_title_style.paragraph_title_style.text_style.bold is True
     assert direct_title_style.paragraph_title_style.separator == ". "
 
-    keyword_group = Theme(typography=TypographyOptions(body_font_name="Aptos"))
+    keyword_group = Theme(typography=TypographyDefaults(body_font_name="Aptos"))
     assert keyword_group.body_font_name == "Aptos"
     keyword_group_override = Theme(
-        TypographyOptions(body_font_name="Arial"),
-        typography=TypographyOptions(body_font_name="Aptos"),
+        TypographyDefaults(body_font_name="Arial"),
+        typography=TypographyDefaults(body_font_name="Aptos"),
     )
     assert keyword_group_override.body_font_name == "Aptos"
 
     try:
         Theme(object())
     except TypeError as exc:
-        assert "Theme positional options" in str(exc)
+        assert "Theme positional defaults" in str(exc)
     else:
         raise AssertionError("Expected unknown Theme positional option to fail")
 
@@ -1247,7 +1247,7 @@ def test_public_api_prefers_classes_for_structural_nodes() -> None:
     assert hasattr(oodocs, "cite")
     assert hasattr(oodocs, "Box")
     assert hasattr(oodocs, "BoxStyle")
-    assert hasattr(oodocs, "CitationOptions")
+    assert hasattr(oodocs, "CitationDefaults")
     assert hasattr(oodocs, "HeadingNumbering")
     assert hasattr(oodocs, "ImageBox")
     assert hasattr(oodocs, "ImageData")

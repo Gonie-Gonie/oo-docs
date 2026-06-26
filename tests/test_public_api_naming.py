@@ -36,6 +36,13 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "load_document",
         "load_python_document",
         "render_document",
+        "BlockOptions",
+        "CaptionOptions",
+        "CitationOptions",
+        "GeneratedPageOptions",
+        "PageNumberOptions",
+        "TitleMatterOptions",
+        "TypographyOptions",
         "validate_source",
     }
     expected = {
@@ -48,6 +55,13 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "build_source_outputs",
         "load_document_from_python",
         "load_source_document",
+        "BlockDefaults",
+        "CaptionDefaults",
+        "CitationDefaults",
+        "GeneratedPageDefaults",
+        "PageNumberDefaults",
+        "TitleMatterDefaults",
+        "TypographyDefaults",
         "save_document_outputs",
         "validate_source_document",
     }
@@ -86,13 +100,15 @@ def test_text_style_uses_canonical_field_names() -> None:
 
 
 def test_citation_defaults_use_style_field_names() -> None:
-    citation_fields = {field.name for field in fields(oodocs.CitationOptions)}
+    citation_fields = {field.name for field in fields(oodocs.CitationDefaults)}
     theme_fields = {field.name for field in fields(oodocs.Theme)}
 
     assert {"citation_format", "reference_format"}.isdisjoint(citation_fields)
     assert {"citation_style", "reference_style"} <= citation_fields
     assert {"citation_format", "reference_format"}.isdisjoint(theme_fields)
     assert {"citation_style", "reference_style"} <= theme_fields
+    assert "citation_options" not in theme_fields
+    assert "citations" in theme_fields
     assert "normalize_citation_format" not in references.__all__
     assert "normalize_reference_format" not in references.__all__
     assert "normalize_citation_style" in references.__all__
@@ -114,8 +130,8 @@ def test_heading_numbering_uses_level_counter_format_field_name() -> None:
 
 
 def test_page_and_part_numbering_use_template_and_counter_field_names() -> None:
-    page_number_fields = {field.name for field in fields(oodocs.PageNumberOptions)}
-    block_fields = {field.name for field in fields(oodocs.BlockOptions)}
+    page_number_fields = {field.name for field in fields(oodocs.PageNumberDefaults)}
+    block_fields = {field.name for field in fields(oodocs.BlockDefaults)}
     theme_fields = {field.name for field in fields(oodocs.Theme)}
 
     forbidden_page_fields = {

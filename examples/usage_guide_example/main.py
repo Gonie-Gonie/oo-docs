@@ -15,10 +15,10 @@ from oodocs import (
     Assumption,
     Author,
     AuthorLayout,
-    BlockOptions,
+    BlockDefaults,
     Box,
     BulletList,
-    CaptionOptions,
+    CaptionDefaults,
     Chapter,
     CitationLibrary,
     CitationSource,
@@ -33,11 +33,11 @@ from oodocs import (
     Figure,
     FigureList,
     Footnote,
-    GeneratedPageOptions,
+    GeneratedPageDefaults,
     ImageBox,
     Lemma,
     NumberedList,
-    PageNumberOptions,
+    PageNumberDefaults,
     PageMargins,
     PageSize,
     Paragraph,
@@ -58,9 +58,9 @@ from oodocs import (
     TextBox,
     Theme,
     Theorem,
-    TitleMatterOptions,
+    TitleMatterDefaults,
     TocLevelStyle,
-    TypographyOptions,
+    TypographyDefaults,
     VerticalSpace,
     badge,
     bold,
@@ -304,17 +304,17 @@ contents = TableOfContents(
 """
 
 CONFIGURATION_OPTIONS_SNIPPET = """from oodocs import (
-    BlockOptions, CaptionOptions, DocumentSettings, PageNumberOptions,
-    Paragraph, Table, Theme, TypographyOptions,
+    BlockDefaults, CaptionDefaults, DocumentSettings, PageNumberDefaults,
+    Paragraph, Table, Theme, TypographyDefaults,
 )
 
 settings = DocumentSettings(
     unit="cm",
     theme=Theme(
-        TypographyOptions(body_font_name="Arial", body_font_size=10.5),
-        CaptionOptions(figure_label="Fig."),
-        PageNumberOptions(show_page_numbers=True, page_number_template="p. {page}"),
-        BlockOptions(paragraph_alignment="left"),
+        TypographyDefaults(body_font_name="Arial", body_font_size=10.5),
+        CaptionDefaults(figure_label="Fig."),
+        PageNumberDefaults(show_page_numbers=True, page_number_template="p. {page}"),
+        BlockDefaults(paragraph_alignment="left"),
     ),
 )
 
@@ -821,13 +821,13 @@ def build_usage_guide_document() -> Document:
     theme_options_table = Table(
         headers=["Theme group", "Options", "Use it for"],
         rows=[
-            ["TypographyOptions", "body_font_name, monospace_font_name, title_font_size, body_font_size, heading_sizes, caption_font_size", "Fonts and type scale."],
-            ["CaptionOptions", "caption_alignment, table_caption_position, figure_caption_position, table_label, figure_label, caption/reference labels", "Caption placement and localized labels."],
-            ["CitationOptions", "citation_style, reference_style", "Inline citation labels and generated reference entry style."],
-            ["GeneratedPageOptions", "contents/list/comments/footnotes/references titles, generated_section_level, generated_page_breaks", "Generated pages and their heading level."],
-            ["PageNumberOptions", "show_page_numbers, page_number_alignment, page_number_template, front/main matter counter formats, page_number_font_size", "Footer page labels."],
-            ["TitleMatterOptions", "title_alignment, subtitle_alignment, author_alignment, affiliation_alignment, author_detail_alignment", "Title-page and metadata alignment."],
-            ["BlockOptions", "page_background_color, paragraph_alignment, table/figure/box alignment, footnote_placement, list styles, heading_numbering", "Document-wide defaults that individual blocks can override."],
+            ["TypographyDefaults", "body_font_name, monospace_font_name, title_font_size, body_font_size, heading_sizes, caption_font_size", "Fonts and type scale."],
+            ["CaptionDefaults", "caption_alignment, table_caption_position, figure_caption_position, table_label, figure_label, caption/reference labels", "Caption placement and localized labels."],
+            ["CitationDefaults", "citation_style, reference_style", "Inline citation labels and generated reference entry style."],
+            ["GeneratedPageDefaults", "contents/list/comments/footnotes/references titles, generated_section_level, generated_page_breaks", "Generated pages and their heading level."],
+            ["PageNumberDefaults", "show_page_numbers, page_number_alignment, page_number_template, front/main matter counter formats, page_number_font_size", "Footer page labels."],
+            ["TitleMatterDefaults", "title_alignment, subtitle_alignment, author_alignment, affiliation_alignment, author_detail_alignment", "Title-page and metadata alignment."],
+            ["BlockDefaults", "page_background_color, paragraph_alignment, table/figure/box alignment, footnote_placement, list styles, heading_numbering", "Document-wide defaults that individual blocks can override."],
         ],
         caption="Grouped Theme options; pass them positionally to Theme(...) or override the same names directly.",
         column_widths=[1.7, 3.7, 1.8],
@@ -1418,7 +1418,7 @@ def build_usage_guide_document() -> Document:
                 Paragraph(
                     "Most author-facing options are available as ordinary keyword arguments. Style objects remain available for reusable patterns, and grouped ",
                     inline_code("Theme"),
-                    " option objects keep document-wide defaults readable when many settings change together. Pass those option objects positionally to ",
+                    " defaults objects keep document-wide settings readable when many values change together. Pass those defaults objects positionally to ",
                     inline_code("Theme"),
                     ", and use direct ",
                     inline_code("Theme(...)"),

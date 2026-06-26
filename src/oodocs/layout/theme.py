@@ -796,7 +796,7 @@ class TableStyle:
 
 
 @dataclass(slots=True)
-class TypographyOptions:
+class TypographyDefaults:
     """Grouped document-wide font and size defaults for ``Theme``.
 
     Attributes:
@@ -809,9 +809,9 @@ class TypographyOptions:
 
     Examples:
         ```python
-        from oodocs import Document, DocumentSettings, Paragraph, Theme, TypographyOptions
+        from oodocs import Document, DocumentSettings, Paragraph, Theme, TypographyDefaults
 
-        theme = Theme(TypographyOptions(body_font_name="Arial", body_font_size=10.5))
+        theme = Theme(TypographyDefaults(body_font_name="Arial", body_font_size=10.5))
         document = Document("Report", Paragraph("Body"), settings=DocumentSettings(theme=theme))
         ```
     """
@@ -825,7 +825,7 @@ class TypographyOptions:
 
 
 @dataclass(slots=True)
-class CaptionOptions:
+class CaptionDefaults:
     """Grouped caption labels, reference labels, positions, and alignment.
 
     Attributes:
@@ -841,9 +841,9 @@ class CaptionOptions:
 
     Examples:
         ```python
-        from oodocs import CaptionOptions, Document, DocumentSettings, Table, Theme
+        from oodocs import CaptionDefaults, Document, DocumentSettings, Table, Theme
 
-        theme = Theme(CaptionOptions(table_caption_position="below"))
+        theme = Theme(CaptionDefaults(table_caption_position="below"))
         document = Document(
             "Metrics",
             Table(["Metric"], [["Latency"]], caption="Runtime metric"),
@@ -864,7 +864,7 @@ class CaptionOptions:
 
 
 @dataclass(slots=True)
-class CitationOptions:
+class CitationDefaults:
     """Grouped citation and bibliography formatting defaults.
 
     Attributes:
@@ -873,9 +873,9 @@ class CitationOptions:
 
     Examples:
         ```python
-        from oodocs import CitationOptions, CitationSource, Document, DocumentSettings, Paragraph, Theme, cite
+        from oodocs import CitationDefaults, CitationSource, Document, DocumentSettings, Paragraph, Theme, cite
 
-        theme = Theme(CitationOptions(citation_style="author-year"))
+        theme = Theme(CitationDefaults(citation_style="author-year"))
         source = CitationSource("Reliable APIs", key="api2024", authors=("Jane Doe",))
         document = Document(
             "Paper",
@@ -891,7 +891,7 @@ class CitationOptions:
 
 
 @dataclass(slots=True)
-class GeneratedPageOptions:
+class GeneratedPageDefaults:
     """Grouped generated-page titles and generated-page layout defaults.
 
     Attributes:
@@ -906,9 +906,9 @@ class GeneratedPageOptions:
 
     Examples:
         ```python
-        from oodocs import Document, DocumentSettings, GeneratedPageOptions, ReferencesPage, Theme
+        from oodocs import Document, DocumentSettings, GeneratedPageDefaults, ReferencesPage, Theme
 
-        theme = Theme(GeneratedPageOptions(references_title="Bibliography"))
+        theme = Theme(GeneratedPageDefaults(references_title="Bibliography"))
         document = Document("Paper", ReferencesPage(), settings=DocumentSettings(theme=theme))
         ```
     """
@@ -924,7 +924,7 @@ class GeneratedPageOptions:
 
 
 @dataclass(slots=True)
-class PageNumberOptions:
+class PageNumberDefaults:
     """Grouped footer page-number defaults.
 
     Attributes:
@@ -937,9 +937,9 @@ class PageNumberOptions:
 
     Examples:
         ```python
-        from oodocs import Document, DocumentSettings, PageNumberOptions, Paragraph, Theme
+        from oodocs import Document, DocumentSettings, PageNumberDefaults, Paragraph, Theme
 
-        theme = Theme(PageNumberOptions(show_page_numbers=True))
+        theme = Theme(PageNumberDefaults(show_page_numbers=True))
         document = Document("Report", Paragraph("Body"), settings=DocumentSettings(theme=theme))
         ```
     """
@@ -953,7 +953,7 @@ class PageNumberOptions:
 
 
 @dataclass(slots=True)
-class TitleMatterOptions:
+class TitleMatterDefaults:
     """Grouped title, subtitle, author, and affiliation alignment defaults.
 
     Attributes:
@@ -965,9 +965,9 @@ class TitleMatterOptions:
 
     Examples:
         ```python
-        from oodocs import Document, DocumentSettings, Paragraph, Theme, TitleMatterOptions
+        from oodocs import Document, DocumentSettings, Paragraph, Theme, TitleMatterDefaults
 
-        theme = Theme(TitleMatterOptions(title_alignment="left"))
+        theme = Theme(TitleMatterDefaults(title_alignment="left"))
         document = Document("Report", Paragraph("Body"), settings=DocumentSettings(theme=theme))
         ```
     """
@@ -980,7 +980,7 @@ class TitleMatterOptions:
 
 
 @dataclass(slots=True)
-class BlockOptions:
+class BlockDefaults:
     """Grouped block-level document defaults for ``Theme``.
 
     Attributes:
@@ -1000,9 +1000,9 @@ class BlockOptions:
 
     Examples:
         ```python
-        from oodocs import BlockOptions, Document, DocumentSettings, HeadingNumbering, Paragraph, Section, Theme
+        from oodocs import BlockDefaults, Document, DocumentSettings, HeadingNumbering, Paragraph, Section, Theme
 
-        theme = Theme(BlockOptions(heading_numbering=HeadingNumbering(enabled=False)))
+        theme = Theme(BlockDefaults(heading_numbering=HeadingNumbering(enabled=False)))
         document = Document(
             "Report",
             Section("Unnumbered", Paragraph("Body", title="Scope")),
@@ -1033,26 +1033,26 @@ class Theme:
     """Document-wide renderer defaults.
 
     Args:
-        *options: Optional grouped option objects. Supported types are
-            ``TypographyOptions``, ``CaptionOptions``, ``CitationOptions``,
-            ``GeneratedPageOptions``, ``PageNumberOptions``,
-            ``TitleMatterOptions``, and ``BlockOptions``.
-        typography: Optional typography option group.
-        captions: Optional caption option group.
-        citation_options: Optional citation option group.
-        generated_pages: Optional generated-page option group.
-        page_numbers: Optional page-number option group.
-        title_matter: Optional title-matter option group.
-        blocks: Optional block option group.
+        *defaults: Optional grouped defaults objects. Supported types are
+            ``TypographyDefaults``, ``CaptionDefaults``, ``CitationDefaults``,
+            ``GeneratedPageDefaults``, ``PageNumberDefaults``,
+            ``TitleMatterDefaults``, and ``BlockDefaults``.
+        typography: Optional typography defaults group.
+        captions: Optional caption defaults group.
+        citations: Optional citation defaults group.
+        generated_pages: Optional generated-page defaults group.
+        page_numbers: Optional page-number defaults group.
+        title_matter: Optional title-matter defaults group.
+        blocks: Optional block defaults group.
 
     Attributes:
-        typography: Resolved typography option group.
-        captions: Resolved caption option group.
-        citation_options: Resolved citation option group.
-        generated_pages: Resolved generated-page option group.
-        page_numbers: Resolved page-number option group.
-        title_matter: Resolved title-matter option group.
-        blocks: Resolved block option group.
+        typography: Resolved typography defaults group.
+        captions: Resolved caption defaults group.
+        citations: Resolved citation defaults group.
+        generated_pages: Resolved generated-page defaults group.
+        page_numbers: Resolved page-number defaults group.
+        title_matter: Resolved title-matter defaults group.
+        blocks: Resolved block defaults group.
         page_background_color: Hex page background color.
         body_font_name: Default proportional font name.
         monospace_font_name: Default monospace font name.
@@ -1104,7 +1104,7 @@ class Theme:
         numbered_list_style: Default numbered list style.
 
     Raises:
-        TypeError: If a positional option is not a supported option group.
+        TypeError: If a positional defaults group is not supported.
         ValueError: If alignment, format, numbering, or color values are
             invalid.
 
@@ -1112,43 +1112,43 @@ class Theme:
         Configure typography and a direct paragraph default:
 
         ```python
-        from oodocs import Document, DocumentSettings, Paragraph, Theme, TypographyOptions
+        from oodocs import Document, DocumentSettings, Paragraph, Theme, TypographyDefaults
 
-        theme = Theme(TypographyOptions(body_font_name="Arial"), paragraph_alignment="left")
+        theme = Theme(TypographyDefaults(body_font_name="Arial"), paragraph_alignment="left")
         document = Document("Report", Paragraph("Body"), settings=DocumentSettings(theme=theme))
         ```
 
         Customize generated page titles and page numbers together:
 
         ```python
-        from oodocs import Document, DocumentSettings, GeneratedPageOptions, PageNumberOptions, ReferencesPage, Theme
+        from oodocs import Document, DocumentSettings, GeneratedPageDefaults, PageNumberDefaults, ReferencesPage, Theme
 
         theme = Theme(
-            GeneratedPageOptions(references_title="Bibliography"),
-            PageNumberOptions(show_page_numbers=True, page_number_template="Page {page}"),
+            GeneratedPageDefaults(references_title="Bibliography"),
+            PageNumberDefaults(show_page_numbers=True, page_number_template="Page {page}"),
         )
         document = Document("Paper", ReferencesPage(), settings=DocumentSettings(theme=theme))
         ```
 
     Notes:
-        Positional option groups are merged with keyword option groups, then
+        Positional defaults groups are merged with keyword defaults groups, then
         direct keyword overrides are applied last. This lets applications keep
         reusable presets while still overriding one or two fields per document.
         Direct keyword overrides use the field names listed in ``Attributes``.
 
     See Also:
-        ``TypographyOptions``, ``CaptionOptions``, ``CitationOptions``,
-        ``GeneratedPageOptions``, ``PageNumberOptions``, ``TitleMatterOptions``,
-        and ``BlockOptions`` for grouped configuration.
+        ``TypographyDefaults``, ``CaptionDefaults``, ``CitationDefaults``,
+        ``GeneratedPageDefaults``, ``PageNumberDefaults``, ``TitleMatterDefaults``,
+        and ``BlockDefaults`` for grouped configuration.
     """
 
-    typography: TypographyOptions
-    captions: CaptionOptions
-    citation_options: CitationOptions
-    generated_pages: GeneratedPageOptions
-    page_numbers: PageNumberOptions
-    title_matter: TitleMatterOptions
-    blocks: BlockOptions
+    typography: TypographyDefaults
+    captions: CaptionDefaults
+    citations: CitationDefaults
+    generated_pages: GeneratedPageDefaults
+    page_numbers: PageNumberDefaults
+    title_matter: TitleMatterDefaults
+    blocks: BlockDefaults
     page_background_color: str = "FFFFFF"
     body_font_name: str = "Times New Roman"
     monospace_font_name: str = "Courier New"
@@ -1203,14 +1203,14 @@ class Theme:
 
     def __init__(
         self,
-        *options: object,
-        typography: TypographyOptions | None = None,
-        captions: CaptionOptions | None = None,
-        citation_options: CitationOptions | None = None,
-        generated_pages: GeneratedPageOptions | None = None,
-        page_numbers: PageNumberOptions | None = None,
-        title_matter: TitleMatterOptions | None = None,
-        blocks: BlockOptions | None = None,
+        *defaults: object,
+        typography: TypographyDefaults | None = None,
+        captions: CaptionDefaults | None = None,
+        citations: CitationDefaults | None = None,
+        generated_pages: GeneratedPageDefaults | None = None,
+        page_numbers: PageNumberDefaults | None = None,
+        title_matter: TitleMatterDefaults | None = None,
+        blocks: BlockDefaults | None = None,
         page_background_color: str | object = _UNSET,
         body_font_name: str | object = _UNSET,
         monospace_font_name: str | object = _UNSET,
@@ -1261,66 +1261,66 @@ class Theme:
         bullet_list_style: ListStyle | object = _UNSET,
         numbered_list_style: ListStyle | object = _UNSET,
     ) -> None:
-        option_groups = {
-            TypographyOptions: None,
-            CaptionOptions: None,
-            CitationOptions: None,
-            GeneratedPageOptions: None,
-            PageNumberOptions: None,
-            TitleMatterOptions: None,
-            BlockOptions: None,
+        default_groups = {
+            TypographyDefaults: None,
+            CaptionDefaults: None,
+            CitationDefaults: None,
+            GeneratedPageDefaults: None,
+            PageNumberDefaults: None,
+            TitleMatterDefaults: None,
+            BlockDefaults: None,
         }
-        for option in options:
+        for defaults_group in defaults:
             matching_type = next(
                 (
-                    option_type
-                    for option_type in option_groups
-                    if isinstance(option, option_type)
+                    defaults_type
+                    for defaults_type in default_groups
+                    if isinstance(defaults_group, defaults_type)
                 ),
                 None,
             )
             if matching_type is None:
                 raise TypeError(
-                    "Theme positional options must be TypographyOptions, "
-                    "CaptionOptions, CitationOptions, GeneratedPageOptions, "
-                    "PageNumberOptions, TitleMatterOptions, or BlockOptions"
+                    "Theme positional defaults must be TypographyDefaults, "
+                    "CaptionDefaults, CitationDefaults, GeneratedPageDefaults, "
+                    "PageNumberDefaults, TitleMatterDefaults, or BlockDefaults"
                 )
-            option_groups[matching_type] = option
+            default_groups[matching_type] = defaults_group
 
-        keyword_groups = {
-            TypographyOptions: typography,
-            CaptionOptions: captions,
-            CitationOptions: citation_options,
-            GeneratedPageOptions: generated_pages,
-            PageNumberOptions: page_numbers,
-            TitleMatterOptions: title_matter,
-            BlockOptions: blocks,
+        keyword_defaults = {
+            TypographyDefaults: typography,
+            CaptionDefaults: captions,
+            CitationDefaults: citations,
+            GeneratedPageDefaults: generated_pages,
+            PageNumberDefaults: page_numbers,
+            TitleMatterDefaults: title_matter,
+            BlockDefaults: blocks,
         }
-        option_groups.update(
+        default_groups.update(
             {
-                option_type: option
-                for option_type, option in keyword_groups.items()
-                if option is not None
+                defaults_type: defaults_group
+                for defaults_type, defaults_group in keyword_defaults.items()
+                if defaults_group is not None
             }
         )
 
-        self.typography = option_groups[TypographyOptions] or TypographyOptions()
-        self.captions = option_groups[CaptionOptions] or CaptionOptions()
-        self.citation_options = option_groups[CitationOptions] or CitationOptions()
-        self.generated_pages = option_groups[GeneratedPageOptions] or GeneratedPageOptions()
-        self.page_numbers = option_groups[PageNumberOptions] or PageNumberOptions()
-        self.title_matter = option_groups[TitleMatterOptions] or TitleMatterOptions()
-        self.blocks = option_groups[BlockOptions] or BlockOptions()
+        self.typography = default_groups[TypographyDefaults] or TypographyDefaults()
+        self.captions = default_groups[CaptionDefaults] or CaptionDefaults()
+        self.citations = default_groups[CitationDefaults] or CitationDefaults()
+        self.generated_pages = default_groups[GeneratedPageDefaults] or GeneratedPageDefaults()
+        self.page_numbers = default_groups[PageNumberDefaults] or PageNumberDefaults()
+        self.title_matter = default_groups[TitleMatterDefaults] or TitleMatterDefaults()
+        self.blocks = default_groups[BlockDefaults] or BlockDefaults()
 
         grouped_values: dict[str, object] = {}
         for group_type, group in (
-            (BlockOptions, self.blocks),
-            (TypographyOptions, self.typography),
-            (CaptionOptions, self.captions),
-            (CitationOptions, self.citation_options),
-            (GeneratedPageOptions, self.generated_pages),
-            (PageNumberOptions, self.page_numbers),
-            (TitleMatterOptions, self.title_matter),
+            (BlockDefaults, self.blocks),
+            (TypographyDefaults, self.typography),
+            (CaptionDefaults, self.captions),
+            (CitationDefaults, self.citations),
+            (GeneratedPageDefaults, self.generated_pages),
+            (PageNumberDefaults, self.page_numbers),
+            (TitleMatterDefaults, self.title_matter),
         ):
             grouped_values.update(
                 {
@@ -1391,7 +1391,7 @@ class Theme:
             setattr(self, name, value)
 
         self.__post_init__()
-        self._sync_option_groups()
+        self._sync_default_groups()
 
     def __post_init__(self) -> None:
         self.page_background_color = normalize_color(self.page_background_color) or "FFFFFF"
@@ -1448,8 +1448,8 @@ class Theme:
             if value not in {"left", "center", "right", "justify"}:
                 raise ValueError(f"Unsupported alignment for {field_name}: {value!r}")
 
-    def _sync_option_groups(self) -> None:
-        self.typography = TypographyOptions(
+    def _sync_default_groups(self) -> None:
+        self.typography = TypographyDefaults(
             body_font_name=self.body_font_name,
             monospace_font_name=self.monospace_font_name,
             title_font_size=self.title_font_size,
@@ -1457,7 +1457,7 @@ class Theme:
             heading_sizes=self.heading_sizes,
             caption_font_size=self.caption_font_size,
         )
-        self.captions = CaptionOptions(
+        self.captions = CaptionDefaults(
             caption_alignment=self.caption_alignment,
             table_caption_position=self.table_caption_position,
             figure_caption_position=self.figure_caption_position,
@@ -1468,11 +1468,11 @@ class Theme:
             table_reference_label=self.table_reference_label,
             figure_reference_label=self.figure_reference_label,
         )
-        self.citation_options = CitationOptions(
+        self.citations = CitationDefaults(
             citation_style=self.citation_style,
             reference_style=self.reference_style,
         )
-        self.generated_pages = GeneratedPageOptions(
+        self.generated_pages = GeneratedPageDefaults(
             list_of_tables_title=self.list_of_tables_title,
             list_of_figures_title=self.list_of_figures_title,
             comments_title=self.comments_title,
@@ -1482,7 +1482,7 @@ class Theme:
             generated_section_level=self.generated_section_level,
             generated_page_breaks=self.generated_page_breaks,
         )
-        self.page_numbers = PageNumberOptions(
+        self.page_numbers = PageNumberDefaults(
             show_page_numbers=self.show_page_numbers,
             page_number_alignment=self.page_number_alignment,
             page_number_template=self.page_number_template,
@@ -1490,14 +1490,14 @@ class Theme:
             main_matter_counter_format=self.main_matter_counter_format,
             page_number_font_size=self.page_number_font_size,
         )
-        self.title_matter = TitleMatterOptions(
+        self.title_matter = TitleMatterDefaults(
             title_alignment=self.title_alignment,
             subtitle_alignment=self.subtitle_alignment,
             author_alignment=self.author_alignment,
             affiliation_alignment=self.affiliation_alignment,
             author_detail_alignment=self.author_detail_alignment,
         )
-        self.blocks = BlockOptions(
+        self.blocks = BlockDefaults(
             page_background_color=self.page_background_color,
             paragraph_alignment=self.paragraph_alignment,
             table_alignment=self.table_alignment,
@@ -1774,19 +1774,19 @@ class Theme:
 
 
 __all__ = [
-    "BlockOptions",
+    "BlockDefaults",
     "BoxStyle",
-    "CaptionOptions",
-    "CitationOptions",
-    "GeneratedPageOptions",
+    "CaptionDefaults",
+    "CitationDefaults",
+    "GeneratedPageDefaults",
     "HeadingNumbering",
     "ListStyle",
-    "PageNumberOptions",
+    "PageNumberDefaults",
     "ParagraphStyle",
     "ParagraphTitleStyle",
     "TableStyle",
     "TextStyle",
-    "TitleMatterOptions",
-    "TypographyOptions",
+    "TitleMatterDefaults",
+    "TypographyDefaults",
     "Theme",
 ]

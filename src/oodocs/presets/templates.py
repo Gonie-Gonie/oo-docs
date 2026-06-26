@@ -13,12 +13,12 @@ from oodocs.components.people import AuthorInput, AuthorLayout
 from oodocs.components.references import CitationLibrary, CitationSource
 from oodocs.document import Document
 from oodocs.layout.theme import (
-    BlockOptions,
-    CaptionOptions,
-    GeneratedPageOptions,
-    PageNumberOptions,
-    TitleMatterOptions,
-    TypographyOptions,
+    BlockDefaults,
+    CaptionDefaults,
+    GeneratedPageDefaults,
+    PageNumberDefaults,
+    TitleMatterDefaults,
+    TypographyDefaults,
     Theme,
 )
 from oodocs.settings import DocumentSettings, PageMargins, PageSize
@@ -33,34 +33,34 @@ def _default_journal_theme() -> Theme:
     """Return manuscript defaults suitable for a conventional journal draft."""
 
     return Theme(
-        TypographyOptions(
+        TypographyDefaults(
             body_font_name="Times New Roman",
             body_font_size=11.0,
             title_font_size=16.0,
             heading_sizes=(13.0, 12.0, 11.0, 11.0),
             caption_font_size=10.0,
         ),
-        CaptionOptions(
+        CaptionDefaults(
             caption_alignment="left",
             table_caption_position="above",
             figure_caption_position="below",
         ),
-        GeneratedPageOptions(
+        GeneratedPageDefaults(
             generated_section_level=1,
             generated_page_breaks=False,
         ),
-        PageNumberOptions(
+        PageNumberDefaults(
             show_page_numbers=True,
             page_number_alignment="center",
         ),
-        TitleMatterOptions(
+        TitleMatterDefaults(
             title_alignment="center",
             subtitle_alignment="center",
             author_alignment="center",
             affiliation_alignment="center",
             author_detail_alignment="center",
         ),
-        BlockOptions(
+        BlockDefaults(
             paragraph_alignment="justify",
             table_alignment="center",
             figure_alignment="center",

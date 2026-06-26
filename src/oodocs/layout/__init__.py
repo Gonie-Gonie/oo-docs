@@ -8,7 +8,7 @@ from importlib import import_module
 _EXPORTS = {
     "BoxStyle": "oodocs.layout.theme",
     "CaptionEntry": "oodocs.layout.indexing",
-    "CitationOptions": "oodocs.layout.theme",
+    "CitationDefaults": "oodocs.layout.theme",
     "CitationReferenceEntry": "oodocs.layout.indexing",
     "CommentReferenceEntry": "oodocs.layout.indexing",
     "FootnoteReferenceEntry": "oodocs.layout.indexing",

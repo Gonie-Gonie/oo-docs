@@ -40,11 +40,11 @@
           "qualname": "oodocs.components.blocks.Axiom"
         },
         {
-          "category": "theme",
+          "category": "style",
           "kind": "class",
           "module": "oodocs.layout.theme",
-          "name": "BlockOptions",
-          "qualname": "oodocs.layout.theme.BlockOptions"
+          "name": "BlockDefaults",
+          "qualname": "oodocs.layout.theme.BlockDefaults"
         },
         {
           "category": "block",
@@ -68,18 +68,18 @@
           "qualname": "oodocs.components.blocks.BulletList"
         },
         {
-          "category": "theme",
+          "category": "style",
           "kind": "class",
           "module": "oodocs.layout.theme",
-          "name": "CaptionOptions",
-          "qualname": "oodocs.layout.theme.CaptionOptions"
+          "name": "CaptionDefaults",
+          "qualname": "oodocs.layout.theme.CaptionDefaults"
         },
         {
-          "category": "theme",
+          "category": "style",
           "kind": "class",
           "module": "oodocs.layout.theme",
-          "name": "CitationOptions",
-          "qualname": "oodocs.layout.theme.CitationOptions"
+          "name": "CitationDefaults",
+          "qualname": "oodocs.layout.theme.CitationDefaults"
         },
         {
           "category": "document-core",
@@ -229,11 +229,11 @@
           "qualname": "oodocs.components.inline.Footnote"
         },
         {
-          "category": "theme",
+          "category": "style",
           "kind": "class",
           "module": "oodocs.layout.theme",
-          "name": "GeneratedPageOptions",
-          "qualname": "oodocs.layout.theme.GeneratedPageOptions"
+          "name": "GeneratedPageDefaults",
+          "qualname": "oodocs.layout.theme.GeneratedPageDefaults"
         },
         {
           "category": "style",
@@ -369,11 +369,11 @@
           "qualname": "typing.Literal"
         },
         {
-          "category": "theme",
+          "category": "style",
           "kind": "class",
           "module": "oodocs.layout.theme",
-          "name": "PageNumberOptions",
-          "qualname": "oodocs.layout.theme.PageNumberOptions"
+          "name": "PageNumberDefaults",
+          "qualname": "oodocs.layout.theme.PageNumberDefaults"
         },
         {
           "category": "settings",
@@ -572,11 +572,11 @@
           "qualname": "oodocs.components.blocks.Theorem"
         },
         {
-          "category": "theme",
+          "category": "style",
           "kind": "class",
           "module": "oodocs.layout.theme",
-          "name": "TitleMatterOptions",
-          "qualname": "oodocs.layout.theme.TitleMatterOptions"
+          "name": "TitleMatterDefaults",
+          "qualname": "oodocs.layout.theme.TitleMatterDefaults"
         },
         {
           "category": "theme",
@@ -593,11 +593,11 @@
           "qualname": "oodocs.components.generated.TocLevelStyle"
         },
         {
-          "category": "theme",
+          "category": "style",
           "kind": "class",
           "module": "oodocs.layout.theme",
-          "name": "TypographyOptions",
-          "qualname": "oodocs.layout.theme.TypographyOptions"
+          "name": "TypographyDefaults",
+          "qualname": "oodocs.layout.theme.TypographyDefaults"
         },
         {
           "category": "error",
