@@ -3240,9 +3240,9 @@ class DocxRenderer:
             return
 
         if has_front_matter:
-            self._set_section_page_number_format(
+            self._set_section_page_counter_format(
                 sections[0],
-                theme.front_matter_page_number_format,
+                theme.front_matter_counter_format,
                 start=1,
             )
             self._add_page_number_footer(
@@ -3252,9 +3252,9 @@ class DocxRenderer:
             )
             if has_main_matter and len(sections) > 1:
                 sections[1].footer.is_linked_to_previous = False
-                self._set_section_page_number_format(
+                self._set_section_page_counter_format(
                     sections[1],
-                    theme.main_matter_page_number_format,
+                    theme.main_matter_counter_format,
                     start=1,
                 )
                 self._add_page_number_footer(
@@ -3264,9 +3264,9 @@ class DocxRenderer:
                 )
             return
 
-        self._set_section_page_number_format(
+        self._set_section_page_counter_format(
             sections[0],
-            theme.main_matter_page_number_format,
+            theme.main_matter_counter_format,
             start=1,
         )
         self._add_page_number_footer(
@@ -3289,7 +3289,7 @@ class DocxRenderer:
         for child in list(paragraph._p):
             if child.tag != qn("w:pPr"):
                 paragraph._p.remove(child)
-        parts = theme.page_number_format.split("{page}")
+        parts = theme.page_number_template.split("{page}")
         for index, part in enumerate(parts):
             if part:
                 run = paragraph.add_run(part)
@@ -3301,10 +3301,10 @@ class DocxRenderer:
             if index < len(parts) - 1:
                 self._append_page_number_field(paragraph)
 
-    def _set_section_page_number_format(
+    def _set_section_page_counter_format(
         self,
         section: object,
-        page_number_format: str,
+        page_counter_format: str,
         *,
         start: int = 1,
     ) -> None:
@@ -3322,7 +3322,7 @@ class DocxRenderer:
             sect_pr.append(page_number_type)
         page_number_type.set(
             qn("w:fmt"),
-            format_map.get(page_number_format, "decimal"),
+            format_map.get(page_counter_format, "decimal"),
         )
         page_number_type.set(qn("w:start"), str(start))
 

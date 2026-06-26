@@ -412,7 +412,7 @@ def build_journal_paper_document() -> Document:
             ],
             theme=Theme(
                 show_page_numbers=True,
-                page_number_format="{page}",
+                page_number_template="{page}",
                 citation_style="apa",
                 reference_style="apa",
             ),

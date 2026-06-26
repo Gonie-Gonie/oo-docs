@@ -930,9 +930,9 @@ class PageNumberOptions:
     Attributes:
         show_page_numbers: Whether renderers should emit footer page numbers.
         page_number_alignment: Footer page-number alignment.
-        page_number_format: Main page number format string.
-        front_matter_page_number_format: Front-matter numbering style.
-        main_matter_page_number_format: Main-matter numbering style.
+        page_number_template: Footer text template containing ``{page}``.
+        front_matter_counter_format: Front-matter page counter style.
+        main_matter_counter_format: Main-matter page counter style.
         page_number_font_size: Footer page-number font size in points.
 
     Examples:
@@ -946,9 +946,9 @@ class PageNumberOptions:
 
     show_page_numbers: bool = False
     page_number_alignment: str = "center"
-    page_number_format: str = "{page}"
-    front_matter_page_number_format: str = "lower-roman"
-    main_matter_page_number_format: str = "decimal"
+    page_number_template: str = "{page}"
+    front_matter_counter_format: str = "lower-roman"
+    main_matter_counter_format: str = "decimal"
     page_number_font_size: float = 9.0
 
 
@@ -990,7 +990,7 @@ class BlockOptions:
         figure_alignment: Default figure alignment.
         box_alignment: Default box alignment.
         part_label: Label used for numbered part pages.
-        part_number_format: Counter format used for parts.
+        part_counter_format: Counter format used for parts.
         footnote_placement: Native or generated-page footnote placement.
         auto_footnotes_page: Whether missing footnote pages are auto-rendered.
         paragraph_title_style: Default style for paragraph titles.
@@ -1017,7 +1017,7 @@ class BlockOptions:
     figure_alignment: str = "center"
     box_alignment: str = "center"
     part_label: str = "Part"
-    part_number_format: str = "upper-roman"
+    part_counter_format: str = "upper-roman"
     footnote_placement: str = "page"
     auto_footnotes_page: bool = True
     paragraph_title_style: ParagraphTitleStyle = field(default_factory=ParagraphTitleStyle)
@@ -1071,7 +1071,7 @@ class Theme:
         table_label: Default table label text.
         figure_label: Default figure label text.
         part_label: Label used for numbered part pages.
-        part_number_format: Counter format used for parts.
+        part_counter_format: Counter format used for parts.
         table_caption_label: Optional table caption label override.
         figure_caption_label: Optional figure caption label override.
         table_reference_label: Optional table reference label override.
@@ -1090,9 +1090,9 @@ class Theme:
         auto_footnotes_page: Whether missing footnote pages are auto-rendered.
         show_page_numbers: Whether renderers should emit footer page numbers.
         page_number_alignment: Footer page-number alignment.
-        page_number_format: Main page number format string.
-        front_matter_page_number_format: Front-matter numbering style.
-        main_matter_page_number_format: Main-matter numbering style.
+        page_number_template: Footer text template containing ``{page}``.
+        front_matter_counter_format: Front-matter page counter style.
+        main_matter_counter_format: Main-matter page counter style.
         page_number_font_size: Footer page-number font size in points.
         title_alignment: Title alignment.
         subtitle_alignment: Subtitle alignment.
@@ -1125,7 +1125,7 @@ class Theme:
 
         theme = Theme(
             GeneratedPageOptions(references_title="Bibliography"),
-            PageNumberOptions(show_page_numbers=True, page_number_format="Page {page}"),
+            PageNumberOptions(show_page_numbers=True, page_number_template="Page {page}"),
         )
         document = Document("Paper", ReferencesPage(), settings=DocumentSettings(theme=theme))
         ```
@@ -1167,7 +1167,7 @@ class Theme:
     table_label: str = "Table"
     figure_label: str = "Figure"
     part_label: str = "Part"
-    part_number_format: str = "upper-roman"
+    part_counter_format: str = "upper-roman"
     table_caption_label: str | None = None
     figure_caption_label: str | None = None
     table_reference_label: str | None = None
@@ -1186,9 +1186,9 @@ class Theme:
     auto_footnotes_page: bool = True
     show_page_numbers: bool = False
     page_number_alignment: str = "center"
-    page_number_format: str = "{page}"
-    front_matter_page_number_format: str = "lower-roman"
-    main_matter_page_number_format: str = "decimal"
+    page_number_template: str = "{page}"
+    front_matter_counter_format: str = "lower-roman"
+    main_matter_counter_format: str = "decimal"
     page_number_font_size: float = 9.0
     title_alignment: str = "center"
     subtitle_alignment: str = "center"
@@ -1229,7 +1229,7 @@ class Theme:
         table_label: str | object = _UNSET,
         figure_label: str | object = _UNSET,
         part_label: str | object = _UNSET,
-        part_number_format: str | object = _UNSET,
+        part_counter_format: str | object = _UNSET,
         table_caption_label: str | None | object = _UNSET,
         figure_caption_label: str | None | object = _UNSET,
         table_reference_label: str | None | object = _UNSET,
@@ -1248,9 +1248,9 @@ class Theme:
         auto_footnotes_page: bool | object = _UNSET,
         show_page_numbers: bool | object = _UNSET,
         page_number_alignment: str | object = _UNSET,
-        page_number_format: str | object = _UNSET,
-        front_matter_page_number_format: str | object = _UNSET,
-        main_matter_page_number_format: str | object = _UNSET,
+        page_number_template: str | object = _UNSET,
+        front_matter_counter_format: str | object = _UNSET,
+        main_matter_counter_format: str | object = _UNSET,
         page_number_font_size: float | object = _UNSET,
         title_alignment: str | object = _UNSET,
         subtitle_alignment: str | object = _UNSET,
@@ -1348,7 +1348,7 @@ class Theme:
             "table_label": table_label,
             "figure_label": figure_label,
             "part_label": part_label,
-            "part_number_format": part_number_format,
+            "part_counter_format": part_counter_format,
             "table_caption_label": table_caption_label,
             "figure_caption_label": figure_caption_label,
             "table_reference_label": table_reference_label,
@@ -1367,9 +1367,9 @@ class Theme:
             "auto_footnotes_page": auto_footnotes_page,
             "show_page_numbers": show_page_numbers,
             "page_number_alignment": page_number_alignment,
-            "page_number_format": page_number_format,
-            "front_matter_page_number_format": front_matter_page_number_format,
-            "main_matter_page_number_format": main_matter_page_number_format,
+            "page_number_template": page_number_template,
+            "front_matter_counter_format": front_matter_counter_format,
+            "main_matter_counter_format": main_matter_counter_format,
             "page_number_font_size": page_number_font_size,
             "title_alignment": title_alignment,
             "subtitle_alignment": subtitle_alignment,
@@ -1428,15 +1428,15 @@ class Theme:
             raise ValueError(
                 f"Unsupported page number alignment: {self.page_number_alignment!r}"
             )
-        self.front_matter_page_number_format = normalize_counter_format(
-            self.front_matter_page_number_format
+        self.front_matter_counter_format = normalize_counter_format(
+            self.front_matter_counter_format
         )
-        self.main_matter_page_number_format = normalize_counter_format(
-            self.main_matter_page_number_format
+        self.main_matter_counter_format = normalize_counter_format(
+            self.main_matter_counter_format
         )
-        self.part_number_format = normalize_counter_format(self.part_number_format)
-        if "{page}" not in self.page_number_format:
-            raise ValueError("page_number_format must contain a '{page}' placeholder")
+        self.part_counter_format = normalize_counter_format(self.part_counter_format)
+        if "{page}" not in self.page_number_template:
+            raise ValueError("page_number_template must contain a '{page}' placeholder")
         for field_name in (
             "title_alignment",
             "subtitle_alignment",
@@ -1485,9 +1485,9 @@ class Theme:
         self.page_numbers = PageNumberOptions(
             show_page_numbers=self.show_page_numbers,
             page_number_alignment=self.page_number_alignment,
-            page_number_format=self.page_number_format,
-            front_matter_page_number_format=self.front_matter_page_number_format,
-            main_matter_page_number_format=self.main_matter_page_number_format,
+            page_number_template=self.page_number_template,
+            front_matter_counter_format=self.front_matter_counter_format,
+            main_matter_counter_format=self.main_matter_counter_format,
             page_number_font_size=self.page_number_font_size,
         )
         self.title_matter = TitleMatterOptions(
@@ -1504,7 +1504,7 @@ class Theme:
             figure_alignment=self.figure_alignment,
             box_alignment=self.box_alignment,
             part_label=self.part_label,
-            part_number_format=self.part_number_format,
+            part_counter_format=self.part_counter_format,
             footnote_placement=self.footnote_placement,
             auto_footnotes_page=self.auto_footnotes_page,
             paragraph_title_style=self.paragraph_title_style,
@@ -1703,18 +1703,18 @@ class Theme:
 
         Examples:
             ```python
-            theme = Theme(page_number_format="Page {page}")
+            theme = Theme(page_number_template="Page {page}")
             assert theme.format_page_number(3) == "Page 3"
             ```
         """
 
         counter_format = (
-            self.front_matter_page_number_format
+            self.front_matter_counter_format
             if front_matter
-            else self.main_matter_page_number_format
+            else self.main_matter_counter_format
         )
         page_label = format_counter_value(page_number, counter_format)
-        return self.page_number_format.format(page=page_label)
+        return self.page_number_template.format(page=page_label)
 
     def format_heading_label(self, counters: Sequence[int]) -> str | None:
         """Render a heading numbering label for nested section counters.
@@ -1752,7 +1752,7 @@ class Theme:
 
         if not self.heading_numbering.enabled:
             return None
-        marker = format_counter_value(value, self.part_number_format)
+        marker = format_counter_value(value, self.part_counter_format)
         return f"{self.part_label} {marker}".strip()
 
     def list_style(self, *, ordered: bool) -> ListStyle:

@@ -113,6 +113,32 @@ def test_heading_numbering_uses_level_counter_format_field_name() -> None:
     assert "level_counter_formats" in field_names
 
 
+def test_page_and_part_numbering_use_template_and_counter_field_names() -> None:
+    page_number_fields = {field.name for field in fields(oodocs.PageNumberOptions)}
+    block_fields = {field.name for field in fields(oodocs.BlockOptions)}
+    theme_fields = {field.name for field in fields(oodocs.Theme)}
+
+    forbidden_page_fields = {
+        "page_number_format",
+        "front_matter_page_number_format",
+        "main_matter_page_number_format",
+    }
+    expected_page_fields = {
+        "page_number_template",
+        "front_matter_counter_format",
+        "main_matter_counter_format",
+    }
+
+    assert forbidden_page_fields.isdisjoint(page_number_fields)
+    assert expected_page_fields <= page_number_fields
+    assert "part_number_format" not in block_fields
+    assert "part_counter_format" in block_fields
+    assert forbidden_page_fields.isdisjoint(theme_fields)
+    assert expected_page_fields <= theme_fields
+    assert "part_number_format" not in theme_fields
+    assert "part_counter_format" in theme_fields
+
+
 def test_apidoc_raw_value_helpers_use_as_prefix() -> None:
     forbidden_by_class = {
         apidoc.ApiParameter: {"to_row", "to_table_cell_values"},

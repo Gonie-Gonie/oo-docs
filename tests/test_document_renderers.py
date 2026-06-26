@@ -439,17 +439,17 @@ def test_method_style_inline_actions_create_renderable_fragments() -> None:
 
 
 def test_theme_validates_page_number_configuration() -> None:
-    theme = Theme(show_page_numbers=True, page_number_format="Page {page}", page_number_alignment="right")
+    theme = Theme(show_page_numbers=True, page_number_template="Page {page}", page_number_alignment="right")
 
     assert theme.format_page_number(3) == "Page 3"
     assert theme.format_page_number(3, front_matter=True) == "Page iii"
 
     try:
-        Theme(page_number_format="Page")
+        Theme(page_number_template="Page")
     except ValueError as exc:
         assert "{page}" in str(exc)
     else:
-        raise AssertionError("Expected page_number_format validation to fail")
+        raise AssertionError("Expected page_number_template validation to fail")
 
 
 def test_theme_accepts_grouped_option_objects() -> None:
@@ -458,7 +458,7 @@ def test_theme_accepts_grouped_option_objects() -> None:
         CaptionOptions(figure_label="Fig.", table_caption_position="below"),
         CitationOptions(citation_style="apa", reference_style="apa"),
         GeneratedPageOptions(contents_title="Outline"),
-        PageNumberOptions(show_page_numbers=True, page_number_format="p. {page}"),
+        PageNumberOptions(show_page_numbers=True, page_number_template="p. {page}"),
         TitleMatterOptions(title_alignment="left"),
         BlockOptions(
             paragraph_alignment="left",
@@ -3009,7 +3009,7 @@ def test_document_renders_to_docx_and_pdf(tmp_path: Path) -> None:
             summary="Renderer integration test",
             theme=Theme(
                 show_page_numbers=True,
-                page_number_format="Page {page}",
+                page_number_template="Page {page}",
                 page_number_alignment="center",
                 footnote_placement="document",
                 heading_numbering=HeadingNumbering(),
