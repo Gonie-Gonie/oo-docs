@@ -46,11 +46,11 @@ def test_apidoc_leaf_metadata_helpers_compose_into_oodocs_blocks() -> None:
     table = Table(
         ["Kind", "Value", "Detail"],
         [
-            ["Return", *returns.to_row(("type", "description"))],
-            ["Raises", *exception.to_row()],
-            ["Example", *example.to_row(("language", "caption"))],
-            ["See also", *see_also.to_row(("label", "target"))],
-            ["Renderer", *note.to_row(("output_format", "message"))],
+            ["Return", *returns.as_return_row(("type", "description"))],
+            ["Raises", *exception.as_exception_row()],
+            ["Example", *example.as_example_row(("language", "caption"))],
+            ["See also", *see_also.as_see_also_row(("label", "target"))],
+            ["Renderer", *note.as_output_note_row(("output_format", "message"))],
         ],
     )
     document = Document(
@@ -67,8 +67,8 @@ def test_apidoc_leaf_metadata_helpers_compose_into_oodocs_blocks() -> None:
         ),
     )
 
-    assert returns.to_row(("type", "documented")) == ["Sequence[str]", "yes"]
-    assert example.to_row(("syntax_ok", "doctest_ok")) == ["yes", ""]
+    assert returns.as_return_row(("type", "documented")) == ["Sequence[str]", "yes"]
+    assert example.as_example_row(("syntax_ok", "doctest_ok")) == ["yes", ""]
     assert "Rendered paths." in returns.to_paragraph().plain_text()
     assert "ValueError" in exception.to_paragraph().plain_text()
     assert "Minimal use" in example.to_paragraph().plain_text()

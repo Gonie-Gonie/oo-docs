@@ -200,7 +200,7 @@ class ApiParameter:
             return ""
         return str(self.annotation).replace("typing.", "")
 
-    def to_table_cell_values(
+    def as_table_cells(
         self,
         columns: Sequence[str] = ("name", "type", "default", "description"),
     ) -> list[object]:
@@ -222,7 +222,7 @@ class ApiParameter:
             parameter = ApiParameter("path", "str", description="Input path.")
             table = Table(
                 ["Name", "Type", "Description"],
-                [parameter.to_table_cell_values(("name", "type", "description"))],
+                [parameter.as_table_cells(("name", "type", "description"))],
             )
             ```
         """
@@ -237,7 +237,7 @@ class ApiParameter:
         }
         return [values[column] for column in columns]
 
-    def to_row(
+    def as_parameter_row(
         self,
         columns: Sequence[str] = ("name", "type", "default", "description"),
     ) -> list[object]:
@@ -256,11 +256,11 @@ class ApiParameter:
             from oodocs.apidoc import ApiParameter
 
             parameter = ApiParameter("verbose", "bool", default="False")
-            row = parameter.to_row(("name", "default", "required"))
+            row = parameter.as_parameter_row(("name", "default", "required"))
             ```
         """
 
-        return self.to_table_cell_values(columns)
+        return self.as_table_cells(columns)
 
     def to_paragraph(self):
         """Return a compact paragraph describing this parameter.
@@ -364,7 +364,7 @@ class ApiReturn:
             documented=bool(data.get("documented", False)),
         )
 
-    def to_row(
+    def as_return_row(
         self,
         columns: Sequence[str] = ("type", "description", "documented"),
     ) -> list[object]:
@@ -385,7 +385,7 @@ class ApiReturn:
             from oodocs.apidoc import ApiReturn
 
             returns = ApiReturn("bool", "Whether validation passed.", documented=True)
-            table = Table(["Type", "Description"], [returns.to_row(("type", "description"))])
+            table = Table(["Type", "Description"], [returns.as_return_row(("type", "description"))])
             ```
         """
 
@@ -500,7 +500,7 @@ class ApiException:
             description=_optional_str(data.get("description")),
         )
 
-    def to_row(
+    def as_exception_row(
         self,
         columns: Sequence[str] = ("exception", "description"),
     ) -> list[object]:
@@ -521,7 +521,7 @@ class ApiException:
             from oodocs.apidoc import ApiException
 
             item = ApiException("ValueError", "If the path is empty.")
-            table = Table(["Exception", "Description"], [item.to_row()])
+            table = Table(["Exception", "Description"], [item.as_exception_row()])
             ```
         """
 
@@ -670,7 +670,7 @@ class ApiExample:
 
         return CodeBlock(_xml_safe_text(self.code), language=self.language or "text")
 
-    def to_row(
+    def as_example_row(
         self,
         columns: Sequence[str] = ("language", "caption", "source", "syntax_ok", "doctest_ok"),
     ) -> list[object]:
@@ -692,7 +692,7 @@ class ApiExample:
             from oodocs.apidoc import ApiExample
 
             example = ApiExample("print('ok')", syntax_ok=True)
-            table = Table(["Language", "Syntax"], [example.to_row(("language", "syntax_ok"))])
+            table = Table(["Language", "Syntax"], [example.as_example_row(("language", "syntax_ok"))])
             ```
         """
 
@@ -819,7 +819,7 @@ class ApiSeeAlso:
             kind=_optional_str(data.get("kind")),
         )
 
-    def to_row(
+    def as_see_also_row(
         self,
         columns: Sequence[str] = ("label", "target", "kind", "description"),
     ) -> list[object]:
@@ -840,7 +840,7 @@ class ApiSeeAlso:
             from oodocs.apidoc import ApiSeeAlso
 
             related = ApiSeeAlso("save", target="mypkg.save", kind="function")
-            table = Table(["Label", "Target", "Kind"], [related.to_row(("label", "target", "kind"))])
+            table = Table(["Label", "Target", "Kind"], [related.as_see_also_row(("label", "target", "kind"))])
             ```
         """
 
@@ -962,7 +962,7 @@ class ApiRendererNote:
             severity=str(data.get("severity", "info")),  # type: ignore[arg-type]
         )
 
-    def to_row(
+    def as_output_note_row(
         self,
         columns: Sequence[str] = ("output_format", "severity", "message"),
     ) -> list[object]:
@@ -983,7 +983,7 @@ class ApiRendererNote:
             from oodocs.apidoc import ApiRendererNote
 
             note = ApiRendererNote("pdf", "Long signatures may wrap.", "warning")
-            table = Table(["Output format", "Severity", "Message"], [note.to_row()])
+            table = Table(["Output format", "Severity", "Message"], [note.as_output_note_row()])
             ```
         """
 
@@ -1119,7 +1119,7 @@ class ApiDocIssue:
             line_number=_optional_int(data.get("line_number")),
         )
 
-    def to_row(self) -> list[object]:
+    def as_issue_row(self) -> list[object]:
         """Return this issue as a table row.
 
         Returns:
@@ -1135,7 +1135,7 @@ class ApiDocIssue:
             issue = ApiDocIssue("warning", "missing-docstring", "No docstring.")
             table = Table(
                 ["Severity", "Code", "Object", "Module", "Location", "Message"],
-                [issue.to_row()],
+                [issue.as_issue_row()],
             )
             ```
         """
@@ -1603,7 +1603,7 @@ class ApiObject:
                 return member
         return None
 
-    def to_summary_row(
+    def as_summary_row(
         self,
         *,
         include_module: bool = True,
@@ -1628,7 +1628,7 @@ class ApiObject:
 
             api = collect_api(".")
             obj = api.functions()[0]
-            table = Table(["Kind", "Module", "Name", "Summary"], [obj.to_summary_row()])
+            table = Table(["Kind", "Module", "Name", "Summary"], [obj.as_summary_row()])
             ```
         """
 
@@ -2030,7 +2030,7 @@ class ApiObject:
 
         return api_object_to_box(self, profile=profile)
 
-    def to_index_row(self) -> list[object]:
+    def as_index_row(self) -> list[object]:
         """Return a row suitable for API index tables.
 
         Returns:
@@ -2044,7 +2044,7 @@ class ApiObject:
             from oodocs.apidoc import collect_api
 
             api = collect_api(".")
-            rows = [obj.to_index_row() for obj in api.public_objects()]
+            rows = [obj.as_index_row() for obj in api.public_objects()]
             table = Table(["Kind", "Name", "Module", "Location", "Summary"], rows)
             ```
         """
@@ -2056,7 +2056,7 @@ class ApiObject:
                 location = f"{location}:{self.line_number}"
         return [self.kind, self.qualname, self.module, location, self.summary_text()]
 
-    def to_doc_issue_rows(self) -> list[list[object]]:
+    def as_issue_rows(self) -> list[list[object]]:
         """Return issue rows stored on this object metadata.
 
         Returns:
@@ -2071,58 +2071,15 @@ class ApiObject:
 
             api = collect_api(".", docstring_style="google")
             obj = api.functions()[0]
-            issue_rows = obj.to_doc_issue_rows()
+            issue_rows = obj.as_issue_rows()
             ```
         """
 
         rows: list[list[object]] = []
         for item in self.metadata.get("issues", []):
             if isinstance(item, dict):
-                rows.append(ApiDocIssue.from_dict(item).to_row())
+                rows.append(ApiDocIssue.from_dict(item).as_issue_row())
         return rows
-
-    def to_issue_rows(self) -> list[list[object]]:
-        """Return object-local diagnostics as stable issue table rows.
-
-        This is the public, checklist-aligned alias for
-        ``to_doc_issue_rows()``. It preserves the same row shape used by
-        ``ApiPackage.to_issue_table(...)`` and coverage CSV sidecars.
-
-        Returns:
-            Rows converted from parser or collection diagnostics stored in this
-            object's metadata.
-
-        Examples:
-            Insert object-local parser issues into a custom evidence document:
-
-            ```python
-            from oodocs import Chapter, Document, Table
-            from oodocs.apidoc import collect_api
-
-            api = collect_api(".", docstring_style="google")
-            obj = api.functions()[0]
-            rows = obj.to_issue_rows()
-            doc = Document(
-                "API Evidence",
-                Chapter(
-                    "Parser Issues",
-                    Table(
-                        [
-                            "Severity",
-                            "Code",
-                            "Object",
-                            "Module",
-                            "Location",
-                            "Message",
-                        ],
-                        rows,
-                    ),
-                ),
-            )
-            ```
-        """
-
-        return self.to_doc_issue_rows()
 
 
 @dataclass(slots=True)
@@ -3394,7 +3351,7 @@ class ApiPackage:
         return Table(
             ["Severity", "Code", "Object", "Module", "Location", "Message"],
             [
-                issue.to_row()
+                issue.as_issue_row()
                 for issue in self.iter_issues(
                     include_object_issues=include_object_issues
                 )

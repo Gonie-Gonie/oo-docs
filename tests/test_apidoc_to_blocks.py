@@ -52,4 +52,4 @@ def test_module_renderer_notes_use_leaf_row_helper() -> None:
 
     assert len(blocks) == 1
     assert isinstance(blocks[0], Table)
-    assert [cell.content.plain_text() for cell in blocks[0].rows[0]] == note.to_row()
+    assert [cell.content.plain_text() for cell in blocks[0].rows[0]] == note.as_output_note_row()

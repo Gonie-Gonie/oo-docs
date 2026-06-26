@@ -51,7 +51,7 @@ from oodocs.apidoc import collect_api
 
 api = collect_api(".")
 obj = api.functions()[0]
-rows = [item.to_row() for item in obj.exceptions]
+rows = [item.as_exception_row() for item in obj.exceptions]
 doc = Document(
     "API Review",
     Chapter(

@@ -258,7 +258,7 @@ class ApiCoverageResult:
             blocks.append(
                 Table(
                     ["Severity", "Code", "Object", "Module", "Location", "Message"],
-                    [issue.to_row() for issue in self.issues],
+                    [issue.as_issue_row() for issue in self.issues],
                     caption="API documentation issues",
                     split=True,
                 )

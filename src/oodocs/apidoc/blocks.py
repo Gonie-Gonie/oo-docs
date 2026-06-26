@@ -309,7 +309,7 @@ def api_parameter_table(
         return None
     columns = resolved.parameter_columns
     headers = [_column_header(column) for column in columns]
-    rows = [parameter.to_table_cell_values(columns) for parameter in obj.parameters]
+    rows = [parameter.as_table_cells(columns) for parameter in obj.parameters]
     return Table(headers, rows, caption=caption, split=True)
 
 
@@ -387,7 +387,7 @@ def api_exceptions_table(
         return None
     return Table(
         ["Exception", "Description"],
-        [item.to_row() for item in obj.exceptions],
+        [item.as_exception_row() for item in obj.exceptions],
         caption=caption,
         split=True,
     )
@@ -475,7 +475,7 @@ def api_see_also_blocks(
                 background_color="EFF6FF",
             )
         ]
-    rows = [item.to_row() for item in obj.see_also]
+    rows = [item.as_see_also_row() for item in obj.see_also]
     return [
         Table(
             ["Label", "Target", "Kind", "Description"],
@@ -604,7 +604,7 @@ def api_output_notes_table(
         return None
     return Table(
         ["Output format", "Severity", "Message"],
-        [note.to_row() for note in notes],
+        [note.as_output_note_row() for note in notes],
         caption=caption,
         split=True,
     )
@@ -975,7 +975,7 @@ def api_objects_to_summary_table(
     headers = ["Kind", "Module", "Name", "Summary"] if include_module else ["Kind", "Name", "Summary"]
     resolved_link_names = resolved.name == "website" if link_names is None else link_names
     rows = [
-        obj.to_summary_row(include_module=include_module, link_name=resolved_link_names)
+        obj.as_summary_row(include_module=include_module, link_name=resolved_link_names)
         for obj in objects
     ]
     return Table(headers, rows, caption=caption, split=True)
@@ -1038,7 +1038,7 @@ def api_module_to_blocks(
         blocks.append(
             Table(
                 ["Format", "Severity", "Message"],
-                [note.to_row() for note in module.renderer_notes],
+                [note.as_output_note_row() for note in module.renderer_notes],
                 caption="Renderer notes",
                 split=True,
             )
