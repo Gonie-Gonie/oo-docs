@@ -75,9 +75,9 @@ For package-wide querying, `ApiPackage` exposes `select_classes()`,
 for classes, functions, properties, and attributes.
 
 Use `max_level` when a large repository should render a shallower reference.
-For example, `api.to_document(presentation="reference", max_level=2)` renders module
-chapters and top-level object sections while keeping deeper class members in
-summary tables instead of expanding them as their own headings.
+For example, `api.to_help_book(presentation="reference", max_level=2)` renders category
+chapters and top-level object help sections while keeping deeper class members
+in summary tables instead of expanding them as their own headings.
 
 Use `api.iter_issues()` or `api.to_issue_table()` when parser diagnostics stored
 on individual API objects should appear beside package-level collection issues.

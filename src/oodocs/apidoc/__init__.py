@@ -61,7 +61,6 @@ from oodocs.apidoc.render import (
     api_diff_to_chapter,
     api_objects_to_chapter,
     api_objects_to_summary_table,
-    api_package_to_document,
 )
 from oodocs.apidoc.help import (
     api_category_to_chapter,
@@ -114,7 +113,6 @@ __all__ = [
     "api_category_to_chapter",
     "api_object_to_help_section",
     "api_package_to_help_book",
-    "api_package_to_document",
     "check_api_docs",
     "check_doctest_examples",
     "check_example_syntax",

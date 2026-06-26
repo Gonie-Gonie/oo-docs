@@ -95,6 +95,7 @@ def test_apidoc_namespace_uses_canonical_exports() -> None:
     forbidden = {
         "ApiDocProfile",
         "ApiRaises",
+        "api_package_to_document",
         "profile_names",
         "register_profile",
         "resolve_profile",
@@ -102,6 +103,7 @@ def test_apidoc_namespace_uses_canonical_exports() -> None:
     expected = {
         "ApiPresentationProfile",
         "ApiException",
+        "api_package_to_help_book",
         "presentation_profile_names",
         "register_presentation_profile",
         "resolve_presentation_profile",
@@ -687,6 +689,7 @@ def test_apidoc_selection_and_json_api_use_canonical_names() -> None:
             "public_objects",
             "private_objects",
             "undocumented_public_objects",
+            "to_document",
             "write_json",
             "read_json",
         },
@@ -729,6 +732,7 @@ def test_apidoc_selection_and_json_api_use_canonical_names() -> None:
             "select_public_objects",
             "select_private_objects",
             "select_undocumented_public_objects",
+            "to_help_book",
             "save_json",
             "load_json",
         },

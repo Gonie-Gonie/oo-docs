@@ -164,7 +164,7 @@ api = collect_api(
     docstring_style=ApiDocstringParser.auto(),
 )
 assert api.find_object("reporting.build_report") is not None
-api.to_document(presentation="reference").save_all(
+api.to_help_book(presentation="reference").save_all(
     "artifacts/api",
     stem="reporting-api",
     formats=("docx", "pdf", "html"),
@@ -418,5 +418,5 @@ api = collect_api(
     public_policy="__all__",
     include_source_locations=False,
 )
-api.to_document(presentation="website").save_html("artifacts/api/index.html")
+api.to_help_book(presentation="website").save_html("artifacts/api/index.html")
 ```

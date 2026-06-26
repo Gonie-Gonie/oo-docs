@@ -156,7 +156,7 @@ def collect_api(
 
         config = ApiCollectConfig.from_pyproject(".")
         api = collect_api(".", config=config)
-        api.to_document(presentation="reference").save_all(
+        api.to_help_book(presentation="reference").save_all(
             "artifacts/api",
             stem="mypkg-api",
         )

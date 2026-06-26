@@ -694,7 +694,7 @@ def test_collect_api_builds_queryable_object_tree_and_blocks(tmp_path: Path) -> 
     assert f'id="{method_anchor}"' not in limited_module_html_text
 
 
-def test_api_package_document_preserves_coverage_issue_details(tmp_path: Path) -> None:
+def test_api_coverage_section_preserves_issue_details(tmp_path: Path) -> None:
     package_dir = tmp_path / "coveragepkg"
     package_dir.mkdir()
     (package_dir / "__init__.py").write_text(
@@ -704,8 +704,8 @@ def test_api_package_document_preserves_coverage_issue_details(tmp_path: Path) -
     )
 
     api = collect_api(package_dir, public_policy="underscore", collector="inspect")
-    document = api.to_document(include_coverage=True, include_modules=False)
-    coverage_chapter = document.body.children[1]
+    coverage_chapter = check_api_docs(api).to_section()
+    document = Document("API Documentation Evidence", coverage_chapter)
     issue_tables = [
         child
         for child in coverage_chapter.children
@@ -715,6 +715,7 @@ def test_api_package_document_preserves_coverage_issue_details(tmp_path: Path) -
     ]
 
     assert coverage_chapter.plain_title() == "API Documentation Coverage"
+    assert document.validate(formats=("html",)).ok
     assert issue_tables
     issue_codes = [row[1].content.plain_text() for row in issue_tables[0].rows]
     assert "missing-docstring" in issue_codes

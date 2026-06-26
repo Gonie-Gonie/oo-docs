@@ -5,90 +5,11 @@ from __future__ import annotations
 from typing import Sequence
 
 from oodocs.apidoc.blocks import api_objects_to_chapter, api_objects_to_summary_table as _api_objects_to_summary_table
-from oodocs.apidoc.coverage import ApiCoverageResult, check_api_docs
+from oodocs.apidoc.coverage import ApiCoverageResult
 from oodocs.apidoc.diff import ApiDiffResult
-from oodocs.apidoc.model import ApiObject, ApiPackage
+from oodocs.apidoc.model import ApiObject
 from oodocs.apidoc.profiles import ApiPresentationProfile
 from oodocs.components.blocks import Chapter, Paragraph
-from oodocs.components.generated import TableOfContents
-from oodocs.document import Document
-
-
-def api_package_to_document(
-    api: ApiPackage,
-    *,
-    title: str | None = None,
-    presentation: str | ApiPresentationProfile = "reference",
-    settings: object | None = None,
-    citations: object | None = None,
-    include_coverage: bool = True,
-    include_modules: bool = True,
-    max_level: int | None = None,
-) -> Document:
-    """Build a complete OODocs document from an API package.
-
-    Args:
-        api: Collected API package object tree.
-        title: Optional document title. Defaults to ``"{api.name} API
-            Reference"``.
-        presentation: Presentation profile name or ``ApiPresentationProfile`` object.
-        settings: Optional ``DocumentSettings`` passed to ``Document``.
-        citations: Optional citation library passed to ``Document``.
-        include_coverage: Whether to include a documentation coverage overview
-            chapter before module chapters.
-        include_modules: Whether to include per-module chapters and object
-            sections.
-        max_level: Optional deepest heading level to render and include in the
-            table of contents.
-
-    Returns:
-        OODocs document ready for ``save_docx``, ``save_pdf``, ``save_html``,
-        or ``save_all``.
-
-    Raises:
-        ValueError: If ``max_level`` is less than ``1``.
-
-    Examples:
-        Render a complete package reference bundle from a general Python
-        repository:
-
-        ```python
-        from oodocs.apidoc import collect_api, api_package_to_document
-
-        api = collect_api(".", collector="griffe", public_policy="__all__")
-        document = api_package_to_document(api, presentation="compact", max_level=3)
-        document.save_all("artifacts/api", stem=f"{api.name}-api")
-        ```
-
-        Embed only the coverage chapter into a separate release document by
-        disabling module chapters:
-
-        ```python
-        evidence = api_package_to_document(
-            api,
-            title="API Documentation Evidence",
-            include_modules=False,
-        )
-        evidence.save_html("artifacts/api-evidence.html")
-        ```
-    """
-
-    if max_level is not None and max_level < 1:
-        raise ValueError("max_level must be >= 1")
-
-    children: list[object] = [
-        TableOfContents(title="API Contents", max_level=max_level)
-    ]
-    if include_coverage:
-        children.append(api_coverage_to_chapter(check_api_docs(api)))
-    if include_modules:
-        children.extend(api.to_chapters(presentation=presentation, max_level=max_level))
-    return Document(
-        title or f"{api.name} API Reference",
-        *children,
-        settings=settings,  # type: ignore[arg-type]
-        citations=citations,  # type: ignore[arg-type]
-    )
 
 
 def api_objects_to_summary_table(
@@ -196,5 +117,4 @@ __all__ = [
     "api_diff_to_chapter",
     "api_objects_to_chapter",
     "api_objects_to_summary_table",
-    "api_package_to_document",
 ]

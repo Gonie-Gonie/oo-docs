@@ -2655,7 +2655,7 @@ class ApiPackage:
 
         collect_api(".").save_json("build/api.json")
         api = ApiPackage.load_json("build/api.json")
-        doc = api.to_document("API Reference")
+        doc = api.to_help_book("API Reference")
         ```
     """
 
@@ -2690,7 +2690,7 @@ class ApiPackage:
                 json.dumps(api.to_dict(), indent=2, sort_keys=True),
                 encoding="utf-8",
             )
-            doc = api.to_document("API Reference")
+            doc = api.to_help_book("API Reference")
             ```
         """
 
@@ -2722,7 +2722,7 @@ class ApiPackage:
 
             payload = json.loads(Path("build/api-package.json").read_text())
             api = ApiPackage.from_dict(payload)
-            doc = api.to_document("API Reference", include_coverage=True)
+            doc = api.to_help_book("API Reference", include_coverage=True)
             ```
         """
 
@@ -2757,7 +2757,7 @@ class ApiPackage:
 
             api = collect_api(".", collector="griffe")
             sidecar_path = api.save_json("build/api/objects.json")
-            doc = api.to_document("API Reference")
+            doc = api.to_help_book("API Reference")
             ```
         """
 
@@ -2786,7 +2786,7 @@ class ApiPackage:
             from oodocs.apidoc import ApiPackage
 
             api = ApiPackage.load_json("build/api/objects.json")
-            doc = api.to_document("API Reference", presentation="reference")
+            doc = api.to_help_book("API Reference", presentation="reference")
             ```
         """
 
@@ -3340,7 +3340,7 @@ class ApiPackage:
             objects: Optional objects to include. Defaults to all public
                 objects.
             **kwargs: Additional options forwarded to
-                ``api_objects_to_summary_table``, such as ``profile`` or
+                ``api_objects_to_summary_table``, such as ``presentation`` or
                 ``caption``.
 
         Returns:
@@ -3585,69 +3585,6 @@ class ApiPackage:
         """
 
         return self.to_chapters(presentation=presentation, max_level=max_level)
-
-    def to_document(
-        self,
-        title: str | None = None,
-        *,
-        presentation: object = "reference",
-        settings: object | None = None,
-        citations: object | None = None,
-        include_coverage: bool = True,
-        include_modules: bool = True,
-        max_level: int | None = None,
-    ):
-        """Return this package as a complete OODocs document.
-
-        Args:
-            title: Optional document title.
-            presentation: Presentation profile name or object.
-            settings: Optional ``DocumentSettings``.
-            citations: Optional citation library.
-            include_coverage: Whether to include a coverage overview chapter.
-            include_modules: Whether to include module chapters.
-            max_level: Optional deepest heading level to render and include
-                in the table of contents.
-
-        Returns:
-            OODocs ``Document``.
-
-        Examples:
-            Render a complete API reference bundle for a general Python repo:
-
-            ```python
-            from oodocs.apidoc import collect_api
-
-            api = collect_api(".", collector="griffe", public_policy="__all__")
-            api.to_document(presentation="reference", max_level=3).save_all(
-                "artifacts/api",
-                stem=f"{api.name}-api",
-            )
-            ```
-
-            Render only coverage evidence from the same collected tree:
-
-            ```python
-            evidence = api.to_document(
-                title="API Documentation Evidence",
-                include_modules=False,
-            )
-            evidence.save_docx("artifacts/api-evidence.docx")
-            ```
-        """
-
-        from oodocs.apidoc.render import api_package_to_document
-
-        return api_package_to_document(
-            self,
-            title=title,
-            presentation=presentation,
-            settings=settings,
-            citations=citations,
-            include_coverage=include_coverage,
-            include_modules=include_modules,
-            max_level=max_level,
-        )
 
     def to_help_book(
         self,

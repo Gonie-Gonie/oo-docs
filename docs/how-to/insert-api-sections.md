@@ -62,7 +62,7 @@ section = api.find_object("reporting.build_report").to_section(presentation="man
 
 ## Build A Full Reference Bundle
 
-Use `ApiPackage.to_document(...)` when the whole collected package should become
+Use `ApiPackage.to_help_book(...)` when the whole collected package should become
 a standalone API reference. The returned value is a normal `Document`, so the
 same `save_all(...)` call can produce DOCX, PDF, and HTML through the usual
 OODocs renderer path. Keep the collected API and coverage result beside those
@@ -79,7 +79,7 @@ api = collect_api(
 )
 coverage = check_api_docs(api, fail_under=0.90)
 
-document = api.to_document(
+document = api.to_help_book(
     title=f"{api.name} API Reference",
     presentation="reference",
     max_level=3,

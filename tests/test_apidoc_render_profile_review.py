@@ -8,7 +8,7 @@ def test_review_profile_builds_editable_docx_review_copy(tmp_path) -> None:
     api = collect_sample_api(tmp_path)
     docx_path = tmp_path / "review-api.docx"
 
-    document = api.to_document(presentation="review", max_level=2)
+    document = api.to_help_book(presentation="review", max_level=2)
 
     assert document.validate(formats=("docx",)).ok
     document.save_docx(docx_path)
@@ -16,11 +16,12 @@ def test_review_profile_builds_editable_docx_review_copy(tmp_path) -> None:
         docx_path,
         required_paragraphs=(
             "samplepkg API Reference",
-            "1 API Documentation Coverage",
-            "2 samplepkg",
+            "1 API Contents",
+            "2 Public API",
             "2.1 samplepkg.CONSTANT",
             "2.2 samplepkg.Widget",
             "2.3 samplepkg.make_widget",
+            "3 API Documentation Coverage",
         ),
         min_tables=4,
         comment_count=3,

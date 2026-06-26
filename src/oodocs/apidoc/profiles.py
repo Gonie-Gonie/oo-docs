@@ -306,7 +306,7 @@ class ApiPresentationProfile:
             from oodocs.apidoc.profiles import ApiPresentationProfile
 
             api = collect_api(".")
-            document = api.to_document(presentation=ApiPresentationProfile.review())
+            document = api.to_help_book(presentation=ApiPresentationProfile.review())
             document.save_docx("artifacts/api-review.docx")
             ```
         """
@@ -340,7 +340,7 @@ class ApiPresentationProfile:
             from oodocs.apidoc.profiles import ApiPresentationProfile
 
             api = collect_api(".")
-            document = api.to_document(presentation=ApiPresentationProfile.website())
+            document = api.to_help_book(presentation=ApiPresentationProfile.website())
             document.save_html("artifacts/api/index.html")
             ```
         """

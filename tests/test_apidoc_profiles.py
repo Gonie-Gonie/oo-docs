@@ -73,7 +73,7 @@ def test_standard_profiles_save_renderer_neutral_bundles(
     profile_name: str,
 ) -> None:
     api = collect_sample_api(tmp_path)
-    document = api.to_document(presentation=profile_name, max_level=2)
+    document = api.to_help_book(presentation=profile_name, max_level=2)
 
     assert document.validate(formats=("docx", "pdf", "html")).ok
     outputs = document.save_all(

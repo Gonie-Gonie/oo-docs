@@ -1245,13 +1245,6 @@
           "qualname": "oodocs.apidoc.help.api_package_to_help_book"
         },
         {
-          "category": "apidoc-composition",
-          "kind": "function",
-          "module": "oodocs.apidoc.render",
-          "name": "api_package_to_document",
-          "qualname": "oodocs.apidoc.render.api_package_to_document"
-        },
-        {
           "category": "apidoc-coverage",
           "kind": "function",
           "module": "oodocs.apidoc.coverage",

@@ -38,7 +38,7 @@ from oodocs.apidoc import (
     api_coverage_to_chapter,
     api_objects_to_chapter,
     api_objects_to_summary_table,
-    api_package_to_document,
+    api_package_to_help_book,
     check_api_docs,
     collect_api,
     collect_module_api,
@@ -738,7 +738,7 @@ def test_general_repo_render_helpers_compose_selected_api(tmp_path) -> None:
     assert_html_internal_links_resolve(outputs["html"])
 
 
-def test_general_repo_package_render_helper_builds_complete_reference(tmp_path) -> None:
+def test_general_repo_package_help_book_helper_builds_complete_reference(tmp_path) -> None:
     repo = write_mixed_docstring_repo(tmp_path)
     api = collect_api(
         repo,
@@ -747,7 +747,7 @@ def test_general_repo_package_render_helper_builds_complete_reference(tmp_path) 
         docstring_style=ApiDocstringParser.auto(),
     )
 
-    document = api_package_to_document(api, presentation="compact", max_level=3)
+    document = api_package_to_help_book(api, presentation="compact", max_level=3)
     outputs = document.save_all(
         tmp_path / "package-rendered",
         stem="mixedpkg-api",
@@ -761,10 +761,11 @@ def test_general_repo_package_render_helper_builds_complete_reference(tmp_path) 
         outputs["docx"],
         required_paragraphs=(
             "mixedpkg API Reference",
-            "1 API Documentation Coverage",
-            "2 mixedpkg",
+            "1 API Contents",
+            "2 Public API",
             "2.1 mixedpkg.Client",
             "2.2 mixedpkg.connect",
+            "3 API Documentation Coverage",
         ),
         min_tables=6,
     )

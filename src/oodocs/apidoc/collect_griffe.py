@@ -61,7 +61,7 @@ def collect_package_griffe(
             module_exclude_patterns=("mypkg.tests*",),
         )
         api = collect_package_griffe(".", config=config)
-        api.to_document(presentation="reference").save_all(
+        api.to_help_book(presentation="reference").save_all(
             "artifacts/api",
             stem="mypkg-api",
         )

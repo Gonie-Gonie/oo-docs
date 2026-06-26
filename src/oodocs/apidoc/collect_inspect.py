@@ -43,7 +43,7 @@ def collect_package_inspect(
             module_exclude_patterns=("mypkg.tests*",),
         )
         api = collect_package_inspect(".", config=config)
-        document = api.to_document(presentation="reference")
+        document = api.to_help_book(presentation="reference")
         ```
     """
 
