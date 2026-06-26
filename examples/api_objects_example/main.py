@@ -1,4 +1,4 @@
-"""Build composable API-object documentation examples."""
+"""Build API help-book and composable API-object examples."""
 
 from __future__ import annotations
 
@@ -13,15 +13,17 @@ from oodocs.apidoc import (
     ApiCoverageResult,
     ApiDocstringParser,
     ApiPackage,
+    ApiPresentationProfile,
     check_api_docs,
     collect_api,
 )
 
 
 ARTIFACT_DIR = Path("artifacts/api-objects-example")
-FULL_REFERENCE_STEM = "oodocs-full-api-reference"
-COMPOSITION_STEM = "oodocs-api-objects"
-COVERAGE_STEM = "oodocs-api-coverage"
+HELP_BOOK_STEM = "oodocs-api-reference"
+API_OBJECT_COMPOSITION_STEM = "oodocs-api-object-composition"
+API_OBJECT_TREE_STEM = "oodocs-api-object-tree"
+API_COVERAGE_STEM = "oodocs-api-coverage"
 
 
 def _log(message: str, *, verbose: bool) -> None:
@@ -68,7 +70,7 @@ def collect_target_api(
             public_policy="__all__",
             docstring_style=ApiDocstringParser.auto(),
         )
-        document = api.to_document(profile="compact")
+        document = api.to_help_book(presentation="help")
         ```
 
         Reuse a repository-local config so the example and release workflow
@@ -112,63 +114,65 @@ def collect_oodocs_api() -> ApiPackage:
         from examples.api_objects_example.main import collect_oodocs_api
 
         api = collect_oodocs_api()
-        full_reference = api.to_document("OODocs Full API Reference")
-        composable_classes = api.select_objects(kind="class", module_prefix="oodocs.components")
+        help_book = api.to_help_book("OODocs API Reference")
+        composable_classes = api.select_objects(
+            kind="class",
+            module_prefix="oodocs.components",
+        )
         ```
     """
 
     return collect_target_api("oodocs", public_policy="__all__", collector="auto")
 
 
-def build_full_package_document(
+def build_help_book_document(
     api: ApiPackage | None = None,
     *,
     title: str | None = None,
-    profile: str = "compact",
+    presentation: str | ApiPresentationProfile = "help",
     max_level: int | None = None,
 ) -> Document:
-    """Build a full package API reference document.
+    """Build a MATLAB-style API help-book document.
 
     Args:
         api: Optional pre-collected API package. When omitted, the OODocs
             package is collected from the current environment.
         title: Optional document title. Defaults to ``"{api.name} API
             Reference"``.
-        profile: API presentation profile used for object sections.
+        presentation: API presentation profile used for object help pages.
         max_level: Optional deepest heading level to render.
 
     Returns:
-        Full package reference document built through ``ApiPackage.to_document``.
+        API help-book document built through ``ApiPackage.to_help_book``.
 
     Examples:
-        Render the whole collected package as a reusable API reference bundle:
+        Render the collected package as a user-facing API reference bundle:
 
         ```python
         from examples.api_objects_example.main import (
-            build_full_package_document,
+            build_help_book_document,
             collect_oodocs_api,
         )
 
         api = collect_oodocs_api()
-        document = build_full_package_document(api, profile="compact", max_level=3)
+        document = build_help_book_document(api, presentation="help", max_level=3)
         document.save_all(
             "artifacts/api-objects-example",
-            stem="oodocs-full-api-reference",
+            stem="oodocs-api-reference",
         )
         ```
     """
 
     api = api or collect_oodocs_api()
-    return api.to_document(
+    return api.to_help_book(
         title=title or f"{api.name} API Reference",
-        profile=profile,
+        presentation=presentation,
         include_coverage=True,
-        include_modules=True,
         max_level=max_level,
     )
 
 
-def build_document(
+def build_composition_demo_document(
     api: ApiPackage | None = None,
     coverage: ApiCoverageResult | None = None,
 ) -> Document:
@@ -186,13 +190,19 @@ def build_document(
         Build a composable document from the same parsed API object tree:
 
         ```python
-        from examples.api_objects_example.main import build_document, collect_oodocs_api
+        from examples.api_objects_example.main import (
+            build_composition_demo_document,
+            collect_oodocs_api,
+        )
         from oodocs.apidoc import check_api_docs
 
         api = collect_oodocs_api()
         coverage = check_api_docs(api)
-        document = build_document(api, coverage)
-        document.save_all("artifacts/api-objects-example", stem="oodocs-api-objects")
+        document = build_composition_demo_document(api, coverage)
+        document.save_all(
+            "artifacts/api-objects-example",
+            stem="oodocs-api-object-composition",
+        )
         ```
     """
 
@@ -265,8 +275,8 @@ def save_sidecars(
         output_dir: Directory that receives the sidecar files.
 
     Returns:
-        Mapping with ``api_json``, ``coverage_json``, and ``coverage_csv``
-        output paths.
+        Mapping with ``api_object_tree_json``, ``api_coverage_json``, and
+        ``api_coverage_csv`` output paths.
 
     Examples:
         Build a small evidence bundle beside rendered API documents:
@@ -284,13 +294,19 @@ def save_sidecars(
     sidecar_dir = Path(output_dir)
     sidecar_dir.mkdir(parents=True, exist_ok=True)
     return {
-        "api_json": api.save_json(sidecar_dir / f"{COMPOSITION_STEM}.json"),
-        "coverage_json": coverage.save_json(sidecar_dir / f"{COVERAGE_STEM}.json"),
-        "coverage_csv": coverage.save_csv(sidecar_dir / f"{COVERAGE_STEM}.csv"),
+        "api_object_tree_json": api.save_json(
+            sidecar_dir / f"{API_OBJECT_TREE_STEM}.json"
+        ),
+        "api_coverage_json": coverage.save_json(
+            sidecar_dir / f"{API_COVERAGE_STEM}.json"
+        ),
+        "api_coverage_csv": coverage.save_csv(
+            sidecar_dir / f"{API_COVERAGE_STEM}.csv"
+        ),
     }
 
 
-def render_api_objects_example(
+def render_apidoc_example_bundle(
     api: ApiPackage | None = None,
     coverage: ApiCoverageResult | None = None,
     output_dir: str | Path = ARTIFACT_DIR,
@@ -300,12 +316,12 @@ def render_api_objects_example(
     public_policy: str | None = None,
     collector: str | None = None,
     docstring_style: str | ApiDocstringParser | None = None,
-    profile: str | None = None,
+    presentation: str | ApiPresentationProfile | None = None,
     max_level: int | None = None,
     formats: Sequence[str] | None = None,
     verbose: bool = False,
 ) -> dict[str, Path]:
-    """Render the full API-object example bundle.
+    """Render the API reference and object-composition example bundle.
 
     Args:
         api: Optional pre-collected API package. When omitted, the OODocs
@@ -315,38 +331,38 @@ def render_api_objects_example(
         target: Importable package/module name, Python file, package directory,
             or repository checkout collected when ``api`` is omitted.
         config: Optional build or collection config. Build configs provide the
-            collection settings plus default profile, formats, and max level.
+            collection settings plus default formats and max level.
         public_policy: Public boundary used when collecting ``target``.
         collector: Collector backend used when collecting ``target``.
         docstring_style: Docstring parser style or reusable parser object used
             when collecting ``target``.
-        profile: Optional presentation profile for the full package reference.
-            Defaults to the build config profile or ``"compact"``.
-        max_level: Optional deepest heading level to render in the full package
-            reference.
+        presentation: Optional presentation profile for the API help book.
+            Defaults to ``"help"``.
+        max_level: Optional deepest heading level to render in the API help
+            book.
         formats: Optional subset of formats passed to ``Document.save_all``.
             Defaults to build config formats or all supported formats.
         verbose: Whether to print major collection and rendering steps.
 
     Returns:
-        Mapping containing DOCX/PDF/HTML paths for the full package reference,
-        DOCX/PDF/HTML paths for the composable API-object document, and API
+        Mapping containing DOCX/PDF/HTML paths for the API help book, DOCX/PDF
+        /HTML paths for the composable API-object document, and API object tree
         JSON plus coverage JSON/CSV sidecar paths.
 
     Examples:
         Render the complete OODocs API reference and composable example bundle:
 
         ```python
-        from examples.api_objects_example.main import render_api_objects_example
+        from examples.api_objects_example.main import render_apidoc_example_bundle
         from oodocs.apidoc import ApiBuildConfig
 
-        outputs = render_api_objects_example(
+        outputs = render_apidoc_example_bundle(
             target=".",
             output_dir="artifacts/api-objects-example",
             config=ApiBuildConfig.from_pyproject("."),
             verbose=True,
         )
-        full_reference_html = outputs["full_reference_html"]
+        help_book_html = outputs["help_book_html"]
         ```
     """
 
@@ -361,7 +377,7 @@ def render_api_objects_example(
     elif isinstance(config, ApiCollectConfig):
         collect_config = config
 
-    effective_profile = profile or (build_config.profile if build_config else "compact")
+    effective_presentation = presentation or "help"
     if max_level is not None:
         effective_max_level = max_level
     elif build_config is not None:
@@ -387,36 +403,36 @@ def render_api_objects_example(
     if effective_formats is not None:
         save_kwargs["formats"] = tuple(effective_formats)
 
-    _log("Building full package API reference...", verbose=verbose)
-    full_reference = build_full_package_document(
+    _log("Building API help book...", verbose=verbose)
+    help_book = build_help_book_document(
         api,
-        profile=effective_profile,
+        presentation=effective_presentation,
         max_level=effective_max_level,
     )
-    _log("Rendering full package API reference...", verbose=verbose)
-    full_outputs = full_reference.save_all(
+    _log("Rendering API help book...", verbose=verbose)
+    help_book_outputs = help_book.save_all(
         output_path,
-        stem=FULL_REFERENCE_STEM,
+        stem=HELP_BOOK_STEM,
         **save_kwargs,
     )
 
     _log("Building composable API-object document...", verbose=verbose)
-    document = build_document(api, coverage)
+    document = build_composition_demo_document(api, coverage)
     _log("Rendering composable API-object document...", verbose=verbose)
     composition_outputs = document.save_all(
         output_path,
-        stem=COMPOSITION_STEM,
+        stem=API_OBJECT_COMPOSITION_STEM,
         **save_kwargs,
     )
 
     _log("Writing API and coverage sidecars...", verbose=verbose)
     outputs: dict[str, Path] = {
-        f"full_reference_{output_format}": path
-        for output_format, path in full_outputs.items()
+        f"help_book_{output_format}": path
+        for output_format, path in help_book_outputs.items()
     }
     outputs.update(
         {
-            f"composition_{output_format}": path
+            f"object_composition_{output_format}": path
             for output_format, path in composition_outputs.items()
         }
     )
@@ -428,7 +444,10 @@ def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     """Parse command-line arguments for the API objects example."""
 
     parser = argparse.ArgumentParser(
-        description="Render composable API-object documents for a Python target."
+        description=(
+            "Render MATLAB-style API help pages and API object sidecars "
+            "for a Python target."
+        )
     )
     parser.add_argument(
         "target",
@@ -472,7 +491,7 @@ def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
 
 
 def main(argv: Sequence[str] | None = None) -> None:
-    """Render the API object example and sidecars.
+    """Render the API help-book example and sidecars.
 
     Args:
         argv: Optional argument list. Defaults to command-line arguments.
@@ -493,7 +512,7 @@ def main(argv: Sequence[str] | None = None) -> None:
         if args.config
         else None
     )
-    outputs = render_api_objects_example(
+    outputs = render_apidoc_example_bundle(
         output_dir=args.out,
         target=args.target,
         config=build_config,

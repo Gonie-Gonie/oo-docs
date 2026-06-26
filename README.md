@@ -1,4 +1,4 @@
-# oodocs
+﻿# oodocs
 
 OODocs is an Object-Oriented Documentation Tool: a Python-first authoring toolkit for defining structured documents as ordinary objects and rendering the same source to DOCX, PDF, and HTML.
 
@@ -297,7 +297,7 @@ Run them directly from the repository checkout:
 .\.venv\Scripts\python.exe .\examples\template_presets\build_all.py
 ```
 
-The full package API reference can also be rendered directly from the
+The package API reference can also be rendered directly from the
 repository-local `apidoc` config:
 
 ```python
@@ -315,7 +315,7 @@ What they show:
 - `journal_paper_example` shows a longer manuscript-style workflow with article-style sections, unnumbered abstract/highlights/acknowledgements, CSV-backed tables, and matplotlib figures inserted directly from Python objects
 - `native_benchmark_report` shows a compact Python-native workflow where a script generates an in-memory workload, benchmarks several callables, turns structured result objects into tables and prose, and exports one report bundle
 - `release_notes_digest` collects `release-notes/*.md`, sorts semantic versions from filenames, imports the Markdown bodies, and builds a release-note document with a version-management table and runbook
-- `api_objects_example` collects the OODocs API, renders a full package API reference as DOCX/PDF/HTML, inserts selected API object sections and summary tables into a separate composable document, and writes API JSON plus coverage JSON/CSV sidecars for release evidence
+- `api_objects_example` collects the OODocs API, renders a help-book API reference as DOCX/PDF/HTML, inserts selected API object sections and summary tables into a separate composable document, and writes API object tree JSON plus coverage JSON/CSV sidecars for release evidence
 - `style_cleanup_smoke` exercises named paragraph, table, box, and chip styles through a document-level `StyleSheet`
 - `template_presets` renders ready-to-customize document templates built from ordinary preset objects
 
@@ -336,12 +336,15 @@ The main exported filenames are:
 - `artifacts/journal-paper/oodocs-development-philosophy.pdf`
 - `artifacts/native-benchmark-report/native-python-benchmark.pdf`
 - `artifacts/release-notes/oodocs-release-notes.pdf`
-- `artifacts/api-objects-example/oodocs-api-objects.pdf`
+- `artifacts/api-objects-example/oodocs-api-object-composition.pdf`
+- `artifacts/api-objects-example/oodocs-api-object-tree.json`
+- `artifacts/api-objects-example/oodocs-api-coverage.json`
+- `artifacts/api-objects-example/oodocs-api-coverage.csv`
 - `artifacts/style-cleanup-smoke/style-cleanup-smoke.pdf`
 - `artifacts/template/journal-article-template.pdf`
-- `artifacts/api-objects-example/oodocs-full-api-reference.docx`
-- `artifacts/api-objects-example/oodocs-full-api-reference.pdf`
-- `artifacts/api-objects-example/oodocs-full-api-reference.html`
+- `artifacts/api-objects-example/oodocs-api-reference.docx`
+- `artifacts/api-objects-example/oodocs-api-reference.pdf`
+- `artifacts/api-objects-example/oodocs-api-reference.html`
 - `artifacts/api/oodocs-api.docx`
 - `artifacts/api/oodocs-api.pdf`
 - `artifacts/api/oodocs-api.html`
@@ -412,3 +415,5 @@ If you want a curated release body instead of GitHub's generated notes, add a fi
 The `examples/release_notes_digest/` script demonstrates the same convention as a document workflow: it scans the semantic-versioned Markdown files under `release-notes/`, builds an index, includes the version-management rules, and imports each release body into one DOCX/PDF/HTML bundle.
 
 PyPI publishing uses Trusted Publishing through the `pypi` GitHub environment. The PyPI project or pending publisher must trust repository `Gonie-Gonie/oo-docs`, workflow `.github/workflows/release.yml`, and environment `pypi`.
+
+

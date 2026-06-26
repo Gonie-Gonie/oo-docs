@@ -124,8 +124,9 @@ def api_package_to_help_book(
         api: Collected package API.
         title: Optional document title. Defaults to
             ``"{api.name} API Reference"``.
-        categories: Optional category definitions. Defaults to
-            ``OODocs_API_CATEGORIES``.
+        categories: Optional category definitions. Defaults to curated OODocs
+            categories for the ``oodocs`` package, or a generated ``Public API``
+            category for other packages.
         presentation: Presentation profile name or object used for symbol
             pages.
         settings: Optional document settings passed to ``Document``.
@@ -160,7 +161,7 @@ def api_package_to_help_book(
 
     if max_level is not None and max_level < 1:
         raise ValueError("max_level must be >= 1")
-    category_list = tuple(categories or OODocs_API_CATEGORIES)
+    category_list = tuple(categories) if categories is not None else _default_categories(api)
     visible_categories = tuple(
         sorted(
             (category for category in category_list if category.show_in_help_book),
@@ -209,6 +210,25 @@ def _contents_chapter(api: ApiPackage, categories: Sequence[ApiCategory]) -> Cha
             rows,
             caption=None,
             split=True,
+        ),
+    )
+
+
+def _default_categories(api: ApiPackage) -> tuple[ApiCategory, ...]:
+    if api.name == "oodocs":
+        return OODocs_API_CATEGORIES
+    public_objects = api.select_objects(
+        kind=("class", "function", "data", "attribute"),
+        visibility="public",
+        recursive=False,
+    )
+    return (
+        ApiCategory(
+            id="public-api",
+            title="Public API",
+            summary=f"Public API symbols exported by {api.name}.",
+            include=tuple(obj.qualname for obj in public_objects),
+            order=10,
         ),
     )
 

@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import importlib
 import importlib.util
@@ -1572,15 +1572,15 @@ def test_apidoc_cli_collect_check_build_snapshot_and_diff(tmp_path: Path, capsys
         "    return path\n"
     )
     (package_dir / "__init__.py").write_text(source, encoding="utf-8")
-    api_json = tmp_path / "api.json"
-    coverage_json = tmp_path / "coverage.json"
-    coverage_csv = tmp_path / "coverage.csv"
+    api_object_tree_json = tmp_path / "api.json"
+    api_coverage_json = tmp_path / "coverage.json"
+    api_coverage_csv = tmp_path / "coverage.csv"
     snapshot_json = tmp_path / "snapshot.json"
     build_dir = tmp_path / "build"
     diff_json = tmp_path / "diff.json"
 
-    assert main(["apidoc", "collect", str(package_dir), "--save-json", str(api_json)]) == 0
-    assert api_json.exists()
+    assert main(["apidoc", "collect", str(package_dir), "--save-json", str(api_object_tree_json)]) == 0
+    assert api_object_tree_json.exists()
     assert (
         main(
             [
@@ -1588,15 +1588,15 @@ def test_apidoc_cli_collect_check_build_snapshot_and_diff(tmp_path: Path, capsys
                 "check",
                 str(package_dir),
                 "--save-json",
-                str(coverage_json),
+                str(api_coverage_json),
                 "--save-csv",
-                str(coverage_csv),
+                str(api_coverage_csv),
             ]
         )
         == 0
     )
-    assert ApiCoverageResult.load_json(coverage_json).package == "clipkg"
-    assert coverage_csv.read_text(encoding="utf-8").startswith(
+    assert ApiCoverageResult.load_json(api_coverage_json).package == "clipkg"
+    assert api_coverage_csv.read_text(encoding="utf-8").startswith(
         "severity,code,qualname,module,source,path,line_number,message"
     )
     ApiBuildConfig(
@@ -1773,7 +1773,7 @@ def test_apidoc_cli_filters_check_and_snapshot(tmp_path: Path) -> None:
     config_json = tmp_path / "configured-api.json"
     pyproject_config_path = tmp_path / "pyproject.toml"
     pyproject_config_json = tmp_path / "pyproject-configured-api.json"
-    pyproject_coverage_json = tmp_path / "pyproject-filtered-coverage.json"
+    pyproject_api_coverage_json = tmp_path / "pyproject-filtered-coverage.json"
     pyproject_snapshot_json = tmp_path / "pyproject-filtered-snapshot.json"
     ApiCollectConfig(
         collector="inspect",
@@ -1894,10 +1894,10 @@ def test_apidoc_cli_filters_check_and_snapshot(tmp_path: Path) -> None:
             "--fail-under",
             "1.0",
             "--save-json",
-            str(pyproject_coverage_json),
+            str(pyproject_api_coverage_json),
         ]
     ) == 0
-    assert ApiCoverageResult.load_json(pyproject_coverage_json).public_object_count == 1
+    assert ApiCoverageResult.load_json(pyproject_api_coverage_json).public_object_count == 1
 
     assert main(
         [
@@ -1952,7 +1952,7 @@ def test_apidoc_cli_filters_check_and_snapshot(tmp_path: Path) -> None:
     assert 'id="filterpkg-core-worker-process"' not in max_level_html
 
 
-def test_api_objects_example_builds_full_reference_and_composable_document(
+def test_api_objects_example_builds_help_book_and_composable_document(
     tmp_path: Path,
 ) -> None:
     module_path = (
@@ -1992,37 +1992,37 @@ def test_api_objects_example_builds_full_reference_and_composable_document(
         collector="inspect",
         docstring_style=ApiDocstringParser.auto(),
     )
-    full_reference = example.build_full_package_document(api)
-    composition = example.build_document(api, coverage)
-    bundle_outputs = example.render_api_objects_example(
+    help_book = example.build_help_book_document(api)
+    composition = example.build_composition_demo_document(api, coverage)
+    bundle_outputs = example.render_apidoc_example_bundle(
         api,
         coverage,
         tmp_path / "bundle",
     )
 
     outputs = {
-        "docx": bundle_outputs["full_reference_docx"],
-        "pdf": bundle_outputs["full_reference_pdf"],
-        "html": bundle_outputs["full_reference_html"],
+        "docx": bundle_outputs["help_book_docx"],
+        "pdf": bundle_outputs["help_book_pdf"],
+        "html": bundle_outputs["help_book_html"],
     }
-    composition_outputs = {
-        "docx": bundle_outputs["composition_docx"],
-        "pdf": bundle_outputs["composition_pdf"],
-        "html": bundle_outputs["composition_html"],
+    object_composition_outputs = {
+        "docx": bundle_outputs["object_composition_docx"],
+        "pdf": bundle_outputs["object_composition_pdf"],
+        "html": bundle_outputs["object_composition_html"],
     }
 
     assert set(outputs) == {"docx", "pdf", "html"}
-    assert set(composition_outputs) == {"docx", "pdf", "html"}
+    assert set(object_composition_outputs) == {"docx", "pdf", "html"}
     assert_rendered_bundle(outputs["docx"], outputs["pdf"], outputs["html"])
     assert_rendered_bundle(
-        composition_outputs["docx"],
-        composition_outputs["pdf"],
-        composition_outputs["html"],
+        object_composition_outputs["docx"],
+        object_composition_outputs["pdf"],
+        object_composition_outputs["html"],
     )
-    assert full_reference.validate(formats=("docx", "pdf", "html")).ok
+    assert help_book.validate(formats=("docx", "pdf", "html")).ok
     assert composition.validate(formats=("docx", "pdf", "html")).ok
     assert_docx_structure(
-        composition_outputs["docx"],
+        object_composition_outputs["docx"],
         required_paragraphs=(
             "OODocs API Object Composition",
             "1 Selected Classes",
@@ -2033,7 +2033,7 @@ def test_api_objects_example_builds_full_reference_and_composable_document(
         min_tables=3,
     )
     assert_pdf_text_and_pages(
-        composition_outputs["pdf"],
+        object_composition_outputs["pdf"],
         required_text=(
             "OODocs API Object Composition",
             "Selected Classes",
@@ -2045,12 +2045,12 @@ def test_api_objects_example_builds_full_reference_and_composable_document(
     )
     assert target_api.name == "examplepkg"
     assert target_api.find_object("examplepkg.Widget") is not None
-    assert ApiPackage.load_json(bundle_outputs["api_json"]).name == "examplepkg"
+    assert ApiPackage.load_json(bundle_outputs["api_object_tree_json"]).name == "examplepkg"
     assert (
-        ApiCoverageResult.load_json(bundle_outputs["coverage_json"]).package
+        ApiCoverageResult.load_json(bundle_outputs["api_coverage_json"]).package
         == "examplepkg"
     )
-    assert bundle_outputs["coverage_csv"].read_text(encoding="utf-8").startswith(
+    assert bundle_outputs["api_coverage_csv"].read_text(encoding="utf-8").startswith(
         "severity,code,qualname,module,source,path,line_number,message"
     )
     html = outputs["html"].read_text(encoding="utf-8")
@@ -2086,16 +2086,18 @@ def test_api_objects_example_builds_full_reference_and_composable_document(
         ]
     )
 
-    assert (cli_output / "oodocs-full-api-reference.html").exists()
-    assert (cli_output / "oodocs-api-objects.html").exists()
-    cli_html = (cli_output / "oodocs-full-api-reference.html").read_text(
+    assert (cli_output / "oodocs-api-reference.html").exists()
+    assert (cli_output / "oodocs-api-object-composition.html").exists()
+    cli_html = (cli_output / "oodocs-api-reference.html").read_text(
         encoding="utf-8"
     )
-    composition_html = (cli_output / "oodocs-api-objects.html").read_text(
+    object_composition_html = (cli_output / "oodocs-api-object-composition.html").read_text(
         encoding="utf-8"
     )
     assert "examplepkg API Reference" in cli_html
-    assert "Focused Module: examplepkg" in composition_html
-    assert "examplepkg.run" in composition_html
+    assert "Focused Module: examplepkg" in object_composition_html
+    assert "examplepkg.run" in object_composition_html
     assert "examplepkg.Widget" in cli_html
-    assert_html_internal_links_resolve(cli_output / "oodocs-full-api-reference.html")
+    assert_html_internal_links_resolve(cli_output / "oodocs-api-reference.html")
+
+

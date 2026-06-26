@@ -1,4 +1,4 @@
-name: Release
+﻿name: Release
 
 on:
   push:
@@ -117,13 +117,13 @@ jobs:
             artifacts/native-benchmark-report/native-python-benchmark.pdf
             artifacts/release-notes/oodocs-release-notes.pdf
             artifacts/template/journal-article-template.pdf
-            artifacts/api-objects-example/oodocs-api-objects.pdf
-            artifacts/api-objects-example/oodocs-api-objects.json
+            artifacts/api-objects-example/oodocs-api-object-composition.pdf
+            artifacts/api-objects-example/oodocs-api-object-tree.json
             artifacts/api-objects-example/oodocs-api-coverage.json
             artifacts/api-objects-example/oodocs-api-coverage.csv
-            artifacts/api-objects-example/oodocs-full-api-reference.docx
-            artifacts/api-objects-example/oodocs-full-api-reference.pdf
-            artifacts/api-objects-example/oodocs-full-api-reference.html
+            artifacts/api-objects-example/oodocs-api-reference.docx
+            artifacts/api-objects-example/oodocs-api-reference.pdf
+            artifacts/api-objects-example/oodocs-api-reference.html
             artifacts/api/oodocs-api.docx
             artifacts/api/oodocs-api.pdf
             artifacts/api/oodocs-api.html
@@ -144,13 +144,13 @@ jobs:
             artifacts/native-benchmark-report/native-python-benchmark.pdf
             artifacts/release-notes/oodocs-release-notes.pdf
             artifacts/template/journal-article-template.pdf
-            artifacts/api-objects-example/oodocs-api-objects.pdf
-            artifacts/api-objects-example/oodocs-api-objects.json
+            artifacts/api-objects-example/oodocs-api-object-composition.pdf
+            artifacts/api-objects-example/oodocs-api-object-tree.json
             artifacts/api-objects-example/oodocs-api-coverage.json
             artifacts/api-objects-example/oodocs-api-coverage.csv
-            artifacts/api-objects-example/oodocs-full-api-reference.docx
-            artifacts/api-objects-example/oodocs-full-api-reference.pdf
-            artifacts/api-objects-example/oodocs-full-api-reference.html
+            artifacts/api-objects-example/oodocs-api-reference.docx
+            artifacts/api-objects-example/oodocs-api-reference.pdf
+            artifacts/api-objects-example/oodocs-api-reference.html
             artifacts/api/oodocs-api.docx
             artifacts/api/oodocs-api.pdf
             artifacts/api/oodocs-api.html
@@ -181,3 +181,5 @@ jobs:
 
       - name: Publish distributions to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
+
+

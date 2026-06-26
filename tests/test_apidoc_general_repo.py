@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import importlib.util
 import json
@@ -812,31 +812,32 @@ def test_general_repo_api_objects_example_cli_targets_repo_path(tmp_path) -> Non
         ]
     )
 
-    full_reference_docx = output_dir / "oodocs-full-api-reference.docx"
-    full_reference_pdf = output_dir / "oodocs-full-api-reference.pdf"
-    full_reference_html = output_dir / "oodocs-full-api-reference.html"
-    composition_docx = output_dir / "oodocs-api-objects.docx"
-    composition_pdf = output_dir / "oodocs-api-objects.pdf"
-    composition_html_path = output_dir / "oodocs-api-objects.html"
-    api_json = output_dir / "oodocs-api-objects.json"
-    coverage_json = output_dir / "oodocs-api-coverage.json"
+    help_book_docx = output_dir / "oodocs-api-reference.docx"
+    help_book_pdf = output_dir / "oodocs-api-reference.pdf"
+    help_book_html = output_dir / "oodocs-api-reference.html"
+    object_composition_docx = output_dir / "oodocs-api-object-composition.docx"
+    object_composition_pdf = output_dir / "oodocs-api-object-composition.pdf"
+    object_composition_html_path = output_dir / "oodocs-api-object-composition.html"
+    api_object_tree_json = output_dir / "oodocs-api-object-tree.json"
+    api_coverage_json = output_dir / "oodocs-api-coverage.json"
 
-    assert_rendered_bundle(full_reference_docx, full_reference_pdf, full_reference_html)
-    assert_rendered_bundle(composition_docx, composition_pdf, composition_html_path)
-    assert api_json.exists()
-    assert coverage_json.exists()
+    assert_rendered_bundle(help_book_docx, help_book_pdf, help_book_html)
+    assert_rendered_bundle(object_composition_docx, object_composition_pdf, object_composition_html_path)
+    assert api_object_tree_json.exists()
+    assert api_coverage_json.exists()
     assert_docx_structure(
-        full_reference_docx,
+        help_book_docx,
         required_paragraphs=(
             "mixedpkg API Reference",
-            "1 API Documentation Coverage",
-            "2 mixedpkg",
+            "1 API Contents",
+            "2 Public API",
             "2.1 mixedpkg.Client",
+            "3 API Documentation Coverage",
         ),
         min_tables=6,
     )
     assert_docx_structure(
-        composition_docx,
+        object_composition_docx,
         required_paragraphs=(
             "OODocs API Object Composition",
             "1 Selected Classes",
@@ -847,7 +848,7 @@ def test_general_repo_api_objects_example_cli_targets_repo_path(tmp_path) -> Non
         min_tables=4,
     )
     assert_pdf_text_and_pages(
-        full_reference_pdf,
+        help_book_pdf,
         required_text=(
             "mixedpkg API Reference",
             "mixedpkg.Client",
@@ -856,7 +857,7 @@ def test_general_repo_api_objects_example_cli_targets_repo_path(tmp_path) -> Non
         min_pages=1,
     )
     assert_pdf_text_and_pages(
-        composition_pdf,
+        object_composition_pdf,
         required_text=(
             "OODocs API Object Composition",
             "Focused Module: mixedpkg.core",
@@ -864,23 +865,23 @@ def test_general_repo_api_objects_example_cli_targets_repo_path(tmp_path) -> Non
         ),
         min_pages=1,
     )
-    rendered_api = ApiPackage.load_json(api_json)
+    rendered_api = ApiPackage.load_json(api_object_tree_json)
     rendered_method = rendered_api.find_object("mixedpkg.Client.connect")
     assert rendered_api.name == "mixedpkg"
     assert rendered_method is not None
     assert rendered_method.metadata["docstring_style"] == "numpy"
     assert rendered_method.parameters[0].description == "Timeout in seconds."
-    assert ApiCoverageResult.load_json(coverage_json).object_coverage == 1.0
+    assert ApiCoverageResult.load_json(api_coverage_json).object_coverage == 1.0
 
-    html = full_reference_html.read_text(encoding="utf-8")
-    composition_html = composition_html_path.read_text(encoding="utf-8")
+    html = help_book_html.read_text(encoding="utf-8")
+    object_composition_html = object_composition_html_path.read_text(encoding="utf-8")
     assert "mixedpkg API Reference" in html
     assert "mixedpkg.Client" in html
     assert "mixedpkg.connect" in html
-    assert "Focused Module: mixedpkg.core" in composition_html
-    assert "mixedpkg.core.Client.connect" in composition_html
-    assert_html_internal_links_resolve(full_reference_html)
-    assert_html_internal_links_resolve(composition_html_path)
+    assert "Focused Module: mixedpkg.core" in object_composition_html
+    assert "mixedpkg.core.Client.connect" in object_composition_html
+    assert_html_internal_links_resolve(help_book_html)
+    assert_html_internal_links_resolve(object_composition_html_path)
 
 
 def test_general_repo_pyproject_auto_parser_builds_cli_bundle(tmp_path) -> None:
@@ -932,14 +933,14 @@ def test_general_repo_pyproject_auto_parser_builds_cli_bundle(tmp_path) -> None:
         ]
     )
 
-    example_html = example_output_dir / "oodocs-full-api-reference.html"
-    example_api_path = example_output_dir / "oodocs-api-objects.json"
+    example_html = example_output_dir / "oodocs-api-reference.html"
+    example_api_path = example_output_dir / "oodocs-api-object-tree.json"
     example_coverage_path = example_output_dir / "oodocs-api-coverage.json"
     assert example_html.exists()
     assert example_api_path.exists()
     assert example_coverage_path.exists()
-    assert not (example_output_dir / "oodocs-full-api-reference.docx").exists()
-    assert not (example_output_dir / "oodocs-full-api-reference.pdf").exists()
+    assert not (example_output_dir / "oodocs-api-reference.docx").exists()
+    assert not (example_output_dir / "oodocs-api-reference.pdf").exists()
     assert_html_internal_links_resolve(example_html)
 
     example_api = ApiPackage.load_json(example_api_path)
@@ -1032,8 +1033,8 @@ def test_general_python_file_module_targets_build_reference_and_example(
     cli_docx = cli_output / "singlemod-api.docx"
     cli_pdf = cli_output / "singlemod-api.pdf"
     cli_html = cli_output / "singlemod-api.html"
-    cli_api_json = cli_output / "singlemod-api.json"
-    cli_coverage_json = cli_output / "singlemod-api-coverage.json"
+    cli_api_object_tree_json = cli_output / "singlemod-api.json"
+    cli_api_coverage_json = cli_output / "singlemod-api-coverage.json"
     assert_rendered_bundle(cli_docx, cli_pdf, cli_html)
     assert_docx_structure(
         cli_docx,
@@ -1057,14 +1058,14 @@ def test_general_python_file_module_targets_build_reference_and_example(
         min_pages=1,
     )
     assert cli_html.exists()
-    assert cli_api_json.exists()
-    assert cli_coverage_json.exists()
+    assert cli_api_object_tree_json.exists()
+    assert cli_api_coverage_json.exists()
     assert_html_internal_links_resolve(cli_html)
     assert (
-        ApiPackage.load_json(cli_api_json).find_object("singlemod.Client.connect")
+        ApiPackage.load_json(cli_api_object_tree_json).find_object("singlemod.Client.connect")
         is not None
     )
-    assert ApiCoverageResult.load_json(cli_coverage_json).object_coverage == 1.0
+    assert ApiCoverageResult.load_json(cli_api_coverage_json).object_coverage == 1.0
 
     example.main(
         [
@@ -1082,13 +1083,13 @@ def test_general_python_file_module_targets_build_reference_and_example(
             "--quiet",
         ]
     )
-    example_html = example_output / "oodocs-full-api-reference.html"
-    example_api_json = example_output / "oodocs-api-objects.json"
+    example_html = example_output / "oodocs-api-reference.html"
+    example_api_object_tree_json = example_output / "oodocs-api-object-tree.json"
     assert example_html.exists()
-    assert example_api_json.exists()
+    assert example_api_object_tree_json.exists()
     assert "singlemod.Client" in example_html.read_text(encoding="utf-8")
     assert_html_internal_links_resolve(example_html)
-    assert ApiPackage.load_json(example_api_json).find_object("singlemod.stream") is not None
+    assert ApiPackage.load_json(example_api_object_tree_json).find_object("singlemod.stream") is not None
 
 
 def test_general_py_modules_repo_targets_build_reference_and_example(
@@ -1146,16 +1147,16 @@ def test_general_py_modules_repo_targets_build_reference_and_example(
             "--quiet",
         ]
     )
-    example_html = example_output / "oodocs-full-api-reference.html"
-    example_api_json = example_output / "oodocs-api-objects.json"
+    example_html = example_output / "oodocs-api-reference.html"
+    example_api_object_tree_json = example_output / "oodocs-api-object-tree.json"
 
     assert example_html.exists()
-    assert example_api_json.exists()
+    assert example_api_object_tree_json.exists()
     rendered_example = example_html.read_text(encoding="utf-8")
     assert "singlemod.Client" in rendered_example
     assert "src.singlemod" not in rendered_example
     assert_html_internal_links_resolve(example_html)
-    assert ApiPackage.load_json(example_api_json).find_object("singlemod.stream") is not None
+    assert ApiPackage.load_json(example_api_object_tree_json).find_object("singlemod.stream") is not None
 
 
 def test_general_hatch_multi_package_repo_builds_complete_reference(
@@ -1490,27 +1491,27 @@ def test_api_objects_example_config_loads_repo_docstring_parser_modules(
         ]
     )
 
-    full_reference = output_dir / "oodocs-full-api-reference.html"
-    api_json = output_dir / "oodocs-api-objects.json"
-    coverage_json = output_dir / "oodocs-api-coverage.json"
-    assert full_reference.exists()
-    assert api_json.exists()
-    assert coverage_json.exists()
-    assert not (output_dir / "oodocs-full-api-reference.docx").exists()
+    help_book = output_dir / "oodocs-api-reference.html"
+    api_object_tree_json = output_dir / "oodocs-api-object-tree.json"
+    api_coverage_json = output_dir / "oodocs-api-coverage.json"
+    assert help_book.exists()
+    assert api_object_tree_json.exists()
+    assert api_coverage_json.exists()
+    assert not (output_dir / "oodocs-api-reference.docx").exists()
 
-    api = ApiPackage.load_json(api_json)
+    api = ApiPackage.load_json(api_object_tree_json)
     runner = api.find_object("briefpkg.Runner")
     run = api.find_object("briefpkg.run")
     assert runner is not None
     assert runner.summary == "brief:Runner class."
     assert run is not None
     assert run.summary == "brief:Run custom command."
-    assert ApiCoverageResult.load_json(coverage_json).object_coverage == 1.0
+    assert ApiCoverageResult.load_json(api_coverage_json).object_coverage == 1.0
 
-    html = full_reference.read_text(encoding="utf-8")
+    html = help_book.read_text(encoding="utf-8")
     assert "brief:Runner class." in html
     assert "brief:Run custom command." in html
-    assert_html_internal_links_resolve(full_reference)
+    assert_html_internal_links_resolve(help_book)
 
 
 def test_api_objects_example_external_json_config_loads_target_parser_modules(
@@ -1594,21 +1595,21 @@ def test_api_objects_example_external_json_config_loads_target_parser_modules(
         ]
     )
 
-    full_reference = output_dir / "oodocs-full-api-reference.html"
-    api_json = output_dir / "oodocs-api-objects.json"
-    coverage_json = output_dir / "oodocs-api-coverage.json"
-    assert full_reference.exists()
-    assert api_json.exists()
-    assert coverage_json.exists()
+    help_book = output_dir / "oodocs-api-reference.html"
+    api_object_tree_json = output_dir / "oodocs-api-object-tree.json"
+    api_coverage_json = output_dir / "oodocs-api-coverage.json"
+    assert help_book.exists()
+    assert api_object_tree_json.exists()
+    assert api_coverage_json.exists()
 
-    api = ApiPackage.load_json(api_json)
+    api = ApiPackage.load_json(api_object_tree_json)
     run = api.find_object("examplejsonpkg.run")
 
     assert run is not None
     assert run.summary == "example-json:Run from the example external config."
-    assert ApiCoverageResult.load_json(coverage_json).object_coverage == 1.0
+    assert ApiCoverageResult.load_json(api_coverage_json).object_coverage == 1.0
     assert_html_internal_links_resolve(
-        full_reference,
+        help_book,
         required_text=("example-json:Run from the example external config.",),
     )
 
@@ -1734,3 +1735,5 @@ def test_collect_api_accepts_config_with_repo_local_parser_modules(
 
     assert run is not None
     assert run.summary == "brief:Run custom command."
+
+
