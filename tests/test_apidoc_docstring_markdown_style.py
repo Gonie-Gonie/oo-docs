@@ -22,7 +22,7 @@ def test_markdown_docstring_fixture_extracts_shared_fields() -> None:
     assert function.exceptions[0].description == "If the path is empty."
     assert function.examples
     assert function.notes
-    assert function.renderer_notes[0].format == "html"
+    assert function.renderer_notes[0].output_format == "html"
     assert class_doc.parameters[0].name == "name"
     assert class_doc.parameters[0].annotation == "str"
     assert class_doc.parameters[0].description == "Widget name value."

@@ -134,9 +134,9 @@ def test_sphinx_parser_extracts_seealso_and_renderer_admonitions() -> None:
         "Load one widget from disk.",
         "Runtime widget object.",
     ]
-    assert parsed.renderer_notes[0].format == "pdf"
+    assert parsed.renderer_notes[0].output_format == "pdf"
     assert parsed.renderer_notes[0].message == "Wide signatures may wrap."
-    assert parsed.renderer_notes[1].format == "html"
+    assert parsed.renderer_notes[1].output_format == "html"
     assert parsed.renderer_notes[1].message == "load_widget receives a stable anchor."
 
 
@@ -238,9 +238,9 @@ def test_sphinx_fallback_parser_extracts_seealso_and_renderer_admonitions(monkey
         "Load one widget from disk.",
         "Runtime widget object.",
     ]
-    assert parsed.renderer_notes[0].format == "pdf"
+    assert parsed.renderer_notes[0].output_format == "pdf"
     assert parsed.renderer_notes[0].message == "Wide signatures may wrap."
-    assert parsed.renderer_notes[1].format == "html"
+    assert parsed.renderer_notes[1].output_format == "html"
     assert parsed.renderer_notes[1].message == "load_widget receives a stable anchor."
 
 

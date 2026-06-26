@@ -603,7 +603,7 @@ def api_renderer_notes_table(
     if not notes:
         return None
     return Table(
-        ["Format", "Severity", "Message"],
+        ["Output format", "Severity", "Message"],
         [note.to_row() for note in notes],
         caption=caption,
         split=True,

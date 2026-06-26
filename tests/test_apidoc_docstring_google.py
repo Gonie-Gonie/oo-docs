@@ -20,7 +20,7 @@ def test_google_docstring_fixture_extracts_shared_fields() -> None:
     assert function.exceptions[0].exception == "ValueError"
     assert function.examples
     assert function.notes
-    assert function.renderer_notes[0].format == "html"
+    assert function.renderer_notes[0].output_format == "html"
     assert class_doc.parameters[0].name == "name"
     assert class_doc.attributes[0].name == "label"
     assert method.parameters[0].name == "path"

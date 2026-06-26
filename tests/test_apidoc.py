@@ -181,7 +181,7 @@ def test_docstring_parsers_normalize_standard_styles() -> None:
     assert google_doctest.examples[0].language == "pycon"
     assert google.notes == ["This loader is safe for generated reference documents."]
     assert google.warnings == ["Retries should stay low in examples."]
-    assert google.renderer_notes[0].format == "pdf"
+    assert google.renderer_notes[0].output_format == "pdf"
     mismatch = parse_docstring(GOOGLE_DOCSTRING, style="numpy", qualname="pkg.load", module="pkg")
     assert any(issue.code == "docstring-style-mismatch" for issue in mismatch.issues)
     assert ParsedDocstring.from_dict(google.to_dict()).to_dict() == google.to_dict()
@@ -600,7 +600,7 @@ def test_collect_api_builds_queryable_object_tree_and_blocks(tmp_path: Path) -> 
     assert isinstance(api, ApiPackage)
     assert module.notes == ["Module notes survive API collection."]
     assert module.warnings == ["Module warnings are rendered in module chapters."]
-    assert module.renderer_notes[0].format == "html"
+    assert module.renderer_notes[0].output_format == "html"
     assert [obj.qualname for obj in classes] == ["samplepkg.Widget"]
     assert [obj.qualname for obj in functions] == ["samplepkg.make_widget"]
     assert api.find("samplepkg.Widget") is classes[0]

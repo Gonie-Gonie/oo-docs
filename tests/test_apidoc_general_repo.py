@@ -201,7 +201,7 @@ def test_general_repo_sphinx_seealso_directives_compose_into_reference(
     assert obj.metadata["docstring_style"] == "sphinx"
     assert obj.see_also[0].label == "open_widget"
     assert obj.see_also[0].description == "Open a widget without loading metadata."
-    assert obj.renderer_notes[0].format == "html"
+    assert obj.renderer_notes[0].output_format == "html"
     assert obj.renderer_notes[0].message == "open_widget receives a stable related API entry."
 
     document = Document(

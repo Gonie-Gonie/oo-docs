@@ -886,7 +886,7 @@ class ApiRendererNote:
     """Renderer-specific behavior note.
 
     Attributes:
-        format: Optional output format label.
+        output_format: Optional output format label.
         message: Note text.
         severity: Note severity.
 
@@ -906,7 +906,7 @@ class ApiRendererNote:
         ```
     """
 
-    format: Literal["docx", "pdf", "html"] | None
+    output_format: Literal["docx", "pdf", "html"] | None
     message: str
     severity: Literal["info", "warning"] = "info"
 
@@ -927,7 +927,7 @@ class ApiRendererNote:
         """
 
         return {
-            "format": self.format,
+            "output_format": self.output_format,
             "message": self.message,
             "severity": self.severity,
         }
@@ -949,7 +949,7 @@ class ApiRendererNote:
             from oodocs.apidoc import ApiRendererNote
 
             note = ApiRendererNote.from_dict({
-                "format": "pdf",
+                "output_format": "pdf",
                 "message": "Wide tables may wrap.",
                 "severity": "warning",
             })
@@ -957,20 +957,20 @@ class ApiRendererNote:
         """
 
         return cls(
-            format=data.get("format"),  # type: ignore[arg-type]
+            output_format=data.get("output_format"),  # type: ignore[arg-type]
             message=str(data["message"]),
             severity=str(data.get("severity", "info")),  # type: ignore[arg-type]
         )
 
     def to_row(
         self,
-        columns: Sequence[str] = ("format", "severity", "message"),
+        columns: Sequence[str] = ("output_format", "severity", "message"),
     ) -> list[object]:
         """Return this renderer note as a table row.
 
         Args:
             columns: Column names to include. Supported values are
-                ``"format"``, ``"severity"``, and ``"message"``.
+                ``"output_format"``, ``"severity"``, and ``"message"``.
 
         Returns:
             List of table cell values.
@@ -983,12 +983,12 @@ class ApiRendererNote:
             from oodocs.apidoc import ApiRendererNote
 
             note = ApiRendererNote("pdf", "Long signatures may wrap.", "warning")
-            table = Table(["Format", "Severity", "Message"], [note.to_row()])
+            table = Table(["Output format", "Severity", "Message"], [note.to_row()])
             ```
         """
 
         values = {
-            "format": self.format or "all",
+            "output_format": self.output_format or "all",
             "severity": self.severity,
             "message": self.message,
         }
@@ -1016,7 +1016,7 @@ class ApiRendererNote:
         from oodocs.components.inline import inline_code
 
         return Paragraph(
-            inline_code(self.format or "all"),
+            inline_code(self.output_format or "all"),
             " ",
             self.severity,
             ": ",

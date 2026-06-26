@@ -50,7 +50,7 @@ def test_apidoc_leaf_metadata_helpers_compose_into_oodocs_blocks() -> None:
             ["Raises", *exception.to_row()],
             ["Example", *example.to_row(("language", "caption"))],
             ["See also", *see_also.to_row(("label", "target"))],
-            ["Renderer", *note.to_row(("format", "message"))],
+            ["Renderer", *note.to_row(("output_format", "message"))],
         ],
     )
     document = Document(
