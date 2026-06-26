@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import json
 from pathlib import Path
 from typing import Sequence
 
@@ -337,22 +336,14 @@ def _run_check(args: argparse.Namespace) -> int:
     if args.save_csv:
         result.save_csv(args.save_csv)
     if args.report_format == "json":
-        print(json.dumps(result.to_dict(), indent=2, sort_keys=True))
+        print(result.to_json(indent=2))
     else:
-        print(
-            f"{result.package}: {result.documented_object_count}/{result.public_object_count} "
-            f"public objects documented ({result.object_coverage:.1%})"
-        )
+        print(result.format_text())
         if args.save_json:
             print(f"Wrote coverage-json: {args.save_json}")
         if args.save_csv:
             print(f"Wrote coverage-csv: {args.save_csv}")
-        if result.issues:
-            for issue in result.issues[:20]:
-                print(f"- {issue.severity.upper()} {issue.code}: {issue.qualname or issue.module or result.package} - {issue.message}")
-            if len(result.issues) > 20:
-                print(f"... {len(result.issues) - 20} more issue(s)")
-    return 1 if any(issue.severity == "error" for issue in result.issues) else 0
+    return 0 if result.ok else 1
 
 
 def _run_snapshot(args: argparse.Namespace) -> int:

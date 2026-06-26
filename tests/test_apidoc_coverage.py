@@ -25,7 +25,12 @@ def test_apidoc_coverage_detects_missing_docs_and_serializes(tmp_path) -> None:
 
     assert coverage.undocumented_object_count >= 1
     assert any(issue.code == "missing-docstring" for issue in coverage.issues)
+    assert coverage.ok
+    assert coverage.errors == ()
+    assert coverage.warnings
     assert ApiCoverageResult.from_dict(coverage.to_dict()).package == "undocpkg"
+    assert ApiCoverageResult.from_json(coverage.to_json()).package == "undocpkg"
+    assert "undocpkg:" in coverage.format_text()
     assert isinstance(coverage.to_table(), Table)
 
 

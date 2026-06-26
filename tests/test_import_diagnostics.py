@@ -17,12 +17,26 @@ _TINY_PNG = (
 )
 
 
-def test_parse_markdown_returns_import_result_with_diagnostics() -> None:
+def test_parse_markdown_returns_import_result_with_diagnostics(tmp_path) -> None:
     result = parse_markdown("![Remote](https://example.com/plot.png)")
 
     assert isinstance(result, ImportResult)
     assert len(result.blocks) == 1
     assert result.issues[0].code == "remote-image-lossy"
+    assert result.ok
+    assert result.errors == ()
+    assert result.infos == ()
+    assert result.warnings[0].code == "remote-image-lossy"
+
+    payload = json.loads(result.to_json(indent=None))
+    assert payload["warnings"] == 1
+    assert payload["block_count"] == 1
+    restored = ImportResult.from_json(result.to_json())
+    assert restored.blocks == ()
+    assert restored.warnings[0].code == "remote-image-lossy"
+    sidecar = result.save_json(tmp_path / "import-diagnostics.json")
+    assert ImportResult.load_json(sidecar).warnings[0].message == result.warnings[0].message
+    assert result.to_table().rows
 
     with pytest.raises(ImportPolicyError):
         parse_markdown(

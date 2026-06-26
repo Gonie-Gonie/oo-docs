@@ -78,6 +78,7 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "PageNumberDefaults",
         "RunInTitleStyle",
         "ReferenceList",
+        "ResultLike",
         "SubSubsection",
         "TitleMatterDefaults",
         "TypographyDefaults",
@@ -472,10 +473,70 @@ def test_api_renderer_note_uses_output_format_field_name() -> None:
 
 
 def test_result_objects_use_format_text_names() -> None:
+    assert "ResultLike" in oodocs.__all__
     assert "format_table" not in _public_members(oodocs.ValidationResult)
     assert "format_issues" not in _public_members(oodocs.ImportResult)
     assert "format_text" in _public_members(oodocs.ValidationResult)
     assert "format_text" in _public_members(oodocs.ImportResult)
+
+    validation_result_members = _public_members(oodocs.ValidationResult)
+    assert {
+        "ok",
+        "errors",
+        "warnings",
+        "infos",
+        "to_dict",
+        "from_dict",
+        "to_json",
+        "from_json",
+        "save_json",
+        "load_json",
+        "to_table",
+    } <= validation_result_members
+    import_result_members = _public_members(oodocs.ImportResult)
+    assert {
+        "ok",
+        "errors",
+        "warnings",
+        "infos",
+        "to_dict",
+        "from_dict",
+        "to_json",
+        "from_json",
+        "save_json",
+        "load_json",
+        "to_table",
+    } <= import_result_members
+    coverage_result_members = _public_members(apidoc.ApiCoverageResult)
+    assert {
+        "ok",
+        "errors",
+        "warnings",
+        "infos",
+        "to_dict",
+        "from_dict",
+        "to_json",
+        "from_json",
+        "save_json",
+        "load_json",
+        "to_table",
+        "format_text",
+    } <= coverage_result_members
+    diff_result_members = _public_members(apidoc.ApiDiffResult)
+    assert {
+        "ok",
+        "errors",
+        "warnings",
+        "infos",
+        "to_dict",
+        "from_dict",
+        "to_json",
+        "from_json",
+        "save_json",
+        "load_json",
+        "to_table",
+        "format_text",
+    } <= diff_result_members
 
 
 def test_import_issue_uses_line_number_field_name() -> None:

@@ -133,7 +133,12 @@ from oodocs.styles import (
     TypographyDefaults,
     Theme,
 )
-from oodocs.validation import DocumentValidationError, ValidationIssue, ValidationResult
+from oodocs.validation import (
+    DocumentValidationError,
+    ResultLike,
+    ValidationIssue,
+    ValidationResult,
+)
 from oodocs.workflows import (
     OutputBundle,
     build_source_outputs,
@@ -233,6 +238,7 @@ __all__ = [
     "ParagraphStyle",
     "RunInTitleStyle",
     "ReferenceList",
+    "ResultLike",
     "OutputBundle",
     "Remark",
     "Section",

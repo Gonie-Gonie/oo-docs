@@ -8,10 +8,13 @@ Attributes:
 from __future__ import annotations
 
 from dataclasses import dataclass
+import json
+from pathlib import Path
 from typing import Iterable, Literal, Sequence
 
 from oodocs.components.base import Block
-from oodocs.core import OODocsError
+from oodocs.components.media import Table
+from oodocs.core import OODocsError, PathLike
 
 
 ImportSeverity = Literal["info", "warning", "error"]
@@ -28,6 +31,7 @@ class ImportIssue:
         message: Human-readable diagnostic message.
         line_number: Optional 1-based source line where the issue occurred.
         source: Optional source label, such as a file path or notebook cell.
+        path: Optional filesystem path associated with the imported source.
 
     Examples:
         ```python
@@ -45,12 +49,14 @@ class ImportIssue:
     message: str
     line_number: int | None = None
     source: str | None = None
+    path: str | None = None
 
     def to_dict(self) -> dict[str, object]:
         """Return the issue as a JSON-serializable mapping.
 
         Returns:
-            Dictionary containing severity, code, message, line number, and source.
+            Dictionary containing severity, code, message, source, path, and
+            line number.
         """
 
         return {
@@ -59,7 +65,38 @@ class ImportIssue:
             "message": self.message,
             "line_number": self.line_number,
             "source": self.source,
+            "path": self.path,
         }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, object]) -> ImportIssue:
+        """Reconstruct an import issue from serialized data.
+
+        Args:
+            data: Mapping produced by ``to_dict``.
+
+        Returns:
+            Import issue object.
+
+        Examples:
+            ```python
+            issue = ImportIssue.from_dict({
+                "severity": "warning",
+                "code": "raw-html-unsupported",
+                "message": "Raw HTML was imported as plain text.",
+            })
+            ```
+        """
+
+        line_number = data.get("line_number")
+        return cls(
+            severity=str(data["severity"]),  # type: ignore[arg-type]
+            code=str(data["code"]),
+            message=str(data["message"]),
+            line_number=int(line_number) if line_number is not None else None,
+            source=_optional_str(data.get("source")),
+            path=_optional_str(data.get("path")),
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -77,7 +114,7 @@ class ImportResult:
         from oodocs import parse_markdown
 
         result = parse_markdown("# Title")
-        if result.warnings():
+        if result.warnings:
             print(result.format_text())
         ```
 
@@ -103,6 +140,17 @@ class ImportResult:
     blocks: tuple[Block, ...]
     issues: tuple[ImportIssue, ...] = ()
 
+    @property
+    def errors(self) -> tuple[ImportIssue, ...]:
+        """Return error diagnostics.
+
+        Returns:
+            Tuple of issues whose severity is ``"error"``.
+        """
+
+        return tuple(issue for issue in self.issues if issue.severity == "error")
+
+    @property
     def warnings(self) -> tuple[ImportIssue, ...]:
         """Return warning diagnostics.
 
@@ -112,14 +160,157 @@ class ImportResult:
 
         return tuple(issue for issue in self.issues if issue.severity == "warning")
 
-    def errors(self) -> tuple[ImportIssue, ...]:
-        """Return error diagnostics.
+    @property
+    def infos(self) -> tuple[ImportIssue, ...]:
+        """Return informational diagnostics.
 
         Returns:
-            Tuple of issues whose severity is ``"error"``.
+            Tuple of issues whose severity is ``"info"``.
         """
 
-        return tuple(issue for issue in self.issues if issue.severity == "error")
+        return tuple(issue for issue in self.issues if issue.severity == "info")
+
+    @property
+    def ok(self) -> bool:
+        """Return whether the import completed without error diagnostics.
+
+        Returns:
+            ``True`` when no issue has severity ``"error"``.
+        """
+
+        return not self.errors
+
+    def to_dict(self) -> dict[str, object]:
+        """Return a JSON-serializable import summary.
+
+        Returns:
+            Dictionary containing status counts, imported block count, and
+            issue dictionaries. Blocks themselves are not serialized because
+            imported OODocs block objects are not a stable JSON format.
+
+        Examples:
+            ```python
+            from oodocs import parse_markdown
+
+            result = parse_markdown("# Title")
+            payload = result.to_dict()
+            ```
+        """
+
+        return {
+            "ok": self.ok,
+            "block_count": len(self.blocks),
+            "errors": len(self.errors),
+            "warnings": len(self.warnings),
+            "infos": len(self.infos),
+            "issues": [issue.to_dict() for issue in self.issues],
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, object]) -> ImportResult:
+        """Reconstruct an import summary from serialized data.
+
+        Args:
+            data: Mapping produced by ``to_dict``.
+
+        Returns:
+            Import result with deserialized issues and an empty block tuple.
+
+        Examples:
+            ```python
+            restored = ImportResult.from_dict(saved_import_summary)
+            if not restored.ok:
+                print(restored.format_text())
+            ```
+        """
+
+        return cls(
+            (),
+            tuple(
+                ImportIssue.from_dict(issue)
+                for issue in data.get("issues", [])  # type: ignore[union-attr]
+            ),
+        )
+
+    def to_json(self, *, indent: int | None = 2) -> str:
+        """Serialize this import summary to JSON.
+
+        Args:
+            indent: Indentation passed to ``json.dumps``.
+
+        Returns:
+            JSON string for the import summary.
+        """
+
+        return json.dumps(self.to_dict(), ensure_ascii=False, indent=indent)
+
+    @classmethod
+    def from_json(cls, text: str) -> ImportResult:
+        """Deserialize an import summary from JSON text.
+
+        Args:
+            text: JSON text produced by ``to_json``.
+
+        Returns:
+            Import result with deserialized issues and no blocks.
+        """
+
+        return cls.from_dict(json.loads(text))
+
+    def save_json(self, path: PathLike) -> Path:
+        """Write this import summary to a JSON sidecar.
+
+        Args:
+            path: Output JSON path.
+
+        Returns:
+            Written path.
+        """
+
+        output_path = Path(path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(self.to_json(indent=2) + "\n", encoding="utf-8")
+        return output_path
+
+    @classmethod
+    def load_json(cls, path: PathLike) -> ImportResult:
+        """Read an import summary JSON sidecar.
+
+        Args:
+            path: JSON sidecar path.
+
+        Returns:
+            Import result with deserialized issues and no blocks.
+        """
+
+        return cls.from_json(Path(path).read_text(encoding="utf-8"))
+
+    def to_table(self, *, caption: str | None = "Import diagnostics") -> Table:
+        """Return import diagnostics as an OODocs table.
+
+        Args:
+            caption: Optional table caption.
+
+        Returns:
+            Table containing severity, code, source, line number, and message.
+        """
+
+        rows = [
+            [
+                issue.severity,
+                issue.code,
+                issue.source or issue.path or "",
+                "" if issue.line_number is None else str(issue.line_number),
+                issue.message,
+            ]
+            for issue in self.issues
+        ]
+        return Table(
+            ["Severity", "Code", "Source", "Line", "Message"],
+            rows,
+            caption=caption,
+            split=True,
+        )
 
     def format_text(self) -> str:
         """Format diagnostics as human-readable console text.
@@ -141,6 +332,10 @@ class ImportResult:
                 f"{issue.message}"
             )
         return "\n".join(lines)
+
+
+def _optional_str(value: object) -> str | None:
+    return str(value) if value is not None else None
 
 
 class ImportPolicyError(OODocsError):

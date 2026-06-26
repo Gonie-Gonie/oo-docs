@@ -3,11 +3,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from oodocs import Document, Figure, Table
+from oodocs import Document, Figure, Table, ValidationResult
 from oodocs.cli import main
 
 
-def test_validation_result_serializes_to_dict_and_json() -> None:
+def test_validation_result_serializes_to_dict_and_json(tmp_path: Path) -> None:
     document = Document("Broken", Figure("missing.png", caption="Missing."))
 
     result = document.validate(formats=("pdf",))
@@ -17,9 +17,17 @@ def test_validation_result_serializes_to_dict_and_json() -> None:
     assert payload["ok"] is False
     assert payload["errors"] == 1
     assert payload["warnings"] == 0
+    assert payload["infos"] == 0
     assert payload["issues"][0]["code"] == "missing-image-file"
     assert payload["issues"][0]["formats"] == ["docx", "pdf", "html"]
     assert parsed == payload
+    assert result.infos == ()
+    assert isinstance(result.to_table(formats=("pdf",)), Table)
+
+    restored = ValidationResult.from_json(result.to_json(formats=("pdf",)))
+    assert restored.errors[0].code == "missing-image-file"
+    sidecar = result.save_json(tmp_path / "validation.json", formats=("pdf",))
+    assert ValidationResult.load_json(sidecar).errors[0].code == "missing-image-file"
 
 
 def test_cli_validate_can_emit_json(tmp_path: Path, capsys) -> None:

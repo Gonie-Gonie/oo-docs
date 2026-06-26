@@ -10,7 +10,7 @@ from dataclasses import dataclass
 import json
 from pathlib import Path
 from textwrap import wrap
-from typing import Iterable, Literal, Sequence, TYPE_CHECKING
+from typing import Iterable, Literal, Protocol, Sequence, TYPE_CHECKING
 
 from oodocs.compatibility import (
     OUTPUT_FORMATS,
@@ -56,7 +56,7 @@ from oodocs.components.inline import (
 from oodocs.components.media import Figure, ImageData, SubFigure, SubFigureGroup, Table
 from oodocs.components.positioning import ImageBox, Shape, TextBox
 from oodocs.components.references import CitationSource
-from oodocs.core import OODocsError, length_to_inches
+from oodocs.core import OODocsError, PathLike, length_to_inches
 
 if TYPE_CHECKING:
     from oodocs.document import Document
@@ -64,6 +64,65 @@ if TYPE_CHECKING:
 
 
 ValidationSeverity = Literal["error", "warning"]
+
+
+class ResultLike(Protocol):
+    """Protocol for serializable result objects.
+
+    Result objects expose status partitions, structured serialization,
+    JSON sidecars, OODocs table conversion, and console text formatting.
+
+    Examples:
+        ```python
+        from oodocs import ResultLike
+
+        def print_summary(result: ResultLike) -> None:
+            print(result.format_text())
+        ```
+    """
+
+    @property
+    def ok(self) -> bool:
+        """Return whether the result has no error-level entries."""
+
+    @property
+    def errors(self) -> tuple[object, ...]:
+        """Return error-level entries."""
+
+    @property
+    def warnings(self) -> tuple[object, ...]:
+        """Return warning-level entries."""
+
+    @property
+    def infos(self) -> tuple[object, ...]:
+        """Return informational entries."""
+
+    def to_dict(self, *args: object, **kwargs: object) -> dict[str, object]:
+        """Return a JSON-serializable mapping."""
+
+    @classmethod
+    def from_dict(cls, data: dict[str, object]) -> ResultLike:
+        """Reconstruct a result from a JSON-serializable mapping."""
+
+    def to_json(self, *args: object, **kwargs: object) -> str:
+        """Serialize this result to JSON text."""
+
+    @classmethod
+    def from_json(cls, text: str) -> ResultLike:
+        """Deserialize a result from JSON text."""
+
+    def save_json(self, path: PathLike, *args: object, **kwargs: object) -> Path:
+        """Write this result to a JSON sidecar."""
+
+    @classmethod
+    def load_json(cls, path: PathLike) -> ResultLike:
+        """Read a result from a JSON sidecar."""
+
+    def to_table(self, *args: object, **kwargs: object) -> Table:
+        """Return this result as an OODocs table."""
+
+    def format_text(self, *args: object, **kwargs: object) -> str:
+        """Format this result as human-readable console text."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -124,6 +183,25 @@ class ValidationIssue:
             "path": self.path,
             "formats": list(self.formats),
         }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, object]) -> ValidationIssue:
+        """Reconstruct a validation issue from serialized data.
+
+        Args:
+            data: Mapping produced by ``to_dict``.
+
+        Returns:
+            Validation issue object.
+        """
+
+        return cls(
+            severity=str(data["severity"]),  # type: ignore[arg-type]
+            code=str(data["code"]),
+            message=str(data["message"]),
+            path=str(data.get("path", "document")),
+            formats=normalize_output_formats(data.get("formats")),  # type: ignore[arg-type]
+        )
 
     def __str__(self) -> str:
         return (
@@ -186,6 +264,16 @@ class ValidationResult:
         """
 
         return tuple(issue for issue in self.issues if issue.severity == "warning")
+
+    @property
+    def infos(self) -> tuple[ValidationIssue, ...]:
+        """Return informational issues.
+
+        Returns:
+            Empty tuple. Validation currently reports only errors and warnings.
+        """
+
+        return ()
 
     @property
     def ok(self) -> bool:
@@ -296,8 +384,27 @@ class ValidationResult:
             "ok": result.ok,
             "errors": len(result.errors),
             "warnings": len(result.warnings),
+            "infos": len(result.infos),
             "issues": [issue.to_dict() for issue in result.issues],
         }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, object]) -> ValidationResult:
+        """Reconstruct a validation result from serialized data.
+
+        Args:
+            data: Mapping produced by ``to_dict``.
+
+        Returns:
+            Validation result object.
+        """
+
+        return cls(
+            tuple(
+                ValidationIssue.from_dict(issue)
+                for issue in data.get("issues", [])  # type: ignore[union-attr]
+            )
+        )
 
     def to_json(
         self,
@@ -319,6 +426,91 @@ class ValidationResult:
             self.to_dict(formats=formats),
             ensure_ascii=False,
             indent=indent,
+        )
+
+    @classmethod
+    def from_json(cls, text: str) -> ValidationResult:
+        """Deserialize a validation result from JSON text.
+
+        Args:
+            text: JSON text produced by ``to_json``.
+
+        Returns:
+            Validation result object.
+        """
+
+        return cls.from_dict(json.loads(text))
+
+    def save_json(
+        self,
+        path: PathLike,
+        *,
+        formats: Iterable[str] | None = None,
+        indent: int | None = 2,
+    ) -> Path:
+        """Write this validation result to a JSON sidecar.
+
+        Args:
+            path: Output JSON path.
+            formats: Output formats to include. Defaults to all formats.
+            indent: Indentation passed to ``json.dumps``.
+
+        Returns:
+            Written path.
+        """
+
+        output_path = Path(path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(
+            self.to_json(formats=formats, indent=indent) + "\n",
+            encoding="utf-8",
+        )
+        return output_path
+
+    @classmethod
+    def load_json(cls, path: PathLike) -> ValidationResult:
+        """Read a validation result JSON sidecar.
+
+        Args:
+            path: JSON sidecar path.
+
+        Returns:
+            Validation result object.
+        """
+
+        return cls.from_json(Path(path).read_text(encoding="utf-8"))
+
+    def to_table(
+        self,
+        *,
+        formats: Iterable[str] | None = None,
+        caption: str | None = "Validation issues",
+    ) -> Table:
+        """Return validation issues as an OODocs table.
+
+        Args:
+            formats: Output formats to include. Defaults to all formats.
+            caption: Optional table caption.
+
+        Returns:
+            Table containing severity, formats, code, path, and message.
+        """
+
+        rows = [
+            [
+                issue.severity,
+                format_output_formats(issue.formats),
+                issue.code,
+                issue.path,
+                issue.message,
+            ]
+            for issue in self.issues_for(formats)
+        ]
+        return Table(
+            ["Severity", "Formats", "Code", "Path", "Message"],
+            rows,
+            caption=caption,
+            split=True,
         )
 
     def format_text(self, *, formats: Iterable[str] | None = None) -> str:
@@ -1355,6 +1547,7 @@ def _wrap_row(values: Sequence[str], widths: Sequence[int]) -> list[tuple[str, .
 
 __all__ = [
     "DocumentValidationError",
+    "ResultLike",
     "ValidationIssue",
     "ValidationResult",
     "ValidationSeverity",

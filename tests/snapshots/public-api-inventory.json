@@ -474,6 +474,13 @@
           "qualname": "oodocs.components.generated.ReferenceList"
         },
         {
+          "category": "validation",
+          "kind": "class",
+          "module": "oodocs.validation",
+          "name": "ResultLike",
+          "qualname": "oodocs.validation.ResultLike"
+        },
+        {
           "category": "workflow",
           "kind": "class",
           "module": "oodocs.workflows",
@@ -1683,6 +1690,13 @@
           "module": "oodocs.validation",
           "name": "DocumentValidationError",
           "qualname": "oodocs.validation.DocumentValidationError"
+        },
+        {
+          "category": "validation",
+          "kind": "class",
+          "module": "oodocs.validation",
+          "name": "ResultLike",
+          "qualname": "oodocs.validation.ResultLike"
         },
         {
           "category": "validation",

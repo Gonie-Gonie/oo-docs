@@ -71,6 +71,46 @@ class ApiCoverageResult:
     issues: list[ApiDocIssue] = field(default_factory=list)
 
     @property
+    def errors(self) -> tuple[ApiDocIssue, ...]:
+        """Return error-level coverage issues.
+
+        Returns:
+            Issues whose severity is ``"error"``.
+        """
+
+        return tuple(issue for issue in self.issues if issue.severity == "error")
+
+    @property
+    def warnings(self) -> tuple[ApiDocIssue, ...]:
+        """Return warning-level coverage issues.
+
+        Returns:
+            Issues whose severity is ``"warning"``.
+        """
+
+        return tuple(issue for issue in self.issues if issue.severity == "warning")
+
+    @property
+    def infos(self) -> tuple[ApiDocIssue, ...]:
+        """Return informational coverage issues.
+
+        Returns:
+            Issues whose severity is ``"info"``.
+        """
+
+        return tuple(issue for issue in self.issues if issue.severity == "info")
+
+    @property
+    def ok(self) -> bool:
+        """Return whether coverage has no error-level issues.
+
+        Returns:
+            ``True`` when no issue has severity ``"error"``.
+        """
+
+        return not self.errors
+
+    @property
     def object_coverage(self) -> float:
         """Return the documented public object ratio.
 
@@ -191,6 +231,31 @@ class ApiCoverageResult:
             ],
         )
 
+    def to_json(self, *, indent: int | None = 2) -> str:
+        """Serialize this coverage result to JSON.
+
+        Args:
+            indent: Indentation passed to ``json.dumps``.
+
+        Returns:
+            JSON string for the coverage result.
+        """
+
+        return json.dumps(self.to_dict(), indent=indent, sort_keys=True)
+
+    @classmethod
+    def from_json(cls, text: str) -> ApiCoverageResult:
+        """Deserialize a coverage result from JSON text.
+
+        Args:
+            text: JSON text produced by ``to_json``.
+
+        Returns:
+            Coverage result object.
+        """
+
+        return cls.from_dict(json.loads(text))
+
     def to_table(self, *, caption: str | None = "API documentation coverage") -> Table:
         """Return coverage metrics as an OODocs table.
 
@@ -267,6 +332,28 @@ class ApiCoverageResult:
             blocks.append(Paragraph("No API documentation issues were found."))
         return Chapter("API Documentation Coverage", *blocks)
 
+    def format_text(self) -> str:
+        """Format coverage as human-readable console text.
+
+        Returns:
+            A coverage summary line plus up to 20 issue rows.
+        """
+
+        lines = [
+            f"{self.package}: {self.documented_object_count}/{self.public_object_count} "
+            f"public objects documented ({self.object_coverage:.1%})"
+        ]
+        if self.issues:
+            for issue in self.issues[:20]:
+                target = issue.qualname or issue.module or self.package
+                lines.append(
+                    f"- {issue.severity.upper()} {issue.code}: "
+                    f"{target} - {issue.message}"
+                )
+            if len(self.issues) > 20:
+                lines.append(f"... {len(self.issues) - 20} more issue(s)")
+        return "\n".join(lines)
+
     def save_json(self, path: PathLike) -> Path:
         """Write coverage sidecar JSON.
 
@@ -290,10 +377,7 @@ class ApiCoverageResult:
 
         output_path = Path(path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(
-            json.dumps(self.to_dict(), indent=2, sort_keys=True) + "\n",
-            encoding="utf-8",
-        )
+        output_path.write_text(self.to_json(indent=2) + "\n", encoding="utf-8")
         return output_path
 
     @classmethod
@@ -323,7 +407,7 @@ class ApiCoverageResult:
             ```
         """
 
-        return cls.from_dict(json.loads(Path(path).read_text(encoding="utf-8")))
+        return cls.from_json(Path(path).read_text(encoding="utf-8"))
 
     def save_csv(self, path: PathLike) -> Path:
         """Save coverage issues as CSV.

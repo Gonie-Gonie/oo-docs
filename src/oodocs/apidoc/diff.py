@@ -216,8 +216,89 @@ class ApiDiffResult:
     deprecated: list[ApiObject]
     coverage_delta: dict[str, object]
 
-    def to_summary_table(self) -> Table:
+    @property
+    def errors(self) -> tuple[str, ...]:
+        """Return breaking API change summaries.
+
+        Returns:
+            Human-readable summaries for removed objects and signature,
+            default-value, parameter-annotation, or return-annotation changes.
+        """
+
+        errors: list[str] = []
+        errors.extend(f"Removed API: {obj.qualname}" for obj in self.removed)
+        errors.extend(
+            f"Changed signature: {base.qualname}"
+            for base, _head in self.changed_signatures
+        )
+        errors.extend(
+            f"Changed default: {base.qualname}"
+            for base, _head in self.changed_defaults
+        )
+        errors.extend(
+            f"Changed parameter annotation: {base.qualname}"
+            for base, _head in self.changed_parameter_annotations
+        )
+        errors.extend(
+            f"Changed return annotation: {base.qualname}"
+            for base, _head in self.changed_return_annotations
+        )
+        return tuple(errors)
+
+    @property
+    def warnings(self) -> tuple[str, ...]:
+        """Return non-breaking API change summaries.
+
+        Returns:
+            Human-readable summaries for docstring changes and deprecated
+            objects.
+        """
+
+        warnings: list[str] = []
+        warnings.extend(
+            f"Changed docstring: {base.qualname}"
+            for base, _head in self.changed_docstrings
+        )
+        warnings.extend(f"Deprecated API: {obj.qualname}" for obj in self.deprecated)
+        return tuple(warnings)
+
+    @property
+    def infos(self) -> tuple[str, ...]:
+        """Return informational API change summaries.
+
+        Returns:
+            Human-readable summaries for added objects.
+        """
+
+        return tuple(f"Added API: {obj.qualname}" for obj in self.added)
+
+    @property
+    def ok(self) -> bool:
+        """Return whether the diff has no breaking API changes.
+
+        Returns:
+            ``True`` when ``errors`` is empty.
+        """
+
+        return not self.errors
+
+    def to_table(self, *, caption: str | None = "API diff summary") -> Table:
+        """Return this diff as a result summary table.
+
+        Args:
+            caption: Optional table caption.
+
+        Returns:
+            OODocs table with counts for diff categories.
+        """
+
+        return self.to_summary_table(caption=caption)
+
+    def to_summary_table(self, *, caption: str | None = "API diff summary") -> Table:
         """Return a compact diff summary table.
+
+        Args:
+            caption: Optional table caption.
 
         Returns:
             OODocs table with counts for added, removed, changed, deprecated,
@@ -248,7 +329,7 @@ class ApiDiffResult:
             ["Deprecated", str(len(self.deprecated))],
             ["Coverage delta", str(self.coverage_delta.get("object_coverage_delta", ""))],
         ]
-        return Table(["Metric", "Count"], rows, caption="API diff summary", split=True)
+        return Table(["Metric", "Count"], rows, caption=caption, split=True)
 
     def to_coverage_delta_table(self) -> Table:
         """Return coverage delta details as an OODocs table.
@@ -425,6 +506,18 @@ class ApiDiffResult:
             "coverage_delta": self.coverage_delta,
         }
 
+    def to_json(self, *, indent: int | None = 2) -> str:
+        """Serialize this diff result to JSON.
+
+        Args:
+            indent: Indentation passed to ``json.dumps``.
+
+        Returns:
+            JSON string for the diff result.
+        """
+
+        return json.dumps(self.to_dict(), indent=indent, sort_keys=True)
+
     @classmethod
     def from_dict(cls, data: dict[str, object]) -> ApiDiffResult:
         """Reconstruct a diff result from serialized data.
@@ -492,6 +585,42 @@ class ApiDiffResult:
             coverage_delta=dict(data.get("coverage_delta", {})),  # type: ignore[arg-type]
         )
 
+    @classmethod
+    def from_json(cls, text: str) -> ApiDiffResult:
+        """Deserialize a diff result from JSON text.
+
+        Args:
+            text: JSON text produced by ``to_json``.
+
+        Returns:
+            Diff result object.
+        """
+
+        return cls.from_dict(json.loads(text))
+
+    def format_text(self) -> str:
+        """Format this diff result as human-readable console text.
+
+        Returns:
+            A summary line plus breaking, warning, and informational change
+            rows.
+        """
+
+        lines = [
+            f"{self.base_name} -> {self.head_name}: "
+            f"{len(self.errors)} breaking, {len(self.warnings)} warning, "
+            f"{len(self.infos)} informational change(s)"
+        ]
+        for label, values in (
+            ("ERROR", self.errors),
+            ("WARNING", self.warnings),
+            ("INFO", self.infos),
+        ):
+            lines.extend(f"- {label}: {value}" for value in values[:20])
+            if len(values) > 20:
+                lines.append(f"... {len(values) - 20} more {label.lower()} change(s)")
+        return "\n".join(lines)
+
     def save_json(self, path: PathLike) -> Path:
         """Write diff sidecar JSON.
 
@@ -516,10 +645,7 @@ class ApiDiffResult:
 
         output_path = Path(path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(
-            json.dumps(self.to_dict(), indent=2, sort_keys=True) + "\n",
-            encoding="utf-8",
-        )
+        output_path.write_text(self.to_json(indent=2) + "\n", encoding="utf-8")
         return output_path
 
     @classmethod
@@ -548,7 +674,7 @@ class ApiDiffResult:
             ```
         """
 
-        return cls.from_dict(json.loads(Path(path).read_text(encoding="utf-8")))
+        return cls.from_json(Path(path).read_text(encoding="utf-8"))
 
 
 def diff_api(

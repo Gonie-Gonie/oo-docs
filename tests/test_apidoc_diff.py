@@ -40,6 +40,12 @@ def test_apidoc_diff_detects_added_and_changed_api(tmp_path) -> None:
 
     assert diff.added
     assert diff.changed_signatures
+    assert not diff.ok
+    assert diff.errors
+    assert diff.infos
+    assert ApiDiffResult.from_json(diff.to_json()).changed_signatures
+    assert "breaking" in diff.format_text()
+    assert isinstance(diff.to_table(), Table)
     assert isinstance(diff.to_summary_table(), Table)
 
 
