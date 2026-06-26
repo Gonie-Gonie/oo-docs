@@ -30,6 +30,8 @@ from oodocs.core import (
     normalize_vertical_alignment,
 )
 from oodocs.styles import (
+    BorderStyle,
+    Padding,
     TableCellStyle,
     TableCellStyleInput,
     TableStyle,
@@ -788,19 +790,14 @@ class Table(Block):
         style: Base table style.
         header_background_color: Optional header background color override.
         header_text_color: Optional header text color override.
-        border_color: Optional border color override.
+        border: Optional border style override.
         body_background_color: Optional body background color override.
         alternate_row_background_color: Optional alternating row background.
         cell_text_alignment: Optional body cell text alignment.
         cell_vertical_alignment: Optional body cell vertical alignment.
         header_text_alignment: Optional header cell text alignment.
         header_vertical_alignment: Optional header vertical alignment.
-        cell_padding: Optional padding override for all sides.
-        cell_padding_top: Optional top padding override.
-        cell_padding_right: Optional right padding override.
-        cell_padding_bottom: Optional bottom padding override.
-        cell_padding_left: Optional left padding override.
-        border_width: Optional border width override.
+        cell_padding: Optional cell padding override.
         repeat_header_rows: Whether fixed-page renderers repeat headers.
         include_index: Whether dataframe-like input includes index columns.
         split: Whether renderers may split the table across pages.
@@ -836,12 +833,14 @@ class Table(Block):
         Build a table from explicit headers and rows:
 
         ```python
-        from oodocs import Document, Table
+        from oodocs import BorderStyle, Document, Padding, Table
 
         table = Table(
             ["Metric", "Value"],
             [["Latency", "42 ms"], ["Errors", "0"]],
             caption="Service health",
+            border=BorderStyle.solid("CBD5E1", width=0.5),
+            cell_padding=Padding.symmetric(vertical=3, horizontal=5),
         )
         doc = Document("Status", table)
         ```
@@ -898,19 +897,14 @@ class Table(Block):
         style: TableStyle | None = None,
         header_background_color: str | None = None,
         header_text_color: str | None = None,
-        border_color: str | None = None,
+        border: BorderStyle | None = None,
         body_background_color: str | None = None,
         alternate_row_background_color: str | None = None,
         cell_text_alignment: str | None = None,
         cell_vertical_alignment: str | None = None,
         header_text_alignment: str | None = None,
         header_vertical_alignment: str | None = None,
-        cell_padding: float | None = None,
-        cell_padding_top: float | None = None,
-        cell_padding_right: float | None = None,
-        cell_padding_bottom: float | None = None,
-        cell_padding_left: float | None = None,
-        border_width: float | None = None,
+        cell_padding: Padding | None = None,
         repeat_header_rows: bool | None = None,
         include_index: bool = False,
         split: TableSplit = False,
@@ -946,7 +940,7 @@ class Table(Block):
             style,
             header_background_color=header_background_color,
             header_text_color=header_text_color,
-            border_color=border_color,
+            border=border,
             body_background_color=body_background_color,
             alternate_row_background_color=alternate_row_background_color,
             cell_text_alignment=cell_text_alignment,
@@ -954,11 +948,6 @@ class Table(Block):
             header_text_alignment=header_text_alignment,
             header_vertical_alignment=header_vertical_alignment,
             cell_padding=cell_padding,
-            cell_padding_top=cell_padding_top,
-            cell_padding_right=cell_padding_right,
-            cell_padding_bottom=cell_padding_bottom,
-            cell_padding_left=cell_padding_left,
-            border_width=border_width,
             repeat_header_rows=repeat_header_rows,
         )
         self.include_index = include_index
@@ -1071,19 +1060,14 @@ class Table(Block):
         style: TableStyle | None = None,
         header_background_color: str | None = None,
         header_text_color: str | None = None,
-        border_color: str | None = None,
+        border: BorderStyle | None = None,
         body_background_color: str | None = None,
         alternate_row_background_color: str | None = None,
         cell_text_alignment: str | None = None,
         cell_vertical_alignment: str | None = None,
         header_text_alignment: str | None = None,
         header_vertical_alignment: str | None = None,
-        cell_padding: float | None = None,
-        cell_padding_top: float | None = None,
-        cell_padding_right: float | None = None,
-        cell_padding_bottom: float | None = None,
-        cell_padding_left: float | None = None,
-        border_width: float | None = None,
+        cell_padding: Padding | None = None,
         repeat_header_rows: bool | None = None,
         include_index: bool = False,
         split: TableSplit = False,
@@ -1104,19 +1088,14 @@ class Table(Block):
             style: Base table style.
             header_background_color: Optional header background color override.
             header_text_color: Optional header text color override.
-            border_color: Optional border color override.
+            border: Optional border style override.
             body_background_color: Optional body background color override.
             alternate_row_background_color: Optional alternating row background.
             cell_text_alignment: Optional body cell text alignment.
             cell_vertical_alignment: Optional body cell vertical alignment.
             header_text_alignment: Optional header cell text alignment.
             header_vertical_alignment: Optional header vertical alignment.
-            cell_padding: Optional padding override for all sides.
-            cell_padding_top: Optional top padding override.
-            cell_padding_right: Optional right padding override.
-            cell_padding_bottom: Optional bottom padding override.
-            cell_padding_left: Optional left padding override.
-            border_width: Optional border width override.
+            cell_padding: Optional cell padding override.
             repeat_header_rows: Whether fixed-page renderers repeat headers.
             include_index: Whether to include dataframe index columns.
             split: Whether renderers may split the table across pages.
@@ -1146,7 +1125,7 @@ class Table(Block):
             style=style,
             header_background_color=header_background_color,
             header_text_color=header_text_color,
-            border_color=border_color,
+            border=border,
             body_background_color=body_background_color,
             alternate_row_background_color=alternate_row_background_color,
             cell_text_alignment=cell_text_alignment,
@@ -1154,11 +1133,6 @@ class Table(Block):
             header_text_alignment=header_text_alignment,
             header_vertical_alignment=header_vertical_alignment,
             cell_padding=cell_padding,
-            cell_padding_top=cell_padding_top,
-            cell_padding_right=cell_padding_right,
-            cell_padding_bottom=cell_padding_bottom,
-            cell_padding_left=cell_padding_left,
-            border_width=border_width,
             repeat_header_rows=repeat_header_rows,
             include_index=include_index,
             split=split,

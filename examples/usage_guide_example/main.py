@@ -16,6 +16,7 @@ from oodocs import (
     Author,
     AuthorLayout,
     BlockDefaults,
+    BorderStyle,
     Box,
     BulletList,
     CaptionDefaults,
@@ -40,6 +41,7 @@ from oodocs import (
     PageNumberDefaults,
     PageMargins,
     PageSize,
+    Padding,
     Paragraph,
     Part,
     Proof,
@@ -266,7 +268,7 @@ document = Document(
 )
 """
 
-REPORT_PANEL_SNIPPET = """from oodocs import Box, Paragraph, Table
+REPORT_PANEL_SNIPPET = """from oodocs import BorderStyle, Box, Padding, Paragraph, Table
 
 panel = Box(
     Paragraph("Editable report content can stay grouped with its evidence."),
@@ -281,10 +283,8 @@ panel = Box(
     background_color="#FDFBF6",
     title_background_color="#1058A3",
     title_text_color="#FFFFFF",
-    padding_top=8,
-    padding_right=12,
-    padding_bottom=8,
-    padding_left=12,
+    border=BorderStyle.solid("#B8C6D6", width=0.75),
+    padding=Padding.symmetric(vertical=8, horizontal=12),
     width=18.0,
     unit="cm",
     block_alignment="center",
@@ -306,8 +306,9 @@ contents = TableOfContents(
 """
 
 CONFIGURATION_OPTIONS_SNIPPET = """from oodocs import (
+    BorderStyle,
     BlockDefaults, CaptionDefaults, DocumentSettings, PageNumberDefaults,
-    Paragraph, Table, Theme, TypographyDefaults,
+    Padding, Paragraph, Table, Theme, TypographyDefaults,
 )
 
 settings = DocumentSettings(
@@ -331,9 +332,8 @@ table = Table(
     rows=[["Latency", "14 ms"]],
     header_background_color="#E8EDF5",
     cell_text_alignment="center",
-    border_width=0.4,
-    cell_padding_top=3,
-    cell_padding_bottom=3,
+    border=BorderStyle.solid("#CBD5E1", width=0.4),
+    cell_padding=Padding.symmetric(vertical=3, horizontal=5),
     repeat_header_rows=True,
 )
 """
@@ -616,14 +616,14 @@ diagram = Figure(
 )
 """
 
-COMPONENT_PRESETS_SNIPPET = """from oodocs import Paragraph
+COMPONENT_PRESETS_SNIPPET = """from oodocs import Padding, Paragraph
 from oodocs.presets.components import CalloutBox, KeyValueTable, Nomenclature
 
 review_note = CalloutBox(
     Paragraph("Check terminology before external review."),
     title="Review focus",
     variant="warning",
-    padding=8,
+    padding=Padding.all(8),
 )
 
 metadata = KeyValueTable(
@@ -842,8 +842,8 @@ def build_usage_guide_document() -> Document:
             ["Text and styled(...)", "font_name, font_size, text_color, highlight_color, bold, italic, underline, strikethrough, small_caps, uppercase, subscript, superscript", "Use TextStyle only when a reusable inline style needs a name."],
             ["Paragraph, CodeBlock, Equation", "text_alignment, space_before, space_after, leading, left_indent, right_indent, first_line_indent, keep_together, keep_with_next, page_break_before, widow_control, unit", "Use ParagraphStyle only for shared paragraph rhythm."],
             ["BulletList, NumberedList", "marker_counter_format, bullet, prefix, suffix, start, indent, marker_gap", "Use ListStyle only for repeated list conventions."],
-            ["Box", "border_color, background_color, title colors, border_width, padding, per-side padding, space_after, width, unit, block_alignment", "Use BoxStyle only for named callout or report-panel designs."],
-            ["Table", "header/body/alternate colors, border_color, border_width, cell/header alignment, cell_padding, per-side cell padding, repeat_header_rows", "row_styles, column_styles, and header_row_styles accept dictionaries for quick overrides."],
+            ["Box", "border, background_color, title colors, padding, space_after, width, unit, block_alignment", "Use BoxStyle only for named callout or report-panel designs."],
+            ["Table", "header/body/alternate colors, border, cell/header alignment, cell_padding, repeat_header_rows", "row_styles, column_styles, and header_row_styles accept dictionaries for quick overrides."],
             ["TableCell", "colspan, rowspan, background_color, text_color, bold, italic, text_alignment, vertical_alignment", "Use TableCellStyle only for reusable row, column, or cell styling."],
             ["TableOfContents", "show_page_numbers, leader, max_level, level_styles", "TocLevelStyle per heading level; dictionaries are accepted for quick overrides."],
             ["Figure, SubFigure, SubFigureGroup", "width, height, unit, placement, image_dpi, columns, column_gap, label_format", "Use caption Paragraphs when caption text needs inline styling."],
@@ -854,9 +854,9 @@ def build_usage_guide_document() -> Document:
     component_presets_table = Table(
         headers=["Preset", "What it builds", "Common customizations"],
         rows=[
-            ["CalloutBox", "A styled Box with info, note, success, or warning variants.", "variant, title, padding, border/background colors, width, block_alignment."],
-            ["KeyValueTable", "A compact two-column Table for metadata and option lists.", "headers, caption, cell padding, border width, column widths."],
-            ["Nomenclature", "A heavy-outlined Box containing a symbol, meaning, and optional unit table with no internal rules.", "double_column, headers, padding, border width, title."],
+            ["CalloutBox", "A styled Box with info, note, success, or warning variants.", "variant, title, padding, border/background styles, width, block_alignment."],
+            ["KeyValueTable", "A compact two-column Table for metadata and option lists.", "headers, caption, cell padding, border style, column widths."],
+            ["Nomenclature", "A heavy-outlined Box containing a symbol, meaning, and optional unit table with no internal rules.", "double_column, headers, padding, border, title."],
             ["CompactTable", "A denser Table baseline for small reports and appendices.", "Any normal Table kwarg, with style objects still available for reusable designs."],
         ],
         caption="Component presets wrap ordinary blocks and still accept the same block/style options.",
@@ -946,7 +946,7 @@ def build_usage_guide_document() -> Document:
         ),
         title="Preset rule",
         variant="info",
-        padding=8,
+        padding=Padding.all(8),
         width=15.0,
         unit="cm",
     )
@@ -982,7 +982,7 @@ def build_usage_guide_document() -> Document:
             "Treat figures, tables, and notes as authored objects rather than pasted export artifacts.",
         ),
         title="Reading Principle",
-        border_color="#6E8497",
+        border=BorderStyle.solid("#6E8497", width=0.75),
         background_color="#F6F9FC",
         title_background_color="#DCE8F4",
     )
@@ -1002,8 +1002,8 @@ def build_usage_guide_document() -> Document:
             column_widths=[3.6, 5.2, 6.2],
             unit="cm",
             header_background_color="#E7EEF7",
-            border_color="#B8C6D6",
-            cell_padding=4,
+            border=BorderStyle.solid("#B8C6D6", width=0.5),
+            cell_padding=Padding.all(4),
         ),
         Figure(LOGO_PATH, width=3.2, unit="cm"),
         Paragraph(
@@ -1012,15 +1012,11 @@ def build_usage_guide_document() -> Document:
             space_after=0,
         ),
         title="OODocs Contributor Certificate",
-        border_color="#D4B56A",
+        border=BorderStyle.solid("#D4B56A", width=1.0),
         background_color="#FDFBF6",
         title_background_color="#1058A3",
         title_text_color="#FFFFFF",
-        border_width=1.0,
-        padding_top=8,
-        padding_right=12,
-        padding_bottom=8,
-        padding_left=12,
+        padding=Padding.symmetric(vertical=8, horizontal=12),
         width=18.0,
         unit="cm",
         block_alignment="center",
@@ -1657,7 +1653,7 @@ def build_usage_guide_document() -> Document:
                         ", ",
                         inline_code("cell_padding"),
                         ", ",
-                        inline_code("border_width"),
+                        inline_code("border"),
                         ", and ",
                         inline_code("column_widths"),
                         ".",

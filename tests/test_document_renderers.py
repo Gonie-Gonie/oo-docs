@@ -27,6 +27,7 @@ from oodocs import (
     AuthorLayout,
     Axiom,
     BlockDefaults,
+    BorderStyle,
     Box,
     BoxStyle,
     BulletList,
@@ -68,6 +69,7 @@ from oodocs import (
     PageMargins,
     PageSize,
     PageBreak,
+    Padding,
     Paragraph,
     ParagraphStyle,
     RunInTitleStyle,
@@ -517,7 +519,7 @@ def test_common_block_styles_accept_direct_kwargs() -> None:
     equation = Equation("x=1", space_after=2)
     bullet_list = BulletList("one", indent=0.4)
     numbered_list = NumberedList("one", start=3, suffix=")")
-    box = Box(Paragraph("inside"), background_color="#FFFFFF", padding=8, width=3.0)
+    box = Box(Paragraph("inside"), background_color="#FFFFFF", padding=Padding.all(8), width=3.0)
     table = Table(
         headers=["A"],
         rows=[["B"]],
@@ -539,7 +541,7 @@ def test_common_block_styles_accept_direct_kwargs() -> None:
     assert numbered_list.style.start == 3
     assert numbered_list.style.suffix == ")"
     assert box.style.background_color == "FFFFFF"
-    assert box.style.padding == 8
+    assert box.style.padding == Padding.all(8)
     assert box.style.width == 3.0
     assert table.style.header_background_color == "AABBCC"
     assert table.style.cell_text_alignment == "center"
@@ -1617,15 +1619,11 @@ def test_box_style_supports_tcolorbox_like_layout_controls(tmp_path: Path) -> No
             Figure(image_path, width=0.7),
             title="Panel",
             style=BoxStyle(
-                border_color="#1058A3",
+                border=BorderStyle.solid("#1058A3", width=0.5),
                 background_color="#FFFFFF",
                 title_background_color="#1058A3",
                 title_text_color="#FFFFFF",
-                border_width=0.5,
-                padding_top=2,
-                padding_right=5,
-                padding_bottom=3,
-                padding_left=7,
+                padding=Padding(2, 5, 3, 7),
                 width=10,
                 unit="cm",
                 block_alignment="left",
@@ -2071,12 +2069,8 @@ def test_table_detail_style_options_render_to_all_outputs(tmp_path: Path) -> Non
         headers=["Metric", "Value"],
         rows=[["Latency", "14 ms"], ["Quality", "Stable"]],
         caption="Detailed table.",
-        border_color="#334155",
-        border_width=1.25,
-        cell_padding_top=2,
-        cell_padding_right=3,
-        cell_padding_bottom=4,
-        cell_padding_left=5,
+        border=BorderStyle.solid("#334155", width=1.25),
+        cell_padding=Padding(2, 3, 4, 5),
         repeat_header_rows=True,
     )
     document = Document("Table Detail Test", table)
@@ -2933,7 +2927,7 @@ def test_document_renders_to_docx_and_pdf(tmp_path: Path) -> None:
         ),
         title="Review Box",
         style=BoxStyle(
-            border_color="#7A8CA5",
+            border=BorderStyle.solid("#7A8CA5", width=0.75),
             background_color="#F4F8FC",
             title_background_color="#DDE8F4",
         ),

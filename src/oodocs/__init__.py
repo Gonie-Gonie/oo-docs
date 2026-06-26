@@ -111,6 +111,7 @@ from oodocs.settings import (
 )
 from oodocs.styles import (
     BlockDefaults,
+    BorderStyle,
     BoxStyle,
     CaptionDefaults,
     CitationDefaults,
@@ -119,6 +120,7 @@ from oodocs.styles import (
     InlineChipStyle,
     ListStyle,
     PageNumberDefaults,
+    Padding,
     ParagraphStyle,
     RunInTitleStyle,
     TableCellStyle,
@@ -167,6 +169,7 @@ __all__ = [
     "AuthorLayout",
     "Axiom",
     "BlockDefaults",
+    "BorderStyle",
     "Box",
     "BoxStyle",
     "BulletList",
@@ -215,6 +218,7 @@ __all__ = [
     "OUTPUT_FORMATS",
     "OutputFormat",
     "PageNumberDefaults",
+    "Padding",
     "PageMargins",
     "PageSize",
     "PageBreak",

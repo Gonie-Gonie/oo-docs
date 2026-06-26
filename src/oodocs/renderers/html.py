@@ -1344,8 +1344,13 @@ class HtmlRenderer:
         context: HtmlRenderContext,
     ) -> str:
         style_parts = [
-            f"border: {block.style.border_width:.2f}pt solid #{block.style.border_color}",
         ]
+        if block.style.border.color is not None and block.style.border.width > 0:
+            style_parts.append(
+                f"border: {block.style.border.width_points():.2f}pt solid #{block.style.border.color}"
+            )
+        else:
+            style_parts.append("border: none")
         top_padding, right_padding, bottom_padding, left_padding = block.style.resolved_cell_padding()
         style_parts.append(
             f"padding: {top_padding:.1f}pt {right_padding:.1f}pt {bottom_padding:.1f}pt {left_padding:.1f}pt"
@@ -1730,10 +1735,26 @@ class HtmlRenderer:
         text = escape(fragment.display_text()).replace("\n", " ")
         base_size = fragment.style.font_size or base_size or theme.typography.body_font_size
         font_size = max(base_size + chip_style.font_size_delta, 6.0)
+        padding_top, padding_right, padding_bottom, padding_left = chip_style.padding.as_tuple()
+        if chip_style.padding.unit == "em":
+            padding_css = (
+                f"{padding_top:.2f}em {padding_right:.2f}em "
+                f"{padding_bottom:.2f}em {padding_left:.2f}em"
+            )
+        else:
+            top_pt, right_pt, bottom_pt, left_pt = chip_style.padding.to_points()
+            padding_css = (
+                f"{top_pt:.2f}pt {right_pt:.2f}pt "
+                f"{bottom_pt:.2f}pt {left_pt:.2f}pt"
+            )
+        if chip_style.border.radius_unit == "em":
+            border_radius_css = f"{chip_style.border.radius_em():.2f}em"
+        else:
+            border_radius_css = f"{chip_style.border.radius_points():.2f}pt"
         styles = [
             "display: inline-block",
-            f"padding: {chip_style.padding_y:.2f}em {chip_style.padding_x:.2f}em",
-            f"border-radius: {chip_style.radius:.2f}em",
+            f"padding: {padding_css}",
+            f"border-radius: {border_radius_css}",
             f"background-color: #{chip_style.background_color}",
             f"color: #{chip_style.text_color}",
             f"font-size: {font_size:.1f}pt",
@@ -1747,9 +1768,9 @@ class HtmlRenderer:
         font_name = chip_style.font_name or fragment.style.font_name
         if font_name is not None:
             styles.append(f"font-family: {self._css_font_family(font_name)}")
-        if chip_style.border_color is not None and chip_style.border_width > 0:
+        if chip_style.border.color is not None and chip_style.border.width > 0:
             styles.append(
-                f"border: {chip_style.border_width:.1f}pt solid #{chip_style.border_color}"
+                f"border: {chip_style.border.width_points():.1f}pt solid #{chip_style.border.color}"
             )
         class_name = f"oodocs-inline-chip oodocs-inline-chip-{fragment.kind}"
         return f'<span class="{class_name}" style="{"; ".join(styles)}">{text}</span>'
@@ -2105,8 +2126,13 @@ class HtmlRenderer:
             if block.style.width is not None
             else ""
         )
+        border_css = (
+            f"{block.style.border.width_points():.2f}pt solid #{block.style.border.color}"
+            if block.style.border.color is not None and block.style.border.width > 0
+            else "none"
+        )
         return (
-            f"border: {block.style.border_width:.2f}pt solid #{block.style.border_color};"
+            f"border: {border_css};"
             f" background: #{block.style.background_color};"
             f" padding: {top_padding:.1f}pt {right_padding:.1f}pt {bottom_padding:.1f}pt {left_padding:.1f}pt;"
             f" margin: 0 0 {block.style.space_after:.1f}pt;"

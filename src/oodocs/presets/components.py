@@ -7,33 +7,33 @@ from collections.abc import Mapping, Sequence
 from oodocs.components.base import BlockInput
 from oodocs.components.blocks import Box, CellInput
 from oodocs.components.media import Table, TableCellInput
-from oodocs.styles import BoxStyle, TableStyle
+from oodocs.styles import BorderStyle, BoxStyle, Padding, TableStyle
 
 
 NomenclatureEntry = tuple[TableCellInput, TableCellInput] | tuple[TableCellInput, TableCellInput, TableCellInput]
 
 
-_CALLOUT_VARIANTS: dict[str, dict[str, str]] = {
+_CALLOUT_VARIANTS: dict[str, dict[str, object]] = {
     "info": {
-        "border_color": "3B82F6",
+        "border": BorderStyle.solid("3B82F6", width=0.75),
         "background_color": "EFF6FF",
         "title_background_color": "DBEAFE",
         "title_text_color": "1E3A8A",
     },
     "note": {
-        "border_color": "64748B",
+        "border": BorderStyle.solid("64748B", width=0.75),
         "background_color": "F8FAFC",
         "title_background_color": "E2E8F0",
         "title_text_color": "0F172A",
     },
     "success": {
-        "border_color": "16A34A",
+        "border": BorderStyle.solid("16A34A", width=0.75),
         "background_color": "F0FDF4",
         "title_background_color": "DCFCE7",
         "title_text_color": "14532D",
     },
     "warning": {
-        "border_color": "D97706",
+        "border": BorderStyle.solid("D97706", width=0.75),
         "background_color": "FFFBEB",
         "title_background_color": "FEF3C7",
         "title_text_color": "78350F",
@@ -117,9 +117,8 @@ class CompactTable(Table):
             rows,
             style=style or TableStyle(
                 header_background_color="F1F5F9",
-                border_color="CBD5E1",
-                cell_padding=3.0,
-                border_width=0.4,
+                border=BorderStyle.solid("CBD5E1", width=0.4),
+                cell_padding=Padding.all(3.0),
             ),
             **table_options,
         )
@@ -174,8 +173,7 @@ class Nomenclature(Box):
         double_column: Whether to split entries into two side-by-side groups.
         title: Optional box title.
         headers: Header labels for symbol, meaning, and unit columns.
-        border_color: Box border color.
-        border_width: Box border width.
+        border: Box border style.
         padding: Box padding.
         table_style: Optional style for the internal table.
         **box_options: Additional arguments forwarded to ``Box``.
@@ -200,9 +198,8 @@ class Nomenclature(Box):
         double_column: bool = False,
         title: CellInput | None = None,
         headers: tuple[str, str, str] = ("Symbol", "Meaning", "Unit"),
-        border_color: str = "111827",
-        border_width: float = 1.2,
-        padding: float = 6.0,
+        border: BorderStyle | None = None,
+        padding: Padding | None = None,
         table_style: TableStyle | None = None,
         **box_options: object,
     ) -> None:
@@ -220,18 +217,16 @@ class Nomenclature(Box):
             rows,
             style=table_style or TableStyle(
                 header_background_color="FFFFFF",
-                border_color="FFFFFF",
-                border_width=0,
-                cell_padding=2.0,
+                border=BorderStyle.none(),
+                cell_padding=Padding.all(2.0),
                 repeat_header_rows=True,
             ),
         )
         super().__init__(
             table,
             title=title,
-            border_color=border_color,
-            border_width=border_width,
-            padding=padding,
+            border=border or BorderStyle.solid("111827", width=1.2),
+            padding=padding or Padding.all(6.0),
             **box_options,
         )
 

@@ -1903,19 +1903,23 @@ class PdfRenderer:
         table_rows: list[list[object]] = [["" for _ in range(layout.column_count)] for _ in range(layout.row_count)]
         top_padding, right_padding, bottom_padding, left_padding = block.style.resolved_cell_padding()
         style_commands: list[tuple[str, tuple[int, int], tuple[int, int], object]] = [
-            (
-                "GRID",
-                (0, 0),
-                (-1, -1),
-                block.style.border_width,
-                colors.HexColor(f"#{block.style.border_color}"),
-            ),
             ("VALIGN", (0, 0), (-1, -1), "TOP"),
             ("LEFTPADDING", (0, 0), (-1, -1), left_padding),
             ("RIGHTPADDING", (0, 0), (-1, -1), right_padding),
             ("TOPPADDING", (0, 0), (-1, -1), top_padding),
             ("BOTTOMPADDING", (0, 0), (-1, -1), bottom_padding),
         ]
+        if block.style.border.color is not None and block.style.border.width > 0:
+            style_commands.insert(
+                0,
+                (
+                    "GRID",
+                    (0, 0),
+                    (-1, -1),
+                    block.style.border.width_points(),
+                    colors.HexColor(f"#{block.style.border.color}"),
+                ),
+            )
         for placement in layout.placements:
             effective_style = block._effective_cell_style(placement)
             cell_bold = bool(effective_style.bold)
@@ -2245,13 +2249,23 @@ class PdfRenderer:
         top_padding, right_padding, bottom_padding, left_padding = block.style.resolved_padding()
         style_commands: list[tuple[str, tuple[int, int], tuple[int, int], object]] = [
             ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor(f"#{block.style.background_color}")),
-            ("BOX", (0, 0), (-1, -1), block.style.border_width, colors.HexColor(f"#{block.style.border_color}")),
             ("LEFTPADDING", (0, 0), (-1, -1), left_padding),
             ("RIGHTPADDING", (0, 0), (-1, -1), right_padding),
             ("TOPPADDING", (0, 0), (-1, -1), top_padding),
             ("BOTTOMPADDING", (0, 0), (-1, -1), bottom_padding),
             ("VALIGN", (0, 0), (-1, -1), "TOP"),
         ]
+        if block.style.border.color is not None and block.style.border.width > 0:
+            style_commands.insert(
+                1,
+                (
+                    "BOX",
+                    (0, 0),
+                    (-1, -1),
+                    block.style.border.width_points(),
+                    colors.HexColor(f"#{block.style.border.color}"),
+                ),
+            )
         style_commands.extend(row_styles)
         table.setStyle(TableStyle(style_commands))
         elements: list[object] = []

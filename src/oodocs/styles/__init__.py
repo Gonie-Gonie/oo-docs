@@ -7,6 +7,7 @@ from oodocs.styles.blocks import (
     box_style_with_overrides,
     paragraph_style_with_overrides,
 )
+from oodocs.styles.border import BorderStyle
 from oodocs.styles.chips import (
     InlineChipStyle,
     _DEFAULT_CHIP_STYLES,
@@ -24,6 +25,7 @@ from oodocs.styles.tables import (
     coerce_table_cell_style,
     table_style_with_overrides,
 )
+from oodocs.styles.spacing import Padding
 from oodocs.styles.text import TextStyle
 from oodocs.styles.theme import (
     BlockDefaults,
@@ -38,6 +40,7 @@ from oodocs.styles.theme import (
 
 __all__ = [
     "BlockDefaults",
+    "BorderStyle",
     "BoxStyle",
     "CaptionDefaults",
     "CitationDefaults",
@@ -46,6 +49,7 @@ __all__ = [
     "InlineChipStyle",
     "ListStyle",
     "PageNumberDefaults",
+    "Padding",
     "ParagraphStyle",
     "RunInTitleStyle",
     "TableCellStyle",

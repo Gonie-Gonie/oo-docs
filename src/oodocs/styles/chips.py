@@ -2,18 +2,17 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from oodocs.core import normalize_color
+from oodocs.styles.border import BorderStyle
+from oodocs.styles.spacing import Padding
 
 _INLINE_CHIP_STYLE_FIELDS = (
     "background_color",
     "text_color",
-    "border_color",
-    "border_width",
-    "padding_x",
-    "padding_y",
-    "radius",
+    "border",
+    "padding",
     "font_size_delta",
     "font_name",
     "bold",
@@ -26,17 +25,15 @@ _INLINE_CHIP_STYLE_FIELDS = (
 class InlineChipStyle:
     """Visual style for compact inline label chips.
 
-    Padding and radius are expressed in em units so chips scale with the
-    surrounding font. Border width and font size delta are expressed in points.
+    Padding and radius are typically expressed in em units so chips scale with
+    the surrounding font. Border width and font size delta are expressed in
+    points by default.
 
     Attributes:
         background_color: Chip background color as a hex string.
         text_color: Chip text color as a hex string.
-        border_color: Optional chip border color as a hex string.
-        border_width: Border width in points.
-        padding_x: Horizontal padding in em units.
-        padding_y: Vertical padding in em units.
-        radius: Corner radius in em units.
+        border: Chip border and corner radius.
+        padding: Chip padding in em units.
         font_size_delta: Font-size delta in points.
         font_name: Optional font family override.
         bold: Whether chip text is bold.
@@ -54,11 +51,17 @@ class InlineChipStyle:
 
     background_color: str = "E8F1FF"
     text_color: str = "1F3A5F"
-    border_color: str | None = "A7C7E7"
-    border_width: float = 0.5
-    padding_x: float = 0.38
-    padding_y: float = 0.12
-    radius: float = 0.5
+    border: BorderStyle = field(
+        default_factory=lambda: BorderStyle.solid(
+            "A7C7E7",
+            width=0.5,
+            radius=0.5,
+            radius_unit="em",
+        )
+    )
+    padding: Padding = field(
+        default_factory=lambda: Padding.symmetric(vertical=0.12, horizontal=0.38, unit="em")
+    )
     font_size_delta: float = -0.5
     font_name: str | None = None
     bold: bool = True
@@ -68,15 +71,10 @@ class InlineChipStyle:
     def __post_init__(self) -> None:
         self.background_color = normalize_color(self.background_color) or "E8F1FF"
         self.text_color = normalize_color(self.text_color) or "1F3A5F"
-        self.border_color = normalize_color(self.border_color)
-        if self.border_width < 0:
-            raise ValueError("InlineChipStyle.border_width must be >= 0")
-        if self.padding_x < 0:
-            raise ValueError("InlineChipStyle.padding_x must be >= 0")
-        if self.padding_y < 0:
-            raise ValueError("InlineChipStyle.padding_y must be >= 0")
-        if self.radius < 0:
-            raise ValueError("InlineChipStyle.radius must be >= 0")
+        if not isinstance(self.border, BorderStyle):
+            raise TypeError("InlineChipStyle.border must be a BorderStyle")
+        if not isinstance(self.padding, Padding):
+            raise TypeError("InlineChipStyle.padding must be a Padding")
 
     def merged(self, **overrides: object) -> InlineChipStyle:
         """Return a copy with selected fields replaced.
@@ -113,28 +111,25 @@ _DEFAULT_CHIP_STYLES = {
     "tag": InlineChipStyle(
         background_color="E8F1FF",
         text_color="1F3A5F",
-        border_color="A7C7E7",
+        border=BorderStyle.solid("A7C7E7", width=0.5, radius=0.5, radius_unit="em"),
     ),
     "badge": InlineChipStyle(
         background_color="F3F4F6",
         text_color="1F2937",
-        border_color="D1D5DB",
-        padding_x=0.32,
+        border=BorderStyle.solid("D1D5DB", width=0.5, radius=0.5, radius_unit="em"),
+        padding=Padding.symmetric(vertical=0.12, horizontal=0.32, unit="em"),
     ),
     "status": InlineChipStyle(
         background_color="F3F4F6",
         text_color="374151",
-        border_color="D1D5DB",
+        border=BorderStyle.solid("D1D5DB", width=0.5, radius=0.5, radius_unit="em"),
         uppercase=True,
     ),
     "keyboard": InlineChipStyle(
         background_color="F8FAFC",
         text_color="111827",
-        border_color="CBD5E1",
-        border_width=0.75,
-        padding_x=0.28,
-        padding_y=0.08,
-        radius=0.22,
+        border=BorderStyle.solid("CBD5E1", width=0.75, radius=0.22, radius_unit="em"),
+        padding=Padding.symmetric(vertical=0.08, horizontal=0.28, unit="em"),
         font_size_delta=-0.5,
         font_name="Courier New",
         bold=False,
@@ -146,31 +141,31 @@ _STATUS_CHIP_STYLES = {
     "success": InlineChipStyle(
         background_color="ECFDF3",
         text_color="166534",
-        border_color="BBF7D0",
+        border=BorderStyle.solid("BBF7D0", width=0.5, radius=0.5, radius_unit="em"),
         uppercase=True,
     ),
     "info": InlineChipStyle(
         background_color="E0F2FE",
         text_color="075985",
-        border_color="BAE6FD",
+        border=BorderStyle.solid("BAE6FD", width=0.5, radius=0.5, radius_unit="em"),
         uppercase=True,
     ),
     "warning": InlineChipStyle(
         background_color="FEF3C7",
         text_color="92400E",
-        border_color="FDE68A",
+        border=BorderStyle.solid("FDE68A", width=0.5, radius=0.5, radius_unit="em"),
         uppercase=True,
     ),
     "danger": InlineChipStyle(
         background_color="FEE2E2",
         text_color="991B1B",
-        border_color="FECACA",
+        border=BorderStyle.solid("FECACA", width=0.5, radius=0.5, radius_unit="em"),
         uppercase=True,
     ),
     "muted": InlineChipStyle(
         background_color="F3F4F6",
         text_color="374151",
-        border_color="D1D5DB",
+        border=BorderStyle.solid("D1D5DB", width=0.5, radius=0.5, radius_unit="em"),
         uppercase=True,
     ),
 }

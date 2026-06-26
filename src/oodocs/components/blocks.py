@@ -39,8 +39,10 @@ from oodocs.core import (
     normalize_text_alignment,
 )
 from oodocs.styles import (
+    BorderStyle,
     BoxStyle,
     ListStyle,
+    Padding,
     ParagraphStyle,
     RunInTitleStyle,
     TextStyle,
@@ -1399,26 +1401,28 @@ class Box(Block):
         *children: Child block content.
         title: Optional box title.
         style: Base box style.
-        border_color: Optional border color override.
+        border: Optional border style override.
         background_color: Optional body background color override.
         title_background_color: Optional title band background override.
         title_text_color: Optional title text color override.
-        border_width: Optional border width override.
-        padding: Optional padding override for all sides.
-        padding_top: Optional top padding override.
-        padding_right: Optional right padding override.
-        padding_bottom: Optional bottom padding override.
-        padding_left: Optional left padding override.
+        padding: Optional padding override.
         space_after: Optional spacing after the box.
         width: Optional preferred box width.
         unit: Unit for length overrides.
         block_alignment: Optional block placement alignment.
 
     Examples:
-        ```python
-        from oodocs import Box, Document, Paragraph
+        Place a styled note box inside a document:
 
-        note = Box(Paragraph("Review this before release."), title="Note")
+        ```python
+        from oodocs import BorderStyle, Box, Document, Padding, Paragraph
+
+        note = Box(
+            Paragraph("Review this before release."),
+            title="Note",
+            border=BorderStyle.solid("CBD5E1", width=0.75),
+            padding=Padding.symmetric(vertical=8, horizontal=12),
+        )
         document = Document("Release Notes", note)
         ```
     """
@@ -1432,16 +1436,11 @@ class Box(Block):
         *children: BlockInput,
         title: InlineInput | None = None,
         style: BoxStyle | None = None,
-        border_color: str | None = None,
+        border: BorderStyle | None = None,
         background_color: str | None = None,
         title_background_color: str | None = None,
         title_text_color: str | None = None,
-        border_width: float | None = None,
-        padding: float | None = None,
-        padding_top: float | None = None,
-        padding_right: float | None = None,
-        padding_bottom: float | None = None,
-        padding_left: float | None = None,
+        padding: Padding | None = None,
         space_after: float | None = None,
         width: float | None = None,
         unit: str | None = None,
@@ -1451,16 +1450,11 @@ class Box(Block):
         self.title = coerce_inlines((title,)) if title is not None else None
         self.style = box_style_with_overrides(
             style,
-            border_color=border_color,
+            border=border,
             background_color=background_color,
             title_background_color=title_background_color,
             title_text_color=title_text_color,
-            border_width=border_width,
             padding=padding,
-            padding_top=padding_top,
-            padding_right=padding_right,
-            padding_bottom=padding_bottom,
-            padding_left=padding_left,
             space_after=space_after,
             width=width,
             unit=unit,

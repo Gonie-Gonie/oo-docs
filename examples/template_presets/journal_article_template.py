@@ -9,6 +9,7 @@ from oodocs import (
     Author,
     CitationLibrary,
     CitationSource,
+    Padding,
     Paragraph,
     Table,
     inline_code,
@@ -123,7 +124,7 @@ INPUT_RESPONSIBILITY_TABLE = Table(
     caption="Content-first journal templates separate manuscript content from repeated document assembly.",
     header_background_color="#E7EEF7",
     alternate_row_background_color="#FAFCFE",
-    cell_padding=4,
+    cell_padding=Padding.all(4),
     repeat_header_rows=True,
 )
 

@@ -1497,16 +1497,29 @@ class DocxRenderer:
         text_bbox = draw.textbbox((0, 0), text, font=font)
         text_width = max(text_bbox[2] - text_bbox[0], 1)
         text_height = max(text_bbox[3] - text_bbox[1], 1)
-        border_px = max(int(round(chip_style.border_width * dpi / 72)), 0)
-        padding_x = max(int(round(font_px * chip_style.padding_x)), 0)
-        padding_y = max(int(round(font_px * chip_style.padding_y)), 0)
-        width = text_width + padding_x * 2 + border_px * 2 + 2
-        height = text_height + padding_y * 2 + border_px * 2 + 2
-        radius = max(int(round(font_px * chip_style.radius)), 0)
+        border_px = max(int(round(chip_style.border.width_points() * dpi / 72)), 0)
+        top_padding, right_padding, bottom_padding, left_padding = chip_style.padding.as_tuple()
+        if chip_style.padding.unit == "em":
+            padding_top_px = max(int(round(font_px * top_padding)), 0)
+            padding_right_px = max(int(round(font_px * right_padding)), 0)
+            padding_bottom_px = max(int(round(font_px * bottom_padding)), 0)
+            padding_left_px = max(int(round(font_px * left_padding)), 0)
+        else:
+            top_pt, right_pt, bottom_pt, left_pt = chip_style.padding.to_points()
+            padding_top_px = max(int(round(top_pt * dpi / 72)), 0)
+            padding_right_px = max(int(round(right_pt * dpi / 72)), 0)
+            padding_bottom_px = max(int(round(bottom_pt * dpi / 72)), 0)
+            padding_left_px = max(int(round(left_pt * dpi / 72)), 0)
+        width = text_width + padding_left_px + padding_right_px + border_px * 2 + 2
+        height = text_height + padding_top_px + padding_bottom_px + border_px * 2 + 2
+        if chip_style.border.radius_unit == "em":
+            radius = max(int(round(font_px * chip_style.border.radius_em())), 0)
+        else:
+            radius = max(int(round(chip_style.border.radius_points() * dpi / 72)), 0)
         image = Image.new("RGBA", (width, height), (255, 255, 255, 0))
         draw = ImageDraw.Draw(image)
         rectangle = (0, 0, width - 1, height - 1)
-        outline = self._inline_chip_rgba(chip_style.border_color) if border_px and chip_style.border_color else None
+        outline = self._inline_chip_rgba(chip_style.border.color) if border_px and chip_style.border.color else None
         draw.rounded_rectangle(
             rectangle,
             radius=radius,
@@ -1514,8 +1527,8 @@ class DocxRenderer:
             outline=outline,
             width=border_px or 1,
         )
-        text_x = padding_x + border_px + 1 - text_bbox[0]
-        text_y = padding_y + border_px + 1 - text_bbox[1]
+        text_x = padding_left_px + border_px + 1 - text_bbox[0]
+        text_y = padding_top_px + border_px + 1 - text_bbox[1]
         draw.text(
             (text_x, text_y),
             text,
@@ -2004,7 +2017,10 @@ class DocxRenderer:
         if box.style.width is not None:
             self._set_cell_width(cell, length_to_inches(box.style.width, box.style.unit or unit))
         self._set_cell_shading(cell, box.style.background_color)
-        self._set_cell_borders(cell, box.style.border_color, box.style.border_width)
+        if box.style.border.color is not None and box.style.border.width > 0:
+            self._set_cell_borders(cell, box.style.border.color, box.style.border.width_points())
+        else:
+            self._set_cell_borders_none(cell)
         self._set_cell_margins(cell, *box.style.resolved_padding())
 
         if box.title is not None:
@@ -2574,11 +2590,14 @@ class DocxRenderer:
             )
             if effective_style.background_color is not None:
                 self._set_cell_shading(target_cell, effective_style.background_color)
-            self._set_cell_borders(
-                target_cell,
-                table_block.style.border_color,
-                table_block.style.border_width,
-            )
+            if table_block.style.border.color is not None and table_block.style.border.width > 0:
+                self._set_cell_borders(
+                    target_cell,
+                    table_block.style.border.color,
+                    table_block.style.border.width_points(),
+                )
+            else:
+                self._set_cell_borders_none(target_cell)
             self._set_cell_margins(target_cell, *table_block.style.resolved_cell_padding())
 
         if table_block.caption is not None and theme.captions.table_caption_position == "below":

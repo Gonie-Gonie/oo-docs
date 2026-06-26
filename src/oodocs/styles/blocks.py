@@ -11,6 +11,8 @@ from oodocs.core import (
     normalize_text_alignment,
 )
 from oodocs.styles.base import _style_with_overrides
+from oodocs.styles.border import BorderStyle
+from oodocs.styles.spacing import Padding
 from oodocs.styles.text import TextStyle
 
 
@@ -251,59 +253,53 @@ class BoxStyle:
     """Shared box styling for visually grouped content.
 
     Attributes:
-        border_color: Hex border color.
+        border: Border style.
         background_color: Hex fill color.
         title_background_color: Optional title band fill color.
         title_text_color: Optional title text color.
-        border_width: Border width in points.
-        padding: Default inner padding in points.
-        padding_top: Optional top padding override in points.
-        padding_right: Optional right padding override in points.
-        padding_bottom: Optional bottom padding override in points.
-        padding_left: Optional left padding override in points.
+        padding: Inner padding.
         space_after: Space after the box in points.
         width: Optional box width in ``unit``.
         unit: Unit for ``width`` when a physical width is set.
         block_alignment: Optional block placement alignment override.
 
     Examples:
-        ```python
-        from oodocs import Box, BoxStyle, Document
+        Style a callout box with grouped border and padding objects:
 
-        box = Box("Note body", title="Note", style=BoxStyle(background_color="F7FAFC"))
+        ```python
+        from oodocs import BorderStyle, Box, BoxStyle, Document, Padding, Paragraph
+
+        style = BoxStyle(
+            border=BorderStyle.solid("CBD5E1", width=0.75),
+            padding=Padding.symmetric(vertical=8, horizontal=12),
+            background_color="F7FAFC",
+        )
+        box = Box(Paragraph("Review scope before release."), title="Note", style=style)
         document = Document("Notes", box)
         ```
     """
 
-    border_color: str = "B7C2D0"
+    border: BorderStyle = field(
+        default_factory=lambda: BorderStyle.solid("B7C2D0", width=0.75)
+    )
     background_color: str = "F7FAFC"
     title_background_color: str | None = None
     title_text_color: str | None = None
-    border_width: float = 0.75
-    padding: float = 6.0
-    padding_top: float | None = None
-    padding_right: float | None = None
-    padding_bottom: float | None = None
-    padding_left: float | None = None
+    padding: Padding = field(default_factory=lambda: Padding.all(6.0))
     space_after: float = 12.0
     width: float | None = None
     unit: str | None = None
     block_alignment: str | None = None
 
     def __post_init__(self) -> None:
-        self.border_color = normalize_color(self.border_color) or "B7C2D0"
+        if not isinstance(self.border, BorderStyle):
+            raise TypeError("BoxStyle.border must be a BorderStyle")
+        if not isinstance(self.padding, Padding):
+            raise TypeError("BoxStyle.padding must be a Padding")
         self.background_color = normalize_color(self.background_color) or "F7FAFC"
         self.title_background_color = normalize_color(self.title_background_color)
         self.title_text_color = normalize_color(self.title_text_color)
         self.unit = normalize_length_unit(self.unit) if self.unit is not None else None
-        if self.border_width < 0:
-            raise ValueError("BoxStyle.border_width must be >= 0")
-        if self.padding < 0:
-            raise ValueError("BoxStyle.padding must be >= 0")
-        for field_name in ("padding_top", "padding_right", "padding_bottom", "padding_left"):
-            value = getattr(self, field_name)
-            if value is not None and value < 0:
-                raise ValueError(f"BoxStyle.{field_name} must be >= 0")
         if self.space_after < 0:
             raise ValueError("BoxStyle.space_after must be >= 0")
         if self.width is not None and self.width <= 0:
@@ -316,14 +312,19 @@ class BoxStyle:
 
         Returns:
             ``(top, right, bottom, left)`` padding values.
+
+        Raises:
+            ValueError: If the padding uses em units and cannot be converted
+                without font-size context.
+
+        Examples:
+            ```python
+            style = BoxStyle(padding=Padding.symmetric(vertical=8, horizontal=12))
+            top, right, bottom, left = style.resolved_padding()
+            ```
         """
 
-        return (
-            self.padding if self.padding_top is None else self.padding_top,
-            self.padding if self.padding_right is None else self.padding_right,
-            self.padding if self.padding_bottom is None else self.padding_bottom,
-            self.padding if self.padding_left is None else self.padding_left,
-        )
+        return self.padding.to_points()
 
 __all__ = [
     "BoxStyle",

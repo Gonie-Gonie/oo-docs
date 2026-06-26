@@ -47,6 +47,13 @@
           "qualname": "oodocs.styles.theme.BlockDefaults"
         },
         {
+          "category": "style",
+          "kind": "class",
+          "module": "oodocs.styles.border",
+          "name": "BorderStyle",
+          "qualname": "oodocs.styles.border.BorderStyle"
+        },
+        {
           "category": "block",
           "kind": "class",
           "module": "oodocs.components.blocks",
@@ -381,6 +388,13 @@
           "module": "oodocs.styles.theme",
           "name": "PageNumberDefaults",
           "qualname": "oodocs.styles.theme.PageNumberDefaults"
+        },
+        {
+          "category": "style",
+          "kind": "class",
+          "module": "oodocs.styles.spacing",
+          "name": "Padding",
+          "qualname": "oodocs.styles.spacing.Padding"
         },
         {
           "category": "settings",
@@ -1452,6 +1466,13 @@
         {
           "category": "style",
           "kind": "class",
+          "module": "oodocs.styles.border",
+          "name": "BorderStyle",
+          "qualname": "oodocs.styles.border.BorderStyle"
+        },
+        {
+          "category": "style",
+          "kind": "class",
           "module": "oodocs.styles.blocks",
           "name": "BoxStyle",
           "qualname": "oodocs.styles.blocks.BoxStyle"
@@ -1504,6 +1525,13 @@
           "module": "oodocs.styles.theme",
           "name": "PageNumberDefaults",
           "qualname": "oodocs.styles.theme.PageNumberDefaults"
+        },
+        {
+          "category": "style",
+          "kind": "class",
+          "module": "oodocs.styles.spacing",
+          "name": "Padding",
+          "qualname": "oodocs.styles.spacing.Padding"
         },
         {
           "category": "style",

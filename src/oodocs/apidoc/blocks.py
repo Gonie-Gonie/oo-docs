@@ -9,7 +9,7 @@ from oodocs.apidoc.profiles import ApiPresentationProfile, resolve_presentation_
 from oodocs.components.base import Block
 from oodocs.components.blocks import Box, CodeBlock, Paragraph, Section, section_for_level
 from oodocs.components.inline import InlineChip, Text, bold, inline_code, comment, italic
-from oodocs.styles import InlineChipStyle
+from oodocs.styles import BorderStyle, InlineChipStyle
 from oodocs.components.media import Table
 
 
@@ -68,7 +68,7 @@ def api_kind_chip(obj: ApiObject) -> InlineChip:
         chip_style=InlineChipStyle(
             background_color="E0F2FE",
             text_color="075985",
-            border_color="BAE6FD",
+            border=BorderStyle.solid("BAE6FD", width=0.5, radius=0.5, radius_unit="em"),
             uppercase=True,
         ),
     )
@@ -98,7 +98,12 @@ def api_visibility_chip(obj: ApiObject) -> InlineChip:
     style = InlineChipStyle(
         background_color="ECFDF3" if obj.visibility == "public" else "F3F4F6",
         text_color="166534" if obj.visibility == "public" else "374151",
-        border_color="BBF7D0" if obj.visibility == "public" else "D1D5DB",
+        border=BorderStyle.solid(
+            "BBF7D0" if obj.visibility == "public" else "D1D5DB",
+            width=0.5,
+            radius=0.5,
+            radius_unit="em",
+        ),
         uppercase=True,
     )
     return InlineChip(obj.visibility, kind="badge", chip_style=style)
@@ -139,7 +144,7 @@ def api_deprecated_chip(obj: ApiObject) -> InlineChip | None:
         chip_style=InlineChipStyle(
             background_color="FEE2E2",
             text_color="991B1B",
-            border_color="FECACA",
+            border=BorderStyle.solid("FECACA", width=0.5, radius=0.5, radius_unit="em"),
             uppercase=True,
         ),
     )
@@ -267,7 +272,7 @@ def api_description_blocks(
             Box(
                 Paragraph(obj.deprecation_message),
                 title="Deprecated",
-                border_color="FCA5A5",
+                border=BorderStyle.solid("FCA5A5", width=0.75),
                 background_color="FEF2F2",
             )
         )
@@ -472,7 +477,7 @@ def api_see_also_blocks(
             Box(
                 *(item.to_paragraph() for item in obj.see_also),
                 title="See also",
-                border_color="93C5FD",
+                border=BorderStyle.solid("93C5FD", width=0.75),
                 background_color="EFF6FF",
             )
         ]
@@ -558,7 +563,7 @@ def api_warnings_blocks(
         Box(
             Paragraph(warning_text),
             title="Warnings",
-            border_color="F59E0B",
+            border=BorderStyle.solid("F59E0B", width=0.75),
             background_color="FFFBEB",
         )
     ]
@@ -1031,7 +1036,7 @@ def api_module_to_blocks(
             Box(
                 Paragraph("\n\n".join(module.warnings)),
                 title="Warnings",
-                border_color="F59E0B",
+                border=BorderStyle.solid("F59E0B", width=0.75),
                 background_color="FFFBEB",
             )
         )

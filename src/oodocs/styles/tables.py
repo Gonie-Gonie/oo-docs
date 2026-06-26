@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Mapping
 
 from oodocs.core import normalize_color, normalize_text_alignment, normalize_vertical_alignment
 from oodocs.styles.base import _style_with_overrides
+from oodocs.styles.border import BorderStyle
+from oodocs.styles.spacing import Padding
 from oodocs.styles.text import TextStyle
 
 
@@ -170,19 +172,14 @@ class TableStyle:
     Attributes:
         header_background_color: Hex fill color for header cells.
         header_text_color: Hex text color for header cells.
-        border_color: Hex table border color.
+        border: Table border style.
         body_background_color: Optional body cell fill color.
         alternate_row_background_color: Optional alternating row fill color.
         cell_text_alignment: Optional body cell text alignment.
         cell_vertical_alignment: Optional body cell vertical alignment.
         header_text_alignment: Optional header cell text alignment.
         header_vertical_alignment: Optional header cell vertical alignment.
-        cell_padding: Default cell padding in points.
-        cell_padding_top: Optional top cell padding override in points.
-        cell_padding_right: Optional right cell padding override in points.
-        cell_padding_bottom: Optional bottom cell padding override in points.
-        cell_padding_left: Optional left cell padding override in points.
-        border_width: Border width in points.
+        cell_padding: Cell padding.
         repeat_header_rows: Whether renderers should repeat header rows.
 
     Examples:
@@ -196,25 +193,25 @@ class TableStyle:
 
     header_background_color: str = "E8EDF5"
     header_text_color: str = "000000"
-    border_color: str = "B7C2D0"
+    border: BorderStyle = field(
+        default_factory=lambda: BorderStyle.solid("B7C2D0", width=0.5)
+    )
     body_background_color: str | None = None
     alternate_row_background_color: str | None = None
     cell_text_alignment: str | None = None
     cell_vertical_alignment: str | None = None
     header_text_alignment: str | None = None
     header_vertical_alignment: str | None = None
-    cell_padding: float = 5.0
-    cell_padding_top: float | None = None
-    cell_padding_right: float | None = None
-    cell_padding_bottom: float | None = None
-    cell_padding_left: float | None = None
-    border_width: float = 0.5
+    cell_padding: Padding = field(default_factory=lambda: Padding.all(5.0))
     repeat_header_rows: bool = False
 
     def __post_init__(self) -> None:
         self.header_background_color = normalize_color(self.header_background_color) or "E8EDF5"
         self.header_text_color = normalize_color(self.header_text_color) or "000000"
-        self.border_color = normalize_color(self.border_color) or "B7C2D0"
+        if not isinstance(self.border, BorderStyle):
+            raise TypeError("TableStyle.border must be a BorderStyle")
+        if not isinstance(self.cell_padding, Padding):
+            raise TypeError("TableStyle.cell_padding must be a Padding")
         self.body_background_color = normalize_color(self.body_background_color)
         self.alternate_row_background_color = normalize_color(self.alternate_row_background_color)
         self.cell_text_alignment = (
@@ -237,20 +234,6 @@ class TableStyle:
             if self.header_vertical_alignment is not None
             else None
         )
-        if self.cell_padding < 0:
-            raise ValueError("TableStyle.cell_padding must be >= 0")
-        for field_name in (
-            "cell_padding_top",
-            "cell_padding_right",
-            "cell_padding_bottom",
-            "cell_padding_left",
-        ):
-            value = getattr(self, field_name)
-            if value is not None and value < 0:
-                raise ValueError(f"TableStyle.{field_name} must be >= 0")
-        if self.border_width < 0:
-            raise ValueError("TableStyle.border_width must be >= 0")
-
     @classmethod
     def plain(cls) -> TableStyle:
         """Create a minimally styled table preset.
@@ -266,9 +249,8 @@ class TableStyle:
 
         return cls(
             header_background_color="FFFFFF",
-            border_color="DADDE3",
-            cell_padding=5.0,
-            border_width=0.5,
+            border=BorderStyle.solid("DADDE3", width=0.5),
+            cell_padding=Padding.all(5.0),
         )
 
     @classmethod
@@ -286,10 +268,9 @@ class TableStyle:
 
         return cls(
             header_background_color="F1F4F8",
-            border_color="C9D2DE",
+            border=BorderStyle.solid("C9D2DE", width=0.4),
             alternate_row_background_color="FAFBFC",
-            cell_padding=3.0,
-            border_width=0.4,
+            cell_padding=Padding.all(3.0),
             repeat_header_rows=True,
         )
 
@@ -308,11 +289,10 @@ class TableStyle:
 
         return cls(
             header_background_color="E7EEF7",
-            border_color="AEBBCC",
+            border=BorderStyle.solid("AEBBCC", width=0.5),
             body_background_color="FFFFFF",
             alternate_row_background_color="F8FBFD",
-            cell_padding=4.0,
-            border_width=0.5,
+            cell_padding=Padding.all(4.0),
             repeat_header_rows=True,
         )
 
@@ -323,12 +303,7 @@ class TableStyle:
             ``(top, right, bottom, left)`` cell padding values.
         """
 
-        return (
-            self.cell_padding if self.cell_padding_top is None else self.cell_padding_top,
-            self.cell_padding if self.cell_padding_right is None else self.cell_padding_right,
-            self.cell_padding if self.cell_padding_bottom is None else self.cell_padding_bottom,
-            self.cell_padding if self.cell_padding_left is None else self.cell_padding_left,
-        )
+        return self.cell_padding.to_points()
 
 __all__ = [
     "TableCellStyle",
