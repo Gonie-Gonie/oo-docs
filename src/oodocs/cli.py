@@ -253,7 +253,7 @@ def _run_import_warning_policy(args: argparse.Namespace) -> int:
         return 0
 
     source_path = Path(args.source)
-    policy = "strict" if args.fail_on_import_warning else "warn"
+    policy = "fail-on-lossy" if args.fail_on_import_warning else "record-lossy"
     suffix = source_path.suffix.lower()
     if suffix in {".md", ".markdown"}:
         from oodocs.importers.markdown import parse_markdown_file

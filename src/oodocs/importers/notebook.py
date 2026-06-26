@@ -107,7 +107,7 @@ def parse_notebook(
     heading_level_shift: int = 0,
     base_dir: str | OsPathLike[str] | None = None,
     diagnostics: bool = False,
-    import_policy: str = "lossy",
+    import_policy: str = "allow-lossy",
 ) -> list[Block] | ImportResult:
     """Parse a Jupyter notebook into oodocs block objects.
 
@@ -137,7 +137,7 @@ def parse_notebook(
         true.
 
     Raises:
-        ImportPolicyError: If strict import policy rejects collected issues.
+        ImportPolicyError: If fail-on-lossy policy rejects collected issues.
         TypeError: If ``source`` is not a supported notebook source.
         ValueError: If options or shifted headings are invalid.
 
@@ -261,7 +261,7 @@ def from_notebook(
     toc: bool | None = None,
     heading_level_shift: int = 0,
     base_dir: str | OsPathLike[str] | None = None,
-    import_policy: str = "lossy",
+    import_policy: str = "allow-lossy",
 ) -> Document:
     """Create a ``Document`` from a Jupyter notebook.
 
@@ -292,7 +292,7 @@ def from_notebook(
         Document populated with imported notebook content.
 
     Raises:
-        ImportPolicyError: If strict import policy rejects collected issues.
+        ImportPolicyError: If fail-on-lossy policy rejects collected issues.
         TypeError: If ``source`` is not a supported notebook source.
         ValueError: If options or shifted headings are invalid.
 

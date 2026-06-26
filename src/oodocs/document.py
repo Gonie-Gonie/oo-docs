@@ -250,7 +250,7 @@ class Document:
         numbered: bool = True,
         toc: bool | None = None,
         heading_level_shift: int = 0,
-        import_policy: str = "lossy",
+        import_policy: str = "allow-lossy",
     ) -> Document:
         """Create a document from a Jupyter notebook.
 

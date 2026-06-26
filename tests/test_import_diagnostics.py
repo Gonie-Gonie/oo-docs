@@ -32,7 +32,7 @@ def test_parse_markdown_diagnostics_preserves_default_return() -> None:
     with pytest.raises(ImportPolicyError):
         parse_markdown(
             "![Remote](https://example.com/plot.png)",
-            import_policy="strict",
+            import_policy="fail-on-lossy",
         )
 
 
@@ -40,7 +40,11 @@ def test_parse_markdown_file_records_source_for_raw_html(tmp_path) -> None:
     markdown_path = tmp_path / "raw.md"
     markdown_path.write_text("<div>raw</div>\n", encoding="utf-8")
 
-    result = parse_markdown_file(markdown_path, diagnostics=True, import_policy="warn")
+    result = parse_markdown_file(
+        markdown_path,
+        diagnostics=True,
+        import_policy="record-lossy",
+    )
 
     assert isinstance(result, ImportResult)
     assert result.issues[0].code == "raw-html-unsupported"
@@ -128,7 +132,7 @@ def test_document_from_notebook_accepts_options() -> None:
     assert document.body.children == []
 
 
-def test_cli_build_can_show_and_strictly_fail_import_warnings(tmp_path, capsys) -> None:
+def test_cli_build_can_show_and_fail_on_import_warnings(tmp_path, capsys) -> None:
     markdown_path = tmp_path / "remote.md"
     markdown_path.write_text("# Remote\n\n![Plot](https://example.com/plot.png)\n", encoding="utf-8")
 
@@ -147,17 +151,17 @@ def test_cli_build_can_show_and_strictly_fail_import_warnings(tmp_path, capsys) 
     assert exit_code == 0
     assert "remote-image-lossy" in captured.out
 
-    strict_exit_code = main(
+    fail_exit_code = main(
         [
             "build",
             str(markdown_path),
             "--outputs",
             "html",
             "--out",
-            str(tmp_path / "strict"),
+            str(tmp_path / "fail"),
             "--fail-on-import-warning",
         ]
     )
     captured = capsys.readouterr()
-    assert strict_exit_code == 2
+    assert fail_exit_code == 2
     assert "remote-image-lossy" in captured.err

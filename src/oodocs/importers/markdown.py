@@ -72,7 +72,7 @@ def parse_markdown(
     heading_level_shift: int = 0,
     base_dir: str | OsPathLike[str] | None = None,
     diagnostics: bool = False,
-    import_policy: str = "lossy",
+    import_policy: str = "allow-lossy",
     source_name: str | None = None,
 ) -> list[Block] | ImportResult:
     """Parse Markdown text into oodocs block objects.
@@ -103,7 +103,7 @@ def parse_markdown(
         true.
 
     Raises:
-        ImportPolicyError: If strict import policy rejects collected issues.
+        ImportPolicyError: If fail-on-lossy policy rejects collected issues.
         ValueError: If shifting a heading would move it outside supported
             section levels.
 
@@ -152,7 +152,7 @@ def from_markdown(
     toc: bool | None = None,
     heading_level_shift: int = 0,
     base_dir: str | OsPathLike[str] | None = None,
-    import_policy: str = "lossy",
+    import_policy: str = "allow-lossy",
 ) -> Document:
     """Create a ``Document`` from Markdown text.
 
@@ -181,7 +181,7 @@ def from_markdown(
         Document populated with imported Markdown content.
 
     Raises:
-        ImportPolicyError: If strict import policy rejects collected issues.
+        ImportPolicyError: If fail-on-lossy policy rejects collected issues.
         ValueError: If shifting a heading would move it outside supported
             section levels.
 
@@ -232,7 +232,7 @@ def parse_markdown_file(
     toc: bool | None = None,
     heading_level_shift: int = 0,
     diagnostics: bool = False,
-    import_policy: str = "lossy",
+    import_policy: str = "allow-lossy",
 ) -> list[Block] | ImportResult:
     """Parse a Markdown file into editable OODocs blocks.
 
@@ -253,7 +253,7 @@ def parse_markdown_file(
 
     Raises:
         FileNotFoundError: If ``path`` does not exist.
-        ImportPolicyError: If strict import policy rejects collected issues.
+        ImportPolicyError: If fail-on-lossy policy rejects collected issues.
 
     Examples:
         ```python
@@ -285,7 +285,7 @@ def from_markdown_file(
     numbered: bool = True,
     toc: bool | None = None,
     heading_level_shift: int = 0,
-    import_policy: str = "lossy",
+    import_policy: str = "allow-lossy",
 ) -> Document:
     """Create a ``Document`` from a Markdown file.
 
@@ -309,7 +309,7 @@ def from_markdown_file(
 
     Raises:
         FileNotFoundError: If ``path`` does not exist.
-        ImportPolicyError: If strict import policy rejects collected issues.
+        ImportPolicyError: If fail-on-lossy policy rejects collected issues.
 
     Examples:
         ```python

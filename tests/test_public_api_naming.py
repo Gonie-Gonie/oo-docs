@@ -10,6 +10,7 @@ import oodocs.apidoc as apidoc
 import oodocs.components.references as references
 from oodocs.apidoc.cli import _build_parser as _build_apidoc_parser
 from oodocs.cli import _build_parser as _build_oodocs_parser
+from oodocs.importers.results import normalize_import_policy
 
 
 def _public_members(cls: type[object]) -> set[str]:
@@ -391,6 +392,16 @@ def test_import_issue_uses_line_number_field_name() -> None:
     assert "line_number" in field_names
     assert "line" not in issue.to_dict()
     assert issue.to_dict()["line_number"] == 4
+
+
+def test_import_policy_names_describe_lossy_behavior() -> None:
+    assert normalize_import_policy(" ALLOW-LOSSY ") == "allow-lossy"
+    assert normalize_import_policy("record-lossy") == "record-lossy"
+    assert normalize_import_policy("fail-on-lossy") == "fail-on-lossy"
+
+    for old_policy in ("lossy", "warn", "strict"):
+        with pytest.raises(ValueError):
+            normalize_import_policy(old_policy)
 
 
 def test_apidoc_raw_value_helpers_use_as_prefix() -> None:

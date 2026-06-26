@@ -15,7 +15,7 @@ from oodocs.core import OODocsError
 
 
 ImportSeverity = Literal["info", "warning", "error"]
-ImportPolicy = Literal["lossy", "warn", "strict"]
+ImportPolicy = Literal["allow-lossy", "record-lossy", "fail-on-lossy"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -96,7 +96,7 @@ class ImportResult:
 
     See Also:
         ``ImportIssue`` for individual diagnostics, ``ImportPolicyError`` for
-        strict-policy failures, and ``parse_markdown``/``parse_notebook`` for
+        fail-on-lossy policy failures, and ``parse_markdown``/``parse_notebook`` for
         diagnostics-producing importers.
     """
 
@@ -144,10 +144,10 @@ class ImportResult:
 
 
 class ImportPolicyError(OODocsError):
-    """Raised when strict import policy rejects a lossy conversion.
+    """Raised when fail-on-lossy import policy rejects a lossy conversion.
 
     Attributes:
-        issues: Diagnostics that caused the strict import to fail.
+        issues: Diagnostics that caused the fail-on-lossy import to fail.
 
     Examples:
         ```python
@@ -162,7 +162,7 @@ class ImportPolicyError(OODocsError):
         """Initialize the policy error from rejected diagnostics.
 
         Args:
-            issues: Import diagnostics that should block strict conversion.
+            issues: Import diagnostics that should block lossy conversion.
 
         Examples:
             ```python
@@ -184,19 +184,22 @@ def normalize_import_policy(value: str) -> ImportPolicy:
         Normalized import policy literal.
 
     Raises:
-        ValueError: If ``value`` is not one of ``"lossy"``, ``"warn"``, or
-            ``"strict"``.
+        ValueError: If ``value`` is not one of ``"allow-lossy"``,
+            ``"record-lossy"``, or ``"fail-on-lossy"``.
 
     Examples:
         ```python
-        normalize_import_policy(" STRICT ")
-        # "strict"
+        normalize_import_policy(" FAIL-ON-LOSSY ")
+        # "fail-on-lossy"
         ```
     """
 
     normalized = value.strip().lower()
-    if normalized not in {"lossy", "warn", "strict"}:
-        raise ValueError("import_policy must be 'lossy', 'warn', or 'strict'")
+    valid_policies = {"allow-lossy", "record-lossy", "fail-on-lossy"}
+    if normalized not in valid_policies:
+        raise ValueError(
+            "import_policy must be 'allow-lossy', 'record-lossy', or 'fail-on-lossy'"
+        )
     return normalized  # type: ignore[return-value]
 
 
@@ -220,8 +223,8 @@ def resolve_import_result(
         ``ImportResult`` containing blocks and diagnostics.
 
     Raises:
-        ImportPolicyError: If ``import_policy`` is ``"strict"`` and any issue
-            was collected.
+        ImportPolicyError: If ``import_policy`` is ``"fail-on-lossy"`` and any
+            issue was collected.
         ValueError: If ``import_policy`` is not supported.
 
     Examples:
@@ -232,7 +235,7 @@ def resolve_import_result(
             [Paragraph("Imported")],
             [],
             diagnostics=True,
-            import_policy="warn",
+            import_policy="record-lossy",
         )
         ```
     """
@@ -240,7 +243,7 @@ def resolve_import_result(
     normalized_policy = normalize_import_policy(import_policy)
     normalized_blocks = tuple(blocks)
     normalized_issues = tuple(issues)
-    if normalized_policy == "strict" and normalized_issues:
+    if normalized_policy == "fail-on-lossy" and normalized_issues:
         raise ImportPolicyError(normalized_issues)
     if diagnostics:
         return ImportResult(normalized_blocks, normalized_issues)
