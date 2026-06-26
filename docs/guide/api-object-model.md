@@ -45,6 +45,6 @@ doc.save_all(
 ```
 
 `ApiObject` stores normalized docstring sections: summary, description,
-parameters, returns, raises, examples, see-also entries, renderer notes, and
+parameters, returns, exceptions, examples, see-also entries, renderer notes, and
 child members. Class and module `Attributes:` sections are connected to
 attribute/data objects so API references can document fields and constants.

@@ -293,8 +293,8 @@ def _copy_missing_doc_fields(obj: ApiObject, target: ApiObject) -> None:
         obj.parameters = copy.deepcopy(target.parameters)
     if obj.returns is None:
         obj.returns = copy.deepcopy(target.returns)
-    if not obj.raises:
-        obj.raises = copy.deepcopy(target.raises)
+    if not obj.exceptions:
+        obj.exceptions = copy.deepcopy(target.exceptions)
     if not obj.examples:
         obj.examples = copy.deepcopy(target.examples)
     if not obj.see_also:
@@ -419,7 +419,7 @@ def _class_from_griffe(
         description=parsed.description,
         parameters=parameters,
         returns=parsed.returns,
-        raises=parsed.raises,
+        exceptions=parsed.exceptions,
         examples=parsed.examples,
         see_also=parsed.see_also,
         notes=parsed.notes,
@@ -503,7 +503,7 @@ def _function_from_griffe(
         description=parsed.description,
         parameters=parameters,
         returns=returns,
-        raises=parsed.raises,
+        exceptions=parsed.exceptions,
         examples=parsed.examples,
         see_also=parsed.see_also,
         notes=parsed.notes,
@@ -571,7 +571,7 @@ def _attribute_from_griffe(
         returns=ApiReturn(annotation=annotation, description=parsed.summary, documented=bool(parsed.summary))
         if kind == "property" and annotation
         else parsed.returns,
-        raises=parsed.raises,
+        exceptions=parsed.exceptions,
         examples=parsed.examples,
         see_also=parsed.see_also,
         notes=parsed.notes,

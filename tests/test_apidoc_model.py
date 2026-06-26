@@ -7,7 +7,7 @@ from oodocs.apidoc import (
     ApiObject,
     ApiPackage,
     ApiParameter,
-    ApiRaises,
+    ApiException,
     ApiRendererNote,
     ApiReturn,
     ApiSeeAlso,
@@ -38,7 +38,7 @@ def test_apidoc_model_roundtrip_preserves_object_tree() -> None:
 
 def test_apidoc_leaf_metadata_helpers_compose_into_oodocs_blocks() -> None:
     returns = ApiReturn("typing.Sequence[str]", "Rendered paths.", documented=True)
-    raises = ApiRaises("ValueError", "If the path is invalid.")
+    exception = ApiException("ValueError", "If the path is invalid.")
     example = ApiExample("print('ok')", caption="Minimal use", syntax_ok=True)
     see_also = ApiSeeAlso("save", target="samplepkg.save", kind="function")
     note = ApiRendererNote("html", "Adds stable anchors.", "info")
@@ -47,7 +47,7 @@ def test_apidoc_leaf_metadata_helpers_compose_into_oodocs_blocks() -> None:
         ["Kind", "Value", "Detail"],
         [
             ["Return", *returns.to_row(("type", "description"))],
-            ["Raises", *raises.to_row()],
+            ["Raises", *exception.to_row()],
             ["Example", *example.to_row(("language", "caption"))],
             ["See also", *see_also.to_row(("label", "target"))],
             ["Renderer", *note.to_row(("format", "message"))],
@@ -58,7 +58,7 @@ def test_apidoc_leaf_metadata_helpers_compose_into_oodocs_blocks() -> None:
         Chapter(
             "Details",
             returns.to_paragraph(),
-            raises.to_paragraph(),
+            exception.to_paragraph(),
             example.to_paragraph(),
             example.to_block(),
             see_also.to_paragraph(),
@@ -70,7 +70,7 @@ def test_apidoc_leaf_metadata_helpers_compose_into_oodocs_blocks() -> None:
     assert returns.to_row(("type", "documented")) == ["Sequence[str]", "yes"]
     assert example.to_row(("syntax_ok", "doctest_ok")) == ["yes", ""]
     assert "Rendered paths." in returns.to_paragraph().plain_text()
-    assert "ValueError" in raises.to_paragraph().plain_text()
+    assert "ValueError" in exception.to_paragraph().plain_text()
     assert "Minimal use" in example.to_paragraph().plain_text()
     assert "samplepkg.save" in see_also.to_paragraph().plain_text()
     assert "Adds stable anchors." in note.to_paragraph().plain_text()

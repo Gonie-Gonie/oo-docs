@@ -9,7 +9,7 @@ Core objects:
 - `ApiObject`: normalized API item for classes, functions, methods, properties,
   attributes, and data.
 - `ApiParameter`: signature or docstring parameter/attribute metadata.
-- `ApiReturn`, `ApiRaises`, `ApiExample`, `ApiSeeAlso`, `ApiRendererNote`,
+- `ApiReturn`, `ApiException`, `ApiExample`, `ApiSeeAlso`, `ApiRendererNote`,
   plus `ApiObject.notes` and `ApiObject.warnings`: normalized docstring
   subsections.
 - `ApiDocIssue`: stable diagnostics from parsing, collection, coverage, and
@@ -40,7 +40,7 @@ can be inserted directly with `obj.to_notes_blocks()` or
 `obj.to_warnings_blocks()` when a document wants those sections outside the
 full `obj.to_section(...)` rendering.
 
-Leaf metadata objects are composable too. `ApiReturn`, `ApiRaises`,
+Leaf metadata objects are composable too. `ApiReturn`, `ApiException`,
 `ApiExample`, `ApiSeeAlso`, and `ApiRendererNote` expose row helpers for custom
 tables, and paragraph/block helpers for inserting a single parsed item into a
 hand-authored chapter without rendering the whole `ApiObject`.
@@ -51,7 +51,7 @@ from oodocs.apidoc import collect_api
 
 api = collect_api(".")
 obj = api.functions()[0]
-rows = [item.to_row() for item in obj.raises]
+rows = [item.to_row() for item in obj.exceptions]
 doc = Document(
     "API Review",
     Chapter(

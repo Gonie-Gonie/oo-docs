@@ -428,7 +428,7 @@ class ApiReturn:
 
 
 @dataclass(slots=True)
-class ApiRaises:
+class ApiException:
     """Exception documented by an API object.
 
     Attributes:
@@ -439,14 +439,14 @@ class ApiRaises:
         Attach documented exceptions to a parsed API object:
 
         ```python
-        from oodocs.apidoc import ApiObject, ApiRaises
+        from oodocs.apidoc import ApiObject, ApiException
 
         obj = ApiObject(
             "function",
             "load",
             "mypkg.load",
             "mypkg",
-            raises=[ApiRaises("ValueError", "If the path is invalid.")],
+            exceptions=[ApiException("ValueError", "If the path is invalid.")],
         )
         ```
     """
@@ -464,16 +464,16 @@ class ApiRaises:
             Serialize an exception entry for a sidecar:
 
             ```python
-            from oodocs.apidoc import ApiRaises
+            from oodocs.apidoc import ApiException
 
-            payload = ApiRaises("ValueError", "Invalid path.").to_dict()
+            payload = ApiException("ValueError", "Invalid path.").to_dict()
             ```
         """
 
         return {"exception": self.exception, "description": self.description}
 
     @classmethod
-    def from_dict(cls, data: dict[str, object]) -> ApiRaises:
+    def from_dict(cls, data: dict[str, object]) -> ApiException:
         """Reconstruct exception metadata from serialized data.
 
         Args:
@@ -486,9 +486,9 @@ class ApiRaises:
             Rehydrate an exception entry from API JSON:
 
             ```python
-            from oodocs.apidoc import ApiRaises
+            from oodocs.apidoc import ApiException
 
-            item = ApiRaises.from_dict({
+            item = ApiException.from_dict({
                 "exception": "ValueError",
                 "description": "Invalid path.",
             })
@@ -514,13 +514,13 @@ class ApiRaises:
             List of table cell values.
 
         Examples:
-            Build an editable raises table for a review document:
+            Build an editable exceptions table for a review document:
 
             ```python
             from oodocs import Table
-            from oodocs.apidoc import ApiRaises
+            from oodocs.apidoc import ApiException
 
-            item = ApiRaises("ValueError", "If the path is empty.")
+            item = ApiException("ValueError", "If the path is empty.")
             table = Table(["Exception", "Description"], [item.to_row()])
             ```
         """
@@ -542,10 +542,10 @@ class ApiRaises:
 
             ```python
             from oodocs import Chapter, Document
-            from oodocs.apidoc import ApiRaises
+            from oodocs.apidoc import ApiException
 
-            raises = ApiRaises("RuntimeError", "When rendering fails.")
-            doc = Document("API Notes", Chapter("Raises", raises.to_paragraph()))
+            exception = ApiException("RuntimeError", "When rendering fails.")
+            doc = Document("API Notes", Chapter("Raises", exception.to_paragraph()))
             ```
         """
 
@@ -1170,7 +1170,7 @@ class ApiObject:
         description: Additional docstring prose.
         parameters: Signature/docstring parameter metadata.
         returns: Optional return metadata.
-        raises: Documented exceptions.
+        exceptions: Documented exceptions.
         examples: Parsed code examples.
         see_also: Parsed related API entries.
         notes: Parsed general notes.
@@ -1209,7 +1209,7 @@ class ApiObject:
     description: str | None = None
     parameters: list[ApiParameter] = field(default_factory=list)
     returns: ApiReturn | None = None
-    raises: list[ApiRaises] = field(default_factory=list)
+    exceptions: list[ApiException] = field(default_factory=list)
     examples: list[ApiExample] = field(default_factory=list)
     see_also: list[ApiSeeAlso] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
@@ -1268,7 +1268,7 @@ class ApiObject:
             "description": self.description,
             "parameters": [parameter.to_dict() for parameter in self.parameters],
             "returns": self.returns.to_dict() if self.returns else None,
-            "raises": [item.to_dict() for item in self.raises],
+            "exceptions": [item.to_dict() for item in self.exceptions],
             "examples": [item.to_dict() for item in self.examples],
             "see_also": [item.to_dict() for item in self.see_also],
             "notes": list(self.notes),
@@ -1320,9 +1320,9 @@ class ApiObject:
                 for item in data.get("parameters", [])  # type: ignore[union-attr]
             ],
             returns=ApiReturn.from_dict(returns_data) if isinstance(returns_data, dict) else None,
-            raises=[
-                ApiRaises.from_dict(item)
-                for item in data.get("raises", [])  # type: ignore[union-attr]
+            exceptions=[
+                ApiException.from_dict(item)
+                for item in data.get("exceptions", [])  # type: ignore[union-attr]
             ],
             examples=[
                 ApiExample.from_dict(item)
@@ -1754,8 +1754,8 @@ class ApiObject:
 
         return api_returns_blocks(self, profile)
 
-    def to_raises_table(self, profile: object = "reference"):
-        """Return this object's raises table, if exceptions are documented.
+    def to_exceptions_table(self, profile: object = "reference"):
+        """Return this object's exception table, if exceptions are documented.
 
         Args:
             profile: Presentation profile name or object.
@@ -1773,14 +1773,14 @@ class ApiObject:
 
             api = collect_api(".")
             obj = api.functions()[0]
-            table = obj.to_raises_table(profile="review")
+            table = obj.to_exceptions_table(profile="review")
             doc = Document("API Review", Chapter("Raises", table))
             ```
         """
 
-        from oodocs.apidoc.blocks import api_raises_table
+        from oodocs.apidoc.blocks import api_exceptions_table
 
-        return api_raises_table(self, profile)
+        return api_exceptions_table(self, profile)
 
     def to_examples_blocks(self, profile: object = "reference") -> list[object]:
         """Return OODocs blocks for examples.
@@ -3729,7 +3729,7 @@ __all__ = [
     "ApiPackage",
     "ApiParameter",
     "ApiPresentationProfileName",
-    "ApiRaises",
+    "ApiException",
     "ApiRendererNote",
     "ApiReturn",
     "ApiSeeAlso",

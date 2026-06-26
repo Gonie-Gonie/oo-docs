@@ -17,7 +17,7 @@ def test_numpy_docstring_fixture_extracts_shared_fields() -> None:
     assert function.style == "numpy"
     assert function.parameters[0].annotation == "str"
     assert function.returns is not None
-    assert function.raises[0].exception == "ValueError"
+    assert function.exceptions[0].exception == "ValueError"
     assert function.examples
     assert function.notes
     assert function.renderer_notes[0].format == "html"
@@ -48,7 +48,7 @@ def test_numpy_fallback_parser_extracts_raises_sections(monkeypatch) -> None:
         style="numpy",
     )
 
-    assert [(item.exception, item.description) for item in parsed.raises] == [
+    assert [(item.exception, item.description) for item in parsed.exceptions] == [
         ("ValueError", "If the path is empty."),
         ("RuntimeError", "If loading fails."),
         ("TypeError, OSError", "If input types or filesystem state are invalid."),

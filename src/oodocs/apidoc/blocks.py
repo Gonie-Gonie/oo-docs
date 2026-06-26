@@ -353,7 +353,7 @@ def api_returns_blocks(
     return [Paragraph(*parts, title="Returns")]
 
 
-def api_raises_table(
+def api_exceptions_table(
     obj: ApiObject,
     profile: str | ApiPresentationProfile = "reference",
     *,
@@ -374,20 +374,20 @@ def api_raises_table(
 
         ```python
         from oodocs.apidoc import collect_api
-        from oodocs.apidoc.blocks import api_raises_table
+        from oodocs.apidoc.blocks import api_exceptions_table
 
         api = collect_api(".")
         obj = api.functions()[0]
-        table = api_raises_table(obj, caption="Raises")
+        table = api_exceptions_table(obj, caption="Raises")
         ```
     """
 
     resolved = resolve_presentation_profile(profile)
-    if not resolved.include_raises or not obj.raises:
+    if not resolved.include_exceptions or not obj.exceptions:
         return None
     return Table(
         ["Exception", "Description"],
-        [item.to_row() for item in obj.raises],
+        [item.to_row() for item in obj.exceptions],
         caption=caption,
         split=True,
     )
@@ -813,8 +813,8 @@ def api_object_to_blocks(
     if parameter_table := api_parameter_table(obj, resolved, caption="Parameters"):
         blocks.append(parameter_table)
     blocks.extend(api_returns_blocks(obj, resolved))
-    if raises_table := api_raises_table(obj, resolved, caption="Raises"):
-        blocks.append(raises_table)
+    if exceptions_table := api_exceptions_table(obj, resolved, caption="Raises"):
+        blocks.append(exceptions_table)
     blocks.extend(api_notes_blocks(obj, resolved))
     blocks.extend(api_warnings_blocks(obj, resolved))
     blocks.extend(api_examples_blocks(obj, resolved))
@@ -1316,7 +1316,7 @@ __all__ = [
     "api_objects_to_summary_table",
     "api_package_to_chapters",
     "api_parameter_table",
-    "api_raises_table",
+    "api_exceptions_table",
     "api_review_note_paragraph",
     "api_renderer_notes_blocks",
     "api_renderer_notes_table",

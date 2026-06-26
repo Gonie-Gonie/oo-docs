@@ -23,7 +23,7 @@ from oodocs.apidoc.model import (
     ApiDocstringStyleName,
     ApiExample,
     ApiParameter,
-    ApiRaises,
+    ApiException,
     ApiRendererNote,
     ApiReturn,
     ApiSeeAlso,
@@ -45,7 +45,7 @@ class ParsedDocstring:
         attributes: Parsed attribute documentation from module or class
             docstrings.
         returns: Parsed return/yield documentation.
-        raises: Parsed exception documentation.
+        exceptions: Parsed exception documentation.
         examples: Parsed code examples.
         see_also: Related API references.
         renderer_notes: Renderer-specific behavior notes.
@@ -74,7 +74,7 @@ class ParsedDocstring:
     parameters: list[ApiParameter] = field(default_factory=list)
     attributes: list[ApiParameter] = field(default_factory=list)
     returns: ApiReturn | None = None
-    raises: list[ApiRaises] = field(default_factory=list)
+    exceptions: list[ApiException] = field(default_factory=list)
     examples: list[ApiExample] = field(default_factory=list)
     see_also: list[ApiSeeAlso] = field(default_factory=list)
     renderer_notes: list[ApiRendererNote] = field(default_factory=list)
@@ -109,7 +109,7 @@ class ParsedDocstring:
             "parameters": [item.to_dict() for item in self.parameters],
             "attributes": [item.to_dict() for item in self.attributes],
             "returns": self.returns.to_dict() if self.returns is not None else None,
-            "raises": [item.to_dict() for item in self.raises],
+            "exceptions": [item.to_dict() for item in self.exceptions],
             "examples": [item.to_dict() for item in self.examples],
             "see_also": [item.to_dict() for item in self.see_also],
             "renderer_notes": [item.to_dict() for item in self.renderer_notes],
@@ -154,9 +154,9 @@ class ParsedDocstring:
                 for item in data.get("attributes", [])  # type: ignore[union-attr]
             ],
             returns=ApiReturn.from_dict(returns_data) if isinstance(returns_data, dict) else None,
-            raises=[
-                ApiRaises.from_dict(item)
-                for item in data.get("raises", [])  # type: ignore[union-attr]
+            exceptions=[
+                ApiException.from_dict(item)
+                for item in data.get("exceptions", [])  # type: ignore[union-attr]
             ],
             examples=[
                 ApiExample.from_dict(item)
@@ -944,9 +944,9 @@ def _parse_google(text: str, qualname: str | None, module: str | None) -> Parsed
             parsed.attributes.extend(_parse_colon_items(body))
         elif normalized in {"returns", "return", "yields", "yield"} and parsed.returns is None:
             parsed.returns = _parse_return_section(body)
-        elif normalized in {"raises", "raise"} and not parsed.raises:
-            parsed.raises.extend(
-                ApiRaises(item.name, item.description)
+        elif normalized in {"raises", "raise"} and not parsed.exceptions:
+            parsed.exceptions.extend(
+                ApiException(item.name, item.description)
                 for item in _parse_colon_items(body, annotation_in_name=True)
             )
         elif normalized in {"examples", "example"} and not parsed.examples:
@@ -987,8 +987,8 @@ def _parse_numpy(text: str, qualname: str | None, module: str | None) -> ParsedD
             parsed.attributes.extend(_parse_numpy_parameters(body))
         elif normalized in {"returns", "yields"} and parsed.returns is None:
             parsed.returns = _parse_numpy_return_section(body)
-        elif normalized == "raises" and not parsed.raises:
-            parsed.raises.extend(_parse_numpy_raises(body))
+        elif normalized == "raises" and not parsed.exceptions:
+            parsed.exceptions.extend(_parse_numpy_raises(body))
         elif normalized == "examples" and not parsed.examples:
             parsed.examples.extend(_examples_or_text(body))
         elif normalized == "see also":
@@ -1113,9 +1113,9 @@ def _parse_sphinx(text: str, qualname: str | None, module: str | None) -> Parsed
         elif match := re.match(r"^:raises?\s+([^:]+)\s*:\s*(.*)$", stripped):
             description, next_index = _collect_sphinx_field_body(lines, i, match.group(2))
             if not sphinx_raises_seen:
-                parsed.raises = []
+                parsed.exceptions = []
                 sphinx_raises_seen = True
-            parsed.raises.append(ApiRaises(match.group(1).strip(), description))
+            parsed.exceptions.append(ApiException(match.group(1).strip(), description))
             i = next_index - 1
         elif stripped.startswith(".. deprecated::"):
             parsed.deprecated = True
@@ -1235,7 +1235,7 @@ def _parse_with_docstring_parser(
         elif class_name == "DocstringRaises":
             exception = getattr(meta, "type_name", None)
             if exception:
-                parsed.raises.append(ApiRaises(str(exception), getattr(meta, "description", None)))
+                parsed.exceptions.append(ApiException(str(exception), getattr(meta, "description", None)))
         elif class_name == "DocstringExample":
             parsed.examples.extend(_examples_from_docstring_parser_meta(meta))
         elif class_name == "DocstringDeprecated":
@@ -1279,7 +1279,7 @@ def _normalize_sphinx_markup(parsed: ParsedDocstring) -> None:
     if parsed.returns is not None:
         parsed.returns.annotation = _plain_sphinx_text(parsed.returns.annotation)
         parsed.returns.description = _plain_sphinx_text(parsed.returns.description)
-    for item in parsed.raises:
+    for item in parsed.exceptions:
         item.exception = _plain_sphinx_text(item.exception) or item.exception
         item.description = _plain_sphinx_text(item.description)
     for item in parsed.see_also:
@@ -1337,7 +1337,7 @@ def _parse_markdown(text: str, qualname: str | None, module: str | None) -> Pars
         elif normalized in {"returns", "return", "yields", "yield"}:
             parsed.returns = _parse_return_section(body)
         elif normalized in {"raises", "raise"}:
-            parsed.raises.extend(_parse_markdown_raises(body))
+            parsed.exceptions.extend(_parse_markdown_raises(body))
         elif normalized in {"examples", "example"}:
             parsed.examples.extend(_examples_or_text(body))
         elif normalized == "see also":
@@ -1498,9 +1498,9 @@ def _parse_numpy_parameters(
     return items
 
 
-def _parse_numpy_raises(text: str) -> list[ApiRaises]:
-    items: list[ApiRaises] = []
-    current: ApiRaises | None = None
+def _parse_numpy_raises(text: str) -> list[ApiException]:
+    items: list[ApiException] = []
+    current: ApiException | None = None
     for raw_line in text.splitlines():
         line = raw_line.rstrip()
         if not line.strip():
@@ -1511,7 +1511,7 @@ def _parse_numpy_raises(text: str) -> list[ApiRaises]:
         )
         if match and not raw_line.startswith((" ", "\t")):
             exception, description = match.groups()
-            current = ApiRaises(exception.strip(), description or None)
+            current = ApiException(exception.strip(), description or None)
             items.append(current)
         elif current is not None:
             current.description = _join_text(current.description, line.strip())
@@ -1598,17 +1598,17 @@ def _parse_markdown_parameters(
     return _parse_numpy_parameters(text, annotation_in_name=annotation_in_name)
 
 
-def _parse_markdown_raises(text: str) -> list[ApiRaises]:
+def _parse_markdown_raises(text: str) -> list[ApiException]:
     table_items = _parse_markdown_raises_table(text)
     if table_items:
         return table_items
     items = _parse_markdown_parameters(text, annotation_in_name=True)
     if not items:
         items = _parse_colon_items(text, annotation_in_name=True)
-    return [ApiRaises(item.name, item.description) for item in items]
+    return [ApiException(item.name, item.description) for item in items]
 
 
-def _parse_markdown_raises_table(text: str) -> list[ApiRaises]:
+def _parse_markdown_raises_table(text: str) -> list[ApiException]:
     lines = [line.strip() for line in text.splitlines() if line.strip().startswith("|")]
     if len(lines) < 3:
         return []
@@ -1619,14 +1619,14 @@ def _parse_markdown_raises_table(text: str) -> list[ApiRaises]:
     )
     if name_header is None:
         return []
-    result: list[ApiRaises] = []
+    result: list[ApiException] = []
     for row in lines[2:]:
         cells = [_plain_code_text(cell) or "" for cell in row.strip("|").split("|")]
         values = {header: cells[index] if index < len(cells) else "" for index, header in enumerate(headers)}
         exception = values.get(name_header, "")
         description = values.get("description") or values.get("reason") or values.get("when") or None
         if exception:
-            result.append(ApiRaises(exception, description))
+            result.append(ApiException(exception, description))
     return result
 
 

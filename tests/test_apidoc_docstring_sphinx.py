@@ -17,7 +17,7 @@ def test_sphinx_docstring_fixture_extracts_shared_fields() -> None:
     assert function.style == "sphinx"
     assert function.parameters[0].annotation == "str"
     assert function.returns is not None
-    assert function.raises[0].exception == "ValueError"
+    assert function.exceptions[0].exception == "ValueError"
     assert function.examples
     assert function.notes
     assert function.warnings
@@ -67,7 +67,7 @@ def test_sphinx_fallback_parser_preserves_multiline_field_bodies(monkeypatch) ->
     assert parsed.returns.description == (
         "Loaded widget name. Empty paths return a default widget."
     )
-    assert parsed.raises[0].description == (
+    assert parsed.exceptions[0].description == (
         "If the path is invalid. The path is included in the exception message."
     )
     assert parsed.notes == ["Used by fallback parser regression tests."]
@@ -102,7 +102,7 @@ def test_sphinx_parser_degrades_inline_rest_markup_to_plain_text() -> None:
     assert parsed.returns is not None
     assert parsed.returns.annotation == "str"
     assert parsed.returns.description == "A widget label with markup."
-    assert parsed.raises[0].description == "If path is blank."
+    assert parsed.exceptions[0].description == "If path is blank."
     assert parsed.notes == ["See widgets.registry before calling."]
     assert parsed.warnings == ["Avoid mutable defaults."]
 
@@ -206,7 +206,7 @@ def test_sphinx_fallback_parser_degrades_inline_rest_markup_to_plain_text(monkey
     assert parsed.returns is not None
     assert parsed.returns.annotation == "str"
     assert parsed.returns.description == "A widget label with markup."
-    assert parsed.raises[0].description == "If path is blank."
+    assert parsed.exceptions[0].description == "If path is blank."
 
 
 def test_sphinx_fallback_parser_extracts_seealso_and_renderer_admonitions(monkeypatch) -> None:

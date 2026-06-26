@@ -31,7 +31,7 @@ class ApiPresentationProfile:
         include_description: Whether to include summary and description text.
         include_parameters: Whether to include a parameter table.
         include_returns: Whether to include returns/yields documentation.
-        include_raises: Whether to include an exception table.
+        include_exceptions: Whether to include an exception table.
         include_examples: Whether to include examples.
         include_see_also: Whether to include related API references.
         include_notes: Whether to include general docstring notes.
@@ -81,7 +81,7 @@ class ApiPresentationProfile:
     include_description: bool = True
     include_parameters: bool = True
     include_returns: bool = True
-    include_raises: bool = True
+    include_exceptions: bool = True
     include_examples: bool = True
     include_see_also: bool = True
     include_notes: bool = True
@@ -333,7 +333,7 @@ class ApiPresentationProfile:
             "include_description": self.include_description,
             "include_parameters": self.include_parameters,
             "include_returns": self.include_returns,
-            "include_raises": self.include_raises,
+            "include_exceptions": self.include_exceptions,
             "include_examples": self.include_examples,
             "include_see_also": self.include_see_also,
             "include_notes": self.include_notes,

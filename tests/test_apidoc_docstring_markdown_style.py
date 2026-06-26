@@ -18,8 +18,8 @@ def test_markdown_docstring_fixture_extracts_shared_fields() -> None:
     assert function.parameters[0].annotation == "str"
     assert function.parameters[0].description == "Input path."
     assert function.returns is not None
-    assert function.raises[0].exception == "ValueError"
-    assert function.raises[0].description == "If the path is empty."
+    assert function.exceptions[0].exception == "ValueError"
+    assert function.exceptions[0].description == "If the path is empty."
     assert function.examples
     assert function.notes
     assert function.renderer_notes[0].format == "html"
@@ -51,7 +51,7 @@ def test_markdown_docstring_parses_raises_table() -> None:
         style="markdown",
     )
 
-    assert [(item.exception, item.description) for item in parsed.raises] == [
+    assert [(item.exception, item.description) for item in parsed.exceptions] == [
         ("ValueError", "If the path is empty."),
         ("RuntimeError", "If loading fails."),
     ]

@@ -1108,8 +1108,8 @@
           "category": "apidoc-model",
           "kind": "class",
           "module": "oodocs.apidoc.model",
-          "name": "ApiRaises",
-          "qualname": "oodocs.apidoc.model.ApiRaises"
+          "name": "ApiException",
+          "qualname": "oodocs.apidoc.model.ApiException"
         },
         {
           "category": "apidoc-model",

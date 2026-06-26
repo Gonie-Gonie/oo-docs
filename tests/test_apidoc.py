@@ -176,7 +176,7 @@ def test_docstring_parsers_normalize_standard_styles() -> None:
     assert google.attributes[0].name == "cache_key"
     assert google.attributes[0].annotation == "str"
     assert google.returns and google.returns.annotation == "bool"
-    assert google.raises[0].exception == "ValueError"
+    assert google.exceptions[0].exception == "ValueError"
     assert google.examples[0].language == "python"
     assert google_doctest.examples[0].language == "pycon"
     assert google.notes == ["This loader is safe for generated reference documents."]

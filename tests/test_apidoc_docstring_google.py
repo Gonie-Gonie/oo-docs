@@ -17,7 +17,7 @@ def test_google_docstring_fixture_extracts_shared_fields() -> None:
     assert function.style == "google"
     assert function.parameters[0].name == "path"
     assert function.returns is not None
-    assert function.raises[0].exception == "ValueError"
+    assert function.exceptions[0].exception == "ValueError"
     assert function.examples
     assert function.notes
     assert function.renderer_notes[0].format == "html"
