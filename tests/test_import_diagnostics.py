@@ -45,7 +45,7 @@ def test_parse_markdown_file_records_source_for_raw_html(tmp_path) -> None:
     assert isinstance(result, ImportResult)
     assert result.issues[0].code == "raw-html-unsupported"
     assert result.issues[0].source == str(markdown_path.resolve())
-    assert result.issues[0].line == 1
+    assert result.issues[0].line_number == 1
 
 
 def test_parse_notebook_options_filter_truncate_and_caption_outputs() -> None:

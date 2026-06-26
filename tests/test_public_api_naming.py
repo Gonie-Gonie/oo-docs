@@ -378,6 +378,21 @@ def test_result_objects_use_format_text_names() -> None:
     assert "format_text" in _public_members(oodocs.ImportResult)
 
 
+def test_import_issue_uses_line_number_field_name() -> None:
+    field_names = {field.name for field in fields(oodocs.ImportIssue)}
+    issue = oodocs.ImportIssue(
+        "warning",
+        "raw-html-unsupported",
+        "Raw HTML was imported as plain text.",
+        line_number=4,
+    )
+
+    assert "line" not in field_names
+    assert "line_number" in field_names
+    assert "line" not in issue.to_dict()
+    assert issue.to_dict()["line_number"] == 4
+
+
 def test_apidoc_raw_value_helpers_use_as_prefix() -> None:
     forbidden_by_class = {
         apidoc.ApiParameter: {"to_row", "to_table_cell_values"},

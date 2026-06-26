@@ -436,14 +436,14 @@ class _MarkdownParser:
         severity: str,
         code: str,
         message: str,
-        line: int | None,
+        line_number: int | None,
     ) -> None:
         self.issues.append(
             ImportIssue(
                 severity=severity,  # type: ignore[arg-type]
                 code=code,
                 message=message,
-                line=line,
+                line_number=line_number,
                 source=self.source_name,
             )
         )

@@ -26,7 +26,7 @@ class ImportIssue:
         severity: Diagnostic severity for the issue.
         code: Stable machine-readable issue code.
         message: Human-readable diagnostic message.
-        line: Optional 1-based source line where the issue occurred.
+        line_number: Optional 1-based source line where the issue occurred.
         source: Optional source label, such as a file path or notebook cell.
 
     Examples:
@@ -35,7 +35,7 @@ class ImportIssue:
             "warning",
             "raw-html-unsupported",
             "Raw HTML was imported as plain text.",
-            line=4,
+            line_number=4,
         )
         ```
     """
@@ -43,21 +43,21 @@ class ImportIssue:
     severity: ImportSeverity
     code: str
     message: str
-    line: int | None = None
+    line_number: int | None = None
     source: str | None = None
 
     def to_dict(self) -> dict[str, object]:
         """Return the issue as a JSON-serializable mapping.
 
         Returns:
-            Dictionary containing severity, code, message, line, and source.
+            Dictionary containing severity, code, message, line number, and source.
         """
 
         return {
             "severity": self.severity,
             "code": self.code,
             "message": self.message,
-            "line": self.line,
+            "line_number": self.line_number,
             "source": self.source,
         }
 
@@ -132,7 +132,9 @@ class ImportResult:
             return "OODocs import completed with 0 issue(s)."
         lines = [f"OODocs import completed with {len(self.issues)} issue(s):"]
         for issue in self.issues:
-            location = f" line {issue.line}" if issue.line is not None else ""
+            location = (
+                f" line {issue.line_number}" if issue.line_number is not None else ""
+            )
             source = f" in {issue.source}" if issue.source else ""
             lines.append(
                 f"- {issue.severity.upper()} {issue.code}{source}{location}: "
