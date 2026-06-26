@@ -955,7 +955,7 @@ class DocxRenderer:
             word_document,
             [Text(document.title)],
             font_size=context.theme.title_font_size,
-            alignment=context.theme.title_alignment,
+            alignment=context.theme.title_text_alignment,
             bold=True,
             space_after=12,
         )
@@ -964,7 +964,7 @@ class DocxRenderer:
                 word_document,
                 document.settings.subtitle,
                 font_size=max(context.theme.body_font_size + 1, 12),
-                alignment=context.theme.subtitle_alignment,
+                alignment=context.theme.subtitle_text_alignment,
                 italic=True,
                 space_after=10,
             )
@@ -1033,10 +1033,10 @@ class DocxRenderer:
 
     def _title_line_alignment(self, line: AuthorTitleLine, theme: Theme) -> str:
         if line.kind == "name":
-            return theme.author_alignment
+            return theme.author_text_alignment
         if line.kind == "affiliation":
-            return theme.affiliation_alignment
-        return theme.author_detail_alignment
+            return theme.affiliation_text_alignment
+        return theme.author_detail_text_alignment
 
     def _title_line_font_size(self, line: AuthorTitleLine, theme: Theme) -> float:
         if line.kind == "name":
@@ -1200,7 +1200,7 @@ class DocxRenderer:
         paragraph = self._add_paragraph(container)
         paragraph.style = "Title" if level == 0 else f"Heading {min(level, 9)}"
         if level == 0:
-            paragraph.alignment = ALIGNMENTS[theme.title_alignment]
+            paragraph.alignment = ALIGNMENTS[theme.title_text_alignment]
         else:
             paragraph.alignment = ALIGNMENTS[theme.heading_alignment(level)]
             paragraph.paragraph_format.space_before = Pt(18 if level == 1 else 12)
@@ -2504,7 +2504,7 @@ class DocxRenderer:
             if table_block.caption is None:
                 return
             caption = self._add_paragraph(container)
-            caption.alignment = ALIGNMENTS[theme.caption_alignment]
+            caption.alignment = ALIGNMENTS[theme.caption_text_alignment]
             self._keep_lines_together(caption)
             self._append_runs(
                 caption,
@@ -2617,7 +2617,7 @@ class DocxRenderer:
             if figure.caption is None:
                 return
             caption = self._add_paragraph(container)
-            caption.alignment = ALIGNMENTS[theme.caption_alignment]
+            caption.alignment = ALIGNMENTS[theme.caption_text_alignment]
             caption.paragraph_format.space_after = Pt(0 if in_box else 12)
             self._keep_lines_together(caption)
             self._append_runs(
@@ -2676,7 +2676,7 @@ class DocxRenderer:
             if group.caption is None:
                 return
             caption = self._add_paragraph(container)
-            caption.alignment = ALIGNMENTS[theme.caption_alignment]
+            caption.alignment = ALIGNMENTS[theme.caption_text_alignment]
             caption.paragraph_format.space_after = Pt(0 if in_box else 12)
             self._keep_lines_together(caption)
             self._append_runs(
@@ -2729,7 +2729,7 @@ class DocxRenderer:
             anchor_paragraph = image_paragraph
             if subfigure.caption is not None:
                 subcaption = cell.add_paragraph()
-                subcaption.alignment = ALIGNMENTS[theme.caption_alignment]
+                subcaption.alignment = ALIGNMENTS[theme.caption_text_alignment]
                 subcaption.paragraph_format.space_after = Pt(0)
                 self._append_runs(
                     subcaption,
@@ -3167,7 +3167,7 @@ class DocxRenderer:
             container,
             title,
             font_size=font_size,
-            alignment=theme.title_alignment if level == 0 else theme.heading_alignment(level),
+            alignment=theme.title_text_alignment if level == 0 else theme.heading_alignment(level),
             bold=theme.heading_emphasis(level)[0] if level > 0 else True,
             italic=theme.heading_emphasis(level)[1] if level > 0 else False,
             space_after=10 if level <= 1 else 6,

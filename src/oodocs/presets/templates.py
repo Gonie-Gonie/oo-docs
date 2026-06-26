@@ -41,7 +41,7 @@ def _default_journal_theme() -> Theme:
             caption_font_size=10.0,
         ),
         CaptionDefaults(
-            caption_alignment="left",
+            caption_text_alignment="left",
             table_caption_position="above",
             figure_caption_position="below",
         ),
@@ -54,11 +54,11 @@ def _default_journal_theme() -> Theme:
             page_number_alignment="center",
         ),
         TitleMatterDefaults(
-            title_alignment="center",
-            subtitle_alignment="center",
-            author_alignment="center",
-            affiliation_alignment="center",
-            author_detail_alignment="center",
+            title_text_alignment="center",
+            subtitle_text_alignment="center",
+            author_text_alignment="center",
+            affiliation_text_alignment="center",
+            author_detail_text_alignment="center",
         ),
         BlockDefaults(
             paragraph_text_alignment="justify",

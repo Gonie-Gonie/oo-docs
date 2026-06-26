@@ -459,7 +459,7 @@ def test_theme_accepts_grouped_defaults_objects() -> None:
         CitationDefaults(citation_style="apa", reference_style="apa"),
         GeneratedContentDefaults(table_of_contents_title="Outline"),
         PageNumberDefaults(show_page_numbers=True, page_number_template="p. {page}"),
-        TitleMatterDefaults(title_alignment="left"),
+        TitleMatterDefaults(title_text_alignment="left"),
         BlockDefaults(
             paragraph_text_alignment="left",
             table_alignment="right",
@@ -479,7 +479,7 @@ def test_theme_accepts_grouped_defaults_objects() -> None:
     assert theme.table_of_contents_title == "Outline"
     assert theme.show_page_numbers is True
     assert theme.format_page_number(4) == "p. 4"
-    assert theme.title_alignment == "left"
+    assert theme.title_text_alignment == "left"
     assert theme.paragraph_text_alignment == "left"
     assert theme.run_in_title_style.text_style.italic is True
     assert theme.blocks.run_in_title_style.separator == ": "
@@ -715,7 +715,7 @@ def test_theme_defaults_center_media_objects_and_captions() -> None:
     theme = Theme()
 
     assert theme.page_background_color == "FFFFFF"
-    assert theme.caption_alignment == "center"
+    assert theme.caption_text_alignment == "center"
     assert theme.table_alignment == "center"
     assert theme.figure_alignment == "center"
     assert theme.box_alignment == "center"

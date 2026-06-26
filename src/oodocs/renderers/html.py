@@ -865,7 +865,7 @@ class HtmlRenderer:
             anchor_attr = f' id="{escape(anchor)}"' if anchor else ""
             caption_html = (
                 f'<figcaption{anchor_attr} class="oodocs-caption oodocs-subfigure-caption" '
-                f'style="text-align: {context.theme.caption_alignment}; font-size: {context.theme.caption_size():.1f}pt;">'
+                f'style="text-align: {context.theme.caption_text_alignment}; font-size: {context.theme.caption_size():.1f}pt;">'
                 + self._inline_html(
                     self._subfigure_caption_fragments(
                         group.formatted_label_for_index(index),
@@ -1156,7 +1156,7 @@ class HtmlRenderer:
             self._title_line_html(
                 [Text(document.title)],
                 font_size=context.theme.title_font_size,
-                alignment=context.theme.title_alignment,
+                alignment=context.theme.title_text_alignment,
                 bold=True,
                 class_name="oodocs-title",
                 theme=context.theme,
@@ -1167,7 +1167,7 @@ class HtmlRenderer:
                 self._title_line_html(
                     settings.subtitle,
                     font_size=max(context.theme.body_font_size + 1, 12),
-                    alignment=context.theme.subtitle_alignment,
+                    alignment=context.theme.subtitle_text_alignment,
                     italic=True,
                     class_name="oodocs-subtitle",
                     theme=context.theme,
@@ -1217,10 +1217,10 @@ class HtmlRenderer:
 
     def _title_line_alignment(self, line: AuthorTitleLine, theme: Theme) -> str:
         if line.kind == "name":
-            return theme.author_alignment
+            return theme.author_text_alignment
         if line.kind == "affiliation":
-            return theme.affiliation_alignment
-        return theme.author_detail_alignment
+            return theme.affiliation_text_alignment
+        return theme.author_detail_text_alignment
 
     def _title_line_font_size(self, line: AuthorTitleLine, theme: Theme) -> float:
         if line.kind == "name":
@@ -1418,7 +1418,7 @@ class HtmlRenderer:
         anchor_attr = f' id="{escape(anchor)}"' if anchor else ""
         return (
             f"<{tag}{anchor_attr} class=\"oodocs-caption oodocs-{kind}-caption\" "
-            f'style="text-align: {context.theme.caption_alignment}; font-size: {context.theme.caption_size():.1f}pt;">'
+            f'style="text-align: {context.theme.caption_text_alignment}; font-size: {context.theme.caption_size():.1f}pt;">'
             + self._inline_html(
                 self._caption_fragments(label, number, caption),
                 context.theme,

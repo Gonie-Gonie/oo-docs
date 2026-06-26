@@ -826,10 +826,10 @@ class TypographyDefaults:
 
 @dataclass(slots=True)
 class CaptionDefaults:
-    """Grouped caption labels, reference labels, positions, and alignment.
+    """Grouped caption labels, reference labels, positions, and text alignment.
 
     Attributes:
-        caption_alignment: Caption paragraph alignment.
+        caption_text_alignment: Caption paragraph text alignment.
         table_caption_position: Table caption position.
         figure_caption_position: Figure caption position.
         table_label: Default table label text.
@@ -852,7 +852,7 @@ class CaptionDefaults:
         ```
     """
 
-    caption_alignment: str = "center"
+    caption_text_alignment: str = "center"
     table_caption_position: str = "above"
     figure_caption_position: str = "below"
     table_label: str = "Table"
@@ -955,29 +955,29 @@ class PageNumberDefaults:
 
 @dataclass(slots=True)
 class TitleMatterDefaults:
-    """Grouped title, subtitle, author, and affiliation alignment defaults.
+    """Grouped title, subtitle, author, and affiliation text alignment defaults.
 
     Attributes:
-        title_alignment: Title alignment.
-        subtitle_alignment: Subtitle alignment.
-        author_alignment: Author line alignment.
-        affiliation_alignment: Affiliation line alignment.
-        author_detail_alignment: Author detail line alignment.
+        title_text_alignment: Title text alignment.
+        subtitle_text_alignment: Subtitle text alignment.
+        author_text_alignment: Author line text alignment.
+        affiliation_text_alignment: Affiliation line text alignment.
+        author_detail_text_alignment: Author detail line text alignment.
 
     Examples:
         ```python
         from oodocs import Document, DocumentSettings, Paragraph, Theme, TitleMatterDefaults
 
-        theme = Theme(TitleMatterDefaults(title_alignment="left"))
+        theme = Theme(TitleMatterDefaults(title_text_alignment="left"))
         document = Document("Report", Paragraph("Body"), settings=DocumentSettings(theme=theme))
         ```
     """
 
-    title_alignment: str = "center"
-    subtitle_alignment: str = "center"
-    author_alignment: str = "center"
-    affiliation_alignment: str = "center"
-    author_detail_alignment: str = "center"
+    title_text_alignment: str = "center"
+    subtitle_text_alignment: str = "center"
+    author_text_alignment: str = "center"
+    affiliation_text_alignment: str = "center"
+    author_detail_text_alignment: str = "center"
 
 
 @dataclass(slots=True)
@@ -1063,7 +1063,7 @@ class Theme:
         run_in_title_style: Default style for run-in paragraph titles.
         heading_sizes: Heading font sizes by level.
         caption_font_size: Optional caption font size override.
-        caption_alignment: Caption paragraph alignment.
+        caption_text_alignment: Caption paragraph text alignment.
         table_alignment: Default table alignment.
         figure_alignment: Default figure alignment.
         box_alignment: Default box alignment.
@@ -1096,11 +1096,11 @@ class Theme:
         front_matter_counter_format: Front-matter page counter style.
         main_matter_counter_format: Main-matter page counter style.
         page_number_font_size: Footer page-number font size in points.
-        title_alignment: Title alignment.
-        subtitle_alignment: Subtitle alignment.
-        author_alignment: Author line alignment.
-        affiliation_alignment: Affiliation line alignment.
-        author_detail_alignment: Author detail line alignment.
+        title_text_alignment: Title text alignment.
+        subtitle_text_alignment: Subtitle text alignment.
+        author_text_alignment: Author line text alignment.
+        affiliation_text_alignment: Affiliation line text alignment.
+        author_detail_text_alignment: Author detail line text alignment.
         heading_numbering: Heading numbering configuration.
         bullet_list_style: Default bullet list style.
         numbered_list_style: Default numbered list style.
@@ -1160,7 +1160,7 @@ class Theme:
     run_in_title_style: RunInTitleStyle = field(default_factory=RunInTitleStyle)
     heading_sizes: tuple[float, ...] = (18.0, 15.0, 13.0, 11.5)
     caption_font_size: float | None = None
-    caption_alignment: str = "center"
+    caption_text_alignment: str = "center"
     table_alignment: str = "center"
     figure_alignment: str = "center"
     box_alignment: str = "center"
@@ -1192,11 +1192,11 @@ class Theme:
     front_matter_counter_format: str = "lower-roman"
     main_matter_counter_format: str = "decimal"
     page_number_font_size: float = 9.0
-    title_alignment: str = "center"
-    subtitle_alignment: str = "center"
-    author_alignment: str = "center"
-    affiliation_alignment: str = "center"
-    author_detail_alignment: str = "center"
+    title_text_alignment: str = "center"
+    subtitle_text_alignment: str = "center"
+    author_text_alignment: str = "center"
+    affiliation_text_alignment: str = "center"
+    author_detail_text_alignment: str = "center"
     heading_numbering: HeadingNumbering = field(default_factory=HeadingNumbering)
     bullet_list_style: ListStyle = field(
         default_factory=lambda: ListStyle(marker_counter_format="bullet", suffix="")
@@ -1222,7 +1222,7 @@ class Theme:
         run_in_title_style: RunInTitleStyle | object = _UNSET,
         heading_sizes: tuple[float, ...] | object = _UNSET,
         caption_font_size: float | None | object = _UNSET,
-        caption_alignment: str | object = _UNSET,
+        caption_text_alignment: str | object = _UNSET,
         table_alignment: str | object = _UNSET,
         figure_alignment: str | object = _UNSET,
         box_alignment: str | object = _UNSET,
@@ -1254,11 +1254,11 @@ class Theme:
         front_matter_counter_format: str | object = _UNSET,
         main_matter_counter_format: str | object = _UNSET,
         page_number_font_size: float | object = _UNSET,
-        title_alignment: str | object = _UNSET,
-        subtitle_alignment: str | object = _UNSET,
-        author_alignment: str | object = _UNSET,
-        affiliation_alignment: str | object = _UNSET,
-        author_detail_alignment: str | object = _UNSET,
+        title_text_alignment: str | object = _UNSET,
+        subtitle_text_alignment: str | object = _UNSET,
+        author_text_alignment: str | object = _UNSET,
+        affiliation_text_alignment: str | object = _UNSET,
+        author_detail_text_alignment: str | object = _UNSET,
         heading_numbering: HeadingNumbering | object = _UNSET,
         bullet_list_style: ListStyle | object = _UNSET,
         numbered_list_style: ListStyle | object = _UNSET,
@@ -1341,7 +1341,7 @@ class Theme:
             "run_in_title_style": run_in_title_style,
             "heading_sizes": heading_sizes,
             "caption_font_size": caption_font_size,
-            "caption_alignment": caption_alignment,
+            "caption_text_alignment": caption_text_alignment,
             "table_alignment": table_alignment,
             "figure_alignment": figure_alignment,
             "box_alignment": box_alignment,
@@ -1373,11 +1373,11 @@ class Theme:
             "front_matter_counter_format": front_matter_counter_format,
             "main_matter_counter_format": main_matter_counter_format,
             "page_number_font_size": page_number_font_size,
-            "title_alignment": title_alignment,
-            "subtitle_alignment": subtitle_alignment,
-            "author_alignment": author_alignment,
-            "affiliation_alignment": affiliation_alignment,
-            "author_detail_alignment": author_detail_alignment,
+            "title_text_alignment": title_text_alignment,
+            "subtitle_text_alignment": subtitle_text_alignment,
+            "author_text_alignment": author_text_alignment,
+            "affiliation_text_alignment": affiliation_text_alignment,
+            "author_detail_text_alignment": author_detail_text_alignment,
             "heading_numbering": heading_numbering,
             "bullet_list_style": bullet_list_style,
             "numbered_list_style": numbered_list_style,
@@ -1400,9 +1400,9 @@ class Theme:
         self.paragraph_text_alignment = normalize_text_alignment(self.paragraph_text_alignment)
         if not isinstance(self.run_in_title_style, RunInTitleStyle):
             raise TypeError("run_in_title_style must be a RunInTitleStyle")
-        if self.caption_alignment not in {"left", "center", "right", "justify"}:
+        if self.caption_text_alignment not in {"left", "center", "right", "justify"}:
             raise ValueError(
-                f"Unsupported caption alignment: {self.caption_alignment!r}"
+                f"Unsupported caption_text_alignment: {self.caption_text_alignment!r}"
             )
         for field_name in (
             "table_alignment",
@@ -1440,11 +1440,11 @@ class Theme:
         if "{page}" not in self.page_number_template:
             raise ValueError("page_number_template must contain a '{page}' placeholder")
         for field_name in (
-            "title_alignment",
-            "subtitle_alignment",
-            "author_alignment",
-            "affiliation_alignment",
-            "author_detail_alignment",
+            "title_text_alignment",
+            "subtitle_text_alignment",
+            "author_text_alignment",
+            "affiliation_text_alignment",
+            "author_detail_text_alignment",
         ):
             value = getattr(self, field_name)
             if value not in {"left", "center", "right", "justify"}:
@@ -1460,7 +1460,7 @@ class Theme:
             caption_font_size=self.caption_font_size,
         )
         self.captions = CaptionDefaults(
-            caption_alignment=self.caption_alignment,
+            caption_text_alignment=self.caption_text_alignment,
             table_caption_position=self.table_caption_position,
             figure_caption_position=self.figure_caption_position,
             table_label=self.table_label,
@@ -1493,11 +1493,11 @@ class Theme:
             page_number_font_size=self.page_number_font_size,
         )
         self.title_matter = TitleMatterDefaults(
-            title_alignment=self.title_alignment,
-            subtitle_alignment=self.subtitle_alignment,
-            author_alignment=self.author_alignment,
-            affiliation_alignment=self.affiliation_alignment,
-            author_detail_alignment=self.author_detail_alignment,
+            title_text_alignment=self.title_text_alignment,
+            subtitle_text_alignment=self.subtitle_text_alignment,
+            author_text_alignment=self.author_text_alignment,
+            affiliation_text_alignment=self.affiliation_text_alignment,
+            author_detail_text_alignment=self.author_detail_text_alignment,
         )
         self.blocks = BlockDefaults(
             page_background_color=self.page_background_color,

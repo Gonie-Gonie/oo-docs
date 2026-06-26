@@ -226,6 +226,42 @@ def test_paragraph_style_uses_text_alignment_names() -> None:
         assert "text_alignment" in parameters, cls.__name__
 
 
+def test_theme_caption_and_title_matter_use_text_alignment_names() -> None:
+    caption_fields = {field.name for field in fields(oodocs.CaptionDefaults)}
+    title_matter_fields = {field.name for field in fields(oodocs.TitleMatterDefaults)}
+    theme_fields = {field.name for field in fields(oodocs.Theme)}
+    theme_parameters = set(inspect.signature(oodocs.Theme).parameters)
+
+    assert "caption_alignment" not in caption_fields
+    assert "caption_text_alignment" in caption_fields
+    assert "caption_alignment" not in theme_fields
+    assert "caption_text_alignment" in theme_fields
+    assert "caption_alignment" not in theme_parameters
+    assert "caption_text_alignment" in theme_parameters
+
+    forbidden = {
+        "title_alignment",
+        "subtitle_alignment",
+        "author_alignment",
+        "affiliation_alignment",
+        "author_detail_alignment",
+    }
+    expected = {
+        "title_text_alignment",
+        "subtitle_text_alignment",
+        "author_text_alignment",
+        "affiliation_text_alignment",
+        "author_detail_text_alignment",
+    }
+
+    assert forbidden.isdisjoint(title_matter_fields)
+    assert expected <= title_matter_fields
+    assert forbidden.isdisjoint(theme_fields)
+    assert expected <= theme_fields
+    assert forbidden.isdisjoint(theme_parameters)
+    assert expected <= theme_parameters
+
+
 def test_image_components_use_image_format_field_name() -> None:
     for cls in (oodocs.ImageData, oodocs.Figure, oodocs.SubFigure, oodocs.ImageBox):
         field_names = {field.name for field in fields(cls)}

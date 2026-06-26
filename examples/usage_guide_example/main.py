@@ -822,11 +822,11 @@ def build_usage_guide_document() -> Document:
         headers=["Theme group", "Options", "Use it for"],
         rows=[
             ["TypographyDefaults", "body_font_name, monospace_font_name, title_font_size, body_font_size, heading_sizes, caption_font_size", "Fonts and type scale."],
-            ["CaptionDefaults", "caption_alignment, table_caption_position, figure_caption_position, table_label, figure_label, caption/reference labels", "Caption placement and localized labels."],
+            ["CaptionDefaults", "caption_text_alignment, table_caption_position, figure_caption_position, table_label, figure_label, caption/reference labels", "Caption placement and localized labels."],
             ["CitationDefaults", "citation_style, reference_style", "Inline citation labels and generated reference entry style."],
             ["GeneratedContentDefaults", "contents/list/comments/footnotes/references titles, generated_heading_level, generated_content_page_breaks", "Generated content titles and heading level."],
             ["PageNumberDefaults", "show_page_numbers, page_number_alignment, page_number_template, front/main matter counter formats, page_number_font_size", "Footer page labels."],
-            ["TitleMatterDefaults", "title_alignment, subtitle_alignment, author_alignment, affiliation_alignment, author_detail_alignment", "Title-page and metadata alignment."],
+            ["TitleMatterDefaults", "title_text_alignment, subtitle_text_alignment, author_text_alignment, affiliation_text_alignment, author_detail_text_alignment", "Title-page and metadata alignment."],
             ["BlockDefaults", "page_background_color, paragraph_text_alignment, table/figure/box alignment, footnote_placement, list styles, heading_numbering", "Document-wide defaults that individual blocks can override."],
         ],
         caption="Grouped Theme options; pass them positionally to Theme(...) or override the same names directly.",

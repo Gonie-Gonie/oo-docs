@@ -1542,7 +1542,7 @@ class PdfRenderer:
                 styles,
                 style_name="OODocsTitle",
                 font_size=theme.title_font_size,
-                alignment=theme.title_alignment,
+                alignment=theme.title_text_alignment,
                 bold=True,
                 space_after=18,
             )
@@ -1555,7 +1555,7 @@ class PdfRenderer:
                     styles,
                     style_name="OODocsSubtitle",
                     font_size=max(theme.body_font_size + 1, 12),
-                    alignment=theme.subtitle_alignment,
+                    alignment=theme.subtitle_text_alignment,
                     italic=True,
                     space_after=12,
                 )
@@ -1578,10 +1578,10 @@ class PdfRenderer:
 
     def _title_line_alignment(self, line: AuthorTitleLine, theme: Theme) -> str:
         if line.kind == "name":
-            return theme.author_alignment
+            return theme.author_text_alignment
         if line.kind == "affiliation":
-            return theme.affiliation_alignment
-        return theme.author_detail_alignment
+            return theme.affiliation_text_alignment
+        return theme.author_detail_text_alignment
 
     def _title_line_font_size(self, line: AuthorTitleLine, theme: Theme) -> float:
         if line.kind == "name":
@@ -2017,7 +2017,7 @@ class PdfRenderer:
                 "TableCaption",
                 parent=body_style,
                 fontSize=theme.caption_size(),
-                alignment=ALIGNMENTS[theme.caption_alignment],
+                alignment=ALIGNMENTS[theme.caption_text_alignment],
                 spaceBefore=0,
                 spaceAfter=6,
             )
@@ -2040,7 +2040,7 @@ class PdfRenderer:
                 "TableCaption",
                 parent=body_style,
                 fontSize=theme.caption_size(),
-                alignment=ALIGNMENTS[theme.caption_alignment],
+                alignment=ALIGNMENTS[theme.caption_text_alignment],
                 spaceBefore=6,
                 spaceAfter=12,
             )
@@ -2392,7 +2392,7 @@ class PdfRenderer:
                 "FigureCaption",
                 parent=body_style,
                 fontSize=theme.caption_size(),
-                alignment=ALIGNMENTS[theme.caption_alignment],
+                alignment=ALIGNMENTS[theme.caption_text_alignment],
                 spaceBefore=0,
                 spaceAfter=2 if in_box else 6,
             )
@@ -2414,7 +2414,7 @@ class PdfRenderer:
                 "FigureCaption",
                 parent=body_style,
                 fontSize=theme.caption_size(),
-                alignment=ALIGNMENTS[theme.caption_alignment],
+                alignment=ALIGNMENTS[theme.caption_text_alignment],
                 spaceBefore=2 if in_box else 6,
                 spaceAfter=0 if in_box else 12,
             )
@@ -2451,7 +2451,7 @@ class PdfRenderer:
             "FigureCaption",
             parent=body_style,
             fontSize=theme.caption_size(),
-            alignment=ALIGNMENTS[theme.caption_alignment],
+            alignment=ALIGNMENTS[theme.caption_text_alignment],
             spaceBefore=0,
             spaceAfter=6,
         )
@@ -2459,7 +2459,7 @@ class PdfRenderer:
             "SubFigureCaption",
             parent=body_style,
             fontSize=theme.caption_size(),
-            alignment=ALIGNMENTS[theme.caption_alignment],
+            alignment=ALIGNMENTS[theme.caption_text_alignment],
             spaceBefore=2,
             spaceAfter=0,
         )
