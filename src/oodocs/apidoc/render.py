@@ -18,7 +18,7 @@ def api_package_to_document(
     api: ApiPackage,
     *,
     title: str | None = None,
-    profile: str | ApiPresentationProfile = "reference",
+    presentation: str | ApiPresentationProfile = "reference",
     settings: object | None = None,
     citations: object | None = None,
     include_coverage: bool = True,
@@ -31,7 +31,7 @@ def api_package_to_document(
         api: Collected API package object tree.
         title: Optional document title. Defaults to ``"{api.name} API
             Reference"``.
-        profile: Presentation profile name or ``ApiPresentationProfile`` object.
+        presentation: Presentation profile name or ``ApiPresentationProfile`` object.
         settings: Optional ``DocumentSettings`` passed to ``Document``.
         citations: Optional citation library passed to ``Document``.
         include_coverage: Whether to include a documentation coverage overview
@@ -56,7 +56,7 @@ def api_package_to_document(
         from oodocs.apidoc import collect_api, api_package_to_document
 
         api = collect_api(".", collector="griffe", public_policy="__all__")
-        document = api_package_to_document(api, profile="compact", max_level=3)
+        document = api_package_to_document(api, presentation="compact", max_level=3)
         document.save_all("artifacts/api", stem=f"{api.name}-api")
         ```
 
@@ -82,7 +82,7 @@ def api_package_to_document(
     if include_coverage:
         children.append(api_coverage_to_chapter(check_api_docs(api)))
     if include_modules:
-        children.extend(api.to_chapters(profile=profile, max_level=max_level))
+        children.extend(api.to_chapters(presentation=presentation, max_level=max_level))
     return Document(
         title or f"{api.name} API Reference",
         *children,
@@ -94,14 +94,14 @@ def api_package_to_document(
 def api_objects_to_summary_table(
     objects: Sequence[ApiObject],
     *,
-    profile: str | ApiPresentationProfile = "compact",
+    presentation: str | ApiPresentationProfile = "compact",
     caption: str | None = None,
 ):
     """Return a summary table for selected API objects.
 
     Args:
         objects: API objects to include as rows.
-        profile: Presentation profile name or ``ApiPresentationProfile``. The website
+        presentation: Presentation profile name or ``ApiPresentationProfile``. The website
             profile renders object names as links to object section anchors.
         caption: Optional table caption.
 
@@ -121,13 +121,13 @@ def api_objects_to_summary_table(
             "Release Notes",
             Chapter(
                 "Public Function Index",
-                api_objects_to_summary_table(functions, profile="compact"),
+                api_objects_to_summary_table(functions, presentation="compact"),
             ),
         )
         ```
     """
 
-    return _api_objects_to_summary_table(objects, profile=profile, caption=caption)
+    return _api_objects_to_summary_table(objects, presentation=presentation, caption=caption)
 
 
 def api_coverage_to_chapter(coverage: object) -> Chapter:

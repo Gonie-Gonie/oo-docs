@@ -24,7 +24,7 @@ def test_apidoc_parameter_table_uses_profile_columns(tmp_path) -> None:
         name="compact",
         parameter_columns=("name", "required", "source"),
     )
-    table = render.to_parameters_table(profile=profile)
+    table = render.to_parameters_table(presentation=profile)
 
     assert table is not None
     assert [cell.content.plain_text() for cell in table.headers] == [

@@ -10,9 +10,9 @@ def test_apidoc_object_converts_to_blocks(tmp_path) -> None:
     obj = api.find_object("samplepkg.make_widget")
 
     assert obj is not None
-    blocks = obj.to_blocks(profile="reference")
+    blocks = obj.to_blocks(presentation="reference")
     assert blocks
-    assert obj.to_signature_code_block(profile="reference") in blocks
+    assert obj.to_signature_code_block(presentation="reference") in blocks
 
 
 def test_manual_profile_renders_see_also_as_box() -> None:
@@ -31,8 +31,8 @@ def test_manual_profile_renders_see_also_as_box() -> None:
         ],
     )
 
-    manual_blocks = obj.to_see_also_blocks(profile="manual")
-    reference_blocks = obj.to_see_also_blocks(profile="reference")
+    manual_blocks = obj.to_see_also_blocks(presentation="manual")
+    reference_blocks = obj.to_see_also_blocks(presentation="reference")
 
     assert len(manual_blocks) == 1
     assert isinstance(manual_blocks[0], Box)
@@ -48,7 +48,7 @@ def test_module_renderer_notes_use_leaf_row_helper() -> None:
         renderer_notes=[note],
     )
 
-    blocks = module.to_blocks(profile="reference")
+    blocks = module.to_blocks(presentation="reference")
 
     assert len(blocks) == 1
     assert isinstance(blocks[0], Table)

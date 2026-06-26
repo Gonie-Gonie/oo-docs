@@ -49,7 +49,7 @@ def api_object_to_help_section(
     """
 
     profile = resolve_presentation_profile(presentation)
-    return obj.to_section(level=level, profile=profile, max_level=max_level)
+    return obj.to_section(level=level, presentation=profile, max_level=max_level)
 
 
 def api_category_to_chapter(

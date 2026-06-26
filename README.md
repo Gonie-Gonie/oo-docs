@@ -236,7 +236,7 @@ doc = Document(
     Chapter(
         "Important Classes",
         Paragraph("This chapter is assembled from parsed API objects."),
-        *[obj.to_section(level=2, profile="manual") for obj in classes[:5]],
+        *[obj.to_section(level=2, presentation="manual") for obj in classes[:5]],
     ),
     Chapter(
         "Function Index",

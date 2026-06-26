@@ -21,7 +21,7 @@ def test_apidoc_renders_oodocs_public_api_reference_bundle(tmp_path) -> None:
     api = collect_api("oodocs", collector="auto", public_policy="__all__")
     coverage = check_api_docs(api)
     document = api.to_document(
-        profile="compact",
+        presentation="compact",
         include_coverage=True,
         include_modules=True,
         max_level=3,

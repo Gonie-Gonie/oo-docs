@@ -1424,12 +1424,12 @@ def _help_book_for_build(
                 api.to_summary_table(
                     selected,
                     caption="Selected public API objects",
-                    profile=config.presentation,
+                    presentation=config.presentation,
                 ),
                 *[
                     obj.to_section(
                         level=2,
-                        profile=config.presentation,
+                        presentation=config.presentation,
                         max_level=config.max_level,
                     )
                     for obj in selected

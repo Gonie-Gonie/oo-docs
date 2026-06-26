@@ -9,6 +9,6 @@ def test_apidoc_object_converts_to_section(tmp_path) -> None:
     obj = api.find_object("samplepkg.Widget")
 
     assert obj is not None
-    section = obj.to_section(level=2, profile="manual")
+    section = obj.to_section(level=2, presentation="manual")
     assert isinstance(section, Section)
     assert section.title[0].plain_text() == "samplepkg.Widget"

@@ -16,7 +16,7 @@ doc = Document(
         "Public Functions",
         api.to_summary_table(
             functions,
-            profile="compact",
+            presentation="compact",
             caption="Public function summary.",
         ),
     ),

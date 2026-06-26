@@ -1200,7 +1200,7 @@ class ApiObject:
         api = collect_api("oodocs", public_policy="__all__")
         classes = api.select_objects(kind="class", module_prefix="oodocs.components")
         doc = Document("Component API", Chapter("Classes", *[
-            obj.to_section(level=2, profile="manual") for obj in classes[:3]
+            obj.to_section(level=2, presentation="manual") for obj in classes[:3]
         ]))
         ```
     """
@@ -1672,11 +1672,11 @@ class ApiObject:
 
         return api_object_summary_paragraph(self)
 
-    def to_signature_code_block(self, profile: object = "reference"):
+    def to_signature_code_block(self, presentation: object = "reference"):
         """Return this object's signature as an OODocs code block.
 
         Args:
-            profile: Presentation profile name or object controlling signature
+            presentation: Presentation profile name or object controlling signature
                 wrapping and visibility.
 
         Returns:
@@ -1692,20 +1692,20 @@ class ApiObject:
 
             api = collect_api(".")
             obj = api.select_functions()[0]
-            block = obj.to_signature_code_block(profile="reference")
+            block = obj.to_signature_code_block(presentation="reference")
             doc = Document("API", Chapter("Signature", block))
             ```
         """
 
         from oodocs.apidoc.blocks import api_signature_code_block
 
-        return api_signature_code_block(self, profile)
+        return api_signature_code_block(self, presentation)
 
-    def to_parameters_table(self, profile: object = "reference"):
+    def to_parameters_table(self, presentation: object = "reference"):
         """Return this object's parameter table, if parameters are available.
 
         Args:
-            profile: Presentation profile name or object controlling parameter
+            presentation: Presentation profile name or object controlling parameter
                 columns and truncation.
 
         Returns:
@@ -1721,7 +1721,7 @@ class ApiObject:
 
             api = collect_api(".")
             fn = api.select_functions()[0]
-            table = fn.to_parameters_table(profile="review")
+            table = fn.to_parameters_table(presentation="review")
             doc = Document(
                 "API Review",
                 Chapter("Parameters", table) if table is not None else Chapter("Parameters"),
@@ -1731,13 +1731,13 @@ class ApiObject:
 
         from oodocs.apidoc.blocks import api_parameter_table
 
-        return api_parameter_table(self, profile)
+        return api_parameter_table(self, presentation)
 
-    def to_returns_blocks(self, profile: object = "reference") -> list[object]:
+    def to_returns_blocks(self, presentation: object = "reference") -> list[object]:
         """Return OODocs blocks documenting return values.
 
         Args:
-            profile: Presentation profile name or object.
+            presentation: Presentation profile name or object.
 
         Returns:
             Renderer-neutral OODocs blocks. Returns an empty list when no return
@@ -1758,13 +1758,13 @@ class ApiObject:
 
         from oodocs.apidoc.blocks import api_returns_blocks
 
-        return api_returns_blocks(self, profile)
+        return api_returns_blocks(self, presentation)
 
-    def to_exceptions_table(self, profile: object = "reference"):
+    def to_exceptions_table(self, presentation: object = "reference"):
         """Return this object's exception table, if exceptions are documented.
 
         Args:
-            profile: Presentation profile name or object.
+            presentation: Presentation profile name or object.
 
         Returns:
             OODocs table, or ``None`` when no exception documentation should
@@ -1779,20 +1779,20 @@ class ApiObject:
 
             api = collect_api(".")
             obj = api.select_functions()[0]
-            table = obj.to_exceptions_table(profile="review")
+            table = obj.to_exceptions_table(presentation="review")
             doc = Document("API Review", Chapter("Raises", table))
             ```
         """
 
         from oodocs.apidoc.blocks import api_exceptions_table
 
-        return api_exceptions_table(self, profile)
+        return api_exceptions_table(self, presentation)
 
-    def to_examples_blocks(self, profile: object = "reference") -> list[object]:
+    def to_examples_blocks(self, presentation: object = "reference") -> list[object]:
         """Return OODocs blocks for examples.
 
         Args:
-            profile: Presentation profile name or object controlling example
+            presentation: Presentation profile name or object controlling example
                 inclusion and maximum example count.
 
         Returns:
@@ -1813,13 +1813,13 @@ class ApiObject:
 
         from oodocs.apidoc.blocks import api_examples_blocks
 
-        return api_examples_blocks(self, profile)
+        return api_examples_blocks(self, presentation)
 
-    def to_see_also_blocks(self, profile: object = "reference") -> list[object]:
+    def to_see_also_blocks(self, presentation: object = "reference") -> list[object]:
         """Return OODocs blocks for related API entries.
 
         Args:
-            profile: Presentation profile name or object.
+            presentation: Presentation profile name or object.
 
         Returns:
             OODocs blocks for parsed ``See Also`` entries.
@@ -1839,13 +1839,13 @@ class ApiObject:
 
         from oodocs.apidoc.blocks import api_see_also_blocks
 
-        return api_see_also_blocks(self, profile)
+        return api_see_also_blocks(self, presentation)
 
-    def to_notes_blocks(self, profile: object = "reference") -> list[object]:
+    def to_notes_blocks(self, presentation: object = "reference") -> list[object]:
         """Return OODocs blocks for parsed general notes.
 
         Args:
-            profile: Presentation profile name or object.
+            presentation: Presentation profile name or object.
 
         Returns:
             OODocs paragraphs for parsed notes.
@@ -1865,13 +1865,13 @@ class ApiObject:
 
         from oodocs.apidoc.blocks import api_notes_blocks
 
-        return api_notes_blocks(self, profile)
+        return api_notes_blocks(self, presentation)
 
-    def to_warnings_blocks(self, profile: object = "reference") -> list[object]:
+    def to_warnings_blocks(self, presentation: object = "reference") -> list[object]:
         """Return OODocs blocks for parsed warning notes.
 
         Args:
-            profile: Presentation profile name or object.
+            presentation: Presentation profile name or object.
 
         Returns:
             OODocs warning blocks for parsed warning notes.
@@ -1891,13 +1891,13 @@ class ApiObject:
 
         from oodocs.apidoc.blocks import api_warnings_blocks
 
-        return api_warnings_blocks(self, profile)
+        return api_warnings_blocks(self, presentation)
 
-    def to_output_notes_blocks(self, profile: object = "reference") -> list[object]:
+    def to_output_notes_blocks(self, presentation: object = "reference") -> list[object]:
         """Return OODocs blocks for renderer-specific notes.
 
         Args:
-            profile: Presentation profile name or object.
+            presentation: Presentation profile name or object.
 
         Returns:
             OODocs blocks for parsed renderer-specific notes.
@@ -1920,19 +1920,19 @@ class ApiObject:
 
         from oodocs.apidoc.blocks import api_output_notes_blocks
 
-        return api_output_notes_blocks(self, profile)
+        return api_output_notes_blocks(self, presentation)
 
     def to_blocks(
         self,
         *,
-        profile: object = "reference",
+        presentation: object = "reference",
         level: int = 2,
         max_level: int | None = None,
     ) -> list[object]:
         """Return OODocs blocks representing this object.
 
         Args:
-            profile: Presentation profile name or object.
+            presentation: Presentation profile name or object.
             level: Heading level used for nested member sections.
             max_level: Optional deepest heading level to render for nested
                 member sections.
@@ -1951,7 +1951,7 @@ class ApiObject:
             api = collect_api(".")
             obj = api.find_object("mypkg.load")
             assert obj is not None
-            doc = Document("API Notes", Chapter("load", *obj.to_blocks(profile="manual")))
+            doc = Document("API Notes", Chapter("load", *obj.to_blocks(presentation="manual")))
             ```
         """
 
@@ -1959,7 +1959,7 @@ class ApiObject:
 
         return api_object_to_blocks(
             self,
-            profile=profile,
+            presentation=presentation,
             level=level,
             max_level=max_level,
         )
@@ -1968,7 +1968,7 @@ class ApiObject:
         self,
         *,
         level: int = 2,
-        profile: object = "reference",
+        presentation: object = "reference",
         title: str | None = None,
         max_level: int | None = None,
     ):
@@ -1976,7 +1976,7 @@ class ApiObject:
 
         Args:
             level: Section heading level.
-            profile: Presentation profile name or object.
+            presentation: Presentation profile name or object.
             title: Optional heading override.
             max_level: Optional deepest heading level to render for nested
                 member sections.
@@ -2005,16 +2005,16 @@ class ApiObject:
         return api_object_to_section(
             self,
             level=level,
-            profile=profile,
+            presentation=presentation,
             title=title,
             max_level=max_level,
         )
 
-    def to_box(self, profile: object = "compact"):
+    def to_box(self, presentation: object = "compact"):
         """Return this object as a compact OODocs box.
 
         Args:
-            profile: Presentation profile name or object.
+            presentation: Presentation profile name or object.
 
         Returns:
             OODocs box with the object summary and optional signature.
@@ -2034,7 +2034,7 @@ class ApiObject:
 
         from oodocs.apidoc.blocks import api_object_to_box
 
-        return api_object_to_box(self, profile=profile)
+        return api_object_to_box(self, presentation=presentation)
 
     def as_index_row(self) -> list[object]:
         """Return a row suitable for API index tables.
@@ -2114,7 +2114,7 @@ class ApiModule:
 
         api = collect_api(".")
         module = api.module_map()["mypkg.widgets"]
-        doc = Document("Widget API", module.to_chapter(profile="reference"))
+        doc = Document("Widget API", module.to_chapter(presentation="reference"))
         ```
     """
 
@@ -2507,14 +2507,14 @@ class ApiModule:
     def to_sections(
         self,
         *,
-        profile: object = "reference",
+        presentation: object = "reference",
         level: int = 2,
         max_level: int | None = None,
     ) -> list[object]:
         """Return module objects as OODocs sections.
 
         Args:
-            profile: Presentation profile name or object.
+            presentation: Presentation profile name or object.
             level: Heading level for top-level module members.
             max_level: Optional deepest heading level for nested API members.
 
@@ -2538,21 +2538,21 @@ class ApiModule:
         """
 
         return [
-            obj.to_section(level=level, profile=profile, max_level=max_level)
+            obj.to_section(level=level, presentation=presentation, max_level=max_level)
             for obj in self.members
         ]
 
     def to_chapter(
         self,
         *,
-        profile: object = "reference",
+        presentation: object = "reference",
         title: str | None = None,
         max_level: int | None = None,
     ):
         """Return this module as an OODocs chapter.
 
         Args:
-            profile: Presentation profile name or object.
+            presentation: Presentation profile name or object.
             title: Optional chapter title. Defaults to the module name.
             max_level: Optional deepest heading level for nested API members.
 
@@ -2576,7 +2576,7 @@ class ApiModule:
 
         return api_module_to_chapter(
             self,
-            profile=profile,
+            presentation=presentation,
             title=title,
             max_level=max_level,
         )
@@ -2584,14 +2584,14 @@ class ApiModule:
     def to_blocks(
         self,
         *,
-        profile: object = "reference",
+        presentation: object = "reference",
         level: int = 2,
         max_level: int | None = None,
     ) -> list[object]:
         """Return this module as renderer-neutral blocks.
 
         Args:
-            profile: Presentation profile name or object.
+            presentation: Presentation profile name or object.
             level: Heading level for the module title or top-level members.
             max_level: Optional deepest heading level for nested API members.
 
@@ -2616,7 +2616,7 @@ class ApiModule:
 
         return api_module_to_blocks(
             self,
-            profile=profile,
+            presentation=presentation,
             level=level,
             max_level=max_level,
         )
@@ -2786,7 +2786,7 @@ class ApiPackage:
             from oodocs.apidoc import ApiPackage
 
             api = ApiPackage.load_json("build/api/objects.json")
-            doc = api.to_document("API Reference", profile="reference")
+            doc = api.to_document("API Reference", presentation="reference")
             ```
         """
 
@@ -3106,7 +3106,7 @@ class ApiPackage:
 
             api = collect_api(".")
             module = api.module_map()["mypkg.widgets"]
-            Document("Widgets API", module.to_chapter(profile="reference")).save_html(
+            Document("Widgets API", module.to_chapter(presentation="reference")).save_html(
                 "widgets.html"
             )
             ```
@@ -3359,7 +3359,7 @@ class ApiPackage:
                 "Release Evidence",
                 Chapter(
                     "Function Index",
-                    api.to_summary_table(functions, profile="compact"),
+                    api.to_summary_table(functions, presentation="compact"),
                 ),
             )
             ```
@@ -3477,14 +3477,14 @@ class ApiPackage:
     def to_sections(
         self,
         *,
-        profile: object = "reference",
+        presentation: object = "reference",
         level: int = 1,
         max_level: int | None = None,
     ) -> list[object]:
         """Return modules as OODocs sections.
 
         Args:
-            profile: Presentation profile name or object.
+            presentation: Presentation profile name or object.
             level: Heading level for module sections. ``1`` returns chapters.
             max_level: Optional deepest heading level for nested API members.
 
@@ -3508,14 +3508,14 @@ class ApiPackage:
 
         if level == 1:
             return [
-                module.to_chapter(profile=profile, max_level=max_level)
+                module.to_chapter(presentation=presentation, max_level=max_level)
                 for module in self.modules
             ]
         sections: list[object] = []
         for module in self.modules:
             sections.extend(
                 module.to_sections(
-                    profile=profile,
+                    presentation=presentation,
                     level=level,
                     max_level=max_level,
                 )
@@ -3525,13 +3525,13 @@ class ApiPackage:
     def to_chapters(
         self,
         *,
-        profile: object = "reference",
+        presentation: object = "reference",
         max_level: int | None = None,
     ) -> list[object]:
         """Return modules as OODocs chapters.
 
         Args:
-            profile: Presentation profile name or object.
+            presentation: Presentation profile name or object.
             max_level: Optional deepest heading level for nested API members.
 
         Returns:
@@ -3553,20 +3553,20 @@ class ApiPackage:
 
         return api_package_to_chapters(
             self,
-            profile=profile,
+            presentation=presentation,
             max_level=max_level,
         )
 
     def to_blocks(
         self,
         *,
-        profile: object = "reference",
+        presentation: object = "reference",
         max_level: int | None = None,
     ) -> list[object]:
         """Return this package as renderer-neutral OODocs blocks.
 
         Args:
-            profile: Presentation profile name or object.
+            presentation: Presentation profile name or object.
             max_level: Optional deepest heading level for nested API members.
 
         Returns:
@@ -3584,13 +3584,13 @@ class ApiPackage:
             ```
         """
 
-        return self.to_chapters(profile=profile, max_level=max_level)
+        return self.to_chapters(presentation=presentation, max_level=max_level)
 
     def to_document(
         self,
         title: str | None = None,
         *,
-        profile: object = "reference",
+        presentation: object = "reference",
         settings: object | None = None,
         citations: object | None = None,
         include_coverage: bool = True,
@@ -3601,7 +3601,7 @@ class ApiPackage:
 
         Args:
             title: Optional document title.
-            profile: Presentation profile name or object.
+            presentation: Presentation profile name or object.
             settings: Optional ``DocumentSettings``.
             citations: Optional citation library.
             include_coverage: Whether to include a coverage overview chapter.
@@ -3619,7 +3619,7 @@ class ApiPackage:
             from oodocs.apidoc import collect_api
 
             api = collect_api(".", collector="griffe", public_policy="__all__")
-            api.to_document(profile="reference", max_level=3).save_all(
+            api.to_document(presentation="reference", max_level=3).save_all(
                 "artifacts/api",
                 stem=f"{api.name}-api",
             )
@@ -3641,7 +3641,7 @@ class ApiPackage:
         return api_package_to_document(
             self,
             title=title,
-            profile=profile,
+            presentation=presentation,
             settings=settings,
             citations=citations,
             include_coverage=include_coverage,

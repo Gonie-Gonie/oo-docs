@@ -36,7 +36,7 @@ classes = api.select_objects(kind="class", module_prefix="oodocs.components")
 
 doc = Document(
     "Selected Component API",
-    Chapter("Classes", *[obj.to_section(level=2, profile="manual") for obj in classes[:3]]),
+    Chapter("Classes", *[obj.to_section(level=2, presentation="manual") for obj in classes[:3]]),
 )
 
 doc.save_all(

@@ -112,7 +112,7 @@ def test_griffe_collector_uses_auto_parser_object_on_mixed_repo(tmp_path) -> Non
     assert stream.returns is not None
     assert stream.returns.description == "Endpoint update payload."
 
-    document = api.to_document(profile="compact", max_level=3)
+    document = api.to_document(presentation="compact", max_level=3)
     outputs = document.save_all(
         tmp_path / "griffe-mixed-rendered",
         stem="mixedpkg-griffe-api",

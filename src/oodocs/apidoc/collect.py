@@ -143,7 +143,7 @@ def collect_api(
             "Selected API",
             Chapter(
                 "Public Classes",
-                *[obj.to_section(level=2, profile="manual") for obj in classes[:3]],
+                *[obj.to_section(level=2, presentation="manual") for obj in classes[:3]],
             ),
         )
         ```
@@ -156,7 +156,7 @@ def collect_api(
 
         config = ApiCollectConfig.from_pyproject(".")
         api = collect_api(".", config=config)
-        api.to_document(profile="reference").save_all(
+        api.to_document(presentation="reference").save_all(
             "artifacts/api",
             stem="mypkg-api",
         )
@@ -276,7 +276,7 @@ def collect_module_api(
             target=".",
             public_policy="__all__",
         )
-        Document("HTTP Adapter API", module.to_chapter(profile="manual")).save_html(
+        Document("HTTP Adapter API", module.to_chapter(presentation="manual")).save_html(
             "artifacts/http-adapter-api.html",
         )
         ```
@@ -354,7 +354,7 @@ def collect_object_api(
             Chapter(
                 "Connection API",
                 Paragraph("The following section is generated from source."),
-                obj.to_section(level=2, profile="manual"),
+                obj.to_section(level=2, presentation="manual"),
             ),
         )
         ```
@@ -368,7 +368,7 @@ def collect_object_api(
         obj = collect_object_api("mypkg.settings.DocumentSettings")
         doc = Document(
             "Settings API",
-            Chapter("Document Settings", obj.to_box(profile="manual")),
+            Chapter("Document Settings", obj.to_box(presentation="manual")),
         )
         ```
 
@@ -379,7 +379,7 @@ def collect_object_api(
         from oodocs.apidoc import collect_object_api
 
         obj = collect_object_api(DocumentSettings, public_policy="underscore")
-        section = obj.to_section(level=2, profile="manual")
+        section = obj.to_section(level=2, presentation="manual")
         ```
     """
 

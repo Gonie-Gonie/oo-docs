@@ -25,7 +25,7 @@ api = collect_api("oodocs", public_policy="__all__")
 doc = Document(
     "API Review",
     Chapter("Classes", *[
-        obj.to_section(level=2, profile="review")
+        obj.to_section(level=2, presentation="review")
         for obj in api.select_objects(kind="class")[:3]
     ]),
 )

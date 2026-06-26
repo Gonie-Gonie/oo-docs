@@ -121,11 +121,11 @@ def test_general_repo_auto_parser_objects_compose_into_document(tmp_path) -> Non
         Chapter(
             "Selected API",
             Paragraph("These sections are composed from a normal Python repository."),
-            client.to_section(level=2, profile="manual"),
+            client.to_section(level=2, presentation="manual"),
         ),
         Chapter(
             "Function Index",
-            api.to_summary_table(api.select_functions(), profile="compact"),
+            api.to_summary_table(api.select_functions(), presentation="compact"),
         ),
         Chapter("Coverage", coverage.to_table()),
     )
@@ -227,7 +227,7 @@ def test_general_repo_sphinx_seealso_directives_compose_into_reference(
 
     document = Document(
         "Sphinx API",
-        Chapter("Selected API", obj.to_section(level=2, profile="reference")),
+        Chapter("Selected API", obj.to_section(level=2, presentation="reference")),
     )
     html_path = tmp_path / "sphinx-api.html"
     document.save_html(html_path)
@@ -601,14 +601,14 @@ def test_general_repo_facades_select_module_and_object_from_target_path(
 
     module_document = Document(
         "Mixed Core Module API",
-        module.to_chapter(profile="manual", max_level=3),
+        module.to_chapter(presentation="manual", max_level=3),
     )
     object_document = Document(
         "Mixed Connect API",
         Chapter(
             "Focused Method",
             Paragraph("This section is selected from the repository API tree."),
-            method.to_section(level=2, profile="manual"),
+            method.to_section(level=2, presentation="manual"),
         ),
     )
 
@@ -686,14 +686,14 @@ def test_general_repo_render_helpers_compose_selected_api(tmp_path) -> None:
         api_objects_to_chapter(
             "Client Classes",
             api.select_objects(kind="class", module_prefix="mixedpkg"),
-            profile="manual",
+            presentation="manual",
             max_level=3,
         ),
         Chapter(
             "Function Summary",
             api_objects_to_summary_table(
                 api.select_functions(),
-                profile="compact",
+                presentation="compact",
                 caption="Mixed package functions.",
             ),
         ),
@@ -747,7 +747,7 @@ def test_general_repo_package_render_helper_builds_complete_reference(tmp_path) 
         docstring_style=ApiDocstringParser.auto(),
     )
 
-    document = api_package_to_document(api, profile="compact", max_level=3)
+    document = api_package_to_document(api, presentation="compact", max_level=3)
     outputs = document.save_all(
         tmp_path / "package-rendered",
         stem="mixedpkg-api",
@@ -988,11 +988,11 @@ def test_general_python_file_module_targets_build_reference_and_example(
         Chapter(
             "Selected API",
             Paragraph("These sections are composed from one Python module file."),
-            client.to_section(level=2, profile="manual"),
+            client.to_section(level=2, presentation="manual"),
         ),
         Chapter(
             "Function Index",
-            api.to_summary_table(api.select_functions(), profile="compact"),
+            api.to_summary_table(api.select_functions(), presentation="compact"),
         ),
     )
     outputs = document.save_all(

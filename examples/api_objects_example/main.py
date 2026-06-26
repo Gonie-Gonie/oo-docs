@@ -218,14 +218,14 @@ def build_composition_demo_document(
         Chapter(
             "Selected Classes",
             Paragraph("These sections are regular OODocs blocks created from ApiObject instances."),
-            *[obj.to_section(level=2, profile="compact") for obj in classes],
+            *[obj.to_section(level=2, presentation="compact") for obj in classes],
         ),
     ]
     if focused_module is not None:
         chapters.append(
             focused_module.to_chapter(
                 title=f"Focused Module: {focused_module.name}",
-                profile="manual",
+                presentation="manual",
                 max_level=3,
             )
         )

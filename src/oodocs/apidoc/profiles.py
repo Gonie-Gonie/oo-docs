@@ -71,7 +71,7 @@ class ApiPresentationProfile:
 
         api = collect_api("oodocs", collector="auto")
         section = api.find_object("oodocs.Document").to_section(
-            profile=ApiPresentationProfile.compact()
+            presentation=ApiPresentationProfile.compact()
         )
         ```
     """
@@ -195,7 +195,7 @@ class ApiPresentationProfile:
                     "Function Summary",
                     api.to_summary_table(
                         functions,
-                        profile=ApiPresentationProfile.compact(),
+                        presentation=ApiPresentationProfile.compact(),
                     ),
                 ),
             )
@@ -236,7 +236,7 @@ class ApiPresentationProfile:
                 Chapter(
                     "Reference Notes",
                     *[
-                        item.to_section(level=2, profile=ApiPresentationProfile.manual())
+                        item.to_section(level=2, presentation=ApiPresentationProfile.manual())
                         for item in classes
                     ],
                 ),
@@ -268,7 +268,7 @@ class ApiPresentationProfile:
                 Chapter(
                     "Public API",
                     *api.to_sections(
-                        profile=ApiPresentationProfile.evidence(),
+                        presentation=ApiPresentationProfile.evidence(),
                         max_level=2,
                     ),
                 ),
@@ -306,7 +306,7 @@ class ApiPresentationProfile:
             from oodocs.apidoc.profiles import ApiPresentationProfile
 
             api = collect_api(".")
-            document = api.to_document(profile=ApiPresentationProfile.review())
+            document = api.to_document(presentation=ApiPresentationProfile.review())
             document.save_docx("artifacts/api-review.docx")
             ```
         """
@@ -340,7 +340,7 @@ class ApiPresentationProfile:
             from oodocs.apidoc.profiles import ApiPresentationProfile
 
             api = collect_api(".")
-            document = api.to_document(profile=ApiPresentationProfile.website())
+            document = api.to_document(presentation=ApiPresentationProfile.website())
             document.save_html("artifacts/api/index.html")
             ```
         """
@@ -458,11 +458,11 @@ def register_presentation_profile(name: str, profile: ApiPresentationProfile) ->
     _PROFILES[normalized] = profile
 
 
-def resolve_presentation_profile(profile: str | ApiPresentationProfile = "reference") -> ApiPresentationProfile:
+def resolve_presentation_profile(presentation: str | ApiPresentationProfile = "reference") -> ApiPresentationProfile:
     """Resolve a profile name or object.
 
     Args:
-        profile: Profile name or already-constructed profile.
+        presentation: Profile name or already-constructed profile.
 
     Returns:
         Resolved profile.
@@ -479,18 +479,20 @@ def resolve_presentation_profile(profile: str | ApiPresentationProfile = "refere
 
         api = collect_api(".")
         profile = resolve_presentation_profile("compact")
-        table = api.to_summary_table(profile=profile)
+        table = api.to_summary_table(presentation=profile)
         ```
     """
 
-    if isinstance(profile, ApiPresentationProfile):
-        return profile
-    normalized = profile.strip().lower()
+    if isinstance(presentation, ApiPresentationProfile):
+        return presentation
+    normalized = presentation.strip().lower()
     try:
         return _PROFILES[normalized]
     except KeyError as exc:
         available = ", ".join(sorted(_PROFILES))
-        raise ValueError(f"Unknown API documentation profile {profile!r}. Available: {available}") from exc
+        raise ValueError(
+            f"Unknown API documentation profile {presentation!r}. Available: {available}"
+        ) from exc
 
 
 def presentation_profile_names() -> tuple[str, ...]:

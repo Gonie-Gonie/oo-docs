@@ -24,14 +24,14 @@ doc = Document(
     api_objects_to_chapter(
         "Selected API",
         classes[:5],
-        profile="manual",
+        presentation="manual",
         max_level=3,
     ),
 )
 ```
 
-Use `profile="compact"` for dense reference appendices, `profile="manual"` for
-guide-like prose, and `profile="reference"` when you want signatures,
+Use `presentation="compact"` for dense reference appendices, `presentation="manual"` for
+guide-like prose, and `presentation="reference"` when you want signatures,
 parameters, returns, examples, see-also entries, and source locations.
 
 For a `src/` layout repository, run the script from the repository root and pass
@@ -57,7 +57,7 @@ api = collect_api(
     public_policy="underscore",
     docstring_style=ApiDocstringParser.auto(),
 )
-section = api.find_object("reporting.build_report").to_section(profile="manual")
+section = api.find_object("reporting.build_report").to_section(presentation="manual")
 ```
 
 ## Build A Full Reference Bundle
@@ -81,7 +81,7 @@ coverage = check_api_docs(api, fail_under=0.90)
 
 document = api.to_document(
     title=f"{api.name} API Reference",
-    profile="reference",
+    presentation="reference",
     max_level=3,
 )
 document.save_all(
@@ -111,7 +111,7 @@ doc = Document(
     Chapter(
         "Client API",
         Paragraph("The following section is generated from the package source."),
-        client.to_section(level=2, profile="manual") if client else Paragraph("Client API not found."),
+        client.to_section(level=2, presentation="manual") if client else Paragraph("Client API not found."),
     ),
 )
 ```
@@ -136,7 +136,7 @@ client_api = collect_object_api(
 
 doc = Document(
     "Client API Notes",
-    Chapter("Client", client_api.to_section(level=2, profile="manual")),
+    Chapter("Client", client_api.to_section(level=2, presentation="manual")),
 )
 ```
 
@@ -159,7 +159,7 @@ doc = Document(
     Chapter(
         "Client",
         Paragraph("This section is generated from the current checkout."),
-        client_api.to_section(level=2, profile="manual"),
+        client_api.to_section(level=2, presentation="manual"),
     ),
 )
 doc.save_all("artifacts/client-api", stem="client-api", formats=("docx", "pdf", "html"))
@@ -183,7 +183,7 @@ module = collect_module_api(
 
 doc = Document(
     "HTTP Adapter API",
-    module.to_chapter(profile="manual"),
+    module.to_chapter(presentation="manual"),
 )
 doc.save_all("artifacts/http-adapter-api", stem="http-adapter-api", formats=("docx", "pdf", "html"))
 ```
@@ -215,7 +215,7 @@ doc = Document(
     Chapter(
         "Public Adapter Functions",
         Paragraph("This table is generated from the current checkout."),
-        api.to_summary_table(functions, profile="compact"),
+        api.to_summary_table(functions, presentation="compact"),
     ),
 )
 ```

@@ -75,7 +75,7 @@ For package-wide querying, `ApiPackage` exposes `select_classes()`,
 for classes, functions, properties, and attributes.
 
 Use `max_level` when a large repository should render a shallower reference.
-For example, `api.to_document(profile="reference", max_level=2)` renders module
+For example, `api.to_document(presentation="reference", max_level=2)` renders module
 chapters and top-level object sections while keeping deeper class members in
 summary tables instead of expanding them as their own headings.
 

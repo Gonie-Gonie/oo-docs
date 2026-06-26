@@ -598,8 +598,8 @@ def test_collect_api_builds_queryable_object_tree_and_blocks(tmp_path: Path) -> 
     label = classes[0].find_member("label")
     assert label is not None
     assert label.summary == "User-facing label shown in summaries."
-    assert isinstance(classes[0].to_section(level=2, profile="compact"), Section)
-    review_blocks = classes[0].to_blocks(profile="review")
+    assert isinstance(classes[0].to_section(level=2, presentation="compact"), Section)
+    review_blocks = classes[0].to_blocks(presentation="review")
     review_notes = [
         block
         for block in review_blocks
@@ -627,12 +627,12 @@ def test_collect_api_builds_queryable_object_tree_and_blocks(tmp_path: Path) -> 
     summary_table = api.to_summary_table(functions)
     assert isinstance(summary_table, Table)
     assert summary_table._resolve_split(default_threshold=999_999)
-    website_table = api.to_summary_table(classes, profile="website")
+    website_table = api.to_summary_table(classes, presentation="website")
     website_name = website_table.rows[0][2].content.content[0]
     assert isinstance(website_name, Hyperlink)
     assert website_name.internal
     assert website_name.target == classes[0].anchor_name()
-    website_section = classes[0].to_section(level=2, profile="website")
+    website_section = classes[0].to_section(level=2, presentation="website")
     assert website_section.anchor == website_name.target
     filtered = api.subset(kind="class", module_prefix="samplepkg")
     assert [obj.qualname for obj in filtered.select_public_objects() if obj.kind == "class"] == ["samplepkg.Widget"]
@@ -650,7 +650,7 @@ def test_collect_api_builds_queryable_object_tree_and_blocks(tmp_path: Path) -> 
         "Website API",
         Chapter(
             "Index",
-            api.to_summary_table(classes, profile="website"),
+            api.to_summary_table(classes, presentation="website"),
             website_section,
         ),
     )
@@ -666,7 +666,7 @@ def test_collect_api_builds_queryable_object_tree_and_blocks(tmp_path: Path) -> 
     assert readback.find_object("samplepkg.Widget") is not None
     assert readback.module_map()["samplepkg"].warnings == module.warnings
 
-    module_doc = Document("Module API", module.to_chapter(profile="reference"))
+    module_doc = Document("Module API", module.to_chapter(presentation="reference"))
     module_html = tmp_path / "module-api.html"
     module_doc.save_html(module_html)
     module_html_text = module_html.read_text(encoding="utf-8")
@@ -676,7 +676,7 @@ def test_collect_api_builds_queryable_object_tree_and_blocks(tmp_path: Path) -> 
 
     module_blocks_doc = Document(
         "Module Blocks",
-        Chapter("API", *module.to_blocks(profile="reference")),
+        Chapter("API", *module.to_blocks(presentation="reference")),
     )
     module_blocks_html = tmp_path / "module-blocks.html"
     module_blocks_doc.save_html(module_blocks_html)
@@ -738,8 +738,8 @@ def test_api_doc_profiles_wrap_long_signature_blocks() -> None:
         ),
     )
 
-    reference = obj.to_signature_code_block(profile="reference")
-    compact = obj.to_signature_code_block(profile=ApiPresentationProfile.compact())
+    reference = obj.to_signature_code_block(presentation="reference")
+    compact = obj.to_signature_code_block(presentation=ApiPresentationProfile.compact())
 
     assert reference is not None
     assert compact is not None
@@ -762,7 +762,7 @@ def test_api_doc_profiles_wrap_long_signature_blocks() -> None:
         module="pkg",
         signature="pkg.many(" + ", ".join(f"value_{index}: str" for index in range(40)) + ")",
     )
-    truncated = long_signature.to_signature_code_block(profile=ApiPresentationProfile.compact())
+    truncated = long_signature.to_signature_code_block(presentation=ApiPresentationProfile.compact())
     assert truncated is not None
     assert len(truncated.code.splitlines()) == 24
     assert truncated.code.splitlines()[-1] == "..."
@@ -891,7 +891,7 @@ def test_collect_api_supports_src_layout_repo_reexports_and_deep_object_lookup(
     )
     assert core_module.name == "widgetlib.core"
     assert core_module.find_object("widgetlib.core.Widget.render") is not None
-    assert Document("Core API", core_module.to_chapter(profile="manual")).validate().ok
+    assert Document("Core API", core_module.to_chapter(presentation="manual")).validate().ok
 
     looked_up = collect_object_api(
         "widgetlib.core.Widget.render",
