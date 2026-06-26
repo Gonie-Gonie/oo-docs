@@ -955,7 +955,11 @@ def test_document_validate_treats_subfigure_group_caption_as_reference_target(
 
 
 def test_numbering_and_list_styles_are_customizable() -> None:
-    heading_numbering = HeadingNumbering(formats=("upper-roman", "lower-alpha"), prefix="[", suffix="]")
+    heading_numbering = HeadingNumbering(
+        level_counter_formats=("upper-roman", "lower-alpha"),
+        prefix="[",
+        suffix="]",
+    )
     ordered_style = ListStyle(marker_counter_format="upper-roman", prefix="(", suffix=")")
     bullet_style = ListStyle(marker_counter_format="bullet", bullet="\u2022", suffix="")
 

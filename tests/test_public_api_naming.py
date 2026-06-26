@@ -106,6 +106,13 @@ def test_list_style_uses_counter_format_field_name() -> None:
     assert "marker_counter_format" in field_names
 
 
+def test_heading_numbering_uses_level_counter_format_field_name() -> None:
+    field_names = {field.name for field in fields(oodocs.HeadingNumbering)}
+
+    assert "formats" not in field_names
+    assert "level_counter_formats" in field_names
+
+
 def test_apidoc_raw_value_helpers_use_as_prefix() -> None:
     forbidden_by_class = {
         apidoc.ApiParameter: {"to_row", "to_table_cell_values"},

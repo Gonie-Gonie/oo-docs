@@ -433,7 +433,7 @@ class HeadingNumbering:
 
     Attributes:
         enabled: Whether heading numbering is enabled.
-        formats: Counter formats for successive heading levels.
+        level_counter_formats: Counter formats for successive heading levels.
         separator: Separator between level counters.
         prefix: Prefix before the full label.
         suffix: Suffix after the full label.
@@ -442,22 +442,24 @@ class HeadingNumbering:
         ```python
         from oodocs import Document, DocumentSettings, Section, Theme
 
-        numbering = HeadingNumbering(formats=("upper-roman", "decimal"))
+        numbering = HeadingNumbering(level_counter_formats=("upper-roman", "decimal"))
         theme = Theme(heading_numbering=numbering)
         document = Document("Report", Section("Methods"), settings=DocumentSettings(theme=theme))
         ```
     """
 
     enabled: bool = True
-    formats: tuple[str, ...] = ("decimal", "decimal", "decimal", "decimal")
+    level_counter_formats: tuple[str, ...] = ("decimal", "decimal", "decimal", "decimal")
     separator: str = "."
     prefix: str = ""
     suffix: str = ""
 
     def __post_init__(self) -> None:
-        self.formats = tuple(normalize_counter_format(value) for value in self.formats)
-        if not self.formats:
-            raise ValueError("HeadingNumbering.formats must not be empty")
+        self.level_counter_formats = tuple(
+            normalize_counter_format(value) for value in self.level_counter_formats
+        )
+        if not self.level_counter_formats:
+            raise ValueError("HeadingNumbering.level_counter_formats must not be empty")
 
     def format_label(self, counters: Sequence[int]) -> str | None:
         """Render a heading label such as ``1.2.3`` from nested counters.
@@ -474,7 +476,12 @@ class HeadingNumbering:
             return None
 
         pieces = [
-            format_counter_value(value, self.formats[min(index, len(self.formats) - 1)])
+            format_counter_value(
+                value,
+                self.level_counter_formats[
+                    min(index, len(self.level_counter_formats) - 1)
+                ],
+            )
             for index, value in enumerate(counters)
         ]
         return f"{self.prefix}{self.separator.join(pieces)}{self.suffix}"
