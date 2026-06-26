@@ -25,7 +25,7 @@ api: ApiPackage = collect_api("oodocs", public_policy="__all__")
 obj = api.find("oodocs.Document")
 
 if obj is not None:
-    print(obj.display_signature())
+    print(obj.signature_text())
     print(obj.to_dict()["qualname"])
 ```
 

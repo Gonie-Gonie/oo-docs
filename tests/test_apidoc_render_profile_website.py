@@ -18,7 +18,7 @@ def test_website_profile_builds_anchor_linked_html_reference(tmp_path) -> None:
     document.save_html(html_path)
     assert_html_internal_links_resolve(
         html_path,
-        required_hrefs=(widget.anchor_id(), make_widget.anchor_id()),
+        required_hrefs=(widget.anchor_name(), make_widget.anchor_name()),
         required_text=(
             "samplepkg API Reference",
             "samplepkg.Widget",

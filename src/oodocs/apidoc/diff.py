@@ -684,7 +684,7 @@ def _object_pair_from_dict(data: object) -> tuple[ApiObject, ApiObject]:
 def _objects_table(objects: list[ApiObject]) -> Table:
     return Table(
         ["Kind", "Name", "Summary"],
-        [[obj.kind, obj.qualname, obj.plain_summary()] for obj in objects],
+        [[obj.kind, obj.qualname, obj.summary_text()] for obj in objects],
         split=True,
     )
 
@@ -717,7 +717,7 @@ def _field(obj: ApiObject, field_name: str) -> str:
         )
     if field_name == "Return annotation":
         return _return_annotation(obj) or ""
-    return obj.plain_summary()
+    return obj.summary_text()
 
 
 __all__ = [

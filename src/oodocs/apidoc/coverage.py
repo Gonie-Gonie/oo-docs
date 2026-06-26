@@ -435,7 +435,7 @@ def check_api_docs(
             documented_objects += 1
         else:
             issues.append(_issue(obj, "warning", "missing-docstring", "Public API object has no docstring summary."))
-        if not obj.plain_summary():
+        if not obj.summary_text():
             issues.append(_issue(obj, "warning", "missing-summary", "Public API object has no summary."))
         for parameter in obj.parameters:
             if parameter.source == "docstring":

@@ -157,7 +157,7 @@ class ApiParameter:
             source=_optional_str(data.get("source")),
         )
 
-    def display_default(self) -> str:
+    def default_text(self) -> str:
         """Return the default value for table/prose display.
 
         Returns:
@@ -171,7 +171,7 @@ class ApiParameter:
             from oodocs.apidoc import ApiParameter
 
             parameter = ApiParameter("retries", "int", default="3")
-            assert parameter.display_default() == "3"
+            assert parameter.default_text() == "3"
             ```
         """
 
@@ -179,7 +179,7 @@ class ApiParameter:
             return ""
         return str(self.default)
 
-    def display_annotation(self) -> str:
+    def annotation_text(self) -> str:
         """Return normalized annotation text for display.
 
         Returns:
@@ -192,7 +192,7 @@ class ApiParameter:
             from oodocs.apidoc import ApiParameter
 
             parameter = ApiParameter("items", "typing.Sequence[str]")
-            assert parameter.display_annotation() == "Sequence[str]"
+            assert parameter.annotation_text() == "Sequence[str]"
             ```
         """
 
@@ -229,8 +229,8 @@ class ApiParameter:
 
         values = {
             "name": self.name,
-            "type": self.display_annotation(),
-            "default": self.display_default(),
+            "type": self.annotation_text(),
+            "default": self.default_text(),
             "required": "yes" if self.required else "no",
             "description": self.description or "",
             "source": self.source or "",
@@ -285,7 +285,7 @@ class ApiParameter:
 
         pieces: list[object] = [inline_code(self.name)]
         if self.annotation:
-            pieces.extend([" (", inline_code(self.display_annotation()), ")"])
+            pieces.extend([" (", inline_code(self.annotation_text()), ")"])
         if self.description:
             pieces.extend([": ", self.description])
         return Paragraph(*pieces)
@@ -390,7 +390,7 @@ class ApiReturn:
         """
 
         values = {
-            "type": _display_annotation(self.annotation),
+            "type": _annotation_text(self.annotation),
             "description": self.description or "",
             "documented": _display_bool(self.documented),
         }
@@ -419,7 +419,7 @@ class ApiReturn:
 
         pieces: list[object] = ["Returns"]
         if self.annotation:
-            pieces.extend([" ", inline_code(_display_annotation(self.annotation))])
+            pieces.extend([" ", inline_code(_annotation_text(self.annotation))])
         if self.description:
             pieces.extend([": ", self.description])
         if not self.annotation and not self.description:
@@ -1350,7 +1350,7 @@ class ApiObject:
             metadata=dict(data.get("metadata", {})),  # type: ignore[arg-type]
         )
 
-    def plain_summary(self) -> str:
+    def summary_text(self) -> str:
         """Return the best short description for this object.
 
         Returns:
@@ -1363,7 +1363,7 @@ class ApiObject:
             from oodocs.apidoc import collect_api
 
             api = collect_api(".")
-            rows = [(obj.qualname, obj.plain_summary()) for obj in api.public_objects()]
+            rows = [(obj.qualname, obj.summary_text()) for obj in api.public_objects()]
             ```
         """
 
@@ -1373,7 +1373,7 @@ class ApiObject:
             return _first_sentence(self.description)
         return ""
 
-    def display_name(self) -> str:
+    def heading_text(self) -> str:
         """Return the display name used in headings and tables.
 
         Returns:
@@ -1387,13 +1387,13 @@ class ApiObject:
             from oodocs.apidoc import ApiObject
 
             obj = ApiObject("function", "load", "mypkg.load", "mypkg")
-            assert obj.display_name() == "mypkg.load"
+            assert obj.heading_text() == "mypkg.load"
             ```
         """
 
         return self.qualname or self.name
 
-    def display_signature(self) -> str:
+    def signature_text(self) -> str:
         """Return callable signature text for code blocks.
 
         Returns:
@@ -1412,15 +1412,15 @@ class ApiObject:
                 "mypkg",
                 signature="load(path: str) -> str",
             )
-            assert obj.display_signature() == "load(path: str) -> str"
+            assert obj.signature_text() == "load(path: str) -> str"
             ```
         """
 
         if self.signature:
             return self.signature
-        return self.display_name()
+        return self.heading_text()
 
-    def anchor_id(self) -> str:
+    def anchor_name(self) -> str:
         """Return a stable anchor id derived from the qualname.
 
         Returns:
@@ -1433,11 +1433,11 @@ class ApiObject:
             from oodocs.apidoc import ApiObject
 
             obj = ApiObject("class", "Client", "mypkg.Client", "mypkg")
-            anchor = obj.anchor_id()
+            anchor = obj.anchor_name()
             ```
         """
 
-        return _anchor_id(self.qualname)
+        return _anchor_name(self.qualname)
 
     def has_parameters(self) -> bool:
         """Return whether this object has parameter metadata.
@@ -1632,12 +1632,12 @@ class ApiObject:
             ```
         """
 
-        name: object = self.display_name()
+        name: object = self.heading_text()
         if link_name:
             from oodocs.components.inline import Hyperlink
 
-            name = Hyperlink.internal_anchor(self.anchor_id(), self.display_name())
-        row: list[object] = [self.kind, name, self.plain_summary()]
+            name = Hyperlink.internal_anchor(self.anchor_name(), self.heading_text())
+        row: list[object] = [self.kind, name, self.summary_text()]
         if include_module:
             row.insert(1, self.module)
         return row
@@ -2054,7 +2054,7 @@ class ApiObject:
             location = self.source_path
             if self.line_number is not None:
                 location = f"{location}:{self.line_number}"
-        return [self.kind, self.qualname, self.module, location, self.plain_summary()]
+        return [self.kind, self.qualname, self.module, location, self.summary_text()]
 
     def to_doc_issue_rows(self) -> list[list[object]]:
         """Return issue rows stored on this object metadata.
@@ -3617,7 +3617,7 @@ def _optional_bool(value: object) -> bool | None:
     return bool(value)
 
 
-def _display_annotation(value: str | None) -> str:
+def _annotation_text(value: str | None) -> str:
     if value in {None, "", str(_empty)}:
         return ""
     return str(value).replace("typing.", "")
@@ -3684,7 +3684,7 @@ def _matches_object(
     return True
 
 
-def _anchor_id(value: str) -> str:
+def _anchor_name(value: str) -> str:
     text = re.sub(r"[^a-zA-Z0-9_.-]+", "-", value.strip()).strip("-")
     return text.replace(".", "-").lower() or "api-object"
 

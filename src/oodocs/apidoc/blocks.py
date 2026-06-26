@@ -33,7 +33,7 @@ def api_heading_text(obj: ApiObject) -> list[Text]:
         ```
     """
 
-    fragments: list[Text] = [Text(obj.display_name())]
+    fragments: list[Text] = [Text(obj.heading_text())]
     if obj.deprecated:
         fragments.extend([Text(" "), api_deprecated_chip(obj)])
     return fragments
@@ -173,9 +173,9 @@ def api_object_summary_paragraph(obj: ApiObject) -> Paragraph:
     pieces: list[object] = [
         api_kind_chip(obj),
         " ",
-        inline_code(obj.display_name()),
+        inline_code(obj.heading_text()),
     ]
-    summary = obj.plain_summary()
+    summary = obj.summary_text()
     if summary:
         pieces.extend([": ", summary])
     return Paragraph(*pieces)
@@ -213,7 +213,7 @@ def api_signature_block(
     if not resolved.include_signature or not obj.signature:
         return None
     signature = _wrap_signature(
-        obj.display_signature(),
+        obj.signature_text(),
         width=resolved.max_signature_width,
         indent=resolved.signature_wrap_indent,
     )
@@ -879,7 +879,7 @@ def api_object_to_section(
         ```
     """
 
-    heading = title or obj.display_name()
+    heading = title or obj.heading_text()
     section = section_for_level(
         heading,
         *api_object_to_blocks(
@@ -889,7 +889,7 @@ def api_object_to_section(
             max_level=max_level,
         ),
         level=level,
-        anchor=obj.anchor_id(),
+        anchor=obj.anchor_name(),
     )
     return section
 
@@ -925,7 +925,7 @@ def api_object_to_compact_box(
     blocks: list[Block] = [api_object_summary_paragraph(obj)]
     if signature := api_signature_block(obj, profile):
         blocks.append(signature)
-    return Box(*blocks, title=obj.display_name())
+    return Box(*blocks, title=obj.heading_text())
 
 
 def api_objects_to_summary_table(
