@@ -260,7 +260,7 @@ document = Document(
     "Drawing placement",
     Paragraph(
         "Inline logo ",
-        ImageBox("assets/oodocs-logo.png", width=0.35, height=0.18, placement="inline"),
+        ImageBox("assets/oodocs-logo.png", width=0.28, height=0.28, placement="inline"),
         " stays in the sentence flow.",
     ),
     settings=DocumentSettings(
@@ -1530,7 +1530,7 @@ def build_usage_guide_document() -> Document:
                 ),
                 Paragraph(
                     "Inline image example: ",
-                    ImageBox(LOGO_PATH, width=0.35, height=0.18, placement="inline"),
+                    ImageBox(LOGO_PATH, width=0.28, height=0.28, placement="inline"),
                     " stays in the sentence flow, while page items stay independent of the paragraph layout."
                 ),
                 drawing_placement_table,
