@@ -28,6 +28,8 @@ Programmatic entry points:
 - `create_stylesheet()` builds the reusable `StyleSheet`.
 - `write_stylesheet_sidecar(...)` and `load_stylesheet_sidecar(...)` demonstrate
   exporting a stylesheet to JSON and loading it back before rendering.
+- `category_mismatch_validation_codes()` demonstrates that validation catches a
+  box style such as `warning` when it is used as a table style.
 - `build_document()` returns the renderable `Document`.
 - `build(output_dir=..., output_formats=..., verbose=False)` writes selected
   outputs, writes `style-cleanup-smoke-stylesheet.json`, and returns a

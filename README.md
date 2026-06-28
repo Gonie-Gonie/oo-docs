@@ -317,7 +317,7 @@ Run them directly from the repository checkout:
 .\.venv\Scripts\python.exe .\examples\release_notes_digest\main.py --output-dir artifacts/release-notes
 .\.venv\Scripts\python.exe .\examples\api_objects_example\main.py . --config pyproject.toml --output-dir artifacts/api-objects-example
 .\.venv\Scripts\python.exe .\examples\style_cleanup_smoke\main.py --output-dir artifacts/style-cleanup-smoke
-.\.venv\Scripts\python.exe .\examples\template_presets\build_all.py --output-dir artifacts/template
+.\.venv\Scripts\python.exe .\examples\template_presets\main.py --output-dir artifacts/template
 .\.venv\Scripts\python.exe .\examples\project_metadata_report\main.py --output-dir artifacts/project-metadata-report
 .\.venv\Scripts\python.exe .\examples\cli_manual_example\main.py --output-dir artifacts/cli-manual-example
 .\.venv\Scripts\python.exe .\examples\config_reference_example\main.py --output-dir artifacts/config-reference-example
@@ -350,8 +350,8 @@ What they show:
 - `native_benchmark_report` shows a compact Python-native workflow where a script generates an in-memory workload, benchmarks several callables, turns structured result objects into tables and prose, and exports one report bundle
 - `release_notes_digest` collects `release-notes/*.md`, sorts semantic versions from filenames, imports the Markdown bodies, and builds a release-note document with a version-management table and runbook
 - `api_objects_example` collects the OODocs API, renders a help-book API reference as DOCX/PDF/HTML, inserts selected API object sections and summary tables into a separate composable document, and writes API object tree JSON plus coverage JSON/CSV sidecars for release evidence
-- `style_cleanup_smoke` exercises named paragraph, table, box, and chip styles through a document-level `StyleSheet`
-- `template_presets` renders ready-to-customize document templates built from ordinary preset objects
+- `style_cleanup_smoke` exercises named paragraph, table, box, and chip styles through a document-level `StyleSheet`, including JSON export/import and category-mismatch validation
+- `template_presets` renders ready-to-customize document templates built from ordinary preset objects, including input schema and optional declaration omission behavior
 - `project_metadata_report` turns `pyproject.toml` and `.github/workflows/release.yml` into a project metadata report plus JSON sidecar
 - `cli_manual_example` turns a runnable `argparse` parser into a command manual with usage, options, subcommands, exit codes, and examples
 - `config_reference_example` turns TOML config and JSON schema inputs into a field reference with required fields, defaults, examples, and environment variables
