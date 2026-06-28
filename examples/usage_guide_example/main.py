@@ -713,6 +713,20 @@ def build_usage_guide_document() -> Document:
         caption="A reading map for the guide.",
         column_widths=[2.0, 2.0, 2.6],
     )
+    example_catalog_table = Table(
+        headers=["Task", "Example", "Use it when"],
+        rows=[
+            ["Learn OODocs concepts", "usage_guide_example", "Start here for the object model, renderer behavior, imports, validation, presets, and CLI workflow."],
+            ["Write a manuscript from data and figures", "journal_paper_example", "Assemble CSV-backed tables, matplotlib figures, citations, and article-style sections."],
+            ["Document Python computation results", "native_benchmark_report", "Turn benchmark data and structured Python results into a compact technical report."],
+            ["Reuse release-note Markdown", "release_notes_digest", "Import versioned Markdown release notes into a synchronized DOCX, PDF, and HTML digest."],
+            ["Document Python API objects", "api_objects_example", "Collect docstrings into API objects, help-book pages, composable reference sections, and sidecars."],
+            ["Create reusable named styles", "style_cleanup_smoke", "Exercise document-wide StyleSheet entries for paragraphs, tables, boxes, and chips."],
+            ["Start from a template", "template_presets", "Build a complete document from content-oriented preset inputs."],
+        ],
+        caption="Purpose-based entry points for the bundled examples.",
+        column_widths=[2.0, 1.8, 3.2],
+    )
     latex_transition_table = Table(
         headers=["If you reach for this in LaTeX", "Use this in oodocs", "Why it is easier here"],
         rows=[
@@ -1066,6 +1080,13 @@ def build_usage_guide_document() -> Document:
                     " is the real payoff of the package. Data files, static assets, title metadata, generated pages, and renderer output all remain downstream of one explicit document tree."
                 ),
                 navigation_table,
+            ),
+            Section(
+                "Example catalog",
+                Paragraph(
+                    "The usage guide explains the core concepts. The other bundled examples are workflow entry points, so choose them by the task you are trying to automate."
+                ),
+                example_catalog_table,
             ),
             Section(
                 "The smallest working document",

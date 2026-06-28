@@ -128,6 +128,8 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert any("TableOfContents" in text for text in paragraph_texts)
     assert any("TocLevelStyle" in text for text in paragraph_texts)
     assert any("A reading map for the guide." in text for text in paragraph_texts)
+    assert any("Example catalog" in text for text in paragraph_texts)
+    assert any("Purpose-based entry points for the bundled examples." in text for text in paragraph_texts)
     assert any("LaTeX habits translated into oodocs's Python-first authoring model." in text for text in paragraph_texts)
     assert any("For authors coming from LaTeX" in text for text in paragraph_texts)
     assert any("Page layout controls shared across renderers." in text for text in paragraph_texts)
@@ -164,9 +166,12 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert any("parse_notebook(...)" in text for text in paragraph_texts)
     assert any("Notebook-backed report" in text for text in paragraph_texts)
     assert any("Release note digest" in text for text in paragraph_texts)
+    assert "Document Python API objects" in table_text
+    assert "api_objects_example" in table_text
+    assert "style_cleanup_smoke" in table_text
     assert "OODocs Contributor Certificate" in table_text
     assert "Footnotes" not in [text for text in paragraph_texts if text == "Footnotes"]
-    assert len(word_document.tables) == 24
+    assert len(word_document.tables) == 25
     assert len(word_document.inline_shapes) == 11
     assert len(word_document.comments) == 2
     assert_docx_structure(
@@ -179,7 +184,7 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
             "Comments",
             "References",
         ),
-        table_count=24,
+        table_count=25,
         inline_shape_count=11,
         comment_count=2,
     )
@@ -221,6 +226,9 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "TableOfContents" in pdf_text
     assert "TocLevelStyle" in pdf_text
     assert "A reading map for the guide." in pdf_text
+    assert "Example catalog" in pdf_text
+    assert "api_objects_example" in pdf_text
+    assert "style_cleanup_smoke" in pdf_text
     assert "LaTeX habits translated into oodocs's Python-first authoring model." in pdf_text
     assert "For authors coming from LaTeX" in pdf_text
     assert "Page layout controls shared across renderers." in pdf_text
@@ -301,6 +309,9 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "TableOfContents" in normalized_html_text
     assert "TocLevelStyle" in normalized_html_text
     assert "CommentList() collects these review notes onto a dedicated generated page." in normalized_html_text
+    assert "Example catalog" in normalized_html_text
+    assert "api_objects_example" in normalized_html_text
+    assert "style_cleanup_smoke" in normalized_html_text
     assert "LaTeX habits translated into oodocs's Python-first authoring model." in normalized_html_text
     assert "For authors coming from LaTeX" in normalized_html_text
     assert "Page layout controls shared across renderers." in normalized_html_text

@@ -285,6 +285,19 @@ The repository includes seven standalone example directories:
 - `examples/style_cleanup_smoke/`
 - `examples/template_presets/`
 
+Choose the example by task. The usage guide explains OODocs concepts; the other
+examples are workflow entry points and intentionally avoid repeating the guide.
+
+| Task | Example | Use it when |
+|---|---|---|
+| Learn OODocs concepts | `usage_guide_example` | You want the object model, renderer behavior, imports, validation, presets, and CLI workflow in one reference-style guide. |
+| Write a manuscript from data and figures | `journal_paper_example` | You have CSV-backed tables, matplotlib figures, citations, and article-style sections to assemble into a manuscript. |
+| Document Python computation results | `native_benchmark_report` | You want a pure-Python result-to-report workflow with benchmark data, summary tables, and generated prose. |
+| Reuse release-note Markdown | `release_notes_digest` | You already maintain versioned Markdown release notes and want a bundled DOCX/PDF/HTML digest. |
+| Document Python API objects | `api_objects_example` | You need docstring-collected API objects for help-book pages, composable reference sections, and release sidecars. |
+| Create reusable named styles | `style_cleanup_smoke` | You want to extend document-wide paragraph, table, box, and chip styles through a `StyleSheet`. |
+| Start from a template | `template_presets` | You want preset objects that turn structured content inputs into complete documents. |
+
 Run them directly from the repository checkout:
 
 ```powershell
