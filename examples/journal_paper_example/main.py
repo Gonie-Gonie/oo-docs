@@ -1,8 +1,7 @@
 """Standalone journal paper example for oodocs."""
 
-from __future__ import annotations
-
 import argparse
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Sequence
 
@@ -38,11 +37,74 @@ from oodocs import (
 
 
 OUTPUT_DIR = Path("artifacts") / "journal-paper"
+REPO_ROOT = Path(__file__).resolve().parents[2]
 EXAMPLE_DIR = Path(__file__).resolve().parent
 ASSET_DIR = EXAMPLE_DIR / "assets"
 RESULTS_CSV_PATH = ASSET_DIR / "benchmark_results.csv"
 ABLATION_CSV_PATH = ASSET_DIR / "ablation_results.csv"
 TRACEABILITY_DIAGRAM_PATH = ASSET_DIR / "traceability-diagram.png"
+
+
+@dataclass(frozen=True, slots=True)
+class ManuscriptInputs:
+    """Input bundle used to assemble the manuscript example."""
+
+    results: pd.DataFrame
+    ablation: pd.DataFrame
+    citations: CitationLibrary
+    traceability_diagram: Path
+    results_csv: Path
+    ablation_csv: Path
+
+
+def repo_relative(path: Path) -> str:
+    """Return a repository-relative path for visible source traces."""
+
+    try:
+        return path.resolve().relative_to(REPO_ROOT).as_posix()
+    except ValueError:
+        return path.as_posix()
+
+
+def load_inputs() -> ManuscriptInputs:
+    """Load structured manuscript inputs from the example asset directory."""
+
+    manuscript_sources = CitationLibrary(
+        [
+            CitationSource(
+                "Literate Programming",
+                key="literate-programming",
+                authors=("D. E. Knuth",),
+                publisher="The Computer Journal",
+                year="1984",
+                url="https://doi.org/10.1093/comjnl/27.2.97",
+            ),
+            CitationSource(
+                "Statistical Analyses and Reproducible Research",
+                key="reproducible-research",
+                authors=("Robert Gentleman", "Duncan Temple Lang"),
+                publisher="Journal of Computational and Graphical Statistics",
+                year="2007",
+                url="https://doi.org/10.1198/106186007X178663",
+            ),
+            CitationSource(
+                "knitr: A General-Purpose Package for Dynamic Report Generation in R",
+                key="knitr",
+                authors=("Yihui Xie",),
+                publisher="Official project site",
+                year="2026",
+                url="https://yihui.org/knitr/",
+            ),
+        ]
+    )
+    return ManuscriptInputs(
+        results=pd.read_csv(RESULTS_CSV_PATH),
+        ablation=pd.read_csv(ABLATION_CSV_PATH),
+        citations=manuscript_sources,
+        traceability_diagram=TRACEABILITY_DIAGRAM_PATH,
+        results_csv=RESULTS_CSV_PATH,
+        ablation_csv=ABLATION_CSV_PATH,
+    )
 
 
 def build_quality_latency_figure(results_df: pd.DataFrame):
@@ -108,11 +170,16 @@ def build_revision_effort_figure():
     return figure
 
 
-def build_journal_paper_document() -> Document:
+def build_journal_paper_document(inputs: ManuscriptInputs | None = None) -> Document:
     """Build an example journal-style manuscript."""
 
-    results_df = pd.read_csv(RESULTS_CSV_PATH)
-    ablation_df = pd.read_csv(ABLATION_CSV_PATH)
+    inputs = inputs or load_inputs()
+    results_df = inputs.results
+    ablation_df = inputs.ablation
+    manuscript_sources = inputs.citations
+    results_source = repo_relative(inputs.results_csv)
+    ablation_source = repo_relative(inputs.ablation_csv)
+    traceability_source = repo_relative(inputs.traceability_diagram)
     dataset_df = pd.DataFrame(
         [
             ["Training", 18420, "system logs + editorial metadata"],
@@ -122,68 +189,52 @@ def build_journal_paper_document() -> Document:
         columns=["Split", "Documents", "Source"],
     )
 
-    manuscript_sources = CitationLibrary(
-        [
-            CitationSource(
-                "Literate Programming",
-                key="literate-programming",
-                authors=("D. E. Knuth",),
-                publisher="The Computer Journal",
-                year="1984",
-                url="https://doi.org/10.1093/comjnl/27.2.97",
-            ),
-            CitationSource(
-                "Statistical Analyses and Reproducible Research",
-                key="reproducible-research",
-                authors=("Robert Gentleman", "Duncan Temple Lang"),
-                publisher="Journal of Computational and Graphical Statistics",
-                year="2007",
-                url="https://doi.org/10.1198/106186007X178663",
-            ),
-            CitationSource(
-                "knitr: A General-Purpose Package for Dynamic Report Generation in R",
-                key="knitr",
-                authors=("Yihui Xie",),
-                publisher="Official project site",
-                year="2026",
-                url="https://yihui.org/knitr/",
-            ),
-        ]
-    )
-
     dataset_table = Table.from_dataframe(
         dataset_df,
-        caption="Study corpus used to evaluate the manuscript workflow.",
+        caption="Study corpus constructed in memory for the manuscript workflow.",
         column_widths=[1.2, 1.2, 3.2],
         header_background_color="#E7EEF7",
         alternate_row_background_color="#FAFCFE",
     )
     benchmark_table = Table.from_dataframe(
         results_df[["Model", "Accuracy", "F1", "Latency_ms"]],
-        caption="Benchmark results loaded directly from the experiment CSV file.",
+        caption=f"Benchmark results loaded from {results_source}.",
         column_widths=[2.0, 1.0, 0.9, 1.3],
         header_background_color="#DCE8F4",
         alternate_row_background_color="#F7FAFD",
     )
     ablation_table = Table.from_dataframe(
         ablation_df,
-        caption="Ablation results for the manuscript automation workflow.",
+        caption=f"Ablation results loaded from {ablation_source}.",
         column_widths=[2.9, 1.0, 1.2],
         header_background_color="#E3ECF6",
         alternate_row_background_color="#F8FBFD",
     )
+    template_comparison_table = Table(
+        headers=["Need", "Use this example", "Use template_presets"],
+        rows=[
+            ["Full control over manuscript structure", "Yes", "No"],
+            ["Fast article skeleton", "No", "Yes"],
+            ["Custom data and figure workflow", "Yes", "Partial"],
+            ["Generic publisher-neutral draft", "Yes", "Yes"],
+        ],
+        caption="When to use direct manuscript assembly versus the template preset example.",
+        column_widths=[3.0, 1.6, 1.8],
+        header_background_color="#E8F2EC",
+        alternate_row_background_color="#FAFCFA",
+    )
 
     traceability_figure = Figure(
-        TRACEABILITY_DIAGRAM_PATH,
+        inputs.traceability_diagram,
         caption=Paragraph(
-            "Traceability pipeline used in the study, linking evidence sources, authored structure, checks, and submission outputs."
+            f"Traceability pipeline used in the study. Source: {traceability_source}."
         ),
         width=6.2,
     )
     quality_latency_figure = Figure(
         build_quality_latency_figure(results_df),
         caption=Paragraph(
-            "Quality-latency frontier derived directly from the benchmark CSV used in the manuscript."
+            f"Quality-latency frontier generated from {results_source}."
         ),
         width=2.7,
         placement="here",
@@ -191,7 +242,7 @@ def build_journal_paper_document() -> Document:
     revision_effort_figure = Figure(
         build_revision_effort_figure(),
         caption=Paragraph(
-            "Estimated late-revision synchronization effort comparing manual workflows with an OODocs-based workflow."
+            "Estimated late-revision synchronization effort generated from the in-script model."
         ),
         width=2.7,
         placement="here",
@@ -284,6 +335,14 @@ def build_journal_paper_document() -> Document:
                 ),
                 level=2,
             ),
+            Section(
+                "Direct Assembly or Template Preset",
+                Paragraph(
+                    "This example deliberately assembles the manuscript with Document, Section, Table, and Figure objects. Use the template preset example when a reusable article skeleton should own the repeated structure."
+                ),
+                level=2,
+            ),
+            ColumnSpan(template_comparison_table),
             Section("Study Assets", level=1),
             Paragraph(
                 "The evaluation uses a small but realistic asset bundle: benchmark result CSV files, an ablation CSV, structured citation metadata, and an authored manuscript script. The corpus summary is shown in ",

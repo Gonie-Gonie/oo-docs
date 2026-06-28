@@ -66,6 +66,11 @@ def _docx_document_xml(docx_path: Path) -> str:
 
 def test_journal_paper_example_builds_outputs(tmp_path: Path) -> None:
     paper_example = _load_example_module("journal_paper_example")
+    inputs = paper_example.load_inputs()
+    assert len(inputs.results) == 4
+    assert len(inputs.ablation) == 4
+    assert inputs.traceability_diagram.exists()
+
     outputs = paper_example.build_journal_paper(tmp_path)
     docx_path = outputs["docx"]
     pdf_path = outputs["pdf"]
@@ -77,6 +82,12 @@ def test_journal_paper_example_builds_outputs(tmp_path: Path) -> None:
 
     word_document = WordDocument(docx_path)
     paragraph_texts = [paragraph.text for paragraph in word_document.paragraphs]
+    table_text = "\n".join(
+        cell.text
+        for table in word_document.tables
+        for row in table.rows
+        for cell in row.cells
+    )
     pdf_reader = PdfReader(BytesIO(pdf_path.read_bytes()))
     pdf_text = "\n".join(page.extract_text() or "" for page in pdf_reader.pages)
     normalized_html_text = _normalized_html_text(html_path)
@@ -105,10 +116,12 @@ def test_journal_paper_example_builds_outputs(tmp_path: Path) -> None:
     assert all(text not in paragraph_texts for text in ("Contents", "List of Tables", "List of Figures"))
     assert any("pandas.read_csv" in text for text in paragraph_texts)
     assert any("matplotlib" in text for text in paragraph_texts)
-    assert any("Traceability pipeline used in the study" in text for text in paragraph_texts)
-    assert any("Quality-latency frontier derived directly from the benchmark CSV used in the manuscript." in text for text in paragraph_texts)
-    assert any("Estimated late-revision synchronization effort comparing manual workflows with an OODocs-based workflow." in text for text in paragraph_texts)
-    assert len(word_document.tables) == 3
+    assert any("Traceability pipeline used in the study. Source: examples/journal_paper_example/assets/traceability-diagram.png." in text for text in paragraph_texts)
+    assert any("Quality-latency frontier generated from examples/journal_paper_example/assets/benchmark_results.csv." in text for text in paragraph_texts)
+    assert any("Estimated late-revision synchronization effort generated from the in-script model." in text for text in paragraph_texts)
+    assert "Full control over manuscript structure" in table_text
+    assert "Fast article skeleton" in table_text
+    assert len(word_document.tables) == 4
     assert len(word_document.inline_shapes) == 3
     assert 'w:num="2"' in _docx_document_xml(docx_path)
     assert_docx_structure(
@@ -119,7 +132,7 @@ def test_journal_paper_example_builds_outputs(tmp_path: Path) -> None:
             "Highlights",
             "References",
         ),
-        table_count=3,
+        table_count=4,
         inline_shape_count=3,
     )
 
@@ -141,11 +154,14 @@ def test_journal_paper_example_builds_outputs(tmp_path: Path) -> None:
     assert "pandas.read_csv" in pdf_text
     assert "matplotlib" in pdf_text
     assert "Traceability pipeline used in the study" in pdf_text
-    assert "Benchmark results loaded directly from the experiment CSV file." in pdf_text
-    assert "Ablation results for the manuscript automation workflow." in pdf_text
+    assert "Benchmark results loaded from" in pdf_text
+    assert "Ablation results loaded from" in pdf_text
+    assert "Direct Assembly" in pdf_text
+    assert "Template Preset" in pdf_text
+    assert "Full control over manuscript structure" in pdf_text
     assert "late-revision" in pdf_text
     assert "synchronization effort" in pdf_text
-    assert "OODocs-based" in pdf_text
+    assert "in-script model" in pdf_text
     assert "https://doi.org/10.1093/comjnl/27.2.97" in pdf_text
     assert "https://doi.org/10.1198/106186007X178663" in pdf_text
     assert "https://yihui.org/knitr/" in pdf_text
@@ -166,11 +182,14 @@ def test_journal_paper_example_builds_outputs(tmp_path: Path) -> None:
     assert "OODocs Development Philosophy" in normalized_html_text
     assert "Hyeong-Gon Jo [1]*, Codex [2]" in normalized_html_text
     assert "Evidence Traceability" in normalized_html_text
+    assert "Direct Assembly or Template Preset" in normalized_html_text
     assert "Study Assets" in normalized_html_text
     assert "Benchmark Frontier" in normalized_html_text
     assert "Ablation Signals" in normalized_html_text
     assert "Late-Revision Cost" in normalized_html_text
     assert "The workflow studied here treats the manuscript itself as code." in normalized_html_text
+    assert "Full control over manuscript structure" in normalized_html_text
+    assert "examples/journal_paper_example/assets/benchmark_results.csv" in normalized_html_text
     assert "https://doi.org/10.1093/comjnl/27.2.97" in normalized_html_text
     assert "https://doi.org/10.1198/106186007X178663" in normalized_html_text
     assert "https://yihui.org/knitr/" in normalized_html_text
