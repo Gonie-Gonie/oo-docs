@@ -131,6 +131,77 @@ INPUT_RESPONSIBILITY_TABLE = Table(
     repeat_header_rows=True,
 )
 
+TEMPLATE_CATALOG_TABLE = Table(
+    headers=["Template", "Input object", "Output document", "When to use"],
+    rows=[
+        [
+            "JournalArticleTemplate",
+            "title, authors, abstract, sections",
+            "manuscript draft",
+            "Article-like reports with conventional title matter and declarations.",
+        ],
+        [
+            "SoftwareManualTemplate",
+            "planned",
+            "software manual",
+            "Future template for command references and user-facing procedures.",
+        ],
+        [
+            "ReleaseEvidenceTemplate",
+            "planned",
+            "release evidence report",
+            "Future template for release gates, checks, and artifact summaries.",
+        ],
+        [
+            "ApiHelpTemplate",
+            "planned",
+            "API help book",
+            "Future template for API object catalogs and help pages.",
+        ],
+    ],
+    caption="Template preset catalog, starting with the implemented journal article preset.",
+    header_background_color="#E8F2EC",
+    alternate_row_background_color="#FAFCFA",
+    cell_padding=Padding.all(4),
+    repeat_header_rows=True,
+)
+
+INPUT_SCHEMA_TABLE = Table(
+    headers=["Input", "Required", "Purpose"],
+    rows=[
+        ["title", "Yes", "Visible manuscript title and default artifact naming context."],
+        ["subtitle", "No", "Optional secondary title line."],
+        ["authors", "Yes", "Structured author and affiliation metadata."],
+        ["abstract", "Yes", "Unnumbered front-matter abstract section."],
+        ["keywords", "No", "Keyword line near the abstract."],
+        ["sections", "Yes", "Ordered manuscript body sections."],
+        ["acknowledgements", "No", "Optional declaration omitted when None."],
+        ["data_availability", "No", "Optional declaration omitted when None."],
+        ["citations", "No", "Citation library used by body content and references."],
+        ["summary", "No", "Document metadata summary."],
+    ],
+    caption="JournalArticleTemplate.build(...) input schema.",
+    header_background_color="#E7EEF7",
+    alternate_row_background_color="#F8FBFD",
+    cell_padding=Padding.all(4),
+    repeat_header_rows=True,
+)
+
+DIRECT_ASSEMBLY_COMPARISON_TABLE = Table(
+    headers=["Need", "template_presets", "journal_paper_example"],
+    rows=[
+        ["Fast article skeleton", "Best fit", "Manual setup required"],
+        ["Full control over structure", "Partial", "Best fit"],
+        ["Custom data and figure workflow", "Supported inside sections", "Best fit"],
+        ["Optional declaration omission", "Built in", "Author-managed"],
+    ],
+    caption="Template-first authoring compared with direct manuscript assembly.",
+    header_background_color="#F1E7D9",
+    alternate_row_background_color="#FFFCF8",
+    cell_padding=Padding.all(4),
+    repeat_header_rows=True,
+)
+
 BODY_SECTIONS = [
     ManuscriptSection(
         "Introduction",
@@ -145,6 +216,7 @@ BODY_SECTIONS = [
                 CITATIONS.cite("reproducible-research"),
                 ": the visible manuscript should remain downstream of structured inputs rather than hand-assembled formatting steps.",
             ),
+            TEMPLATE_CATALOG_TABLE,
         ],
     ),
     ManuscriptSection(
@@ -155,6 +227,7 @@ BODY_SECTIONS = [
                 inline_code("JournalArticleTemplate.build(...)"),
                 ". The caller supplies the content surface directly and lets the template decide ordinary journal defaults such as title matter placement, page numbering, caption alignment, declaration ordering, and reference placement.",
             ),
+            INPUT_SCHEMA_TABLE,
             INPUT_RESPONSIBILITY_TABLE,
         ],
     ),
@@ -175,6 +248,7 @@ BODY_SECTIONS = [
                 inline_code("None"),
                 " to omit it without leaving an empty heading.",
             ),
+            DIRECT_ASSEMBLY_COMPARISON_TABLE,
         ],
     ),
     ManuscriptSection(

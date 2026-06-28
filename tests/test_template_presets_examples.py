@@ -76,7 +76,13 @@ def test_template_preset_examples_build_all_outputs(tmp_path: Path) -> None:
         assert "JournalArticleTemplate.build(...)" in word_text
         assert "Data Availability" in word_text
         assert "Acknowledgements" in word_text
+        assert "Template preset catalog, starting with the implemented journal article preset." in word_text
+        assert "JournalArticleTemplate.build(...) input schema." in word_text
         assert "Template responsibility" in table_text
+        assert "Template-first authoring compared with direct manuscript assembly." in word_text
+        assert "journal_paper_example" in table_text
+        assert "acknowledgements" in table_text
+        assert len(word_document.tables) >= 4
         assert "References" in word_text
         assert_docx_structure(
             docx_path,
@@ -85,6 +91,8 @@ def test_template_preset_examples_build_all_outputs(tmp_path: Path) -> None:
         )
         assert title in normalized_pdf_text
         assert "Methods" in normalized_pdf_text
+        assert "Template preset catalog" in normalized_pdf_text
+        assert "input schema" in normalized_pdf_text
         assert "Data Availability" in normalized_pdf_text
         assert "References" in normalized_pdf_text
         assert_pdf_text_and_pages(
@@ -94,6 +102,8 @@ def test_template_preset_examples_build_all_outputs(tmp_path: Path) -> None:
         )
         assert title in html_text
         assert "content-first template" in html_text
+        assert "Template preset catalog" in html_text
+        assert "journal_paper_example" in html_text
         assert_html_internal_links_resolve(
             html_path,
             required_text=(title, "content-first template"),

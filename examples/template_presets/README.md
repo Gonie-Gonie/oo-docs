@@ -24,6 +24,9 @@ Programmatic entry points:
 
 - `journal_article_template.build_document()` returns a complete `Document`
   built from preset inputs.
+- The rendered journal template includes a template catalog, a
+  `JournalArticleTemplate.build(...)` input schema, and a comparison with the
+  direct assembly workflow in `journal_paper_example`.
 - `journal_article_template.build(output_dir=..., output_formats=...)` writes
   one template output bundle.
 - `build_all.build_all(output_dir=..., output_formats=...)` renders every
