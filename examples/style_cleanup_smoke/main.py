@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import argparse
 from pathlib import Path
+from typing import Sequence
 
 from oodocs import (
     BlockDefaults,
@@ -100,12 +102,15 @@ def build_document() -> Document:
 def build(
     output_dir: str | Path = OUTPUT_DIR,
     *,
+    output_formats: Sequence[str] | None = None,
     verbose: bool = False,
 ) -> OutputBundle:
-    """Render the smoke document to DOCX, PDF, and HTML.
+    """Render the smoke document.
 
     Args:
         output_dir: Directory where rendered files should be written.
+        output_formats: Output formats to render. Defaults to DOCX, PDF, and
+            HTML when omitted.
         verbose: Print slow render steps.
 
     Returns:
@@ -114,14 +119,55 @@ def build(
 
     document = build_document()
     document.validate(raise_on_error=True)
+    formats = tuple(output_formats or ("docx", "pdf", "html"))
     return document.save_all(
         output_dir,
         stem=OUTPUT_STEM,
-        formats=("docx", "pdf", "html"),
+        formats=formats,
         verbose=verbose,
     )
 
 
+def main(argv: Sequence[str] | None = None) -> None:
+    """Render the example from the command line.
+
+    Args:
+        argv: Optional argument sequence. When omitted, arguments are read from
+            ``sys.argv``.
+    """
+
+    parser = argparse.ArgumentParser(
+        description="Render the OODocs named style smoke example.",
+    )
+    parser.add_argument(
+        "--output-dir",
+        default=OUTPUT_DIR,
+        type=Path,
+        help="Directory where rendered files are written.",
+    )
+    parser.add_argument(
+        "--outputs",
+        action="append",
+        choices=("docx", "pdf", "html"),
+        dest="output_formats",
+        help="Output format to render. Repeat for multiple formats.",
+    )
+    parser.add_argument(
+        "--quiet",
+        action="store_true",
+        help="Suppress progress and output-path messages.",
+    )
+    args = parser.parse_args(argv)
+
+    outputs = build(
+        args.output_dir,
+        output_formats=args.output_formats,
+        verbose=not args.quiet,
+    )
+    if not args.quiet:
+        for output_format, path in outputs:
+            print(f"Wrote {output_format}: {path}")
+
+
 if __name__ == "__main__":
-    for output_format, path in build(verbose=True):
-        print(f"Wrote {output_format}: {path}")
+    main()

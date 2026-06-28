@@ -33,3 +33,26 @@ def test_style_cleanup_smoke_example_builds_outputs(tmp_path: Path) -> None:
     assert "Requirement:" in html
     assert "Schema-style table." in html
     assert_html_internal_links_resolve(outputs["html"])
+
+
+def test_style_cleanup_smoke_example_supports_common_cli(tmp_path: Path, capsys) -> None:
+    example = _load_style_cleanup_smoke_example()
+    output_dir = tmp_path / "cli"
+
+    outputs = example.build(output_dir / "programmatic", output_formats=("html",))
+    assert set(outputs.keys()) == {"html"}
+    assert outputs["html"].exists()
+
+    example.main(
+        [
+            "--output-dir",
+            str(output_dir),
+            "--outputs",
+            "html",
+            "--quiet",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert (output_dir / "style-cleanup-smoke.html").exists()
