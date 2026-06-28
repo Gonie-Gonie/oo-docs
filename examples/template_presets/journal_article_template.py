@@ -11,6 +11,7 @@ from oodocs import (
     Author,
     CitationLibrary,
     CitationSource,
+    CodeBlock,
     OutputBundle,
     Padding,
     Paragraph,
@@ -248,6 +249,17 @@ BODY_SECTIONS = [
                 inline_code("None"),
                 " to omit it without leaving an empty heading.",
             ),
+            CodeBlock(
+                """minimal_doc = JournalArticleTemplate().build(
+    "Minimal Article",
+    authors=[author],
+    abstract="...",
+    sections=[ManuscriptSection("Body", [Paragraph("...")])],
+    acknowledgements=None,
+    data_availability=None,
+)""",
+                language="python",
+            ),
             DIRECT_ASSEMBLY_COMPARISON_TABLE,
         ],
     ),
@@ -273,6 +285,29 @@ BODY_SECTIONS = [
         ],
     ),
 ]
+
+
+def build_minimal_document():
+    """Build a minimal article that omits optional declaration sections."""
+
+    return JournalArticleTemplate().build(
+        "Minimal Article",
+        authors=[AUTHORS[0]],
+        abstract="A minimal article can omit optional declaration sections.",
+        sections=[
+            ManuscriptSection(
+                "Body",
+                [
+                    Paragraph(
+                        "This body section is present, while acknowledgements and data availability are omitted."
+                    )
+                ],
+            )
+        ],
+        acknowledgements=None,
+        data_availability=None,
+        citations=None,
+    )
 
 
 def build_document():

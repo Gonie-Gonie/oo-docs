@@ -410,6 +410,29 @@ def build_release_notes(
     return ReleaseNotesBundle(rendered, diagnostics_path)
 
 
+def build_document(*, mode: ReleaseNotesMode = "full") -> Document:
+    """Return the renderable release notes digest document."""
+
+    return build_release_notes_document(mode=mode)
+
+
+def build(
+    output_dir: str | Path = OUTPUT_DIR,
+    *,
+    output_formats: Sequence[str] | None = None,
+    mode: ReleaseNotesMode = "full",
+    verbose: bool = False,
+) -> ReleaseNotesBundle:
+    """Render the release notes digest through the common example interface."""
+
+    return build_release_notes(
+        output_dir,
+        output_formats=output_formats,
+        mode=mode,
+        verbose=verbose,
+    )
+
+
 def main(argv: Sequence[str] | None = None) -> None:
     """Build the release-note digest from the command line."""
 

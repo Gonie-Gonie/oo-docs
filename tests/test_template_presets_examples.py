@@ -74,6 +74,7 @@ def test_template_preset_examples_build_all_outputs(tmp_path: Path) -> None:
         assert "Introduction" in word_text
         assert "Content-first journal templates separate manuscript content from repeated document assembly." in word_text
         assert "JournalArticleTemplate.build(...)" in word_text
+        assert "Minimal Article" in word_text
         assert "Data Availability" in word_text
         assert "Acknowledgements" in word_text
         assert "Template preset catalog, starting with the implemented journal article preset." in word_text
@@ -104,10 +105,30 @@ def test_template_preset_examples_build_all_outputs(tmp_path: Path) -> None:
         assert "content-first template" in html_text
         assert "Template preset catalog" in html_text
         assert "journal_paper_example" in html_text
+        assert "Minimal Article" in html_text
         assert_html_internal_links_resolve(
             html_path,
             required_text=(title, "content-first template"),
         )
+
+
+def test_template_preset_minimal_article_omits_optional_sections(tmp_path: Path) -> None:
+    journal_article_template = _load_template_module("journal_article_template")
+    document = journal_article_template.build_minimal_document()
+
+    assert document.validate().ok
+    outputs = document.save_all(
+        tmp_path,
+        stem="minimal-article",
+        formats=("html",),
+        verbose=False,
+    )
+    html_text = _normalized_html_text(outputs["html"])
+
+    assert "Minimal Article" in html_text
+    assert "Body" in html_text
+    assert "Data Availability" not in html_text
+    assert "Acknowledgements" not in html_text
 
 
 def test_template_preset_examples_support_common_cli(tmp_path: Path, capsys) -> None:

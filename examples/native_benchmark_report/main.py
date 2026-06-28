@@ -450,6 +450,27 @@ def build_native_benchmark_report(
     return BenchmarkReportBundle(rendered=rendered, results_json=sidecar_path)
 
 
+def build_document() -> Document:
+    """Return the renderable benchmark report document."""
+
+    return build_benchmark_document()
+
+
+def build(
+    output_dir: str | Path = OUTPUT_DIR,
+    *,
+    output_formats: Sequence[str] | None = None,
+    verbose: bool = False,
+) -> BenchmarkReportBundle:
+    """Render the benchmark report through the common example interface."""
+
+    return build_native_benchmark_report(
+        output_dir,
+        output_formats=output_formats,
+        verbose=verbose,
+    )
+
+
 def main(argv: Sequence[str] | None = None) -> None:
     """Build the benchmark report from the command line."""
 

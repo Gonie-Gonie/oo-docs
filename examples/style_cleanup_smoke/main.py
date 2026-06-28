@@ -11,6 +11,7 @@ from oodocs import (
     BoxStyle,
     CaptionDefaults,
     Chapter,
+    CodeBlock,
     Document,
     DocumentSettings,
     InlineChip,
@@ -123,6 +124,29 @@ def load_stylesheet_sidecar(path: str | Path) -> StyleSheet:
     return StyleSheet.from_dict(json.loads(Path(path).read_text(encoding="utf-8")))
 
 
+def category_mismatch_validation_codes(
+    stylesheet: StyleSheet | None = None,
+) -> tuple[str, ...]:
+    """Return validation codes for a named-style category mismatch probe.
+
+    Args:
+        stylesheet: Stylesheet used to resolve the probe document. Defaults to
+            the stylesheet created by this example.
+
+    Returns:
+        Validation issue codes produced when a box style is used as a table
+        style.
+    """
+
+    styles = stylesheet or create_stylesheet()
+    probe = Document(
+        "Named Style Category Probe",
+        Table(["Field"], [["status"]], style="warning"),
+        settings=DocumentSettings(theme=Theme(stylesheet=styles)),
+    )
+    return tuple(issue.code for issue in probe.validate().issues)
+
+
 def build_document(stylesheet: StyleSheet | None = None) -> Document:
     """Build the custom styles example document.
 
@@ -142,6 +166,18 @@ def build_document(stylesheet: StyleSheet | None = None) -> Document:
         caption="Named styles replace repeated visual kwargs with reusable style identifiers.",
         style="schema",
     )
+    validation_table = Table(
+        ["Probe", "Expected validation code", "Reason"],
+        [
+            [
+                "Table(..., style='warning')",
+                "wrong-style-category",
+                "'warning' is registered as a box style, not a table style.",
+            ]
+        ],
+        caption="Named style validation catches category mismatches before rendering.",
+        style="schema",
+    )
     return Document(
         "Custom Styles Example",
         Chapter(
@@ -156,6 +192,13 @@ def build_document(stylesheet: StyleSheet | None = None) -> Document:
                 caption="Schema-style table.",
                 style="schema",
             ),
+            Paragraph(
+                "Use named styles from the category that matches the component. "
+                "A table style name is resolved from the table registry, while "
+                "a box style name is resolved from the box registry."
+            ),
+            CodeBlock("Table(['A'], [['B']], style='warning')", language="python"),
+            validation_table,
         ),
         settings=DocumentSettings(
             theme=Theme(

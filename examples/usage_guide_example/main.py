@@ -1776,6 +1776,27 @@ def build_usage_guide(
     )
 
 
+def build_document() -> Document:
+    """Return the renderable usage guide document."""
+
+    return build_usage_guide_document()
+
+
+def build(
+    output_dir: str | Path = OUTPUT_DIR,
+    *,
+    output_formats: Sequence[str] | None = None,
+    verbose: bool = False,
+) -> OutputBundle:
+    """Render the usage guide through the common example interface."""
+
+    return build_usage_guide(
+        output_dir,
+        output_formats=output_formats,
+        verbose=verbose,
+    )
+
+
 def main(argv: Sequence[str] | None = None) -> None:
     """Build the guide from the command line."""
 

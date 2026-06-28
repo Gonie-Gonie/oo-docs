@@ -504,6 +504,27 @@ def build_journal_paper(
     )
 
 
+def build_document(inputs: ManuscriptInputs | None = None) -> Document:
+    """Return the renderable journal paper document."""
+
+    return build_journal_paper_document(inputs)
+
+
+def build(
+    output_dir: str | Path = OUTPUT_DIR,
+    *,
+    output_formats: Sequence[str] | None = None,
+    verbose: bool = False,
+) -> OutputBundle:
+    """Render the journal paper through the common example interface."""
+
+    return build_journal_paper(
+        output_dir,
+        output_formats=output_formats,
+        verbose=verbose,
+    )
+
+
 def main(argv: Sequence[str] | None = None) -> None:
     """Build the paper from the command line."""
 

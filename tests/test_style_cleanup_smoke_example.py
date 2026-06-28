@@ -34,11 +34,14 @@ def test_style_cleanup_smoke_example_builds_outputs(tmp_path: Path) -> None:
     assert "paragraph" in stylesheet_payload
     assert "body.compact" in stylesheet_payload["paragraph"]
     assert example.load_stylesheet_sidecar(outputs.stylesheet_json).to_dict() == stylesheet_payload
+    assert "wrong-style-category" in example.category_mismatch_validation_codes()
     html = outputs["html"].read_text(encoding="utf-8")
     assert "Custom Styles Example" in html
     assert "Requirement:" in html
     assert "Schema-style table." in html
     assert "Named styles replace repeated visual kwargs with reusable style identifiers." in html
+    assert "Named style validation catches category mismatches before rendering." in html
+    assert "wrong-style-category" in html
     assert_html_internal_links_resolve(outputs["html"])
 
 

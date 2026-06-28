@@ -448,6 +448,30 @@ def render_apidoc_example_bundle(
     return outputs
 
 
+def build_document(
+    api: ApiPackage | None = None,
+    coverage: ApiCoverageResult | None = None,
+) -> Document:
+    """Return the composable API-object demonstration document."""
+
+    return build_composition_demo_document(api, coverage)
+
+
+def build(
+    output_dir: str | Path = ARTIFACT_DIR,
+    *,
+    output_formats: Sequence[str] | None = None,
+    verbose: bool = False,
+) -> dict[str, Path]:
+    """Render the API object example through the common example interface."""
+
+    return render_apidoc_example_bundle(
+        output_dir=output_dir,
+        output_formats=output_formats,
+        verbose=verbose,
+    )
+
+
 def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     """Parse command-line arguments for the API objects example."""
 
