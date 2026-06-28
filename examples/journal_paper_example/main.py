@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import argparse
 from pathlib import Path
+from typing import Sequence
 
 import matplotlib
 
@@ -423,28 +425,60 @@ def build_journal_paper_document() -> Document:
 
 
 def build_journal_paper(
-    output_dir: str | Path,
+    output_dir: str | Path = OUTPUT_DIR,
     *,
+    output_formats: Sequence[str] | None = None,
     verbose: bool = False,
 ) -> OutputBundle:
-    """Build the journal paper example and export it to DOCX, PDF, and HTML."""
+    """Build the journal paper example and export selected formats."""
 
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
 
     document = build_journal_paper_document()
+    formats = tuple(output_formats or ("docx", "pdf", "html"))
     return document.save_all(
         output_path,
         stem="oodocs-development-philosophy",
+        formats=formats,
         verbose=verbose,
     )
 
 
-def main() -> None:
-    """Build the paper into the default example output directory."""
+def main(argv: Sequence[str] | None = None) -> None:
+    """Build the paper from the command line."""
 
-    for output_format, path in build_journal_paper(OUTPUT_DIR, verbose=True):
-        print(f"Wrote {output_format}: {path}")
+    parser = argparse.ArgumentParser(
+        description="Render the OODocs journal paper example.",
+    )
+    parser.add_argument(
+        "--output-dir",
+        default=OUTPUT_DIR,
+        type=Path,
+        help="Directory where rendered files are written.",
+    )
+    parser.add_argument(
+        "--outputs",
+        action="append",
+        choices=("docx", "pdf", "html"),
+        dest="output_formats",
+        help="Output format to render. Repeat for multiple formats.",
+    )
+    parser.add_argument(
+        "--quiet",
+        action="store_true",
+        help="Suppress progress and output-path messages.",
+    )
+    args = parser.parse_args(argv)
+
+    outputs = build_journal_paper(
+        args.output_dir,
+        output_formats=args.output_formats,
+        verbose=not args.quiet,
+    )
+    if not args.quiet:
+        for output_format, path in outputs:
+            print(f"Wrote {output_format}: {path}")
 
 
 if __name__ == "__main__":

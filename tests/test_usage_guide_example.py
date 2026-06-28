@@ -361,3 +361,29 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert 'class="oodocs-toc-entry oodocs-toc-entry-no-page oodocs-toc-entry-level-2"' in html_text
     assert 'class="oodocs-toc-entry oodocs-toc-entry-no-page oodocs-toc-entry-level-3"' in html_text
     assert 'class="oodocs-toc-entry oodocs-toc-entry-no-page oodocs-toc-entry-level-4"' in html_text
+
+
+def test_usage_guide_example_supports_common_cli(tmp_path: Path, capsys) -> None:
+    usage_guide = _load_example_module("usage_guide_example")
+    output_dir = tmp_path / "cli"
+
+    outputs = usage_guide.build_usage_guide(
+        output_dir / "programmatic",
+        output_formats=("html",),
+    )
+    assert set(outputs.keys()) == {"html"}
+    assert outputs["html"].exists()
+
+    usage_guide.main(
+        [
+            "--output-dir",
+            str(output_dir),
+            "--outputs",
+            "html",
+            "--quiet",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert (output_dir / "oodocs-user-guide.html").exists()

@@ -174,3 +174,32 @@ def test_release_notes_digest_example_builds_outputs(tmp_path: Path) -> None:
         html_path,
         required_text=("OODocs Release Notes", "Version History"),
     )
+
+
+def test_release_notes_digest_example_supports_common_cli(
+    tmp_path: Path,
+    capsys,
+) -> None:
+    release_notes_example = _load_example_module("release_notes_digest")
+    output_dir = tmp_path / "cli"
+
+    outputs = release_notes_example.build_release_notes(
+        output_dir / "programmatic",
+        output_formats=("html",),
+    )
+    assert set(outputs.keys()) == {"html"}
+    assert outputs["html"].exists()
+
+    release_notes_example.main(
+        [
+            "--output-dir",
+            str(output_dir),
+            "--outputs",
+            "html",
+            "--quiet",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert (output_dir / "oodocs-release-notes.html").exists()

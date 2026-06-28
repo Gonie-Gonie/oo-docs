@@ -121,3 +121,32 @@ def test_native_benchmark_report_example_builds_outputs(tmp_path: Path) -> None:
         required_hrefs=("#heading_1", "#table_1", "#table_3"),
         required_text=("Native Python Benchmark Report", "results: list[dict]"),
     )
+
+
+def test_native_benchmark_report_example_supports_common_cli(
+    tmp_path: Path,
+    capsys,
+) -> None:
+    benchmark_example = _load_example_module("native_benchmark_report")
+    output_dir = tmp_path / "cli"
+
+    outputs = benchmark_example.build_native_benchmark_report(
+        output_dir / "programmatic",
+        output_formats=("html",),
+    )
+    assert set(outputs.keys()) == {"html"}
+    assert outputs["html"].exists()
+
+    benchmark_example.main(
+        [
+            "--output-dir",
+            str(output_dir),
+            "--outputs",
+            "html",
+            "--quiet",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert (output_dir / "native-python-benchmark.html").exists()

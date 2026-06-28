@@ -184,3 +184,29 @@ def test_journal_paper_example_builds_outputs(tmp_path: Path) -> None:
         required_hrefs=("#table_2", "#figure_2"),
         required_text=("OODocs Development Philosophy", "Benchmark Frontier"),
     )
+
+
+def test_journal_paper_example_supports_common_cli(tmp_path: Path, capsys) -> None:
+    paper_example = _load_example_module("journal_paper_example")
+    output_dir = tmp_path / "cli"
+
+    outputs = paper_example.build_journal_paper(
+        output_dir / "programmatic",
+        output_formats=("html",),
+    )
+    assert set(outputs.keys()) == {"html"}
+    assert outputs["html"].exists()
+
+    paper_example.main(
+        [
+            "--output-dir",
+            str(output_dir),
+            "--outputs",
+            "html",
+            "--quiet",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert (output_dir / "oodocs-development-philosophy.html").exists()
