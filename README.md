@@ -275,7 +275,7 @@ doc = Document(
 
 ## Example Scripts
 
-The repository includes nine standalone example directories:
+The repository includes ten standalone example directories:
 
 - `examples/usage_guide_example/`
 - `examples/journal_paper_example/`
@@ -286,6 +286,7 @@ The repository includes nine standalone example directories:
 - `examples/template_presets/`
 - `examples/project_metadata_report/`
 - `examples/cli_manual_example/`
+- `examples/config_reference_example/`
 
 Choose the example by task. The usage guide explains OODocs concepts; the other
 examples are workflow entry points and intentionally avoid repeating the guide.
@@ -301,6 +302,7 @@ examples are workflow entry points and intentionally avoid repeating the guide.
 | Start from a template | `template_presets` | You want preset objects that turn structured content inputs into complete documents. |
 | Review project metadata | `project_metadata_report` | You want `pyproject.toml` and GitHub Actions workflow metadata as a document plus JSON sidecar. |
 | Publish a CLI manual | `cli_manual_example` | You want an `argparse` parser rendered as usage, options, subcommands, exit codes, and examples. |
+| Publish a config reference | `config_reference_example` | You want TOML config and JSON schema fields rendered as required/optional/default/env-var documentation. |
 
 Run them directly from the repository checkout:
 
@@ -314,6 +316,7 @@ Run them directly from the repository checkout:
 .\.venv\Scripts\python.exe .\examples\template_presets\build_all.py --output-dir artifacts/template
 .\.venv\Scripts\python.exe .\examples\project_metadata_report\main.py --output-dir artifacts/project-metadata-report
 .\.venv\Scripts\python.exe .\examples\cli_manual_example\main.py --output-dir artifacts/cli-manual-example
+.\.venv\Scripts\python.exe .\examples\config_reference_example\main.py --output-dir artifacts/config-reference-example
 ```
 
 Most examples accept repeatable `--outputs` and `--quiet` flags:
@@ -345,6 +348,7 @@ What they show:
 - `template_presets` renders ready-to-customize document templates built from ordinary preset objects
 - `project_metadata_report` turns `pyproject.toml` and `.github/workflows/release.yml` into a project metadata report plus JSON sidecar
 - `cli_manual_example` turns a runnable `argparse` parser into a command manual with usage, options, subcommands, exit codes, and examples
+- `config_reference_example` turns TOML config and JSON schema inputs into a field reference with required fields, defaults, examples, and environment variables
 
 By default they write outputs under:
 
@@ -358,6 +362,7 @@ By default they write outputs under:
 - `artifacts/api/`
 - `artifacts/project-metadata-report/`
 - `artifacts/cli-manual-example/`
+- `artifacts/config-reference-example/`
 
 The main exported filenames are:
 
@@ -377,6 +382,7 @@ The main exported filenames are:
 - `artifacts/project-metadata-report/project-metadata-report.pdf`
 - `artifacts/project-metadata-report/project-metadata.json`
 - `artifacts/cli-manual-example/cli-manual.pdf`
+- `artifacts/config-reference-example/config-reference.pdf`
 - `artifacts/api-objects-example/oodocs-api-reference.docx`
 - `artifacts/api-objects-example/oodocs-api-reference.pdf`
 - `artifacts/api-objects-example/oodocs-api-reference.html`

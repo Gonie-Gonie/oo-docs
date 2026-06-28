@@ -1,0 +1,43 @@
+{
+  "title": "Documentation build config",
+  "properties": {
+    "build.output_dir": {
+      "type": "path",
+      "required": true,
+      "description": "Directory where rendered artifacts are written.",
+      "env": "OODOCS_OUTPUT_DIR"
+    },
+    "build.formats": {
+      "type": "list[str]",
+      "required": true,
+      "default": ["docx", "pdf", "html"],
+      "description": "Output formats to render."
+    },
+    "build.strict": {
+      "type": "bool",
+      "required": false,
+      "default": false,
+      "description": "Treat warnings as release-gate failures.",
+      "env": "OODOCS_STRICT"
+    },
+    "rendering.theme": {
+      "type": "str",
+      "required": false,
+      "default": "default",
+      "description": "Named rendering theme."
+    },
+    "rendering.page_size": {
+      "type": "str",
+      "required": false,
+      "default": "letter",
+      "description": "Target page size for fixed-page renderers."
+    },
+    "environment.cache_dir": {
+      "type": "path",
+      "required": false,
+      "default": ".cache/oodocs",
+      "description": "Directory for importer and build cache files.",
+      "env": "OODOCS_CACHE_DIR"
+    }
+  }
+}

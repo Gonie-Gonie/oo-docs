@@ -1,0 +1,11 @@
+[build]
+output_dir = "artifacts/docs"
+formats = ["pdf", "html"]
+strict = true
+
+[rendering]
+theme = "default"
+page_size = "letter"
+
+[environment]
+cache_dir = ".cache/oodocs"
