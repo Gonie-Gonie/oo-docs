@@ -79,6 +79,7 @@ jobs:
           python examples/api_objects_example/main.py . --config pyproject.toml
           python examples/style_cleanup_smoke/main.py
           python examples/template_presets/build_all.py
+          python examples/project_metadata_report/main.py
           python - <<'PY'
           from oodocs.apidoc import ApiHelpBookConfig
 
@@ -119,6 +120,8 @@ jobs:
             artifacts/release-notes/oodocs-release-notes.pdf
             artifacts/release-notes/release-notes-import-diagnostics.json
             artifacts/template/journal-article-template.pdf
+            artifacts/project-metadata-report/project-metadata-report.pdf
+            artifacts/project-metadata-report/project-metadata.json
             artifacts/api-objects-example/oodocs-api-object-composition.pdf
             artifacts/api-objects-example/oodocs-api-object-tree.json
             artifacts/api-objects-example/oodocs-api-coverage.json
@@ -148,6 +151,8 @@ jobs:
             artifacts/release-notes/oodocs-release-notes.pdf
             artifacts/release-notes/release-notes-import-diagnostics.json
             artifacts/template/journal-article-template.pdf
+            artifacts/project-metadata-report/project-metadata-report.pdf
+            artifacts/project-metadata-report/project-metadata.json
             artifacts/api-objects-example/oodocs-api-object-composition.pdf
             artifacts/api-objects-example/oodocs-api-object-tree.json
             artifacts/api-objects-example/oodocs-api-coverage.json
