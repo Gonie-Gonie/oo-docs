@@ -98,3 +98,38 @@ def test_template_preset_examples_build_all_outputs(tmp_path: Path) -> None:
             html_path,
             required_text=(title, "content-first template"),
         )
+
+
+def test_template_preset_examples_support_common_cli(tmp_path: Path, capsys) -> None:
+    build_all = _load_template_module("build_all")
+    journal_article_template = _load_template_module("journal_article_template")
+    output_dir = tmp_path / "cli"
+
+    all_outputs = build_all.build_all(
+        output_dir / "programmatic-all",
+        output_formats=("html",),
+    )
+    assert set(all_outputs) == {"journal_article_template"}
+    assert set(all_outputs["journal_article_template"].keys()) == {"html"}
+    assert all_outputs["journal_article_template"]["html"].exists()
+
+    template_outputs = journal_article_template.build(
+        output_dir / "programmatic-one",
+        output_formats=("html",),
+    )
+    assert set(template_outputs.keys()) == {"html"}
+    assert template_outputs["html"].exists()
+
+    build_all.main(
+        [
+            "--output-dir",
+            str(output_dir),
+            "--outputs",
+            "html",
+            "--quiet",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert (output_dir / "journal-article-template.html").exists()

@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import argparse
 from pathlib import Path
+from typing import Sequence
 
 from oodocs import (
     Affiliation,
@@ -219,22 +221,54 @@ def build_document():
 def build(
     output_dir: str | Path = OUTPUT_DIR,
     *,
+    output_formats: Sequence[str] | None = None,
     verbose: bool = False,
 ) -> OutputBundle:
     """Render the example into the template artifact directory."""
 
+    formats = tuple(output_formats or ("docx", "pdf", "html"))
     return build_document().save_all(
         output_dir,
         stem="journal-article-template",
+        formats=formats,
         verbose=verbose,
     )
 
 
-def main() -> None:
+def main(argv: Sequence[str] | None = None) -> None:
     """Build the example from the command line."""
 
-    for path in build(verbose=True).values():
-        print(f"Wrote {path}")
+    parser = argparse.ArgumentParser(
+        description="Render the OODocs journal article template preset example.",
+    )
+    parser.add_argument(
+        "--output-dir",
+        default=OUTPUT_DIR,
+        type=Path,
+        help="Directory where rendered files are written.",
+    )
+    parser.add_argument(
+        "--outputs",
+        action="append",
+        choices=("docx", "pdf", "html"),
+        dest="output_formats",
+        help="Output format to render. Repeat for multiple formats.",
+    )
+    parser.add_argument(
+        "--quiet",
+        action="store_true",
+        help="Suppress progress and output-path messages.",
+    )
+    args = parser.parse_args(argv)
+
+    outputs = build(
+        args.output_dir,
+        output_formats=args.output_formats,
+        verbose=not args.quiet,
+    )
+    if not args.quiet:
+        for output_format, path in outputs:
+            print(f"Wrote {output_format}: {path}")
 
 
 if __name__ == "__main__":
