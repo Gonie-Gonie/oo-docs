@@ -275,7 +275,7 @@ doc = Document(
 
 ## Example Scripts
 
-The repository includes eight standalone example directories:
+The repository includes nine standalone example directories:
 
 - `examples/usage_guide_example/`
 - `examples/journal_paper_example/`
@@ -285,6 +285,7 @@ The repository includes eight standalone example directories:
 - `examples/style_cleanup_smoke/`
 - `examples/template_presets/`
 - `examples/project_metadata_report/`
+- `examples/cli_manual_example/`
 
 Choose the example by task. The usage guide explains OODocs concepts; the other
 examples are workflow entry points and intentionally avoid repeating the guide.
@@ -299,6 +300,7 @@ examples are workflow entry points and intentionally avoid repeating the guide.
 | Create reusable named styles | `style_cleanup_smoke` | You want to extend document-wide paragraph, table, box, and chip styles through a `StyleSheet`. |
 | Start from a template | `template_presets` | You want preset objects that turn structured content inputs into complete documents. |
 | Review project metadata | `project_metadata_report` | You want `pyproject.toml` and GitHub Actions workflow metadata as a document plus JSON sidecar. |
+| Publish a CLI manual | `cli_manual_example` | You want an `argparse` parser rendered as usage, options, subcommands, exit codes, and examples. |
 
 Run them directly from the repository checkout:
 
@@ -311,6 +313,7 @@ Run them directly from the repository checkout:
 .\.venv\Scripts\python.exe .\examples\style_cleanup_smoke\main.py --output-dir artifacts/style-cleanup-smoke
 .\.venv\Scripts\python.exe .\examples\template_presets\build_all.py --output-dir artifacts/template
 .\.venv\Scripts\python.exe .\examples\project_metadata_report\main.py --output-dir artifacts/project-metadata-report
+.\.venv\Scripts\python.exe .\examples\cli_manual_example\main.py --output-dir artifacts/cli-manual-example
 ```
 
 Most examples accept repeatable `--outputs` and `--quiet` flags:
@@ -341,6 +344,7 @@ What they show:
 - `style_cleanup_smoke` exercises named paragraph, table, box, and chip styles through a document-level `StyleSheet`
 - `template_presets` renders ready-to-customize document templates built from ordinary preset objects
 - `project_metadata_report` turns `pyproject.toml` and `.github/workflows/release.yml` into a project metadata report plus JSON sidecar
+- `cli_manual_example` turns a runnable `argparse` parser into a command manual with usage, options, subcommands, exit codes, and examples
 
 By default they write outputs under:
 
@@ -353,6 +357,7 @@ By default they write outputs under:
 - `artifacts/template/`
 - `artifacts/api/`
 - `artifacts/project-metadata-report/`
+- `artifacts/cli-manual-example/`
 
 The main exported filenames are:
 
@@ -371,6 +376,7 @@ The main exported filenames are:
 - `artifacts/template/journal-article-template.pdf`
 - `artifacts/project-metadata-report/project-metadata-report.pdf`
 - `artifacts/project-metadata-report/project-metadata.json`
+- `artifacts/cli-manual-example/cli-manual.pdf`
 - `artifacts/api-objects-example/oodocs-api-reference.docx`
 - `artifacts/api-objects-example/oodocs-api-reference.pdf`
 - `artifacts/api-objects-example/oodocs-api-reference.html`
