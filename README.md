@@ -275,7 +275,7 @@ doc = Document(
 
 ## Example Scripts
 
-The repository includes eleven standalone example directories:
+The repository includes twelve standalone example directories:
 
 - `examples/usage_guide_example/`
 - `examples/journal_paper_example/`
@@ -288,6 +288,7 @@ The repository includes eleven standalone example directories:
 - `examples/cli_manual_example/`
 - `examples/config_reference_example/`
 - `examples/validation_gate_report/`
+- `examples/conformance_matrix_report/`
 
 Choose the example by task. The usage guide explains OODocs concepts; the other
 examples are workflow entry points and intentionally avoid repeating the guide.
@@ -305,6 +306,7 @@ examples are workflow entry points and intentionally avoid repeating the guide.
 | Publish a CLI manual | `cli_manual_example` | You want an `argparse` parser rendered as usage, options, subcommands, exit codes, and examples. |
 | Publish a config reference | `config_reference_example` | You want TOML config and JSON schema fields rendered as required/optional/default/env-var documentation. |
 | Document a validation gate | `validation_gate_report` | You want `Document.validate()` diagnostics rendered as a release-gate report and JSON sidecar. |
+| Report a conformance matrix | `conformance_matrix_report` | You want a readable PDF excerpt plus full JSON sidecar for a wide test/simulation matrix. |
 
 Run them directly from the repository checkout:
 
@@ -320,6 +322,7 @@ Run them directly from the repository checkout:
 .\.venv\Scripts\python.exe .\examples\cli_manual_example\main.py --output-dir artifacts/cli-manual-example
 .\.venv\Scripts\python.exe .\examples\config_reference_example\main.py --output-dir artifacts/config-reference-example
 .\.venv\Scripts\python.exe .\examples\validation_gate_report\main.py --output-dir artifacts/validation-gate-report
+.\.venv\Scripts\python.exe .\examples\conformance_matrix_report\main.py --output-dir artifacts/conformance-matrix-report
 ```
 
 Most examples accept repeatable `--outputs` and `--quiet` flags:
@@ -353,6 +356,7 @@ What they show:
 - `cli_manual_example` turns a runnable `argparse` parser into a command manual with usage, options, subcommands, exit codes, and examples
 - `config_reference_example` turns TOML config and JSON schema inputs into a field reference with required fields, defaults, examples, and environment variables
 - `validation_gate_report` turns `Document.validate()` output into a release-gate report with warning policy and JSON diagnostics
+- `conformance_matrix_report` keeps a wide conformance matrix in JSON while rendering a readable claim boundary, summary, excerpt, and failure appendix
 
 By default they write outputs under:
 
@@ -368,6 +372,7 @@ By default they write outputs under:
 - `artifacts/cli-manual-example/`
 - `artifacts/config-reference-example/`
 - `artifacts/validation-gate-report/`
+- `artifacts/conformance-matrix-report/`
 
 The main exported filenames are:
 
@@ -390,6 +395,8 @@ The main exported filenames are:
 - `artifacts/config-reference-example/config-reference.pdf`
 - `artifacts/validation-gate-report/validation-gate-report.pdf`
 - `artifacts/validation-gate-report/validation-result.json`
+- `artifacts/conformance-matrix-report/conformance-matrix-report.pdf`
+- `artifacts/conformance-matrix-report/conformance-matrix-full.json`
 - `artifacts/api-objects-example/oodocs-api-reference.docx`
 - `artifacts/api-objects-example/oodocs-api-reference.pdf`
 - `artifacts/api-objects-example/oodocs-api-reference.html`

@@ -1,0 +1,7 @@
+case,status,max_error,temperature_error,pressure_error,flow_error,energy_error,solver,platform,notes
+case-001,pass,0.002,0.001,0.002,0.001,0.002,steady-state,windows,baseline room load
+case-002,pass,0.004,0.003,0.002,0.004,0.003,steady-state,linux,solar gain edge case
+case-003,review,0.018,0.011,0.018,0.007,0.010,transient,linux,pressure tolerance near limit
+case-004,fail,0.043,0.019,0.043,0.014,0.021,transient,windows,pressure residual exceeds policy
+case-005,pass,0.006,0.003,0.006,0.003,0.004,steady-state,linux,humidity coupling check
+case-006,review,0.022,0.020,0.012,0.022,0.018,transient,windows,flow tolerance near limit
