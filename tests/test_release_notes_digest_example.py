@@ -97,6 +97,7 @@ def test_release_notes_digest_example_builds_outputs(tmp_path: Path) -> None:
     html_text = html_path.read_text(encoding="utf-8")
 
     assert "OODocs Release Notes" in paragraph_texts
+    assert "OODocs Contributors" in paragraph_texts
     assert "Contents" in paragraph_texts
     assert any("Release Note Index" in text for text in paragraph_texts)
     assert any("Release-note digest workflow" in text for text in paragraph_texts)
@@ -110,6 +111,7 @@ def test_release_notes_digest_example_builds_outputs(tmp_path: Path) -> None:
     assert any(latest_release_path in text for text in paragraph_texts)
     assert f"Release date: {latest_release_date}." in paragraph_texts
     assert latest_version in paragraph_texts
+    assert paragraph_texts.count(latest_version) == 1
     assert "Highlights" in paragraph_texts
     assert f"3 {latest_version}" not in paragraph_texts
     assert f"3.1 {latest_version}" not in paragraph_texts

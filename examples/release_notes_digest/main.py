@@ -10,6 +10,8 @@ import subprocess
 from typing import Literal, Sequence
 
 from oodocs import (
+    Author,
+    AuthorLayout,
     Chapter,
     Document,
     DocumentSettings,
@@ -33,6 +35,7 @@ ASSET_DIR = EXAMPLE_DIR / "assets"
 RELEASE_NOTES_DIR = REPO_ROOT / "release-notes"
 OUTPUT_DIR = Path("artifacts") / "release-notes"
 RELEASE_DIGEST_DIAGRAM_PATH = ASSET_DIR / "release-digest-workflow.png"
+LOGO_PATH = REPO_ROOT / "examples" / "usage_guide_example" / "assets" / "oodocs-logo.png"
 VERSION_FILENAME_RE = re.compile(
     r"^v(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)\.md$"
 )
@@ -186,6 +189,18 @@ def write_import_diagnostics_sidecar(
     return sidecar_path
 
 
+def _release_body_blocks(blocks: Sequence[object], version: str) -> tuple[object, ...]:
+    """Return imported release blocks without a duplicate top-level version heading."""
+
+    if len(blocks) == 1:
+        first = blocks[0]
+        title = getattr(first, "plain_title", lambda: None)()
+        children = getattr(first, "children", None)
+        if title == version and children is not None:
+            return tuple(children)
+    return tuple(blocks)
+
+
 def build_release_notes_document(
     release_notes_dir: str | Path = RELEASE_NOTES_DIR,
     *,
@@ -225,7 +240,7 @@ def build_release_notes_document(
                 for issue in imported_release.issues
             )
         release_body = (
-            imported_release.blocks
+            _release_body_blocks(imported_release.blocks, version)
             if mode == "full"
             else (
                 Paragraph(
@@ -272,6 +287,7 @@ def build_release_notes_document(
         ),
         width=6.5,
     )
+    logo_figure = Figure(LOGO_PATH, width=1.2, placement="here")
     release_index_table = Table(
         headers=["Version", "Git tag", "Date", "Status", "Type", "File", "Sections"],
         rows=release_index_rows,
@@ -318,6 +334,7 @@ def build_release_notes_document(
 
     return Document(
         "OODocs Release Notes",
+        logo_figure,
         TableOfContents(max_level=2),
         Chapter(
             "Release Note Index",
@@ -375,6 +392,12 @@ def build_release_notes_document(
             metadata_author="OODocs Contributors",
             summary="Release-note digest generated from repository Markdown files",
             subtitle="Markdown import, semantic sorting, and release workflow documentation",
+            authors=[Author("OODocs Contributors")],
+            author_layout=AuthorLayout(
+                mode="stacked",
+                show_affiliations=False,
+                show_details=False,
+            ),
             theme=Theme(
                 page_numbers=PageNumberDefaults(
                     show_page_numbers=True,

@@ -13,7 +13,6 @@ from pathlib import Path
 from typing import Sequence
 
 from oodocs import (
-    Affiliation,
     Assumption,
     Author,
     AuthorLayout,
@@ -671,7 +670,7 @@ document.save_all("artifacts/manuscript", stem="article-draft")
 def build_usage_guide_document() -> Document:
     """Build a detailed reference-style usage guide."""
 
-    logo_figure = Figure(LOGO_PATH, width=1.8)
+    logo_figure = Figure(LOGO_PATH, width=1.8, placement="here")
     pipeline_figure = Figure(
         PIPELINE_DIAGRAM_PATH,
         caption=Paragraph(
@@ -728,6 +727,28 @@ def build_usage_guide_document() -> Document:
         ],
         caption="Purpose-based entry points for the bundled examples.",
         column_widths=[2.0, 1.8, 3.2],
+    )
+    document_credits_table = Table(
+        headers=["Label", "Value", "Role in this document"],
+        rows=[
+            [
+                "Author",
+                "OODocs Contributors",
+                "Maintainers and release editors for the public documentation workflow.",
+            ],
+            [
+                "Author",
+                "Hyeong-Gon Jo",
+                "Repository steward and maintainer of the example documentation.",
+            ],
+            [
+                "Affiliation",
+                "Building Simulation LAB, Seoul National University",
+                "Structured affiliation metadata used by repository stewardship examples.",
+            ],
+        ],
+        caption="Document credits separate names, affiliations, and document roles.",
+        column_widths=[1.6, 2.7, 3.2],
     )
     latex_transition_table = Table(
         headers=["If you reach for this in LaTeX", "Use this in oodocs", "Why it is easier here"],
@@ -1038,9 +1059,10 @@ def build_usage_guide_document() -> Document:
 
     return Document(
         "OODocs User Guide",
+        logo_figure,
         Section(
             "Guide Cover",
-            logo_figure,
+            document_credits_table,
             Paragraph(
                 bold("License. "),
                 "MIT. The package metadata, source code, and example release workflow all live in the same repository so the rendered outputs can be attached to a tagged release."
@@ -1727,25 +1749,14 @@ def build_usage_guide_document() -> Document:
             summary="Detailed usage guide and API walkthrough",
             subtitle="Reference-style guide for structured Python document authoring",
             authors=[
-                Author(
-                    "OODocs Contributors",
-                    affiliations=["Open-source documentation workflow"],
-                    note="Maintainers and release editors",
-                ),
-                Author(
-                    "Hyeong-Gon Jo",
-                    affiliations=[
-                        Affiliation(
-                            department="Building Simulation LAB",
-                            organization="Seoul National University",
-                            city="Seoul",
-                            country="Republic of Korea",
-                        )
-                    ],
-                    note="Repository steward",
-                ),
+                Author("OODocs Contributors"),
+                Author("Hyeong-Gon Jo"),
             ],
-            author_layout=AuthorLayout(mode="stacked"),
+            author_layout=AuthorLayout(
+                mode="stacked",
+                show_affiliations=False,
+                show_details=False,
+            ),
             page_margins=PageMargins.symmetric(vertical=2.0, horizontal=2.2, unit="cm"),
             theme=Theme(
                 page_numbers=PageNumberDefaults(

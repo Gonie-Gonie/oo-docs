@@ -2085,6 +2085,8 @@ def test_api_objects_example_builds_help_book_and_composable_document(
     html = outputs["html"].read_text(encoding="utf-8")
     assert "examplepkg.Widget" in html
     assert "examplepkg.run" in html
+    assert "OODocs Contributors" in html
+    assert "data:image/png;base64," in html
     assert "API Documentation Coverage" not in html
     assert_html_internal_links_resolve(outputs["html"])
     assert any(
@@ -2125,8 +2127,12 @@ def test_api_objects_example_builds_help_book_and_composable_document(
         encoding="utf-8"
     )
     assert "examplepkg API Reference" in cli_html
+    assert "OODocs Contributors" in cli_html
+    assert "data:image/png;base64," in cli_html
     assert "API Documentation Coverage" not in cli_html
     assert "Focused Module: examplepkg" in object_composition_html
     assert "examplepkg.run" in object_composition_html
+    assert "OODocs Contributors" in object_composition_html
+    assert "data:image/png;base64," in object_composition_html
     assert "examplepkg.Widget" in cli_html
     assert_html_internal_links_resolve(cli_output / "oodocs-api-reference.html")

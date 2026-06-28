@@ -6,7 +6,15 @@ import argparse
 from pathlib import Path
 from typing import Sequence
 
-from oodocs import Chapter, Document, Paragraph
+from oodocs import (
+    Author,
+    AuthorLayout,
+    Chapter,
+    Document,
+    DocumentSettings,
+    Figure,
+    Paragraph,
+)
 from oodocs.apidoc import (
     ApiHelpBookConfig,
     ApiCollectConfig,
@@ -20,6 +28,14 @@ from oodocs.apidoc import (
 
 
 ARTIFACT_DIR = Path("artifacts/api-objects-example")
+REPO_ROOT = Path(__file__).resolve().parents[2]
+LOGO_PATH = (
+    REPO_ROOT
+    / "examples"
+    / "usage_guide_example"
+    / "assets"
+    / "oodocs-logo.png"
+)
 HELP_BOOK_STEM = "oodocs-api-reference"
 API_OBJECT_COMPOSITION_STEM = "oodocs-api-object-composition"
 API_OBJECT_TREE_STEM = "oodocs-api-object-tree"
@@ -29,6 +45,27 @@ API_COVERAGE_STEM = "oodocs-api-coverage"
 def _log(message: str, *, verbose: bool) -> None:
     if verbose:
         print(message, flush=True)
+
+
+def _official_example_settings(subtitle: str) -> DocumentSettings:
+    """Return compact title matter shared by official documentation examples."""
+
+    return DocumentSettings(
+        metadata_author="OODocs Contributors",
+        subtitle=subtitle,
+        authors=[Author("OODocs Contributors")],
+        author_layout=AuthorLayout(
+            mode="stacked",
+            show_affiliations=False,
+            show_details=False,
+        ),
+    )
+
+
+def _official_logo_figure() -> Figure:
+    """Return the OODocs logo block used on official documentation examples."""
+
+    return Figure(LOGO_PATH, width=1.2, placement="here")
 
 
 def collect_target_api(
@@ -168,12 +205,22 @@ def build_help_book_document(
     """
 
     api = api or collect_oodocs_api()
-    return api.to_help_book(
-        title=title or f"{api.name} API Reference",
+    default_title = (
+        "OODocs API Reference"
+        if api.name.lower() == "oodocs"
+        else f"{api.name} API Reference"
+    )
+    document = api.to_help_book(
+        title=title or default_title,
         presentation=presentation,
+        settings=_official_example_settings(
+            "Generated API reference from public Python objects"
+        ),
         include_coverage=include_coverage,
         max_heading_level=max_heading_level,
     )
+    document.body.children.insert(0, _official_logo_figure())
+    return document
 
 
 def build_composition_demo_document(
@@ -247,7 +294,14 @@ def build_composition_demo_document(
             ),
         ]
     )
-    return Document("OODocs API Object Composition", *chapters)
+    return Document(
+        "OODocs API Object Composition",
+        _official_logo_figure(),
+        *chapters,
+        settings=_official_example_settings(
+            "Composable examples built from parsed API objects"
+        ),
+    )
 
 
 def _focused_module_for_example(api: ApiPackage):
