@@ -5,13 +5,17 @@ package, module, file, or repository target:
 
 1. collect an `ApiPackage` from a target Python project with an auto docstring
    parser
-2. render a help-book API reference as DOCX, PDF, and HTML artifacts named
-   `oodocs-api-reference`
+2. render a user-facing help-book API reference as DOCX, PDF, and HTML
+   artifacts named `oodocs-api-reference`
 3. render a hand-composed `oodocs-api-object-composition` document that inserts
    selected class sections, one focused module chapter, a function summary
    table, and coverage evidence into an ordinary OODocs document
 4. write deterministic API object tree JSON plus coverage JSON/CSV sidecars for
    release evidence
+
+The help-book reference keeps coverage evidence out of the reader-facing
+chapters by default. Coverage remains available in the composition document and
+in the JSON/CSV sidecars.
 
 Run it against the current repository:
 
@@ -38,6 +42,20 @@ For a quick HTML-only check while developing another package:
 
 ```powershell
 python examples/api_objects_example/main.py C:\path\to\repo --collector inspect --public-policy underscore --outputs html
+```
+
+Composable object-selection pattern:
+
+```python
+from examples.api_objects_example.main import collect_target_api
+from oodocs import Chapter
+
+api = collect_target_api("my_package", public_policy="__all__")
+classes = api.select_objects(kind="class", module_prefix="my_package.core")
+chapter = Chapter(
+    "Core Classes",
+    *[obj.to_section(level=2, presentation="manual") for obj in classes],
+)
 ```
 
 The script writes rendered files under `artifacts/api-objects-example` by

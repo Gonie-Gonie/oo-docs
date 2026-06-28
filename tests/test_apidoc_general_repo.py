@@ -835,9 +835,8 @@ def test_general_repo_api_objects_example_cli_targets_repo_path(tmp_path, capsys
             "1 API Contents",
             "2 Public API",
             "2.1 mixedpkg.Client",
-            "3 API Documentation Coverage",
         ),
-        min_tables=6,
+        min_tables=5,
     )
     assert_docx_structure(
         object_composition_docx,

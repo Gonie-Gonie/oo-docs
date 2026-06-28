@@ -130,6 +130,7 @@ def build_help_book_document(
     *,
     title: str | None = None,
     presentation: str | ApiPresentationProfile = "help",
+    include_coverage: bool = False,
     max_heading_level: int | None = None,
 ) -> Document:
     """Build a MATLAB-style API help-book document.
@@ -140,6 +141,9 @@ def build_help_book_document(
         title: Optional document title. Defaults to ``"{api.name} API
             Reference"``.
         presentation: API presentation profile used for object help pages.
+        include_coverage: Whether to append coverage evidence to the help book.
+            Defaults to ``False`` because this example writes coverage as
+            sidecars and keeps evidence in the composition document.
         max_heading_level: Optional deepest heading level to render.
 
     Returns:
@@ -167,7 +171,7 @@ def build_help_book_document(
     return api.to_help_book(
         title=title or f"{api.name} API Reference",
         presentation=presentation,
-        include_coverage=True,
+        include_coverage=include_coverage,
         max_heading_level=max_heading_level,
     )
 
