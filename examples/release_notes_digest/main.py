@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import argparse
+import json
 from pathlib import Path
 import re
 import subprocess
-from typing import Sequence
+from typing import Literal, Sequence
 
 from oodocs import (
     Chapter,
@@ -23,6 +24,7 @@ from oodocs import (
     Theme,
     inline_code,
 )
+from oodocs.importers.markdown import parse_markdown
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -36,6 +38,40 @@ VERSION_FILENAME_RE = re.compile(
 )
 GIT_TAG_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 PENDING_RELEASE_DATE = "Pending tag"
+ReleaseNotesMode = Literal["full", "index-only"]
+
+
+class ReleaseNotesBundle:
+    """Rendered release-note digest outputs plus import diagnostics."""
+
+    def __init__(self, rendered: OutputBundle, diagnostics_json: Path) -> None:
+        self.rendered = rendered
+        self.diagnostics_json = diagnostics_json
+
+    def __iter__(self):
+        """Iterate over rendered document outputs."""
+
+        return iter(self.rendered)
+
+    def __getitem__(self, output_format: str) -> Path:
+        """Return the rendered path for an output format."""
+
+        return self.rendered[output_format]
+
+    def keys(self):
+        """Return rendered output format keys."""
+
+        return self.rendered.keys()
+
+    def values(self):
+        """Return rendered output paths."""
+
+        return self.rendered.values()
+
+    def items(self):
+        """Return rendered output pairs."""
+
+        return self.rendered.items()
 
 
 def version_parts_from_filename(path: Path) -> tuple[int, int, int]:
@@ -130,11 +166,36 @@ def section_titles(markdown_text: str) -> str:
     return ", ".join(titles) or "Release notes"
 
 
+def write_import_diagnostics_sidecar(
+    output_dir: str | Path,
+    diagnostics: Sequence[dict[str, object]],
+) -> Path:
+    """Write Markdown import diagnostics collected from release notes."""
+
+    output_path = Path(output_dir)
+    output_path.mkdir(parents=True, exist_ok=True)
+    sidecar_path = output_path / "release-notes-import-diagnostics.json"
+    payload = {
+        "diagnostic_count": len(diagnostics),
+        "diagnostics": list(diagnostics),
+    }
+    sidecar_path.write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    return sidecar_path
+
+
 def build_release_notes_document(
     release_notes_dir: str | Path = RELEASE_NOTES_DIR,
+    *,
+    mode: ReleaseNotesMode = "full",
+    diagnostics: list[dict[str, object]] | None = None,
 ) -> Document:
     """Build the release-note digest document from Markdown files."""
 
+    if mode not in ("full", "index-only"):
+        raise ValueError("mode must be 'full' or 'index-only'.")
     files = release_note_files(release_notes_dir)
     release_dates = release_dates_from_git()
     release_index_rows = []
@@ -146,17 +207,39 @@ def build_release_notes_document(
         release_type = release_type_from_version(version_parts)
         markdown_text = path.read_text(encoding="utf-8")
         release_date = release_date_for_version(version, release_dates)
-        imported_release = Document.from_markdown(
+        release_status = "tagged" if version in release_dates else "draft"
+        imported_release = parse_markdown(
             markdown_text,
             numbered=False,
             toc=False,
             heading_level_shift=1,
+            source_name=repo_relative(path),
+        )
+        if diagnostics is not None:
+            diagnostics.extend(
+                {
+                    "version": version,
+                    "file": repo_relative(path),
+                    **issue.to_dict(),
+                }
+                for issue in imported_release.issues
+            )
+        release_body = (
+            imported_release.blocks
+            if mode == "full"
+            else (
+                Paragraph(
+                    "Release body omitted because index-only mode was selected."
+                ),
+            )
         )
 
         release_index_rows.append(
             [
                 f"{version} (latest)" if index == 0 else version,
+                "exists" if version in release_dates else "missing",
                 release_date,
+                release_status,
                 release_type,
                 path.name,
                 section_titles(markdown_text),
@@ -172,7 +255,7 @@ def build_release_notes_document(
                     inline_code(repo_relative(path)),
                     " after semantic-version sorting.",
                 ),
-                imported_release.body.children,
+                release_body,
                 level=2,
                 numbered=False,
                 toc=True,
@@ -190,10 +273,10 @@ def build_release_notes_document(
         width=6.5,
     )
     release_index_table = Table(
-        headers=["Version", "Date", "Type", "File", "Sections"],
+        headers=["Version", "Git tag", "Date", "Status", "Type", "File", "Sections"],
         rows=release_index_rows,
-        caption="Release note files collected from the repository.",
-        column_widths=[2.6, 2.3, 1.4, 2.7, 7.0],
+        caption="Release note files, matching git tag status, and imported sections.",
+        column_widths=[2.2, 1.6, 2.0, 1.5, 1.3, 2.4, 5.0],
         unit="cm",
         header_background_color="#E7EEF7",
         alternate_row_background_color="#F8FBFD",
@@ -306,21 +389,25 @@ def build_release_notes(
     output_dir: str | Path = OUTPUT_DIR,
     *,
     output_formats: Sequence[str] | None = None,
+    mode: ReleaseNotesMode = "full",
     verbose: bool = False,
-) -> OutputBundle:
+) -> ReleaseNotesBundle:
     """Build the release-note digest and export selected formats."""
 
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
 
-    document = build_release_notes_document()
+    diagnostics: list[dict[str, object]] = []
+    document = build_release_notes_document(mode=mode, diagnostics=diagnostics)
+    diagnostics_path = write_import_diagnostics_sidecar(output_path, diagnostics)
     formats = tuple(output_formats or ("docx", "pdf", "html"))
-    return document.save_all(
+    rendered = document.save_all(
         output_path,
         stem="oodocs-release-notes",
         formats=formats,
         verbose=verbose,
     )
+    return ReleaseNotesBundle(rendered, diagnostics_path)
 
 
 def main(argv: Sequence[str] | None = None) -> None:
@@ -343,6 +430,12 @@ def main(argv: Sequence[str] | None = None) -> None:
         help="Output format to render. Repeat for multiple formats.",
     )
     parser.add_argument(
+        "--mode",
+        choices=("full", "index-only"),
+        default="full",
+        help="Whether to include full release-note bodies or only the index.",
+    )
+    parser.add_argument(
         "--quiet",
         action="store_true",
         help="Suppress progress and output-path messages.",
@@ -352,11 +445,13 @@ def main(argv: Sequence[str] | None = None) -> None:
     outputs = build_release_notes(
         args.output_dir,
         output_formats=args.output_formats,
+        mode=args.mode,
         verbose=not args.quiet,
     )
     if not args.quiet:
         for output_format, path in outputs:
             print(f"Wrote {output_format}: {path}")
+        print(f"Wrote diagnostics: {outputs.diagnostics_json}")
 
 
 if __name__ == "__main__":

@@ -356,6 +356,7 @@ The main exported filenames are:
 - `artifacts/native-benchmark-report/native-python-benchmark.pdf`
 - `artifacts/native-benchmark-report/native-python-benchmark.json`
 - `artifacts/release-notes/oodocs-release-notes.pdf`
+- `artifacts/release-notes/release-notes-import-diagnostics.json`
 - `artifacts/api-objects-example/oodocs-api-object-composition.pdf`
 - `artifacts/api-objects-example/oodocs-api-object-tree.json`
 - `artifacts/api-objects-example/oodocs-api-coverage.json`

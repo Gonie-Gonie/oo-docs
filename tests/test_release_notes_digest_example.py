@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 from html import unescape
 from io import BytesIO
 from pathlib import Path
@@ -74,8 +75,13 @@ def test_release_notes_digest_example_builds_outputs(tmp_path: Path) -> None:
     docx_path = outputs["docx"]
     pdf_path = outputs["pdf"]
     html_path = outputs["html"]
+    diagnostics_json_path = outputs.diagnostics_json
 
     assert_rendered_bundle(docx_path, pdf_path, html_path)
+    assert diagnostics_json_path.exists()
+    diagnostics_payload = json.loads(diagnostics_json_path.read_text(encoding="utf-8"))
+    assert "diagnostic_count" in diagnostics_payload
+    assert "diagnostics" in diagnostics_payload
 
     word_document = WordDocument(docx_path)
     paragraph_texts = [paragraph.text for paragraph in word_document.paragraphs]
@@ -117,7 +123,7 @@ def test_release_notes_digest_example_builds_outputs(tmp_path: Path) -> None:
         for text in paragraph_texts
     )
     assert any(
-        "Release note files collected from the repository." in text
+        "Release note files, matching git tag status, and imported sections." in text
         for text in paragraph_texts
     )
     assert len(word_document.tables) == 2
@@ -186,9 +192,12 @@ def test_release_notes_digest_example_supports_common_cli(
     outputs = release_notes_example.build_release_notes(
         output_dir / "programmatic",
         output_formats=("html",),
+        mode="index-only",
     )
     assert set(outputs.keys()) == {"html"}
     assert outputs["html"].exists()
+    assert outputs.diagnostics_json.exists()
+    assert "Release body omitted because index-only mode was selected." in outputs["html"].read_text(encoding="utf-8")
 
     release_notes_example.main(
         [
@@ -196,6 +205,8 @@ def test_release_notes_digest_example_supports_common_cli(
             str(output_dir),
             "--outputs",
             "html",
+            "--mode",
+            "index-only",
             "--quiet",
         ]
     )
@@ -203,3 +214,18 @@ def test_release_notes_digest_example_supports_common_cli(
     captured = capsys.readouterr()
     assert captured.out == ""
     assert (output_dir / "oodocs-release-notes.html").exists()
+    assert (output_dir / "release-notes-import-diagnostics.json").exists()
+
+
+def test_release_notes_digest_semantic_version_filenames() -> None:
+    release_notes_example = _load_example_module("release_notes_digest")
+
+    assert release_notes_example.version_parts_from_filename(Path("v1.2.3.md")) == (1, 2, 3)
+    invalid_names = ["1.2.3.md", "v1.2.md", "v1.2.3-rc1.md"]
+    for name in invalid_names:
+        try:
+            release_notes_example.version_parts_from_filename(Path(name))
+        except ValueError as exc:
+            assert "vMAJOR.MINOR.PATCH.md" in str(exc)
+        else:
+            raise AssertionError(f"Expected {name} to be rejected")

@@ -117,6 +117,7 @@ jobs:
             artifacts/native-benchmark-report/native-python-benchmark.pdf
             artifacts/native-benchmark-report/native-python-benchmark.json
             artifacts/release-notes/oodocs-release-notes.pdf
+            artifacts/release-notes/release-notes-import-diagnostics.json
             artifacts/template/journal-article-template.pdf
             artifacts/api-objects-example/oodocs-api-object-composition.pdf
             artifacts/api-objects-example/oodocs-api-object-tree.json
@@ -145,6 +146,7 @@ jobs:
             artifacts/native-benchmark-report/native-python-benchmark.pdf
             artifacts/native-benchmark-report/native-python-benchmark.json
             artifacts/release-notes/oodocs-release-notes.pdf
+            artifacts/release-notes/release-notes-import-diagnostics.json
             artifacts/template/journal-article-template.pdf
             artifacts/api-objects-example/oodocs-api-object-composition.pdf
             artifacts/api-objects-example/oodocs-api-object-tree.json

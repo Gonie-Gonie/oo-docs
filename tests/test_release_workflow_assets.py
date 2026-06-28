@@ -18,6 +18,7 @@ def test_release_workflow_uploads_curated_assets_only() -> None:
     assert "artifacts/api-objects-example/oodocs-api-object-composition.pdf" in workflow
     assert "artifacts/native-benchmark-report/native-python-benchmark.pdf" in workflow
     assert "artifacts/native-benchmark-report/native-python-benchmark.json" in workflow
+    assert "artifacts/release-notes/release-notes-import-diagnostics.json" in workflow
     assert "artifacts/template/journal-article-template.pdf" in workflow
     assert "artifacts/api-objects-example/oodocs-api-object-tree.json" in workflow
     assert "artifacts/api-objects-example/oodocs-api-coverage.json" in workflow
