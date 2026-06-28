@@ -82,6 +82,7 @@ jobs:
           python examples/project_metadata_report/main.py
           python examples/cli_manual_example/main.py
           python examples/config_reference_example/main.py
+          python examples/validation_gate_report/main.py
           python - <<'PY'
           from oodocs.apidoc import ApiHelpBookConfig
 
@@ -126,6 +127,8 @@ jobs:
             artifacts/project-metadata-report/project-metadata.json
             artifacts/cli-manual-example/cli-manual.pdf
             artifacts/config-reference-example/config-reference.pdf
+            artifacts/validation-gate-report/validation-gate-report.pdf
+            artifacts/validation-gate-report/validation-result.json
             artifacts/api-objects-example/oodocs-api-object-composition.pdf
             artifacts/api-objects-example/oodocs-api-object-tree.json
             artifacts/api-objects-example/oodocs-api-coverage.json
@@ -159,6 +162,8 @@ jobs:
             artifacts/project-metadata-report/project-metadata.json
             artifacts/cli-manual-example/cli-manual.pdf
             artifacts/config-reference-example/config-reference.pdf
+            artifacts/validation-gate-report/validation-gate-report.pdf
+            artifacts/validation-gate-report/validation-result.json
             artifacts/api-objects-example/oodocs-api-object-composition.pdf
             artifacts/api-objects-example/oodocs-api-object-tree.json
             artifacts/api-objects-example/oodocs-api-coverage.json

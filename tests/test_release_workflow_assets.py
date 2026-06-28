@@ -17,6 +17,7 @@ def test_release_workflow_uploads_curated_assets_only() -> None:
     assert "python examples/project_metadata_report/main.py" in workflow
     assert "python examples/cli_manual_example/main.py" in workflow
     assert "python examples/config_reference_example/main.py" in workflow
+    assert "python examples/validation_gate_report/main.py" in workflow
     assert 'ApiHelpBookConfig.from_pyproject(".").save_all(".")' in workflow
     assert "artifacts/api-objects-example/oodocs-api-object-composition.pdf" in workflow
     assert "artifacts/native-benchmark-report/native-python-benchmark.pdf" in workflow
@@ -27,6 +28,8 @@ def test_release_workflow_uploads_curated_assets_only() -> None:
     assert "artifacts/project-metadata-report/project-metadata.json" in workflow
     assert "artifacts/cli-manual-example/cli-manual.pdf" in workflow
     assert "artifacts/config-reference-example/config-reference.pdf" in workflow
+    assert "artifacts/validation-gate-report/validation-gate-report.pdf" in workflow
+    assert "artifacts/validation-gate-report/validation-result.json" in workflow
     assert "artifacts/api-objects-example/oodocs-api-object-tree.json" in workflow
     assert "artifacts/api-objects-example/oodocs-api-coverage.json" in workflow
     assert "artifacts/api-objects-example/oodocs-api-coverage.csv" in workflow
