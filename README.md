@@ -354,6 +354,7 @@ The main exported filenames are:
 - `artifacts/usage-guide/oodocs-user-guide.pdf`
 - `artifacts/journal-paper/oodocs-development-philosophy.pdf`
 - `artifacts/native-benchmark-report/native-python-benchmark.pdf`
+- `artifacts/native-benchmark-report/native-python-benchmark.json`
 - `artifacts/release-notes/oodocs-release-notes.pdf`
 - `artifacts/api-objects-example/oodocs-api-object-composition.pdf`
 - `artifacts/api-objects-example/oodocs-api-object-tree.json`

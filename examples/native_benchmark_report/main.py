@@ -1,13 +1,15 @@
 """Native Python benchmark report example for oodocs."""
 
-from __future__ import annotations
-
 import argparse
+from dataclasses import asdict, dataclass
 from hashlib import sha256
+import json
+import platform
 from pathlib import Path
 from statistics import median
+import sys
 from time import perf_counter_ns
-from typing import Sequence
+from typing import Iterator, Sequence
 
 from oodocs import (
     Chapter,
@@ -29,7 +31,66 @@ from oodocs import (
 
 
 OUTPUT_DIR = Path("artifacts") / "native-benchmark-report"
+OUTPUT_STEM = "native-python-benchmark"
+DEFAULT_PAYLOAD_COUNT = 1200
+DEFAULT_REPEAT = 7
+DEFAULT_INNER_ITERATIONS = 20
 TRANSLATION_TABLE = str.maketrans({"-": " ", "_": " "})
+
+
+@dataclass(frozen=True, slots=True)
+class BenchmarkResult:
+    """Measured result for one normalization implementation."""
+
+    name: str
+    median_ms: float
+    best_ms: float
+    checksum: str
+
+    def as_table_row(self, rank: int, best_ms: float) -> list[str]:
+        """Convert the result into a rendered benchmark table row."""
+
+        return [
+            str(rank),
+            self.name,
+            f"{self.median_ms:.3f}",
+            f"{self.best_ms:.3f}",
+            f"{self.median_ms / best_ms:.2f}x",
+            self.checksum,
+        ]
+
+
+@dataclass(frozen=True, slots=True)
+class BenchmarkReportBundle:
+    """Rendered benchmark report outputs plus the machine-readable sidecar."""
+
+    rendered: OutputBundle
+    results_json: Path
+
+    def __iter__(self) -> Iterator[tuple[str, Path]]:
+        """Iterate over rendered document outputs."""
+
+        return iter(self.rendered)
+
+    def __getitem__(self, output_format: str) -> Path:
+        """Return the rendered path for an output format."""
+
+        return self.rendered[output_format]
+
+    def keys(self) -> tuple[str, ...]:
+        """Return rendered output format keys."""
+
+        return self.rendered.keys()
+
+    def values(self) -> tuple[Path, ...]:
+        """Return rendered output paths."""
+
+        return self.rendered.values()
+
+    def items(self) -> tuple[tuple[str, Path], ...]:
+        """Return rendered output pairs."""
+
+        return self.rendered.items()
 
 
 def normalize_with_loop(text: str) -> str:
@@ -60,7 +121,7 @@ NORMALIZERS = (
 )
 
 
-def generate_payload(count: int = 1200) -> list[str]:
+def generate_payload(count: int = DEFAULT_PAYLOAD_COUNT) -> list[str]:
     owners = ("Alpha Team", "Beta Squad", "Core Platform", "Release Desk")
     verbs = ("Prepare", "Review", "Normalize", "Publish")
     objects = ("User Guide", "Benchmark Report", "Release Note", "API Draft")
@@ -72,10 +133,10 @@ def generate_payload(count: int = 1200) -> list[str]:
 
 def benchmark_normalizers(
     payload: list[str],
-    repeat: int = 7,
-    inner_iterations: int = 20,
-) -> list[dict[str, float | str]]:
-    results: list[dict[str, float | str]] = []
+    repeat: int = DEFAULT_REPEAT,
+    inner_iterations: int = DEFAULT_INNER_ITERATIONS,
+) -> list[BenchmarkResult]:
+    results: list[BenchmarkResult] = []
 
     for name, normalizer in NORMALIZERS:
         durations_ms: list[float] = []
@@ -89,38 +150,118 @@ def benchmark_normalizers(
 
         checksum = sha256("\n".join(normalized).encode("utf-8")).hexdigest()[:12]
         results.append(
-            {
-                "name": name,
-                "median_ms": median(durations_ms),
-                "best_ms": min(durations_ms),
-                "checksum": checksum,
-            }
+            BenchmarkResult(
+                name=name,
+                median_ms=median(durations_ms),
+                best_ms=min(durations_ms),
+                checksum=checksum,
+            )
         )
 
-    return sorted(results, key=lambda result: float(result["median_ms"]))
+    return sorted(results, key=lambda result: result.median_ms)
 
 
-def build_benchmark_document() -> Document:
-    payload = generate_payload()
-    results = benchmark_normalizers(payload)
+def validate_benchmark_results(results: Sequence[BenchmarkResult]) -> None:
+    """Validate benchmark results before documenting them."""
+
+    if len(results) < 2:
+        raise ValueError("At least two benchmark results are required.")
+    checksums = {result.checksum for result in results}
+    if len(checksums) != 1:
+        raise ValueError("Benchmark implementations produced different checksums.")
+    if any(result.median_ms <= 0 for result in results):
+        raise ValueError("Benchmark median times must be positive.")
+
+
+def benchmark_results_to_table(results: Sequence[BenchmarkResult]) -> Table:
+    """Convert benchmark results into a rendered OODocs table."""
+
+    validate_benchmark_results(results)
     best = results[0]
-    slowest = results[-1]
-    speedup = float(slowest["median_ms"]) / float(best["median_ms"])
+    benchmark_rows = [
+        result.as_table_row(index, best.median_ms)
+        for index, result in enumerate(results, start=1)
+    ]
+    return Table(
+        headers=["Rank", "Implementation", "Median batch ms", "Best batch ms", "Vs best", "Checksum"],
+        rows=benchmark_rows,
+        caption="Native Python benchmark results converted directly from measured data.",
+        column_widths=[1.1, 3.2, 2.4, 2.2, 1.8, 3.0],
+        unit="cm",
+        header_background_color="#E4EDF7",
+        alternate_row_background_color="#F8FBFE",
+    )
+
+
+def benchmark_environment_rows(
+    payload_count: int,
+    repeat: int,
+    inner_iterations: int,
+) -> list[list[str]]:
+    """Return execution metadata rows for the benchmark report."""
+
+    return [
+        ["Python version", sys.version.split()[0]],
+        ["Platform", platform.platform()],
+        ["Repeat count", str(repeat)],
+        ["Inner iterations", str(inner_iterations)],
+        ["Payload size", str(payload_count)],
+        ["Hash algorithm", "SHA-256 truncated to 12 hex characters"],
+    ]
+
+
+def write_benchmark_sidecar(
+    output_dir: str | Path,
+    results: Sequence[BenchmarkResult],
+    *,
+    payload_count: int,
+    repeat: int,
+    inner_iterations: int,
+) -> Path:
+    """Write benchmark results and environment metadata as JSON."""
+
+    output_path = Path(output_dir)
+    output_path.mkdir(parents=True, exist_ok=True)
+    sidecar_path = output_path / f"{OUTPUT_STEM}.json"
+    payload = {
+        "payload_count": payload_count,
+        "repeat": repeat,
+        "inner_iterations": inner_iterations,
+        "environment": {
+            "python_version": sys.version.split()[0],
+            "platform": platform.platform(),
+            "hash_algorithm": "sha256",
+        },
+        "results": [asdict(result) for result in results],
+    }
+    sidecar_path.write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    return sidecar_path
+
+
+def build_benchmark_document(
+    payload: Sequence[str] | None = None,
+    results: Sequence[BenchmarkResult] | None = None,
+    *,
+    repeat: int = DEFAULT_REPEAT,
+    inner_iterations: int = DEFAULT_INNER_ITERATIONS,
+) -> Document:
+    payload_values = list(payload) if payload is not None else generate_payload(DEFAULT_PAYLOAD_COUNT)
+    result_values = list(results) if results is not None else benchmark_normalizers(
+        payload_values,
+        repeat=repeat,
+        inner_iterations=inner_iterations,
+    )
+    validate_benchmark_results(result_values)
+    best = result_values[0]
+    slowest = result_values[-1]
+    speedup = slowest.median_ms / best.median_ms
 
     sample_rows = [
         [str(index + 1), value, normalize_with_translate(value)]
-        for index, value in enumerate(payload[:5])
-    ]
-    benchmark_rows = [
-        [
-            str(index),
-            str(result["name"]),
-            f"{float(result['median_ms']):.3f}",
-            f"{float(result['best_ms']):.3f}",
-            f"{float(result['median_ms']) / float(best['median_ms']):.2f}x",
-            str(result["checksum"]),
-        ]
-        for index, result in enumerate(results, start=1)
+        for index, value in enumerate(payload_values[:5])
     ]
 
     pipeline_table = Table(
@@ -128,8 +269,8 @@ def build_benchmark_document() -> Document:
         rows=[
             ["1", "payload: list[str]", "Generated in memory by normal Python code."],
             ["2", "NORMALIZERS", "Three callables are benchmarked with the same loop."],
-            ["3", "results: list[dict]", "Median time, best time, and checksum are kept as data."],
-            ["4", "benchmark_rows", "The measured data becomes table rows."],
+            ["3", "results: list[BenchmarkResult]", "Median time, best time, and checksum are kept as typed data."],
+            ["4", "benchmark_results_to_table(...)", "The measured data becomes table rows."],
             ["5", "Document", "The report is exported to DOCX, PDF, and HTML."],
         ],
         caption="Serialized Python-to-document flow used by this example.",
@@ -147,15 +288,20 @@ def build_benchmark_document() -> Document:
         header_background_color="#F1E7D9",
         alternate_row_background_color="#FFFCF8",
     )
-    result_table = Table(
-        headers=["Rank", "Implementation", "Median batch ms", "Best batch ms", "Vs best", "Checksum"],
-        rows=benchmark_rows,
-        caption="Native Python benchmark results converted directly from measured data.",
-        column_widths=[1.1, 3.2, 2.4, 2.2, 1.8, 3.0],
+    environment_table = Table(
+        headers=["Metadata", "Value"],
+        rows=benchmark_environment_rows(
+            len(payload_values),
+            repeat,
+            inner_iterations,
+        ),
+        caption="Benchmark environment metadata recorded with the result sidecar.",
+        column_widths=[3.4, 10.2],
         unit="cm",
-        header_background_color="#E4EDF7",
-        alternate_row_background_color="#F8FBFE",
+        header_background_color="#E7EEF7",
+        alternate_row_background_color="#F8FBFD",
     )
+    result_table = benchmark_results_to_table(result_values)
 
     return Document(
         "Native Python Benchmark Report",
@@ -174,8 +320,8 @@ def build_benchmark_document() -> Document:
                 NumberedList(
                     "Generate a deterministic in-memory payload.",
                     "Run each implementation over the same workload.",
-                    "Keep timing and checksum values in dictionaries.",
-                    "Turn those dictionaries into oodocs table rows and prose.",
+                    "Keep timing and checksum values in BenchmarkResult objects.",
+                    "Turn those result objects into oodocs table rows and prose.",
                     "Render the same source document to DOCX, PDF, and HTML.",
                 ),
             ),
@@ -188,6 +334,13 @@ def build_benchmark_document() -> Document:
                 "be reviewed as a report."
             ),
             sample_table,
+            Section(
+                "Benchmark environment",
+                Paragraph(
+                    "Timing results are only useful when the run context is visible. This example records the core execution metadata in the document and in the JSON sidecar."
+                ),
+                environment_table,
+            ),
             Section(
                 "Implementation candidates",
                 Paragraph(
@@ -209,9 +362,9 @@ def build_benchmark_document() -> Document:
             "Results",
             Paragraph(
                 "The fastest candidate in this run was ",
-                bold(str(best["name"])),
+                bold(best.name),
                 " at ",
-                inline_code(f"{float(best['median_ms']):.3f}"),
+                inline_code(f"{best.median_ms:.3f}"),
                 " ms per measured batch. The slowest candidate took about ",
                 inline_code(f"{speedup:.2f}x"),
                 " as long on the same payload."
@@ -235,8 +388,10 @@ def build_benchmark_document() -> Document:
             CodeBlock(
                 "payload = generate_payload()\n"
                 "results = benchmark_normalizers(payload)\n"
-                "document = build_benchmark_document()\n"
-                "document.save_all('artifacts/native-benchmark-report', stem='native-python-benchmark')",
+                "validate_benchmark_results(results)\n"
+                "table = benchmark_results_to_table(results)\n"
+                "document = build_benchmark_document(payload, results)\n"
+                "bundle = document.save_all('artifacts/native-benchmark-report', stem='native-python-benchmark')",
                 language="python",
             ),
         ),
@@ -259,19 +414,40 @@ def build_native_benchmark_report(
     *,
     output_formats: Sequence[str] | None = None,
     verbose: bool = False,
-) -> OutputBundle:
+) -> BenchmarkReportBundle:
     """Build the benchmark report example and export selected formats."""
 
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
 
-    formats = tuple(output_formats or ("docx", "pdf", "html"))
-    return build_benchmark_document().save_all(
+    payload = generate_payload(DEFAULT_PAYLOAD_COUNT)
+    results = benchmark_normalizers(
+        payload,
+        repeat=DEFAULT_REPEAT,
+        inner_iterations=DEFAULT_INNER_ITERATIONS,
+    )
+    validate_benchmark_results(results)
+    sidecar_path = write_benchmark_sidecar(
         output_path,
-        stem="native-python-benchmark",
+        results,
+        payload_count=len(payload),
+        repeat=DEFAULT_REPEAT,
+        inner_iterations=DEFAULT_INNER_ITERATIONS,
+    )
+    document = build_benchmark_document(
+        payload,
+        results,
+        repeat=DEFAULT_REPEAT,
+        inner_iterations=DEFAULT_INNER_ITERATIONS,
+    )
+    formats = tuple(output_formats or ("docx", "pdf", "html"))
+    rendered = document.save_all(
+        output_path,
+        stem=OUTPUT_STEM,
         formats=formats,
         verbose=verbose,
     )
+    return BenchmarkReportBundle(rendered=rendered, results_json=sidecar_path)
 
 
 def main(argv: Sequence[str] | None = None) -> None:
@@ -308,6 +484,7 @@ def main(argv: Sequence[str] | None = None) -> None:
     if not args.quiet:
         for output_format, path in outputs:
             print(f"Wrote {output_format}: {path}")
+        print(f"Wrote json: {outputs.results_json}")
 
 
 if __name__ == "__main__":

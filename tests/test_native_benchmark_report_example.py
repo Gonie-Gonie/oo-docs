@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 from html import unescape
 from io import BytesIO
 from pathlib import Path
@@ -42,15 +43,24 @@ def test_native_benchmark_report_example_builds_outputs(tmp_path: Path) -> None:
 
     assert len(payload) == 24
     assert len(results) == 3
-    assert len({result["checksum"] for result in results}) == 1
-    assert results == sorted(results, key=lambda result: float(result["median_ms"]))
+    assert len({result.checksum for result in results}) == 1
+    assert results == sorted(results, key=lambda result: result.median_ms)
+    assert all(result.median_ms > 0 for result in results)
 
     outputs = benchmark_example.build_native_benchmark_report(tmp_path)
     docx_path = outputs["docx"]
     pdf_path = outputs["pdf"]
     html_path = outputs["html"]
+    results_json_path = outputs.results_json
 
     assert_rendered_bundle(docx_path, pdf_path, html_path)
+    assert results_json_path.exists()
+    results_payload = json.loads(results_json_path.read_text(encoding="utf-8"))
+    assert results_payload["payload_count"] == 1200
+    assert results_payload["repeat"] == 7
+    assert results_payload["inner_iterations"] == 20
+    assert results_payload["environment"]["hash_algorithm"] == "sha256"
+    assert len(results_payload["results"]) == 3
 
     word_document = WordDocument(docx_path)
     paragraph_texts = [paragraph.text for paragraph in word_document.paragraphs]
@@ -80,10 +90,16 @@ def test_native_benchmark_report_example_builds_outputs(tmp_path: Path) -> None:
         "Native Python benchmark results converted directly from measured data." in text
         for text in paragraph_texts
     )
+    assert any(
+        "Benchmark environment metadata recorded with the result sidecar." in text
+        for text in paragraph_texts
+    )
     assert "character loop" in table_text
     assert "replace + split" in table_text
     assert "translate + split" in table_text
-    assert len(word_document.tables) == 3
+    assert "Python version" in table_text
+    assert "Payload size" in table_text
+    assert len(word_document.tables) == 4
     assert_docx_structure(
         docx_path,
         required_paragraphs=(
@@ -92,12 +108,14 @@ def test_native_benchmark_report_example_builds_outputs(tmp_path: Path) -> None:
             "List of Tables",
             "1 Benchmark as a Document Workflow",
         ),
-        table_count=3,
+        table_count=4,
     )
 
     assert "Native Python Benchmark Report" in pdf_text
     assert "Benchmark as a Document Workflow" in pdf_text
     assert "Serialized Python-to-document flow" in pdf_text
+    assert "Benchmark environment" in pdf_text
+    assert "Python version" in pdf_text
     assert "NORMALIZERS" in pdf_text
     assert "document.save_all" in pdf_text
     assert len(pdf_reader.pages) >= 3
@@ -113,13 +131,14 @@ def test_native_benchmark_report_example_builds_outputs(tmp_path: Path) -> None:
 
     assert "Native Python Benchmark Report" in normalized_html_text
     assert "Documenting measured Python work without leaving Python" in normalized_html_text
-    assert "results: list[dict]" in normalized_html_text
+    assert "results: list[BenchmarkResult]" in normalized_html_text
+    assert "Benchmark environment" in normalized_html_text
     assert "Native Python benchmark results converted directly from measured data." in normalized_html_text
     assert "save_all" in normalized_html_text
     assert_html_internal_links_resolve(
         html_path,
         required_hrefs=("#heading_1", "#table_1", "#table_3"),
-        required_text=("Native Python Benchmark Report", "results: list[dict]"),
+        required_text=("Native Python Benchmark Report", "results: list[BenchmarkResult]"),
     )
 
 
@@ -150,3 +169,4 @@ def test_native_benchmark_report_example_supports_common_cli(
     captured = capsys.readouterr()
     assert captured.out == ""
     assert (output_dir / "native-python-benchmark.html").exists()
+    assert (output_dir / "native-python-benchmark.json").exists()
