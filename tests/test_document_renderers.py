@@ -2644,6 +2644,60 @@ def test_table_of_contents_options_can_hide_pages_and_limit_depth(tmp_path: Path
     assert 'class="oodocs-toc-entry oodocs-toc-entry-level-2"' not in html_text
 
 
+def test_caption_lists_use_page_numbers_and_leaders_by_default(tmp_path: Path) -> None:
+    document = Document(
+        "Caption Lists",
+        ListOfTables(),
+        ListOfFigures(),
+        Table(["Metric"], [["Latency"]], caption="Metric summary."),
+        Figure(ImageData(_build_sample_png()), caption="Result plot.", width=1.0),
+    )
+
+    docx_path = tmp_path / "caption-lists.docx"
+    pdf_path = tmp_path / "caption-lists.pdf"
+    html_path = tmp_path / "caption-lists.html"
+    document.save_docx(docx_path)
+    document.save_pdf(pdf_path)
+    document.save_html(html_path)
+
+    docx_xml = _docx_document_xml(docx_path)
+    docx_settings_xml = _docx_settings_xml(docx_path)
+    pdf_text = "\n".join(page.extract_text() or "" for page in PdfReader(BytesIO(pdf_path.read_bytes())).pages)
+    html_text = html_path.read_text(encoding="utf-8")
+    warning_codes = {issue.code for issue in document.validate().warnings}
+
+    assert "PAGEREF table_1 \\h" in docx_xml
+    assert "PAGEREF figure_1 \\h" in docx_xml
+    assert 'w:updateFields w:val="true"' in docx_settings_xml
+    assert "Table 1. Metric summary." in pdf_text
+    assert "Figure 1. Result plot." in pdf_text
+    assert ".  .  ." in pdf_text
+    assert 'class="oodocs-caption-list-entry"' in html_text
+    assert "oodocs-toc-page-number" not in html_text
+    assert "html-table-list-page-numbers" in warning_codes
+    assert "html-figure-list-page-numbers" in warning_codes
+
+
+def test_caption_lists_can_hide_page_numbers(tmp_path: Path) -> None:
+    document = Document(
+        "Caption List Options",
+        ListOfTables(show_page_numbers=False),
+        ListOfFigures(show_page_numbers=False),
+        Table(["Metric"], [["Latency"]], caption="Metric summary."),
+        Figure(ImageData(_build_sample_png()), caption="Result plot.", width=1.0),
+    )
+
+    docx_path = tmp_path / "caption-list-options.docx"
+    document.save_docx(docx_path)
+    warning_codes = {issue.code for issue in document.validate().warnings}
+
+    docx_xml = _docx_document_xml(docx_path)
+    assert "PAGEREF table_1 \\h" not in docx_xml
+    assert "PAGEREF figure_1 \\h" not in docx_xml
+    assert "html-table-list-page-numbers" not in warning_codes
+    assert "html-figure-list-page-numbers" not in warning_codes
+
+
 def test_table_of_contents_default_styles_emphasize_only_top_level(tmp_path: Path) -> None:
     document = Document(
         "TOC Style",
@@ -3196,11 +3250,11 @@ def test_document_renders_to_docx_and_pdf(tmp_path: Path) -> None:
     assert any("[1] Check the generated outputs before release." in text for text in paragraph_texts)
     assert any(text == "\u2022 Lists render into both DOCX and PDF." for text in paragraph_texts)
     assert any(text == "1. Create the model" for text in paragraph_texts)
-    assert paragraph_texts.count("Table 1. Generated artifacts.") >= 2
-    assert paragraph_texts.count("Table 2. Output workflow.") >= 2
-    assert paragraph_texts.count("Table 3. Merged header table.") >= 2
-    assert paragraph_texts.count("Figure 1. Tiny sample image.") >= 2
-    assert paragraph_texts.count("Figure 2. Second tiny sample image.") >= 2
+    assert sum("Table 1. Generated artifacts." in text for text in paragraph_texts) >= 2
+    assert sum("Table 2. Output workflow." in text for text in paragraph_texts) >= 2
+    assert sum("Table 3. Merged header table." in text for text in paragraph_texts) >= 2
+    assert sum("Figure 1. Tiny sample image." in text for text in paragraph_texts) >= 2
+    assert sum("Figure 2. Second tiny sample image." in text for text in paragraph_texts) >= 2
     assert any("https://github.com/Gonie-Gonie/oo-docs" in text for text in paragraph_texts)
     assert any("https://github.com/Gonie-Gonie/oo-docs/releases" in text for text in paragraph_texts)
     assert all("internal-draft" not in text.lower() for text in paragraph_texts)
@@ -3261,6 +3315,8 @@ def test_document_renders_to_docx_and_pdf(tmp_path: Path) -> None:
     assert "stable" in docx_xml
     assert "D9E6F2" in docx_xml
     assert "DCE8F4" in docx_xml
+    assert "PAGEREF table_1 \\h" in docx_xml
+    assert "PAGEREF figure_1 \\h" in docx_xml
     assert len(figure_object.calls) >= 2
     assert all(call.get("format") == "png" for call in figure_object.calls)
 

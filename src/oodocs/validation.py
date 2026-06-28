@@ -1395,21 +1395,27 @@ class _ValidationContext:
                         path,
                     )
                 continue
-            if isinstance(page, ListOfTables) and not render_index.tables:
-                self._add(
-                    "warning",
-                    "empty-table-list",
-                    "ListOfTables has no captioned tables to display.",
-                    path,
-                )
+            if isinstance(page, ListOfTables):
+                if page.show_page_numbers:
+                    self._add_compatibility_warning("html-table-list-page-numbers", path)
+                if not render_index.tables:
+                    self._add(
+                        "warning",
+                        "empty-table-list",
+                        "ListOfTables has no captioned tables to display.",
+                        path,
+                    )
                 continue
-            if isinstance(page, ListOfFigures) and not render_index.figures:
-                self._add(
-                    "warning",
-                    "empty-figure-list",
-                    "ListOfFigures has no captioned figures to display.",
-                    path,
-                )
+            if isinstance(page, ListOfFigures):
+                if page.show_page_numbers:
+                    self._add_compatibility_warning("html-figure-list-page-numbers", path)
+                if not render_index.figures:
+                    self._add(
+                        "warning",
+                        "empty-figure-list",
+                        "ListOfFigures has no captioned figures to display.",
+                        path,
+                    )
                 continue
             if isinstance(page, ReferenceList) and not render_index.citations:
                 self._add(

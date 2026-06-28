@@ -758,6 +758,9 @@ class DocxRenderer:
             context.render_index,
             context.theme.resolve_generated_page_title("list_of_tables"),
             context.theme.resolve_caption_label("table", "caption"),
+            show_page_numbers=block.show_page_numbers,
+            leader=block.leader,
+            text_width=context.settings.text_width_in_inches(),
         )
 
     def render_list_of_figures(
@@ -780,6 +783,9 @@ class DocxRenderer:
             context.render_index,
             context.theme.resolve_generated_page_title("list_of_figures"),
             context.theme.resolve_caption_label("figure", "caption"),
+            show_page_numbers=block.show_page_numbers,
+            leader=block.leader,
+            text_width=context.settings.text_width_in_inches(),
         )
 
     def render_table(
@@ -3040,11 +3046,21 @@ class DocxRenderer:
         render_index: RenderIndex,
         default_title: str,
         label: str,
+        *,
+        show_page_numbers: bool,
+        leader: str,
+        text_width: float,
     ) -> None:
         self._add_heading(word_document, title or [Text(default_title)], level=theme.generated_content.generated_heading_level, theme=theme, number_label=None)
         for entry in entries:
             paragraph = word_document.add_paragraph()
             paragraph.paragraph_format.left_indent = Inches(0.25)
+            if show_page_numbers:
+                paragraph.paragraph_format.tab_stops.add_tab_stop(
+                    Inches(text_width),
+                    WD_TAB_ALIGNMENT.RIGHT,
+                    WD_TAB_LEADER.DOTS if leader == "." else WD_TAB_LEADER.SPACES,
+                )
             anchor = entry.anchor
             self._append_hyperlink_runs(
                 paragraph,
@@ -3054,6 +3070,9 @@ class DocxRenderer:
                 style=TextStyle(),
                 default_size=theme.caption_size(),
             )
+            if show_page_numbers:
+                paragraph.add_run("\t")
+                self._append_pageref_field(paragraph, entry.anchor)
 
     def _render_comment_list(
         self,

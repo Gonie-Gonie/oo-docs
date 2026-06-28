@@ -568,6 +568,10 @@ class OODocsPdfTemplate(SimpleDocTemplate):
         if toc_entry is not None:
             level, text, key = toc_entry
             self.notify("TOCEntry", (level, text, self._logical_page(self.page), key))
+        caption_list_entry = getattr(flowable, "_oodocs_caption_list_entry", None)
+        if caption_list_entry is not None:
+            kind, text, key = caption_list_entry
+            self.notify(kind, (0, text, self._logical_page(self.page), key))
 
     def _logical_page(self, physical_page: int) -> int:
         if self.main_matter_start_page is None:
@@ -1284,6 +1288,7 @@ class PdfRenderer:
         """
 
         return self._render_caption_list(
+            block,
             block.title,
             context.render_index.tables,
             context.theme,
@@ -1291,6 +1296,7 @@ class PdfRenderer:
             context.render_index,
             context.theme.resolve_generated_page_title("list_of_tables"),
             context.theme.resolve_caption_label("table", "caption"),
+            notify_kind="TableListEntry",
         )
 
     def render_list_of_figures(
@@ -1309,6 +1315,7 @@ class PdfRenderer:
         """
 
         return self._render_caption_list(
+            block,
             block.title,
             context.render_index.figures,
             context.theme,
@@ -1316,6 +1323,7 @@ class PdfRenderer:
             context.render_index,
             context.theme.resolve_generated_page_title("list_of_figures"),
             context.theme.resolve_caption_label("figure", "caption"),
+            notify_kind="FigureListEntry",
         )
 
     def render_comment_list(
@@ -2038,17 +2046,19 @@ class PdfRenderer:
                 spaceBefore=0,
                 spaceAfter=6,
             )
+            caption_fragments = self._caption_fragments(
+                theme.resolve_caption_label("table", "caption"),
+                render_index.table_number(block),
+                block.caption,
+            )
             story.append(
-                RLParagraph(
-                    self._anchor_markup(render_index.table_anchor(block))
-                    + self._inline_markup(
-                        self._caption_fragments(theme.resolve_caption_label("table", "caption"), render_index.table_number(block), block.caption),
-                        theme,
-                        render_index,
-                        base_font_name=caption_style.fontName,
-                        base_size=caption_style.fontSize,
-                    ),
+                self._caption_paragraph(
+                    render_index.table_anchor(block),
+                    caption_fragments,
                     caption_style,
+                    theme,
+                    render_index,
+                    notify_kind="TableListEntry",
                 )
             )
         story.append(table)
@@ -2061,21 +2071,19 @@ class PdfRenderer:
                 spaceBefore=6,
                 spaceAfter=12,
             )
+            caption_fragments = self._caption_fragments(
+                theme.resolve_caption_label("table", "caption"),
+                render_index.table_number(block),
+                block.caption,
+            )
             story.append(
-                RLParagraph(
-                    self._anchor_markup(render_index.table_anchor(block))
-                    + self._inline_markup(
-                        self._caption_fragments(
-                            theme.resolve_caption_label("table", "caption"),
-                            render_index.table_number(block),
-                            block.caption,
-                        ),
-                        theme,
-                        render_index,
-                        base_font_name=caption_style.fontName,
-                        base_size=caption_style.fontSize,
-                    ),
+                self._caption_paragraph(
+                    render_index.table_anchor(block),
+                    caption_fragments,
                     caption_style,
+                    theme,
+                    render_index,
+                    notify_kind="TableListEntry",
                 )
             )
         elif not in_box:
@@ -2448,16 +2456,17 @@ class PdfRenderer:
                 spaceAfter=2 if in_box else 6,
             )
             elements = [
-                RLParagraph(
-                    self._anchor_markup(render_index.figure_anchor(block))
-                    + self._inline_markup(
-                        self._caption_fragments(theme.resolve_caption_label("figure", "caption"), render_index.figure_number(block), block.caption),
-                        theme,
-                        render_index,
-                        base_font_name=caption_style.fontName,
-                        base_size=caption_style.fontSize,
+                self._caption_paragraph(
+                    render_index.figure_anchor(block),
+                    self._caption_fragments(
+                        theme.resolve_caption_label("figure", "caption"),
+                        render_index.figure_number(block),
+                        block.caption,
                     ),
                     caption_style,
+                    theme,
+                    render_index,
+                    notify_kind="FigureListEntry",
                 )
             ] + elements
         if block.caption is not None and theme.captions.figure_caption_position == "below":
@@ -2470,16 +2479,17 @@ class PdfRenderer:
                 spaceAfter=0 if in_box else 12,
             )
             elements.append(
-                RLParagraph(
-                    self._anchor_markup(render_index.figure_anchor(block))
-                    + self._inline_markup(
-                        self._caption_fragments(theme.resolve_caption_label("figure", "caption"), render_index.figure_number(block), block.caption),
-                        theme,
-                        render_index,
-                        base_font_name=caption_style.fontName,
-                        base_size=caption_style.fontSize,
+                self._caption_paragraph(
+                    render_index.figure_anchor(block),
+                    self._caption_fragments(
+                        theme.resolve_caption_label("figure", "caption"),
+                        render_index.figure_number(block),
+                        block.caption,
                     ),
                     caption_style,
+                    theme,
+                    render_index,
+                    notify_kind="FigureListEntry",
                 )
             )
         elif not in_box:
@@ -2570,16 +2580,17 @@ class PdfRenderer:
         elements: list[object] = []
         if block.caption is not None and theme.captions.figure_caption_position == "above":
             elements.append(
-                RLParagraph(
-                    self._anchor_markup(render_index.figure_anchor(block))
-                    + self._inline_markup(
-                        self._caption_fragments(theme.resolve_caption_label("figure", "caption"), render_index.figure_number(block), block.caption),
-                        theme,
-                        render_index,
-                        base_font_name=caption_style.fontName,
-                        base_size=caption_style.fontSize,
+                self._caption_paragraph(
+                    render_index.figure_anchor(block),
+                    self._caption_fragments(
+                        theme.resolve_caption_label("figure", "caption"),
+                        render_index.figure_number(block),
+                        block.caption,
                     ),
                     caption_style,
+                    theme,
+                    render_index,
+                    notify_kind="FigureListEntry",
                 )
             )
         elements.append(subfigure_table)
@@ -2591,16 +2602,17 @@ class PdfRenderer:
                 spaceAfter=0 if in_box else 12,
             )
             elements.append(
-                RLParagraph(
-                    self._anchor_markup(render_index.figure_anchor(block))
-                    + self._inline_markup(
-                        self._caption_fragments(theme.resolve_caption_label("figure", "caption"), render_index.figure_number(block), block.caption),
-                        theme,
-                        render_index,
-                        base_font_name=below_caption_style.fontName,
-                        base_size=below_caption_style.fontSize,
+                self._caption_paragraph(
+                    render_index.figure_anchor(block),
+                    self._caption_fragments(
+                        theme.resolve_caption_label("figure", "caption"),
+                        render_index.figure_number(block),
+                        block.caption,
                     ),
                     below_caption_style,
+                    theme,
+                    render_index,
+                    notify_kind="FigureListEntry",
                 )
             )
         elif not in_box:
@@ -3092,8 +3104,37 @@ class PdfRenderer:
     def _subfigure_caption_fragments(self, label: str, caption: Paragraph) -> list[Text]:
         return [Text(f"{label} ")] + caption.content
 
+    def _caption_paragraph(
+        self,
+        anchor: str | None,
+        fragments: list[Text],
+        style: RLParagraphStyle,
+        theme: Theme,
+        render_index: RenderIndex,
+        *,
+        notify_kind: str,
+    ) -> RLParagraph:
+        paragraph = RLParagraph(
+            self._anchor_markup(anchor)
+            + self._inline_markup(
+                fragments,
+                theme,
+                render_index,
+                base_font_name=style.fontName,
+                base_size=style.fontSize,
+            ),
+            style,
+        )
+        paragraph._oodocs_caption_list_entry = (  # type: ignore[attr-defined]
+            notify_kind,
+            self._flatten_fragments(fragments, theme, render_index),
+            anchor,
+        )
+        return paragraph
+
     def _render_caption_list(
         self,
+        block: ListOfTables | ListOfFigures,
         title: list[Text] | None,
         entries: list[object],
         theme: Theme,
@@ -3101,6 +3142,8 @@ class PdfRenderer:
         render_index: RenderIndex,
         default_title: str,
         label: str,
+        *,
+        notify_kind: str,
     ) -> list[object]:
         level = theme.generated_content.generated_heading_level
         bold, italic = theme.resolve_heading_emphasis(level)
@@ -3130,27 +3173,35 @@ class PdfRenderer:
                 title_style,
             )
         ]
-        for entry in entries:
-            story.append(
-                RLParagraph(
-                    self._link_markup(
-                        entry.anchor,
-                        self._inline_markup(
-                            self._caption_fragments(
-                                label,
-                                entry.number,
-                                entry.block.caption,
-                            ),
-                            theme,
-                            render_index,
-                            base_font_name=entry_style.fontName,
-                            base_size=entry_style.fontSize,
-                        ),
-                        internal=True,
-                    ),
-                    entry_style,
-                )
+        if block.show_page_numbers:
+            caption_list = RLTableOfContents(
+                notifyKind=notify_kind,
+                dotsMinLevel=0 if block.leader else -1,
             )
+            caption_list.levelStyles = [entry_style]
+            story.append(caption_list)
+        else:
+            for entry in entries:
+                story.append(
+                    RLParagraph(
+                        self._link_markup(
+                            entry.anchor,
+                            self._inline_markup(
+                                self._caption_fragments(
+                                    label,
+                                    entry.number,
+                                    entry.block.caption,
+                                ),
+                                theme,
+                                render_index,
+                                base_font_name=entry_style.fontName,
+                                base_size=entry_style.fontSize,
+                            ),
+                            internal=True,
+                        ),
+                        entry_style,
+                    )
+                )
         if entries:
             story.append(Spacer(1, 6))
         return story

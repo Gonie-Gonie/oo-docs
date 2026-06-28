@@ -52,6 +52,22 @@ COMPATIBILITY_NOTES: dict[str, CompatibilityNote] = {
         ),
         formats=("html",),
     ),
+    "html-table-list-page-numbers": CompatibilityNote(
+        code="html-table-list-page-numbers",
+        message=(
+            "HTML output does not have stable rendered page numbers, "
+            "so the list of tables is link-only there."
+        ),
+        formats=("html",),
+    ),
+    "html-figure-list-page-numbers": CompatibilityNote(
+        code="html-figure-list-page-numbers",
+        message=(
+            "HTML output does not have stable rendered page numbers, "
+            "so the list of figures is link-only there."
+        ),
+        formats=("html",),
+    ),
 }
 
 

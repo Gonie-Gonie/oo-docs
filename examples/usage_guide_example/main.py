@@ -760,7 +760,7 @@ def build_usage_guide_document() -> Document:
         headers=["Generated object", "Why it exists", "What triggers it"],
         rows=[
             ["TableOfContents()", "Creates a navigable outline from authored headings.", "Place the block where the contents page should appear."],
-            ["ListOfTables() / ListOfFigures()", "Collects numbered captions in a stable order.", "Use captioned tables or figures earlier in the document."],
+            ["ListOfTables() / ListOfFigures()", "Collects numbered captions in a stable order with page labels in DOCX and PDF.", "Use captioned tables or figures earlier in the document; pass show_page_numbers=False for a link-only list."],
             ["CommentList()", "Exports reviewer comments without disturbing reading flow.", Comment.annotated("Place review remarks inline", "CommentList() collects these review notes onto a dedicated generated page.")],
             ["ReferenceList()", "Renders only the bibliography entries that were cited.", "Cite items from CitationLibrary or CitationSource."],
         ],
@@ -818,7 +818,7 @@ def build_usage_guide_document() -> Document:
         headers=["Concern", "Default", "Customization path"],
         rows=[
             ["Part entries", "Shown above chapters when authored.", "Use Part(...) for book-like divisions; set level_styles={0: TocLevelStyle(...)} to tune the part line."],
-            ["Page numbers", "Shown by default in paginated DOCX and PDF output.", "HTML keeps a clean navigation-only outline because browsers do not provide stable page labels."],
+            ["Page numbers", "Shown by default for contents, table lists, and figure lists in paginated DOCX and PDF output.", "HTML keeps clean link-only generated lists because browsers do not provide stable page labels."],
             ["Leader dots", "Dotted leaders connect the heading text to the page number in paginated output.", "Set leader='' for no leader or another short string for a different visual cue."],
             ["Heading depth", "All numbered headings are included.", "Set max_level=2 or max_level=3 for shorter contents pages."],
             ["Hierarchy styling", "Top-level entries are bold; lower levels use normal weight by default.", "Pass level_styles={level: TocLevelStyle(...)} for per-level spacing, indentation, and emphasis."],
@@ -938,7 +938,7 @@ def build_usage_guide_document() -> Document:
             ["Uncaptioned table or figure reference", "Automatic references need a numbered target.", "Add a caption or provide an explicit custom reference label."],
             ["Unnumbered heading or countable reference", "The default label cannot be resolved without a number.", "Set numbered=True, set toc=True for heading anchors, or write reference(obj, 'custom label')."],
             ["Top-level heading below chapter", "A report can look like it skipped its first chapter.", "Wrap imported blocks in Chapter(...) or import with heading_level_shift."],
-            ["HTML TOC page numbers", "Browsers do not have stable rendered page numbers.", "Accept the warning for HTML or render a link-only contents page."],
+            ["HTML generated-list page numbers", "Browsers do not have stable rendered page numbers.", "Accept the warning for HTML or set show_page_numbers=False on TableOfContents, ListOfTables, or ListOfFigures."],
         ],
         caption="Validation results are structured objects, but they print as a compact table for terminal and CI logs.",
         column_widths=[2.0, 2.7, 2.7],
@@ -1476,11 +1476,15 @@ def build_usage_guide_document() -> Document:
             Section(
                 "Contents hierarchy and page labels",
                 Paragraph(
-                    "The generated contents page uses hierarchy-aware spacing and emphasis by default. In paginated DOCX and PDF output it also renders page labels with dotted leaders, which is the common book/report convention where the entry text sits on the left and the page number aligns on the right. HTML keeps the same hierarchy as a clean navigation outline."
+                    "The generated contents, table-list, and figure-list pages use hierarchy-aware or caption-aware spacing by default. In paginated DOCX and PDF output they also render page labels with dotted leaders, which is the common book/report convention where the entry text sits on the left and the page number aligns on the right. HTML keeps the same information as clean link-only navigation because browsers do not expose stable rendered page labels."
                 ),
                 Paragraph(
                     "Use ",
                     inline_code("TableOfContents"),
+                    ", ",
+                    inline_code("ListOfTables"),
+                    ", and ",
+                    inline_code("ListOfFigures"),
                     " options when the document needs a shorter outline, no page numbers, or a different per-level visual rhythm."
                 ),
                 contents_style_table,

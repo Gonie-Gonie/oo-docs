@@ -81,19 +81,32 @@ class ListOfTables(Block):
     Args:
         title: Optional page title. Renderers use their default title when
             omitted.
+        show_page_numbers: Whether fixed-page renderers should display page
+            numbers.
+        leader: Leader character between caption text and page number.
 
     Examples:
         ```python
         from oodocs import Document, ListOfTables
 
-        doc = Document("Report", ListOfTables("Tables"))
+        doc = Document("Report", ListOfTables("Tables", leader="."))
         ```
     """
 
     title: list[Text] | None
+    show_page_numbers: bool
+    leader: str
 
-    def __init__(self, title: InlineInput | None = None) -> None:
+    def __init__(
+        self,
+        title: InlineInput | None = None,
+        *,
+        show_page_numbers: bool = True,
+        leader: str = ".",
+    ) -> None:
         self.title = coerce_inlines((title,)) if title is not None else None
+        self.show_page_numbers = show_page_numbers
+        self.leader = leader
 
     def render_to_docx(
         self,
@@ -145,19 +158,32 @@ class ListOfFigures(Block):
     Args:
         title: Optional page title. Renderers use their default title when
             omitted.
+        show_page_numbers: Whether fixed-page renderers should display page
+            numbers.
+        leader: Leader character between caption text and page number.
 
     Examples:
         ```python
         from oodocs import Document, ListOfFigures
 
-        doc = Document("Report", ListOfFigures("Figures"))
+        doc = Document("Report", ListOfFigures("Figures", show_page_numbers=False))
         ```
     """
 
     title: list[Text] | None
+    show_page_numbers: bool
+    leader: str
 
-    def __init__(self, title: InlineInput | None = None) -> None:
+    def __init__(
+        self,
+        title: InlineInput | None = None,
+        *,
+        show_page_numbers: bool = True,
+        leader: str = ".",
+    ) -> None:
         self.title = coerce_inlines((title,)) if title is not None else None
+        self.show_page_numbers = show_page_numbers
+        self.leader = leader
 
     def render_to_docx(
         self,
