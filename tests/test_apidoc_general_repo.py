@@ -787,7 +787,7 @@ def test_general_repo_package_help_book_helper_builds_complete_reference(tmp_pat
     assert_html_internal_links_resolve(outputs["html"])
 
 
-def test_general_repo_api_objects_example_cli_targets_repo_path(tmp_path) -> None:
+def test_general_repo_api_objects_example_cli_targets_repo_path(tmp_path, capsys) -> None:
     repo = write_mixed_docstring_repo(tmp_path)
     output_dir = tmp_path / "example-bundle"
     example = _load_api_objects_example()
@@ -812,6 +812,8 @@ def test_general_repo_api_objects_example_cli_targets_repo_path(tmp_path) -> Non
             "--quiet",
         ]
     )
+    captured = capsys.readouterr()
+    assert captured.out == ""
 
     help_book_docx = output_dir / "oodocs-api-reference.docx"
     help_book_pdf = output_dir / "oodocs-api-reference.pdf"

@@ -526,8 +526,9 @@ def main(argv: Sequence[str] | None = None) -> None:
         output_formats=args.outputs,
         verbose=not args.quiet,
     )
-    for path in outputs.values():
-        print(f"Wrote {path}", flush=True)
+    if not args.quiet:
+        for path in outputs.values():
+            print(f"Wrote {path}", flush=True)
 
 
 if __name__ == "__main__":

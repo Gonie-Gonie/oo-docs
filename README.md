@@ -301,13 +301,19 @@ examples are workflow entry points and intentionally avoid repeating the guide.
 Run them directly from the repository checkout:
 
 ```powershell
-.\.venv\Scripts\python.exe .\examples\usage_guide_example\main.py
-.\.venv\Scripts\python.exe .\examples\journal_paper_example\main.py
-.\.venv\Scripts\python.exe .\examples\native_benchmark_report\main.py
-.\.venv\Scripts\python.exe .\examples\release_notes_digest\main.py
-.\.venv\Scripts\python.exe .\examples\api_objects_example\main.py . --config pyproject.toml
-.\.venv\Scripts\python.exe .\examples\style_cleanup_smoke\main.py
-.\.venv\Scripts\python.exe .\examples\template_presets\build_all.py
+.\.venv\Scripts\python.exe .\examples\usage_guide_example\main.py --output-dir artifacts/usage-guide
+.\.venv\Scripts\python.exe .\examples\journal_paper_example\main.py --output-dir artifacts/journal-paper
+.\.venv\Scripts\python.exe .\examples\native_benchmark_report\main.py --output-dir artifacts/native-benchmark-report
+.\.venv\Scripts\python.exe .\examples\release_notes_digest\main.py --output-dir artifacts/release-notes
+.\.venv\Scripts\python.exe .\examples\api_objects_example\main.py . --config pyproject.toml --output-dir artifacts/api-objects-example
+.\.venv\Scripts\python.exe .\examples\style_cleanup_smoke\main.py --output-dir artifacts/style-cleanup-smoke
+.\.venv\Scripts\python.exe .\examples\template_presets\build_all.py --output-dir artifacts/template
+```
+
+Most examples accept repeatable `--outputs` and `--quiet` flags:
+
+```powershell
+.\.venv\Scripts\python.exe .\examples\native_benchmark_report\main.py --outputs html --quiet
 ```
 
 The package API reference can also be rendered directly from the
