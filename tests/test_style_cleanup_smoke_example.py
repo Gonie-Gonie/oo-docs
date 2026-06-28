@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 from pathlib import Path
 
 from example_regression import assert_html_internal_links_resolve, assert_rendered_bundle
@@ -28,10 +29,16 @@ def test_style_cleanup_smoke_example_builds_outputs(tmp_path: Path) -> None:
 
     assert document.validate().ok
     assert_rendered_bundle(outputs["docx"], outputs["pdf"], outputs["html"])
+    assert outputs.stylesheet_json.exists()
+    stylesheet_payload = json.loads(outputs.stylesheet_json.read_text(encoding="utf-8"))
+    assert "paragraph" in stylesheet_payload
+    assert "body.compact" in stylesheet_payload["paragraph"]
+    assert example.load_stylesheet_sidecar(outputs.stylesheet_json).to_dict() == stylesheet_payload
     html = outputs["html"].read_text(encoding="utf-8")
-    assert "Style Cleanup Smoke Test" in html
+    assert "Custom Styles Example" in html
     assert "Requirement:" in html
     assert "Schema-style table." in html
+    assert "Named styles replace repeated visual kwargs with reusable style identifiers." in html
     assert_html_internal_links_resolve(outputs["html"])
 
 
@@ -56,3 +63,4 @@ def test_style_cleanup_smoke_example_supports_common_cli(tmp_path: Path, capsys)
     captured = capsys.readouterr()
     assert captured.out == ""
     assert (output_dir / "style-cleanup-smoke.html").exists()
+    assert (output_dir / "style-cleanup-smoke-stylesheet.json").exists()

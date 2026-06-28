@@ -362,6 +362,7 @@ The main exported filenames are:
 - `artifacts/api-objects-example/oodocs-api-coverage.json`
 - `artifacts/api-objects-example/oodocs-api-coverage.csv`
 - `artifacts/style-cleanup-smoke/style-cleanup-smoke.pdf`
+- `artifacts/style-cleanup-smoke/style-cleanup-smoke-stylesheet.json`
 - `artifacts/template/journal-article-template.pdf`
 - `artifacts/api-objects-example/oodocs-api-reference.docx`
 - `artifacts/api-objects-example/oodocs-api-reference.pdf`
