@@ -796,11 +796,14 @@ class _ValidationContext:
             self._register_referenceable(block, path)
             if isinstance(block, Box):
                 self._validate_style_reference("box", block.style, f"{path}.style")
+                self._validate_box_renderer_features(block, path)
             else:
                 self._validate_style_reference("paragraph", block.style, f"{path}.style")
             if isinstance(block, Box):
                 if block.title is not None:
                     self._scan_inlines(block.title, f"{path}.title")
+                if block.icon is not None:
+                    self._scan_inlines(block.icon, f"{path}.icon")
                 self._collect_blocks(
                     block.children,
                     path,
@@ -843,6 +846,9 @@ class _ValidationContext:
                 )
             if block.title is not None:
                 self._scan_inlines(block.title, f"{path}.title")
+            if block.box_style is not None:
+                self._validate_style_reference("box", block.box_style, f"{path}.box_style")
+                self._validate_box_style_shadow(block.box_style, f"{path}.box_style")
             self._collect_blocks(
                 block.children,
                 path,
@@ -1034,6 +1040,33 @@ class _ValidationContext:
             )
         except TypeError as exc:
             self._add("error", "wrong-style-category", str(exc), path)
+
+    def _validate_box_renderer_features(self, block: Box, path: str) -> None:
+        try:
+            box_style = self.document.settings.theme.stylesheet.resolve("box", block.style, None)
+        except (KeyError, TypeError):
+            return
+        shadow = block.shadow if block.shadow is not None else getattr(box_style, "shadow", False)
+        if shadow:
+            self._add_box_shadow_warning(f"{path}.shadow")
+
+    def _validate_box_style_shadow(self, value: object, path: str) -> None:
+        try:
+            box_style = self.document.settings.theme.stylesheet.resolve("box", value, None)
+        except (KeyError, TypeError):
+            return
+        if getattr(box_style, "shadow", False):
+            self._add_box_shadow_warning(path)
+
+    def _add_box_shadow_warning(self, path: str) -> None:
+        note = compatibility_note("box-shadow-html-only")
+        self._add(
+            "warning",
+            note.code,
+            note.message,
+            path,
+            formats=note.formats,
+        )
 
     def _find_style_category(self, name: str, *, exclude: str) -> str | None:
         stylesheet = self.document.settings.theme.stylesheet

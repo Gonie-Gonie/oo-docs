@@ -106,6 +106,7 @@ class StyleSheet:
         sheet.register("box", "note", _box_style("64748B", "F8FAFC", "E2E8F0", "0F172A"))
         sheet.register("box", "info", _box_style("3B82F6", "EFF6FF", "DBEAFE", "1E3A8A"))
         sheet.register("box", "warning", _box_style("D97706", "FFFBEB", "FEF3C7", "78350F"))
+        sheet.register("box", "danger", _box_style("DC2626", "FEF2F2", "FEE2E2", "7F1D1D"))
         sheet.register("box", "success", _box_style("16A34A", "F0FDF4", "DCFCE7", "14532D"))
         sheet.register("chip", "tag", InlineChipStyle())
         sheet.register("chip", "badge", InlineChipStyle(

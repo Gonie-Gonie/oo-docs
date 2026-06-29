@@ -188,7 +188,7 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "style_cleanup_smoke" in table_text
     assert "OODocs Contributor Certificate" in table_text
     assert "Footnotes" not in [text for text in paragraph_texts if text == "Footnotes"]
-    assert len(word_document.tables) == 26
+    assert len(word_document.tables) == 27
     assert len(word_document.inline_shapes) == 11
     assert len(word_document.comments) == 2
     assert_docx_structure(
@@ -201,7 +201,7 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
             "Comments",
             "References",
         ),
-        table_count=26,
+        table_count=27,
         inline_shape_count=11,
         comment_count=2,
     )

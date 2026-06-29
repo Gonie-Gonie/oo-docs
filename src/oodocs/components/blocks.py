@@ -1560,6 +1560,15 @@ class Appendix(Part):
         return self
 
 
+def _normalize_box_title_position(value: str | None) -> str | None:
+    if value is None:
+        return None
+    normalized = str(value).strip().lower()
+    if normalized not in {"top", "side"}:
+        raise ValueError("Box title_position must be 'top' or 'side'")
+    return normalized
+
+
 @dataclass(slots=True, init=False)
 class Box(Block):
     """Bordered container for grouped block content.
@@ -1567,11 +1576,16 @@ class Box(Block):
     Args:
         *children: Child block content.
         title: Optional box title.
+        icon: Optional inline icon rendered before the title.
         style: Base box style.
         border: Optional border style override.
         background_color: Optional body background color override.
         title_background_color: Optional title band background override.
         title_text_color: Optional title text color override.
+        title_position: Optional title placement override, either ``"top"`` or
+            ``"side"``.
+        shadow: Optional shadow override. HTML renders it visually; DOCX and
+            PDF preserve the box without a shadow.
         padding: Optional padding override.
         space_after: Optional spacing after the box.
         width: Optional preferred box width.
@@ -1596,17 +1610,23 @@ class Box(Block):
 
     children: list[Block]
     title: list[Text] | None
+    icon: list[Text] | None
     style: BoxStyle | str
+    title_position: str | None
+    shadow: bool | None
 
     def __init__(
         self,
         *children: BlockInput,
         title: InlineInput | None = None,
+        icon: InlineInput | None = None,
         style: BoxStyle | str | None = None,
         border: BorderStyle | None = None,
         background_color: str | None = None,
         title_background_color: str | None = None,
         title_text_color: str | None = None,
+        title_position: str | None = None,
+        shadow: bool | None = None,
         padding: Padding | None = None,
         space_after: float | None = None,
         width: float | None = None,
@@ -1615,6 +1635,11 @@ class Box(Block):
     ) -> None:
         self.children = coerce_blocks(children)
         self.title = coerce_inlines((title,)) if title is not None else None
+        self.icon = coerce_inlines((icon,)) if icon is not None else None
+        self.title_position = _normalize_box_title_position(title_position)
+        if shadow is not None and not isinstance(shadow, bool):
+            raise TypeError("Box shadow must be a bool")
+        self.shadow = shadow
         self.style = box_style_with_overrides(
             style,
             border=border,
@@ -1627,6 +1652,25 @@ class Box(Block):
             unit=unit,
             block_alignment=block_alignment,
         )
+
+    def title_fragments(self) -> list[Text] | None:
+        """Return rendered title fragments, including the optional icon.
+
+        Returns:
+            Title fragments for renderers, or ``None`` when the box has no
+            title or icon.
+        """
+
+        if self.icon is None and self.title is None:
+            return None
+        fragments: list[Text] = []
+        if self.icon is not None:
+            fragments.extend(self.icon)
+            if self.title is not None:
+                fragments.append(Text(" "))
+        if self.title is not None:
+            fragments.extend(self.title)
+        return fragments
 
     def add(self, *children: BlockInput) -> Box:
         """Append boxed content.
@@ -1710,6 +1754,8 @@ class CountableBlock(Block):
             sequence.
         reference_label: Label prefix used by automatic inline references.
         label_suffix: Punctuation appended to heading labels.
+        box_style: Optional box style used to render this theorem-like block as
+            a titled Box.
 
     Raises:
         TypeError: If ``label_suffix`` is not a string.
@@ -1736,6 +1782,7 @@ class CountableBlock(Block):
     counter: str | None
     reference_label: str
     label_suffix: str
+    box_style: BoxStyle | str | None
 
     def __init__(
         self,
@@ -1746,6 +1793,7 @@ class CountableBlock(Block):
         counter: str | None = DEFAULT_COUNTABLE_COUNTER,
         reference_label: str | None = None,
         label_suffix: str = ".",
+        box_style: BoxStyle | str | None = None,
     ) -> None:
         normalized_kind = str(kind).strip()
         if not normalized_kind:
@@ -1770,6 +1818,7 @@ class CountableBlock(Block):
         self.counter = normalized_counter if self.numbered else None
         self.reference_label = normalized_reference_label
         self.label_suffix = label_suffix
+        self.box_style = box_style
 
     def add(self, *children: BlockInput) -> CountableBlock:
         """Append child blocks.
@@ -1822,6 +1871,22 @@ class CountableBlock(Block):
         """
 
         return f"{self.reference_label} {number}"
+
+    def heading_fragments(self, number: int | None) -> list[Text]:
+        """Return heading fragments used by renderers.
+
+        Args:
+            number: Assigned number, or ``None`` for unnumbered display.
+
+        Returns:
+            Heading label and optional title as inline fragments.
+        """
+
+        fragments = [Text(self.heading_label(number))]
+        if self.title is not None:
+            fragments.append(Text(" "))
+            fragments.extend(self.title)
+        return fragments
 
     def render_to_docx(
         self,
@@ -1937,6 +2002,7 @@ class Algorithm(CountableBlock):
         numbered: bool = True,
         counter: str | None = ALGORITHM_COUNTER,
         reference_label: str | None = "Algorithm",
+        box_style: BoxStyle | str | None = None,
     ) -> None:
         if body_style not in {"prose", "code"}:
             raise ValueError("Algorithm body_style must be 'prose' or 'code'")
@@ -1962,6 +2028,7 @@ class Algorithm(CountableBlock):
             numbered=numbered,
             counter=counter,
             reference_label=reference_label,
+            box_style=box_style,
         )
 
     def _generated_children(self) -> list[Block]:
@@ -2076,6 +2143,7 @@ def create_countable_block_type(
             counter: str | None = counter,
             reference_label: str | None = reference_label,
             label_suffix: str = label_suffix,
+            box_style: BoxStyle | str | None = None,
         ) -> None:
             super().__init__(
                 normalized_kind,
@@ -2085,6 +2153,7 @@ def create_countable_block_type(
                 counter=counter,
                 reference_label=reference_label,
                 label_suffix=label_suffix,
+                box_style=box_style,
             )
 
     CustomCountableBlock.__name__ = _countable_class_name(normalized_kind)

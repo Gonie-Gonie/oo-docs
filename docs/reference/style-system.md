@@ -61,8 +61,12 @@ fails unless `warning` is registered as a table style.
 | Named paragraph, box, table, and chip styles | Yes | Yes | Yes |
 | `css_class` on style objects | Ignored | Ignored | Added to HTML class attributes |
 | `Padding` and `BorderStyle` primitives | Yes | Yes | Yes |
+| `BoxStyle.title_position="side"` | Yes | Yes | Yes |
+| `BoxStyle.shadow` | Degrades to a normal box | Degrades to a normal box | Renders `box-shadow` |
 | `CounterStyle` for lists/headings/page numbers | Yes | Yes | Yes |
 
 Use direct block keyword arguments for local changes, concrete style objects for
 one-off reusable values, and `StyleSheet` entries when a style name should be
 shared across a document or organization.
+Built-in box style names include `note`, `info`, `warning`, `danger`, and
+`success`, which are also the default `CalloutBox(variant=...)` values.

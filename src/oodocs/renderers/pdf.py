@@ -113,7 +113,7 @@ from oodocs.document import Document
 from oodocs.components.equations import SUBSCRIPT, SUPERSCRIPT, parse_latex_segments
 from oodocs.core import OODocsError, PathLike, length_to_inches
 from oodocs.layout.indexing import RenderIndex, build_render_index
-from oodocs.styles import ParagraphStyle, TableStyle as OODocsTableStyle, Theme
+from oodocs.styles import BoxStyle, ParagraphStyle, TableStyle as OODocsTableStyle, Theme
 from oodocs.renderers.context import PdfRenderContext
 from oodocs.renderers.syntax import SyntaxToken, _syntax_line_tokens, syntax_tokens
 
@@ -1179,6 +1179,32 @@ class PdfRenderer:
         Returns:
             Flowables representing the countable heading and children.
         """
+
+        if block.box_style is not None:
+            boxed_block = Box(
+                *block.children,
+                title=block.heading_fragments(context.render_index.countable_number(block)),
+                style=block.box_style,
+            )
+            anchor = context.render_index.block_anchor(block)
+            if anchor is not None:
+                context.render_index.block_anchors[id(boxed_block)] = anchor
+            elements = self.render_box(boxed_block, context)
+            number = context.render_index.countable_number(block)
+            if block.counter == "algorithm" and number is not None:
+                for element in elements:
+                    if isinstance(element, Flowable):
+                        element._oodocs_caption_list_entry = (  # type: ignore[attr-defined]
+                            "AlgorithmListEntry",
+                            self._flatten_fragments(
+                                _countable_block_fragments(block, number),
+                                context.theme,
+                                context.render_index,
+                            ),
+                            context.render_index.block_anchor(block),
+                        )
+                        break
+            return elements
 
         heading_style = self._paragraph_style(
             ParagraphStyle(space_after=4, keep_with_next=True),
@@ -2516,36 +2542,54 @@ class PdfRenderer:
             flowables.append(Spacer(1, 8))
         return flowables
 
-    def _render_box(self, block: Box, theme: Theme, styles: object, render_index: RenderIndex, settings: object, unit: str) -> list[object]:
+    def _effective_box_style(self, block: Box, theme: Theme) -> BoxStyle:
         box_style = theme.stylesheet.resolve("box", block.style, None)
+        if block.title_position is None and block.shadow is None:
+            return box_style
+        return replace(
+            box_style,
+            title_position=block.title_position or box_style.title_position,
+            shadow=box_style.shadow if block.shadow is None else block.shadow,
+        )
+
+    def _box_side_title_width(self, box_width: float) -> float:
+        if box_width <= 1.5:
+            return max(box_width / 2, 0.25)
+        return min(max(box_width * 0.24, 0.75), box_width - 0.75)
+
+    def _render_box(self, block: Box, theme: Theme, styles: object, render_index: RenderIndex, settings: object, unit: str) -> list[object]:
+        box_style = self._effective_box_style(block, theme)
         body_style = self._paragraph_style(ParagraphStyle(space_after=0), theme, styles["BodyText"])
+        title_fragments = block.title_fragments()
+        if title_fragments is None and box_style.title_position == "side":
+            box_style = replace(box_style, title_position="top")
+        title_is_side = title_fragments is not None and box_style.title_position == "side"
         rows: list[list[object]] = []
         row_styles: list[tuple[str, tuple[int, int], tuple[int, int], object]] = []
-        if block.title is not None:
+        title_flowable = None
+        if title_fragments is not None:
             title_style = RLParagraphStyle(
                 "BoxTitle",
                 parent=body_style,
                 fontName=self._resolve_font(theme.resolve_body_font(), True, False),
-                spaceAfter=6,
+                spaceAfter=0 if title_is_side else 6,
                 textColor=colors.HexColor(f"#{box_style.title_text_color or '000000'}"),
             )
-            rows.append(
-                [
-                    RLParagraph(
-                        self._inline_markup(
-                            block.title,
-                            theme,
-                            render_index,
-                            base_font_name=title_style.fontName,
-                            base_size=title_style.fontSize,
-                            base_bold=True,
-                            base_italic=False,
-                        ),
-                        title_style,
-                    )
-                ]
+            title_flowable = RLParagraph(
+                self._inline_markup(
+                    title_fragments,
+                    theme,
+                    render_index,
+                    base_font_name=title_style.fontName,
+                    base_size=title_style.fontSize,
+                    base_bold=True,
+                    base_italic=False,
+                ),
+                title_style,
             )
-            if box_style.title_background_color is not None:
+            if not title_is_side:
+                rows.append([title_flowable])
+            if not title_is_side and box_style.title_background_color is not None:
                 row_styles.append(
                     (
                         "BACKGROUND",
@@ -2554,6 +2598,7 @@ class PdfRenderer:
                         colors.HexColor(f"#{box_style.title_background_color}"),
                     )
                 )
+        body_flowables: list[object] = []
         for child in block.children:
             self._assert_box_child_supported(child)
             context = PdfRenderContext(
@@ -2566,15 +2611,39 @@ class PdfRenderer:
             )
             for flowable in self._render_block(child, context):
                 if isinstance(flowable, KeepTogether):
-                    rows.extend([[nested]] for nested in flowable._content)
+                    if title_is_side:
+                        body_flowables.extend(flowable._content)
+                    else:
+                        rows.extend([[nested]] for nested in flowable._content)
                     continue
-                rows.append([flowable])
+                if title_is_side:
+                    body_flowables.append(flowable)
+                else:
+                    rows.append([flowable])
+        if title_is_side:
+            if not body_flowables:
+                body_flowables.append(Spacer(1, 1))
+            rows = [[title_flowable or Spacer(1, 1), body_flowables]]
+            if box_style.title_background_color is not None:
+                row_styles.append(
+                    (
+                        "BACKGROUND",
+                        (0, 0),
+                        (0, 0),
+                        colors.HexColor(f"#{box_style.title_background_color}"),
+                    )
+                )
         if not rows:
             rows.append([Spacer(1, 1)])
 
         column_widths = None
         if box_style.width is not None:
-            column_widths = [length_to_inches(box_style.width, box_style.unit or unit) * inch]
+            width = length_to_inches(box_style.width, box_style.unit or unit)
+            if title_is_side:
+                title_width = self._box_side_title_width(width)
+                column_widths = [title_width * inch, max(width - title_width, 0.25) * inch]
+            else:
+                column_widths = [width * inch]
         table = RLTable(
             rows,
             colWidths=column_widths,

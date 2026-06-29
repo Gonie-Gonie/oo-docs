@@ -352,6 +352,8 @@ panel = Box(
         ],
     ),
     title="Report panel",
+    icon="i",
+    title_position="side",
     background_color="#FDFBF6",
     title_background_color="#1058A3",
     title_text_color="#FFFFFF",
@@ -771,7 +773,8 @@ from oodocs.presets.components import CalloutBox, KeyValueTable, Nomenclature
 review_note = CalloutBox(
     Paragraph("Check terminology before external review."),
     title="Review focus",
-    style="warning",
+    variant="warning",
+    icon="!",
 )
 
 metadata = KeyValueTable(
@@ -908,7 +911,7 @@ def build_usage_guide_document() -> Document:
             ["tabular or booktabs", "Table(...), Table.from_dataframe(...), style=\"booktabs\"", "Tables can be created directly from Python data instead of being copied into markup."],
             ["multirow or multicolumn", "TableCell(rowspan=...), Table.grouped_headers(...)", "Merged cells remain explicit table data, and grouped headers can be generated without hand-building every span."],
             ["\\label and \\ref", "Call reference(figure_obj) or figure_obj.reference() inside Paragraph(...)", "References follow the indexed document order without hand-maintained labels."],
-            ["tcolorbox", "Box(..., background_color=..., padding=...)", "Report panels remain editable in Word while keeping a similar grouped visual shape in PDF and HTML."],
+            ["tcolorbox", "Box(..., icon=..., title_position='side') or CalloutBox(variant='danger')", "Report panels remain editable in Word while keeping a similar grouped visual shape in PDF and HTML."],
             ["BibTeX plus \\cite", "CitationLibrary and CitationSource.cite(...)", "Citations are authored inline, and only cited sources appear on ReferenceList()."],
         ],
         caption="LaTeX habits translated into oodocs's Python-first authoring model.",
@@ -1035,7 +1038,7 @@ def build_usage_guide_document() -> Document:
             ["Section, Chapter, Subsection", "level, numbered, toc, anchor, run_in_title_style, heading_style", "Use HeadingStyle for per-level theme defaults or one-off heading overrides."],
             ["Part, Appendix", "title, toc; Part also accepts numbered", "Use Appendix when child chapters should switch to A/B/C numbering."],
             ["BulletList, NumberedList", "marker=CounterStyle(...), indent, marker_gap", "Use ListStyle only for repeated list conventions."],
-            ["Box", "border, background_color, title colors, padding, space_after, width, unit, block_alignment", "Use BoxStyle only for named callout or report-panel designs."],
+            ["Box", "icon, title_position, shadow, border, background_color, title colors, padding, space_after, width, unit, block_alignment", "Use BoxStyle only for named callout or report-panel designs."],
             ["Table", "header/body/alternate colors, border, top_rule, header_rule, bottom_rule, alignment, cell_padding, repeat_header_rows", "Use style=\"booktabs\" for publication-style horizontal rules without vertical grid lines."],
             ["TableCell", "colspan, rowspan, background_color, text_color, bold, italic, text_alignment, vertical_alignment", "Use TableCellStyle only for reusable row, column, or cell styling."],
             ["TableOfContents, ListOfTables, ListOfFigures, ListOfAlgorithms", "scope, show_page_numbers, leader; TableOfContents also accepts max_level and level_styles", "Use scope for document, part, chapter, or section-local generated lists."],
@@ -1047,7 +1050,7 @@ def build_usage_guide_document() -> Document:
     component_presets_table = Table(
         headers=["Preset", "What it builds", "Common customizations"],
         rows=[
-            ["CalloutBox", "A styled Box using named styles such as info, note, success, or warning.", "style, title, and normal Box options when using a concrete BoxStyle."],
+            ["CalloutBox", "A styled Box using variants such as info, note, warning, danger, or success.", "variant, icon, title, and normal Box options such as title_position."],
             ["KeyValueTable", "A compact two-column Table for metadata and option lists.", "headers, caption, style, column widths."],
             ["Nomenclature", "A heavy-outlined Box containing a symbol, meaning, and optional unit table with no internal rules.", "double_column, headers, padding, border, title."],
             ["CompactTable", "A table preset using the compact named table style.", "Any normal Table kwarg, including grouped_headers(...) for spanning preset tables."],
@@ -1122,7 +1125,9 @@ def build_usage_guide_document() -> Document:
     )
     Exercise = create_countable_block_type("Exercise", counter="exercise")
     counted_definition = Definition(
-        "A countable block is a document block with a visible kind label and an index-assigned number."
+        "A countable block is a document block with a visible kind label and an index-assigned number.",
+        title="Countable block",
+        box_style="info",
     )
     counted_theorem = Theorem(
         "The same source object can be referenced from prose after the render index assigns its number.",
@@ -1150,7 +1155,9 @@ def build_usage_guide_document() -> Document:
             "Presets are ordinary oodocs components with carefully chosen defaults. Use direct kwargs for quick local changes and reserve style objects for repeated house styles that need a name."
         ),
         title="Preset rule",
-        style="info",
+        variant="info",
+        icon="i",
+        title_position="side",
     )
     preset_metadata_table = KeyValueTable(
         {

@@ -6,6 +6,7 @@ from collections.abc import Mapping, Sequence
 
 from oodocs.components.base import BlockInput
 from oodocs.components.blocks import Box, CellInput
+from oodocs.components.inline import InlineInput
 from oodocs.components.media import Table, TableCellInput
 from oodocs.styles import BorderStyle, BoxStyle, Padding, TableStyle
 
@@ -14,6 +15,7 @@ NomenclatureEntry = tuple[TableCellInput, TableCellInput] | tuple[TableCellInput
 
 
 _CALLOUT_TITLES = {
+    "danger": "Danger",
     "info": "Info",
     "note": "Note",
     "success": "Success",
@@ -27,7 +29,10 @@ class CalloutBox(Box):
     Args:
         *children: Box content.
         title: Optional callout title. Defaults to a title derived from the
-            named style when possible.
+            variant or named style when possible.
+        variant: Built-in callout variant. Used as the named box style when
+            ``style`` is omitted.
+        icon: Optional inline icon rendered before the callout title.
         style: Named box style or concrete box style.
         **box_options: Additional arguments forwarded to ``Box``.
 
@@ -39,7 +44,7 @@ class CalloutBox(Box):
         styles = StyleSheet.default()
         doc = Document(
             "Review",
-            CalloutBox("Check logs before release.", style="warning"),
+            CalloutBox("Check logs before release.", variant="warning", icon="!"),
             settings=DocumentSettings(theme=Theme(stylesheet=styles)),
         )
         ```
@@ -48,15 +53,19 @@ class CalloutBox(Box):
     def __init__(
         self,
         *children: BlockInput,
-        title: CellInput | None = None,
-        style: BoxStyle | str | None = "info",
+        title: InlineInput | None = None,
+        variant: str = "info",
+        icon: InlineInput | None = None,
+        style: BoxStyle | str | None = None,
         **box_options: object,
     ) -> None:
-        display_title = title if title is not None else _callout_title(style)
+        resolved_style = style if style is not None else variant
+        display_title = title if title is not None else _callout_title(resolved_style)
         super().__init__(
             *children,
             title=display_title,
-            style=style,
+            icon=icon,
+            style=resolved_style,
             **box_options,
         )
 
@@ -275,7 +284,7 @@ def option_table(
 
 def note_box(
     *children: BlockInput,
-    title: CellInput | None = None,
+    title: InlineInput | None = None,
     style: BoxStyle | str | None = "note",
     **box_options: object,
 ) -> CalloutBox:
@@ -298,12 +307,12 @@ def note_box(
         ```
     """
 
-    return CalloutBox(*children, title=title, style=style, **box_options)
+    return CalloutBox(*children, title=title, variant="note", style=style, **box_options)
 
 
 def info_box(
     *children: BlockInput,
-    title: CellInput | None = None,
+    title: InlineInput | None = None,
     style: BoxStyle | str | None = "info",
     **box_options: object,
 ) -> CalloutBox:
@@ -326,12 +335,12 @@ def info_box(
         ```
     """
 
-    return CalloutBox(*children, title=title, style=style, **box_options)
+    return CalloutBox(*children, title=title, variant="info", style=style, **box_options)
 
 
 def warning_box(
     *children: BlockInput,
-    title: CellInput | None = None,
+    title: InlineInput | None = None,
     style: BoxStyle | str | None = "warning",
     **box_options: object,
 ) -> CalloutBox:
@@ -354,12 +363,12 @@ def warning_box(
         ```
     """
 
-    return CalloutBox(*children, title=title, style=style, **box_options)
+    return CalloutBox(*children, title=title, variant="warning", style=style, **box_options)
 
 
 def success_box(
     *children: BlockInput,
-    title: CellInput | None = None,
+    title: InlineInput | None = None,
     style: BoxStyle | str | None = "success",
     **box_options: object,
 ) -> CalloutBox:
@@ -382,7 +391,7 @@ def success_box(
         ```
     """
 
-    return CalloutBox(*children, title=title, style=style, **box_options)
+    return CalloutBox(*children, title=title, variant="success", style=style, **box_options)
 
 
 def _callout_title(style: BoxStyle | str | None) -> str:

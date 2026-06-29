@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import Literal
 
 from oodocs.core import (
     length_to_inches,
@@ -14,6 +15,9 @@ from oodocs.styles.base import _normalize_css_class, _style_with_overrides
 from oodocs.styles.border import BorderStyle
 from oodocs.styles.spacing import Padding
 from oodocs.styles.text import TextStyle
+
+
+BoxTitlePosition = Literal["top", "side"]
 
 
 def paragraph_style_with_overrides(
@@ -265,6 +269,8 @@ class BoxStyle:
         background_color: Hex fill color.
         title_background_color: Optional title band fill color.
         title_text_color: Optional title text color.
+        title_position: Title placement, either ``"top"`` or ``"side"``.
+        shadow: Whether HTML output should render a tcolorbox-like shadow.
         padding: Inner padding.
         space_after: Space after the box in points.
         width: Optional box width in ``unit``.
@@ -294,6 +300,8 @@ class BoxStyle:
     background_color: str = "F7FAFC"
     title_background_color: str | None = None
     title_text_color: str | None = None
+    title_position: BoxTitlePosition = "top"
+    shadow: bool = False
     padding: Padding = field(default_factory=lambda: Padding.all(6.0))
     space_after: float = 12.0
     width: float | None = None
@@ -310,6 +318,10 @@ class BoxStyle:
         self.background_color = normalize_color(self.background_color) or "F7FAFC"
         self.title_background_color = normalize_color(self.title_background_color)
         self.title_text_color = normalize_color(self.title_text_color)
+        if self.title_position not in {"top", "side"}:
+            raise ValueError("BoxStyle.title_position must be 'top' or 'side'")
+        if not isinstance(self.shadow, bool):
+            raise TypeError("BoxStyle.shadow must be a bool")
         self.unit = normalize_length_unit(self.unit) if self.unit is not None else None
         if self.space_after < 0:
             raise ValueError("BoxStyle.space_after must be >= 0")

@@ -76,6 +76,14 @@ COMPATIBILITY_NOTES: dict[str, CompatibilityNote] = {
         ),
         formats=("html",),
     ),
+    "box-shadow-html-only": CompatibilityNote(
+        code="box-shadow-html-only",
+        message=(
+            "Box shadows render in HTML output only; DOCX and PDF keep the "
+            "box content and omit the shadow."
+        ),
+        formats=("docx", "pdf"),
+    ),
 }
 
 

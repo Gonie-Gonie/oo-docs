@@ -499,14 +499,18 @@ class HtmlRenderer:
         """
 
         self._assert_box_children_supported(block.children)
-        box_style = context.stylesheet.resolve("box", block.style, None)
+        box_style = self._effective_box_style(block, context.theme)
+        title_fragments = block.title_fragments()
+        if title_fragments is None and box_style.title_position == "side":
+            box_style = replace(box_style, title_position="top")
+        title_is_side = title_fragments is not None and box_style.title_position == "side"
         title_html = ""
-        if block.title is not None:
+        if title_fragments is not None:
             title_html = (
                 '<div class="oodocs-box-title" '
-                f'style="{self._box_title_css(box_style, context.theme)}">'
+                f'style="{self._box_title_css(box_style, context.theme, side=title_is_side)}">'
                 + self._inline_html(
-                    block.title,
+                    title_fragments,
                     context.theme,
                     context.render_index,
                     base_bold=True,
@@ -529,11 +533,18 @@ class HtmlRenderer:
         anchor = context.render_index.block_anchor(block)
         anchor_attr = f' id="{escape(anchor)}"' if anchor else ""
         class_attr = self._html_class_attr("oodocs-box", box_style.css_class)
+        body_html = (
+            '<div class="oodocs-box-body" style="min-width: 0;">'
+            + children_html
+            + "</div>"
+            if title_is_side
+            else children_html
+        )
         return (
             f'<section{anchor_attr}{class_attr} '
             f'style="{self._box_css(box_style, context.theme, context.unit)}">'
             + title_html
-            + children_html
+            + body_html
             + "</section>"
         )
 
@@ -551,6 +562,17 @@ class HtmlRenderer:
         Returns:
             HTML fragment for the countable block.
         """
+
+        if block.box_style is not None:
+            boxed_block = Box(
+                *block.children,
+                title=block.heading_fragments(context.render_index.countable_number(block)),
+                style=block.box_style,
+            )
+            anchor = context.render_index.block_anchor(block)
+            if anchor is not None:
+                context.render_index.block_anchors[id(boxed_block)] = anchor
+            return self.render_box(boxed_block, context)
 
         number = context.render_index.countable_number(block)
         anchor = context.render_index.block_anchor(block)
@@ -2480,6 +2502,16 @@ class HtmlRenderer:
             f"{''.join(pagination_styles)}"
         )
 
+    def _effective_box_style(self, box: Box, theme: Theme) -> BoxStyle:
+        box_style = theme.stylesheet.resolve("box", box.style, None)
+        if box.title_position is None and box.shadow is None:
+            return box_style
+        return replace(
+            box_style,
+            title_position=box.title_position or box_style.title_position,
+            shadow=box_style.shadow if box.shadow is None else box.shadow,
+        )
+
     def _box_css(self, style: BoxStyle, theme: Theme, unit: str) -> str:
         top_padding, right_padding, bottom_padding, left_padding = style.padding.to_points()
         width = (
@@ -2492,12 +2524,25 @@ class HtmlRenderer:
             if style.border.color is not None and style.border.width > 0
             else "none"
         )
+        side_title_css = (
+            " display: grid; grid-template-columns: max-content minmax(0, 1fr);"
+            " column-gap: 10pt; align-items: stretch;"
+            if style.title_position == "side"
+            else ""
+        )
+        shadow_css = (
+            " box-shadow: 0 10pt 22pt rgba(15, 23, 42, 0.14);"
+            if style.shadow
+            else ""
+        )
         return (
             f"border: {border_css};"
             f" background: #{style.background_color};"
             f" padding: {top_padding:.1f}pt {right_padding:.1f}pt {bottom_padding:.1f}pt {left_padding:.1f}pt;"
             f" margin: 0 0 {style.space_after:.1f}pt;"
             f"{width}"
+            f"{side_title_css}"
+            f"{shadow_css}"
             f" {self._block_alignment_css(style.block_alignment or theme.blocks.box_block_alignment)}"
         )
 
@@ -2544,11 +2589,13 @@ class HtmlRenderer:
             return "margin-left: auto; margin-right: auto;"
         return "margin-left: 0; margin-right: auto;"
 
-    def _box_title_css(self, style: BoxStyle, theme: Theme) -> str:
+    def _box_title_css(self, style: BoxStyle, theme: Theme, *, side: bool = False) -> str:
         parts = [
             "font-weight: 700",
-            "margin: 0 0 6pt",
+            "margin: 0 0 6pt" if not side else "margin: 0",
         ]
+        if side:
+            parts.extend(["align-self: stretch", "min-width: 0"])
         if style.title_background_color is not None:
             parts.append(f"background: #{style.title_background_color}")
             parts.append("padding: 4pt 6pt")

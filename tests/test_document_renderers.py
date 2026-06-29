@@ -2082,7 +2082,16 @@ def test_box_style_supports_tcolorbox_like_layout_controls(tmp_path: Path) -> No
                 block_alignment="left",
             ),
         ),
+        CalloutBox(
+            Paragraph("Stop the release until the reviewer resolves this item."),
+            variant="danger",
+            icon="!",
+            title_position="side",
+            shadow=True,
+        ),
     )
+    validation = document.validate()
+    assert "box-shadow-html-only" in {issue.code for issue in validation.warnings}
 
     docx_path = tmp_path / "box-layout.docx"
     pdf_path = tmp_path / "box-layout.pdf"
@@ -2095,6 +2104,7 @@ def test_box_style_supports_tcolorbox_like_layout_controls(tmp_path: Path) -> No
     docx_xml = _docx_document_xml(docx_path)
     html_text = html_path.read_text(encoding="utf-8")
     pdf_text = "\n".join(page.extract_text() or "" for page in PdfReader(BytesIO(pdf_path.read_bytes())).pages)
+    normalized_pdf_text = " ".join(pdf_text.split())
 
     assert "Editable content inside a styled report panel." in docx_xml
     assert 'w:fill="1058A3"' in docx_xml
@@ -2107,8 +2117,14 @@ def test_box_style_supports_tcolorbox_like_layout_controls(tmp_path: Path) -> No
     assert "padding: 0;" in html_text
     assert "box-shadow: none" in html_text
     assert "color: #FFFFFF" in html_text
+    assert "grid-template-columns: max-content minmax(0, 1fr)" in html_text
+    assert "box-shadow: 0 10pt 22pt rgba(15, 23, 42, 0.14)" in html_text
+    assert "Danger" in docx_xml
+    assert "Stop the release until the reviewer resolves this item." in docx_xml
     assert "Editable content inside a styled report panel." in pdf_text
     assert "compact nested table" in pdf_text
+    assert "Danger" in pdf_text
+    assert "Stop the release until the reviewer resolves this item." in normalized_pdf_text
 
 
 def test_explicit_page_break_renders_to_all_outputs(tmp_path: Path) -> None:
@@ -2664,6 +2680,9 @@ def test_component_and_template_presets_build_renderable_documents(tmp_path: Pat
     assert info_box("Info body").style == "info"
     assert warning_box("Warning body").style == "warning"
     assert success_box("Success body").style == "success"
+    danger_callout = CalloutBox("Danger body", variant="danger", icon="!")
+    assert danger_callout.style == "danger"
+    assert danger_callout.title_fragments() is not None
 
     try:
         Nomenclature([("x", "value", "-", "extra")])  # type: ignore[list-item]
@@ -3034,6 +3053,53 @@ def test_countable_blocks_share_document_counter_and_render_references(tmp_path:
     assert "See Theorem 3 , the proof , and Claim 7 ." in normalized_html_text
     assert 'class="oodocs-countable-block' in html_text
     assert 'href="#countable_' in html_text
+
+
+def test_countable_blocks_can_render_as_theorem_boxes(tmp_path: Path) -> None:
+    definition = Definition(
+        "A boxed theorem-like block keeps its counter and reference target.",
+        title="Boxed term",
+        box_style=BoxStyle(
+            border=BorderStyle.solid("2563EB", width=0.75),
+            background_color="EFF6FF",
+            title_background_color="DBEAFE",
+            title_text_color="1E3A8A",
+            title_position="side",
+        ),
+    )
+    document = Document(
+        "Boxed Countable Blocks",
+        Paragraph("See ", definition.reference(), "."),
+        definition,
+    )
+
+    docx_path = tmp_path / "boxed-countable.docx"
+    pdf_path = tmp_path / "boxed-countable.pdf"
+    html_path = tmp_path / "boxed-countable.html"
+    document.save_docx(docx_path)
+    document.save_pdf(pdf_path)
+    document.save_html(html_path)
+
+    word_text = "\n".join(paragraph.text for paragraph in WordDocument(docx_path).paragraphs)
+    docx_xml = _docx_document_xml(docx_path)
+    pdf_text = "\n".join(page.extract_text() or "" for page in PdfReader(BytesIO(pdf_path.read_bytes())).pages)
+    normalized_pdf_text = " ".join(pdf_text.split())
+    html_text = html_path.read_text(encoding="utf-8")
+    normalized_html_text = _normalized_html_text(html_path)
+
+    assert "See Definition 1." in word_text
+    assert "Definition 1." in docx_xml
+    assert "Boxed term" in docx_xml
+    assert "A boxed theorem-like block keeps its counter and reference target." in docx_xml
+    assert "See Definition 1." in pdf_text
+    assert "Definition 1. Boxed term" in pdf_text
+    assert "A boxed theorem-like block keeps its counter and reference target." in normalized_pdf_text
+    assert "See Definition 1 ." in normalized_html_text
+    assert "Definition 1. Boxed term" in normalized_html_text
+    assert "A boxed theorem-like block keeps its counter and reference target." in normalized_html_text
+    assert 'class="oodocs-box"' in html_text
+    assert 'href="#countable_' in html_text
+    assert 'id="countable_' in html_text
 
 
 def test_algorithm_blocks_render_clauses_steps_code_and_references(tmp_path: Path) -> None:

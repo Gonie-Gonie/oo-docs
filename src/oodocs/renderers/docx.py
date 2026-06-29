@@ -95,7 +95,7 @@ from oodocs.document import Document
 from oodocs.components.equations import SUBSCRIPT, SUPERSCRIPT, parse_latex_segments
 from oodocs.core import OODocsError, PathLike, length_to_inches
 from oodocs.layout.indexing import RenderIndex, build_render_index
-from oodocs.styles import HeadingStyle, ParagraphStyle, TableStyle, TextStyle, Theme
+from oodocs.styles import BoxStyle, HeadingStyle, ParagraphStyle, TableStyle, TextStyle, Theme
 from oodocs.renderers.context import DocxRenderContext
 from oodocs.renderers.syntax import SyntaxToken, _syntax_line_tokens, syntax_tokens
 
@@ -561,6 +561,18 @@ class DocxRenderer:
             block: Countable block to render.
             context: Current DOCX render context.
         """
+
+        if block.box_style is not None:
+            boxed_block = Box(
+                *block.children,
+                title=block.heading_fragments(context.render_index.countable_number(block)),
+                style=block.box_style,
+            )
+            anchor = context.render_index.block_anchor(block)
+            if anchor is not None:
+                context.render_index.block_anchors[id(boxed_block)] = anchor
+            self.render_box(container, boxed_block, context)
+            return
 
         paragraph = self._add_paragraph(container)
         paragraph.paragraph_format.space_after = Pt(4)
@@ -2146,6 +2158,21 @@ class DocxRenderer:
             run = paragraph.add_run(f" ({number})")
             self._apply_run_style(run, TextStyle(), default_size=theme.typography.body_font_size)
 
+    def _effective_box_style(self, box: Box, theme: Theme) -> BoxStyle:
+        box_style = theme.stylesheet.resolve("box", box.style, None)
+        if box.title_position is None and box.shadow is None:
+            return box_style
+        return replace(
+            box_style,
+            title_position=box.title_position or box_style.title_position,
+            shadow=box_style.shadow if box.shadow is None else box.shadow,
+        )
+
+    def _box_side_title_width(self, box_width: float) -> float:
+        if box_width <= 1.5:
+            return max(box_width / 2, 0.25)
+        return min(max(box_width * 0.24, 0.75), box_width - 0.75)
+
     def _render_box(
         self,
         container: object,
@@ -2157,48 +2184,78 @@ class DocxRenderer:
         *,
         word_document: WordDocument,
     ) -> None:
-        box_style = theme.stylesheet.resolve("box", box.style, None)
+        box_style = self._effective_box_style(box, theme)
         alignment = box_style.block_alignment or theme.blocks.box_block_alignment
+        title_fragments = box.title_fragments()
+        title_is_side = title_fragments is not None and box_style.title_position == "side"
         anchor = render_index.block_anchor(box)
         if anchor is not None:
             anchor_paragraph = self._add_paragraph(container)
             anchor_paragraph.paragraph_format.space_before = Pt(0)
             anchor_paragraph.paragraph_format.space_after = Pt(0)
             self._add_bookmark(anchor_paragraph, anchor)
-        outer_table = container.add_table(rows=1, cols=1)
+        outer_table = container.add_table(rows=1, cols=2 if title_is_side else 1)
         outer_table.alignment = TABLE_ALIGNMENTS[alignment]
+        box_width = None
         if box_style.width is not None:
-            width = length_to_inches(box_style.width, box_style.unit or unit)
+            box_width = length_to_inches(box_style.width, box_style.unit or unit)
             outer_table.autofit = False
-            self._set_table_width(outer_table, width)
-            outer_table.columns[0].width = Inches(width)
-        cell = outer_table.rows[0].cells[0]
-        cell._tc.clear_content()
-        self._initialized_cells.discard(id(cell))
-        if box_style.width is not None:
-            self._set_cell_width(cell, length_to_inches(box_style.width, box_style.unit or unit))
-        self._set_cell_shading(cell, box_style.background_color)
-        if box_style.border.color is not None and box_style.border.width > 0:
-            self._set_cell_borders(cell, box_style.border.color, box_style.border.width_points())
-        else:
-            self._set_cell_borders_none(cell)
-        self._set_cell_margins(cell, *box_style.padding.to_points())
+            self._set_table_width(outer_table, box_width)
 
-        if box.title is not None:
-            title_paragraph = self._add_paragraph(cell)
-            title_paragraph.paragraph_format.space_after = Pt(6)
+        cells = outer_table.rows[0].cells
+        body_cell = cells[-1]
+        for cell in cells:
+            cell._tc.clear_content()
+            self._initialized_cells.discard(id(cell))
+            self._set_cell_shading(cell, box_style.background_color)
+            if box_style.border.color is not None and box_style.border.width > 0:
+                self._set_cell_borders(cell, box_style.border.color, box_style.border.width_points())
+            else:
+                self._set_cell_borders_none(cell)
+            self._set_cell_margins(cell, *box_style.padding.to_points())
+
+        if title_is_side:
+            title_cell = cells[0]
             if box_style.title_background_color is not None:
-                self._set_paragraph_shading(title_paragraph, box_style.title_background_color)
+                self._set_cell_shading(title_cell, box_style.title_background_color)
+            if box_width is not None:
+                title_width = self._box_side_title_width(box_width)
+                body_width = max(box_width - title_width, 0.25)
+                outer_table.columns[0].width = Inches(title_width)
+                outer_table.columns[1].width = Inches(body_width)
+                self._set_cell_width(title_cell, title_width)
+                self._set_cell_width(body_cell, body_width)
+            title_paragraph = self._add_paragraph(title_cell)
+            title_paragraph.paragraph_format.space_after = Pt(0)
             title_style = TextStyle(text_color=box_style.title_text_color, bold=True)
             self._append_runs(
                 title_paragraph,
-                box.title,
+                title_fragments,
                 default_size=theme.typography.body_font_size,
                 default_style=title_style,
                 theme=theme,
                 render_index=render_index,
                 word_document=word_document,
             )
+        else:
+            if box_width is not None:
+                outer_table.columns[0].width = Inches(box_width)
+                self._set_cell_width(body_cell, box_width)
+            if title_fragments is not None:
+                title_paragraph = self._add_paragraph(body_cell)
+                title_paragraph.paragraph_format.space_after = Pt(6)
+                if box_style.title_background_color is not None:
+                    self._set_paragraph_shading(title_paragraph, box_style.title_background_color)
+                title_style = TextStyle(text_color=box_style.title_text_color, bold=True)
+                self._append_runs(
+                    title_paragraph,
+                    title_fragments,
+                    default_size=theme.typography.body_font_size,
+                    default_style=title_style,
+                    theme=theme,
+                    render_index=render_index,
+                    word_document=word_document,
+                )
 
         context = DocxRenderContext(
             theme=theme,
@@ -2210,10 +2267,10 @@ class DocxRenderer:
         )
         for child in box.children:
             self._assert_box_child_supported(child)
-            self._render_block(cell, child, context)
+            self._render_block(body_cell, child, context)
 
-        if not cell.paragraphs:
-            cell.add_paragraph()
+        if not body_cell.paragraphs:
+            body_cell.add_paragraph()
 
     def _render_multi_column(
         self,
