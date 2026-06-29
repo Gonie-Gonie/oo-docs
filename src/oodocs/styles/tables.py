@@ -176,6 +176,9 @@ class TableStyle:
         header_background_color: Hex fill color for header cells.
         header_text_color: Hex text color for header cells.
         border: Table border style.
+        top_rule: Optional horizontal rule applied to the top table edge.
+        header_rule: Optional horizontal rule applied below the last header row.
+        bottom_rule: Optional horizontal rule applied to the bottom table edge.
         body_background_color: Optional body cell fill color.
         alternate_row_background_color: Optional alternating row fill color.
         cell_text_alignment: Optional body cell text alignment.
@@ -200,6 +203,9 @@ class TableStyle:
     border: BorderStyle = field(
         default_factory=lambda: BorderStyle.solid("B7C2D0", width=0.5)
     )
+    top_rule: BorderStyle | None = None
+    header_rule: BorderStyle | None = None
+    bottom_rule: BorderStyle | None = None
     body_background_color: str | None = None
     alternate_row_background_color: str | None = None
     cell_text_alignment: str | None = None
@@ -216,6 +222,10 @@ class TableStyle:
         self.header_text_color = normalize_color(self.header_text_color) or "000000"
         if not isinstance(self.border, BorderStyle):
             raise TypeError("TableStyle.border must be a BorderStyle")
+        for field_name in ("top_rule", "header_rule", "bottom_rule"):
+            rule = getattr(self, field_name)
+            if rule is not None and not isinstance(rule, BorderStyle):
+                raise TypeError(f"TableStyle.{field_name} must be a BorderStyle or None")
         if not isinstance(self.cell_padding, Padding):
             raise TypeError("TableStyle.cell_padding must be a Padding")
         self.body_background_color = normalize_color(self.body_background_color)
@@ -301,6 +311,60 @@ class TableStyle:
             cell_padding=Padding.all(4.0),
             repeat_header_rows=True,
         )
+
+    @classmethod
+    def booktabs(cls) -> TableStyle:
+        """Create a publication-style table preset with horizontal rules only.
+
+        Returns:
+            Booktabs-style table with top, header, and bottom rules and no
+            vertical grid lines.
+
+        Examples:
+            ```python
+            style = TableStyle.booktabs()
+            ```
+        """
+
+        rule_color = "111827"
+        return cls(
+            header_background_color="FFFFFF",
+            header_text_color="111827",
+            border=BorderStyle.none(),
+            top_rule=BorderStyle.solid(rule_color, width=1.0),
+            header_rule=BorderStyle.solid(rule_color, width=0.6),
+            bottom_rule=BorderStyle.solid(rule_color, width=1.0),
+            body_background_color="FFFFFF",
+            cell_padding=Padding.symmetric(vertical=4.0, horizontal=5.0),
+            repeat_header_rows=True,
+        )
+
+    def _border_edges(
+        self,
+        *,
+        row: int,
+        rowspan: int,
+        row_count: int,
+        header_row_count: int,
+    ) -> dict[str, BorderStyle]:
+        default = self.border if _border_enabled(self.border) else BorderStyle.none()
+        edges = {edge: default for edge in ("top", "right", "bottom", "left")}
+        end_row = row + max(rowspan, 1) - 1
+        if row == 0 and _border_enabled(self.top_rule):
+            edges["top"] = self.top_rule
+        if (
+            header_row_count > 0
+            and end_row == header_row_count - 1
+            and _border_enabled(self.header_rule)
+        ):
+            edges["bottom"] = self.header_rule
+        if end_row == row_count - 1 and _border_enabled(self.bottom_rule):
+            edges["bottom"] = self.bottom_rule
+        return edges
+
+
+def _border_enabled(border: BorderStyle | None) -> bool:
+    return border is not None and border.color is not None and border.width > 0
 
 __all__ = [
     "TableCellStyle",

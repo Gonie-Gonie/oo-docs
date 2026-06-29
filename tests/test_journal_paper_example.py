@@ -196,6 +196,8 @@ def test_journal_paper_example_builds_outputs(tmp_path: Path) -> None:
     assert html_text.count("data:image/png;base64,") == 3
     assert 'class="oodocs-multi-column-layout"' in html_text
     assert "column-count: 2" in html_text
+    assert "border-top: 1.00pt solid #111827" in html_text
+    assert "border-bottom: 0.60pt solid #111827" in html_text
     assert 'href="#table_2"' in html_text
     assert 'href="#figure_2"' in html_text
     assert_html_internal_links_resolve(

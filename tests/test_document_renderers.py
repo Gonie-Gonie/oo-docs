@@ -19,8 +19,10 @@ import pytest
 import oodocs.components.generated as generated_components
 import oodocs.components.inline as inline_components
 from oodocs.components.equations import BASELINE, SUBSCRIPT, SUPERSCRIPT, parse_latex_segments
+from oodocs.components.media import build_table_layout
 from oodocs.core import length_to_inches
 from oodocs.layout.indexing import build_render_index
+from oodocs.renderers.pdf import PdfRenderer
 from oodocs import (
     Affiliation,
     Assumption,
@@ -2342,6 +2344,50 @@ def test_table_detail_style_options_render_to_all_outputs(tmp_path: Path) -> Non
     assert "Detailed table." in pdf_text
     assert "border: 1.25pt solid #334155" in html_text
     assert "padding: 2.0pt 3.0pt 4.0pt 5.0pt" in html_text
+
+
+def test_booktabs_table_style_renders_horizontal_rules_to_all_outputs(tmp_path: Path) -> None:
+    table = Table(
+        headers=["Metric", "Value"],
+        rows=[["Accuracy", "0.91"], ["F1", "0.88"]],
+        caption="Booktabs table.",
+        style="booktabs",
+    )
+    document = Document("Booktabs Table Test", table)
+
+    docx_path = tmp_path / "booktabs-table.docx"
+    pdf_path = tmp_path / "booktabs-table.pdf"
+    html_path = tmp_path / "booktabs-table.html"
+    document.save_docx(docx_path)
+    document.save_pdf(pdf_path)
+    document.save_html(html_path)
+
+    docx_xml = _docx_document_xml(docx_path)
+    pdf_text = "\n".join(
+        page.extract_text() or "" for page in PdfReader(BytesIO(pdf_path.read_bytes())).pages
+    )
+    html_text = html_path.read_text(encoding="utf-8")
+    pdf_border_commands = PdfRenderer()._table_border_style_commands(
+        TableStyle.booktabs(),
+        build_table_layout(table.header_rows, table.rows),
+    )
+
+    assert "Booktabs table." in pdf_text
+    assert "Accuracy" in pdf_text
+    assert 'w:color="111827"' in docx_xml
+    assert 'w:sz="8"' in docx_xml
+    assert 'w:sz="5"' in docx_xml
+    assert '<w:left w:val="nil"/>' in docx_xml
+    assert '<w:right w:val="nil"/>' in docx_xml
+    assert "border: none" in html_text
+    assert "border-top: 1.00pt solid #111827" in html_text
+    assert "border-bottom: 0.60pt solid #111827" in html_text
+    assert "border-bottom: 1.00pt solid #111827" in html_text
+    assert [command[0] for command in pdf_border_commands] == [
+        "LINEABOVE",
+        "LINEBELOW",
+        "LINEBELOW",
+    ]
 
 
 def test_component_and_template_presets_build_renderable_documents(tmp_path: Path) -> None:

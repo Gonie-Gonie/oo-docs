@@ -63,6 +63,37 @@ def test_border_style_factories_and_units() -> None:
     assert BorderStyle.none().width == 0.0
 
 
+def test_table_style_booktabs_preset_uses_horizontal_rules() -> None:
+    style = TableStyle.booktabs()
+
+    assert style.border.color is None
+    assert style.top_rule is not None
+    assert style.top_rule.width_points() == 1.0
+    assert style.header_rule is not None
+    assert style.header_rule.width_points() == 0.6
+    assert style.bottom_rule is not None
+    assert style.bottom_rule.width_points() == 1.0
+    header_edges = style._border_edges(row=0, rowspan=1, row_count=3, header_row_count=1)
+    body_edges = style._border_edges(row=1, rowspan=1, row_count=3, header_row_count=1)
+    bottom_edges = style._border_edges(row=2, rowspan=1, row_count=3, header_row_count=1)
+
+    assert header_edges["top"].width_points() == 1.0
+    assert header_edges["bottom"].width_points() == 0.6
+    assert header_edges["left"].color is None
+    assert body_edges["top"].color is None
+    assert body_edges["bottom"].color is None
+    assert bottom_edges["bottom"].width_points() == 1.0
+
+    sheet = StyleSheet.default()
+    resolved = sheet.resolve("table", "booktabs")
+    round_tripped = StyleSheet.from_dict(sheet.to_dict()).resolve("table", "booktabs")
+
+    assert isinstance(resolved, TableStyle)
+    assert isinstance(round_tripped, TableStyle)
+    assert round_tripped.top_rule is not None
+    assert round_tripped.top_rule.width_points() == 1.0
+
+
 def test_stroke_style_factories_and_point_conversion() -> None:
     stroke = StrokeStyle.solid("#334155", width=0.75)
 

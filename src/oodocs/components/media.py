@@ -819,6 +819,9 @@ class Table(Block):
         header_background_color: Optional header background color override.
         header_text_color: Optional header text color override.
         border: Optional border style override.
+        top_rule: Optional top horizontal rule override.
+        header_rule: Optional rule below the last header row.
+        bottom_rule: Optional bottom horizontal rule override.
         body_background_color: Optional body background color override.
         alternate_row_background_color: Optional alternating row background.
         cell_text_alignment: Optional body cell text alignment.
@@ -926,6 +929,9 @@ class Table(Block):
         header_background_color: str | None = None,
         header_text_color: str | None = None,
         border: BorderStyle | None = None,
+        top_rule: BorderStyle | None = None,
+        header_rule: BorderStyle | None = None,
+        bottom_rule: BorderStyle | None = None,
         body_background_color: str | None = None,
         alternate_row_background_color: str | None = None,
         cell_text_alignment: str | None = None,
@@ -969,6 +975,9 @@ class Table(Block):
             header_background_color=header_background_color,
             header_text_color=header_text_color,
             border=border,
+            top_rule=top_rule,
+            header_rule=header_rule,
+            bottom_rule=bottom_rule,
             body_background_color=body_background_color,
             alternate_row_background_color=alternate_row_background_color,
             cell_text_alignment=cell_text_alignment,
@@ -1103,6 +1112,9 @@ class Table(Block):
         header_background_color: str | None = None,
         header_text_color: str | None = None,
         border: BorderStyle | None = None,
+        top_rule: BorderStyle | None = None,
+        header_rule: BorderStyle | None = None,
+        bottom_rule: BorderStyle | None = None,
         body_background_color: str | None = None,
         alternate_row_background_color: str | None = None,
         cell_text_alignment: str | None = None,
@@ -1131,6 +1143,9 @@ class Table(Block):
             header_background_color: Optional header background color override.
             header_text_color: Optional header text color override.
             border: Optional border style override.
+            top_rule: Optional top horizontal rule override.
+            header_rule: Optional rule below the last header row.
+            bottom_rule: Optional bottom horizontal rule override.
             body_background_color: Optional body background color override.
             alternate_row_background_color: Optional alternating row background.
             cell_text_alignment: Optional body cell text alignment.
@@ -1168,6 +1183,9 @@ class Table(Block):
             header_background_color=header_background_color,
             header_text_color=header_text_color,
             border=border,
+            top_rule=top_rule,
+            header_rule=header_rule,
+            bottom_rule=bottom_rule,
             body_background_color=body_background_color,
             alternate_row_background_color=alternate_row_background_color,
             cell_text_alignment=cell_text_alignment,

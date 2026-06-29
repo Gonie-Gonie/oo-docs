@@ -130,6 +130,7 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert any("YAML" in text for text in paragraph_texts)
     assert any("Table(split=False)" in text for text in paragraph_texts)
     assert any("Table(split=True)" in text for text in paragraph_texts)
+    assert any('style="booktabs"' in text for text in paragraph_texts)
     assert any("'tbp'" in text or 'placement="tbp"' in text for text in paragraph_texts)
     assert any("TableOfContents" in text for text in paragraph_texts)
     assert any("TocLevelStyle" in text for text in paragraph_texts)
@@ -228,6 +229,7 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "YAML" in pdf_text
     assert "Table(split=False)" in pdf_text
     assert "Table(split=True)" in pdf_text
+    assert 'style="booktabs"' in pdf_text
     assert ("'tbp'" in pdf_text) or ('placement="tbp"' in pdf_text)
     assert "TableOfContents" in pdf_text
     assert "TocLevelStyle" in pdf_text
@@ -311,6 +313,7 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "YAML" in normalized_html_text
     assert "Table(split=False)" in normalized_html_text
     assert "Table(split=True)" in normalized_html_text
+    assert 'style="booktabs"' in normalized_html_text
     assert ("'tbp'" in normalized_html_text) or ('placement="tbp"' in normalized_html_text)
     assert "TableOfContents" in normalized_html_text
     assert "TocLevelStyle" in normalized_html_text

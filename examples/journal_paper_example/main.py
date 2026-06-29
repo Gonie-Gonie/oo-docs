@@ -193,8 +193,7 @@ def build_journal_paper_document(inputs: ManuscriptInputs | None = None) -> Docu
         dataset_df,
         caption="Study corpus constructed in memory for the manuscript workflow.",
         column_widths=[1.2, 1.2, 3.2],
-        header_background_color="#E7EEF7",
-        alternate_row_background_color="#FAFCFE",
+        style="booktabs",
     )
     benchmark_table = Table.from_dataframe(
         results_df[["Model", "Accuracy", "F1", "Latency_ms"]],

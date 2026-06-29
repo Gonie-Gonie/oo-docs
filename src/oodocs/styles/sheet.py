@@ -89,6 +89,7 @@ class StyleSheet:
         sheet.register("table", "plain", TableStyle.plain())
         sheet.register("table", "compact", TableStyle.compact())
         sheet.register("table", "evidence", TableStyle.evidence())
+        sheet.register("table", "booktabs", TableStyle.booktabs())
         sheet.register(
             "table",
             "nomenclature.inner",
@@ -323,6 +324,10 @@ def _style_from_payload(style_type: type, payload: dict[str, Any]) -> object:
     values = dict(payload)
     if style_type in {BoxStyle, TableStyle, InlineChipStyle} and isinstance(values.get("border"), dict):
         values["border"] = BorderStyle(**values["border"])
+    if style_type is TableStyle:
+        for field_name in ("top_rule", "header_rule", "bottom_rule"):
+            if isinstance(values.get(field_name), dict):
+                values[field_name] = BorderStyle(**values[field_name])
     if style_type is BoxStyle and isinstance(values.get("padding"), dict):
         values["padding"] = Padding(**values["padding"])
     if style_type is TableStyle and isinstance(values.get("cell_padding"), dict):

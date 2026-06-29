@@ -623,6 +623,16 @@ Table(
 )
 """
 
+BOOKTABS_TABLE_SNIPPET = """from oodocs import Table
+
+Table(
+    headers=["Metric", "Value"],
+    rows=[["Accuracy", "0.91"], ["F1", "0.88"]],
+    caption="Publication-style metrics.",
+    style="booktabs",
+)
+"""
+
 TABLE_PLACEMENT_SNIPPET = """from oodocs import Figure, Table
 
 audit_log = Table(
@@ -787,7 +797,7 @@ def build_usage_guide_document() -> Document:
             ["\\textbf, \\emph, \\texttt", "bold(...), italic(...), inline_code(...)", "Inline styling stays attached to the words being styled and works in DOCX, PDF, and HTML."],
             ["\\includegraphics", "Figure(path_or_matplotlib_figure, caption=...)", "Static images and Python-generated figures use the same captioning and referencing model."],
             ["\\vspace{...}, \\hrule", "VerticalSpace(...), Divider()", "Vertical spacing and separators remain explicit document blocks, including a Notion-like divider for lightweight visual breaks."],
-            ["tabular or booktabs", "Table(...), Table.from_dataframe(...)", "Tables can be created directly from Python data instead of being copied into markup."],
+            ["tabular or booktabs", "Table(...), Table.from_dataframe(...), style=\"booktabs\"", "Tables can be created directly from Python data instead of being copied into markup."],
             ["\\label and \\ref", "Call reference(figure_obj) or figure_obj.reference() inside Paragraph(...)", "References follow the indexed document order without hand-maintained labels."],
             ["tcolorbox", "Box(..., background_color=..., padding=...)", "Report panels remain editable in Word while keeping a similar grouped visual shape in PDF and HTML."],
             ["BibTeX plus \\cite", "CitationLibrary and CitationSource.cite(...)", "Citations are authored inline, and only cited sources appear on ReferenceList()."],
@@ -916,7 +926,7 @@ def build_usage_guide_document() -> Document:
             ["Part, Appendix", "title, toc; Part also accepts numbered", "Use Appendix when child chapters should switch to A/B/C numbering."],
             ["BulletList, NumberedList", "marker=CounterStyle(...), indent, marker_gap", "Use ListStyle only for repeated list conventions."],
             ["Box", "border, background_color, title colors, padding, space_after, width, unit, block_alignment", "Use BoxStyle only for named callout or report-panel designs."],
-            ["Table", "header/body/alternate colors, border, cell/header alignment, cell_padding, repeat_header_rows", "row_styles, column_styles, and header_row_styles accept dictionaries for quick overrides."],
+            ["Table", "header/body/alternate colors, border, top_rule, header_rule, bottom_rule, alignment, cell_padding, repeat_header_rows", "Use style=\"booktabs\" for publication-style horizontal rules without vertical grid lines."],
             ["TableCell", "colspan, rowspan, background_color, text_color, bold, italic, text_alignment, vertical_alignment", "Use TableCellStyle only for reusable row, column, or cell styling."],
             ["TableOfContents, ListOfTables, ListOfFigures", "scope, show_page_numbers, leader; TableOfContents also accepts max_level and level_styles", "Use scope for document, part, chapter, or section-local generated lists."],
             ["Figure, SubFigure, SubFigureGroup", "width, height, unit, placement, image_dpi, columns, column_gap, label_format", "Use caption Paragraphs when caption text needs inline styling."],
@@ -1367,6 +1377,22 @@ def build_usage_guide_document() -> Document:
                     "."
                 ),
                 CodeBlock(TABLE_ALIGNMENT_SNIPPET, language="python"),
+                Paragraph(
+                    "For publication-style tables comparable to LaTeX ",
+                    inline_code("booktabs"),
+                    ", use the built-in ",
+                    inline_code('style="booktabs"'),
+                    " preset, or build a custom ",
+                    inline_code("TableStyle"),
+                    " with ",
+                    inline_code("top_rule"),
+                    ", ",
+                    inline_code("header_rule"),
+                    ", and ",
+                    inline_code("bottom_rule"),
+                    "."
+                ),
+                CodeBlock(BOOKTABS_TABLE_SNIPPET, language="python"),
                 Paragraph(
                     "That local authorship pattern is also why the guide can stay detailed without becoming confusing. The content reads like a normal reference document, but the source remains inspectable because the formatting instructions are still attached to the words they affect."
                 ),

@@ -1347,7 +1347,16 @@ class HtmlRenderer:
         for row_index in sorted(rows):
             cells = []
             for placement in sorted(rows[row_index], key=lambda value: value.column):
-                cells.append(self._table_cell_html(placement, tag, block, context, table_style))
+                cells.append(
+                    self._table_cell_html(
+                        placement,
+                        tag,
+                        block,
+                        context,
+                        table_style,
+                        layout=layout,
+                    )
+                )
             html_rows.append("<tr>" + "".join(cells) + "</tr>")
         return "".join(html_rows)
 
@@ -1358,14 +1367,19 @@ class HtmlRenderer:
         block: Table,
         context: HtmlRenderContext,
         table_style: TableStyle,
+        layout: object,
     ) -> str:
         style_parts = []
-        if table_style.border.color is not None and table_style.border.width > 0:
-            style_parts.append(
-                f"border: {table_style.border.width_points():.2f}pt solid #{table_style.border.color}"
+        style_parts.extend(
+            self._table_border_css(
+                table_style._border_edges(
+                    row=placement.row,
+                    rowspan=placement.cell.rowspan,
+                    row_count=layout.row_count,
+                    header_row_count=layout.header_row_count,
+                )
             )
-        else:
-            style_parts.append("border: none")
+        )
         top_padding, right_padding, bottom_padding, left_padding = table_style.cell_padding.to_points()
         style_parts.append(
             f"padding: {top_padding:.1f}pt {right_padding:.1f}pt {bottom_padding:.1f}pt {left_padding:.1f}pt"
@@ -1426,6 +1440,22 @@ class HtmlRenderer:
             + paragraph_html
             + f"</{tag}>"
         )
+
+    def _table_border_css(self, edges: dict[str, object]) -> list[str]:
+        default = edges["top"]
+        if all(edges[edge_name] == default for edge_name in ("right", "bottom", "left")):
+            if default.color is not None and default.width > 0:
+                return [f"border: {default.width_points():.2f}pt solid #{default.color}"]
+            return ["border: none"]
+
+        styles = ["border: none"]
+        for edge_name in ("top", "right", "bottom", "left"):
+            border = edges[edge_name]
+            if border.color is not None and border.width > 0:
+                styles.append(
+                    f"border-{edge_name}: {border.width_points():.2f}pt solid #{border.color}"
+                )
+        return styles
 
     def _table_cell_text_alignment(
         self,

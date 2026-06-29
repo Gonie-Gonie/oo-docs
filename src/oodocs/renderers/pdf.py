@@ -1944,17 +1944,7 @@ class PdfRenderer:
             ("TOPPADDING", (0, 0), (-1, -1), top_padding),
             ("BOTTOMPADDING", (0, 0), (-1, -1), bottom_padding),
         ]
-        if table_style.border.color is not None and table_style.border.width > 0:
-            style_commands.insert(
-                0,
-                (
-                    "GRID",
-                    (0, 0),
-                    (-1, -1),
-                    table_style.border.width_points(),
-                    colors.HexColor(f"#{table_style.border.color}"),
-                ),
-            )
+        style_commands[0:0] = self._table_border_style_commands(table_style, layout)
         for placement in layout.placements:
             effective_style = block._effective_cell_style(
                 placement,
@@ -2116,6 +2106,71 @@ class PdfRenderer:
         if not split_table:
             story = [KeepTogether(story)]
         return self._apply_pdf_media_placement(story, media_placement, in_box=in_box)
+
+    def _table_border_style_commands(
+        self,
+        table_style: OODocsTableStyle,
+        layout: object,
+    ) -> list[tuple[object, ...]]:
+        commands: list[tuple[object, ...]] = []
+        if table_style.border.color is not None and table_style.border.width > 0:
+            commands.append(
+                (
+                    "GRID",
+                    (0, 0),
+                    (-1, -1),
+                    table_style.border.width_points(),
+                    colors.HexColor(f"#{table_style.border.color}"),
+                )
+            )
+        if layout.row_count == 0:
+            return commands
+        if (
+            table_style.top_rule is not None
+            and table_style.top_rule.color is not None
+            and table_style.top_rule.width > 0
+        ):
+            commands.append(
+                (
+                    "LINEABOVE",
+                    (0, 0),
+                    (-1, 0),
+                    table_style.top_rule.width_points(),
+                    colors.HexColor(f"#{table_style.top_rule.color}"),
+                )
+            )
+        if (
+            layout.header_row_count > 0
+            and table_style.header_rule is not None
+            and table_style.header_rule.color is not None
+            and table_style.header_rule.width > 0
+        ):
+            header_row = layout.header_row_count - 1
+            commands.append(
+                (
+                    "LINEBELOW",
+                    (0, header_row),
+                    (-1, header_row),
+                    table_style.header_rule.width_points(),
+                    colors.HexColor(f"#{table_style.header_rule.color}"),
+                )
+            )
+        if (
+            table_style.bottom_rule is not None
+            and table_style.bottom_rule.color is not None
+            and table_style.bottom_rule.width > 0
+        ):
+            bottom_row = layout.row_count - 1
+            commands.append(
+                (
+                    "LINEBELOW",
+                    (0, bottom_row),
+                    (-1, bottom_row),
+                    table_style.bottom_rule.width_points(),
+                    colors.HexColor(f"#{table_style.bottom_rule.color}"),
+                )
+            )
+        return commands
 
     def _apply_pdf_media_placement(
         self,

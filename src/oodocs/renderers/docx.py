@@ -2634,14 +2634,15 @@ class DocxRenderer:
             )
             if effective_style.background_color is not None:
                 self._set_cell_shading(target_cell, effective_style.background_color)
-            if table_style.border.color is not None and table_style.border.width > 0:
-                self._set_cell_borders(
-                    target_cell,
-                    table_style.border.color,
-                    table_style.border.width_points(),
-                )
-            else:
-                self._set_cell_borders_none(target_cell)
+            self._set_cell_border_edges(
+                target_cell,
+                table_style._border_edges(
+                    row=cell_placement.row,
+                    rowspan=cell_placement.cell.rowspan,
+                    row_count=layout.row_count,
+                    header_row_count=layout.header_row_count,
+                ),
+            )
             self._set_cell_margins(target_cell, *table_style.cell_padding.to_points())
 
         if table_block.caption is not None and theme.captions.table_caption_position == "below":
@@ -2890,6 +2891,24 @@ class DocxRenderer:
         for edge_name in ("top", "left", "bottom", "right"):
             edge = OxmlElement(f"w:{edge_name}")
             edge.set(qn("w:val"), "nil")
+            borders.append(edge)
+        properties.append(borders)
+
+    def _set_cell_border_edges(self, cell: object, edges: dict[str, object]) -> None:
+        properties = cell._tc.get_or_add_tcPr()
+        for existing in list(properties.findall(qn("w:tcBorders"))):
+            properties.remove(existing)
+        borders = OxmlElement("w:tcBorders")
+        for edge_name in ("top", "left", "bottom", "right"):
+            border = edges[edge_name]
+            edge = OxmlElement(f"w:{edge_name}")
+            if border.color is not None and border.width > 0:
+                edge.set(qn("w:val"), "single")
+                edge.set(qn("w:sz"), str(max(int(round(border.width_points() * 8)), 0)))
+                edge.set(qn("w:space"), "0")
+                edge.set(qn("w:color"), border.color)
+            else:
+                edge.set(qn("w:val"), "nil")
             borders.append(edge)
         properties.append(borders)
 
