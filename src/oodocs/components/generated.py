@@ -11,7 +11,10 @@ from dataclasses import dataclass
 from typing import Literal, Mapping, TYPE_CHECKING
 
 from oodocs.components.base import Block
+from oodocs.components.blocks import Section
+from oodocs.components.glossary import Glossary
 from oodocs.components.inline import InlineInput, Text, coerce_inlines
+from oodocs.components.media import Table
 from oodocs.components.references import normalize_reference_sort
 
 if TYPE_CHECKING:
@@ -443,6 +446,88 @@ class ReferenceList(Block):
 
 
 @dataclass(slots=True, init=False)
+class GlossaryList(Block):
+    """Generated glossary table from a ``Glossary`` registry.
+
+    Args:
+        glossary: Glossary registry to display.
+        title: Optional section title. Defaults to ``"Glossary"``.
+        headers: Term and definition column labels.
+        sort: Entry order: ``"insertion"``, ``"key"``, or ``"term"``.
+    """
+
+    glossary: Glossary
+    title: list[Text] | None
+    headers: tuple[str, str]
+    sort: str
+
+    def __init__(
+        self,
+        glossary: Glossary,
+        title: InlineInput | None = None,
+        *,
+        headers: tuple[str, str] = ("Term", "Definition"),
+        sort: str = "insertion",
+    ) -> None:
+        if not isinstance(glossary, Glossary):
+            raise TypeError("GlossaryList.glossary must be a Glossary")
+        if len(headers) != 2:
+            raise ValueError("GlossaryList.headers must contain two labels")
+        normalized_sort = str(sort).lower()
+        if normalized_sort not in {"insertion", "key", "term"}:
+            raise ValueError("GlossaryList.sort must be 'insertion', 'key', or 'term'")
+        self.glossary = glossary
+        self.title = coerce_inlines((title,)) if title is not None else None
+        self.headers = (str(headers[0]), str(headers[1]))
+        self.sort = normalized_sort
+
+    def rows(self) -> list[list[str]]:
+        """Return table rows for the configured glossary."""
+
+        return [
+            [entry.list_label(), entry.list_definition()]
+            for entry in self.glossary.sorted_entries(self.sort)
+        ]
+
+    def to_table(self) -> Table:
+        """Return the generated glossary as a table block."""
+
+        return Table(list(self.headers), self.rows())
+
+    def _section(self) -> Section:
+        title = self.title if self.title is not None else "Glossary"
+        return Section(title, self.to_table(), numbered=False, toc=False)
+
+    def render_to_docx(
+        self,
+        renderer: object,
+        container: object,
+        context: DocxRenderContext,
+    ) -> None:
+        """Render this glossary list into a DOCX container."""
+
+        self._section().render_to_docx(renderer, container, context)
+
+    def render_to_pdf(
+        self,
+        renderer: object,
+        context: PdfRenderContext,
+    ) -> list[object]:
+        """Render this glossary list into PDF flowables."""
+
+        return self._section().render_to_pdf(renderer, context)
+
+    def render_to_html(
+        self,
+        renderer: object,
+        context: HtmlRenderContext,
+    ) -> str:
+        """Render this glossary list into HTML markup."""
+
+        return self._section().render_to_html(renderer, context)
+
+
+@dataclass(slots=True, init=False)
 class CommentList(Block):
     """Generated list of numbered inline comments.
 
@@ -701,6 +786,7 @@ class TableOfContents(Block):
 
 __all__ = [
     "CommentList",
+    "GlossaryList",
     "ListOfAlgorithms",
     "ListOfFigures",
     "FootnoteList",

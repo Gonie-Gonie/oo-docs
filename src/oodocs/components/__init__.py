@@ -7,6 +7,7 @@ from importlib import import_module
 
 _EXPORTS = {
     "Affiliation": "oodocs.components.people",
+    "Acronym": "oodocs.components.glossary",
     "Algorithm": "oodocs.components.blocks",
     "AlignedEquation": "oodocs.components.blocks",
     "Assumption": "oodocs.components.blocks",
@@ -42,6 +43,9 @@ _EXPORTS = {
     "ListOfFigures": "oodocs.components.generated",
     "Footnote": "oodocs.components.inline",
     "FootnoteList": "oodocs.components.generated",
+    "Glossary": "oodocs.components.glossary",
+    "GlossaryList": "oodocs.components.generated",
+    "GlossaryTerm": "oodocs.components.glossary",
     "Highlight": "oodocs.components.inline",
     "Hyperlink": "oodocs.components.inline",
     "ImageBox": "oodocs.components.positioning",

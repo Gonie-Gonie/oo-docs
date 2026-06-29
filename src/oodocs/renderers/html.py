@@ -26,6 +26,7 @@ from oodocs.components.blocks import (
 )
 from oodocs.components.generated import (
     CommentList,
+    GlossaryList,
     ListOfAlgorithms,
     ListOfFigures,
     FootnoteList,
@@ -2653,6 +2654,7 @@ class HtmlRenderer:
         unsupported = (
             CommentList,
             FootnoteList,
+            GlossaryList,
             ReferenceList,
             TableOfContents,
             ListOfTables,

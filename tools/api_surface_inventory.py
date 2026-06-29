@@ -255,6 +255,8 @@ def category_for(
         return "generated-page"
     if module in {"oodocs.components.inline", "oodocs.components.chemistry"}:
         return "inline"
+    if module == "oodocs.components.glossary":
+        return "document-core"
     if module in {"oodocs.components.media", "oodocs.components.positioning"}:
         return "media"
     if module in {"oodocs.components.people", "oodocs.settings"}:

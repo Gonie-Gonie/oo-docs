@@ -50,6 +50,7 @@ from oodocs.components.chemistry import ChemicalFormula, chemical_formula
 from oodocs.components.generated import (
     CommentList,
     FootnoteList,
+    GlossaryList,
     ListOfAlgorithms,
     ListOfFigures,
     ReferenceList,
@@ -57,6 +58,7 @@ from oodocs.components.generated import (
     TableOfContents,
     TocLevelStyle,
 )
+from oodocs.components.glossary import Acronym, Glossary, GlossaryTerm
 from oodocs.components.media import (
     ColumnSpec,
     CropBox,
@@ -196,6 +198,7 @@ __version__ = _resolve_version()
 
 __all__ = [
     "Affiliation",
+    "Acronym",
     "Algorithm",
     "AlignedEquation",
     "Assumption",
@@ -240,6 +243,9 @@ __all__ = [
     "Footnote",
     "FootnoteList",
     "GeneratedContentDefaults",
+    "Glossary",
+    "GlossaryList",
+    "GlossaryTerm",
     "HeadingStyle",
     "HeadingNumbering",
     "ImageBox",

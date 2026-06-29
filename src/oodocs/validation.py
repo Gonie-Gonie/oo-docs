@@ -39,6 +39,7 @@ from oodocs.components.blocks import (
 )
 from oodocs.components.generated import (
     CommentList,
+    GlossaryList,
     ListOfAlgorithms,
     ListOfFigures,
     FootnoteList,
@@ -922,6 +923,7 @@ class _ValidationContext:
                 ListOfTables,
                 ListOfFigures,
                 ListOfAlgorithms,
+                GlossaryList,
                 ReferenceList,
                 CommentList,
                 FootnoteList,
@@ -1703,6 +1705,23 @@ class _ValidationContext:
                         "warning",
                         "empty-algorithm-list",
                         "ListOfAlgorithms has no numbered algorithms to display.",
+                        path,
+                    )
+                continue
+            if isinstance(page, GlossaryList):
+                duplicates = page.glossary.duplicate_keys()
+                for key in sorted(duplicates):
+                    self._add(
+                        "error",
+                        "duplicate-glossary-key",
+                        f"Glossary key {key!r} is defined more than once.",
+                        path,
+                    )
+                if not page.glossary.entries:
+                    self._add(
+                        "warning",
+                        "empty-glossary-list",
+                        "GlossaryList has no glossary entries to display.",
                         path,
                     )
                 continue

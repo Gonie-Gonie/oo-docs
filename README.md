@@ -158,6 +158,7 @@ Common translations:
 - LaTeX `\label` / `\ref` -> use `reference(obj)` or `obj.reference()` inside `Paragraph(...)`
 - LaTeX `\url{...}` / `\href{...}{...}` -> use `url(...)` for visible URLs and `link(...)` for named links
 - LaTeX `enumitem` list options -> use `BulletList(...)`, `NumberedList(start=...)`, `NumberedList(resume_from=...)`, and `ListStyle(...)`
+- LaTeX `glossaries` / `acronym` / `nomencl` -> use `Glossary`, `GlossaryList`, and `Nomenclature`
 - LaTeX `tcolorbox` / `mdframed` report panels -> editable `Box(..., icon=..., title_position="side")` or `CalloutBox(..., variant="danger", icon="!")`
 - BibTeX-style references -> `CitationLibrary`, `CitationSource.cite(...)`, and `ReferenceList()`
 
@@ -220,6 +221,7 @@ The default behavior is intentionally conventional:
 - Use `Algorithm(..., inputs=..., outputs=..., steps=...)` for numbered pseudocode blocks. Pass `code=...` or `body_style="code"` when the algorithm should render more like a code listing.
 - Use `Theme(captions=CaptionDefaults(table_caption_label=..., table_reference_label=..., figure_caption_label=..., figure_reference_label=...))` when captions and in-text references should use different labels such as `Figure`, `Fig.`, or localized terms.
 - Use `CitationLibrary.from_bibtex_file("refs.bib")` for BibTeX input, and `Theme(citations=CitationDefaults(citation_style="apa", reference_style="apa", reference_sort="author"))` when inline citations and the generated references page should follow an author-year style. Numeric citation output and citation-order references remain the default; pass `ReferenceList(include_uncited=True)` when the generated bibliography should include uncited library entries.
+- Use `Glossary()` with `glossary.term(...)` and `glossary.acronym(...)` for collected terminology. `glossary.use("API")` expands acronyms on first use, and `GlossaryList(glossary)` renders the generated glossary table.
 - Use advanced `placement=...` hints on tables and figures only when needed. Supported values include `here`, `tbp`/`float`, `top`, `bottom`, and `page`.
 - Use `Box(...)` for callouts, evidence panels, and tcolorbox-like report sections that should stay editable in Word. Add `icon=...`, `title_position="side"`, or `shadow=True` when a panel needs callout-box treatment; shadows render in HTML and degrade to ordinary boxes in DOCX/PDF.
 - Use `Shape(...)`, `TextBox(...)`, and `ImageBox(...)` with `DocumentSettings(page_items=[...])` for page-positioned overlays that do not move the body text. Use `placement="inline"` when the same objects should sit in the text flow like Word's inline drawing mode.
@@ -292,6 +294,7 @@ doc = Document(
 - inline drawing placement for `Shape(...)`, `TextBox(...)`, and `ImageBox(...)`, similar to using an image directly in the document flow
 - inline chips through `InlineChip(...)`, `tag(...)`, `badge(...)`, `status(...)`, and `keyboard(...)`
 - bibliography support through `CitationSource`, `CitationLibrary`, direct citation objects, BibTeX import, and configurable inline/Reference styles such as APA
+- glossary and acronym registries through `Glossary`, `GlossaryList`, and the existing `Nomenclature` preset
 - optional title matter such as subtitle, structured `Author(...)` metadata, `AuthorLayout(...)`, affiliations, and a cover page
 - inline hyperlinks, breakable URL labels, theme-controlled link styling, heading/caption anchors, plural/range object-reference helpers, and validation for broken internal links
 - release evidence adapters for pyproject metadata, GitHub Actions workflows, JSON manifests, CSV/TSV evidence tables, checksums, and generated evidence reports

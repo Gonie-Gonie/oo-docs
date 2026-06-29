@@ -26,6 +26,7 @@ from oodocs.layout.indexing import build_render_index
 from oodocs.renderers.pdf import PdfRenderer
 from oodocs import (
     Affiliation,
+    Acronym,
     Algorithm,
     AlignedEquation,
     Assumption,
@@ -68,6 +69,9 @@ from oodocs import (
     ListOfFigures,
     Footnote,
     GeneratedContentDefaults,
+    Glossary,
+    GlossaryList,
+    GlossaryTerm,
     HeadingStyle,
     HeadingNumbering,
     ImageBox,
@@ -1371,7 +1375,16 @@ def test_numbered_list_start_resume_and_spacing_render_to_outputs(tmp_path: Path
     document.save_pdf(pdf_path)
     document.save_html(html_path)
 
-    word_text = "\n".join(paragraph.text for paragraph in WordDocument(docx_path).paragraphs)
+    word_document = WordDocument(docx_path)
+    word_text = "\n".join(
+        [paragraph.text for paragraph in word_document.paragraphs]
+        + [
+            cell.text
+            for table in word_document.tables
+            for row in table.rows
+            for cell in row.cells
+        ]
+    )
     pdf_text = "\n".join(page.extract_text() or "" for page in PdfReader(BytesIO(pdf_path.read_bytes())).pages)
     normalized_pdf_text = " ".join(pdf_text.split())
     html_text = _normalized_html_text(html_path)
@@ -1388,6 +1401,71 @@ def test_numbered_list_start_resume_and_spacing_render_to_outputs(tmp_path: Path
         assert expected in html_text
     assert "margin: 0.0pt 0 7.0pt;" in html_markup
     assert "margin-bottom: 11.0pt;" in html_markup
+
+
+def test_glossary_acronym_and_generated_list_render_to_outputs(tmp_path: Path) -> None:
+    glossary = Glossary()
+    glossary.term("SLO", "Service level objective")
+    glossary.acronym("HVAC", "Heating, ventilation, and air conditioning")
+
+    assert isinstance(glossary.get("HVAC"), Acronym)
+    assert isinstance(glossary.get("SLO"), GlossaryTerm)
+
+    document = Document(
+        "Glossary Document",
+        Paragraph(
+            glossary.use("HVAC"),
+            " controls support the ",
+            glossary.use("SLO"),
+            ". Later references use ",
+            glossary.use("HVAC"),
+            ".",
+        ),
+        GlossaryList(glossary, sort="key"),
+    )
+
+    result = document.validate()
+    assert result.ok
+
+    docx_path = tmp_path / "glossary.docx"
+    pdf_path = tmp_path / "glossary.pdf"
+    html_path = tmp_path / "glossary.html"
+    document.save_docx(docx_path)
+    document.save_pdf(pdf_path)
+    document.save_html(html_path)
+
+    word_document = WordDocument(docx_path)
+    word_text = "\n".join(
+        [paragraph.text for paragraph in word_document.paragraphs]
+        + [
+            cell.text
+            for table in word_document.tables
+            for row in table.rows
+            for cell in row.cells
+        ]
+    )
+    pdf_text = "\n".join(page.extract_text() or "" for page in PdfReader(BytesIO(pdf_path.read_bytes())).pages)
+    normalized_pdf_text = " ".join(pdf_text.split())
+    html_text = _normalized_html_text(html_path)
+
+    for expected in (
+        "Heating, ventilation, and air conditioning (HVAC)",
+        "Later references use HVAC.",
+        "Service level objective",
+        "Glossary",
+    ):
+        assert expected in word_text
+        assert expected in normalized_pdf_text
+        assert expected in html_text
+
+    duplicate_glossary = Glossary()
+    duplicate_glossary.term("API", "Application programming interface")
+    duplicate_glossary.term("API", "Duplicate application term")
+    duplicate_result = Document("Duplicate Glossary", GlossaryList(duplicate_glossary)).validate()
+    assert "duplicate-glossary-key" in {issue.code for issue in duplicate_result.errors}
+
+    empty_result = Document("Empty Glossary", GlossaryList(Glossary())).validate()
+    assert "empty-glossary-list" in {issue.code for issue in empty_result.warnings}
 
 
 def test_heading_style_renders_across_outputs(tmp_path: Path) -> None:
