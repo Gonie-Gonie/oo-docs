@@ -1232,7 +1232,18 @@ def test_table_split_and_media_placement_options_render(tmp_path: Path) -> None:
         rows=[["split=True", "render here and allow page breaks"]],
         caption="Explicit split table.",
         split=True,
+        continuation_label="continued",
+        continued_caption_template="{caption} -- {continuation_label}",
     )
+    invalid_template_error = None
+    try:
+        Table(
+            headers=["Mode"],
+            rows=[["bad"]],
+            continued_caption_template="{missing}",
+        )
+    except ValueError as exc:
+        invalid_template_error = exc
     top_figure = Figure(
         image_path,
         caption=Paragraph("Figure with top placement."),
@@ -1255,6 +1266,9 @@ def test_table_split_and_media_placement_options_render(tmp_path: Path) -> None:
     assert long_table._resolve_placement() == "here"
     assert here_table._resolve_split() is True
     assert here_table._resolve_placement() == "here"
+    assert here_table.continued_caption_text() == "Explicit split table. -- continued"
+    assert invalid_template_error is not None
+    assert "continued_caption_template" in str(invalid_template_error)
     assert top_figure.resolved_placement() == "top"
 
     docx_path = tmp_path / "placement.docx"
@@ -1271,11 +1285,16 @@ def test_table_split_and_media_placement_options_render(tmp_path: Path) -> None:
 
     assert long_table.total_row_count == 35
     assert 'w:tblHeader' in docx_xml
+    assert docx_xml.count('<w:tblHeader') >= 2
     assert '<w:br w:type="page"/>' in docx_xml
     assert "Long table with repeated headers." in pdf_text
     assert pdf_text.count("Item") >= 2
     assert len(pdf_reader.pages) >= 2
     assert 'oodocs-table-split' in html_text
+    assert 'data-continuation-label="continued"' in html_text
+    assert 'data-continued-caption="Explicit split table. -- continued"' in html_text
+    assert '.oodocs-table-split thead' in html_text
+    assert 'display: table-header-group' in html_text
     assert 'oodocs-placement-here' in html_text
     assert 'oodocs-placement-top' in html_text
     assert 'break-before: page' in html_text

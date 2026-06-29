@@ -648,6 +648,7 @@ runbook = Table(
     rows=[["Preflight", "Release lead"], ["Smoke test", "QA"]],
     caption="Runbook checks.",
     split=True,       # Always render here and allow page breaks.
+    continuation_label="continued",
 )
 
 diagram = Figure(
@@ -1457,7 +1458,16 @@ def build_usage_guide_document() -> Document:
                     inline_code("Table(split=False)"),
                     ", oodocs keeps a short table together and lets PDF place following prose before the table when that avoids an awkward blank page. Very long tables automatically switch to repeated-header split rendering. With ",
                     inline_code("Table(split=True)"),
-                    ", the table behaves like a here-placed object that can break in source order."
+                    ", the table behaves like a here-placed object that can break in source order. Add ",
+                    inline_code("continuation_label"),
+                    " and ",
+                    inline_code("continued_caption_template"),
+                    " when downstream HTML or post-processing needs explicit continued-caption metadata."
+                ),
+                Paragraph(
+                    "DOCX and PDF use repeated header rows for split tables. HTML keeps a plain flow policy with ",
+                    inline_code("display: table-header-group"),
+                    " instead of sticky headers so printed output and lightweight browser sharing behave consistently."
                 ),
                 Paragraph(
                     "Tables and figures also accept advanced ",

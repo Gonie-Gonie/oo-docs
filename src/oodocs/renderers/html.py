@@ -726,6 +726,7 @@ class HtmlRenderer:
             else ""
         )
         table_class_attr = self._html_class_attr("oodocs-table", table_style.css_class)
+        continuation_attrs = self._table_continuation_attrs(block)
         table_html = (
             '<div class="oodocs-table-wrapper '
             f'oodocs-placement-{placement} '
@@ -736,7 +737,7 @@ class HtmlRenderer:
                 if block.caption is not None and context.theme.captions.table_caption_position == "above"
                 else ""
             )
-            + f"<table{table_class_attr}>"
+            + f"<table{table_class_attr}{continuation_attrs}>"
             + colgroup
             + (f"<thead>{thead_html}</thead>" if thead_html else "")
             + (f"<tbody>{tbody_html}</tbody>" if tbody_html else "")
@@ -749,6 +750,19 @@ class HtmlRenderer:
             + "</div>"
         )
         return table_html
+
+    def _table_continuation_attrs(self, block: Table) -> str:
+        attrs = []
+        if block.continuation_label is not None:
+            attrs.append(
+                f' data-continuation-label="{escape(block.continuation_label)}"'
+            )
+        continued_caption = block.continued_caption_text()
+        if continued_caption is not None:
+            attrs.append(
+                f' data-continued-caption="{escape(continued_caption)}"'
+            )
+        return "".join(attrs)
 
     def render_figure(self, block: Figure, context: HtmlRenderContext) -> str:
         """Render a figure block into HTML.

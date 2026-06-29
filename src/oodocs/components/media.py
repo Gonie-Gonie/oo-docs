@@ -706,6 +706,30 @@ def _coerce_style_mapping(
     return normalized
 
 
+def _normalize_optional_text(value: str | None, *, name: str) -> str | None:
+    if value is None:
+        return None
+    if not isinstance(value, str):
+        raise TypeError(f"{name} must be a string or None")
+    normalized = value.strip()
+    return normalized or None
+
+
+def _normalize_continued_caption_template(value: str) -> str:
+    if not isinstance(value, str):
+        raise TypeError("continued_caption_template must be a string")
+    normalized = value.strip()
+    if not normalized:
+        raise ValueError("continued_caption_template must not be empty")
+    try:
+        normalized.format(caption="Caption", continuation_label="continued")
+    except (KeyError, ValueError) as exc:
+        raise ValueError(
+            "continued_caption_template must format with caption and continuation_label"
+        ) from exc
+    return normalized
+
+
 def _resolve_table_cell_style(
     style: TableCellStyle | str | None,
     stylesheet: object | None,
@@ -830,6 +854,10 @@ class Table(Block):
         header_vertical_alignment: Optional header vertical alignment.
         cell_padding: Optional cell padding override.
         repeat_header_rows: Whether fixed-page renderers repeat headers.
+        continuation_label: Optional label for repeated-header continuation
+            metadata.
+        continued_caption_template: Template used to describe continuation
+            captions. It receives ``caption`` and ``continuation_label``.
         include_index: Whether dataframe-like input includes index columns.
         split: Whether renderers may split the table across pages.
         placement: Optional placement policy.
@@ -912,6 +940,8 @@ class Table(Block):
     split: TableSplit
     placement: MediaPlacement
     long_table_threshold: int | None
+    continuation_label: str | None
+    continued_caption_template: str
     row_styles: dict[int, TableCellStyle | str]
     column_styles: dict[int, TableCellStyle | str]
     header_row_styles: dict[int, TableCellStyle | str]
@@ -940,6 +970,8 @@ class Table(Block):
         header_vertical_alignment: str | None = None,
         cell_padding: Padding | None = None,
         repeat_header_rows: bool | None = None,
+        continuation_label: str | None = None,
+        continued_caption_template: str = "{caption} ({continuation_label})",
         include_index: bool = False,
         split: TableSplit = False,
         placement: str | None = None,
@@ -986,6 +1018,13 @@ class Table(Block):
             header_vertical_alignment=header_vertical_alignment,
             cell_padding=cell_padding,
             repeat_header_rows=repeat_header_rows,
+        )
+        self.continuation_label = _normalize_optional_text(
+            continuation_label,
+            name="continuation_label",
+        )
+        self.continued_caption_template = _normalize_continued_caption_template(
+            continued_caption_template,
         )
         self.include_index = include_index
         self.split = normalize_table_split(split)
@@ -1039,6 +1078,21 @@ class Table(Block):
         if self.placement == "auto":
             return "float"
         return self.placement
+
+    def continued_caption_text(self) -> str | None:
+        """Return continuation caption text for split-table metadata.
+
+        Returns:
+            Formatted continuation caption text, or ``None`` when the table has
+            no caption or continuation label.
+        """
+
+        if self.caption is None or self.continuation_label is None:
+            return None
+        return self.continued_caption_template.format(
+            caption=self.caption.plain_text(),
+            continuation_label=self.continuation_label,
+        )
 
     def _effective_cell_style(
         self,
@@ -1123,6 +1177,8 @@ class Table(Block):
         header_vertical_alignment: str | None = None,
         cell_padding: Padding | None = None,
         repeat_header_rows: bool | None = None,
+        continuation_label: str | None = None,
+        continued_caption_template: str = "{caption} ({continuation_label})",
         include_index: bool = False,
         split: TableSplit = False,
         placement: str | None = None,
@@ -1154,6 +1210,10 @@ class Table(Block):
             header_vertical_alignment: Optional header vertical alignment.
             cell_padding: Optional cell padding override.
             repeat_header_rows: Whether fixed-page renderers repeat headers.
+            continuation_label: Optional label for repeated-header
+                continuation metadata.
+            continued_caption_template: Template used to describe continuation
+                captions. It receives ``caption`` and ``continuation_label``.
             include_index: Whether to include dataframe index columns.
             split: Whether renderers may split the table across pages.
             placement: Optional placement policy.
@@ -1194,6 +1254,8 @@ class Table(Block):
             header_vertical_alignment=header_vertical_alignment,
             cell_padding=cell_padding,
             repeat_header_rows=repeat_header_rows,
+            continuation_label=continuation_label,
+            continued_caption_template=continued_caption_template,
             include_index=include_index,
             split=split,
             placement=placement,
