@@ -55,6 +55,7 @@ from oodocs.components.inline import (
     InlineChip,
     Text,
 )
+from oodocs.components.equations import unsupported_latex_commands
 from oodocs.components.media import Figure, ImageData, PdfPages, SubFigure, SubFigureGroup, SubTable, SubTableGroup, Table
 from oodocs.components.positioning import ImageBox, Shape, TextBox
 from oodocs.components.references import CitationSource
@@ -799,6 +800,8 @@ class _ValidationContext:
                 self._validate_box_renderer_features(block, path)
             else:
                 self._validate_style_reference("paragraph", block.style, f"{path}.style")
+            if isinstance(block, Equation):
+                self._validate_equation(block, path)
             if isinstance(block, Box):
                 if block.title is not None:
                     self._scan_inlines(block.title, f"{path}.title")
@@ -1067,6 +1070,17 @@ class _ValidationContext:
             path,
             formats=note.formats,
         )
+
+    def _validate_equation(self, block: Equation, path: str) -> None:
+        for source_index, source in enumerate(block.math_sources()):
+            for command in unsupported_latex_commands(source):
+                self._add(
+                    "warning",
+                    "unsupported-latex-command",
+                    f"Equation source uses unsupported LaTeX command \\{command}. "
+                    "It will be rendered as readable fallback text.",
+                    f"{path}.expression[{source_index}]",
+                )
 
     def _find_style_category(self, name: str, *, exclude: str) -> str | None:
         stylesheet = self.document.settings.theme.stylesheet
@@ -1549,7 +1563,19 @@ class _ValidationContext:
                 )
             return
 
-        if isinstance(target, (Paragraph, Equation, CodeBlock, Box)):
+        if isinstance(target, Equation):
+            if target.numbered:
+                return
+            if not has_custom_label:
+                self._add(
+                    "error",
+                    "unnumbered-equation-reference",
+                    "Unnumbered Equation references require a custom label.",
+                    path,
+                )
+            return
+
+        if isinstance(target, (Paragraph, CodeBlock, Box)):
             return
 
         self._add(

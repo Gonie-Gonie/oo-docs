@@ -116,6 +116,8 @@ OODocs_API_CATEGORIES: tuple[ApiCategory, ...] = (
             "oodocs.LineBreak",
             "oodocs.Math",
             "oodocs.Equation",
+            "oodocs.AlignedEquation",
+            "oodocs.CasesEquation",
             "oodocs.components.inline.*",
             "oodocs.components.markup.*",
             "oodocs.components.equations.*",

@@ -8,6 +8,7 @@ from importlib import import_module
 _EXPORTS = {
     "Affiliation": "oodocs.components.people",
     "Algorithm": "oodocs.components.blocks",
+    "AlignedEquation": "oodocs.components.blocks",
     "Assumption": "oodocs.components.blocks",
     "Appendix": "oodocs.components.blocks",
     "Author": "oodocs.components.people",
@@ -16,6 +17,7 @@ _EXPORTS = {
     "Bold": "oodocs.components.inline",
     "Box": "oodocs.components.blocks",
     "BulletList": "oodocs.components.blocks",
+    "CasesEquation": "oodocs.components.blocks",
     "Chapter": "oodocs.components.blocks",
     "Citation": "oodocs.components.inline",
     "CitationLibrary": "oodocs.components.references",

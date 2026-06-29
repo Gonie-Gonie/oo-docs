@@ -14,6 +14,7 @@ from typing import Sequence
 
 from oodocs import (
     Algorithm,
+    AlignedEquation,
     Assumption,
     Author,
     AuthorLayout,
@@ -21,6 +22,7 @@ from oodocs import (
     BorderStyle,
     Box,
     BulletList,
+    CasesEquation,
     CaptionDefaults,
     Chapter,
     CitationLibrary,
@@ -32,6 +34,7 @@ from oodocs import (
     Divider,
     Document,
     DocumentSettings,
+    Equation,
     Example,
     Figure,
     ListOfFigures,
@@ -596,6 +599,24 @@ Paragraph(
 )
 """
 
+MATH_BLOCKS_SNIPPET = """from oodocs import AlignedEquation, CasesEquation, Equation, Paragraph
+
+derivation = AlignedEquation(
+    r"a &= b + c",
+    r"  &= d",
+    reference_label="Eq.",
+)
+
+piecewise = CasesEquation(
+    ("0", "x < 0"),
+    (r"x^2", r"x \\geq 0"),
+    left="f(x)",
+)
+
+local_definition = Equation(r"\\operatorname{loss}(x)", numbered=False)
+paragraph = Paragraph("See ", derivation.reference(), " and ", local_definition.reference("the loss definition"), ".")
+"""
+
 INLINE_CHIPS_SNIPPET = """from oodocs import Paragraph, badge, keyboard, status, tag
 
 Paragraph(
@@ -1033,7 +1054,7 @@ def build_usage_guide_document() -> Document:
         headers=["Block", "Direct kwargs", "Style object when needed"],
         rows=[
             ["Text and styled(...)", "font_name, font_size, text_color, highlight_color, bold, italic, underline, strikethrough, small_caps, uppercase, subscript, superscript", "Use TextStyle only when a reusable inline style needs a name."],
-            ["Paragraph, CodeBlock, Equation", "text_alignment, space_before, space_after, leading, left_indent, right_indent, first_line_indent, keep_together, keep_with_next, page_break_before, widow_control, unit; CodeBlock also accepts caption, identifier, line_numbers, highlight_lines", "Use ParagraphStyle only for shared paragraph rhythm."],
+            ["Paragraph, CodeBlock, Equation", "text_alignment, space_before, space_after, leading, left_indent, right_indent, first_line_indent, keep_together, keep_with_next, page_break_before, widow_control, unit; CodeBlock also accepts caption, identifier, line_numbers, highlight_lines; Equation also accepts numbered and reference_label", "Use ParagraphStyle only for shared paragraph rhythm."],
             ["Algorithm", "inputs, outputs, steps, code, language, caption, body_style, line_numbers, numbered", "Use prose steps for method summaries and code-style bodies for pseudocode listings."],
             ["Section, Chapter, Subsection", "level, numbered, toc, anchor, run_in_title_style, heading_style", "Use HeadingStyle for per-level theme defaults or one-off heading overrides."],
             ["Part, Appendix", "title, toc; Part also accepts numbered", "Use Appendix when child chapters should switch to A/B/C numbering."],
@@ -1150,6 +1171,17 @@ def build_usage_guide_document() -> Document:
         ],
         caption="Coverage aggregation algorithm.",
     )
+    math_derivation = AlignedEquation(
+        r"a &= b + c",
+        r"  &= d",
+        reference_label="Eq.",
+    )
+    math_piecewise = CasesEquation(
+        ("0", "x < 0"),
+        (r"x^2", r"x \geq 0"),
+        left="f(x)",
+    )
+    math_local_definition = Equation(r"\operatorname{loss}(x)", numbered=False)
     preset_callout = CalloutBox(
         Paragraph(
             "Presets are ordinary oodocs components with carefully chosen defaults. Use direct kwargs for quick local changes and reserve style objects for repeated house styles that need a name."
@@ -1475,6 +1507,23 @@ def build_usage_guide_document() -> Document:
                     ".",
                 ),
                 CodeBlock(INLINE_WORD_FEATURES_SNIPPET, language="python"),
+                Paragraph(
+                    "Displayed math uses lightweight LaTeX-like source. Use ",
+                    inline_code("AlignedEquation"),
+                    " for multi-line derivations, ",
+                    inline_code("CasesEquation"),
+                    " for piecewise definitions, and ",
+                    inline_code("numbered=False"),
+                    " when a local display should not consume an equation number. For example, see ",
+                    math_derivation.reference(),
+                    " and ",
+                    math_local_definition.reference("the local loss definition"),
+                    ".",
+                ),
+                math_derivation,
+                math_piecewise,
+                math_local_definition,
+                CodeBlock(MATH_BLOCKS_SNIPPET, language="python"),
                 Paragraph(
                     "Compact inline chips cover categories, counts, states, and keys: ",
                     tag("api"),

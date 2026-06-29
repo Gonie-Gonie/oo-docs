@@ -9,11 +9,17 @@ Attributes:
     GROUP_COMMANDS: LaTeX commands whose braced content is rendered directly.
     DELIMITER_COMMANDS: LaTeX delimiter commands skipped by the lightweight
         parser.
+    STRUCTURE_COMMANDS: LaTeX structural commands handled by custom parser
+        logic.
+    SUPPORTED_LATEX_COMMANDS: Complete command allow-list used by validation.
+    unsupported_latex_commands: Return commands outside the lightweight parser
+        support matrix.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
+import re
 
 
 BASELINE = "baseline"
@@ -40,12 +46,14 @@ LATEX_SYMBOLS = {
     "iota": "iota",
     "kappa": "kappa",
     "lambda": "lambda",
+    "lbrace": "{",
     "mu": "mu",
     "nu": "nu",
     "xi": "xi",
     "pi": "pi",
     "varpi": "pi",
     "rho": "rho",
+    "rbrace": "}",
     "varrho": "rho",
     "sigma": "sigma",
     "varsigma": "sigma",
@@ -116,6 +124,23 @@ LATEX_SYMBOLS = {
 
 GROUP_COMMANDS = {"text", "mathrm", "mathit", "mathbf", "operatorname", "operatorname*"}
 DELIMITER_COMMANDS = {"left", "right"}
+STRUCTURE_COMMANDS = {
+    "\\",
+    "frac",
+    "dfrac",
+    "tfrac",
+    "prescript",
+    "sqrt",
+    "overline",
+    "quad",
+    "qquad",
+}
+SUPPORTED_LATEX_COMMANDS = (
+    set(LATEX_SYMBOLS)
+    | GROUP_COMMANDS
+    | DELIMITER_COMMANDS
+    | STRUCTURE_COMMANDS
+)
 
 
 @dataclass(slots=True)
@@ -179,6 +204,34 @@ def equation_plain_text(source: str) -> str:
     """
 
     return "".join(segment.text for segment in parse_latex_segments(source))
+
+
+def unsupported_latex_commands(source: str) -> tuple[str, ...]:
+    """Return LaTeX commands not handled by the lightweight parser.
+
+    Args:
+        source: LaTeX-like source text.
+
+    Returns:
+        Unique unsupported command names in first-seen order.
+
+    Examples:
+        ```python
+        unsupported_latex_commands(r"\foo{x} + \alpha")
+        # ("foo",)
+        ```
+    """
+
+    unsupported: list[str] = []
+    seen: set[str] = set()
+    for match in re.finditer(r"\\([A-Za-z]+|.)", source):
+        command = match.group(1)
+        if command in SUPPORTED_LATEX_COMMANDS:
+            continue
+        if command not in seen:
+            seen.add(command)
+            unsupported.append(command)
+    return tuple(unsupported)
 
 
 class _EquationParser:
@@ -319,7 +372,10 @@ __all__ = [
     "LATEX_SYMBOLS",
     "SUBSCRIPT",
     "SUPERSCRIPT",
+    "STRUCTURE_COMMANDS",
+    "SUPPORTED_LATEX_COMMANDS",
     "VERTICAL_ALIGNMENTS",
     "equation_plain_text",
     "parse_latex_segments",
+    "unsupported_latex_commands",
 ]

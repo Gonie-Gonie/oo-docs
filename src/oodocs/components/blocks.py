@@ -1,6 +1,7 @@
 """Common structural and block-level document components.
 
 Attributes:
+    AlignedEquation: Multi-line equation block for aligned derivations.
     CodeLanguagePosition: Type alias for code block language-label positions.
     MIN_SECTION_LEVEL: Lowest supported heading level.
     MAX_SECTION_LEVEL: Highest supported heading level.
@@ -23,6 +24,7 @@ Attributes:
         prose or code-style pseudocode.
     Appendix: Container for document appendices with alphabetic chapter
         numbering.
+    CasesEquation: Piecewise equation block with case conditions.
     CellInput: Type alias for values accepted by table cells.
 """
 
@@ -689,12 +691,22 @@ def _normalize_code_highlight_lines(lines: Iterable[int] | None) -> frozenset[in
     return normalized
 
 
+def _normalize_reference_label(value: str | None, default: str) -> str:
+    normalized = default if value is None else str(value).strip()
+    if not normalized:
+        raise ValueError("reference_label must not be empty")
+    return normalized
+
+
 @dataclass(slots=True, init=False)
 class Equation(Block):
     """A centered block equation written in lightweight LaTeX syntax.
 
     Args:
         expression: LaTeX-like equation source.
+        numbered: Whether the equation participates in document-wide equation
+            numbering.
+        reference_label: Label prefix used by automatic inline references.
         style: Base paragraph style.
         text_alignment: Optional text alignment override.
         space_before: Optional spacing before the equation.
@@ -720,12 +732,16 @@ class Equation(Block):
     """
 
     expression: str
+    numbered: bool
+    reference_label: str
     style: ParagraphStyle | str
 
     def __init__(
         self,
         expression: str,
         *,
+        numbered: bool = True,
+        reference_label: str = "Equation",
         style: ParagraphStyle | str | None = None,
         text_alignment: str | None = None,
         space_before: float | None = None,
@@ -741,6 +757,8 @@ class Equation(Block):
         unit: str | None = None,
     ) -> None:
         self.expression = expression
+        self.numbered = bool(numbered)
+        self.reference_label = _normalize_reference_label(reference_label, "Equation")
         self.style = paragraph_style_with_overrides(
             style or ParagraphStyle(text_alignment="center", space_after=12.0),
             text_alignment=text_alignment,
@@ -765,6 +783,27 @@ class Equation(Block):
         """
 
         return equation_plain_text(self.expression)
+
+    def reference_text(self, number: int) -> str:
+        """Return the default inline reference label.
+
+        Args:
+            number: Assigned equation number.
+
+        Returns:
+            Inline reference text for this equation.
+        """
+
+        return f"{self.reference_label} {number}"
+
+    def math_sources(self) -> tuple[str, ...]:
+        """Return LaTeX-like source strings used by this equation block.
+
+        Returns:
+            Source strings that validation should inspect.
+        """
+
+        return (self.expression,)
 
     def render_to_docx(
         self,
@@ -807,6 +846,192 @@ class Equation(Block):
         """
 
         return renderer.render_equation(self, context)
+
+
+@dataclass(slots=True, init=False)
+class AlignedEquation(Equation):
+    """A multi-line aligned equation block.
+
+    Args:
+        *lines: LaTeX-like equation rows. Alignment markers ``&`` are accepted
+            and omitted from rendered text.
+        numbered: Whether the block participates in equation numbering.
+        reference_label: Label prefix used by automatic inline references.
+        style: Base paragraph style.
+
+    Raises:
+        ValueError: If no non-empty equation rows are provided.
+
+    Examples:
+        ```python
+        from oodocs import AlignedEquation, Document
+
+        derivation = AlignedEquation(r"a &= b + c", r"  &= d")
+        document = Document("Derivation", derivation)
+        ```
+    """
+
+    lines: tuple[str, ...]
+
+    def __init__(
+        self,
+        *lines: str,
+        numbered: bool = True,
+        reference_label: str = "Equation",
+        style: ParagraphStyle | str | None = None,
+        text_alignment: str | None = None,
+        space_before: float | None = None,
+        space_after: float | None = None,
+        leading: float | None = None,
+        left_indent: float | None = None,
+        right_indent: float | None = None,
+        first_line_indent: float | None = None,
+        keep_together: bool | None = None,
+        keep_with_next: bool | None = None,
+        page_break_before: bool | None = None,
+        widow_control: bool | None = None,
+        unit: str | None = None,
+    ) -> None:
+        self.lines = _normalize_equation_lines(lines, "AlignedEquation")
+        Equation.__init__(
+            self,
+            _join_equation_lines(self.lines),
+            numbered=numbered,
+            reference_label=reference_label,
+            style=style,
+            text_alignment=text_alignment,
+            space_before=space_before,
+            space_after=space_after,
+            leading=leading,
+            left_indent=left_indent,
+            right_indent=right_indent,
+            first_line_indent=first_line_indent,
+            keep_together=keep_together,
+            keep_with_next=keep_with_next,
+            page_break_before=page_break_before,
+            widow_control=widow_control,
+            unit=unit,
+        )
+
+    def math_sources(self) -> tuple[str, ...]:
+        """Return the aligned equation rows used for validation."""
+
+        return self.lines
+
+
+@dataclass(slots=True, init=False)
+class CasesEquation(Equation):
+    """A piecewise equation block similar to LaTeX ``cases``.
+
+    Args:
+        *cases: ``(expression, condition)`` rows.
+        left: Optional expression rendered before the left brace.
+        numbered: Whether the block participates in equation numbering.
+        reference_label: Label prefix used by automatic inline references.
+        style: Base paragraph style.
+
+    Raises:
+        ValueError: If no cases are provided.
+        TypeError: If a case row is not an expression/condition pair.
+
+    Examples:
+        ```python
+        from oodocs import CasesEquation
+
+        piecewise = CasesEquation(("0", "x < 0"), ("x^2", "x >= 0"), left="f(x)")
+        ```
+    """
+
+    cases: tuple[tuple[str, str], ...]
+    left: str | None
+
+    def __init__(
+        self,
+        *cases: tuple[str, str],
+        left: str | None = None,
+        numbered: bool = True,
+        reference_label: str = "Equation",
+        style: ParagraphStyle | str | None = None,
+        text_alignment: str | None = None,
+        space_before: float | None = None,
+        space_after: float | None = None,
+        leading: float | None = None,
+        left_indent: float | None = None,
+        right_indent: float | None = None,
+        first_line_indent: float | None = None,
+        keep_together: bool | None = None,
+        keep_with_next: bool | None = None,
+        page_break_before: bool | None = None,
+        widow_control: bool | None = None,
+        unit: str | None = None,
+    ) -> None:
+        self.cases = _normalize_equation_cases(cases)
+        self.left = None if left is None else str(left).strip() or None
+        Equation.__init__(
+            self,
+            _cases_equation_expression(self.cases, self.left),
+            numbered=numbered,
+            reference_label=reference_label,
+            style=style,
+            text_alignment=text_alignment,
+            space_before=space_before,
+            space_after=space_after,
+            leading=leading,
+            left_indent=left_indent,
+            right_indent=right_indent,
+            first_line_indent=first_line_indent,
+            keep_together=keep_together,
+            keep_with_next=keep_with_next,
+            page_break_before=page_break_before,
+            widow_control=widow_control,
+            unit=unit,
+        )
+
+
+def _normalize_equation_lines(lines: Sequence[str], owner: str) -> tuple[str, ...]:
+    normalized: list[str] = []
+    for line in lines:
+        if not isinstance(line, str):
+            raise TypeError(f"{owner} lines must be strings")
+        cleaned = line.replace("&", "").strip()
+        if cleaned:
+            normalized.append(cleaned)
+    if not normalized:
+        raise ValueError(f"{owner} requires at least one non-empty line")
+    return tuple(normalized)
+
+
+def _join_equation_lines(lines: Sequence[str]) -> str:
+    return " \\\\ ".join(lines)
+
+
+def _normalize_equation_cases(
+    cases: Sequence[tuple[str, str]],
+) -> tuple[tuple[str, str], ...]:
+    normalized: list[tuple[str, str]] = []
+    for case in cases:
+        if not isinstance(case, tuple) or len(case) != 2:
+            raise TypeError("CasesEquation cases must be (expression, condition) pairs")
+        expression, condition = case
+        expression_text = str(expression).strip()
+        condition_text = str(condition).strip()
+        if not expression_text:
+            raise ValueError("CasesEquation case expressions must not be empty")
+        normalized.append((expression_text, condition_text))
+    if not normalized:
+        raise ValueError("CasesEquation requires at least one case")
+    return tuple(normalized)
+
+
+def _cases_equation_expression(
+    cases: Sequence[tuple[str, str]],
+    left: str | None,
+) -> str:
+    prefix = f"{left} = " if left else ""
+    rows = []
+    for expression, condition in cases:
+        rows.append(expression if not condition else f"{expression}, if {condition}")
+    return prefix + r"\lbrace " + _join_equation_lines(rows) + r" \rbrace"
 
 
 @dataclass(slots=True)
@@ -2714,10 +2939,12 @@ def coerce_cell(value: CellInput) -> Paragraph:
 
 __all__ = [
     "Algorithm",
+    "AlignedEquation",
     "Box",
     "BulletList",
     "Chapter",
     "CellInput",
+    "CasesEquation",
     "CodeBlock",
     "ColumnSpan",
     "CountableBlock",

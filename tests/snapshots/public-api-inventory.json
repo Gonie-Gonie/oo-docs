@@ -22,6 +22,13 @@
           "category": "block",
           "kind": "class",
           "module": "oodocs.components.blocks",
+          "name": "AlignedEquation",
+          "qualname": "oodocs.components.blocks.AlignedEquation"
+        },
+        {
+          "category": "block",
+          "kind": "class",
+          "module": "oodocs.components.blocks",
           "name": "Assumption",
           "qualname": "oodocs.components.blocks.Assumption"
         },
@@ -87,6 +94,13 @@
           "module": "oodocs.components.blocks",
           "name": "BulletList",
           "qualname": "oodocs.components.blocks.BulletList"
+        },
+        {
+          "category": "block",
+          "kind": "class",
+          "module": "oodocs.components.blocks",
+          "name": "CasesEquation",
+          "qualname": "oodocs.components.blocks.CasesEquation"
         },
         {
           "category": "theme",

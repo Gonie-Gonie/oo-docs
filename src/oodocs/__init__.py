@@ -6,11 +6,13 @@ from oodocs.core import OODocsError
 from oodocs.compatibility import OUTPUT_FORMATS, OutputFormat
 from oodocs.components.blocks import (
     Algorithm,
+    AlignedEquation,
     Assumption,
     Appendix,
     Axiom,
     Box,
     BulletList,
+    CasesEquation,
     Chapter,
     Claim,
     CodeBlock,
@@ -183,6 +185,7 @@ __version__ = _resolve_version()
 __all__ = [
     "Affiliation",
     "Algorithm",
+    "AlignedEquation",
     "Assumption",
     "Appendix",
     "Author",
@@ -193,6 +196,7 @@ __all__ = [
     "Box",
     "BoxStyle",
     "BulletList",
+    "CasesEquation",
     "CaptionDefaults",
     "CitationDefaults",
     "CounterStyle",

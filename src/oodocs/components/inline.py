@@ -494,8 +494,9 @@ def _reference_label_prefix(target: object) -> str:
         return "Figure"
     if target_name in {"SubTable", "SubTableGroup"}:
         return "Table"
-    if target_name == "Equation":
-        return "Equation"
+    reference_label = getattr(target, "reference_label", None)
+    if isinstance(reference_label, str) and reference_label:
+        return reference_label
     if target_name == "Paragraph":
         return "Paragraph"
     if target_name == "CodeBlock":
@@ -1437,12 +1438,13 @@ def coerce_inlines(values: Iterable[InlineInput]) -> list[Text]:
 def _is_referenceable(value: object) -> bool:
     if _as_countable_block(value) is not None:
         return True
+    if _as_equation(value) is not None:
+        return True
     block_name = type(value).__name__
     return block_name in {
         "Box",
         "Chapter",
         "CodeBlock",
-        "Equation",
         "Figure",
         "Paragraph",
         "Part",
@@ -1463,6 +1465,16 @@ def _as_countable_block(value: object) -> object | None:
     except ImportError:
         return None
     if isinstance(value, CountableBlock):
+        return value
+    return None
+
+
+def _as_equation(value: object) -> object | None:
+    try:
+        from oodocs.components.blocks import Equation
+    except ImportError:
+        return None
+    if isinstance(value, Equation):
         return value
     return None
 

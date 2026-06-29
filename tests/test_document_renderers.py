@@ -27,6 +27,7 @@ from oodocs.renderers.pdf import PdfRenderer
 from oodocs import (
     Affiliation,
     Algorithm,
+    AlignedEquation,
     Assumption,
     Author,
     AuthorLayout,
@@ -37,6 +38,7 @@ from oodocs import (
     Box,
     BoxStyle,
     BulletList,
+    CasesEquation,
     CaptionDefaults,
     CitationDefaults,
     CitationLibrary,
@@ -413,6 +415,71 @@ def test_math_prescript_renders_to_all_outputs(tmp_path: Path) -> None:
     html_text = html_path.read_text(encoding="utf-8")
     assert "<sup>14</sup><sub>6</sub>C" in html_text
     assert "<sup>3</sup><sub>1</sub>H" in html_text
+
+
+def test_amsmath_equation_blocks_number_reference_and_validate(tmp_path: Path) -> None:
+    aligned = AlignedEquation(
+        r"a &= b + c",
+        r"  &= d",
+        reference_label="Eq.",
+    )
+    cases = CasesEquation(
+        ("0", "x < 0"),
+        (r"x^2", r"x \geq 0"),
+        left="f(x)",
+    )
+    unnumbered = Equation(r"\operatorname{loss}(x)", numbered=False)
+    unsupported = Equation(r"\foo{x} + 1", numbered=False)
+    document = Document(
+        "AMSMath Blocks",
+        Paragraph("See ", aligned.reference(), " and ", unnumbered.reference("the loss definition"), "."),
+        aligned,
+        cases,
+        unnumbered,
+        unsupported,
+    )
+
+    render_index = build_render_index(document)
+    assert render_index.equation_number(aligned) == 1
+    assert render_index.equation_number(cases) == 2
+    assert render_index.equation_number(unnumbered) is None
+    assert render_index.equation_number(unsupported) is None
+    warning_codes = {issue.code for issue in document.validate().warnings}
+    assert "unsupported-latex-command" in warning_codes
+
+    unnumbered_target = Equation("x=1", numbered=False)
+    invalid_reference = Document(
+        "Invalid Equation Reference",
+        Paragraph("See ", unnumbered_target.reference(), "."),
+        unnumbered_target,
+    )
+    error_codes = {issue.code for issue in invalid_reference.validate().errors}
+    assert "unnumbered-equation-reference" in error_codes
+
+    docx_path = tmp_path / "amsmath.docx"
+    pdf_path = tmp_path / "amsmath.pdf"
+    html_path = tmp_path / "amsmath.html"
+    document.save_docx(docx_path)
+    document.save_pdf(pdf_path)
+    document.save_html(html_path)
+
+    docx_xml = _docx_document_xml(docx_path)
+    pdf_text = "\n".join(page.extract_text() or "" for page in PdfReader(BytesIO(pdf_path.read_bytes())).pages)
+    normalized_pdf_text = " ".join(pdf_text.split())
+    html_text = html_path.read_text(encoding="utf-8")
+    normalized_html_text = _normalized_html_text(html_path)
+
+    assert "See Eq. 1 and the loss definition." in normalized_pdf_text
+    assert "a = b + c" in docx_xml
+    assert "= d" in docx_xml
+    assert "f(x) = { 0, if x &lt; 0" in html_text
+    assert "x<sup>2</sup>, if x &gt;= 0" in html_text
+    assert "a = b + c" in normalized_html_text
+    assert "= d" in normalized_html_text
+    assert "Eq. 1" in normalized_html_text
+    assert "(1)" in normalized_html_text
+    assert "(2)" in normalized_html_text
+    assert "(3)" not in normalized_html_text
 
 
 def test_method_style_inline_actions_create_renderable_fragments() -> None:

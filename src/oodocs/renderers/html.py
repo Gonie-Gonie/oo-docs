@@ -2256,8 +2256,11 @@ class HtmlRenderer:
         if isinstance(target, Equation):
             number = render_index.equation_number(target)
             if number is None:
-                raise OODocsError("Equation references require the target equation to be included in the document")
-            return f"Equation {number}"
+                raise OODocsError(
+                    "Equation references require the target equation to be numbered and included in the document, "
+                    "or the reference must provide a custom label"
+                )
+            return target.reference_text(number)
 
         if isinstance(target, Paragraph):
             number = render_index.paragraph_number(target)
