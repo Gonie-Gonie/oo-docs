@@ -2,12 +2,28 @@
 
 from __future__ import annotations
 
+from copy import copy
 from dataclasses import dataclass
 from typing import Any
 
 from oodocs.layout.indexing import RenderIndex
 from oodocs.styles import RunInTitleStyle, StyleSheet, Theme
-from oodocs.settings import DocumentSettings
+from oodocs.settings import DocumentSettings, PageLayout
+
+
+def _settings_with_page_layout(
+    settings: DocumentSettings,
+    page_layout: PageLayout,
+) -> DocumentSettings:
+    """Return settings with page geometry replaced for scoped rendering."""
+
+    if settings.page_layout == page_layout:
+        return settings
+    scoped = copy(settings)
+    scoped.page_layout = page_layout
+    scoped.page_size = page_layout.page_size
+    scoped.page_margins = page_layout.page_margins
+    return scoped
 
 
 @dataclass(slots=True)

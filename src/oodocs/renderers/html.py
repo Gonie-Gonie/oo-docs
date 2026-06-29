@@ -82,8 +82,9 @@ from oodocs.layout.indexing import (
     reference_text_pieces,
     resolve_block_reference,
 )
+from oodocs.settings import PageLayout
 from oodocs.styles import BoxStyle, HeadingStyle, ListStyle, ParagraphStyle, TableStyle, TextStyle, Theme
-from oodocs.renderers.context import HtmlRenderContext
+from oodocs.renderers.context import HtmlRenderContext, _settings_with_page_layout
 from oodocs.renderers.syntax import _syntax_line_html, syntax_html
 
 
@@ -764,6 +765,25 @@ class HtmlRenderer:
 
         return self._positioned_item_html(self._inline_or_page_box(block, context), context)
 
+    def _context_with_page_layout(
+        self,
+        context: HtmlRenderContext,
+        page_layout: PageLayout,
+    ) -> HtmlRenderContext:
+        return replace(
+            context,
+            settings=_settings_with_page_layout(context.settings, page_layout),
+        )
+
+    def _section_page_layout_css(self, page_layout: PageLayout, unit: str) -> str:
+        top, right, bottom, left = page_layout.page_margin_inches(unit)
+        return (
+            "break-before: page; page-break-before: always; "
+            f"--oodocs-page-width: {page_layout.page_width_in_inches(unit):.2f}in; "
+            f"--oodocs-page-height: {page_layout.page_height_in_inches(unit):.2f}in; "
+            f"--oodocs-page-margin: {top:.2f}in {right:.2f}in {bottom:.2f}in {left:.2f}in;"
+        )
+
     def render_section(self, block: Section, context: HtmlRenderContext) -> str:
         """Render a titled section and its children into HTML.
 
@@ -776,14 +796,19 @@ class HtmlRenderer:
         """
 
         heading_tag = self._heading_tag(block.level)
-        number_label = context.render_index.heading_number(block) if block.numbered else None
-        anchor = context.render_index.heading_anchor(block)
-        heading_style = context.theme.resolve_heading_style(block.level, block.heading_style)
+        section_context = (
+            self._context_with_page_layout(context, block.page_layout)
+            if block.page_layout is not None
+            else context
+        )
+        number_label = section_context.render_index.heading_number(block) if block.numbered else None
+        anchor = section_context.render_index.heading_anchor(block)
+        heading_style = section_context.theme.resolve_heading_style(block.level, block.heading_style)
         heading_text_style = heading_style.text_style
         child_context = (
-            replace(context, run_in_title_style=block.run_in_title_style)
+            replace(section_context, run_in_title_style=block.run_in_title_style)
             if block.run_in_title_style is not None
-            else context
+            else section_context
         )
         children_html = "".join(
             child.render_to_html(self, child_context)
@@ -793,19 +818,27 @@ class HtmlRenderer:
             f"<{heading_tag}"
             + (f' id="{escape(anchor)}"' if anchor else "")
             + f' class="oodocs-heading oodocs-heading-level-{block.level}"'
-            + f' style="{self._heading_css(block.level, context.theme, block.heading_style)}">'
+            + f' style="{self._heading_css(block.level, section_context.theme, block.heading_style)}">'
             + self._inline_html(
                 self._heading_fragments(block.title, number_label),
-                context.theme,
-                context.render_index,
+                section_context.theme,
+                section_context.render_index,
                 base_bold=bool(heading_text_style.bold),
                 base_italic=bool(heading_text_style.italic),
-                base_size=heading_text_style.font_size or context.theme.resolve_heading_size(block.level),
+                base_size=heading_text_style.font_size or section_context.theme.resolve_heading_size(block.level),
             )
             + f"</{heading_tag}>"
         )
+        classes = [
+            "oodocs-section",
+            f"oodocs-section-level-{block.level}",
+        ]
+        style_attr = ""
+        if block.page_layout is not None:
+            classes.append("oodocs-section-page-layout")
+            style_attr = f' style="{self._section_page_layout_css(block.page_layout, context.unit)}"'
         return (
-            f'<section class="oodocs-section oodocs-section-level-{block.level}">'
+            f'<section class="{" ".join(classes)}"{style_attr}>'
             + heading_html
             + children_html
             + "</section>"
@@ -2987,6 +3020,16 @@ body {{
   page-break-after: always;
   height: 0;
   margin: 0;
+}}
+.oodocs-section-page-layout {{
+  max-width: var(--oodocs-page-width);
+}}
+@media print {{
+  .oodocs-section-page-layout {{
+    width: var(--oodocs-page-width);
+    min-height: var(--oodocs-page-height);
+    box-sizing: border-box;
+  }}
 }}
 .oodocs-title {{
   margin: 0 0 12pt;

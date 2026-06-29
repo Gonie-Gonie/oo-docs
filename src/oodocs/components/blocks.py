@@ -65,6 +65,7 @@ from oodocs.styles import (
 
 if TYPE_CHECKING:
     from oodocs.renderers.context import DocxRenderContext, HtmlRenderContext, PdfRenderContext
+    from oodocs.settings import PageLayout
 
 
 CodeLanguagePosition = Literal["top-left", "top-right", "bottom-left", "bottom-right"]
@@ -2572,6 +2573,10 @@ class Section(Block):
         run_in_title_style: Optional run-in title style inherited by
             paragraphs in this section subtree.
         heading_style: Optional direct style override for this section heading.
+        page_layout: Optional page geometry for this section. DOCX and PDF
+            renderers start the section on a new page with this layout; HTML
+            emits a page-break region and scoped page-box CSS as a print
+            fallback.
 
     Raises:
         ValueError: If ``level`` is less than one.
@@ -2599,6 +2604,7 @@ class Section(Block):
     anchor: str | None
     run_in_title_style: RunInTitleStyle | None
     heading_style: HeadingStyle | None
+    page_layout: PageLayout | None
 
     def __init__(
         self,
@@ -2610,11 +2616,17 @@ class Section(Block):
         anchor: str | None = None,
         run_in_title_style: RunInTitleStyle | None = None,
         heading_style: HeadingStyle | None = None,
+        page_layout: PageLayout | None = None,
     ) -> None:
         if level < 1:
             raise ValueError("Section level must be >= 1")
         if heading_style is not None and not isinstance(heading_style, HeadingStyle):
             raise TypeError("heading_style must be a HeadingStyle")
+        if page_layout is not None:
+            from oodocs.settings import PageLayout as PageLayoutType
+
+            if not isinstance(page_layout, PageLayoutType):
+                raise TypeError("page_layout must be a PageLayout")
         self.title = coerce_inlines((title,))
         self.children = coerce_blocks(children)
         self.level = level
@@ -2623,6 +2635,7 @@ class Section(Block):
         self.anchor = anchor
         self.run_in_title_style = run_in_title_style
         self.heading_style = heading_style
+        self.page_layout = page_layout
 
     def add(self, *children: BlockInput) -> Section:
         """Append child blocks.
@@ -2673,25 +2686,7 @@ class Section(Block):
             context: Shared DOCX render context.
         """
 
-        renderer.add_heading(
-            container,
-            self.title,
-            self.level,
-            context,
-            number_label=(
-                context.render_index.heading_number(self)
-                if self.numbered
-                else None
-            ),
-            anchor=context.render_index.heading_anchor(self),
-            toc=self.toc,
-            heading_style=self.heading_style,
-        )
-        child_context = context
-        if self.run_in_title_style is not None:
-            child_context = replace(context, run_in_title_style=self.run_in_title_style)
-        for child in self.children:
-            child.render_to_docx(renderer, container, child_context)
+        renderer.render_section(container, self, context)
 
     def render_to_pdf(
         self,

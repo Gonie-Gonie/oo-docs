@@ -917,6 +917,11 @@ class _ValidationContext:
             self._validate_title(block.title, f"{path}.title", "Section title must not be empty.")
             self._scan_inlines(block.title, f"{path}.title")
             self._validate_heading_level(block, path, parent_level)
+            if block.page_layout is not None:
+                self._add_compatibility_warning(
+                    "section-page-layout-html-degrade",
+                    f"{path}.page_layout",
+                )
             self._collect_blocks(
                 block.children,
                 path,

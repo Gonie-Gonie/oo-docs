@@ -39,6 +39,7 @@ from reportlab.platypus import (
     Frame,
     HRFlowable,
     KeepTogether,
+    NextPageTemplate,
     PageBreak as RLPageBreak,
     PageTemplate,
     Paragraph as RLParagraph,
@@ -124,8 +125,9 @@ from oodocs.layout.indexing import (
     reference_text_pieces,
     resolve_block_reference,
 )
+from oodocs.settings import PageLayout
 from oodocs.styles import BoxStyle, ListStyle, ParagraphStyle, TableStyle as OODocsTableStyle, TextStyle, Theme
-from oodocs.renderers.context import PdfRenderContext
+from oodocs.renderers.context import PdfRenderContext, _settings_with_page_layout
 from oodocs.renderers.syntax import SyntaxToken, _syntax_line_tokens, syntax_tokens
 
 
@@ -566,6 +568,20 @@ class OODocsPdfTemplate(SimpleDocTemplate):
         self.main_matter_start_page: int | None = None
         self._outline_base_level: int | None = None
         self._outline_last_level: int | None = None
+        self._oodocs_page_layout_templates: list[
+            tuple[str, tuple[float, float], tuple[float, float, float, float]]
+        ] = []
+
+    def add_page_layout_template(
+        self,
+        template_id: str,
+        *,
+        pagesize: tuple[float, float],
+        margins: tuple[float, float, float, float],
+    ) -> None:
+        """Register an additional page template for scoped page geometry."""
+
+        self._oodocs_page_layout_templates.append((template_id, pagesize, margins))
 
     def beforeDocument(self) -> None:
         """Reset per-build page-number state before ReportLab starts.
@@ -608,6 +624,26 @@ class OODocsPdfTemplate(SimpleDocTemplate):
                 PageTemplate(id="Later", frames=frame, onPage=onLaterPages, pagesize=self.pagesize),
             ]
         )
+        for template_id, pagesize, margins in self._oodocs_page_layout_templates:
+            top, right, bottom, left = margins
+            width, height = pagesize
+            template_frame = Frame(
+                left,
+                bottom,
+                max(width - left - right, 0),
+                max(height - top - bottom, 0),
+                id=f"{template_id}-frame",
+            )
+            self.addPageTemplates(
+                [
+                    PageTemplate(
+                        id=template_id,
+                        frames=template_frame,
+                        onPage=onLaterPages,
+                        pagesize=pagesize,
+                    )
+                ]
+            )
         if onFirstPage is _doNothing and hasattr(self, "onFirstPage"):
             self.pageTemplates[0].beforeDrawPage = self.onFirstPage
         if onLaterPages is _doNothing and hasattr(self, "onLaterPages"):
@@ -700,6 +736,10 @@ class PdfRenderer:
         self._registered_system_fonts: dict[tuple[str, bool, bool], str] = {}
         self._pending_float_flowables: list[object] = []
         self._pdf_page_replacements: dict[str, tuple[Path, int]] = {}
+        self._pdf_page_layout_template_ids: dict[
+            tuple[float, float, float, float, float, float],
+            str,
+        ] = {}
 
     def render(self, document: Document, output_path: PathLike) -> Path:
         """Render an OODocs document to a PDF file.
@@ -716,6 +756,7 @@ class PdfRenderer:
         path.parent.mkdir(parents=True, exist_ok=True)
         self._pending_float_flowables = []
         self._pdf_page_replacements = {}
+        self._pdf_page_layout_template_ids = {}
         settings = document.settings
 
         pdf = OODocsPdfTemplate(
@@ -733,6 +774,7 @@ class PdfRenderer:
             topMargin=settings.page_margins.top_in_inches(settings.unit) * inch,
             bottomMargin=settings.page_margins.bottom_in_inches(settings.unit) * inch,
         )
+        self._register_pdf_page_layout_templates(pdf, document)
         story: list[object] = []
         styles = getSampleStyleSheet()
         render_index = build_render_index(document)
@@ -801,6 +843,95 @@ class PdfRenderer:
             pdf.build(story)
         self._replace_pdf_page_placeholders(path)
         return path
+
+    def _page_layout_key(
+        self,
+        page_layout: PageLayout,
+        unit: str,
+    ) -> tuple[float, float, float, float, float, float]:
+        top, right, bottom, left = page_layout.page_margin_inches(unit)
+        return (
+            round(page_layout.page_width_in_inches(unit), 4),
+            round(page_layout.page_height_in_inches(unit), 4),
+            round(top, 4),
+            round(right, 4),
+            round(bottom, 4),
+            round(left, 4),
+        )
+
+    def _collect_section_page_layouts(self, blocks: list[object]) -> list[PageLayout]:
+        layouts: list[PageLayout] = []
+        for block in blocks:
+            if isinstance(block, Section) and block.page_layout is not None:
+                layouts.append(block.page_layout)
+            children = getattr(block, "children", None)
+            if isinstance(children, list):
+                layouts.extend(self._collect_section_page_layouts(children))
+        return layouts
+
+    def _register_pdf_page_layout_templates(
+        self,
+        pdf: OODocsPdfTemplate,
+        document: Document,
+    ) -> None:
+        settings = document.settings
+        default_key = self._page_layout_key(settings.page_layout, settings.unit)
+        self._pdf_page_layout_template_ids[default_key] = "Later"
+        for page_layout in self._collect_section_page_layouts(document.body.children):
+            key = self._page_layout_key(page_layout, settings.unit)
+            if key in self._pdf_page_layout_template_ids:
+                continue
+            template_id = f"OODocsPageLayout{len(self._pdf_page_layout_template_ids)}"
+            self._pdf_page_layout_template_ids[key] = template_id
+            top, right, bottom, left = page_layout.page_margin_inches(settings.unit)
+            pdf.add_page_layout_template(
+                template_id,
+                pagesize=(
+                    page_layout.page_width_in_inches(settings.unit) * inch,
+                    page_layout.page_height_in_inches(settings.unit) * inch,
+                ),
+                margins=(
+                    top * inch,
+                    right * inch,
+                    bottom * inch,
+                    left * inch,
+                ),
+            )
+
+    def _pdf_page_layout_template_id(
+        self,
+        page_layout: PageLayout,
+        context: PdfRenderContext,
+    ) -> str:
+        key = self._page_layout_key(page_layout, context.unit)
+        return self._pdf_page_layout_template_ids.get(key, "Later")
+
+    def _context_with_page_layout(
+        self,
+        context: PdfRenderContext,
+        page_layout: PageLayout,
+    ) -> PdfRenderContext:
+        return replace(
+            context,
+            settings=_settings_with_page_layout(context.settings, page_layout),
+        )
+
+    def _block_page_layout(self, block: object) -> PageLayout | None:
+        if isinstance(block, Section):
+            return block.page_layout
+        return None
+
+    def _append_pdf_page_layout_transition(
+        self,
+        story: list[object],
+        page_layout: PageLayout,
+        context: PdfRenderContext,
+    ) -> None:
+        transition = NextPageTemplate(self._pdf_page_layout_template_id(page_layout, context))
+        if story and isinstance(story[-1], RLPageBreak):
+            story.insert(len(story) - 1, transition)
+            return
+        story.extend([transition, RLPageBreak()])
 
     def _replace_pdf_page_placeholders(self, path: Path) -> None:
         if not self._pdf_page_replacements:
@@ -1054,15 +1185,21 @@ class PdfRenderer:
             Flowables representing the heading and section body.
         """
 
-        child_context = (
-            replace(context, run_in_title_style=block.run_in_title_style)
-            if block.run_in_title_style is not None
+        section_context = (
+            self._context_with_page_layout(context, block.page_layout)
+            if block.page_layout is not None
             else context
         )
-        return [self.make_section_heading(block, context)] + self._render_flow_children(
+        child_context = (
+            replace(section_context, run_in_title_style=block.run_in_title_style)
+            if block.run_in_title_style is not None
+            else section_context
+        )
+        return [self.make_section_heading(block, section_context)] + self._render_flow_children(
             block.children,
             child_context,
             flush_trailing_floats=False,
+            restore_layout_at_end=True,
         )
 
     def render_list(
@@ -1721,14 +1858,20 @@ class PdfRenderer:
         follows_existing_content: bool = False,
     ) -> list[object]:
         story: list[object] = []
+        active_context = context
         for index, child in enumerate(children):
+            target_layout = self._block_page_layout(child) or context.settings.page_layout
+            if target_layout != active_context.settings.page_layout:
+                story.extend(self._pop_pending_float_flowables())
+                self._append_pdf_page_layout_transition(story, target_layout, active_context)
+                active_context = self._context_with_page_layout(active_context, target_layout)
             if isinstance(child, PdfPages):
                 story.extend(self._pop_pending_float_flowables())
                 if story and not isinstance(story[-1], RLPageBreak):
                     story.append(RLPageBreak())
                 elif not story and follows_existing_content:
                     story.append(RLPageBreak())
-                story.extend(child.render_to_pdf(self, context))
+                story.extend(child.render_to_pdf(self, active_context))
                 if index < len(children) - 1:
                     story.append(RLPageBreak())
                 continue
@@ -1738,20 +1881,20 @@ class PdfRenderer:
                     story.append(RLPageBreak())
                 elif not story and follows_existing_content:
                     story.append(RLPageBreak())
-                story.extend(child.render_to_pdf(self, context))
+                story.extend(child.render_to_pdf(self, active_context))
                 if not child.children and index < len(children) - 1:
                     story.append(RLPageBreak())
                 continue
-            if self._is_paginated_generated_page(child) and context.theme.generated_content.generated_content_page_breaks:
+            if self._is_paginated_generated_page(child) and active_context.theme.generated_content.generated_content_page_breaks:
                 story.extend(self._pop_pending_float_flowables())
                 if story and not isinstance(story[-1], RLPageBreak):
                     story.append(RLPageBreak())
-                story.extend(child.render_to_pdf(self, context))
+                story.extend(child.render_to_pdf(self, active_context))
                 if index < len(children) - 1:
                     story.append(RLPageBreak())
                 continue
             pending_before_child = bool(self._pending_float_flowables)
-            child_story = child.render_to_pdf(self, context)
+            child_story = child.render_to_pdf(self, active_context)
             if self._is_float_story(child_story):
                 self._pending_float_flowables.extend(child_story)
                 continue
@@ -1767,19 +1910,26 @@ class PdfRenderer:
         context: PdfRenderContext,
         *,
         flush_trailing_floats: bool,
+        restore_layout_at_end: bool = True,
     ) -> list[object]:
         story: list[object] = []
+        active_context = context
         for index, child in enumerate(children):
+            target_layout = self._block_page_layout(child) or context.settings.page_layout
+            if target_layout != active_context.settings.page_layout:
+                story.extend(self._pop_pending_float_flowables())
+                self._append_pdf_page_layout_transition(story, target_layout, active_context)
+                active_context = self._context_with_page_layout(active_context, target_layout)
             if isinstance(child, PdfPages):
                 story.extend(self._pop_pending_float_flowables())
                 if story and not isinstance(story[-1], RLPageBreak):
                     story.append(RLPageBreak())
-                story.extend(child.render_to_pdf(self, context))
+                story.extend(child.render_to_pdf(self, active_context))
                 if index < len(children) - 1:
                     story.append(RLPageBreak())
                 continue
             pending_before_child = bool(self._pending_float_flowables)
-            child_story = child.render_to_pdf(self, context)
+            child_story = child.render_to_pdf(self, active_context)
             if self._is_float_story(child_story):
                 self._pending_float_flowables.extend(child_story)
                 continue
@@ -1788,6 +1938,13 @@ class PdfRenderer:
                 story.extend(self._pop_pending_float_flowables())
         if flush_trailing_floats:
             story.extend(self._pop_pending_float_flowables())
+        if restore_layout_at_end and active_context.settings.page_layout != context.settings.page_layout:
+            story.extend(self._pop_pending_float_flowables())
+            self._append_pdf_page_layout_transition(
+                story,
+                context.settings.page_layout,
+                active_context,
+            )
         return story
 
     def _render_multi_column_group(

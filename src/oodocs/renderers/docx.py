@@ -104,8 +104,9 @@ from oodocs.layout.indexing import (
     reference_text_pieces,
     resolve_block_reference,
 )
+from oodocs.settings import PageLayout
 from oodocs.styles import BoxStyle, HeadingStyle, ListStyle, ParagraphStyle, TableStyle, TextStyle, Theme
-from oodocs.renderers.context import DocxRenderContext
+from oodocs.renderers.context import DocxRenderContext, _settings_with_page_layout
 from oodocs.renderers.syntax import SyntaxToken, _syntax_line_tokens, syntax_tokens
 
 
@@ -372,8 +373,54 @@ class DocxRenderer:
 
         if block.children:
             self._ensure_page_break(word_document)
-            for child in block.children:
-                child.render_to_docx(self, word_document, context)
+            self._render_docx_flow_children(
+                word_document,
+                block.children,
+                context,
+                restore_at_end=True,
+            )
+
+    def render_section(
+        self,
+        container: object,
+        block: Section,
+        context: DocxRenderContext,
+    ) -> None:
+        """Render a section heading and child blocks into DOCX."""
+
+        section_context = context
+        if block.page_layout is not None:
+            section_context = self._ensure_docx_page_layout(
+                container,
+                context,
+                block.page_layout,
+            )
+        self.add_heading(
+            container,
+            block.title,
+            block.level,
+            section_context,
+            number_label=(
+                section_context.render_index.heading_number(block)
+                if block.numbered
+                else None
+            ),
+            anchor=section_context.render_index.heading_anchor(block),
+            toc=block.toc,
+            heading_style=block.heading_style,
+        )
+        child_context = section_context
+        if block.run_in_title_style is not None:
+            child_context = replace(
+                section_context,
+                run_in_title_style=block.run_in_title_style,
+            )
+        self._render_docx_flow_children(
+            container,
+            block.children,
+            child_context,
+            restore_at_end=True,
+        )
 
     def render_paragraph(
         self,
@@ -1071,6 +1118,61 @@ class DocxRenderer:
         section.bottom_margin = Inches(bottom)
         section.left_margin = Inches(left)
 
+    def _context_with_page_layout(
+        self,
+        context: DocxRenderContext,
+        page_layout: PageLayout,
+    ) -> DocxRenderContext:
+        return replace(
+            context,
+            settings=_settings_with_page_layout(context.settings, page_layout),
+        )
+
+    def _block_page_layout(self, block: object) -> PageLayout | None:
+        if isinstance(block, Section):
+            return block.page_layout
+        return None
+
+    def _ensure_docx_page_layout(
+        self,
+        container: object,
+        context: DocxRenderContext,
+        page_layout: PageLayout,
+    ) -> DocxRenderContext:
+        if context.settings.page_layout == page_layout:
+            return context
+        if self._is_cell_container(container) or not hasattr(container, "add_section"):
+            return context
+        scoped_context = self._context_with_page_layout(context, page_layout)
+        section = container.add_section(WD_SECTION.NEW_PAGE)
+        self._configure_section_page_box(section, scoped_context.settings)
+        return scoped_context
+
+    def _render_docx_flow_children(
+        self,
+        container: object,
+        children: list[object],
+        context: DocxRenderContext,
+        *,
+        restore_at_end: bool,
+    ) -> DocxRenderContext:
+        active_context = context
+        for child in children:
+            target_layout = self._block_page_layout(child) or context.settings.page_layout
+            active_context = self._ensure_docx_page_layout(
+                container,
+                active_context,
+                target_layout,
+            )
+            child.render_to_docx(self, container, active_context)
+        if restore_at_end and active_context.settings.page_layout != context.settings.page_layout:
+            active_context = self._ensure_docx_page_layout(
+                container,
+                active_context,
+                context.settings.page_layout,
+            )
+        return active_context
+
     def _set_section_columns(self, section: object, columns: int, gap_inches: float) -> None:
         sect_pr = section._sectPr
         cols = sect_pr.find(qn("w:cols"))
@@ -1086,15 +1188,22 @@ class DocxRenderer:
         children: list[object],
         context: DocxRenderContext,
     ) -> None:
+        active_context = context
         for index, child in enumerate(children):
+            target_layout = self._block_page_layout(child) or context.settings.page_layout
+            active_context = self._ensure_docx_page_layout(
+                word_document,
+                active_context,
+                target_layout,
+            )
             if self._is_paginated_generated_page(child) and context.theme.generated_content.generated_content_page_breaks:
                 if word_document.paragraphs and not self._ends_with_page_break(word_document):
                     self._ensure_page_break(word_document)
-                child.render_to_docx(self, word_document, context)
+                child.render_to_docx(self, word_document, active_context)
                 if index < len(children) - 1:
                     self._ensure_page_break(word_document)
                 continue
-            child.render_to_docx(self, word_document, context)
+            child.render_to_docx(self, word_document, active_context)
             if isinstance(child, Part) and not child.children and index < len(children) - 1:
                 self._ensure_page_break(word_document)
 

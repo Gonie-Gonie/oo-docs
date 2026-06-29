@@ -92,6 +92,16 @@ COMPATIBILITY_NOTES: dict[str, CompatibilityNote] = {
         ),
         formats=("docx", "html"),
     ),
+    "section-page-layout-html-degrade": CompatibilityNote(
+        code="section-page-layout-html-degrade",
+        message=(
+            "Section page_layout uses actual page sections in DOCX/PDF; HTML "
+            "uses a page-break region and scoped CSS variables as a print "
+            "fallback because browsers do not consistently enforce mixed page "
+            "sizes in one document."
+        ),
+        formats=("html",),
+    ),
     "docx-footnote-stream-generated-list": CompatibilityNote(
         code="docx-footnote-stream-generated-list",
         message=(

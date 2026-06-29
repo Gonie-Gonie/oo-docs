@@ -4612,6 +4612,57 @@ def test_page_layout_rejects_ambiguous_settings_geometry() -> None:
         )
 
 
+def test_section_page_layout_switches_docx_pdf_and_html(tmp_path: Path) -> None:
+    default_layout = PageLayout.portrait(
+        PageSize.a4(),
+        PageMargins.all(1.0, unit="cm"),
+    )
+    landscape_layout = PageLayout.landscape(
+        PageSize.a4(),
+        PageMargins.all(1.0, unit="cm"),
+    )
+    document = Document(
+        "Section Layout",
+        Section("Default Section", Paragraph("Portrait body."), level=1),
+        Section(
+            "Wide Section",
+            Paragraph("Landscape body."),
+            level=1,
+            page_layout=landscape_layout,
+        ),
+        Paragraph("Back to the default page layout."),
+        settings=DocumentSettings(unit="cm", page_layout=default_layout),
+    )
+
+    warning_codes = {issue.code for issue in document.validate().warnings}
+    assert "section-page-layout-html-degrade" in warning_codes
+
+    docx_path = tmp_path / "section-layout.docx"
+    pdf_path = tmp_path / "section-layout.pdf"
+    html_path = tmp_path / "section-layout.html"
+    document.save_docx(docx_path)
+    document.save_pdf(pdf_path)
+    document.save_html(html_path)
+
+    word_sections = list(WordDocument(docx_path).sections)
+    assert len(word_sections) >= 3
+    assert int(word_sections[1].page_width) > int(word_sections[1].page_height)
+    assert int(word_sections[-1].page_width) < int(word_sections[-1].page_height)
+
+    pdf_pages = PdfReader(BytesIO(pdf_path.read_bytes())).pages
+    page_orientations = [
+        float(page.mediabox.width) > float(page.mediabox.height)
+        for page in pdf_pages
+    ]
+    assert True in page_orientations
+    assert page_orientations[-1] is False
+
+    html_text = html_path.read_text(encoding="utf-8")
+    assert "oodocs-section-page-layout" in html_text
+    assert "--oodocs-page-width: 11.69in;" in html_text
+    assert "--oodocs-page-height: 8.27in;" in html_text
+
+
 def test_object_unit_overrides_document_unit(tmp_path: Path) -> None:
     image_path = tmp_path / "sample.png"
     _write_sample_image(image_path)
