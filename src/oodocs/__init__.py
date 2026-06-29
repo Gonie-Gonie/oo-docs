@@ -122,6 +122,7 @@ from oodocs.components.inline import (
     superscript,
     tag,
     text_color,
+    url,
 )
 from oodocs.settings import (
     DocumentMetadata,
@@ -351,6 +352,7 @@ __all__ = [
     "superscript",
     "tag",
     "text_color",
+    "url",
     "validate_source_document",
 ]
 

@@ -95,6 +95,7 @@ OODocs_API_CATEGORIES: tuple[ApiCategory, ...] = (
             "oodocs.text_color",
             "oodocs.highlight",
             "oodocs.link",
+            "oodocs.url",
             "oodocs.Ref",
             "oodocs.ref",
             "oodocs.reference",

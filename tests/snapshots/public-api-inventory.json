@@ -1104,6 +1104,13 @@
           "qualname": "oodocs.components.inline.text_color"
         },
         {
+          "category": "inline",
+          "kind": "function",
+          "module": "oodocs.components.inline",
+          "name": "url",
+          "qualname": "oodocs.components.inline.url"
+        },
+        {
           "category": "workflow",
           "kind": "function",
           "module": "oodocs.workflows",

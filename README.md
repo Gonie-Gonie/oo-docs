@@ -156,6 +156,7 @@ Common translations:
 - LaTeX `tabularx` / `array` column specs -> `ColumnSpec(width=...)`, `ColumnSpec(flex=...)`, and `Table.excerpt(...)` plus a CSV sidecar for very wide matrices
 - LaTeX `multirow` / `multicolumn` -> `TableCell(rowspan=...)`, `TableCell(colspan=...)`, or `Table.grouped_headers(...)`
 - LaTeX `\label` / `\ref` -> use `reference(obj)` or `obj.reference()` inside `Paragraph(...)`
+- LaTeX `\url{...}` / `\href{...}{...}` -> use `url(...)` for visible URLs and `link(...)` for named links
 - LaTeX `tcolorbox` / `mdframed` report panels -> editable `Box(..., icon=..., title_position="side")` or `CalloutBox(..., variant="danger", icon="!")`
 - BibTeX-style references -> `CitationLibrary`, `CitationSource.cite(...)`, and `ReferenceList()`
 
@@ -166,7 +167,7 @@ The main payoff is fewer manual handoffs: a benchmark CSV can become a table, a 
 OODocs tries to keep the source readable:
 
 - create objects with classes such as `Document`, `Part`, `Appendix`, `Chapter`, `Section`, `Paragraph`, `Table`, and `Figure`
-- apply inline actions with helpers such as `bold(...)`, `italic(...)`, `inline_code(...)`, `tag(...)`, `badge(...)`, `status(...)`, `keyboard(...)`, `Text.from_markup(...)`, `Comment.annotated(...)`, `Footnote.annotated(...)`, and `CitationSource.cite()`
+- apply inline actions with helpers such as `bold(...)`, `italic(...)`, `inline_code(...)`, `tag(...)`, `badge(...)`, `status(...)`, `keyboard(...)`, `url(...)`, `Text.from_markup(...)`, `Comment.annotated(...)`, `Footnote.annotated(...)`, and `CitationSource.cite()`
 - import existing Markdown with `parse_markdown(...)`, `from_markdown(...)`, or `Document.from_markdown(...)` when release notes, README fragments, or generated Markdown should become editable OODocs objects
 - import Jupyter notebooks with `parse_notebook(...)`, `from_notebook(...)`, or `Document.from_notebook(...)` when notebook markdown, code cells, and textual outputs should become OODocs blocks
 - collect Python API metadata with `oodocs.apidoc.collect_api(...)` when public classes, functions, methods, parameters, examples, and docstring coverage should become queryable objects before they become document blocks
@@ -191,6 +192,7 @@ The default behavior is intentionally conventional:
 - Use `Paragraph(..., title="Outcome")` for run-in paragraph titles such as LaTeX-style bold labels before body text. Override one paragraph with `title_style=RunInTitleStyle(...)`, set a section/chapter scope with `Section(..., run_in_title_style=...)`, or set the document default with `Theme(blocks=BlockDefaults(run_in_title_style=...))`.
 - Use `tag(...)`, `badge(...)`, `status(...)`, and `keyboard(...)` for compact inline labels. They share the `InlineChip(...)` model; DOCX emits small inline images, while PDF and HTML keep styled text.
 - Use `highlight(...)`, `strikethrough(...)`, and `line_break()` for Word-style emphasis and manual line breaks inside one paragraph.
+- Use `link(target, label)` for named external links and `url(target, breakable=True)` when the visible text is the URL itself. Long raw URL labels emit a validation warning because DOCX, PDF, and HTML wrap them differently.
 - Use `Theme(blocks=BlockDefaults(paragraph_text_alignment=...))` for the document-wide paragraph default, and direct paragraph kwargs such as `text_alignment=...` when one paragraph should override it.
 - Use `Paragraph(left_indent=..., right_indent=..., first_line_indent=..., unit=...)` when you need Word-like first-line or hanging indents. If `unit` is omitted, indent values follow `DocumentSettings(unit=...)`.
 - Use `subscript(...)`, `superscript(...)`, and `prescript(...)` for ordinary prose. Use `Math(...)`, `Equation(...)`, `AlignedEquation(...)`, or `CasesEquation(...)` for lightweight LaTeX-style math, including ordinary `x^2` / `x_0` scripts, aligned derivations, piecewise cases, and front scripts such as `\prescript{14}{6}{C}`. Pass `numbered=False` when a displayed equation should not consume an equation number.
@@ -290,7 +292,7 @@ doc = Document(
 - inline chips through `InlineChip(...)`, `tag(...)`, `badge(...)`, `status(...)`, and `keyboard(...)`
 - bibliography support through `CitationSource`, `CitationLibrary`, direct citation objects, BibTeX import, and configurable inline/Reference styles such as APA
 - optional title matter such as subtitle, structured `Author(...)` metadata, `AuthorLayout(...)`, affiliations, and a cover page
-- inline hyperlinks, theme-controlled link styling, heading/caption anchors, plural/range object-reference helpers, and validation for broken internal links
+- inline hyperlinks, breakable URL labels, theme-controlled link styling, heading/caption anchors, plural/range object-reference helpers, and validation for broken internal links
 - release evidence adapters for pyproject metadata, GitHub Actions workflows, JSON manifests, CSV/TSV evidence tables, checksums, and generated evidence reports
 - API object collection, docstring coverage checks, API snapshots, API diffs, and composable API-reference sections through `oodocs.apidoc`
 

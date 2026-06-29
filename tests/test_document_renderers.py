@@ -155,6 +155,7 @@ from oodocs import (
     subscript,
     superscript,
     tag,
+    url,
 )
 from oodocs.presets.components import (
     CalloutBox,
@@ -332,9 +333,32 @@ def _docx_word_xml(docx_path: Path) -> str:
         )
 
 
+def _docx_relationships_xml(docx_path: Path) -> str:
+    with zipfile.ZipFile(docx_path) as archive:
+        return "\n".join(
+            archive.read(name).decode("utf-8")
+            for name in archive.namelist()
+            if name.startswith("word/_rels/") and name.endswith(".rels")
+        )
+
+
 def _docx_settings_xml(docx_path: Path) -> str:
     with zipfile.ZipFile(docx_path) as archive:
         return archive.read("word/settings.xml").decode("utf-8")
+
+
+def _pdf_uri_targets(pdf_path: Path) -> list[str]:
+    targets: list[str] = []
+    for page in PdfReader(BytesIO(pdf_path.read_bytes())).pages:
+        for annotation_ref in page.get("/Annots", []):
+            annotation = annotation_ref.get_object()
+            action = annotation.get("/A")
+            if action is None:
+                continue
+            uri = action.get("/URI")
+            if uri is not None:
+                targets.append(str(uri))
+    return targets
 
 
 def _normalized_html_text(html_path: Path) -> str:
@@ -575,6 +599,13 @@ def test_method_style_inline_actions_create_renderable_fragments() -> None:
     assert isinstance(external_link, inline_components.Hyperlink)
     assert external_link.target == "https://example.com"
     assert external_link.plain_text() == "Example"
+    long_target = "https://example.com/releases/" + "stable-artifact-" * 8
+    visible_url = url(long_target)
+    assert isinstance(visible_url, inline_components.Hyperlink)
+    assert visible_url.target == long_target
+    assert "\u200b" in visible_url.plain_text()
+    assert visible_url.plain_text().replace("\u200b", "") == long_target
+    assert url(long_target, label="Project site").plain_text() == "Project site"
     assert source.cite().plain_text() == "[?]"
     assert library.cite("guide").plain_text() == "[?]"
     assert Comment.annotated("term", "Expanded note").plain_text() == "term[?]"
@@ -3994,6 +4025,41 @@ def test_theme_link_style_controls_html_link_defaults(tmp_path: Path) -> None:
 
     assert "color: #C00000;" in html_text
     assert "text-decoration: none;" in html_text
+
+
+def test_url_helper_preserves_targets_and_warns_for_raw_long_urls(tmp_path: Path) -> None:
+    long_target = (
+        "https://example.com/releases/download/v1.2.3/"
+        + "portable-artifact-segment-" * 5
+        + "?checksum="
+        + "abcdef1234567890" * 4
+    )
+    document = Document(
+        "Breakable URLs",
+        Paragraph("Download ", url(long_target), " or open ", url(long_target, label="release page"), "."),
+    )
+
+    result = document.validate()
+    assert "overly-long-url" not in {issue.code for issue in result.warnings}
+
+    docx_path = tmp_path / "breakable-url.docx"
+    pdf_path = tmp_path / "breakable-url.pdf"
+    html_path = tmp_path / "breakable-url.html"
+    document.save_docx(docx_path)
+    document.save_pdf(pdf_path)
+    document.save_html(html_path)
+
+    html_text = html_path.read_text(encoding="utf-8")
+    assert long_target.replace("&", "&amp;") in html_text
+    assert "\u200b" in html_text
+    assert long_target in _docx_relationships_xml(docx_path)
+    assert long_target in _pdf_uri_targets(pdf_path)
+
+    raw_document = Document("Raw URL", Paragraph("Download ", link(long_target), "."))
+    labeled_document = Document("Labeled URL", Paragraph("Download ", link(long_target, "release page"), "."))
+
+    assert "overly-long-url" in {issue.code for issue in raw_document.validate().warnings}
+    assert "overly-long-url" not in {issue.code for issue in labeled_document.validate().warnings}
 
 
 def test_validation_reports_broken_internal_hyperlinks() -> None:

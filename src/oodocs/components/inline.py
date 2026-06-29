@@ -962,6 +962,29 @@ class Hyperlink(Text):
         return cls(target, *label, internal=True, style=style)
 
 
+_URL_SOFT_BREAK = "\u200b"
+_URL_BREAK_AFTER = frozenset("/?#&=:%._-~")
+_URL_MAX_UNBROKEN_SEGMENT = 24
+
+
+def _breakable_url_label(value: str) -> str:
+    text = str(value)
+    if _URL_SOFT_BREAK in text:
+        return text
+    parts: list[str] = []
+    segment_length = 0
+    last_index = len(text) - 1
+    for index, character in enumerate(text):
+        parts.append(character)
+        segment_length += 1
+        if index == last_index:
+            continue
+        if character in _URL_BREAK_AFTER or segment_length >= _URL_MAX_UNBROKEN_SEGMENT:
+            parts.append(_URL_SOFT_BREAK)
+            segment_length = 0
+    return "".join(parts)
+
+
 class Comment(Text):
     """Inline text annotated with a numbered comment.
 
@@ -1650,6 +1673,40 @@ def link(
     return Hyperlink.external(target, *label, style=style)
 
 
+def url(
+    target: str,
+    label: InlineInput | None = None,
+    *,
+    breakable: bool = True,
+    style: TextStyle | None = None,
+) -> Hyperlink:
+    """Create a display-friendly external URL hyperlink.
+
+    Args:
+        target: External URL. The link target is preserved exactly.
+        label: Optional visible label. Defaults to the URL itself.
+        breakable: Whether to insert zero-width soft break points in the
+            visible URL label.
+        style: Optional inline style.
+
+    Returns:
+        External hyperlink fragment.
+
+    Examples:
+        ```python
+        fragment = url("https://example.com/releases/latest")
+        labeled = url("https://example.com", label="Project site")
+        ```
+    """
+
+    visible_label: InlineInput
+    if label is None:
+        visible_label = _breakable_url_label(target) if breakable else target
+    else:
+        visible_label = label
+    return Hyperlink.external(target, visible_label, style=style)
+
+
 InlineInput = Text | str | Sequence["InlineInput"] | None | object
 
 
@@ -1797,4 +1854,5 @@ __all__ = [
     "superscript",
     "tag",
     "text_color",
+    "url",
 ]

@@ -68,6 +68,10 @@ if TYPE_CHECKING:
 
 
 ValidationSeverity = Literal["error", "warning"]
+_URL_SOFT_BREAK = "\u200b"
+_LONG_URL_TARGET_LENGTH = 96
+_LONG_URL_UNBROKEN_SEGMENT_LENGTH = 64
+_EXTERNAL_URL_PREFIXES = ("http://", "https://", "ftp://", "mailto:")
 
 
 class ResultLike(Protocol):
@@ -1488,6 +1492,10 @@ class _ValidationContext:
         )
 
     def _validate_hyperlinks(self, render_index: RenderIndex | None) -> None:
+        for hyperlink, path in self.hyperlinks:
+            if not hyperlink.internal:
+                self._validate_long_url_label(hyperlink, path)
+
         if render_index is None:
             return
         anchors = render_index.anchors()
@@ -1504,6 +1512,27 @@ class _ValidationContext:
                 path,
                 formats=("docx", "html", "pdf"),
             )
+
+    def _validate_long_url_label(self, hyperlink: Hyperlink, path: str) -> None:
+        target = hyperlink.target.strip()
+        if not target.lower().startswith(_EXTERNAL_URL_PREFIXES):
+            return
+        if len(target) < _LONG_URL_TARGET_LENGTH:
+            return
+        visible_text = hyperlink.plain_text()
+        if _URL_SOFT_BREAK in visible_text:
+            return
+        longest_segment = max((len(segment) for segment in visible_text.split()), default=0)
+        if longest_segment < _LONG_URL_UNBROKEN_SEGMENT_LENGTH:
+            return
+        self._add(
+            "warning",
+            "overly-long-url",
+            "Long URL labels may wrap poorly in fixed-page outputs. "
+            "Use url(..., breakable=True) or provide a shorter label.",
+            path,
+            formats=("docx", "html", "pdf"),
+        )
 
     def _validate_reference(
         self,

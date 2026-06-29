@@ -110,6 +110,7 @@ _EXPORTS = {
     "superscript": "oodocs.components.inline",
     "tag": "oodocs.components.inline",
     "text_color": "oodocs.components.inline",
+    "url": "oodocs.components.inline",
 }
 
 __all__ = list(_EXPORTS)
