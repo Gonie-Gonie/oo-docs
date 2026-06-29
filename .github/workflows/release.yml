@@ -63,35 +63,23 @@ jobs:
         run: |
           python -m oodocs apidoc check . \
             --config pyproject.toml \
-            --fail-under 0.90 \
-            --save-json artifacts/api-objects-example/oodocs-api-coverage.json \
-            --save-csv artifacts/api-objects-example/oodocs-api-coverage.csv
+            --fail-under 0.90
 
       - name: Build distributions
         run: python -m build
 
       - name: Render release documents
         run: |
-          python examples/usage_guide_example/main.py
-          python examples/journal_paper_example/main.py
-          python examples/native_benchmark_report/main.py
-          python examples/release_notes_digest/main.py
-          python examples/api_objects_example/main.py . --config pyproject.toml
-          python examples/style_cleanup_smoke/main.py
-          python examples/template_presets/build_all.py
-          python examples/project_metadata_report/main.py
-          python examples/cli_manual_example/main.py
-          python examples/config_reference_example/main.py
-          python examples/validation_gate_report/main.py
-          python examples/conformance_matrix_report/main.py
+          python examples/usage_guide_example/main.py --outputs pdf
           python - <<'PY'
           from oodocs.apidoc import ApiHelpBookConfig
 
-          ApiHelpBookConfig.from_pyproject(".").save_all(".")
+          ApiHelpBookConfig.from_pyproject(".").save_all(
+              ".",
+              output_formats=("pdf",),
+              sidecars=False,
+          )
           PY
-
-      - name: Build release evidence
-        run: python -m oodocs.evidence build --out artifacts/evidence
 
       - name: Store Python distributions for PyPI job
         uses: actions/upload-artifact@v4
@@ -118,34 +106,7 @@ jobs:
           files: |
             dist/*
             artifacts/usage-guide/oodocs-user-guide.pdf
-            artifacts/journal-paper/oodocs-development-philosophy.pdf
-            artifacts/native-benchmark-report/native-python-benchmark.pdf
-            artifacts/native-benchmark-report/native-python-benchmark.json
-            artifacts/release-notes/oodocs-release-notes.pdf
-            artifacts/release-notes/release-notes-import-diagnostics.json
-            artifacts/template/journal-article-template.pdf
-            artifacts/project-metadata-report/project-metadata-report.pdf
-            artifacts/project-metadata-report/project-metadata.json
-            artifacts/cli-manual-example/cli-manual.pdf
-            artifacts/config-reference-example/config-reference.pdf
-            artifacts/validation-gate-report/validation-gate-report.pdf
-            artifacts/validation-gate-report/validation-result.json
-            artifacts/conformance-matrix-report/conformance-matrix-report.pdf
-            artifacts/conformance-matrix-report/conformance-matrix-full.json
-            artifacts/api-objects-example/oodocs-api-object-composition.pdf
-            artifacts/api-objects-example/oodocs-api-object-tree.json
-            artifacts/api-objects-example/oodocs-api-coverage.json
-            artifacts/api-objects-example/oodocs-api-coverage.csv
-            artifacts/api-objects-example/oodocs-api-reference.docx
-            artifacts/api-objects-example/oodocs-api-reference.pdf
-            artifacts/api-objects-example/oodocs-api-reference.html
-            artifacts/api/oodocs-api.docx
             artifacts/api/oodocs-api.pdf
-            artifacts/api/oodocs-api.html
-            artifacts/api/oodocs-api-object-tree.json
-            artifacts/api/oodocs-api-coverage.json
-            artifacts/api/oodocs-api-coverage.csv
-            artifacts/evidence/oodocs-evidence-report.pdf
           body_path: ${{ steps.release_notes.outputs.path }}
 
       - name: Publish GitHub Release
@@ -155,34 +116,7 @@ jobs:
           files: |
             dist/*
             artifacts/usage-guide/oodocs-user-guide.pdf
-            artifacts/journal-paper/oodocs-development-philosophy.pdf
-            artifacts/native-benchmark-report/native-python-benchmark.pdf
-            artifacts/native-benchmark-report/native-python-benchmark.json
-            artifacts/release-notes/oodocs-release-notes.pdf
-            artifacts/release-notes/release-notes-import-diagnostics.json
-            artifacts/template/journal-article-template.pdf
-            artifacts/project-metadata-report/project-metadata-report.pdf
-            artifacts/project-metadata-report/project-metadata.json
-            artifacts/cli-manual-example/cli-manual.pdf
-            artifacts/config-reference-example/config-reference.pdf
-            artifacts/validation-gate-report/validation-gate-report.pdf
-            artifacts/validation-gate-report/validation-result.json
-            artifacts/conformance-matrix-report/conformance-matrix-report.pdf
-            artifacts/conformance-matrix-report/conformance-matrix-full.json
-            artifacts/api-objects-example/oodocs-api-object-composition.pdf
-            artifacts/api-objects-example/oodocs-api-object-tree.json
-            artifacts/api-objects-example/oodocs-api-coverage.json
-            artifacts/api-objects-example/oodocs-api-coverage.csv
-            artifacts/api-objects-example/oodocs-api-reference.docx
-            artifacts/api-objects-example/oodocs-api-reference.pdf
-            artifacts/api-objects-example/oodocs-api-reference.html
-            artifacts/api/oodocs-api.docx
             artifacts/api/oodocs-api.pdf
-            artifacts/api/oodocs-api.html
-            artifacts/api/oodocs-api-object-tree.json
-            artifacts/api/oodocs-api-coverage.json
-            artifacts/api/oodocs-api-coverage.csv
-            artifacts/evidence/oodocs-evidence-report.pdf
           generate_release_notes: true
 
   publish-pypi:

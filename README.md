@@ -374,7 +374,7 @@ By default they write outputs under:
 - `artifacts/validation-gate-report/`
 - `artifacts/conformance-matrix-report/`
 
-The main exported filenames are:
+When you run the examples locally, the main exported filenames are:
 
 - `artifacts/usage-guide/oodocs-user-guide.pdf`
 - `artifacts/journal-paper/oodocs-development-philosophy.pdf`
@@ -463,7 +463,15 @@ Create and push a release tag like this:
 .\scripts\release.ps1 1.1.0
 ```
 
-That pushes `v1.1.0`, and the GitHub release workflow runs the test suite, enforces API documentation coverage with `oodocs apidoc check`, builds the wheel/sdist artifacts, renders the release documents, builds the release evidence bundle, attaches the curated documents and API evidence sidecars to the matching GitHub Release, and uploads the Python distributions to PyPI.
+That pushes `v1.1.0`, and the GitHub release workflow runs the test suite, enforces API documentation coverage with `oodocs apidoc check`, builds the wheel/sdist artifacts, renders the user guide and API reference PDFs, attaches the user-facing assets to the matching GitHub Release, and uploads the Python distributions to PyPI.
+
+GitHub Release assets are intentionally limited to:
+
+- Python distributions from `dist/*`
+- `artifacts/usage-guide/oodocs-user-guide.pdf`
+- `artifacts/api/oodocs-api.pdf`
+
+Example outputs, machine-readable sidecars, DOCX variants, and HTML variants stay out of the release download list. Build them locally from the example scripts when needed.
 
 If you want a curated release body instead of GitHub's generated notes, add a file such as `release-notes/v1.1.0.md` before pushing the tag.
 

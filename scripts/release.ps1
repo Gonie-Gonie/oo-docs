@@ -45,5 +45,5 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Host "Pushed $tag."
-Write-Host "GitHub Actions will run tests, build release artifacts, render the example PDFs, publish the GitHub Release, and upload Python distributions to PyPI."
+Write-Host "GitHub Actions will run tests, build release artifacts, render the user guide and API PDFs, publish the GitHub Release, and upload Python distributions to PyPI."
 Write-Host "If release-notes/$tag.md exists in the repository, that file will be used as the release body."
