@@ -106,6 +106,7 @@ from oodocs.components.inline import (
 )
 from oodocs.settings import (
     DocumentSettings,
+    PageLayout,
     PageMargins,
     PageSize,
 )
@@ -228,6 +229,7 @@ __all__ = [
     "OutputFormat",
     "PageNumberDefaults",
     "Padding",
+    "PageLayout",
     "PageMargins",
     "PageSize",
     "PageBreak",

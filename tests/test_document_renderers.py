@@ -14,6 +14,7 @@ from docx import Document as WordDocument
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.shared import RGBColor
 from pypdf import PdfReader
+import pytest
 
 import oodocs.components.generated as generated_components
 import oodocs.components.inline as inline_components
@@ -68,6 +69,7 @@ from oodocs import (
     NumberedList,
     OutputBundle,
     PageNumberDefaults,
+    PageLayout,
     PageMargins,
     PageSize,
     PageBreak,
@@ -2886,6 +2888,46 @@ def test_page_size_and_margins_render_to_all_outputs(tmp_path: Path) -> None:
     assert "size: 7.87in 3.94in;" in html_text
     assert "margin: 0.59in 0.79in 0.59in 0.79in;" in html_text
     assert "max-width: 6.30in;" in html_text
+
+
+def test_page_layout_landscape_renders_to_all_outputs(tmp_path: Path) -> None:
+    layout = PageLayout.landscape(
+        PageSize.a4(),
+        PageMargins.all(1.0, unit="cm"),
+    )
+    settings = DocumentSettings(unit="cm", page_layout=layout)
+    document = Document("Landscape Layout", Paragraph("Body"), settings=settings)
+
+    assert settings.page_layout.orientation == "landscape"
+    assert settings.page_width_in_inches() > settings.page_height_in_inches()
+    assert round(settings.get_text_width(unit="cm"), 1) == 27.7
+    assert round(PageSize.a4().landscape().width, 1) == 29.7
+    assert round(PageSize(11.0, 8.5, unit="in").portrait().height, 1) == 11.0
+
+    docx_path = tmp_path / "landscape.docx"
+    pdf_path = tmp_path / "landscape.pdf"
+    html_path = tmp_path / "landscape.html"
+    document.save_docx(docx_path)
+    document.save_pdf(pdf_path)
+    document.save_html(html_path)
+
+    word_section = WordDocument(docx_path).sections[0]
+    assert int(word_section.page_width) > int(word_section.page_height)
+    assert abs(int(word_section.page_width) - int(29.7 / 2.54 * 914400)) <= 300
+    pdf_page = PdfReader(BytesIO(pdf_path.read_bytes())).pages[0]
+    assert float(pdf_page.mediabox.width) > float(pdf_page.mediabox.height)
+    html_text = html_path.read_text(encoding="utf-8")
+    assert "size: 11.69in 8.27in;" in html_text
+    assert "margin: 0.39in 0.39in 0.39in 0.39in;" in html_text
+    assert "max-width: 10.91in;" in html_text
+
+
+def test_page_layout_rejects_ambiguous_settings_geometry() -> None:
+    with pytest.raises(ValueError, match="page_layout cannot be combined"):
+        DocumentSettings(
+            page_layout=PageLayout.landscape(),
+            page_size=PageSize.letter(),
+        )
 
 
 def test_object_unit_overrides_document_unit(tmp_path: Path) -> None:

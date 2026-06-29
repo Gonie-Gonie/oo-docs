@@ -81,6 +81,8 @@ are imported through the same parser APIs available from Python.
 ## What You Can Build
 
 - DOCX, PDF, and HTML documents from one Python object tree
+- document-level page layout for page size, margins, and portrait/landscape
+  orientation
 - authored prose, headings, lists, equations, code blocks, boxes, tables, and
   figures
 - captioned tables and figures with automatic numbering and cross-references

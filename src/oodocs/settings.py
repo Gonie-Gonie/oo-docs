@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Iterable, Sequence
+from typing import Iterable, Literal, Sequence
 
 from oodocs.components.inline import InlineInput, Text, coerce_inlines
 from oodocs.components.positioning import PositionedItem, coerce_positioned_items
@@ -18,6 +18,19 @@ from oodocs.components.people import (
     coerce_authors,
 )
 from oodocs.styles import Theme
+
+PageOrientation = Literal["portrait", "landscape"]
+
+
+def _normalize_page_orientation(orientation: str | None) -> PageOrientation | None:
+    if orientation is None:
+        return None
+    normalized = orientation.strip().lower()
+    if normalized not in {"portrait", "landscape"}:
+        raise ValueError("orientation must be 'portrait', 'landscape', or None")
+    if normalized == "portrait":
+        return "portrait"
+    return "landscape"
 
 
 @dataclass(slots=True, init=False)
@@ -83,6 +96,52 @@ class PageSize:
         """
 
         return cls(8.5, 11.0, unit="in")
+
+    def oriented(self, orientation: str | None) -> PageSize:
+        """Return this page size with portrait or landscape orientation.
+
+        Args:
+            orientation: ``"portrait"`` or ``"landscape"``. ``None`` keeps
+                the current width and height order.
+
+        Returns:
+            A page size with width and height swapped only when needed.
+
+        Examples:
+            ```python
+            assert PageSize.a4().landscape().width > PageSize.a4().landscape().height
+            ```
+        """
+
+        normalized = _normalize_page_orientation(orientation)
+        if normalized is None:
+            return PageSize(self.width, self.height, unit=self.unit)
+        should_swap = (
+            normalized == "landscape" and self.width < self.height
+        ) or (
+            normalized == "portrait" and self.width > self.height
+        )
+        if should_swap:
+            return PageSize(self.height, self.width, unit=self.unit)
+        return PageSize(self.width, self.height, unit=self.unit)
+
+    def landscape(self) -> PageSize:
+        """Return this page size in landscape orientation.
+
+        Returns:
+            A page size whose width is greater than or equal to its height.
+        """
+
+        return self.oriented("landscape")
+
+    def portrait(self) -> PageSize:
+        """Return this page size in portrait orientation.
+
+        Returns:
+            A page size whose height is greater than or equal to its width.
+        """
+
+        return self.oriented("portrait")
 
     def width_in_inches(self, default_unit: str) -> float:
         """Return the page width in inches.
@@ -278,6 +337,93 @@ class PageMargins:
 
 
 @dataclass(slots=True, init=False)
+class PageLayout:
+    """Document-level page geometry grouped like LaTeX ``geometry`` options.
+
+    Args:
+        page_size: Physical page size. Defaults to A4.
+        page_margins: Physical page margins. Defaults to 2.54 cm on all sides.
+        orientation: Optional page orientation. When omitted, ``page_size`` is
+            used as supplied; ``"portrait"`` or ``"landscape"`` swaps width
+            and height when needed.
+
+    Examples:
+        ```python
+        from oodocs import DocumentSettings, PageLayout, PageSize
+
+        settings = DocumentSettings(page_layout=PageLayout.landscape(PageSize.a4()))
+        ```
+    """
+
+    page_size: PageSize
+    page_margins: PageMargins
+    orientation: PageOrientation | None
+
+    def __init__(
+        self,
+        page_size: PageSize | None = None,
+        page_margins: PageMargins | None = None,
+        *,
+        orientation: str | None = None,
+    ) -> None:
+        self.orientation = _normalize_page_orientation(orientation)
+        self.page_size = (page_size or PageSize.a4()).oriented(self.orientation)
+        self.page_margins = page_margins or PageMargins()
+
+    @classmethod
+    def portrait(
+        cls,
+        page_size: PageSize | None = None,
+        page_margins: PageMargins | None = None,
+    ) -> PageLayout:
+        """Create a portrait page layout."""
+
+        return cls(page_size, page_margins, orientation="portrait")
+
+    @classmethod
+    def landscape(
+        cls,
+        page_size: PageSize | None = None,
+        page_margins: PageMargins | None = None,
+    ) -> PageLayout:
+        """Create a landscape page layout."""
+
+        return cls(page_size, page_margins, orientation="landscape")
+
+    def page_width_in_inches(self, default_unit: str) -> float:
+        """Return the resolved page width in inches."""
+
+        return self.page_size.width_in_inches(default_unit)
+
+    def page_height_in_inches(self, default_unit: str) -> float:
+        """Return the resolved page height in inches."""
+
+        return self.page_size.height_in_inches(default_unit)
+
+    def page_margin_inches(self, default_unit: str) -> tuple[float, float, float, float]:
+        """Return resolved page margins as ``(top, right, bottom, left)``."""
+
+        return (
+            self.page_margins.top_in_inches(default_unit),
+            self.page_margins.right_in_inches(default_unit),
+            self.page_margins.bottom_in_inches(default_unit),
+            self.page_margins.left_in_inches(default_unit),
+        )
+
+    def text_width_in_inches(self, default_unit: str) -> float:
+        """Return writable page width after horizontal margins."""
+
+        _, right, _, left = self.page_margin_inches(default_unit)
+        return max(self.page_width_in_inches(default_unit) - left - right, 0)
+
+    def text_height_in_inches(self, default_unit: str) -> float:
+        """Return writable page height after vertical margins."""
+
+        top, _, bottom, _ = self.page_margin_inches(default_unit)
+        return max(self.page_height_in_inches(default_unit) - top - bottom, 0)
+
+
+@dataclass(slots=True, init=False)
 class DocumentSettings:
     """Document-level metadata and rendering configuration.
 
@@ -291,8 +437,12 @@ class DocumentSettings:
         cover_page: Whether renderers should place title matter on a separate
             cover page when supported.
         unit: Default length unit for values that do not carry an explicit unit.
-        page_size: Physical page size.
-        page_margins: Physical page margins.
+        page_layout: Grouped page geometry. When supplied, ``page_size`` and
+            ``page_margins`` must be omitted.
+        page_size: Physical page size. Preserved for compatibility; prefer
+            ``page_layout`` when setting orientation.
+        page_margins: Physical page margins. Preserved for compatibility;
+            prefer ``page_layout`` when setting orientation.
         page_items: Absolute-positioned page decorations or overlays.
         theme: Rendering theme.
 
@@ -338,6 +488,7 @@ class DocumentSettings:
     author_layout: AuthorLayout
     cover_page: bool
     unit: str
+    page_layout: PageLayout
     page_size: PageSize
     page_margins: PageMargins
     page_items: tuple[PositionedItem, ...]
@@ -353,6 +504,7 @@ class DocumentSettings:
         author_layout: AuthorLayout | None = None,
         cover_page: bool = False,
         unit: str = "in",
+        page_layout: PageLayout | None = None,
         page_size: PageSize | None = None,
         page_margins: PageMargins | None = None,
         page_items: Sequence[PositionedItem] | None = None,
@@ -365,8 +517,14 @@ class DocumentSettings:
         self.author_layout = coerce_author_layout(author_layout)
         self.cover_page = cover_page
         self.unit = normalize_length_unit(unit)
-        self.page_size = page_size or PageSize.a4()
-        self.page_margins = page_margins or PageMargins()
+        if page_layout is not None and (page_size is not None or page_margins is not None):
+            raise ValueError("page_layout cannot be combined with page_size or page_margins")
+        self.page_layout = page_layout or PageLayout(
+            page_size=page_size or PageSize.a4(),
+            page_margins=page_margins or PageMargins(),
+        )
+        self.page_size = self.page_layout.page_size
+        self.page_margins = self.page_layout.page_margins
         self.page_items = coerce_positioned_items(page_items)
         self.theme = theme or Theme()
 
@@ -383,7 +541,7 @@ class DocumentSettings:
             ```
         """
 
-        return self.page_size.width_in_inches(self.unit)
+        return self.page_layout.page_width_in_inches(self.unit)
 
     def page_height_in_inches(self) -> float:
         """Return the resolved page height in inches.
@@ -398,7 +556,7 @@ class DocumentSettings:
             ```
         """
 
-        return self.page_size.height_in_inches(self.unit)
+        return self.page_layout.page_height_in_inches(self.unit)
 
     def page_margin_inches(self) -> tuple[float, float, float, float]:
         """Return resolved page margins in inches.
@@ -413,12 +571,7 @@ class DocumentSettings:
             ```
         """
 
-        return (
-            self.page_margins.top_in_inches(self.unit),
-            self.page_margins.right_in_inches(self.unit),
-            self.page_margins.bottom_in_inches(self.unit),
-            self.page_margins.left_in_inches(self.unit),
-        )
+        return self.page_layout.page_margin_inches(self.unit)
 
     def text_width_in_inches(self) -> float:
         """Return the writable page width after horizontal margins.
@@ -436,8 +589,7 @@ class DocumentSettings:
             ```
         """
 
-        _, right, _, left = self.page_margin_inches()
-        return max(self.page_width_in_inches() - left - right, 0)
+        return self.page_layout.text_width_in_inches(self.unit)
 
     def text_height_in_inches(self) -> float:
         """Return the writable page height after vertical margins.
@@ -455,8 +607,7 @@ class DocumentSettings:
             ```
         """
 
-        top, _, bottom, _ = self.page_margin_inches()
-        return max(self.page_height_in_inches() - top - bottom, 0)
+        return self.page_layout.text_height_in_inches(self.unit)
 
     def get_page_width(self, scale: float = 1.0, *, unit: str | None = None) -> float:
         """Return the page width in a requested unit.
@@ -681,6 +832,7 @@ __all__ = [
     "Author",
     "AuthorLayout",
     "DocumentSettings",
+    "PageLayout",
     "PageMargins",
     "PageSize",
 ]

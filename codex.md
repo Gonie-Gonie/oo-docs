@@ -35,6 +35,11 @@ This file is the shared memory for ongoing work on this repository. Keep it read
 - `Shape`, `TextBox`, and `ImageBox` also support `placement="inline"` so users can insert drawing objects into the body flow in a Word-like "in line with text" mode, similar to direct LaTeX `includegraphics` usage.
 - Table authors should choose whether a table may split, not whether it is a normal table or longtable. `Table(split=True)` means here/in-source-order and splittable; `split=False` keeps short tables together but still auto-splits very long tables with repeated headers where possible. `placement=...` on tables and figures is an advanced hint for here/float/top/bottom/page-like behavior.
 - Documents now have `validate()` as a preflight API. Validation returns a structured `ValidationResult` that prints as a table, records format scope (`docx`, `pdf`, `html`), and is run automatically before `save*` rendering. Keep future renderer-specific caveats connected to `oodocs.compatibility` and validation issues rather than scattering ad hoc checks in renderers.
+- LaTeX `geometry` parity starts with document-level `PageLayout`, which groups
+  `PageSize`, `PageMargins`, and optional portrait/landscape orientation under
+  `DocumentSettings(page_layout=...)`. Keep legacy `page_size` and
+  `page_margins` working, and leave per-section geometry for a renderer-specific
+  follow-up with explicit DOCX section breaks and PDF template switching.
 - The CLI entry point is `oodocs.cli:main`, with `build`, `convert`, and `validate` subcommands. Keep CLI behavior thin over `oodocs.workflows` so Python API and command-line behavior stay aligned.
 - Theorem-like blocks use `CountableBlock` plus `countable_kind(...)`. Built-ins such as `Definition`, `Lemma`, `Proposition`, `Theorem`, `Corollary`, `Example`, `Remark`, `Assumption`, `Axiom`, `Claim`, and `Conjecture` share the document-wide `theorem` counter; `Proof` is unnumbered by default. Custom countable classes should be made with the factory instead of asking users to subclass.
 - Markdown and notebook imports should preserve editable OODocs objects, not only rendered text. Prefer file-aware helpers such as `from_markdown_file(...)` for relative assets, and use `ImageData` for in-memory imported images such as notebook display outputs.

@@ -407,6 +407,13 @@
           "category": "settings",
           "kind": "class",
           "module": "oodocs.settings",
+          "name": "PageLayout",
+          "qualname": "oodocs.settings.PageLayout"
+        },
+        {
+          "category": "settings",
+          "kind": "class",
+          "module": "oodocs.settings",
           "name": "PageMargins",
           "qualname": "oodocs.settings.PageMargins"
         },

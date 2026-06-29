@@ -41,6 +41,7 @@ from oodocs import (
     NumberedList,
     OutputBundle,
     PageNumberDefaults,
+    PageLayout,
     PageMargins,
     PageSize,
     Padding,
@@ -198,12 +199,14 @@ settings = DocumentSettings(
 )
 """
 
-LAYOUT_CONTROL_SNIPPET = """from oodocs import BlockDefaults, CaptionDefaults, DocumentSettings, GeneratedContentDefaults, PageMargins, PageSize, Theme
+LAYOUT_CONTROL_SNIPPET = """from oodocs import BlockDefaults, CaptionDefaults, DocumentSettings, GeneratedContentDefaults, PageLayout, PageMargins, PageSize, Theme
 
 settings = DocumentSettings(
     unit="cm",
-    page_size=PageSize.a4(),
-    page_margins=PageMargins.symmetric(vertical=2.0, horizontal=2.4, unit="cm"),
+    page_layout=PageLayout(
+        page_size=PageSize.a4(),
+        page_margins=PageMargins.symmetric(vertical=2.0, horizontal=2.4, unit="cm"),
+    ),
     theme=Theme(
         blocks=BlockDefaults(footnote_placement="document"),
         generated_content=GeneratedContentDefaults(generated_content_page_breaks=True),
@@ -825,7 +828,8 @@ def build_usage_guide_document() -> Document:
         headers=["Need", "API", "Effect"],
         rows=[
             ["Work in metric units", "DocumentSettings(unit='cm')", "Numeric lengths are interpreted as centimeters unless an object overrides unit."],
-            ["Set paper size", "PageSize.a4(), PageSize.letter(), or PageSize(width, height, unit=...)", "DOCX, PDF, and HTML use the same page box."],
+            ["Set page layout", "PageLayout(page_size=PageSize.a4(), page_margins=...)", "DOCX, PDF, and HTML use the same page box."],
+            ["Set orientation", "PageLayout.landscape(PageSize.a4(), PageMargins.all(...))", "Landscape swaps the page box before text width helpers and renderers use it."],
             ["Set printable margins", "PageMargins.all(...) or PageMargins.symmetric(...)", "The text area and HTML @page margins stay aligned."],
             ["Add local vertical spacing", "VerticalSpace(8)", "A small block-level spacer gives the flow breathing room without inserting dummy prose."],
             ["Insert a visual separator", "Divider()", "A Notion-like horizontal rule separates nearby blocks while staying renderer-neutral."],
@@ -851,8 +855,9 @@ def build_usage_guide_document() -> Document:
         headers=["Object", "Options", "Scope"],
         rows=[
             ["DocumentSettings", "metadata_author, summary, subtitle, authors, author_layout, cover_page", "Document metadata and title matter."],
-            ["DocumentSettings", "unit, page_size, page_margins, page_items", "Page geometry and page-positioned overlays."],
+            ["DocumentSettings", "unit, page_layout, page_items", "Page geometry and page-positioned overlays."],
             ["DocumentSettings", "theme", "Document-wide renderer defaults shared by DOCX, PDF, and HTML."],
+            ["PageLayout", "page_size, page_margins, orientation; portrait(...); landscape(...)", "Grouped page geometry comparable to LaTeX geometry options."],
             ["PageSize", "width, height, unit", "Physical page box."],
             ["PageMargins", "top, right, bottom, left, unit; all(...); symmetric(...)", "Printable area around document content."],
             ["AuthorLayout", "mode, name_separator, show_affiliations, show_details", "How structured author metadata is displayed."],
@@ -905,7 +910,7 @@ def build_usage_guide_document() -> Document:
         rows=[
             ["JournalArticleTemplate", "title, authors, abstract, keywords, body sections, optional declarations, citations.", "A content-first manuscript builder where the caller fills article fields and the preset owns routine article assembly."],
             ["ManuscriptSection", "title, children, level, numbered.", "A small descriptor when users prefer data-like section lists over nested Section objects."],
-            ["Advanced overrides", "theme, page_size, page_margins, author_layout, contents/references flags.", "Use these only when a lab or target journal has explicit layout requirements."],
+            ["Advanced overrides", "theme, page_layout, author_layout, contents/references flags.", "Use these only when a lab or target journal has explicit layout requirements."],
         ],
         caption="Template presets build full Document objects from manuscript-shaped inputs.",
         column_widths=[1.7, 3.4, 2.3],
