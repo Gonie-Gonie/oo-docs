@@ -157,6 +157,7 @@ Common translations:
 - LaTeX `multirow` / `multicolumn` -> `TableCell(rowspan=...)`, `TableCell(colspan=...)`, or `Table.grouped_headers(...)`
 - LaTeX `\label` / `\ref` -> use `reference(obj)` or `obj.reference()` inside `Paragraph(...)`
 - LaTeX `\url{...}` / `\href{...}{...}` -> use `url(...)` for visible URLs and `link(...)` for named links
+- LaTeX `enumitem` list options -> use `BulletList(...)`, `NumberedList(start=...)`, `NumberedList(resume_from=...)`, and `ListStyle(...)`
 - LaTeX `tcolorbox` / `mdframed` report panels -> editable `Box(..., icon=..., title_position="side")` or `CalloutBox(..., variant="danger", icon="!")`
 - BibTeX-style references -> `CitationLibrary`, `CitationSource.cite(...)`, and `ReferenceList()`
 
@@ -181,7 +182,7 @@ The default behavior is intentionally conventional:
 - parts render on their own separator pages and do not reset chapter numbering
 - appendices render on a separator page and switch child chapter numbering to `A`, `B`, `C`
 - headings are numbered as `1`, `1.1`, `1.1.1`, and so on
-- ordered and bullet lists can be customized with direct kwargs such as `indent=...`, `marker=CounterStyle(...)`, and `marker_gap=...`
+- ordered and bullet lists can be customized with direct kwargs such as `indent=...`, `marker=CounterStyle(...)`, `marker_gap=...`, `item_spacing=...`, `block_spacing=...`, `start=...`, and `resume_from=...`
 - heading numbering can be customized with `HeadingNumbering(...)`
 - heading typography, spacing, alignment, and per-level counter formats can be customized with `HeadingStyle(...)`
 - article-style front matter can be left unnumbered with `Section(..., numbered=False)`

@@ -102,7 +102,7 @@ from oodocs.layout.indexing import (
     reference_text_pieces,
     resolve_block_reference,
 )
-from oodocs.styles import BoxStyle, HeadingStyle, ParagraphStyle, TableStyle, TextStyle, Theme
+from oodocs.styles import BoxStyle, HeadingStyle, ListStyle, ParagraphStyle, TableStyle, TextStyle, Theme
 from oodocs.renderers.context import DocxRenderContext
 from oodocs.renderers.syntax import SyntaxToken, _syntax_line_tokens, syntax_tokens
 
@@ -2029,18 +2029,31 @@ class DocxRenderer:
         *,
         word_document: WordDocument,
         depth: int = 0,
+        parent_style: ListStyle | None = None,
     ) -> None:
         list_style = theme.stylesheet.resolve(
             "list",
             list_block.style,
             theme.list_style(ordered=isinstance(list_block, NumberedList)),
         )
+        if parent_style is not None and list_block.style is None:
+            list_style = replace(
+                list_style,
+                marker_gap=parent_style.marker_gap,
+                item_spacing=parent_style.item_spacing,
+                block_spacing=parent_style.block_spacing,
+            )
+        list_style = list_block._effective_style(list_style)
         if depth:
             list_style = replace(list_style, indent=list_style.indent + depth * 0.25)
         for index, item in enumerate(list_block.items):
             paragraph = self._add_paragraph(container)
             item_style = theme.stylesheet.resolve("paragraph", item.style, ParagraphStyle())
             self._apply_paragraph_style(paragraph, item_style, theme, unit)
+            spacing = list_style.item_spacing
+            if index == len(list_block.items) - 1:
+                spacing = max(spacing, list_style.block_spacing)
+            paragraph.paragraph_format.space_after = Pt(spacing)
             paragraph.paragraph_format.left_indent = Inches(list_style.indent)
             paragraph.paragraph_format.first_line_indent = Inches(-list_style.indent)
             anchor = render_index.block_anchor(item)
@@ -2060,6 +2073,7 @@ class DocxRenderer:
                     unit,
                     word_document=word_document,
                     depth=depth + 1,
+                    parent_style=list_style,
                 )
 
     def _render_code_block(

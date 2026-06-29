@@ -714,7 +714,13 @@ def test_common_block_styles_accept_direct_kwargs() -> None:
     )
     equation = Equation("x=1", space_after=2)
     bullet_list = BulletList("one", indent=0.4)
-    numbered_list = NumberedList("one", marker=CounterStyle(start=3, suffix=")"))
+    numbered_list = NumberedList(
+        "one",
+        marker=CounterStyle(suffix=")"),
+        start=3,
+        item_spacing=5,
+        block_spacing=9,
+    )
     box = Box(Paragraph("inside"), background_color="#FFFFFF", padding=Padding.all(8), width=3.0)
     table = Table(
         headers=["A"],
@@ -740,8 +746,10 @@ def test_common_block_styles_accept_direct_kwargs() -> None:
     assert bullet_list.style.marker.counter_format == "bullet"
     assert bullet_list.style.indent == 0.4
     assert numbered_list.style is not None
-    assert numbered_list.style.marker.start == 3
+    assert numbered_list.start == 3
     assert numbered_list.style.marker.suffix == ")"
+    assert numbered_list.style.item_spacing == 5
+    assert numbered_list.style.block_spacing == 9
     assert box.style.background_color == "FFFFFF"
     assert box.style.padding == Padding.all(8)
     assert box.style.width == 3.0
@@ -1337,6 +1345,49 @@ def test_numbering_and_list_styles_are_customizable() -> None:
     assert ordered_style.marker_for(0) == "(I)"
     assert ordered_style.marker_for(2) == "(III)"
     assert bullet_style.marker_for(1) == "\u2022"
+
+
+def test_numbered_list_start_resume_and_spacing_render_to_outputs(tmp_path: Path) -> None:
+    setup_steps = NumberedList(
+        "Create the model",
+        "Render the files",
+        start=4,
+        item_spacing=2,
+        block_spacing=6,
+    )
+    follow_up = NumberedList("Publish the bundle", resume_from=setup_steps)
+    nested = BulletList(
+        "Inspect follow-up tasks",
+        item_children=[[NumberedList("Audit links", start=2)]],
+        item_spacing=7,
+        block_spacing=11,
+    )
+    document = Document("Enumitem Lists", setup_steps, follow_up, nested)
+
+    docx_path = tmp_path / "enumitem-lists.docx"
+    pdf_path = tmp_path / "enumitem-lists.pdf"
+    html_path = tmp_path / "enumitem-lists.html"
+    document.save_docx(docx_path)
+    document.save_pdf(pdf_path)
+    document.save_html(html_path)
+
+    word_text = "\n".join(paragraph.text for paragraph in WordDocument(docx_path).paragraphs)
+    pdf_text = "\n".join(page.extract_text() or "" for page in PdfReader(BytesIO(pdf_path.read_bytes())).pages)
+    normalized_pdf_text = " ".join(pdf_text.split())
+    html_text = _normalized_html_text(html_path)
+    html_markup = html_path.read_text(encoding="utf-8")
+
+    for expected in (
+        "4. Create the model",
+        "5. Render the files",
+        "6. Publish the bundle",
+        "2. Audit links",
+    ):
+        assert expected in word_text
+        assert expected in normalized_pdf_text
+        assert expected in html_text
+    assert "margin: 0.0pt 0 7.0pt;" in html_markup
+    assert "margin-bottom: 11.0pt;" in html_markup
 
 
 def test_heading_style_renders_across_outputs(tmp_path: Path) -> None:

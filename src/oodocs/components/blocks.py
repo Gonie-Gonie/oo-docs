@@ -288,6 +288,8 @@ class ListBlock(Block):
         marker: Optional marker counter style override.
         indent: Optional list indent.
         marker_gap: Optional gap between marker and item text.
+        item_spacing: Optional space after each list item paragraph in points.
+        block_spacing: Optional space after the whole list in points.
         item_children: Optional nested lists for each list item.
 
     Raises:
@@ -298,6 +300,7 @@ class ListBlock(Block):
     item_children: list[list["ListBlock"]]
     ordered: bool
     style: ListStyle | str | None
+    start: int | None
 
     def __init__(
         self,
@@ -307,8 +310,13 @@ class ListBlock(Block):
         marker: CounterStyle | None = None,
         indent: float | None = None,
         marker_gap: float | None = None,
+        item_spacing: float | None = None,
+        block_spacing: float | None = None,
+        start: int | None = None,
         item_children: Sequence[Sequence["ListBlock"]] | None = None,
     ) -> None:
+        if start is not None and start < 1:
+            raise ValueError("ListBlock.start must be >= 1")
         self.items = [coerce_list_item(item) for item in items if item is not None]
         if item_children is None:
             self.item_children = [[] for _ in self.items]
@@ -317,13 +325,36 @@ class ListBlock(Block):
             if len(self.item_children) != len(self.items):
                 raise ValueError("item_children must match the number of list items")
         self.ordered = ordered
+        self.start = start if ordered else None
         self.style = list_style_with_overrides(
             style,
             ordered=ordered,
             marker=marker,
             indent=indent,
             marker_gap=marker_gap,
+            item_spacing=item_spacing,
+            block_spacing=block_spacing,
         )
+
+    def _effective_style(self, style: ListStyle) -> ListStyle:
+        """Return ``style`` with this list's start number applied."""
+
+        if not self.ordered or self.start is None:
+            return style
+        return replace(style, marker=replace(style.marker, start=self.start))
+
+    def _next_start(self) -> int:
+        """Return the start value that resumes after this list."""
+
+        if not self.ordered:
+            raise TypeError("Only numbered lists can be resumed")
+        if self.start is not None:
+            start = self.start
+        elif isinstance(self.style, ListStyle):
+            start = self.style.marker.start
+        else:
+            start = 1
+        return start + len(self.items)
 
     def render_to_docx(
         self,
@@ -385,6 +416,8 @@ class BulletList(ListBlock):
         marker: Optional marker counter style override.
         indent: Optional list indent.
         marker_gap: Optional gap between marker and item text.
+        item_spacing: Optional space after each list item paragraph in points.
+        block_spacing: Optional space after the whole list in points.
         item_children: Optional nested lists for each list item.
 
     Examples:
@@ -403,6 +436,8 @@ class BulletList(ListBlock):
         marker: CounterStyle | None = None,
         indent: float | None = None,
         marker_gap: float | None = None,
+        item_spacing: float | None = None,
+        block_spacing: float | None = None,
         item_children: Sequence[Sequence[ListBlock]] | None = None,
     ) -> None:
         super().__init__(
@@ -412,6 +447,8 @@ class BulletList(ListBlock):
             marker=marker,
             indent=indent,
             marker_gap=marker_gap,
+            item_spacing=item_spacing,
+            block_spacing=block_spacing,
             item_children=item_children,
         )
 
@@ -425,6 +462,10 @@ class NumberedList(ListBlock):
         marker: Optional marker counter style override.
         indent: Optional list indent.
         marker_gap: Optional gap between marker and item text.
+        item_spacing: Optional space after each list item paragraph in points.
+        block_spacing: Optional space after the whole list in points.
+        start: Optional first counter value for this list.
+        resume_from: Previous numbered list to continue from.
         item_children: Optional nested lists for each list item.
 
     Examples:
@@ -443,8 +484,17 @@ class NumberedList(ListBlock):
         marker: CounterStyle | None = None,
         indent: float | None = None,
         marker_gap: float | None = None,
+        item_spacing: float | None = None,
+        block_spacing: float | None = None,
+        start: int | None = None,
+        resume_from: "NumberedList" | None = None,
         item_children: Sequence[Sequence[ListBlock]] | None = None,
     ) -> None:
+        if start is not None and resume_from is not None:
+            raise ValueError("NumberedList accepts either start or resume_from, not both")
+        if resume_from is not None and not isinstance(resume_from, NumberedList):
+            raise TypeError("NumberedList.resume_from must be a NumberedList")
+        resolved_start = resume_from._next_start() if resume_from is not None else start
         super().__init__(
             *items,
             ordered=True,
@@ -452,6 +502,9 @@ class NumberedList(ListBlock):
             marker=marker,
             indent=indent,
             marker_gap=marker_gap,
+            item_spacing=item_spacing,
+            block_spacing=block_spacing,
+            start=resolved_start,
             item_children=item_children,
         )
 

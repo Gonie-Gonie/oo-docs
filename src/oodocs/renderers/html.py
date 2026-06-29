@@ -79,7 +79,7 @@ from oodocs.layout.indexing import (
     reference_text_pieces,
     resolve_block_reference,
 )
-from oodocs.styles import BoxStyle, HeadingStyle, ParagraphStyle, TableStyle, TextStyle, Theme
+from oodocs.styles import BoxStyle, HeadingStyle, ListStyle, ParagraphStyle, TableStyle, TextStyle, Theme
 from oodocs.renderers.context import HtmlRenderContext
 from oodocs.renderers.syntax import _syntax_line_html, syntax_html
 
@@ -304,12 +304,21 @@ class HtmlRenderer:
         context: HtmlRenderContext,
         *,
         depth: int,
+        parent_style: ListStyle | None = None,
     ) -> str:
         list_style = context.stylesheet.resolve(
             "list",
             block.style,
             context.theme.list_style(ordered=isinstance(block, NumberedList)),
         )
+        if parent_style is not None and block.style is None:
+            list_style = replace(
+                list_style,
+                marker_gap=parent_style.marker_gap,
+                item_spacing=parent_style.item_spacing,
+                block_spacing=parent_style.block_spacing,
+            )
+        list_style = block._effective_style(list_style)
         if depth:
             list_style = replace(list_style, indent=list_style.indent + depth * 0.22)
         items = []
@@ -318,17 +327,23 @@ class HtmlRenderer:
             anchor = context.render_index.block_anchor(item)
             anchor_attr = f' id="{escape(anchor)}"' if anchor else ""
             child_html = "".join(
-                self._render_list(child_list, context, depth=depth + 1)
+                self._render_list(
+                    child_list,
+                    context,
+                    depth=depth + 1,
+                    parent_style=list_style,
+                )
                 for child_list in block.item_children[index]
             )
             item_style = context.stylesheet.resolve("paragraph", item.style, ParagraphStyle())
+            item_style = replace(item_style, space_after=list_style.item_spacing)
             items.append(
                 (
                     '<div class="oodocs-list-item" '
                     f'style="column-gap: {list_style.marker_gap:.2f}in; padding-left: {list_style.indent:.2f}in;">'
                     f'<div class="oodocs-list-marker">{marker}</div>'
                     '<div class="oodocs-list-content">'
-                    f'<p{anchor_attr} class="oodocs-paragraph" style="{self._paragraph_style_css(item_style, context.theme, default_space_after=3.0, default_unit=context.unit)}">'
+                    f'<p{anchor_attr} class="oodocs-paragraph" style="{self._paragraph_style_css(item_style, context.theme, default_unit=context.unit)}">'
                     + self._inline_html(
                         item.content,
                         context.theme,
@@ -341,7 +356,11 @@ class HtmlRenderer:
                 )
             )
         list_class = "oodocs-numbered-list" if isinstance(block, NumberedList) else "oodocs-bullet-list"
-        return f'<div class="oodocs-list {list_class}">{"".join(items)}</div>'
+        return (
+            f'<div class="oodocs-list {list_class}" '
+            f'style="margin-bottom: {list_style.block_spacing:.1f}pt;">'
+            f'{"".join(items)}</div>'
+        )
 
     def render_code_block(
         self,

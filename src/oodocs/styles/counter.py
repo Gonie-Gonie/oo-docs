@@ -150,6 +150,8 @@ class ListStyle:
         marker: Counter style used for the marker.
         indent: List indent in inches.
         marker_gap: Gap between marker and item text in inches.
+        item_spacing: Space after each list item paragraph in points.
+        block_spacing: Space after the whole list in points.
 
     Examples:
         ```python
@@ -167,6 +169,8 @@ class ListStyle:
     marker: CounterStyle = field(default_factory=lambda: CounterStyle(suffix="."))
     indent: float = 0.25
     marker_gap: float = 0.1
+    item_spacing: float = 3.0
+    block_spacing: float = 8.0
 
     def __post_init__(self) -> None:
         self.marker = _coerce_counter_style(self.marker)
@@ -174,6 +178,10 @@ class ListStyle:
             raise ValueError("ListStyle.indent must be >= 0")
         if self.marker_gap < 0:
             raise ValueError("ListStyle.marker_gap must be >= 0")
+        if self.item_spacing < 0:
+            raise ValueError("ListStyle.item_spacing must be >= 0")
+        if self.block_spacing < 0:
+            raise ValueError("ListStyle.block_spacing must be >= 0")
 
     def marker_for(self, index: int) -> str:
         """Return the rendered marker for a zero-based list item index.

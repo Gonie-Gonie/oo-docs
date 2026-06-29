@@ -121,7 +121,7 @@ from oodocs.layout.indexing import (
     reference_text_pieces,
     resolve_block_reference,
 )
-from oodocs.styles import BoxStyle, ParagraphStyle, TableStyle as OODocsTableStyle, TextStyle, Theme
+from oodocs.styles import BoxStyle, ListStyle, ParagraphStyle, TableStyle as OODocsTableStyle, TextStyle, Theme
 from oodocs.renderers.context import PdfRenderContext
 from oodocs.renderers.syntax import SyntaxToken, _syntax_line_tokens, syntax_tokens
 
@@ -2494,11 +2494,27 @@ class PdfRenderer:
         *,
         depth: int = 0,
         add_trailing_spacer: bool = True,
+        parent_style: ListStyle | None = None,
     ) -> list[object]:
+        list_style = theme.stylesheet.resolve(
+            "list",
+            block.style,
+            theme.list_style(ordered=isinstance(block, NumberedList)),
+        )
+        if parent_style is not None and block.style is None:
+            list_style = replace(
+                list_style,
+                marker_gap=parent_style.marker_gap,
+                item_spacing=parent_style.item_spacing,
+                block_spacing=parent_style.block_spacing,
+            )
+        list_style = block._effective_style(list_style)
+        if depth:
+            list_style = replace(list_style, indent=list_style.indent + depth * 0.22)
         item_block_style = theme.stylesheet.resolve(
             "paragraph",
-            ParagraphStyle(space_after=3),
-            ParagraphStyle(space_after=3),
+            ParagraphStyle(space_after=list_style.item_spacing),
+            ParagraphStyle(space_after=list_style.item_spacing),
         )
         item_style = self._paragraph_style(
             item_block_style,
@@ -2510,15 +2526,8 @@ class PdfRenderer:
             "ListMarker",
             parent=item_style,
             alignment=TA_RIGHT,
-            spaceAfter=3,
+            spaceAfter=list_style.item_spacing,
         )
-        list_style = theme.stylesheet.resolve(
-            "list",
-            block.style,
-            theme.list_style(ordered=isinstance(block, NumberedList)),
-        )
-        if depth:
-            list_style = replace(list_style, indent=list_style.indent + depth * 0.22)
         marker_width = max(list_style.indent * inch, 0.35 * inch)
         rows: list[list[object]] = []
         for index, item in enumerate(block.items):
@@ -2547,6 +2556,7 @@ class PdfRenderer:
                         unit,
                         depth=depth + 1,
                         add_trailing_spacer=False,
+                        parent_style=list_style,
                     )
                 )
             rows.append(
@@ -2569,8 +2579,8 @@ class PdfRenderer:
             )
         )
         flowables: list[object] = [table]
-        if add_trailing_spacer:
-            flowables.append(Spacer(1, 8))
+        if add_trailing_spacer and list_style.block_spacing:
+            flowables.append(Spacer(1, list_style.block_spacing))
         return flowables
 
     def _effective_box_style(self, block: Box, theme: Theme) -> BoxStyle:
