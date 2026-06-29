@@ -152,6 +152,7 @@ OODocs_API_CATEGORIES: tuple[ApiCategory, ...] = (
         include=(
             "oodocs.PageSize",
             "oodocs.PageMargins",
+            "oodocs.PageLayout",
             "oodocs.Theme",
             "oodocs.StyleSheet",
             "oodocs.BorderStyle",
@@ -165,6 +166,7 @@ OODocs_API_CATEGORIES: tuple[ApiCategory, ...] = (
             "oodocs.BoxStyle",
             "oodocs.InlineChipStyle",
             "oodocs.ListStyle",
+            "oodocs.HeadingStyle",
             "oodocs.HeadingNumbering",
             "oodocs.TocLevelStyle",
             "oodocs.TypographyDefaults",

@@ -9,6 +9,7 @@ from oodocs import (
     CaptionDefaults,
     CounterStyle,
     GeneratedContentDefaults,
+    HeadingStyle,
     HeadingNumbering,
     InlineChipStyle,
     ListStyle,
@@ -130,6 +131,51 @@ def test_theme_resolves_heading_and_caption_defaults() -> None:
 
     with pytest.raises(ValueError, match="caption label context"):
         theme.resolve_caption_label("table", "inline")
+
+
+def test_heading_style_merges_level_defaults_and_overrides() -> None:
+    level_style = HeadingStyle(
+        text_style=TextStyle(font_size=14, bold=False, text_color="#123456"),
+        space_before=4,
+        space_after=5,
+        text_alignment="center",
+        numbering=CounterStyle(counter_format="upper-alpha"),
+    )
+    theme = Theme(blocks=BlockDefaults(heading_styles={2: level_style}))
+
+    resolved = theme.resolve_heading_style(2)
+
+    assert resolved.text_style.font_size == 14
+    assert resolved.text_style.bold is False
+    assert resolved.text_style.italic is False
+    assert resolved.text_style.text_color == "123456"
+    assert resolved.space_before == 4
+    assert resolved.space_after == 5
+    assert resolved.text_alignment == "center"
+    assert theme.resolve_heading_size(2) == 14
+    assert theme.resolve_heading_emphasis(2) == (False, False)
+    assert theme.resolve_heading_text_alignment(2) == "center"
+    assert theme.format_heading_label([1, 2]) == "1.B"
+
+    override = HeadingStyle(text_style=TextStyle(italic=True), space_after=2)
+    overridden = theme.resolve_heading_style(2, override)
+
+    assert overridden.text_style.font_size == 14
+    assert overridden.text_style.bold is False
+    assert overridden.text_style.italic is True
+    assert overridden.space_before == 4
+    assert overridden.space_after == 2
+
+
+def test_heading_style_validates_values() -> None:
+    with pytest.raises(ValueError, match="space_before"):
+        HeadingStyle(space_before=-1)
+
+    with pytest.raises(ValueError, match="heading_styles keys"):
+        BlockDefaults(heading_styles={0: HeadingStyle()})
+
+    with pytest.raises(TypeError, match="HeadingStyle"):
+        BlockDefaults(heading_styles={1: object()})  # type: ignore[dict-item]
 
 
 def test_theme_resolves_generated_page_titles() -> None:

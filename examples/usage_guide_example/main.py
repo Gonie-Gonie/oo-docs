@@ -314,7 +314,7 @@ contents = TableOfContents(
 CONFIGURATION_OPTIONS_SNIPPET = """from oodocs import (
     BorderStyle,
     BlockDefaults, CaptionDefaults, DocumentSettings, PageNumberDefaults,
-    Padding, Paragraph, Table, Theme, TypographyDefaults,
+    HeadingStyle, Padding, Paragraph, Table, TextStyle, Theme, TypographyDefaults,
 )
 
 settings = DocumentSettings(
@@ -323,7 +323,12 @@ settings = DocumentSettings(
         typography=TypographyDefaults(body_font_name="Arial", body_font_size=10.5),
         captions=CaptionDefaults(figure_label="Fig."),
         page_numbers=PageNumberDefaults(show_page_numbers=True, page_number_template="p. {page}"),
-        blocks=BlockDefaults(paragraph_text_alignment="left"),
+        blocks=BlockDefaults(
+            paragraph_text_alignment="left",
+            heading_styles={
+                1: HeadingStyle(text_style=TextStyle(font_size=18), space_after=8),
+            },
+        ),
     ),
 )
 
@@ -874,7 +879,7 @@ def build_usage_guide_document() -> Document:
             ["GeneratedContentDefaults", "contents/list/comments/footnotes/references titles, generated_heading_level, generated_content_page_breaks", "Generated content titles and heading level."],
             ["PageNumberDefaults", "show_page_numbers, page_number_alignment, page_number_template, front/main matter counters, page_number_font_size", "Footer page labels."],
             ["TitleMatterDefaults", "title_text_alignment, subtitle_text_alignment, author_text_alignment, affiliation_text_alignment, author_detail_text_alignment", "Title-page and metadata alignment."],
-            ["BlockDefaults", "page_background_color, paragraph_text_alignment, table_block_alignment, figure_block_alignment, box_block_alignment, footnote_placement, list styles, heading_numbering", "Document-wide defaults that individual blocks can override."],
+            ["BlockDefaults", "page_background_color, paragraph_text_alignment, table/figure/box block alignment, footnote_placement, list styles, heading_styles, heading_numbering", "Document-wide defaults that individual blocks can override."],
         ],
         caption="Grouped Theme defaults are passed as keyword groups to Theme(...).",
         column_widths=[1.7, 3.7, 1.8],
@@ -884,6 +889,7 @@ def build_usage_guide_document() -> Document:
         rows=[
             ["Text and styled(...)", "font_name, font_size, text_color, highlight_color, bold, italic, underline, strikethrough, small_caps, uppercase, subscript, superscript", "Use TextStyle only when a reusable inline style needs a name."],
             ["Paragraph, CodeBlock, Equation", "text_alignment, space_before, space_after, leading, left_indent, right_indent, first_line_indent, keep_together, keep_with_next, page_break_before, widow_control, unit", "Use ParagraphStyle only for shared paragraph rhythm."],
+            ["Section, Chapter, Subsection", "level, numbered, toc, anchor, run_in_title_style, heading_style", "Use HeadingStyle for per-level theme defaults or one-off heading overrides."],
             ["BulletList, NumberedList", "marker=CounterStyle(...), indent, marker_gap", "Use ListStyle only for repeated list conventions."],
             ["Box", "border, background_color, title colors, padding, space_after, width, unit, block_alignment", "Use BoxStyle only for named callout or report-panel designs."],
             ["Table", "header/body/alternate colors, border, cell/header alignment, cell_padding, repeat_header_rows", "row_styles, column_styles, and header_row_styles accept dictionaries for quick overrides."],

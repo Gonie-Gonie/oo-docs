@@ -173,6 +173,7 @@ The default behavior is intentionally conventional:
 - headings are numbered as `1`, `1.1`, `1.1.1`, and so on
 - ordered and bullet lists can be customized with direct kwargs such as `indent=...`, `marker=CounterStyle(...)`, and `marker_gap=...`
 - heading numbering can be customized with `HeadingNumbering(...)`
+- heading typography, spacing, alignment, and per-level counter formats can be customized with `HeadingStyle(...)`
 - article-style front matter can be left unnumbered with `Section(..., numbered=False)`
 
 ## What To Use When
@@ -186,6 +187,7 @@ The default behavior is intentionally conventional:
 - Use `subscript(...)`, `superscript(...)`, and `prescript(...)` for ordinary prose. Use `Math(...)` or `Equation(...)` for lightweight LaTeX-style math, including ordinary `x^2` / `x_0` scripts and front scripts such as `\prescript{14}{6}{C}`.
 - Use `Part(...)` for book-like divisions above chapters; each part gets a separator page, while chapter numbers continue across parts by default.
 - Use `Chapter(...)`, `Section(...)`, `Subsection(...)`, and `SubSubsection(...)` for the visible outline. Their nesting in Python should match how you expect the final document to read.
+- Use `Theme(blocks=BlockDefaults(heading_styles={level: HeadingStyle(...)}))` for document-wide heading styling, or `Section(..., heading_style=HeadingStyle(...))` when one heading needs a local override.
 - Use `Document.add(...)`, `Section.add(...)`, `Box.add(...)`, and `MultiColumn.add(...)` when a longer report is easier to assemble step by step. Matching `extend(...)` methods accept iterables and use the same coercion rules as constructors.
 - Use `reference(obj)` or `obj.reference()` for cross-references to captioned media, headings, equations, paragraphs, code blocks, and boxes. Passing the raw object inside `Paragraph(...)` is rejected so insertion and citation are not confused.
 - Use `Definition(...)`, `Lemma(...)`, `Proposition(...)`, `Theorem(...)`, `Corollary(...)`, `Example(...)`, `Remark(...)`, `Assumption(...)`, `Axiom(...)`, `Claim(...)`, and `Conjecture(...)` for theorem-like blocks that share a document-wide counter; `Proof(...)` is unnumbered by default. Use `create_countable_block_type("Exercise", counter="exercise")` to create custom countable block classes without subclassing, or pass `counter="theorem"` when a custom block should join the same sequence.

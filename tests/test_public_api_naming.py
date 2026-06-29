@@ -266,6 +266,7 @@ def test_theme_resolver_methods_use_explicit_resolve_names() -> None:
     expected = {
         "resolve_body_font",
         "resolve_monospace_font",
+        "resolve_heading_style",
         "resolve_heading_size",
         "resolve_heading_emphasis",
         "resolve_heading_text_alignment",

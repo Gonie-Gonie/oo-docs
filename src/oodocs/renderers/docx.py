@@ -90,7 +90,7 @@ from oodocs.document import Document
 from oodocs.components.equations import SUBSCRIPT, SUPERSCRIPT, parse_latex_segments
 from oodocs.core import OODocsError, PathLike, length_to_inches
 from oodocs.layout.indexing import RenderIndex, build_render_index
-from oodocs.styles import ParagraphStyle, TableStyle, TextStyle, Theme
+from oodocs.styles import HeadingStyle, ParagraphStyle, TableStyle, TextStyle, Theme
 from oodocs.renderers.context import DocxRenderContext
 from oodocs.renderers.syntax import SyntaxToken, syntax_tokens
 
@@ -265,6 +265,7 @@ class DocxRenderer:
         number_label: str | None = None,
         anchor: str | None = None,
         toc: bool = False,
+        heading_style: HeadingStyle | None = None,
     ) -> None:
         """Render a heading into the current DOCX container.
 
@@ -276,6 +277,7 @@ class DocxRenderer:
             number_label: Optional generated heading number.
             anchor: Optional bookmark anchor.
             toc: Whether to append a Word table-of-contents entry.
+            heading_style: Optional direct heading style override.
         """
 
         self._add_heading(
@@ -287,6 +289,7 @@ class DocxRenderer:
             anchor=anchor,
             render_index=context.render_index,
             toc=toc,
+            heading_style=heading_style,
         )
 
     def render_part(
@@ -891,14 +894,16 @@ class DocxRenderer:
             italic=False,
         )
         for level in range(1, 5):
-            bold, italic = theme.resolve_heading_emphasis(level)
+            heading_style = theme.resolve_heading_style(level)
+            heading_text_style = heading_style.text_style
             self._configure_named_style(
                 word_document,
                 f"Heading {level}",
-                font_name=theme.resolve_body_font(),
-                font_size=theme.resolve_heading_size(level),
-                bold=bold,
-                italic=italic,
+                font_name=heading_text_style.font_name or theme.resolve_body_font(),
+                font_size=heading_text_style.font_size or theme.resolve_heading_size(level),
+                bold=bool(heading_text_style.bold),
+                italic=bool(heading_text_style.italic),
+                text_color=heading_text_style.text_color,
             )
         self._set_page_background(word_document, theme.blocks.page_background_color)
 
@@ -1207,20 +1212,31 @@ class DocxRenderer:
         anchor: str | None = None,
         render_index: RenderIndex | None = None,
         toc: bool = False,
+        heading_style: HeadingStyle | None = None,
     ) -> None:
         paragraph = self._add_paragraph(container)
         paragraph.style = "Title" if level == 0 else f"Heading {min(level, 9)}"
+        default_size = theme.typography.title_font_size
+        default_style: TextStyle | None = None
         if level == 0:
             paragraph.alignment = ALIGNMENTS[theme.title_matter.title_text_alignment]
         else:
-            paragraph.alignment = ALIGNMENTS[theme.resolve_heading_text_alignment(level)]
-            paragraph.paragraph_format.space_before = Pt(18 if level == 1 else 12)
-            paragraph.paragraph_format.space_after = Pt(10 if level == 1 else 6)
+            resolved_style = theme.resolve_heading_style(level, heading_style)
+            paragraph.alignment = ALIGNMENTS[resolved_style.text_alignment or "left"]
+            if resolved_style.space_before is not None:
+                paragraph.paragraph_format.space_before = Pt(resolved_style.space_before)
+            if resolved_style.space_after is not None:
+                paragraph.paragraph_format.space_after = Pt(resolved_style.space_after)
+            if resolved_style.leading is not None:
+                paragraph.paragraph_format.line_spacing = Pt(resolved_style.leading)
+            default_size = resolved_style.text_style.font_size or theme.resolve_heading_size(level)
+            default_style = resolved_style.text_style
         heading_fragments = self._heading_fragments(title, number_label)
         self._append_runs(
             paragraph,
             heading_fragments,
-            default_size=theme.typography.title_font_size if level == 0 else theme.resolve_heading_size(level),
+            default_size=default_size,
+            default_style=default_style,
             theme=theme,
             render_index=render_index,
         )
@@ -2919,13 +2935,16 @@ class DocxRenderer:
         font_size: float,
         bold: bool,
         italic: bool,
+        text_color: str | None = None,
     ) -> None:
         style = word_document.styles[style_name]
         style.font.name = font_name
         style.font.size = Pt(font_size)
         style.font.bold = bold
         style.font.italic = italic
-        style.font.color.rgb = RGBColor(0, 0, 0)
+        style.font.color.rgb = (
+            RGBColor.from_string(text_color) if text_color is not None else RGBColor(0, 0, 0)
+        )
 
     def _resolve_fragment_text(self, fragment: Text, theme: Theme | None, render_index: RenderIndex | None) -> str:
         if isinstance(fragment, _BlockReference):
@@ -3237,15 +3256,34 @@ class DocxRenderer:
         level: int,
         theme: Theme,
     ) -> None:
-        font_size = theme.typography.title_font_size if level == 0 else theme.resolve_heading_size(level)
+        heading_style = theme.resolve_heading_style(level) if level > 0 else None
+        heading_text_style = heading_style.text_style if heading_style is not None else None
+        space_after = (
+            10
+            if level == 0
+            else (
+                heading_style.space_after
+                if heading_style.space_after is not None
+                else (10 if level == 1 else 6)
+            )
+        )
+        font_size = (
+            theme.typography.title_font_size
+            if level == 0
+            else (heading_text_style.font_size or theme.resolve_heading_size(level))
+        )
         self._add_title_line(
             container,
             title,
             font_size=font_size,
-            alignment=theme.title_matter.title_text_alignment if level == 0 else theme.resolve_heading_text_alignment(level),
-            bold=theme.resolve_heading_emphasis(level)[0] if level > 0 else True,
-            italic=theme.resolve_heading_emphasis(level)[1] if level > 0 else False,
-            space_after=10 if level <= 1 else 6,
+            alignment=(
+                theme.title_matter.title_text_alignment
+                if level == 0
+                else (heading_style.text_alignment or "left")
+            ),
+            bold=bool(heading_text_style.bold) if heading_text_style is not None else True,
+            italic=bool(heading_text_style.italic) if heading_text_style is not None else False,
+            space_after=space_after,
         )
 
     def _append_native_toc_field(

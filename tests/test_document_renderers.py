@@ -57,6 +57,7 @@ from oodocs import (
     ListOfFigures,
     Footnote,
     GeneratedContentDefaults,
+    HeadingStyle,
     HeadingNumbering,
     ImageBox,
     ImageData,
@@ -1090,6 +1091,66 @@ def test_numbering_and_list_styles_are_customizable() -> None:
     assert bullet_style.marker_for(1) == "\u2022"
 
 
+def test_heading_style_renders_across_outputs(tmp_path: Path) -> None:
+    heading_style = HeadingStyle(
+        text_style=TextStyle(
+            font_size=17,
+            bold=False,
+            italic=True,
+            text_color="#1A2B3C",
+        ),
+        space_before=4,
+        space_after=5,
+        leading=19,
+        text_alignment="right",
+        numbering=CounterStyle(counter_format="upper-alpha", suffix=")"),
+    )
+    document = Document(
+        "Heading Style",
+        Section(
+            "Styled",
+            Paragraph("Body."),
+            level=2,
+            heading_style=heading_style,
+        ),
+    )
+
+    docx_path = tmp_path / "heading-style.docx"
+    html_path = tmp_path / "heading-style.html"
+    pdf_path = tmp_path / "heading-style.pdf"
+    document.save_docx(docx_path)
+    document.save_html(html_path)
+    document.save_pdf(pdf_path)
+
+    word_document = WordDocument(docx_path)
+    heading = next(
+        paragraph
+        for paragraph in word_document.paragraphs
+        if paragraph.text == "1.A) Styled"
+    )
+    assert heading.alignment == WD_ALIGN_PARAGRAPH.RIGHT
+    assert heading.paragraph_format.space_before.pt == 4
+    assert heading.paragraph_format.space_after.pt == 5
+    assert heading.paragraph_format.line_spacing.pt == 19
+    assert heading.runs[0].font.size.pt == 17
+    assert heading.runs[0].font.bold is False
+    assert heading.runs[0].font.italic is True
+    assert heading.runs[0].font.color.rgb == RGBColor.from_string("1A2B3C")
+
+    html = html_path.read_text(encoding="utf-8")
+    assert "1.A) Styled" in html
+    assert "font-size: 17.0pt" in html
+    assert "text-align: right" in html
+    assert "margin: 4.0pt 0 5.0pt" in html
+    assert "line-height: 19.0pt" in html
+    assert "font-weight: 400" in html
+    assert "font-style: italic" in html
+    assert "color: #1A2B3C" in html
+
+    pdf_text = "\n".join(page.extract_text() or "" for page in PdfReader(pdf_path).pages)
+    assert "1.A) Styled" in pdf_text
+
+
 def test_table_accepts_dataframe_like_inputs_and_spans() -> None:
     dataframe = FakeDataFrame(
         columns=[("Metrics", "Latency"), ("Metrics", "Quality"), ("Summary", "")],
@@ -1369,6 +1430,7 @@ def test_public_api_prefers_classes_for_structural_nodes() -> None:
     assert hasattr(oodocs, "Box")
     assert hasattr(oodocs, "BoxStyle")
     assert hasattr(oodocs, "CitationDefaults")
+    assert hasattr(oodocs, "HeadingStyle")
     assert hasattr(oodocs, "HeadingNumbering")
     assert hasattr(oodocs, "ImageBox")
     assert hasattr(oodocs, "ImageData")

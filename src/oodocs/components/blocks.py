@@ -42,6 +42,7 @@ from oodocs.styles import (
     BorderStyle,
     BoxStyle,
     CounterStyle,
+    HeadingStyle,
     ListStyle,
     Padding,
     ParagraphStyle,
@@ -1764,18 +1765,20 @@ class Section(Block):
             links.
         run_in_title_style: Optional run-in title style inherited by
             paragraphs in this section subtree.
+        heading_style: Optional direct style override for this section heading.
 
     Raises:
         ValueError: If ``level`` is less than one.
 
     Examples:
         ```python
-        from oodocs import Document, Paragraph, RunInTitleStyle, Section, TextStyle
+        from oodocs import Document, HeadingStyle, Paragraph, RunInTitleStyle, Section, TextStyle
 
         section = Section(
             "Results",
             Paragraph("The benchmark passed.", title="Outcome"),
             level=2,
+            heading_style=HeadingStyle(text_style=TextStyle(font_size=14)),
             run_in_title_style=RunInTitleStyle(TextStyle(bold=True), separator=". "),
         )
         document = Document("Benchmark", section)
@@ -1789,6 +1792,7 @@ class Section(Block):
     toc: bool
     anchor: str | None
     run_in_title_style: RunInTitleStyle | None
+    heading_style: HeadingStyle | None
 
     def __init__(
         self,
@@ -1799,9 +1803,12 @@ class Section(Block):
         toc: bool | None = None,
         anchor: str | None = None,
         run_in_title_style: RunInTitleStyle | None = None,
+        heading_style: HeadingStyle | None = None,
     ) -> None:
         if level < 1:
             raise ValueError("Section level must be >= 1")
+        if heading_style is not None and not isinstance(heading_style, HeadingStyle):
+            raise TypeError("heading_style must be a HeadingStyle")
         self.title = coerce_inlines((title,))
         self.children = coerce_blocks(children)
         self.level = level
@@ -1809,6 +1816,7 @@ class Section(Block):
         self.toc = numbered if toc is None else bool(toc)
         self.anchor = anchor
         self.run_in_title_style = run_in_title_style
+        self.heading_style = heading_style
 
     def add(self, *children: BlockInput) -> Section:
         """Append child blocks.
@@ -1871,6 +1879,7 @@ class Section(Block):
             ),
             anchor=context.render_index.heading_anchor(self),
             toc=self.toc,
+            heading_style=self.heading_style,
         )
         child_context = context
         if self.run_in_title_style is not None:
@@ -1917,6 +1926,7 @@ class Chapter(Section):
             links.
         run_in_title_style: Optional run-in title style inherited by
             paragraphs in this chapter subtree.
+        heading_style: Optional direct style override for this chapter heading.
 
     Examples:
         ```python
@@ -1935,6 +1945,7 @@ class Chapter(Section):
         toc: bool | None = None,
         anchor: str | None = None,
         run_in_title_style: RunInTitleStyle | None = None,
+        heading_style: HeadingStyle | None = None,
     ) -> None:
         super().__init__(
             title,
@@ -1944,6 +1955,7 @@ class Chapter(Section):
             toc=toc,
             anchor=anchor,
             run_in_title_style=run_in_title_style,
+            heading_style=heading_style,
         )
 
 
@@ -1960,6 +1972,7 @@ class Subsection(Section):
             links.
         run_in_title_style: Optional run-in title style inherited by
             paragraphs in this subsection subtree.
+        heading_style: Optional direct style override for this subsection heading.
 
     Examples:
         ```python
@@ -1978,6 +1991,7 @@ class Subsection(Section):
         toc: bool | None = None,
         anchor: str | None = None,
         run_in_title_style: RunInTitleStyle | None = None,
+        heading_style: HeadingStyle | None = None,
     ) -> None:
         super().__init__(
             title,
@@ -1987,6 +2001,7 @@ class Subsection(Section):
             toc=toc,
             anchor=anchor,
             run_in_title_style=run_in_title_style,
+            heading_style=heading_style,
         )
 
 
@@ -2003,6 +2018,7 @@ class SubSubsection(Section):
             links.
         run_in_title_style: Optional run-in title style inherited by
             paragraphs in this fourth-level section subtree.
+        heading_style: Optional direct style override for this heading.
 
     Examples:
         ```python
@@ -2021,6 +2037,7 @@ class SubSubsection(Section):
         toc: bool | None = None,
         anchor: str | None = None,
         run_in_title_style: RunInTitleStyle | None = None,
+        heading_style: HeadingStyle | None = None,
     ) -> None:
         super().__init__(
             title,
@@ -2030,6 +2047,7 @@ class SubSubsection(Section):
             toc=toc,
             anchor=anchor,
             run_in_title_style=run_in_title_style,
+            heading_style=heading_style,
         )
 
 
@@ -2043,6 +2061,7 @@ def section_for_level(
     max_level: int = MAX_SECTION_LEVEL,
     anchor: str | None = None,
     run_in_title_style: RunInTitleStyle | None = None,
+    heading_style: HeadingStyle | None = None,
 ) -> Section:
     """Create the section-like object that best matches a heading level.
 
@@ -2058,6 +2077,7 @@ def section_for_level(
             links.
         run_in_title_style: Optional run-in title style inherited by
             paragraphs in this section subtree.
+        heading_style: Optional direct style override for this heading.
 
     Returns:
         ``Chapter``, ``Subsection``, ``SubSubsection``, or ``Section`` based on
@@ -2083,6 +2103,7 @@ def section_for_level(
             toc=toc,
             anchor=anchor,
             run_in_title_style=run_in_title_style,
+            heading_style=heading_style,
         )
     if level == 3:
         return Subsection(
@@ -2092,6 +2113,7 @@ def section_for_level(
             toc=toc,
             anchor=anchor,
             run_in_title_style=run_in_title_style,
+            heading_style=heading_style,
         )
     if level == 4:
         return SubSubsection(
@@ -2101,6 +2123,7 @@ def section_for_level(
             toc=toc,
             anchor=anchor,
             run_in_title_style=run_in_title_style,
+            heading_style=heading_style,
         )
     return Section(
         title,
@@ -2110,6 +2133,7 @@ def section_for_level(
         toc=toc,
         anchor=anchor,
         run_in_title_style=run_in_title_style,
+        heading_style=heading_style,
     )
 
 
@@ -2208,6 +2232,7 @@ def shift_heading_level(
         max_level=max_level,
         anchor=block.anchor,
         run_in_title_style=block.run_in_title_style,
+        heading_style=block.heading_style,
     )
 
 

@@ -707,17 +707,29 @@ class PdfRenderer:
         theme = context.theme
         styles = context.styles
         render_index = context.render_index
-        bold, italic = theme.resolve_heading_emphasis(block.level)
+        heading_style = theme.resolve_heading_style(block.level, block.heading_style)
+        heading_text_style = heading_style.text_style
+        bold = bool(heading_text_style.bold)
+        italic = bool(heading_text_style.italic)
+        font_size = heading_text_style.font_size or theme.resolve_heading_size(block.level)
         title_style = RLParagraphStyle(
             f"Heading{block.level}",
             parent=styles["Heading1"],
-            fontName=self._resolve_font(theme.resolve_body_font(), bold, italic),
-            fontSize=theme.resolve_heading_size(block.level),
-            leading=theme.resolve_heading_size(block.level) * 1.2,
-            spaceBefore=18 if block.level == 1 else 12,
-            spaceAfter=10 if block.level == 1 else 6,
-            alignment=ALIGNMENTS[theme.resolve_heading_text_alignment(block.level)],
-            textColor=colors.black,
+            fontName=self._resolve_font(
+                heading_text_style.font_name or theme.resolve_body_font(),
+                bold,
+                italic,
+            ),
+            fontSize=font_size,
+            leading=heading_style.leading if heading_style.leading is not None else font_size * 1.2,
+            spaceBefore=heading_style.space_before if heading_style.space_before is not None else 0,
+            spaceAfter=heading_style.space_after if heading_style.space_after is not None else 0,
+            alignment=ALIGNMENTS[heading_style.text_alignment or "left"],
+            textColor=(
+                colors.HexColor(f"#{heading_text_style.text_color}")
+                if heading_text_style.text_color is not None
+                else colors.black
+            ),
         )
         anchor = render_index.heading_anchor(block)
         paragraph = RLParagraph(
@@ -2877,7 +2889,16 @@ class PdfRenderer:
         text = escape(rendered_text).replace("\n", "<br/>")
         bold = base_bold if fragment.style.bold is None else fragment.style.bold
         italic = base_italic if fragment.style.italic is None else fragment.style.italic
-        font_name = self._resolve_font(fragment.style.font_name or theme.resolve_body_font(), bold, italic)
+        font_name = (
+            base_font_name
+            if (
+                fragment.style.font_name is None
+                and fragment.style.bold is None
+                and fragment.style.italic is None
+                and base_font_name is not None
+            )
+            else self._resolve_font(fragment.style.font_name or theme.resolve_body_font(), bold, italic)
+        )
         size = fragment.style.font_size or base_size or theme.typography.body_font_size
 
         font_attrs: list[str] = []

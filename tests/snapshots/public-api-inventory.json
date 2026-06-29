@@ -259,6 +259,13 @@
         {
           "category": "style",
           "kind": "class",
+          "module": "oodocs.styles.theme",
+          "name": "HeadingStyle",
+          "qualname": "oodocs.styles.theme.HeadingStyle"
+        },
+        {
+          "category": "style",
+          "kind": "class",
           "module": "oodocs.styles.counter",
           "name": "HeadingNumbering",
           "qualname": "oodocs.styles.counter.HeadingNumbering"
@@ -1588,6 +1595,13 @@
           "module": "oodocs.styles.theme",
           "name": "GeneratedContentDefaults",
           "qualname": "oodocs.styles.theme.GeneratedContentDefaults"
+        },
+        {
+          "category": "style",
+          "kind": "class",
+          "module": "oodocs.styles.theme",
+          "name": "HeadingStyle",
+          "qualname": "oodocs.styles.theme.HeadingStyle"
         },
         {
           "category": "style",

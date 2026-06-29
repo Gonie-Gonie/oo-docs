@@ -66,7 +66,7 @@ from oodocs.core import OODocsError, PathLike, length_to_inches
 from oodocs.document import Document
 from oodocs.components.equations import SUBSCRIPT, SUPERSCRIPT, parse_latex_segments
 from oodocs.layout.indexing import RenderIndex, build_render_index
-from oodocs.styles import BoxStyle, ParagraphStyle, TableStyle, Theme
+from oodocs.styles import BoxStyle, HeadingStyle, ParagraphStyle, TableStyle, Theme
 from oodocs.renderers.context import HtmlRenderContext
 from oodocs.renderers.syntax import syntax_html
 
@@ -642,6 +642,8 @@ class HtmlRenderer:
         heading_tag = self._heading_tag(block.level)
         number_label = context.render_index.heading_number(block) if block.numbered else None
         anchor = context.render_index.heading_anchor(block)
+        heading_style = context.theme.resolve_heading_style(block.level, block.heading_style)
+        heading_text_style = heading_style.text_style
         child_context = (
             replace(context, run_in_title_style=block.run_in_title_style)
             if block.run_in_title_style is not None
@@ -655,14 +657,14 @@ class HtmlRenderer:
             f"<{heading_tag}"
             + (f' id="{escape(anchor)}"' if anchor else "")
             + f' class="oodocs-heading oodocs-heading-level-{block.level}"'
-            + f' style="{self._heading_css(block.level, context.theme)}">'
+            + f' style="{self._heading_css(block.level, context.theme, block.heading_style)}">'
             + self._inline_html(
                 self._heading_fragments(block.title, number_label),
                 context.theme,
                 context.render_index,
-                base_bold=context.theme.resolve_heading_emphasis(block.level)[0],
-                base_italic=context.theme.resolve_heading_emphasis(block.level)[1],
-                base_size=context.theme.resolve_heading_size(block.level),
+                base_bold=bool(heading_text_style.bold),
+                base_italic=bool(heading_text_style.italic),
+                base_size=heading_text_style.font_size or context.theme.resolve_heading_size(block.level),
             )
             + f"</{heading_tag}>"
         )
@@ -2069,17 +2071,46 @@ class HtmlRenderer:
     def _heading_tag(self, level: int) -> str:
         return f"h{min(level + 1, 6)}"
 
-    def _heading_css(self, level: int, theme: Theme) -> str:
-        bold, italic = theme.resolve_heading_emphasis(level)
+    def _heading_css(
+        self,
+        level: int,
+        theme: Theme,
+        override: HeadingStyle | None = None,
+    ) -> str:
+        heading_style = theme.resolve_heading_style(level, override)
+        heading_text_style = heading_style.text_style
+        bold = bool(heading_text_style.bold)
+        italic = bool(heading_text_style.italic)
+        font_size = heading_text_style.font_size or theme.resolve_heading_size(level)
+        space_before = heading_style.space_before if heading_style.space_before is not None else 0
+        space_after = heading_style.space_after if heading_style.space_after is not None else 0
         styles = [
-            f"font-size: {theme.resolve_heading_size(level):.1f}pt",
-            f"text-align: {theme.resolve_heading_text_alignment(level)}",
-            f"margin: {'18' if level == 1 else '12'}pt 0 {'10' if level == 1 else '6'}pt",
+            f"font-size: {font_size:.1f}pt",
+            f"text-align: {heading_style.text_alignment or 'left'}",
+            f"margin: {space_before:.1f}pt 0 {space_after:.1f}pt",
         ]
-        if bold:
-            styles.append("font-weight: 700")
+        if heading_style.leading is not None:
+            styles.append(f"line-height: {heading_style.leading:.1f}pt")
+        styles.append(f"font-weight: {'700' if bold else '400'}")
         if italic:
             styles.append("font-style: italic")
+        if heading_text_style.font_name is not None:
+            styles.append(f"font-family: {self._css_font_family(heading_text_style.font_name)}")
+        if heading_text_style.text_color is not None:
+            styles.append(f"color: #{heading_text_style.text_color}")
+        if heading_text_style.highlight_color is not None:
+            styles.append(f"background-color: #{heading_text_style.highlight_color}")
+        decorations = []
+        if heading_text_style.underline:
+            decorations.append("underline")
+        if heading_text_style.strikethrough:
+            decorations.append("line-through")
+        if decorations:
+            styles.append(f"text-decoration: {' '.join(decorations)}")
+        if heading_text_style.small_caps:
+            styles.append("font-variant: small-caps")
+        if heading_text_style.uppercase:
+            styles.append("text-transform: uppercase")
         return "; ".join(styles)
 
     def _toc_level_style(self, block: TableOfContents, level: int) -> TocLevelStyle:

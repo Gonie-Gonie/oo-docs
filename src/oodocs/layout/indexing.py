@@ -729,7 +729,8 @@ def _index_blocks(
                     block.level,
                 )
                 number_label = theme.format_heading_label(
-                    current_counters[: block.level]
+                    current_counters[: block.level],
+                    block.heading_style,
                 )
                 render_index.heading_numbers[id(block)] = number_label
             anchor = (

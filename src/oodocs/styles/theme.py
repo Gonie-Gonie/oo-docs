@@ -16,6 +16,7 @@ from oodocs.styles.sheet import StyleSheet
 from oodocs.styles.tables import TableStyle
 from oodocs.styles.text import TextStyle
 
+
 @dataclass(slots=True)
 class TypographyDefaults:
     """Grouped document-wide font and size defaults for ``Theme``.
@@ -43,6 +44,95 @@ class TypographyDefaults:
     body_font_size: float = 11.0
     heading_sizes: tuple[float, ...] = (18.0, 15.0, 13.0, 11.5)
     caption_font_size: float | None = None
+
+
+@dataclass(slots=True)
+class HeadingStyle:
+    """Per-level or per-section heading styling.
+
+    Attributes:
+        text_style: Inline text defaults applied to the heading title.
+        space_before: Spacing before the heading in points.
+        space_after: Spacing after the heading in points.
+        leading: Heading line spacing in points.
+        text_alignment: Heading text alignment.
+        numbering: Optional counter style for this heading level.
+
+    Examples:
+        ```python
+        from oodocs import HeadingStyle, TextStyle
+
+        heading = HeadingStyle(
+            text_style=TextStyle(bold=True, font_size=16),
+            space_before=18,
+            space_after=8,
+        )
+        ```
+    """
+
+    text_style: TextStyle = field(default_factory=TextStyle)
+    space_before: float | None = None
+    space_after: float | None = None
+    leading: float | None = None
+    text_alignment: str | None = None
+    numbering: CounterStyle | None = None
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.text_style, TextStyle):
+            raise TypeError("HeadingStyle.text_style must be a TextStyle")
+        if self.text_alignment is not None:
+            self.text_alignment = normalize_text_alignment(self.text_alignment)
+        if self.numbering is not None and not isinstance(self.numbering, CounterStyle):
+            raise TypeError("HeadingStyle.numbering must be a CounterStyle")
+        for field_name in ("space_before", "space_after", "leading"):
+            value = getattr(self, field_name)
+            if value is not None and value < 0:
+                raise ValueError(f"HeadingStyle.{field_name} must be >= 0")
+
+    def merged(self, *others: HeadingStyle | None) -> HeadingStyle:
+        """Return a new heading style with later values overriding earlier ones.
+
+        Args:
+            *others: Heading styles to overlay from left to right.
+
+        Returns:
+            New merged heading style.
+        """
+
+        merged = HeadingStyle(
+            text_style=self.text_style,
+            space_before=self.space_before,
+            space_after=self.space_after,
+            leading=self.leading,
+            text_alignment=self.text_alignment,
+            numbering=self.numbering,
+        )
+        for other in others:
+            if other is None:
+                continue
+            if not isinstance(other, HeadingStyle):
+                raise TypeError("heading style values must be HeadingStyle instances")
+            merged = HeadingStyle(
+                text_style=merged.text_style.merged(other.text_style),
+                space_before=(
+                    merged.space_before
+                    if other.space_before is None
+                    else other.space_before
+                ),
+                space_after=(
+                    merged.space_after
+                    if other.space_after is None
+                    else other.space_after
+                ),
+                leading=merged.leading if other.leading is None else other.leading,
+                text_alignment=(
+                    merged.text_alignment
+                    if other.text_alignment is None
+                    else other.text_alignment
+                ),
+                numbering=merged.numbering if other.numbering is None else other.numbering,
+            )
+        return merged
 
 
 @dataclass(slots=True)
@@ -251,15 +341,21 @@ class BlockDefaults:
         footnote_placement: Native or generated content footnote placement.
         auto_footnotes_page: Whether missing footnote pages are auto-rendered.
         run_in_title_style: Default style for run-in paragraph titles.
+        heading_styles: Per-level heading style overrides keyed by heading level.
         heading_numbering: Heading numbering configuration.
         bullet_list_style: Default bullet list style.
         numbered_list_style: Default numbered list style.
 
     Examples:
         ```python
-        from oodocs import BlockDefaults, Document, DocumentSettings, HeadingNumbering, Paragraph, Section, Theme
+        from oodocs import BlockDefaults, Document, DocumentSettings, HeadingNumbering, HeadingStyle, Paragraph, Section, TextStyle, Theme
 
-        theme = Theme(blocks=BlockDefaults(heading_numbering=HeadingNumbering(enabled=False)))
+        theme = Theme(
+            blocks=BlockDefaults(
+                heading_numbering=HeadingNumbering(enabled=False),
+                heading_styles={1: HeadingStyle(text_style=TextStyle(font_size=18))},
+            )
+        )
         document = Document(
             "Report",
             Section("Unnumbered", Paragraph("Body", title="Scope")),
@@ -280,6 +376,7 @@ class BlockDefaults:
     footnote_placement: str = "page"
     auto_footnotes_page: bool = True
     run_in_title_style: RunInTitleStyle = field(default_factory=RunInTitleStyle)
+    heading_styles: dict[int, HeadingStyle] = field(default_factory=dict)
     heading_numbering: HeadingNumbering = field(default_factory=HeadingNumbering)
     bullet_list_style: ListStyle = field(
         default_factory=lambda: ListStyle(
@@ -305,6 +402,12 @@ class BlockDefaults:
             raise ValueError("footnote_placement must be 'page' or 'document'")
         if not isinstance(self.run_in_title_style, RunInTitleStyle):
             raise TypeError("run_in_title_style must be a RunInTitleStyle")
+        self.heading_styles = dict(self.heading_styles)
+        for level, style in self.heading_styles.items():
+            if not isinstance(level, int) or level < 1:
+                raise ValueError("heading_styles keys must be positive heading levels")
+            if not isinstance(style, HeadingStyle):
+                raise TypeError("heading_styles values must be HeadingStyle instances")
         if not isinstance(self.heading_numbering, HeadingNumbering):
             raise TypeError("heading_numbering must be a HeadingNumbering")
         if not isinstance(self.bullet_list_style, ListStyle):
@@ -459,6 +562,49 @@ class Theme:
 
         return self.typography.monospace_font_name
 
+    def resolve_heading_style(
+        self,
+        level: int,
+        override: HeadingStyle | None = None,
+    ) -> HeadingStyle:
+        """Return the effective heading style for a heading level.
+
+        Args:
+            level: One-based heading level.
+            override: Optional section-specific heading style.
+
+        Returns:
+            Effective heading style after theme defaults, per-level defaults,
+            and the direct override are merged.
+
+        Examples:
+            ```python
+            from oodocs import BlockDefaults, HeadingStyle, TextStyle, Theme
+
+            theme = Theme(
+                blocks=BlockDefaults(
+                    heading_styles={2: HeadingStyle(text_style=TextStyle(font_size=14))}
+                )
+            )
+            assert theme.resolve_heading_style(2).text_style.font_size == 14
+            ```
+        """
+
+        if override is not None and not isinstance(override, HeadingStyle):
+            raise TypeError("override must be a HeadingStyle")
+        base = HeadingStyle(
+            text_style=TextStyle(
+                font_size=self._default_heading_size(level),
+                bold=self._default_heading_emphasis(level)[0],
+                italic=self._default_heading_emphasis(level)[1],
+            ),
+            space_before=18 if level == 1 else 12,
+            space_after=10 if level == 1 else 6,
+            leading=self._default_heading_size(level) * 1.2,
+            text_alignment="left",
+        )
+        return base.merged(self.blocks.heading_styles.get(level), override)
+
     def resolve_heading_size(self, level: int) -> float:
         """Return the configured font size for a heading level.
 
@@ -474,6 +620,9 @@ class Theme:
             ```
         """
 
+        return self.resolve_heading_style(level).text_style.font_size or self._default_heading_size(level)
+
+    def _default_heading_size(self, level: int) -> float:
         index = min(max(level - 1, 0), len(self.typography.heading_sizes) - 1)
         return self.typography.heading_sizes[index]
 
@@ -492,6 +641,10 @@ class Theme:
             ```
         """
 
+        style = self.resolve_heading_style(level)
+        return bool(style.text_style.bold), bool(style.text_style.italic)
+
+    def _default_heading_emphasis(self, level: int) -> tuple[bool, bool]:
         emphasis = (
             (True, False),
             (True, False),
@@ -516,7 +669,7 @@ class Theme:
             ```
         """
 
-        return "left"
+        return self.resolve_heading_style(level).text_alignment or "left"
 
     def resolve_paragraph_text_alignment(self, style: ParagraphStyle) -> str:
         """Return a paragraph style's alignment or the document-wide default.
@@ -696,12 +849,17 @@ class Theme:
         page_label = counter.format_value(page_number)
         return self.page_numbers.page_number_template.format(page=page_label)
 
-    def format_heading_label(self, counters: Sequence[int]) -> str | None:
+    def format_heading_label(
+        self,
+        counters: Sequence[int],
+        heading_style: HeadingStyle | None = None,
+    ) -> str | None:
         """Render a heading numbering label for nested section counters.
 
         Args:
             counters: Counter values from top-level heading through current
                 heading.
+            heading_style: Optional style override for the current heading.
 
         Returns:
             Formatted heading label, or ``None`` when numbering is disabled.
@@ -712,7 +870,25 @@ class Theme:
             ```
         """
 
-        return self.blocks.heading_numbering.format_label(counters)
+        if not self.blocks.heading_numbering.enabled:
+            return None
+        level = len(counters)
+        resolved_style = self.resolve_heading_style(level, heading_style)
+        if resolved_style.numbering is None:
+            return self.blocks.heading_numbering.format_label(counters)
+        pieces = []
+        for index, value in enumerate(counters):
+            counter_style = self.blocks.heading_numbering.level_styles[
+                min(index, len(self.blocks.heading_numbering.level_styles) - 1)
+            ]
+            if index == level - 1:
+                counter_style = resolved_style.numbering
+            pieces.append(counter_style.format_value(value))
+        return (
+            f"{self.blocks.heading_numbering.prefix}"
+            f"{self.blocks.heading_numbering.separator.join(pieces)}"
+            f"{self.blocks.heading_numbering.suffix}"
+        )
 
     def format_part_label(self, value: int) -> str | None:
         """Render a part label such as ``Part I`` from an independent counter.
@@ -759,6 +935,7 @@ __all__ = [
     "CitationDefaults",
     "CounterStyle",
     "GeneratedContentDefaults",
+    "HeadingStyle",
     "HeadingNumbering",
     "ListStyle",
     "PageNumberDefaults",
