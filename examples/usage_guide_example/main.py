@@ -25,6 +25,7 @@ from oodocs import (
     CasesEquation,
     CaptionDefaults,
     Chapter,
+    ChemicalFormula,
     CitationLibrary,
     CitationSource,
     Comment,
@@ -54,6 +55,7 @@ from oodocs import (
     Paragraph,
     Part,
     Proof,
+    ReactionEquation,
     ReferenceList,
     Remark,
     Section,
@@ -79,6 +81,7 @@ from oodocs import (
     VerticalSpace,
     badge,
     bold,
+    chemical_formula,
     inline_code,
     text_color,
     create_countable_block_type,
@@ -617,6 +620,15 @@ local_definition = Equation(r"\\operatorname{loss}(x)", numbered=False)
 paragraph = Paragraph("See ", derivation.reference(), " and ", local_definition.reference("the loss definition"), ".")
 """
 
+CHEMISTRY_SNIPPET = """from oodocs import Paragraph, ReactionEquation, chemical_formula
+
+water = chemical_formula("H2O")
+sulfate = chemical_formula("SO4^2-")
+reaction = ReactionEquation("2H2 + O2 -> 2H2O")
+
+paragraph = Paragraph("Water is ", water, ", sulfate is ", sulfate, ", and the reaction is ", reaction.reference(), ".")
+"""
+
 INLINE_CHIPS_SNIPPET = """from oodocs import Paragraph, badge, keyboard, status, tag
 
 Paragraph(
@@ -1054,7 +1066,7 @@ def build_usage_guide_document() -> Document:
         headers=["Block", "Direct kwargs", "Style object when needed"],
         rows=[
             ["Text and styled(...)", "font_name, font_size, text_color, highlight_color, bold, italic, underline, strikethrough, small_caps, uppercase, subscript, superscript", "Use TextStyle only when a reusable inline style needs a name."],
-            ["Paragraph, CodeBlock, Equation", "text_alignment, space_before, space_after, leading, left_indent, right_indent, first_line_indent, keep_together, keep_with_next, page_break_before, widow_control, unit; CodeBlock also accepts caption, identifier, line_numbers, highlight_lines; Equation also accepts numbered and reference_label", "Use ParagraphStyle only for shared paragraph rhythm."],
+            ["Paragraph, CodeBlock, Equation, ReactionEquation", "text_alignment, space_before, space_after, leading, left_indent, right_indent, first_line_indent, keep_together, keep_with_next, page_break_before, widow_control, unit; CodeBlock also accepts caption, identifier, line_numbers, highlight_lines; Equation and ReactionEquation also accept numbered and reference_label", "Use ParagraphStyle only for shared paragraph rhythm."],
             ["Algorithm", "inputs, outputs, steps, code, language, caption, body_style, line_numbers, numbered", "Use prose steps for method summaries and code-style bodies for pseudocode listings."],
             ["Section, Chapter, Subsection", "level, numbered, toc, anchor, run_in_title_style, heading_style", "Use HeadingStyle for per-level theme defaults or one-off heading overrides."],
             ["Part, Appendix", "title, toc; Part also accepts numbered", "Use Appendix when child chapters should switch to A/B/C numbering."],
@@ -1182,6 +1194,9 @@ def build_usage_guide_document() -> Document:
         left="f(x)",
     )
     math_local_definition = Equation(r"\operatorname{loss}(x)", numbered=False)
+    water_formula = chemical_formula("H2O")
+    sulfate_formula = ChemicalFormula("SO4^2-")
+    combustion_reaction = ReactionEquation("2H2 + O2 -> 2H2O")
     preset_callout = CalloutBox(
         Paragraph(
             "Presets are ordinary oodocs components with carefully chosen defaults. Use direct kwargs for quick local changes and reserve style objects for repeated house styles that need a name."
@@ -1524,6 +1539,21 @@ def build_usage_guide_document() -> Document:
                 math_piecewise,
                 math_local_definition,
                 CodeBlock(MATH_BLOCKS_SNIPPET, language="python"),
+                Paragraph(
+                    "Chemistry notation uses ",
+                    inline_code("chemical_formula"),
+                    " for inline formulas such as ",
+                    water_formula,
+                    " and ",
+                    sulfate_formula,
+                    ", while ",
+                    inline_code("ReactionEquation"),
+                    " gives reactions their own reference label. For example, see ",
+                    combustion_reaction.reference(),
+                    ".",
+                ),
+                combustion_reaction,
+                CodeBlock(CHEMISTRY_SNIPPET, language="python"),
                 Paragraph(
                     "Compact inline chips cover categories, counts, states, and keys: ",
                     tag("api"),

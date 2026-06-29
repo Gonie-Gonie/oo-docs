@@ -34,6 +34,7 @@ from oodocs.components.blocks import (
     Part,
     Proof,
     Proposition,
+    ReactionEquation,
     Remark,
     Section,
     Subsection,
@@ -45,6 +46,7 @@ from oodocs.components.blocks import (
     shift_heading_level,
     shift_heading_levels,
 )
+from oodocs.components.chemistry import ChemicalFormula, chemical_formula
 from oodocs.components.generated import (
     CommentList,
     FootnoteList,
@@ -198,6 +200,7 @@ __all__ = [
     "BulletList",
     "CasesEquation",
     "CaptionDefaults",
+    "ChemicalFormula",
     "CitationDefaults",
     "CounterStyle",
     "CitationLibrary",
@@ -258,6 +261,7 @@ __all__ = [
     "Proof",
     "Proposition",
     "ParagraphStyle",
+    "ReactionEquation",
     "RunInTitleStyle",
     "ReferenceList",
     "ResultLike",
@@ -295,6 +299,7 @@ __all__ = [
     "badge",
     "bold",
     "build_source_outputs",
+    "chemical_formula",
     "cite",
     "comment",
     "create_countable_block_type",

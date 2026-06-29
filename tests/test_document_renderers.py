@@ -40,6 +40,7 @@ from oodocs import (
     BulletList,
     CasesEquation,
     CaptionDefaults,
+    ChemicalFormula,
     CitationDefaults,
     CitationLibrary,
     CitationSource,
@@ -92,6 +93,7 @@ from oodocs import (
     Part,
     Proof,
     Proposition,
+    ReactionEquation,
     ReferenceList,
     Remark,
     Section,
@@ -122,6 +124,7 @@ from oodocs import (
     VerticalSpace,
     badge,
     bold,
+    chemical_formula,
     inline_code,
     text_color,
     cite,
@@ -480,6 +483,57 @@ def test_amsmath_equation_blocks_number_reference_and_validate(tmp_path: Path) -
     assert "(1)" in normalized_html_text
     assert "(2)" in normalized_html_text
     assert "(3)" not in normalized_html_text
+
+
+def test_mhchem_formula_and_reaction_render_to_all_outputs(tmp_path: Path) -> None:
+    from oodocs.chem import ce
+
+    water = chemical_formula("H2O")
+    sulfate = ChemicalFormula("SO4^2-")
+    ammonium = ce("NH4+")
+    reaction = ReactionEquation("2H2 + O2 -> 2H2O")
+    document = Document(
+        "Chemistry Blocks",
+        Paragraph("Water is ", water, "; sulfate is ", sulfate, "; ammonium is ", ammonium, "."),
+        Paragraph("See ", reaction.reference(), "."),
+        reaction,
+    )
+
+    assert ChemicalFormula(r"\ce{CO2}").value == "CO_{2}"
+    assert water.plain_text() == "H2O"
+    assert sulfate.plain_text() == "SO42-"
+    assert ammonium.value == "NH_{4}^{+}"
+    assert build_render_index(document).equation_number(reaction) == 1
+    assert reaction.reference_text(1) == "Reaction 1"
+
+    docx_path = tmp_path / "mhchem.docx"
+    pdf_path = tmp_path / "mhchem.pdf"
+    html_path = tmp_path / "mhchem.html"
+    document.save_docx(docx_path)
+    document.save_pdf(pdf_path)
+    document.save_html(html_path)
+
+    word_document = WordDocument(docx_path)
+    formula_paragraph = next(paragraph for paragraph in word_document.paragraphs if "Water is" in paragraph.text)
+    reaction_paragraph = next(paragraph for paragraph in word_document.paragraphs if "2H2 + O2" in paragraph.text)
+    assert any(run.text == "2" and run.font.subscript for run in formula_paragraph.runs)
+    assert any(run.text == "2-" and run.font.superscript for run in formula_paragraph.runs)
+    assert any(run.text == "+" and run.font.superscript for run in formula_paragraph.runs)
+    assert any(run.text == "2" and run.font.subscript for run in reaction_paragraph.runs)
+
+    pdf_text = "\n".join(page.extract_text() or "" for page in PdfReader(BytesIO(pdf_path.read_bytes())).pages)
+    normalized_pdf_text = " ".join(pdf_text.split())
+    assert "See Reaction 1." in normalized_pdf_text
+    assert "2H2 + O2 -> 2H2O" in normalized_pdf_text
+
+    html_text = html_path.read_text(encoding="utf-8")
+    normalized_html_text = _normalized_html_text(html_path)
+    assert "H<sub>2</sub>O" in html_text
+    assert "SO<sub>4</sub><sup>2-</sup>" in html_text
+    assert "NH<sub>4</sub><sup>+</sup>" in html_text
+    assert "2H<sub>2</sub> + O<sub>2</sub> -&gt; 2H<sub>2</sub>O" in html_text
+    assert "Reaction 1" in normalized_html_text
+    assert "(1)" in normalized_html_text
 
 
 def test_method_style_inline_actions_create_renderable_fragments() -> None:
@@ -1795,6 +1849,8 @@ def test_public_api_prefers_classes_for_structural_nodes() -> None:
     assert hasattr(oodocs, "Footnote")
     assert hasattr(oodocs, "FootnoteList")
     assert hasattr(oodocs, "Equation")
+    assert hasattr(oodocs, "ChemicalFormula")
+    assert hasattr(oodocs, "ReactionEquation")
     assert hasattr(oodocs, "Math")
     assert hasattr(oodocs, "InlineChip")
     assert hasattr(oodocs, "InlineChipStyle")
@@ -1831,6 +1887,7 @@ def test_public_api_prefers_classes_for_structural_nodes() -> None:
     assert hasattr(oodocs, "from_markdown_file")
     assert not hasattr(oodocs, "from_ipynb")
     assert hasattr(oodocs, "math")
+    assert hasattr(oodocs, "chemical_formula")
     assert hasattr(oodocs, "prescript")
     assert hasattr(oodocs, "reference")
     assert hasattr(oodocs, "bold")

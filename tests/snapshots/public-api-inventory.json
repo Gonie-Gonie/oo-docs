@@ -110,6 +110,13 @@
           "qualname": "oodocs.styles.theme.CaptionDefaults"
         },
         {
+          "category": "inline",
+          "kind": "class",
+          "module": "oodocs.components.chemistry",
+          "name": "ChemicalFormula",
+          "qualname": "oodocs.components.chemistry.ChemicalFormula"
+        },
+        {
           "category": "theme",
           "kind": "class",
           "module": "oodocs.styles.theme",
@@ -530,6 +537,13 @@
           "qualname": "oodocs.styles.blocks.ParagraphStyle"
         },
         {
+          "category": "block",
+          "kind": "class",
+          "module": "oodocs.components.blocks",
+          "name": "ReactionEquation",
+          "qualname": "oodocs.components.blocks.ReactionEquation"
+        },
+        {
           "category": "style",
           "kind": "class",
           "module": "oodocs.styles.blocks",
@@ -787,6 +801,13 @@
           "module": "oodocs.workflows",
           "name": "build_source_outputs",
           "qualname": "oodocs.workflows.build_source_outputs"
+        },
+        {
+          "category": "inline",
+          "kind": "function",
+          "module": "oodocs.components.chemistry",
+          "name": "chemical_formula",
+          "qualname": "oodocs.components.chemistry.chemical_formula"
         },
         {
           "category": "inline",
@@ -1467,6 +1488,38 @@
           "module": "oodocs.apidoc.categories",
           "name": "select_uncategorized_api_objects",
           "qualname": "oodocs.apidoc.categories.select_uncategorized_api_objects"
+        }
+      ]
+    },
+    "oodocs.chem": {
+      "exports": [
+        {
+          "category": "inline",
+          "kind": "class",
+          "module": "oodocs.components.chemistry",
+          "name": "ChemicalFormula",
+          "qualname": "oodocs.components.chemistry.ChemicalFormula"
+        },
+        {
+          "category": "block",
+          "kind": "class",
+          "module": "oodocs.components.blocks",
+          "name": "ReactionEquation",
+          "qualname": "oodocs.components.blocks.ReactionEquation"
+        },
+        {
+          "category": "inline",
+          "kind": "function",
+          "module": "oodocs.chem",
+          "name": "ce",
+          "qualname": "oodocs.chem.ce"
+        },
+        {
+          "category": "inline",
+          "kind": "function",
+          "module": "oodocs.components.chemistry",
+          "name": "chemical_formula",
+          "qualname": "oodocs.components.chemistry.chemical_formula"
         }
       ]
     },

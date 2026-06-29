@@ -26,6 +26,7 @@ Attributes:
         numbering.
     CasesEquation: Piecewise equation block with case conditions.
     CellInput: Type alias for values accepted by table cells.
+    ReactionEquation: Displayed chemical reaction equation.
 """
 
 from __future__ import annotations
@@ -37,6 +38,7 @@ import re
 from typing import TYPE_CHECKING, Iterable, Literal, Sequence
 
 from oodocs.components.base import Block, BlockInput, coerce_blocks
+from oodocs.components.chemistry import chemical_formula_math_source, chemical_formula_plain_text
 from oodocs.components.equations import equation_plain_text
 from oodocs.components.inline import InlineInput, Text, coerce_inlines
 from oodocs.core import (
@@ -986,6 +988,97 @@ class CasesEquation(Equation):
             widow_control=widow_control,
             unit=unit,
         )
+
+
+@dataclass(slots=True, init=False)
+class ReactionEquation(Equation):
+    """A displayed chemical reaction equation.
+
+    Args:
+        source: Reaction source such as ``"2H2 + O2 -> 2H2O"``. Chemical
+            formula suffixes render as subscripts, and explicit charges such as
+            ``^2-`` render as superscripts.
+        numbered: Whether the reaction participates in equation numbering.
+        reference_label: Label prefix used by automatic inline references.
+            Defaults to ``"Reaction"``.
+        style: Base paragraph style.
+        text_alignment: Optional text alignment override.
+        space_before: Optional spacing before the reaction.
+        space_after: Optional spacing after the reaction.
+        leading: Optional line spacing.
+        left_indent: Optional left indent.
+        right_indent: Optional right indent.
+        first_line_indent: Optional first-line indent.
+        keep_together: Whether renderers should keep the reaction on one page.
+        keep_with_next: Whether renderers should keep this reaction with the
+            following block.
+        page_break_before: Whether renderers should start a new page first.
+        widow_control: Whether renderers should avoid widowed lines.
+        unit: Unit for length overrides.
+
+    Raises:
+        ValueError: If ``source`` is empty.
+
+    Examples:
+        ```python
+        from oodocs import Document, Paragraph, ReactionEquation
+
+        combustion = ReactionEquation("CH4 + 2O2 -> CO2 + 2H2O")
+        document = Document("Combustion", Paragraph("See ", combustion.reference(), "."), combustion)
+        ```
+    """
+
+    source: str
+
+    def __init__(
+        self,
+        source: str,
+        *,
+        numbered: bool = True,
+        reference_label: str = "Reaction",
+        style: ParagraphStyle | str | None = None,
+        text_alignment: str | None = None,
+        space_before: float | None = None,
+        space_after: float | None = None,
+        leading: float | None = None,
+        left_indent: float | None = None,
+        right_indent: float | None = None,
+        first_line_indent: float | None = None,
+        keep_together: bool | None = None,
+        keep_with_next: bool | None = None,
+        page_break_before: bool | None = None,
+        widow_control: bool | None = None,
+        unit: str | None = None,
+    ) -> None:
+        self.source = chemical_formula_plain_text(source)
+        Equation.__init__(
+            self,
+            chemical_formula_math_source(source),
+            numbered=numbered,
+            reference_label=reference_label,
+            style=style,
+            text_alignment=text_alignment,
+            space_before=space_before,
+            space_after=space_after,
+            leading=leading,
+            left_indent=left_indent,
+            right_indent=right_indent,
+            first_line_indent=first_line_indent,
+            keep_together=keep_together,
+            keep_with_next=keep_with_next,
+            page_break_before=page_break_before,
+            widow_control=widow_control,
+            unit=unit,
+        )
+
+    def plain_text(self) -> str:
+        """Return the reaction as readable plain text.
+
+        Returns:
+            Reaction source with chemistry notation normalized for plain text.
+        """
+
+        return self.source
 
 
 def _normalize_equation_lines(lines: Sequence[str], owner: str) -> tuple[str, ...]:
@@ -2962,6 +3055,7 @@ __all__ = [
     "Paragraph",
     "Part",
     "Proof",
+    "ReactionEquation",
     "Remark",
     "Section",
     "Subsection",
