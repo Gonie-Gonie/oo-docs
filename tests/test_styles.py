@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 
 from oodocs import (
@@ -13,6 +15,7 @@ from oodocs import (
     HeadingNumbering,
     InlineChipStyle,
     ListStyle,
+    LocaleDefaults,
     PageNumberDefaults,
     Padding,
     ParagraphStyle,
@@ -223,6 +226,28 @@ def test_theme_resolves_generated_page_titles() -> None:
 
     with pytest.raises(ValueError, match="unsupported generated content kind"):
         theme.resolve_generated_page_title("appendix")
+
+
+def test_theme_from_locale_resolves_korean_labels_dates_and_font_guidance() -> None:
+    theme = Theme.from_locale("ko-KR")
+
+    assert theme.resolve_language_tag() == "ko-KR"
+    assert theme.resolve_body_font() == "Malgun Gothic"
+    assert theme.resolve_monospace_font() == "D2Coding"
+    assert theme.resolve_caption_label("table", "caption") == "표"
+    assert theme.resolve_caption_label("figure", "reference") == "그림"
+    assert theme.resolve_generated_page_title("table_of_contents") == "목차"
+    assert theme.resolve_generated_page_title("reference_list") == "참고문헌"
+    assert theme.resolve_generated_page_title("glossary_list") == "용어집"
+    assert theme.resolve_glossary_headers() == ("용어", "정의")
+    assert theme.format_date(date(2026, 6, 29)) == "2026. 6. 29."
+    assert theme.format_date("2026-06-29") == "2026. 6. 29."
+    assert "Malgun Gothic" in theme.pdf_font_fallback_guide()
+
+    with pytest.raises(ValueError, match="unsupported built-in locale"):
+        LocaleDefaults.from_locale("fr-FR")
+    with pytest.raises(TypeError, match="Theme.locale"):
+        Theme(locale=object())  # type: ignore[arg-type]
 
 
 def test_stylesheet_resolves_prefixed_names_and_roundtrips() -> None:

@@ -78,6 +78,7 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "CaptionDefaults",
         "CitationDefaults",
         "GeneratedContentDefaults",
+        "LocaleDefaults",
         "CropBox",
         "PageNumberDefaults",
         "RunInTitleStyle",
@@ -206,6 +207,7 @@ def test_generated_content_defaults_use_document_language_field_names() -> None:
         "comment_list_title",
         "footnote_list_title",
         "reference_list_title",
+        "glossary_list_title",
         "table_of_contents_title",
         "generated_heading_level",
         "generated_content_page_breaks",
@@ -236,6 +238,7 @@ def test_theme_constructor_uses_grouped_defaults_only() -> None:
         "captions",
         "citations",
         "generated_content",
+        "locale",
         "page_numbers",
         "title_matter",
         "blocks",
@@ -279,6 +282,7 @@ def test_theme_resolver_methods_use_explicit_resolve_names() -> None:
         "resolve_paragraph_text_alignment",
         "resolve_caption_label",
         "resolve_generated_page_title",
+        "resolve_language_tag",
         "resolve_run_in_title_style",
     }
 

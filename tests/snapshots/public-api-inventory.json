@@ -425,6 +425,13 @@
           "qualname": "oodocs.styles.theme.LinkDefaults"
         },
         {
+          "category": "theme",
+          "kind": "class",
+          "module": "oodocs.styles.theme",
+          "name": "LocaleDefaults",
+          "qualname": "oodocs.styles.theme.LocaleDefaults"
+        },
+        {
           "category": "style",
           "kind": "class",
           "module": "oodocs.styles.counter",
@@ -1837,6 +1844,13 @@
           "module": "oodocs.styles.theme",
           "name": "LinkDefaults",
           "qualname": "oodocs.styles.theme.LinkDefaults"
+        },
+        {
+          "category": "theme",
+          "kind": "class",
+          "module": "oodocs.styles.theme",
+          "name": "LocaleDefaults",
+          "qualname": "oodocs.styles.theme.LocaleDefaults"
         },
         {
           "category": "style",

@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import date as date_type
+from datetime import datetime
 from typing import Literal, Sequence
 
 from oodocs.components.references import (
@@ -260,6 +262,7 @@ class GeneratedContentDefaults:
         comment_list_title: Default title for generated comment lists.
         footnote_list_title: Default title for generated footnote lists.
         reference_list_title: Default title for generated reference lists.
+        glossary_list_title: Default title for generated glossary lists.
         table_of_contents_title: Default title for generated tables of contents.
         generated_heading_level: Heading level used by generated content.
         generated_content_page_breaks: Whether generated content starts on new
@@ -280,9 +283,183 @@ class GeneratedContentDefaults:
     comment_list_title: str = "Comments"
     footnote_list_title: str = "Footnotes"
     reference_list_title: str = "References"
+    glossary_list_title: str = "Glossary"
     table_of_contents_title: str = "Contents"
     generated_heading_level: int = 2
     generated_content_page_breaks: bool = True
+
+
+def _normalize_language_tag(value: str) -> str:
+    normalized = str(value).strip().replace("_", "-")
+    if not normalized:
+        raise ValueError("language_tag must not be empty")
+    aliases = {
+        "en": "en-US",
+        "en-us": "en-US",
+        "ko": "ko-KR",
+        "ko-kr": "ko-KR",
+    }
+    alias = aliases.get(normalized.lower())
+    if alias is not None:
+        return alias
+    pieces = [piece for piece in normalized.split("-") if piece]
+    if not pieces:
+        raise ValueError("language_tag must not be empty")
+    language = pieces[0].lower()
+    tail = [
+        piece.upper() if len(piece) == 2 and piece.isalpha() else piece
+        for piece in pieces[1:]
+    ]
+    return "-".join([language, *tail])
+
+
+@dataclass(slots=True)
+class LocaleDefaults:
+    """Grouped document language, localized labels, and date defaults.
+
+    Args:
+        language_tag: BCP 47-style document language tag, such as
+            ``"en-US"`` or ``"ko-KR"``.
+        date_format: ``str.format`` template used by ``format_date``.
+        captions: Localized caption and reference labels.
+        generated_content: Localized generated-page titles.
+        glossary_headers: Localized glossary table headers.
+        typography: Optional locale-specific font defaults.
+        pdf_font_fallbacks: Human-readable font family suggestions for PDF
+            output when the locale needs fonts outside ReportLab's built-ins.
+
+    Examples:
+        ```python
+        from datetime import date
+        from oodocs import Theme
+
+        theme = Theme.from_locale("ko-KR")
+        assert theme.format_date(date(2026, 6, 29)) == "2026. 6. 29."
+        ```
+    """
+
+    language_tag: str = "en-US"
+    date_format: str = "{month_name} {day}, {year}"
+    captions: CaptionDefaults = field(default_factory=CaptionDefaults)
+    generated_content: GeneratedContentDefaults = field(default_factory=GeneratedContentDefaults)
+    glossary_headers: tuple[str, str] = ("Term", "Definition")
+    typography: TypographyDefaults | None = None
+    pdf_font_fallbacks: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        self.language_tag = _normalize_language_tag(self.language_tag)
+        if not isinstance(self.date_format, str) or not self.date_format.strip():
+            raise ValueError("LocaleDefaults.date_format must not be empty")
+        if not isinstance(self.captions, CaptionDefaults):
+            raise TypeError("LocaleDefaults.captions must be a CaptionDefaults")
+        if not isinstance(self.generated_content, GeneratedContentDefaults):
+            raise TypeError(
+                "LocaleDefaults.generated_content must be a GeneratedContentDefaults"
+            )
+        if len(self.glossary_headers) != 2:
+            raise ValueError("LocaleDefaults.glossary_headers must contain two labels")
+        self.glossary_headers = (
+            str(self.glossary_headers[0]),
+            str(self.glossary_headers[1]),
+        )
+        if self.typography is not None and not isinstance(
+            self.typography,
+            TypographyDefaults,
+        ):
+            raise TypeError("LocaleDefaults.typography must be a TypographyDefaults")
+        self.pdf_font_fallbacks = tuple(
+            fallback
+            for fallback in (str(item).strip() for item in self.pdf_font_fallbacks)
+            if fallback
+        )
+
+    @classmethod
+    def from_locale(cls, language_tag: str) -> LocaleDefaults:
+        """Return a built-in locale bundle.
+
+        Args:
+            language_tag: Locale tag. Supported built-ins are ``"en-US"`` and
+                ``"ko-KR"``; ``"en"`` and ``"ko"`` are accepted aliases.
+
+        Returns:
+            Locale defaults for the requested locale.
+
+        Raises:
+            ValueError: If the locale is not built in.
+        """
+
+        normalized = _normalize_language_tag(language_tag)
+        if normalized == "en-US":
+            return cls()
+        if normalized == "ko-KR":
+            return cls(
+                language_tag="ko-KR",
+                date_format="{year}. {month}. {day}.",
+                captions=CaptionDefaults(table_label="표", figure_label="그림"),
+                generated_content=GeneratedContentDefaults(
+                    list_of_tables_title="표 목록",
+                    list_of_figures_title="그림 목록",
+                    list_of_algorithms_title="알고리즘 목록",
+                    comment_list_title="주석",
+                    footnote_list_title="각주",
+                    reference_list_title="참고문헌",
+                    glossary_list_title="용어집",
+                    table_of_contents_title="목차",
+                ),
+                glossary_headers=("용어", "정의"),
+                typography=TypographyDefaults(
+                    body_font_name="Malgun Gothic",
+                    monospace_font_name="D2Coding",
+                ),
+                pdf_font_fallbacks=(
+                    "Malgun Gothic",
+                    "NanumGothic",
+                    "Noto Sans CJK KR",
+                ),
+            )
+        raise ValueError(f"unsupported built-in locale: {language_tag!r}")
+
+    def format_date(self, value: date_type | datetime | str) -> str:
+        """Format a date with this locale's date template.
+
+        Args:
+            value: ``date``, ``datetime``, or ISO ``YYYY-MM-DD`` string.
+
+        Returns:
+            Localized date string.
+        """
+
+        if isinstance(value, datetime):
+            date_value = value.date()
+        elif isinstance(value, date_type):
+            date_value = value
+        elif isinstance(value, str):
+            try:
+                date_value = date_type.fromisoformat(value)
+            except ValueError:
+                date_value = datetime.fromisoformat(value).date()
+        else:
+            raise TypeError("format_date value must be date, datetime, or ISO date text")
+        month_names = (
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December",
+        )
+        return self.date_format.format(
+            year=date_value.year,
+            month=date_value.month,
+            day=date_value.day,
+            month_name=month_names[date_value.month - 1],
+        )
 
 
 @dataclass(slots=True)
@@ -465,6 +642,7 @@ class Theme:
         citations: Optional citation defaults group.
         links: Optional hyperlink defaults group.
         generated_content: Optional generated-content defaults group.
+        locale: Optional document language and localization defaults group.
         page_numbers: Optional page-number defaults group.
         title_matter: Optional title-matter defaults group.
         blocks: Optional block defaults group.
@@ -476,6 +654,7 @@ class Theme:
         citations: Resolved citation defaults group.
         links: Resolved hyperlink defaults group.
         generated_content: Resolved generated-content defaults group.
+        locale: Resolved document language and localization defaults group.
         page_numbers: Resolved page-number defaults group.
         title_matter: Resolved title-matter defaults group.
         blocks: Resolved block defaults group.
@@ -519,8 +698,8 @@ class Theme:
 
     See Also:
         ``TypographyDefaults``, ``CaptionDefaults``, ``CitationDefaults``,
-        ``LinkDefaults``, ``GeneratedContentDefaults``, ``PageNumberDefaults``,
-        ``TitleMatterDefaults``, and ``BlockDefaults`` for grouped
+        ``LinkDefaults``, ``GeneratedContentDefaults``, ``LocaleDefaults``,
+        ``PageNumberDefaults``, ``TitleMatterDefaults``, and ``BlockDefaults`` for grouped
         configuration.
     """
 
@@ -529,6 +708,7 @@ class Theme:
     citations: CitationDefaults
     links: LinkDefaults
     generated_content: GeneratedContentDefaults
+    locale: LocaleDefaults
     page_numbers: PageNumberDefaults
     title_matter: TitleMatterDefaults
     blocks: BlockDefaults
@@ -542,11 +722,21 @@ class Theme:
         citations: CitationDefaults | None = None,
         links: LinkDefaults | None = None,
         generated_content: GeneratedContentDefaults | None = None,
+        locale: LocaleDefaults | str | None = None,
         page_numbers: PageNumberDefaults | None = None,
         title_matter: TitleMatterDefaults | None = None,
         blocks: BlockDefaults | None = None,
         stylesheet: StyleSheet | None = None,
     ) -> None:
+        if locale is None:
+            locale_defaults = LocaleDefaults()
+        elif isinstance(locale, str):
+            locale_defaults = LocaleDefaults.from_locale(locale)
+        elif isinstance(locale, LocaleDefaults):
+            locale_defaults = locale
+        else:
+            raise TypeError("Theme.locale must be a LocaleDefaults")
+
         expected_types = {
             "typography": (typography, TypographyDefaults),
             "captions": (captions, CaptionDefaults),
@@ -564,15 +754,38 @@ class Theme:
                     f"Theme.{argument_name} must be a {expected_type.__name__}"
                 )
 
-        self.typography = typography or TypographyDefaults()
-        self.captions = captions or CaptionDefaults()
+        self.locale = locale_defaults
+        self.typography = typography or self.locale.typography or TypographyDefaults()
+        self.captions = captions or self.locale.captions
         self.citations = citations or CitationDefaults()
         self.links = links or LinkDefaults()
-        self.generated_content = generated_content or GeneratedContentDefaults()
+        self.generated_content = generated_content or self.locale.generated_content
         self.page_numbers = page_numbers or PageNumberDefaults()
         self.title_matter = title_matter or TitleMatterDefaults()
         self.blocks = blocks or BlockDefaults()
         self.stylesheet = stylesheet or StyleSheet.default()
+
+    @classmethod
+    def from_locale(cls, language_tag: str, **overrides: object) -> Theme:
+        """Create a theme from a built-in locale bundle.
+
+        Args:
+            language_tag: Built-in locale tag such as ``"en-US"`` or
+                ``"ko-KR"``.
+            **overrides: Any regular ``Theme`` keyword overrides.
+
+        Returns:
+            Theme with localized caption labels, generated-page titles,
+            glossary labels, date formatting, and locale typography.
+
+        Examples:
+            ```python
+            theme = Theme.from_locale("ko-KR")
+            assert theme.resolve_language_tag() == "ko-KR"
+            ```
+        """
+
+        return cls(locale=LocaleDefaults.from_locale(language_tag), **overrides)
 
     def resolve_body_font(self) -> str:
         """Return the document-wide proportional font name.
@@ -590,6 +803,15 @@ class Theme:
         """
 
         return self.typography.body_font_name
+
+    def resolve_language_tag(self) -> str:
+        """Return the document language tag used by renderers.
+
+        Returns:
+            BCP 47-style language tag such as ``"en-US"`` or ``"ko-KR"``.
+        """
+
+        return self.locale.language_tag
 
     def resolve_monospace_font(self) -> str:
         """Return the document-wide monospace font name.
@@ -819,6 +1041,7 @@ class Theme:
             "comment_list",
             "footnote_list",
             "reference_list",
+            "glossary_list",
             "table_of_contents",
         ],
     ) -> str:
@@ -829,7 +1052,8 @@ class Theme:
                 ``"list_of_tables"``, ``"list_of_figures"``,
                 ``"list_of_algorithms"``,
                 ``"comment_list"``, ``"footnote_list"``,
-                ``"reference_list"``, and ``"table_of_contents"``.
+                ``"reference_list"``, ``"glossary_list"``, and
+                ``"table_of_contents"``.
 
         Returns:
             Default title text for the generated content block.
@@ -855,12 +1079,37 @@ class Theme:
             "comment_list": self.generated_content.comment_list_title,
             "footnote_list": self.generated_content.footnote_list_title,
             "reference_list": self.generated_content.reference_list_title,
+            "glossary_list": self.generated_content.glossary_list_title,
             "table_of_contents": self.generated_content.table_of_contents_title,
         }
         try:
             return titles[kind]
         except KeyError as exc:
             raise ValueError(f"unsupported generated content kind: {kind!r}") from exc
+
+    def resolve_glossary_headers(self) -> tuple[str, str]:
+        """Return default glossary table headers for the active locale."""
+
+        return self.locale.glossary_headers
+
+    def format_date(self, value: date_type | datetime | str) -> str:
+        """Format a date using the active locale defaults."""
+
+        return self.locale.format_date(value)
+
+    def pdf_font_fallback_guide(self) -> str:
+        """Return a concise PDF font fallback guide for the active locale."""
+
+        if not self.locale.pdf_font_fallbacks:
+            return (
+                "PDF output uses the theme typography fonts and ReportLab's "
+                "built-in fallbacks."
+            )
+        fallback_list = ", ".join(self.locale.pdf_font_fallbacks)
+        return (
+            f"PDF output for {self.locale.language_tag} should use a font with "
+            f"script coverage, for example: {fallback_list}."
+        )
 
     def caption_size(self) -> float:
         """Return the effective caption font size.
@@ -1035,6 +1284,7 @@ __all__ = [
     "HeadingNumbering",
     "LinkDefaults",
     "ListStyle",
+    "LocaleDefaults",
     "PageNumberDefaults",
     "ParagraphStyle",
     "RunInTitleStyle",

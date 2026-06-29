@@ -215,6 +215,18 @@ SYSTEM_FONT_VARIANTS = {
         (False, True): ["C:/Windows/Fonts/ariali.ttf"],
         (True, True): ["C:/Windows/Fonts/arialbi.ttf"],
     },
+    "Malgun Gothic": {
+        (False, False): ["C:/Windows/Fonts/malgun.ttf"],
+        (True, False): ["C:/Windows/Fonts/malgunbd.ttf"],
+        (False, True): ["C:/Windows/Fonts/malgun.ttf"],
+        (True, True): ["C:/Windows/Fonts/malgunbd.ttf"],
+    },
+    "D2Coding": {
+        (False, False): ["C:/Windows/Fonts/D2Coding.ttf"],
+        (True, False): ["C:/Windows/Fonts/D2CodingBold.ttf"],
+        (False, True): ["C:/Windows/Fonts/D2Coding.ttf"],
+        (True, True): ["C:/Windows/Fonts/D2CodingBold.ttf"],
+    },
 }
 
 

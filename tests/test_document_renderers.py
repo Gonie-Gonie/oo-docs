@@ -1468,6 +1468,35 @@ def test_glossary_acronym_and_generated_list_render_to_outputs(tmp_path: Path) -
     assert "empty-glossary-list" in {issue.code for issue in empty_result.warnings}
 
 
+def test_locale_theme_localizes_html_language_and_generated_labels(tmp_path: Path) -> None:
+    glossary = Glossary()
+    glossary.term("api", "Application programming interface", term="API")
+    table = Table(["항목"], [["값"]], caption="측정값")
+    source = CitationSource("Locale reference", key="locale2026", authors=("Kim",), year="2026")
+    document = Document(
+        "지역화 문서",
+        Paragraph("본문 ", cite("locale2026"), "."),
+        table,
+        ListOfTables(),
+        GlossaryList(glossary),
+        ReferenceList(),
+        settings=DocumentSettings(theme=Theme.from_locale("ko-KR")),
+        citations=[source],
+    )
+    html_path = tmp_path / "locale.html"
+
+    document.save_html(html_path)
+
+    html_markup = html_path.read_text(encoding="utf-8")
+    normalized_html_text = _normalized_html_text(html_path)
+    assert '<html lang="ko-KR">' in html_markup
+    assert "표 1. 측정값" in normalized_html_text
+    assert "표 목록" in normalized_html_text
+    assert "용어집" in normalized_html_text
+    assert "용어 정의" in normalized_html_text
+    assert "참고문헌" in normalized_html_text
+
+
 def test_heading_style_renders_across_outputs(tmp_path: Path) -> None:
     heading_style = HeadingStyle(
         text_style=TextStyle(

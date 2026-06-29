@@ -165,10 +165,11 @@ class HtmlRenderer:
         body_parts.append("</div>")
 
         metadata_title = settings.resolved_metadata_title(document.title)
+        language_tag = escape(settings.theme.resolve_language_tag(), quote=True)
         html = "\n".join(
             [
                 "<!DOCTYPE html>",
-                '<html lang="en">',
+                f'<html lang="{language_tag}">',
                 "<head>",
                 '  <meta charset="utf-8" />',
                 '  <meta name="viewport" content="width=device-width, initial-scale=1" />',

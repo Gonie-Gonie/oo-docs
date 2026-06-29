@@ -969,13 +969,14 @@ class DocxRenderer:
         if description:
             properties.comments = description
         self._enable_field_updates(word_document)
+        self._configure_document_language(word_document, theme)
 
         normal_style = word_document.styles["Normal"]
-        normal_style.font.name = theme.resolve_body_font()
+        self._set_style_font_family(normal_style, theme.resolve_body_font())
         normal_style.font.size = Pt(theme.typography.body_font_size)
         normal_style.font.color.rgb = RGBColor(0, 0, 0)
         footer_style = word_document.styles["Footer"]
-        footer_style.font.name = theme.resolve_body_font()
+        self._set_style_font_family(footer_style, theme.resolve_body_font())
         footer_style.font.size = Pt(theme.page_numbers.page_number_font_size)
         footer_style.font.color.rgb = RGBColor(0, 0, 0)
         for section in word_document.sections:
@@ -1010,6 +1011,33 @@ class DocxRenderer:
             update_fields = OxmlElement("w:updateFields")
             settings.append(update_fields)
         update_fields.set(qn("w:val"), "true")
+
+    def _configure_document_language(
+        self,
+        word_document: WordDocument,
+        theme: Theme,
+    ) -> None:
+        language_tag = theme.resolve_language_tag()
+        styles_element = word_document.styles.element
+        doc_defaults = styles_element.find(qn("w:docDefaults"))
+        if doc_defaults is None:
+            doc_defaults = OxmlElement("w:docDefaults")
+            styles_element.insert(0, doc_defaults)
+        run_properties_default = doc_defaults.find(qn("w:rPrDefault"))
+        if run_properties_default is None:
+            run_properties_default = OxmlElement("w:rPrDefault")
+            doc_defaults.append(run_properties_default)
+        run_properties = run_properties_default.find(qn("w:rPr"))
+        if run_properties is None:
+            run_properties = OxmlElement("w:rPr")
+            run_properties_default.append(run_properties)
+        language = run_properties.find(qn("w:lang"))
+        if language is None:
+            language = OxmlElement("w:lang")
+            run_properties.append(language)
+        language.set(qn("w:val"), language_tag)
+        language.set(qn("w:eastAsia"), language_tag)
+        language.set(qn("w:bidi"), language_tag)
 
     def _render_block(
         self,
@@ -1731,6 +1759,18 @@ class DocxRenderer:
                 (False, True): "timesi.ttf",
                 (True, True): "timesbi.ttf",
             },
+            "malgun gothic": {
+                (False, False): "malgun.ttf",
+                (True, False): "malgunbd.ttf",
+                (False, True): "malgun.ttf",
+                (True, True): "malgunbd.ttf",
+            },
+            "d2coding": {
+                (False, False): "D2Coding.ttf",
+                (True, False): "D2CodingBold.ttf",
+                (False, True): "D2Coding.ttf",
+                (True, True): "D2CodingBold.ttf",
+            },
         }
         candidates: list[str] = []
         if key in font_files:
@@ -1790,6 +1830,8 @@ class DocxRenderer:
             fonts = OxmlElement("w:rFonts")
             fonts.set(qn("w:ascii"), style.font_name)
             fonts.set(qn("w:hAnsi"), style.font_name)
+            fonts.set(qn("w:eastAsia"), style.font_name)
+            fonts.set(qn("w:cs"), style.font_name)
             run_properties.append(fonts)
         font_size = style.font_size if style.font_size is not None else default_size
         if font_size is not None:
@@ -1901,7 +1943,7 @@ class DocxRenderer:
     def _apply_run_style(self, run: object, style: object, *, default_size: float | None = None) -> None:
         font = run.font
         if style.font_name:
-            font.name = style.font_name
+            self._set_run_font_family(run, style.font_name)
         if style.font_size is not None:
             font.size = Pt(style.font_size)
         elif default_size is not None:
@@ -3336,13 +3378,34 @@ class DocxRenderer:
         text_color: str | None = None,
     ) -> None:
         style = word_document.styles[style_name]
-        style.font.name = font_name
+        self._set_style_font_family(style, font_name)
         style.font.size = Pt(font_size)
         style.font.bold = bold
         style.font.italic = italic
         style.font.color.rgb = (
             RGBColor.from_string(text_color) if text_color is not None else RGBColor(0, 0, 0)
         )
+
+    def _set_style_font_family(self, style: object, font_name: str) -> None:
+        style.font.name = font_name
+        run_properties = style.element.find(qn("w:rPr"))
+        if run_properties is None:
+            run_properties = OxmlElement("w:rPr")
+            style.element.append(run_properties)
+        self._set_rfonts(run_properties, font_name)
+
+    def _set_run_font_family(self, run: object, font_name: str) -> None:
+        run.font.name = font_name
+        run_properties = run._r.get_or_add_rPr()
+        self._set_rfonts(run_properties, font_name)
+
+    def _set_rfonts(self, run_properties: object, font_name: str) -> None:
+        fonts = run_properties.find(qn("w:rFonts"))
+        if fonts is None:
+            fonts = OxmlElement("w:rFonts")
+            run_properties.append(fonts)
+        for slot in ("ascii", "hAnsi", "eastAsia", "cs"):
+            fonts.set(qn(f"w:{slot}"), font_name)
 
     def _resolve_fragment_text(self, fragment: Text, theme: Theme | None, render_index: RenderIndex | None) -> str:
         if isinstance(fragment, _BlockReference):
