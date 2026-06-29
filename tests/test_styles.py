@@ -11,6 +11,7 @@ from oodocs import (
     CaptionDefaults,
     CounterStyle,
     GeneratedContentDefaults,
+    HeaderFooterDefaults,
     HeadingStyle,
     HeadingNumbering,
     InlineChipStyle,
@@ -248,6 +249,31 @@ def test_theme_from_locale_resolves_korean_labels_dates_and_font_guidance() -> N
         LocaleDefaults.from_locale("fr-FR")
     with pytest.raises(TypeError, match="Theme.locale"):
         Theme(locale=object())  # type: ignore[arg-type]
+
+
+def test_header_footer_defaults_resolve_templates_and_legacy_page_numbers() -> None:
+    header_footer = HeaderFooterDefaults(
+        header_left="{chapter}",
+        footer_center="{page}",
+        first_footer_center="cover {page}",
+        different_first_page=True,
+    )
+    assert header_footer.content_for("header", "left") == "{chapter}"
+    assert header_footer.content_for("footer", "center", page_kind="first") == "cover {page}"
+
+    theme = Theme(header_footer=header_footer)
+    assert theme.uses_header_footer()
+    assert theme.format_header_footer_text(
+        theme.resolve_header_footer_template("footer", "center"),
+        page_number=3,
+        title="Report",
+        chapter="Methods",
+        section="Scope",
+    ) == "3"
+
+    legacy = Theme(page_numbers=PageNumberDefaults(show_page_numbers=True))
+    assert legacy.uses_header_footer()
+    assert legacy.resolve_header_footer_template("footer", "center") == "{page}"
 
 
 def test_stylesheet_resolves_prefixed_names_and_roundtrips() -> None:

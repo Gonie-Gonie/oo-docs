@@ -72,6 +72,7 @@ from oodocs import (
     Glossary,
     GlossaryList,
     GlossaryTerm,
+    HeaderFooterDefaults,
     HeadingStyle,
     HeadingNumbering,
     ImageBox,
@@ -2311,6 +2312,63 @@ def test_page_items_render_without_affecting_document_flow(tmp_path: Path) -> No
     assert "Anchored to the named frame shape." in html_text
     assert html_text.count("data:image/png;base64,") == 1
     assert "oodocs-sheet" not in html_text
+
+
+def test_header_footer_templates_render_across_outputs(tmp_path: Path) -> None:
+    document = Document(
+        "Header Footer",
+        Chapter(
+            "Overview",
+            Section("Scope", Paragraph("Body text.")),
+        ),
+        settings=DocumentSettings(
+            theme=Theme(
+                header_footer=HeaderFooterDefaults(
+                    header_left="{chapter}",
+                    header_right="{page}",
+                    footer_center="{title}",
+                    first_header_center="First {title}",
+                    first_footer_center="Cover {page}",
+                    even_header_left="Even {section}",
+                    different_first_page=True,
+                    different_odd_even_pages=True,
+                )
+            )
+        ),
+    )
+
+    docx_path = tmp_path / "header-footer.docx"
+    pdf_path = tmp_path / "header-footer.pdf"
+    html_path = tmp_path / "header-footer.html"
+    document.save_docx(docx_path)
+    document.save_pdf(pdf_path)
+    document.save_html(html_path)
+
+    word_document = WordDocument(docx_path)
+    settings_xml = word_document.settings.element.xml
+    header_xml = word_document.sections[0].header.paragraphs[0]._p.xml
+    first_header_xml = word_document.sections[0].first_page_header.paragraphs[0]._p.xml
+    first_footer_xml = word_document.sections[0].first_page_footer.paragraphs[0]._p.xml
+    even_header_xml = word_document.sections[0].even_page_header.paragraphs[0]._p.xml
+
+    assert "evenAndOddHeaders" in settings_xml
+    assert 'STYLEREF "Heading 1"' in header_xml
+    assert " PAGE " in header_xml
+    assert "First " in first_header_xml
+    assert "Header Footer" in first_header_xml
+    assert "Cover " in first_footer_xml
+    assert " PAGE " in first_footer_xml
+    assert 'STYLEREF "Heading 2"' in even_header_xml
+
+    pdf_text = "\n".join(page.extract_text() or "" for page in PdfReader(BytesIO(pdf_path.read_bytes())).pages)
+    assert "First Header Footer" in pdf_text
+    assert "Cover 1" in pdf_text
+
+    html_text = html_path.read_text(encoding="utf-8")
+    assert 'class="oodocs-header-footer"' in html_text
+    assert "First Header Footer" in html_text
+    assert "Cover 1" in html_text
+    assert "@media print" in html_text
 
 
 def test_positioned_items_can_render_inline_like_text(tmp_path: Path) -> None:

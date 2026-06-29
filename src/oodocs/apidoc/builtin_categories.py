@@ -205,6 +205,7 @@ OODocs_API_CATEGORIES: tuple[ApiCategory, ...] = (
             "oodocs.GeneratedContentDefaults",
             "oodocs.LocaleDefaults",
             "oodocs.PageNumberDefaults",
+            "oodocs.HeaderFooterDefaults",
             "oodocs.TitleMatterDefaults",
             "oodocs.BlockDefaults",
             "oodocs.settings.*",

@@ -130,6 +130,7 @@ class HtmlRenderer:
         body_parts = [
             '<div class="oodocs-page-frame">',
             self._page_items_html(document, context),
+            self._header_footer_html(document, context),
             '<div class="oodocs-document">',
             self._render_title_matter(
                 document,
@@ -1842,6 +1843,57 @@ class HtmlRenderer:
             + "</div>"
         )
 
+    def _header_footer_html(self, document: Document, context: HtmlRenderContext) -> str:
+        theme = context.theme
+        if not theme.uses_header_footer():
+            return ""
+        header_footer = theme.effective_header_footer()
+        page_kind = "first" if header_footer.different_first_page else "default"
+        chapter, section = self._static_running_titles(context.render_index)
+        regions = []
+        for region in ("header", "footer"):
+            slots = []
+            for position in ("left", "center", "right"):
+                template = theme.resolve_header_footer_template(
+                    region,  # type: ignore[arg-type]
+                    position,  # type: ignore[arg-type]
+                    page_kind=page_kind,  # type: ignore[arg-type]
+                )
+                text = theme.format_header_footer_text(
+                    template,
+                    page_number=1,
+                    title=document.title,
+                    chapter=chapter,
+                    section=section,
+                )
+                slots.append(
+                    f'<span class="oodocs-header-footer-{position}">'
+                    f"{escape(text)}</span>"
+                )
+            regions.append(
+                f'<div class="oodocs-page-{region}">'
+                + "".join(slots)
+                + "</div>"
+            )
+        return (
+            '<div class="oodocs-header-footer" aria-hidden="true">'
+            + "".join(regions)
+            + "</div>"
+        )
+
+    def _static_running_titles(self, render_index: RenderIndex) -> tuple[str, str]:
+        chapter = ""
+        section = ""
+        for entry in render_index.headings:
+            title = "".join(fragment.plain_text() for fragment in entry.title)
+            if entry.level == 1 and not chapter:
+                chapter = title
+            elif entry.level > 1 and not section:
+                section = title
+            if chapter and section:
+                break
+        return chapter, section
+
     def _inline_or_page_box(
         self,
         item: PositionedItem,
@@ -2755,6 +2807,42 @@ body {{
   width: {page_width:.2f}in;
   height: {settings.page_height_in_inches():.2f}in;
   pointer-events: none;
+}}
+.oodocs-header-footer {{
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  pointer-events: none;
+  color: #4b5563;
+  font-size: {theme.resolve_header_footer_font_size():.1f}pt;
+  line-height: 1.2;
+}}
+.oodocs-page-header,
+.oodocs-page-footer {{
+  position: absolute;
+  left: {margin_left:.2f}in;
+  right: {margin_right:.2f}in;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.12in;
+}}
+.oodocs-page-header {{
+  top: 0.22in;
+}}
+.oodocs-page-footer {{
+  top: {max(settings.page_height_in_inches() - 0.55, 0):.2f}in;
+}}
+.oodocs-header-footer-center {{
+  text-align: center;
+}}
+.oodocs-header-footer-right {{
+  text-align: right;
+}}
+@media print {{
+  .oodocs-header-footer {{
+    position: fixed;
+    inset: 0 0 auto 0;
+  }}
 }}
 .oodocs-title-matter,
 .oodocs-front-matter,

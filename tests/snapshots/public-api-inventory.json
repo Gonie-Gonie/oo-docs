@@ -327,6 +327,13 @@
           "qualname": "oodocs.styles.theme.GeneratedContentDefaults"
         },
         {
+          "category": "theme",
+          "kind": "class",
+          "module": "oodocs.styles.theme",
+          "name": "HeaderFooterDefaults",
+          "qualname": "oodocs.styles.theme.HeaderFooterDefaults"
+        },
+        {
           "category": "document-core",
           "kind": "class",
           "module": "oodocs.components.glossary",
@@ -1823,6 +1830,13 @@
           "module": "oodocs.styles.theme",
           "name": "GeneratedContentDefaults",
           "qualname": "oodocs.styles.theme.GeneratedContentDefaults"
+        },
+        {
+          "category": "theme",
+          "kind": "class",
+          "module": "oodocs.styles.theme",
+          "name": "HeaderFooterDefaults",
+          "qualname": "oodocs.styles.theme.HeaderFooterDefaults"
         },
         {
           "category": "style",

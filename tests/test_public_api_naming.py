@@ -78,6 +78,7 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "CaptionDefaults",
         "CitationDefaults",
         "GeneratedContentDefaults",
+        "HeaderFooterDefaults",
         "LocaleDefaults",
         "CropBox",
         "PageNumberDefaults",
@@ -240,6 +241,7 @@ def test_theme_constructor_uses_grouped_defaults_only() -> None:
         "generated_content",
         "locale",
         "page_numbers",
+        "header_footer",
         "title_matter",
         "blocks",
     }
@@ -282,6 +284,7 @@ def test_theme_resolver_methods_use_explicit_resolve_names() -> None:
         "resolve_paragraph_text_alignment",
         "resolve_caption_label",
         "resolve_generated_page_title",
+        "resolve_header_footer_template",
         "resolve_language_tag",
         "resolve_run_in_title_style",
     }

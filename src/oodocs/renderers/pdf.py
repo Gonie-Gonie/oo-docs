@@ -786,7 +786,7 @@ class PdfRenderer:
         )
         if self._story_has_indexing_flowable(story):
             pdf.multiBuild(story, onFirstPage=page_callback, onLaterPages=page_callback)
-        elif settings.theme.page_numbers.show_page_numbers or settings.theme.blocks.page_background_color != "FFFFFF":
+        elif settings.theme.uses_header_footer() or settings.theme.blocks.page_background_color != "FFFFFF":
             pdf.build(story, onFirstPage=page_callback, onLaterPages=page_callback)
         else:
             pdf.build(story)
@@ -4235,6 +4235,7 @@ class PdfRenderer:
     ):
         theme = document.settings.theme
         font_name = self._resolve_font(theme.resolve_body_font(), False, False)
+        running_chapter, running_section = self._static_running_titles(context.render_index)
 
         def draw_page(canvas: object, doc: object) -> None:
             canvas.saveState()
@@ -4242,10 +4243,10 @@ class PdfRenderer:
                 canvas.setFillColor(colors.HexColor(f"#{theme.blocks.page_background_color}"))
                 canvas.rect(0, 0, doc.pagesize[0], doc.pagesize[1], fill=1, stroke=0)
             self._draw_page_items(canvas, document, context)
-            if not theme.page_numbers.show_page_numbers:
+            if not theme.uses_header_footer():
                 canvas.restoreState()
                 return
-            canvas.setFont(font_name, theme.page_numbers.page_number_font_size)
+            canvas.setFont(font_name, theme.resolve_header_footer_font_size())
             current_page = canvas.getPageNumber()
             main_start_page = getattr(doc, "main_matter_start_page", None)
             is_front_matter = has_front_matter and (
@@ -4256,20 +4257,97 @@ class PdfRenderer:
                 if is_front_matter or main_start_page is None
                 else current_page - main_start_page + 1
             )
-            text = theme.format_page_number(
-                logical_page,
-                front_matter=is_front_matter,
+            page_kind = self._header_footer_page_kind(
+                current_page,
+                theme.effective_header_footer().different_first_page,
+                theme.effective_header_footer().different_odd_even_pages,
             )
-            y = 0.45 * inch
-            if theme.page_numbers.page_number_alignment == "left":
-                canvas.drawString(doc.leftMargin, y, text)
-            elif theme.page_numbers.page_number_alignment == "right":
-                canvas.drawRightString(doc.pagesize[0] - doc.rightMargin, y, text)
-            else:
-                canvas.drawCentredString(doc.pagesize[0] / 2, y, text)
+            self._draw_pdf_header_footer(
+                canvas,
+                doc,
+                theme,
+                page_kind=page_kind,
+                page_number=logical_page,
+                front_matter=is_front_matter,
+                title=document.title,
+                chapter=running_chapter,
+                section=running_section,
+            )
             canvas.restoreState()
 
         return draw_page
+
+    def _static_running_titles(self, render_index: RenderIndex) -> tuple[str, str]:
+        chapter = ""
+        section = ""
+        for entry in render_index.headings:
+            title = "".join(fragment.plain_text() for fragment in entry.title)
+            if entry.level == 1 and not chapter:
+                chapter = title
+            elif entry.level > 1 and not section:
+                section = title
+            if chapter and section:
+                break
+        return chapter, section
+
+    def _header_footer_page_kind(
+        self,
+        page_number: int,
+        different_first_page: bool,
+        different_odd_even_pages: bool,
+    ) -> str:
+        if different_first_page and page_number == 1:
+            return "first"
+        if different_odd_even_pages and page_number % 2 == 0:
+            return "even"
+        return "default"
+
+    def _draw_pdf_header_footer(
+        self,
+        canvas: object,
+        doc: object,
+        theme: Theme,
+        *,
+        page_kind: str,
+        page_number: int,
+        front_matter: bool,
+        title: str,
+        chapter: str,
+        section: str,
+    ) -> None:
+        positions = ("left", "center", "right")
+        y_positions = {
+            "header": doc.pagesize[1] - 0.45 * inch,
+            "footer": 0.45 * inch,
+        }
+        x_positions = {
+            "left": doc.leftMargin,
+            "center": doc.pagesize[0] / 2,
+            "right": doc.pagesize[0] - doc.rightMargin,
+        }
+        for region in ("header", "footer"):
+            for position in positions:
+                template = theme.resolve_header_footer_template(
+                    region,  # type: ignore[arg-type]
+                    position,  # type: ignore[arg-type]
+                    page_kind=page_kind,  # type: ignore[arg-type]
+                )
+                text = theme.format_header_footer_text(
+                    template,
+                    page_number=page_number,
+                    front_matter=front_matter,
+                    title=title,
+                    chapter=chapter,
+                    section=section,
+                )
+                if not text:
+                    continue
+                if position == "left":
+                    canvas.drawString(x_positions[position], y_positions[region], text)
+                elif position == "right":
+                    canvas.drawRightString(x_positions[position], y_positions[region], text)
+                else:
+                    canvas.drawCentredString(x_positions[position], y_positions[region], text)
 
     def _comment_marker(self, fragment: Comment, render_index: RenderIndex) -> str:
         return f"[{render_index.comment_number(fragment)}]"

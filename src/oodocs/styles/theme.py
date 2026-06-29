@@ -505,6 +505,150 @@ class PageNumberDefaults:
             raise ValueError("page_number_template must contain a '{page}' placeholder")
 
 
+_HEADER_FOOTER_TEMPLATE_FIELDS = (
+    "header_left",
+    "header_center",
+    "header_right",
+    "footer_left",
+    "footer_center",
+    "footer_right",
+    "first_header_left",
+    "first_header_center",
+    "first_header_right",
+    "first_footer_left",
+    "first_footer_center",
+    "first_footer_right",
+    "even_header_left",
+    "even_header_center",
+    "even_header_right",
+    "even_footer_left",
+    "even_footer_center",
+    "even_footer_right",
+)
+
+
+class _HeaderFooterTokenMap(dict[str, str]):
+    def __missing__(self, key: str) -> str:
+        return "{" + key + "}"
+
+
+@dataclass(slots=True)
+class HeaderFooterDefaults:
+    """Grouped page header and footer templates.
+
+    Attributes:
+        header_left: Left header template for ordinary pages.
+        header_center: Center header template for ordinary pages.
+        header_right: Right header template for ordinary pages.
+        footer_left: Left footer template for ordinary pages.
+        footer_center: Center footer template for ordinary pages.
+        footer_right: Right footer template for ordinary pages.
+        first_*: Optional first-page overrides used when
+            ``different_first_page`` is true.
+        even_*: Optional even-page overrides used when
+            ``different_odd_even_pages`` is true.
+        different_first_page: Whether first pages use first-page overrides.
+        different_odd_even_pages: Whether even pages use even-page overrides.
+        font_size: Optional header/footer font size in points.
+
+    Notes:
+        Templates support ``{page}``, ``{title}``, ``{chapter}``, and
+        ``{section}``. DOCX renders ``{page}``, ``{chapter}``, and
+        ``{section}`` as Word fields; PDF and HTML resolve them at render time.
+
+    Examples:
+        ```python
+        from oodocs import HeaderFooterDefaults, Theme
+
+        theme = Theme(
+            header_footer=HeaderFooterDefaults(
+                header_left="{chapter}",
+                header_right="{page}",
+                footer_center="{title}",
+                different_first_page=True,
+            )
+        )
+        ```
+    """
+
+    header_left: str | None = None
+    header_center: str | None = None
+    header_right: str | None = None
+    footer_left: str | None = None
+    footer_center: str | None = None
+    footer_right: str | None = None
+    first_header_left: str | None = None
+    first_header_center: str | None = None
+    first_header_right: str | None = None
+    first_footer_left: str | None = None
+    first_footer_center: str | None = None
+    first_footer_right: str | None = None
+    even_header_left: str | None = None
+    even_header_center: str | None = None
+    even_header_right: str | None = None
+    even_footer_left: str | None = None
+    even_footer_center: str | None = None
+    even_footer_right: str | None = None
+    different_first_page: bool = False
+    different_odd_even_pages: bool = False
+    font_size: float | None = None
+
+    def __post_init__(self) -> None:
+        token_map = _HeaderFooterTokenMap(
+            page="1",
+            title="Document",
+            chapter="Chapter",
+            section="Section",
+        )
+        for field_name in _HEADER_FOOTER_TEMPLATE_FIELDS:
+            value = getattr(self, field_name)
+            if value is None:
+                continue
+            if not isinstance(value, str):
+                raise TypeError(f"HeaderFooterDefaults.{field_name} must be a string")
+            try:
+                value.format_map(token_map)
+            except ValueError as exc:
+                raise ValueError(
+                    f"HeaderFooterDefaults.{field_name} has an invalid format string"
+                ) from exc
+        self.different_first_page = bool(self.different_first_page)
+        self.different_odd_even_pages = bool(self.different_odd_even_pages)
+        if self.font_size is not None and self.font_size <= 0:
+            raise ValueError("HeaderFooterDefaults.font_size must be > 0")
+
+    def has_content(self) -> bool:
+        """Return whether any header/footer slot has visible template text."""
+
+        return any(
+            bool(getattr(self, field_name))
+            for field_name in _HEADER_FOOTER_TEMPLATE_FIELDS
+        )
+
+    def content_for(
+        self,
+        region: Literal["header", "footer"],
+        position: Literal["left", "center", "right"],
+        *,
+        page_kind: Literal["default", "first", "even"] = "default",
+    ) -> str | None:
+        """Return the template for one header/footer slot."""
+
+        if region not in {"header", "footer"}:
+            raise ValueError("region must be 'header' or 'footer'")
+        if position not in {"left", "center", "right"}:
+            raise ValueError("position must be 'left', 'center', or 'right'")
+        if page_kind == "first" and self.different_first_page:
+            override = getattr(self, f"first_{region}_{position}")
+            if override is not None:
+                return override
+        if page_kind == "even" and self.different_odd_even_pages:
+            override = getattr(self, f"even_{region}_{position}")
+            if override is not None:
+                return override
+        return getattr(self, f"{region}_{position}")
+
+
 @dataclass(slots=True)
 class TitleMatterDefaults:
     """Grouped title, subtitle, author, and affiliation text alignment defaults.
@@ -644,6 +788,7 @@ class Theme:
         generated_content: Optional generated-content defaults group.
         locale: Optional document language and localization defaults group.
         page_numbers: Optional page-number defaults group.
+        header_footer: Optional page header/footer template defaults group.
         title_matter: Optional title-matter defaults group.
         blocks: Optional block defaults group.
         stylesheet: Optional named style registry.
@@ -656,6 +801,7 @@ class Theme:
         generated_content: Resolved generated-content defaults group.
         locale: Resolved document language and localization defaults group.
         page_numbers: Resolved page-number defaults group.
+        header_footer: Resolved page header/footer template defaults group.
         title_matter: Resolved title-matter defaults group.
         blocks: Resolved block defaults group.
         stylesheet: Resolved named style registry.
@@ -699,7 +845,8 @@ class Theme:
     See Also:
         ``TypographyDefaults``, ``CaptionDefaults``, ``CitationDefaults``,
         ``LinkDefaults``, ``GeneratedContentDefaults``, ``LocaleDefaults``,
-        ``PageNumberDefaults``, ``TitleMatterDefaults``, and ``BlockDefaults`` for grouped
+        ``PageNumberDefaults``, ``HeaderFooterDefaults``,
+        ``TitleMatterDefaults``, and ``BlockDefaults`` for grouped
         configuration.
     """
 
@@ -710,6 +857,7 @@ class Theme:
     generated_content: GeneratedContentDefaults
     locale: LocaleDefaults
     page_numbers: PageNumberDefaults
+    header_footer: HeaderFooterDefaults
     title_matter: TitleMatterDefaults
     blocks: BlockDefaults
     stylesheet: StyleSheet
@@ -724,6 +872,7 @@ class Theme:
         generated_content: GeneratedContentDefaults | None = None,
         locale: LocaleDefaults | str | None = None,
         page_numbers: PageNumberDefaults | None = None,
+        header_footer: HeaderFooterDefaults | None = None,
         title_matter: TitleMatterDefaults | None = None,
         blocks: BlockDefaults | None = None,
         stylesheet: StyleSheet | None = None,
@@ -744,6 +893,7 @@ class Theme:
             "links": (links, LinkDefaults),
             "generated_content": (generated_content, GeneratedContentDefaults),
             "page_numbers": (page_numbers, PageNumberDefaults),
+            "header_footer": (header_footer, HeaderFooterDefaults),
             "title_matter": (title_matter, TitleMatterDefaults),
             "blocks": (blocks, BlockDefaults),
             "stylesheet": (stylesheet, StyleSheet),
@@ -761,6 +911,7 @@ class Theme:
         self.links = links or LinkDefaults()
         self.generated_content = generated_content or self.locale.generated_content
         self.page_numbers = page_numbers or PageNumberDefaults()
+        self.header_footer = header_footer or HeaderFooterDefaults()
         self.title_matter = title_matter or TitleMatterDefaults()
         self.blocks = blocks or BlockDefaults()
         self.stylesheet = stylesheet or StyleSheet.default()
@@ -1111,6 +1262,74 @@ class Theme:
             f"script coverage, for example: {fallback_list}."
         )
 
+    def effective_header_footer(self) -> HeaderFooterDefaults:
+        """Return configured header/footer templates, including legacy page numbers."""
+
+        if self.header_footer.has_content():
+            return self.header_footer
+        if not self.page_numbers.show_page_numbers:
+            return self.header_footer
+        slots = {
+            f"footer_{self.page_numbers.page_number_alignment}": (
+                self.page_numbers.page_number_template
+            )
+        }
+        return HeaderFooterDefaults(
+            **slots,
+            font_size=self.page_numbers.page_number_font_size,
+        )
+
+    def uses_header_footer(self) -> bool:
+        """Return whether renderers should emit a header/footer layer."""
+
+        return self.effective_header_footer().has_content()
+
+    def resolve_header_footer_font_size(self) -> float:
+        """Return effective header/footer font size in points."""
+
+        return (
+            self.effective_header_footer().font_size
+            or self.page_numbers.page_number_font_size
+        )
+
+    def resolve_header_footer_template(
+        self,
+        region: Literal["header", "footer"],
+        position: Literal["left", "center", "right"],
+        *,
+        page_kind: Literal["default", "first", "even"] = "default",
+    ) -> str | None:
+        """Return a raw header/footer template for one slot."""
+
+        return self.effective_header_footer().content_for(
+            region,
+            position,
+            page_kind=page_kind,
+        )
+
+    def format_header_footer_text(
+        self,
+        template: str | None,
+        *,
+        page_number: int,
+        front_matter: bool = False,
+        title: str = "",
+        chapter: str = "",
+        section: str = "",
+    ) -> str:
+        """Resolve a header/footer template to plain text."""
+
+        if not template:
+            return ""
+        page_label = self.format_page_number(page_number, front_matter=front_matter)
+        values = _HeaderFooterTokenMap(
+            page=page_label,
+            title=title,
+            chapter=chapter,
+            section=section,
+        )
+        return template.format_map(values)
+
     def caption_size(self) -> float:
         """Return the effective caption font size.
 
@@ -1280,6 +1499,7 @@ __all__ = [
     "CitationDefaults",
     "CounterStyle",
     "GeneratedContentDefaults",
+    "HeaderFooterDefaults",
     "HeadingStyle",
     "HeadingNumbering",
     "LinkDefaults",

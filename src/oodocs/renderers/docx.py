@@ -14,6 +14,7 @@ from __future__ import annotations
 from dataclasses import replace
 from io import BytesIO
 from pathlib import Path
+import re
 from xml.sax.saxutils import escape as xml_escape
 
 from docx import Document as WordDocument
@@ -257,9 +258,10 @@ class DocxRenderer:
         if self._should_auto_render_footnote_list(document, render_index):
             self.render_footnote_list(FootnoteList(), context)
 
-        if settings.theme.page_numbers.show_page_numbers:
-            self._configure_page_number_sections(
+        if settings.theme.uses_header_footer():
+            self._configure_header_footer_sections(
                 word_document,
+                document,
                 settings.theme,
                 has_front_matter=has_front_matter,
                 has_main_matter=bool(main_children) or not has_front_matter,
@@ -3825,9 +3827,10 @@ class DocxRenderer:
             italic=defaults.italic if override.italic is None else override.italic,
         )
 
-    def _configure_page_number_sections(
+    def _configure_header_footer_sections(
         self,
         word_document: WordDocument,
+        document: Document,
         theme: Theme,
         *,
         has_front_matter: bool,
@@ -3837,26 +3840,33 @@ class DocxRenderer:
         if not sections:
             return
 
+        self._set_even_and_odd_headers(
+            word_document,
+            theme.effective_header_footer().different_odd_even_pages,
+        )
         if has_front_matter:
             self._set_section_page_counter_format(
                 sections[0],
                 theme.page_numbers.front_matter_counter.counter_format,
                 start=1,
             )
-            self._add_page_number_footer(
+            self._add_section_header_footer(
                 sections[0],
+                document,
                 theme,
                 front_matter=True,
             )
             if has_main_matter and len(sections) > 1:
+                self._unlink_section_header_footer(sections[1])
                 sections[1].footer.is_linked_to_previous = False
                 self._set_section_page_counter_format(
                     sections[1],
                     theme.page_numbers.main_matter_counter.counter_format,
                     start=1,
                 )
-                self._add_page_number_footer(
+                self._add_section_header_footer(
                     sections[1],
+                    document,
                     theme,
                     front_matter=False,
                 )
@@ -3867,37 +3877,212 @@ class DocxRenderer:
             theme.page_numbers.main_matter_counter.counter_format,
             start=1,
         )
-        self._add_page_number_footer(
+        self._add_section_header_footer(
             sections[0],
+            document,
             theme,
             front_matter=False,
         )
 
-    def _add_page_number_footer(
+    def _add_section_header_footer(
         self,
         section: object,
+        document: Document,
         theme: Theme,
         *,
         front_matter: bool,
     ) -> None:
-        footer = section.footer
-        paragraph = footer.paragraphs[0] if footer.paragraphs else footer.add_paragraph()
+        header_footer = theme.effective_header_footer()
+        section.different_first_page_header_footer = header_footer.different_first_page
+        page_kinds: list[tuple[str, object, object]] = [
+            ("default", section.header, section.footer)
+        ]
+        if header_footer.different_first_page:
+            page_kinds.append(("first", section.first_page_header, section.first_page_footer))
+        if header_footer.different_odd_even_pages:
+            page_kinds.append(("even", section.even_page_header, section.even_page_footer))
+        text_width = max(
+            section.page_width.inches
+            - section.left_margin.inches
+            - section.right_margin.inches,
+            0.1,
+        )
+        for page_kind, header, footer in page_kinds:
+            header.is_linked_to_previous = False
+            footer.is_linked_to_previous = False
+            self._add_header_footer_part(
+                header,
+                document,
+                theme,
+                region="header",
+                page_kind=page_kind,
+                front_matter=front_matter,
+                text_width=text_width,
+            )
+            self._add_header_footer_part(
+                footer,
+                document,
+                theme,
+                region="footer",
+                page_kind=page_kind,
+                front_matter=front_matter,
+                text_width=text_width,
+            )
+
+    def _add_header_footer_part(
+        self,
+        part: object,
+        document: Document,
+        theme: Theme,
+        *,
+        region: str,
+        page_kind: str,
+        front_matter: bool,
+        text_width: float,
+    ) -> None:
+        slots = [
+            theme.resolve_header_footer_template(
+                region,  # type: ignore[arg-type]
+                "left",
+                page_kind=page_kind,  # type: ignore[arg-type]
+            ),
+            theme.resolve_header_footer_template(
+                region,  # type: ignore[arg-type]
+                "center",
+                page_kind=page_kind,  # type: ignore[arg-type]
+            ),
+            theme.resolve_header_footer_template(
+                region,  # type: ignore[arg-type]
+                "right",
+                page_kind=page_kind,  # type: ignore[arg-type]
+            ),
+        ]
+        if not any(slot for slot in slots):
+            return
+        paragraph = part.paragraphs[0] if part.paragraphs else part.add_paragraph()
         paragraph.style = "Footer"
-        paragraph.alignment = ALIGNMENTS[theme.page_numbers.page_number_alignment]
         for child in list(paragraph._p):
             if child.tag != qn("w:pPr"):
                 paragraph._p.remove(child)
-        parts = theme.page_numbers.page_number_template.split("{page}")
-        for index, part in enumerate(parts):
-            if part:
-                run = paragraph.add_run(part)
+        non_empty_slots = [
+            (position, template)
+            for position, template in zip(("left", "center", "right"), slots)
+            if template
+        ]
+        if len(non_empty_slots) == 1:
+            position, template = non_empty_slots[0]
+            paragraph.alignment = ALIGNMENTS[position]
+            self._append_header_footer_template(
+                paragraph,
+                template,
+                document,
+                theme,
+                front_matter=front_matter,
+            )
+            return
+        paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
+        self._configure_header_footer_tabs(paragraph, text_width)
+        if slots[0]:
+            self._append_header_footer_template(
+                paragraph,
+                slots[0],
+                document,
+                theme,
+                front_matter=front_matter,
+            )
+        if slots[1] or slots[2]:
+            paragraph.add_run("\t")
+        if slots[1]:
+            self._append_header_footer_template(
+                paragraph,
+                slots[1],
+                document,
+                theme,
+                front_matter=front_matter,
+            )
+        if slots[2]:
+            paragraph.add_run("\t")
+            self._append_header_footer_template(
+                paragraph,
+                slots[2],
+                document,
+                theme,
+                front_matter=front_matter,
+            )
+
+    def _configure_header_footer_tabs(self, paragraph: object, text_width: float) -> None:
+        tab_stops = paragraph.paragraph_format.tab_stops
+        tab_stops.clear_all()
+        tab_stops.add_tab_stop(Inches(text_width / 2), WD_TAB_ALIGNMENT.CENTER)
+        tab_stops.add_tab_stop(Inches(text_width), WD_TAB_ALIGNMENT.RIGHT)
+
+    def _append_header_footer_template(
+        self,
+        paragraph: object,
+        template: str,
+        document: Document,
+        theme: Theme,
+        *,
+        front_matter: bool,
+    ) -> None:
+        font_size = theme.resolve_header_footer_font_size()
+        token_pattern = re.compile(r"(\{page\}|\{title\}|\{chapter\}|\{section\})")
+        for piece in token_pattern.split(template):
+            if not piece:
+                continue
+            if piece == "{page}":
+                self._append_page_number_field(paragraph)
+            elif piece == "{title}":
+                self._append_header_footer_text(paragraph, document.title, theme)
+            elif piece == "{chapter}":
+                self._append_field(paragraph, 'STYLEREF "Heading 1"')
+            elif piece == "{section}":
+                self._append_field(paragraph, 'STYLEREF "Heading 2"')
+            else:
+                self._append_header_footer_text(paragraph, piece, theme)
+        for run in paragraph.runs:
+            if run.text or run._r.findall(qn("w:fldChar")) or run._r.findall(qn("w:instrText")):
                 self._apply_run_style(
                     run,
-                    Text(part).style,
-                    default_size=theme.page_numbers.page_number_font_size,
+                    Text("").style,
+                    default_size=font_size,
                 )
-            if index < len(parts) - 1:
-                self._append_page_number_field(paragraph)
+
+    def _append_header_footer_text(
+        self,
+        paragraph: object,
+        text: str,
+        theme: Theme,
+    ) -> None:
+        run = paragraph.add_run(text)
+        self._apply_run_style(
+            run,
+            Text(text).style,
+            default_size=theme.resolve_header_footer_font_size(),
+        )
+
+    def _unlink_section_header_footer(self, section: object) -> None:
+        for part in (
+            section.header,
+            section.footer,
+            section.first_page_header,
+            section.first_page_footer,
+            section.even_page_header,
+            section.even_page_footer,
+        ):
+            part.is_linked_to_previous = False
+
+    def _set_even_and_odd_headers(
+        self,
+        word_document: WordDocument,
+        enabled: bool,
+    ) -> None:
+        settings = word_document.settings.element
+        existing = settings.find(qn("w:evenAndOddHeaders"))
+        if enabled and existing is None:
+            settings.append(OxmlElement("w:evenAndOddHeaders"))
+        elif not enabled and existing is not None:
+            settings.remove(existing)
 
     def _set_section_page_counter_format(
         self,
