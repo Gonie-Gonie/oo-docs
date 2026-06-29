@@ -10,8 +10,9 @@ from dataclasses import dataclass
 from typing import Iterable, Sequence, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from oodocs.components.inline import BlockReference, InlineInput
+    from oodocs.components.inline import BlockReference, InlineInput, ReferenceFormat
     from oodocs.renderers.context import DocxRenderContext, HtmlRenderContext, PdfRenderContext
+    from oodocs.styles import TextStyle
 
 
 class Block:
@@ -38,12 +39,16 @@ class Block:
     def reference(
         self,
         *label: InlineInput,
+        style: TextStyle | None = None,
+        reference_format: ReferenceFormat | None = None,
     ) -> BlockReference:
         """Create an explicit inline reference to this block.
 
         Args:
             *label: Optional inline content to use instead of the automatic
                 reference label.
+            style: Optional inline style.
+            reference_format: Optional automatic reference formatting rules.
 
         Returns:
             An inline block reference targeting this block.
@@ -59,7 +64,7 @@ class Block:
 
         from oodocs.components.inline import reference
 
-        return reference(self, *label)
+        return reference(self, *label, style=style, reference_format=reference_format)
 
     def render_to_docx(
         self,

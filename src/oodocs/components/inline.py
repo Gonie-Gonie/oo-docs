@@ -442,6 +442,93 @@ class LineBreak(Text):
         return "\n"
 
 
+@dataclass(slots=True, init=False)
+class ReferenceFormat:
+    """Formatting options for object references.
+
+    Args:
+        label: Optional singular label override such as ``"Fig."``.
+        plural_label: Optional plural label for ``refs(...)`` when all targets
+            share the same reference kind.
+        capitalized: Whether to capitalize the rendered label.
+        prefix: Text inserted before the rendered reference.
+        suffix: Text inserted after the rendered reference.
+        separator: Separator between reference items.
+        last_separator: Separator before the final item.
+        range_separator: Separator between the first and last item for
+            ``ref_range(...)``.
+        page: Whether the author requested a page-aware reference. Renderers
+            currently degrade this to an ordinary reference and validation emits
+            a compatibility warning.
+
+    Examples:
+        ```python
+        from oodocs import ReferenceFormat, refs
+
+        fragments = refs([figure_a, figure_b], reference_format=ReferenceFormat(plural_label="Figures"))
+        ```
+    """
+
+    label: str | None
+    plural_label: str | None
+    capitalized: bool
+    prefix: str
+    suffix: str
+    separator: str
+    last_separator: str
+    range_separator: str
+    page: bool
+
+    def __init__(
+        self,
+        *,
+        label: str | None = None,
+        plural_label: str | None = None,
+        capitalized: bool = False,
+        prefix: str = "",
+        suffix: str = "",
+        separator: str = ", ",
+        last_separator: str = " and ",
+        range_separator: str = "-",
+        page: bool = False,
+    ) -> None:
+        self.label = _normalize_optional_reference_text(label, "label")
+        self.plural_label = _normalize_optional_reference_text(plural_label, "plural_label")
+        self.capitalized = bool(capitalized)
+        self.prefix = str(prefix)
+        self.suffix = str(suffix)
+        self.separator = str(separator)
+        self.last_separator = str(last_separator)
+        self.range_separator = str(range_separator)
+        self.page = bool(page)
+
+    def merged(self, **overrides: object) -> ReferenceFormat:
+        """Return a copy with selected fields overridden."""
+
+        values = {
+            "label": self.label,
+            "plural_label": self.plural_label,
+            "capitalized": self.capitalized,
+            "prefix": self.prefix,
+            "suffix": self.suffix,
+            "separator": self.separator,
+            "last_separator": self.last_separator,
+            "range_separator": self.range_separator,
+            "page": self.page,
+        }
+        values.update(overrides)
+        return ReferenceFormat(**values)
+
+
+def _normalize_optional_reference_text(value: str | None, name: str) -> str | None:
+    if value is None:
+        return None
+    normalized = str(value).strip()
+    if not normalized:
+        raise ValueError(f"ReferenceFormat.{name} must not be empty")
+    return normalized
+
+
 class BlockReference(Text):
     """Inline reference to a numbered or anchored document object.
 
@@ -459,17 +546,19 @@ class BlockReference(Text):
         ```
     """
 
-    __slots__ = ("target", "label")
+    __slots__ = ("target", "label", "reference_format")
 
     def __init__(
         self,
         target: object,
         *label: InlineInput,
         style: TextStyle | None = None,
+        reference_format: ReferenceFormat | None = None,
     ) -> None:
         super().__init__(value="", style=style or TextStyle())
         self.target = target
         self.label = coerce_inlines(label) if label else None
+        self.reference_format = reference_format or ReferenceFormat()
 
     def plain_text(self) -> str:
         """Return placeholder reference text before numbering is resolved.
@@ -514,6 +603,7 @@ def reference(
     target: object,
     *label: InlineInput,
     style: TextStyle | None = None,
+    reference_format: ReferenceFormat | None = None,
 ) -> BlockReference:
     """Create an explicit inline reference to a document object.
 
@@ -539,7 +629,180 @@ def reference(
 
     if not _is_referenceable(target):
         raise TypeError(f"Unsupported reference target: {type(target)!r}")
-    return BlockReference(target, *label, style=style)
+    return BlockReference(target, *label, style=style, reference_format=reference_format)
+
+
+def ref(
+    target: object,
+    *label: InlineInput,
+    style: TextStyle | None = None,
+    reference_format: ReferenceFormat | None = None,
+) -> BlockReference:
+    """Create an inline object reference.
+
+    This is a shorter alias for ``reference(...)`` matching common LaTeX
+    ``cleveref`` authoring style.
+    """
+
+    return reference(target, *label, style=style, reference_format=reference_format)
+
+
+def Ref(
+    target: object,
+    *label: InlineInput,
+    style: TextStyle | None = None,
+    reference_format: ReferenceFormat | None = None,
+) -> BlockReference:
+    """Create a capitalized inline object reference."""
+
+    base = reference_format or ReferenceFormat()
+    return reference(
+        target,
+        *label,
+        style=style,
+        reference_format=base.merged(capitalized=True),
+    )
+
+
+class ReferenceGroup(Text):
+    """Inline reference to multiple document objects.
+
+    Args:
+        targets: Reference targets.
+        reference_format: Formatting rules for labels and separators.
+        range_reference: Whether to render the targets as a range.
+        style: Optional inline style.
+    """
+
+    __slots__ = ("targets", "reference_format", "range_reference")
+
+    def __init__(
+        self,
+        targets: Sequence[object],
+        *,
+        reference_format: ReferenceFormat | None = None,
+        range_reference: bool = False,
+        style: TextStyle | None = None,
+    ) -> None:
+        if isinstance(targets, (str, bytes)):
+            raise TypeError("ReferenceGroup targets must be document objects")
+        normalized = tuple(targets)
+        minimum = 2 if range_reference else 1
+        if len(normalized) < minimum:
+            raise ValueError(
+                "ref_range requires two targets"
+                if range_reference
+                else "refs requires at least one target"
+            )
+        for target in normalized:
+            if not _is_referenceable(target):
+                raise TypeError(f"Unsupported reference target: {type(target)!r}")
+        super().__init__(value="", style=style or TextStyle())
+        self.targets = normalized
+        self.reference_format = reference_format or ReferenceFormat()
+        self.range_reference = range_reference
+
+    def plain_text(self) -> str:
+        """Return placeholder reference text before numbering is resolved."""
+
+        if self.range_reference:
+            return f"{_reference_label_prefix(self.targets[0])} ?{self.reference_format.range_separator}?"
+        return self.reference_format.separator.join(
+            f"{_reference_label_prefix(target)} ?" for target in self.targets
+        )
+
+
+def refs(
+    targets: Sequence[object],
+    *,
+    style: TextStyle | None = None,
+    reference_format: ReferenceFormat | None = None,
+    label: str | None = None,
+    plural_label: str | None = None,
+    separator: str | None = None,
+    last_separator: str | None = None,
+) -> ReferenceGroup:
+    """Create an inline reference list for several document objects."""
+
+    base = reference_format or ReferenceFormat()
+    overrides: dict[str, object] = {}
+    if label is not None:
+        overrides["label"] = label
+    if plural_label is not None:
+        overrides["plural_label"] = plural_label
+    if separator is not None:
+        overrides["separator"] = separator
+    if last_separator is not None:
+        overrides["last_separator"] = last_separator
+    return ReferenceGroup(
+        targets,
+        style=style,
+        reference_format=base.merged(**overrides) if overrides else base,
+    )
+
+
+def ref_range(
+    start: object,
+    end: object,
+    *,
+    style: TextStyle | None = None,
+    reference_format: ReferenceFormat | None = None,
+    label: str | None = None,
+    plural_label: str | None = None,
+    range_separator: str | None = None,
+) -> ReferenceGroup:
+    """Create an inline reference range from two document objects."""
+
+    base = reference_format or ReferenceFormat()
+    overrides: dict[str, object] = {}
+    if label is not None:
+        overrides["label"] = label
+    if plural_label is not None:
+        overrides["plural_label"] = plural_label
+    if range_separator is not None:
+        overrides["range_separator"] = range_separator
+    return ReferenceGroup(
+        (start, end),
+        style=style,
+        reference_format=base.merged(**overrides) if overrides else base,
+        range_reference=True,
+    )
+
+
+def paren_ref(
+    target: object,
+    *,
+    style: TextStyle | None = None,
+    reference_format: ReferenceFormat | None = None,
+) -> BlockReference:
+    """Create a parenthesized inline object reference."""
+
+    base = reference_format or ReferenceFormat()
+    return reference(
+        target,
+        style=style,
+        reference_format=base.merged(prefix="(", suffix=")"),
+    )
+
+
+def page_ref(
+    target: object,
+    *,
+    style: TextStyle | None = None,
+    reference_format: ReferenceFormat | None = None,
+) -> BlockReference:
+    """Create a page-aware reference request.
+
+    Renderers currently degrade this to an ordinary reference and validation
+    reports a warning so authors can decide whether that is acceptable.
+    """
+
+    base = reference_format or ReferenceFormat()
+    return reference(
+        target,
+        style=style,
+        reference_format=base.merged(page=True),
+    )
 
 
 class Citation(Text):
@@ -1501,6 +1764,8 @@ __all__ = [
     "LineBreak",
     "Math",
     "InlineCode",
+    "ReferenceFormat",
+    "ReferenceGroup",
     "Strikethrough",
     "Text",
     "_BlockReference",
@@ -1517,7 +1782,13 @@ __all__ = [
     "line_break",
     "math",
     "prescript",
+    "Ref",
+    "ref",
     "reference",
+    "ref_range",
+    "refs",
+    "page_ref",
+    "paren_ref",
     "status",
     "inline_code",
     "strikethrough",

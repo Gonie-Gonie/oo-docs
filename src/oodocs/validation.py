@@ -53,6 +53,7 @@ from oodocs.components.inline import (
     Footnote,
     Hyperlink,
     InlineChip,
+    ReferenceGroup,
     Text,
 )
 from oodocs.components.equations import unsupported_latex_commands
@@ -689,6 +690,7 @@ class _ValidationContext:
         self.block_paths: dict[int, str] = {}
         self.referenceable_paths: dict[int, str] = {}
         self.references: list[tuple[BlockReference, str]] = []
+        self.reference_groups: list[tuple[ReferenceGroup, str]] = []
         self.citations: list[tuple[Citation, str]] = []
         self.hyperlinks: list[tuple[Hyperlink, str]] = []
         self.generated_content: list[tuple[object, str]] = []
@@ -1002,8 +1004,15 @@ class _ValidationContext:
                 continue
             if isinstance(fragment, BlockReference):
                 self.references.append((fragment, fragment_path))
+                if fragment.reference_format.page:
+                    self._add_page_reference_warning(fragment_path)
                 if fragment.label is not None:
                     self._scan_inlines(fragment.label, f"{fragment_path}.label")
+                continue
+            if isinstance(fragment, ReferenceGroup):
+                self.reference_groups.append((fragment, fragment_path))
+                if fragment.reference_format.page:
+                    self._add_page_reference_warning(fragment_path)
                 continue
             if isinstance(fragment, Citation):
                 self.citations.append((fragment, fragment_path))
@@ -1461,6 +1470,22 @@ class _ValidationContext:
     def _validate_references(self, render_index: RenderIndex | None) -> None:
         for reference, path in self.references:
             self._validate_reference(reference, path, render_index)
+        for group, path in self.reference_groups:
+            for index, target in enumerate(group.targets):
+                self._validate_reference(
+                    BlockReference(target),
+                    f"{path}.targets[{index}]",
+                    render_index,
+                )
+
+    def _add_page_reference_warning(self, path: str) -> None:
+        self._add(
+            "warning",
+            "page-aware-reference-degrades",
+            "Page-aware references currently render as ordinary object references.",
+            path,
+            formats=("docx", "html", "pdf"),
+        )
 
     def _validate_hyperlinks(self, render_index: RenderIndex | None) -> None:
         if render_index is None:

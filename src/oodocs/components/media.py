@@ -49,7 +49,7 @@ from oodocs.styles import (
 )
 
 if TYPE_CHECKING:
-    from oodocs.components.inline import BlockReference, InlineInput
+    from oodocs.components.inline import BlockReference, InlineInput, ReferenceFormat
     from oodocs.renderers.context import DocxRenderContext, HtmlRenderContext, PdfRenderContext
 
 
@@ -2584,6 +2584,8 @@ class SubFigure:
     def reference(
         self,
         *label: InlineInput,
+        style: TextStyle | None = None,
+        reference_format: ReferenceFormat | None = None,
     ) -> BlockReference:
         """Create an explicit inline reference to this subfigure.
 
@@ -2596,7 +2598,7 @@ class SubFigure:
 
         from oodocs.components.inline import reference
 
-        return reference(self, *label)
+        return reference(self, *label, style=style, reference_format=reference_format)
 
 
 @dataclass(slots=True, init=False)
@@ -2845,12 +2847,14 @@ class SubTable:
     def reference(
         self,
         *label: InlineInput,
+        style: TextStyle | None = None,
+        reference_format: ReferenceFormat | None = None,
     ) -> BlockReference:
         """Create an explicit inline reference to this subtable."""
 
         from oodocs.components.inline import reference
 
-        return reference(self, *label)
+        return reference(self, *label, style=style, reference_format=reference_format)
 
 
 @dataclass(slots=True, init=False)
@@ -2957,12 +2961,14 @@ class SubTableGroup(Block):
     def reference(
         self,
         *label: InlineInput,
+        style: TextStyle | None = None,
+        reference_format: ReferenceFormat | None = None,
     ) -> BlockReference:
         """Create an explicit inline reference to this subtable group."""
 
         from oodocs.components.inline import reference
 
-        return reference(self, *label)
+        return reference(self, *label, style=style, reference_format=reference_format)
 
     def render_to_docx(
         self,

@@ -67,6 +67,7 @@ from oodocs.components.inline import (
     InlineChip,
     LineBreak,
     Math,
+    ReferenceGroup,
     Text,
 )
 from oodocs.components.media import (
@@ -94,7 +95,13 @@ from oodocs.components.references import format_citation_label, reference_entry_
 from oodocs.document import Document
 from oodocs.components.equations import SUBSCRIPT, SUPERSCRIPT, parse_latex_segments
 from oodocs.core import OODocsError, PathLike, length_to_inches
-from oodocs.layout.indexing import RenderIndex, build_render_index
+from oodocs.layout.indexing import (
+    ReferenceTextPiece,
+    RenderIndex,
+    build_render_index,
+    reference_text_pieces,
+    resolve_block_reference,
+)
 from oodocs.styles import BoxStyle, HeadingStyle, ParagraphStyle, TableStyle, TextStyle, Theme
 from oodocs.renderers.context import DocxRenderContext
 from oodocs.renderers.syntax import SyntaxToken, _syntax_line_tokens, syntax_tokens
@@ -1478,18 +1485,39 @@ class DocxRenderer:
                     default_size=default_size,
                 )
                 continue
+            if isinstance(fragment, ReferenceGroup) and theme is not None and render_index is not None:
+                self._append_reference_pieces(
+                    paragraph,
+                    reference_text_pieces(
+                        fragment.targets,
+                        fragment.reference_format,
+                        theme,
+                        render_index,
+                        range_reference=fragment.range_reference,
+                    ),
+                    style=fragment_style,
+                    default_size=default_size,
+                )
+                continue
             if isinstance(fragment, _BlockReference) and theme is not None and render_index is not None:
                 anchor = self._block_reference_anchor(fragment.target, render_index)
-                label_fragments = fragment.label or [
-                    Text(
-                        self._resolve_block_reference(fragment.target, theme, render_index),
+                if fragment.label is None:
+                    self._append_reference_pieces(
+                        paragraph,
+                        reference_text_pieces(
+                            (fragment.target,),
+                            fragment.reference_format,
+                            theme,
+                            render_index,
+                        ),
                         style=fragment_style,
+                        default_size=default_size,
                     )
-                ]
+                    continue
                 self._append_hyperlink_runs(
                     paragraph,
                     anchor,
-                    label_fragments,
+                    fragment.label,
                     internal=True,
                     style=fragment_style,
                     default_size=default_size,
@@ -1817,6 +1845,28 @@ class DocxRenderer:
         run.append(text)
         hyperlink.append(run)
         paragraph._p.append(hyperlink)
+
+    def _append_reference_pieces(
+        self,
+        paragraph: object,
+        pieces: list[ReferenceTextPiece],
+        *,
+        style: TextStyle,
+        default_size: float | None,
+    ) -> None:
+        for piece in pieces:
+            if piece.anchor is not None:
+                self._append_hyperlink_runs(
+                    paragraph,
+                    piece.anchor,
+                    [Text(piece.text, style=style)],
+                    internal=True,
+                    style=style,
+                    default_size=default_size,
+                )
+                continue
+            run = paragraph.add_run(piece.text)
+            self._apply_run_style(run, style, default_size=default_size)
 
     def _add_bookmark(self, paragraph: object, anchor: str) -> None:
         bookmark_start = OxmlElement("w:bookmarkStart")
@@ -3284,7 +3334,25 @@ class DocxRenderer:
                 return "".join(item.plain_text() for item in fragment.label)
             if theme is None or render_index is None:
                 return fragment.plain_text()
-            return self._resolve_block_reference(fragment.target, theme, render_index)
+            return self._resolve_block_reference(
+                fragment.target,
+                theme,
+                render_index,
+                fragment.reference_format,
+            )
+        if isinstance(fragment, ReferenceGroup):
+            if theme is None or render_index is None:
+                return fragment.plain_text()
+            return "".join(
+                piece.text
+                for piece in reference_text_pieces(
+                    fragment.targets,
+                    fragment.reference_format,
+                    theme,
+                    render_index,
+                    range_reference=fragment.range_reference,
+                )
+            )
         if isinstance(fragment, Citation):
             if render_index is None:
                 return fragment.plain_text()
@@ -3311,83 +3379,15 @@ class DocxRenderer:
         target: object,
         theme: Theme,
         render_index: RenderIndex,
+        reference_format: object | None = None,
     ) -> str:
-        if isinstance(target, (Table, SubTable, SubTableGroup)):
-            number = render_index.table_number(target)
-            if number is None:
-                raise OODocsError("Table references require the target table to have a caption and be included in the document")
-            label = theme.resolve_caption_label("table", "reference")
-            if isinstance(target, SubTable):
-                subtable_label = render_index.subtable_reference_label(target)
-                if subtable_label is None:
-                    raise OODocsError("Subtable references require the target subtable to belong to a captioned SubTableGroup")
-                return f"{label} {number}{subtable_label}"
-            return f"{label} {number}"
+        from oodocs.components.inline import ReferenceFormat
 
-        if isinstance(target, (Figure, SubFigure, SubFigureGroup)):
-            number = render_index.figure_number(target)
-            if number is None:
-                raise OODocsError("Figure references require the target figure to have a caption and be included in the document")
-            if isinstance(target, SubFigure):
-                label = render_index.subfigure_label(target)
-                if label is None:
-                    raise OODocsError("Subfigure references require the target subfigure to belong to a captioned SubFigureGroup")
-                figure_label = theme.resolve_caption_label("figure", "reference")
-                reference_label = render_index.subfigure_reference_label(target)
-                return f"{figure_label} {number}{reference_label or f'({label})'}"
-            label = theme.resolve_caption_label("figure", "reference")
-            return f"{label} {number}"
-
-        if isinstance(target, Part):
-            number_label = render_index.heading_number(target)
-            if number_label is None:
-                raise OODocsError("Part references require the target part to be numbered and included in the document")
-            return number_label
-
-        if isinstance(target, Section):
-            number_label = render_index.heading_number(target)
-            if number_label is None:
-                raise OODocsError("Section references require the target section to be numbered and included in the document")
-            prefix = "Chapter" if target.level == 1 else "Section"
-            return f"{prefix} {number_label}"
-
-        if isinstance(target, Equation):
-            number = render_index.equation_number(target)
-            if number is None:
-                raise OODocsError(
-                    "Equation references require the target equation to be numbered and included in the document, "
-                    "or the reference must provide a custom label"
-                )
-            return target.reference_text(number)
-
-        if isinstance(target, Paragraph):
-            number = render_index.paragraph_number(target)
-            if number is None:
-                raise OODocsError("Paragraph references require the target paragraph to be included in the document")
-            return f"Paragraph {number}"
-
-        if isinstance(target, CodeBlock):
-            number = render_index.code_block_number(target)
-            if number is None:
-                raise OODocsError("Code block references require the target code block to be included in the document")
-            return f"Code block {number}"
-
-        if isinstance(target, Box):
-            number = render_index.box_number(target)
-            if number is None:
-                raise OODocsError("Box references require the target box to be included in the document")
-            return f"Box {number}"
-
-        if isinstance(target, CountableBlock):
-            number = render_index.countable_number(target)
-            if number is None:
-                raise OODocsError(
-                    "CountableBlock references require the target to be numbered and included in the document, "
-                    "or the reference must provide a custom label"
-                )
-            return target.reference_text(number)
-
-        raise OODocsError(f"Unsupported reference target: {type(target)!r}")
+        return resolve_block_reference(
+            target,
+            theme,
+            render_index,
+        ).text(reference_format if isinstance(reference_format, ReferenceFormat) else None)
 
     def _caption_fragments(self, label: str, number: int | None, caption: Paragraph) -> list[Text]:
         if number is None:

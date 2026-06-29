@@ -558,6 +558,13 @@
           "qualname": "oodocs.components.blocks.ReactionEquation"
         },
         {
+          "category": "inline",
+          "kind": "class",
+          "module": "oodocs.components.inline",
+          "name": "ReferenceFormat",
+          "qualname": "oodocs.components.inline.ReferenceFormat"
+        },
+        {
           "category": "style",
           "kind": "class",
           "module": "oodocs.styles.blocks",
@@ -946,8 +953,50 @@
           "category": "inline",
           "kind": "function",
           "module": "oodocs.components.inline",
+          "name": "Ref",
+          "qualname": "oodocs.components.inline.Ref"
+        },
+        {
+          "category": "inline",
+          "kind": "function",
+          "module": "oodocs.components.inline",
+          "name": "ref",
+          "qualname": "oodocs.components.inline.ref"
+        },
+        {
+          "category": "inline",
+          "kind": "function",
+          "module": "oodocs.components.inline",
           "name": "reference",
           "qualname": "oodocs.components.inline.reference"
+        },
+        {
+          "category": "inline",
+          "kind": "function",
+          "module": "oodocs.components.inline",
+          "name": "ref_range",
+          "qualname": "oodocs.components.inline.ref_range"
+        },
+        {
+          "category": "inline",
+          "kind": "function",
+          "module": "oodocs.components.inline",
+          "name": "refs",
+          "qualname": "oodocs.components.inline.refs"
+        },
+        {
+          "category": "inline",
+          "kind": "function",
+          "module": "oodocs.components.inline",
+          "name": "page_ref",
+          "qualname": "oodocs.components.inline.page_ref"
+        },
+        {
+          "category": "inline",
+          "kind": "function",
+          "module": "oodocs.components.inline",
+          "name": "paren_ref",
+          "qualname": "oodocs.components.inline.paren_ref"
         },
         {
           "category": "workflow",

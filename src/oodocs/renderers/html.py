@@ -42,6 +42,8 @@ from oodocs.components.inline import (
     Hyperlink,
     InlineChip,
     Math,
+    ReferenceFormat,
+    ReferenceGroup,
     Text,
 )
 from oodocs.components.media import (
@@ -70,7 +72,13 @@ from oodocs.components.references import format_citation_label, reference_entry_
 from oodocs.core import OODocsError, PathLike, length_to_inches
 from oodocs.document import Document
 from oodocs.components.equations import SUBSCRIPT, SUPERSCRIPT, parse_latex_segments
-from oodocs.layout.indexing import RenderIndex, build_render_index
+from oodocs.layout.indexing import (
+    ReferenceTextPiece,
+    RenderIndex,
+    build_render_index,
+    reference_text_pieces,
+    resolve_block_reference,
+)
 from oodocs.styles import BoxStyle, HeadingStyle, ParagraphStyle, TableStyle, TextStyle, Theme
 from oodocs.renderers.context import HtmlRenderContext
 from oodocs.renderers.syntax import _syntax_line_html, syntax_html
@@ -1970,6 +1978,22 @@ class HtmlRenderer:
                 ),
                 internal=fragment.internal,
             )
+        if isinstance(fragment, ReferenceGroup):
+            return self._reference_pieces_html(
+                reference_text_pieces(
+                    fragment.targets,
+                    fragment.reference_format,
+                    theme,
+                    render_index,
+                    range_reference=fragment.range_reference,
+                ),
+                fragment,
+                theme,
+                base_bold=base_bold,
+                base_italic=base_italic,
+                base_size=base_size,
+                default_style=default_style,
+            )
         if isinstance(fragment, InlineChip):
             return self._inline_chip_html(
                 fragment,
@@ -1977,18 +2001,14 @@ class HtmlRenderer:
                 base_size=base_size,
             )
         if isinstance(fragment, _BlockReference):
-            label_html = (
-                self._inline_html(
-                    fragment.label,
-                    theme,
-                    render_index,
-                    base_bold=base_bold,
-                    base_italic=base_italic,
-                    base_size=base_size,
-                )
-                if fragment.label is not None
-                else self._styled_text_html(
-                    self._resolve_block_reference(fragment.target, theme, render_index),
+            if fragment.label is None:
+                return self._reference_pieces_html(
+                    reference_text_pieces(
+                        (fragment.target,),
+                        fragment.reference_format,
+                        theme,
+                        render_index,
+                    ),
                     fragment,
                     theme,
                     base_bold=base_bold,
@@ -1996,6 +2016,13 @@ class HtmlRenderer:
                     base_size=base_size,
                     default_style=default_style,
                 )
+            label_html = self._inline_html(
+                fragment.label,
+                theme,
+                render_index,
+                base_bold=base_bold,
+                base_italic=base_italic,
+                base_size=base_size,
             )
             return self._link_html(
                 self._block_reference_anchor(fragment.target, render_index),
@@ -2211,7 +2238,23 @@ class HtmlRenderer:
         if isinstance(fragment, _BlockReference):
             if fragment.label is not None:
                 return "".join(item.plain_text() for item in fragment.label)
-            return self._resolve_block_reference(fragment.target, theme, render_index)
+            return self._resolve_block_reference(
+                fragment.target,
+                theme,
+                render_index,
+                fragment.reference_format,
+            )
+        if isinstance(fragment, ReferenceGroup):
+            return "".join(
+                piece.text
+                for piece in reference_text_pieces(
+                    fragment.targets,
+                    fragment.reference_format,
+                    theme,
+                    render_index,
+                    range_reference=fragment.range_reference,
+                )
+            )
         if isinstance(fragment, Citation):
             citation_entry = render_index.citation_entry(fragment.target)
             return format_citation_label(
@@ -2234,91 +2277,42 @@ class HtmlRenderer:
         target: object,
         theme: Theme,
         render_index: RenderIndex,
+        reference_format: ReferenceFormat | None = None,
     ) -> str:
-        if isinstance(target, (Table, SubTable, SubTableGroup)):
-            number = render_index.table_number(target)
-            if number is None:
-                raise OODocsError(
-                    "Table references require the target table to have a caption and be included in the document"
-                )
-            label = theme.resolve_caption_label("table", "reference")
-            if isinstance(target, SubTable):
-                subtable_label = render_index.subtable_reference_label(target)
-                if subtable_label is None:
-                    raise OODocsError(
-                        "Subtable references require the target subtable to belong to a captioned SubTableGroup"
-                    )
-                return f"{label} {number}{subtable_label}"
-            return f"{label} {number}"
+        return resolve_block_reference(
+            target,
+            theme,
+            render_index,
+        ).text(reference_format)
 
-        if isinstance(target, (Figure, SubFigure, SubFigureGroup)):
-            number = render_index.figure_number(target)
-            if number is None:
-                raise OODocsError(
-                    "Figure references require the target figure to have a caption and be included in the document"
-                )
-            if isinstance(target, SubFigure):
-                label = render_index.subfigure_label(target)
-                if label is None:
-                    raise OODocsError(
-                        "Subfigure references require the target subfigure to belong to a captioned SubFigureGroup"
-                    )
-                figure_label = theme.resolve_caption_label("figure", "reference")
-                reference_label = render_index.subfigure_reference_label(target)
-                return f"{figure_label} {number}{reference_label or f'({label})'}"
-            label = theme.resolve_caption_label("figure", "reference")
-            return f"{label} {number}"
-
-        if isinstance(target, Part):
-            number_label = render_index.heading_number(target)
-            if number_label is None:
-                raise OODocsError("Part references require the target part to be numbered and included in the document")
-            return number_label
-
-        if isinstance(target, Section):
-            number_label = render_index.heading_number(target)
-            if number_label is None:
-                raise OODocsError("Section references require the target section to be numbered and included in the document")
-            prefix = "Chapter" if target.level == 1 else "Section"
-            return f"{prefix} {number_label}"
-
-        if isinstance(target, Equation):
-            number = render_index.equation_number(target)
-            if number is None:
-                raise OODocsError(
-                    "Equation references require the target equation to be numbered and included in the document, "
-                    "or the reference must provide a custom label"
-                )
-            return target.reference_text(number)
-
-        if isinstance(target, Paragraph):
-            number = render_index.paragraph_number(target)
-            if number is None:
-                raise OODocsError("Paragraph references require the target paragraph to be included in the document")
-            return f"Paragraph {number}"
-
-        if isinstance(target, CodeBlock):
-            number = render_index.code_block_number(target)
-            if number is None:
-                raise OODocsError("Code block references require the target code block to be included in the document")
-            return f"Code block {number}"
-
-        if isinstance(target, Box):
-            number = render_index.box_number(target)
-            if number is None:
-                raise OODocsError("Box references require the target box to be included in the document")
-            return f"Box {number}"
-
-        if isinstance(target, CountableBlock):
-            number = render_index.countable_number(target)
-            if number is None:
-                raise OODocsError(
-                    "CountableBlock references require the target to be numbered and included in the document, "
-                    "or the reference must provide a custom label"
-                )
-            return target.reference_text(number)
-
-        raise OODocsError(f"Unsupported reference target: {type(target)!r}")
+    def _reference_pieces_html(
+        self,
+        pieces: list[ReferenceTextPiece],
+        fragment: Text,
+        theme: Theme,
+        *,
+        base_bold: bool,
+        base_italic: bool,
+        base_size: float | None,
+        default_style: TextStyle | None = None,
+    ) -> str:
+        parts: list[str] = []
+        for piece in pieces:
+            text = self._styled_text_html(
+                piece.text,
+                fragment,
+                theme,
+                base_bold=base_bold,
+                base_italic=base_italic,
+                base_size=base_size,
+                default_style=default_style,
+            )
+            parts.append(
+                self._link_html(piece.anchor, text, internal=True)
+                if piece.anchor is not None
+                else text
+            )
+        return "".join(parts)
 
     def _block_reference_anchor(
         self,

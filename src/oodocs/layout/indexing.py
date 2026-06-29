@@ -30,7 +30,15 @@ from oodocs.components.generated import (
     ListOfTables,
     TableOfContents,
 )
-from oodocs.components.inline import BlockReference, Citation, Comment, Footnote, Hyperlink, Text
+from oodocs.components.inline import (
+    BlockReference,
+    Citation,
+    Comment,
+    Footnote,
+    Hyperlink,
+    ReferenceFormat,
+    Text,
+)
 from oodocs.components.media import Figure, SubFigure, SubFigureGroup, SubTable, SubTableGroup, Table
 from oodocs.components.references import CitationLibrary, CitationSource, normalize_reference_sort
 from oodocs.core import OODocsError
@@ -215,6 +223,28 @@ class CountableEntry:
     counter: str
     anchor: str
     scope: EntryScope = field(default_factory=EntryScope)
+
+
+@dataclass(slots=True)
+class ResolvedBlockReference:
+    """Resolved label, number text, and anchor for an object reference."""
+
+    label: str
+    value: str
+    anchor: str | None
+
+    def text(self, reference_format: ReferenceFormat | None = None) -> str:
+        """Return the formatted reference text."""
+
+        return _format_reference_text(self, reference_format or ReferenceFormat())
+
+
+@dataclass(slots=True)
+class ReferenceTextPiece:
+    """Text plus optional internal anchor for formatted references."""
+
+    text: str
+    anchor: str | None = None
 
 
 @dataclass(slots=True)
@@ -735,6 +765,269 @@ class RenderIndex:
         return anchors
 
 
+def resolve_block_reference(
+    target: object,
+    theme: Theme,
+    render_index: RenderIndex,
+) -> ResolvedBlockReference:
+    """Resolve a document object reference into label, value, and anchor."""
+
+    if isinstance(target, (Table, SubTable, SubTableGroup)):
+        number = render_index.table_number(target)
+        if number is None:
+            raise OODocsError(
+                "Table references require the target table to have a caption and be included in the document"
+            )
+        label = theme.resolve_caption_label("table", "reference")
+        if isinstance(target, SubTable):
+            subtable_label = render_index.subtable_reference_label(target)
+            if subtable_label is None:
+                raise OODocsError(
+                    "Subtable references require the target subtable to belong to a captioned SubTableGroup"
+                )
+            return ResolvedBlockReference(
+                label,
+                f"{number}{subtable_label}",
+                render_index.table_anchor(target),
+            )
+        return ResolvedBlockReference(label, str(number), render_index.table_anchor(target))
+
+    if isinstance(target, (Figure, SubFigure, SubFigureGroup)):
+        number = render_index.figure_number(target)
+        if number is None:
+            raise OODocsError(
+                "Figure references require the target figure to have a caption and be included in the document"
+            )
+        label = theme.resolve_caption_label("figure", "reference")
+        if isinstance(target, SubFigure):
+            subfigure_label = render_index.subfigure_label(target)
+            if subfigure_label is None:
+                raise OODocsError(
+                    "Subfigure references require the target subfigure to belong to a captioned SubFigureGroup"
+                )
+            reference_label = render_index.subfigure_reference_label(target)
+            return ResolvedBlockReference(
+                label,
+                f"{number}{reference_label or f'({subfigure_label})'}",
+                render_index.figure_anchor(target),
+            )
+        return ResolvedBlockReference(label, str(number), render_index.figure_anchor(target))
+
+    if isinstance(target, Part):
+        number_label = render_index.heading_number(target)
+        if number_label is None:
+            raise OODocsError("Part references require the target part to be numbered and included in the document")
+        return ResolvedBlockReference("", number_label, render_index.heading_anchor(target))
+
+    if isinstance(target, Section):
+        number_label = render_index.heading_number(target)
+        if number_label is None:
+            raise OODocsError("Section references require the target section to be numbered and included in the document")
+        label = "Chapter" if target.level == 1 else "Section"
+        return ResolvedBlockReference(label, number_label, render_index.heading_anchor(target))
+
+    if isinstance(target, Equation):
+        number = render_index.equation_number(target)
+        if number is None:
+            raise OODocsError(
+                "Equation references require the target equation to be numbered and included in the document, "
+                "or the reference must provide a custom label"
+            )
+        return ResolvedBlockReference(
+            target.reference_label,
+            str(number),
+            render_index.block_anchor(target),
+        )
+
+    if isinstance(target, Paragraph):
+        number = render_index.paragraph_number(target)
+        if number is None:
+            raise OODocsError("Paragraph references require the target paragraph to be included in the document")
+        return ResolvedBlockReference("Paragraph", str(number), render_index.block_anchor(target))
+
+    if isinstance(target, CodeBlock):
+        number = render_index.code_block_number(target)
+        if number is None:
+            raise OODocsError("Code block references require the target code block to be included in the document")
+        return ResolvedBlockReference("Code block", str(number), render_index.block_anchor(target))
+
+    if isinstance(target, Box):
+        number = render_index.box_number(target)
+        if number is None:
+            raise OODocsError("Box references require the target box to be included in the document")
+        return ResolvedBlockReference("Box", str(number), render_index.block_anchor(target))
+
+    if isinstance(target, CountableBlock):
+        number = render_index.countable_number(target)
+        if number is None:
+            raise OODocsError(
+                "CountableBlock references require the target to be numbered and included in the document, "
+                "or the reference must provide a custom label"
+            )
+        return ResolvedBlockReference(
+            target.reference_label,
+            str(number),
+            render_index.block_anchor(target),
+        )
+
+    raise OODocsError(f"Unsupported reference target: {type(target)!r}")
+
+
+def reference_text_pieces(
+    targets: Sequence[object],
+    reference_format: ReferenceFormat,
+    theme: Theme,
+    render_index: RenderIndex,
+    *,
+    range_reference: bool = False,
+) -> list[ReferenceTextPiece]:
+    """Return text/link pieces for one or more object references."""
+
+    resolved = [
+        resolve_block_reference(target, theme, render_index)
+        for target in targets
+    ]
+    if not resolved:
+        return []
+    if range_reference:
+        return _wrap_reference_pieces(
+            _range_reference_pieces(resolved[0], resolved[-1], reference_format),
+            reference_format,
+        )
+    if len(resolved) == 1:
+        return _wrap_reference_pieces(
+            [ReferenceTextPiece(resolved[0].text(reference_format), resolved[0].anchor)],
+            reference_format,
+        )
+    return _wrap_reference_pieces(
+        _multi_reference_pieces(resolved, reference_format),
+        reference_format,
+    )
+
+
+def _multi_reference_pieces(
+    resolved: Sequence[ResolvedBlockReference],
+    reference_format: ReferenceFormat,
+) -> list[ReferenceTextPiece]:
+    labels = {
+        _effective_reference_label(item.label, reference_format)
+        for item in resolved
+    }
+    if len(labels) == 1 and next(iter(labels)):
+        label = _plural_reference_label(next(iter(labels)), reference_format)
+        pieces = [ReferenceTextPiece(_apply_reference_case(label, reference_format) + " ")]
+        pieces.extend(
+            _join_reference_value_pieces(resolved, reference_format)
+        )
+        return pieces
+    return _join_reference_text_pieces(resolved, reference_format)
+
+
+def _range_reference_pieces(
+    start: ResolvedBlockReference,
+    end: ResolvedBlockReference,
+    reference_format: ReferenceFormat,
+) -> list[ReferenceTextPiece]:
+    start_label = _effective_reference_label(start.label, reference_format)
+    end_label = _effective_reference_label(end.label, reference_format)
+    if start_label == end_label and start_label:
+        label = _plural_reference_label(start_label, reference_format)
+        return [
+            ReferenceTextPiece(_apply_reference_case(label, reference_format) + " "),
+            ReferenceTextPiece(start.value, start.anchor),
+            ReferenceTextPiece(reference_format.range_separator),
+            ReferenceTextPiece(end.value, end.anchor),
+        ]
+    return [
+        ReferenceTextPiece(_format_reference_text(start, reference_format), start.anchor),
+        ReferenceTextPiece(reference_format.range_separator),
+        ReferenceTextPiece(_format_reference_text(end, reference_format), end.anchor),
+    ]
+
+
+def _join_reference_value_pieces(
+    resolved: Sequence[ResolvedBlockReference],
+    reference_format: ReferenceFormat,
+) -> list[ReferenceTextPiece]:
+    pieces: list[ReferenceTextPiece] = []
+    for index, item in enumerate(resolved):
+        if index:
+            pieces.append(ReferenceTextPiece(_reference_separator(index, len(resolved), reference_format)))
+        pieces.append(ReferenceTextPiece(item.value, item.anchor))
+    return pieces
+
+
+def _join_reference_text_pieces(
+    resolved: Sequence[ResolvedBlockReference],
+    reference_format: ReferenceFormat,
+) -> list[ReferenceTextPiece]:
+    pieces: list[ReferenceTextPiece] = []
+    for index, item in enumerate(resolved):
+        if index:
+            pieces.append(ReferenceTextPiece(_reference_separator(index, len(resolved), reference_format)))
+        pieces.append(ReferenceTextPiece(_format_reference_text(item, reference_format), item.anchor))
+    return pieces
+
+
+def _wrap_reference_pieces(
+    pieces: list[ReferenceTextPiece],
+    reference_format: ReferenceFormat,
+) -> list[ReferenceTextPiece]:
+    if reference_format.prefix:
+        pieces.insert(0, ReferenceTextPiece(reference_format.prefix))
+    if reference_format.suffix:
+        pieces.append(ReferenceTextPiece(reference_format.suffix))
+    return pieces
+
+
+def _format_reference_text(
+    reference: ResolvedBlockReference,
+    reference_format: ReferenceFormat,
+) -> str:
+    label = _effective_reference_label(reference.label, reference_format)
+    label = _apply_reference_case(label, reference_format)
+    if not label:
+        return reference.value
+    return f"{label} {reference.value}"
+
+
+def _effective_reference_label(
+    label: str,
+    reference_format: ReferenceFormat,
+) -> str:
+    return reference_format.label if reference_format.label is not None else label
+
+
+def _plural_reference_label(
+    label: str,
+    reference_format: ReferenceFormat,
+) -> str:
+    if reference_format.plural_label is not None:
+        return reference_format.plural_label
+    if label.endswith(".") or label.endswith("s"):
+        return label
+    return f"{label}s"
+
+
+def _apply_reference_case(
+    label: str,
+    reference_format: ReferenceFormat,
+) -> str:
+    if not reference_format.capitalized or not label:
+        return label
+    return label[:1].upper() + label[1:]
+
+
+def _reference_separator(
+    index: int,
+    total: int,
+    reference_format: ReferenceFormat,
+) -> str:
+    if index == total - 1 and total > 1:
+        return reference_format.last_separator
+    return reference_format.separator
+
+
 def _reference_entry_sort_key(
     entry: CitationReferenceEntry,
     sort_style: str,
@@ -1204,6 +1497,10 @@ __all__ = [
     "EntryScope",
     "FootnoteReferenceEntry",
     "HeadingEntry",
+    "ReferenceTextPiece",
     "RenderIndex",
+    "ResolvedBlockReference",
     "build_render_index",
+    "reference_text_pieces",
+    "resolve_block_reference",
 ]

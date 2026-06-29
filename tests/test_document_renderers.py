@@ -98,6 +98,7 @@ from oodocs import (
     Proposition,
     ReactionEquation,
     ReferenceList,
+    ReferenceFormat,
     Remark,
     Section,
     Shape,
@@ -142,6 +143,11 @@ from oodocs import (
     math,
     markup,
     prescript,
+    Ref,
+    ref_range,
+    refs,
+    page_ref,
+    paren_ref,
     reference,
     status,
     strikethrough,
@@ -3048,6 +3054,94 @@ def test_caption_and_reference_labels_can_differ_by_theme(tmp_path: Path) -> Non
     assert "See Tbl. 1 and Fig. 1" in normalized_html_text
     assert "Table 1. Localized table caption." in normalized_html_text
     assert "Figure 1. Localized figure caption." in normalized_html_text
+
+
+def test_cleveref_style_reference_helpers_render_lists_ranges_and_wrappers(tmp_path: Path) -> None:
+    first = Table(["Metric"], [["A"]], caption="First table.")
+    second = Table(["Metric"], [["B"]], caption="Second table.")
+    theorem = Theorem("Every generated reference should keep its label.")
+    section = Section("Targets", first, second, theorem)
+    document = Document(
+        "Clever References",
+        section,
+        Paragraph(
+            "See ",
+            Ref(first, style=TextStyle(text_color="C00000")),
+            ", ",
+            refs([first, second], plural_label="Tables", style=TextStyle(bold=True)),
+            ", ",
+            ref_range(
+                first,
+                second,
+                plural_label="Tables",
+                range_separator="--",
+                style=TextStyle(underline=True),
+            ),
+            ", ",
+            paren_ref(theorem),
+            ", and ",
+            page_ref(section),
+            ".",
+        ),
+    )
+
+    warning_codes = {issue.code for issue in document.validate().warnings}
+    assert "page-aware-reference-degrades" in warning_codes
+
+    docx_path = tmp_path / "clever-references.docx"
+    pdf_path = tmp_path / "clever-references.pdf"
+    html_path = tmp_path / "clever-references.html"
+    document.save_docx(docx_path)
+    document.save_pdf(pdf_path)
+    document.save_html(html_path)
+
+    word_text = "\n".join(paragraph.text for paragraph in WordDocument(docx_path).paragraphs)
+    pdf_text = "\n".join(page.extract_text() or "" for page in PdfReader(BytesIO(pdf_path.read_bytes())).pages)
+    with zipfile.ZipFile(docx_path) as archive:
+        word_xml = archive.read("word/document.xml").decode("utf-8")
+    html_markup = html_path.read_text(encoding="utf-8")
+    html_text = _normalized_html_text(html_path)
+
+    expected = "See Table 1, Tables 1 and 2, Tables 1--2, (Theorem 1), and Section 1.1."
+    assert expected in word_text
+    assert expected in pdf_text
+    assert 'w:val="C00000"' in word_xml
+    assert "<w:b" in word_xml
+    assert 'w:val="single"' in word_xml
+    assert "color: #C00000" in html_markup
+    assert "font-weight: 700" in html_markup
+    assert "text-decoration: underline" in html_markup
+    assert "Table 1" in html_text
+    assert "Tables 1 and 2" in html_text
+    assert "Tables 1 -- 2" in html_text
+    assert "Theorem 1" in html_text
+    assert "Section 1.1" in html_text
+
+
+def test_reference_format_overrides_labels_for_helpers(tmp_path: Path) -> None:
+    image_path = tmp_path / "reference-format.png"
+    _write_sample_image(image_path)
+    first = Figure(image_path, caption="First figure.", width=0.5)
+    second = Figure(image_path, caption="Second figure.", width=0.5)
+    document = Document(
+        "Reference Format",
+        Paragraph(
+            "Compare ",
+            refs(
+                [first, second],
+                reference_format=ReferenceFormat(label="fig.", plural_label="figs."),
+                last_separator=" + ",
+            ),
+            ".",
+        ),
+        first,
+        second,
+    )
+
+    html_path = tmp_path / "reference-format.html"
+    document.save_html(html_path)
+
+    assert "Compare figs. 1 + 2" in _normalized_html_text(html_path)
 
 
 def test_explicit_reference_api_covers_numbered_blocks(tmp_path: Path) -> None:
