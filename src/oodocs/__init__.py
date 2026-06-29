@@ -75,7 +75,7 @@ from oodocs.components.media import (
 from oodocs.components.markup import markup
 from oodocs.components.people import Affiliation, Author, AuthorLayout
 from oodocs.components.references import CitationLibrary, CitationSource
-from oodocs.components.positioning import ImageBox, Shape, TextBox
+from oodocs.components.positioning import ImageBox, PageItemScope, Shape, TextBox
 from oodocs.document import Document
 from oodocs.importers.markdown import (
     from_markdown,
@@ -277,6 +277,7 @@ __all__ = [
     "PageMargins",
     "PageSize",
     "PageBreak",
+    "PageItemScope",
     "PdfPages",
     "Paragraph",
     "Part",

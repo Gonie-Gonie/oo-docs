@@ -163,6 +163,7 @@ OODocs_API_CATEGORIES: tuple[ApiCategory, ...] = (
             "oodocs.TextBox",
             "oodocs.ImageBox",
             "oodocs.Shape",
+            "oodocs.PageItemScope",
             "oodocs.components.media.*",
             "oodocs.components.positioning.*",
         ),

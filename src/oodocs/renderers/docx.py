@@ -233,9 +233,14 @@ class DocxRenderer:
             unit=settings.unit,
             word_document=word_document,
         )
-        self._render_page_items(word_document, document, context)
         front_children, main_children = document.split_top_level_children()
         has_front_matter = settings.cover_page or bool(front_children)
+        self._render_page_items(
+            word_document,
+            document,
+            context,
+            has_front_matter=has_front_matter,
+        )
 
         self._render_title_matter(
             word_document,
@@ -251,6 +256,7 @@ class DocxRenderer:
             if main_children:
                 section = word_document.add_section(WD_SECTION.NEW_PAGE)
                 self._configure_section_page_box(section, settings)
+                self._render_main_page_items(section, document, context)
                 self._render_top_level_children(word_document, main_children, context)
         else:
             self._render_top_level_children(word_document, main_children, context)
@@ -2534,16 +2540,76 @@ class DocxRenderer:
         word_document: WordDocument,
         document: Document,
         context: DocxRenderContext,
+        *,
+        has_front_matter: bool,
     ) -> None:
         if not document.settings.page_items:
             return
+        section = word_document.sections[0]
+        if document.settings.cover_page:
+            section.different_first_page_header_footer = True
+            self._render_section_page_items(
+                section.first_page_header,
+                document,
+                context,
+                phase="cover",
+                page_number=1,
+            )
+            if has_front_matter:
+                self._render_section_page_items(
+                    section.header,
+                    document,
+                    context,
+                    phase="front",
+                    page_number=None,
+                )
+            return
+
+        self._render_section_page_items(
+            section.header,
+            document,
+            context,
+            phase="front" if has_front_matter else "main",
+            page_number=1,
+        )
+
+    def _render_main_page_items(
+        self,
+        section: object,
+        document: Document,
+        context: DocxRenderContext,
+    ) -> None:
+        if not document.settings.page_items:
+            return
+        self._unlink_page_item_header(section.header)
+        self._render_section_page_items(
+            section.header,
+            document,
+            context,
+            phase="main",
+            page_number=None,
+        )
+
+    def _render_section_page_items(
+        self,
+        header: object,
+        document: Document,
+        context: DocxRenderContext,
+        *,
+        phase: str,
+        page_number: int | None,
+    ) -> None:
         boxes = resolve_positioned_boxes(
             document.settings.page_items,
             document.settings,
             context.unit,
+            page_number=page_number,
+            phase=phase,
         )
-        header = word_document.sections[0].header
-        paragraph = header.paragraphs[0] if header.paragraphs else header.add_paragraph()
+        if not boxes:
+            return
+        self._unlink_page_item_header(header)
+        paragraph = header.add_paragraph()
         paragraph.paragraph_format.space_before = Pt(0)
         paragraph.paragraph_format.space_after = Pt(0)
         for box in boxes:
@@ -2555,6 +2621,10 @@ class DocxRenderer:
                     absolute=True,
                 )
             )
+
+    def _unlink_page_item_header(self, header: object) -> None:
+        if hasattr(header, "is_linked_to_previous"):
+            header.is_linked_to_previous = False
 
     def _render_positioned_item(
         self,
@@ -3893,11 +3963,13 @@ class DocxRenderer:
         front_matter: bool,
     ) -> None:
         header_footer = theme.effective_header_footer()
-        section.different_first_page_header_footer = header_footer.different_first_page
+        section.different_first_page_header_footer = (
+            header_footer.different_first_page or section.different_first_page_header_footer
+        )
         page_kinds: list[tuple[str, object, object]] = [
             ("default", section.header, section.footer)
         ]
-        if header_footer.different_first_page:
+        if section.different_first_page_header_footer:
             page_kinds.append(("first", section.first_page_header, section.first_page_footer))
         if header_footer.different_odd_even_pages:
             page_kinds.append(("even", section.even_page_header, section.even_page_footer))

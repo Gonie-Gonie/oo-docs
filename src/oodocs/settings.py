@@ -534,7 +534,9 @@ class DocumentSettings:
             ``page_layout`` when setting orientation.
         page_margins: Physical page margins. Preserved for compatibility;
             prefer ``page_layout`` when setting orientation.
-        page_items: Absolute-positioned page decorations or overlays.
+        page_items: Absolute-positioned page decorations or overlays. Pass
+            ``scope=...`` on each item for all, cover, front, main, or physical
+            page-range selection.
         theme: Rendering theme.
 
     Examples:
@@ -558,7 +560,15 @@ class DocumentSettings:
         from oodocs import Document, DocumentSettings, Paragraph, TextBox
 
         watermark = TextBox("DRAFT", x=0.75, y=0.75, width=2.0, height=0.5, font_size=24)
-        settings = DocumentSettings(page_items=[watermark])
+        cover_stamp = TextBox(
+            "CONFIDENTIAL",
+            x=0.75,
+            y=1.25,
+            width=2.0,
+            height=0.5,
+            scope="cover",
+        )
+        settings = DocumentSettings(page_items=[watermark, cover_stamp])
         document = Document("Draft Report", Paragraph("Internal review."), settings=settings)
         ```
 
@@ -566,6 +576,8 @@ class DocumentSettings:
         Length values without their own unit use ``unit`` as the default when
         renderers resolve physical page geometry. ``page_items`` are absolute
         overlays or decorations and are validated when settings are created.
+        PDF applies page scopes to physical pages. DOCX applies scopes at
+        section/header level, and HTML applies them to the static page frame.
 
     See Also:
         ``PageSize`` and ``PageMargins`` for page geometry, ``Theme`` for

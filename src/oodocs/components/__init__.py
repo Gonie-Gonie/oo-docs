@@ -58,6 +58,7 @@ _EXPORTS = {
     "InlineCode": "oodocs.components.inline",
     "MultiColumn": "oodocs.components.blocks",
     "NumberedList": "oodocs.components.blocks",
+    "PageItemScope": "oodocs.components.positioning",
     "Paragraph": "oodocs.components.blocks",
     "Part": "oodocs.components.blocks",
     "PdfPages": "oodocs.components.media",

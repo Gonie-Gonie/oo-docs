@@ -84,6 +84,14 @@ COMPATIBILITY_NOTES: dict[str, CompatibilityNote] = {
         ),
         formats=("docx", "pdf"),
     ),
+    "page-item-scope-static-output": CompatibilityNote(
+        code="page-item-scope-static-output",
+        message=(
+            "Scoped page items are exact in PDF; DOCX applies them at section "
+            "header level and HTML applies them to the static page frame."
+        ),
+        formats=("docx", "html"),
+    ),
 }
 
 

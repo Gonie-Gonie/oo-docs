@@ -126,10 +126,20 @@ class HtmlRenderer:
         )
         front_children, main_children = document.split_top_level_children()
         has_front_matter = settings.cover_page or bool(front_children)
+        page_item_phase = (
+            "cover"
+            if settings.cover_page
+            else "front" if has_front_matter else "main"
+        )
 
         body_parts = [
             '<div class="oodocs-page-frame">',
-            self._page_items_html(document, context),
+            self._page_items_html(
+                document,
+                context,
+                phase=page_item_phase,
+                page_number=1,
+            ),
             self._header_footer_html(document, context),
             '<div class="oodocs-document">',
             self._render_title_matter(
@@ -1827,18 +1837,30 @@ class HtmlRenderer:
             for fragment in fragments
         ) or "&nbsp;"
 
-    def _page_items_html(self, document: Document, context: HtmlRenderContext) -> str:
+    def _page_items_html(
+        self,
+        document: Document,
+        context: HtmlRenderContext,
+        *,
+        phase: str,
+        page_number: int | None,
+    ) -> str:
         if not document.settings.page_items:
+            return ""
+        boxes = resolve_positioned_boxes(
+            document.settings.page_items,
+            document.settings,
+            context.unit,
+            page_number=page_number,
+            phase=phase,
+        )
+        if not boxes:
             return ""
         return (
             '<div class="oodocs-page-items" aria-hidden="true">'
             + "".join(
                 self._positioned_item_html(box, context)
-                for box in resolve_positioned_boxes(
-                    document.settings.page_items,
-                    document.settings,
-                    context.unit,
-                )
+                for box in boxes
             )
             + "</div>"
         )

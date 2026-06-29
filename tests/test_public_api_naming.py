@@ -81,6 +81,7 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "HeaderFooterDefaults",
         "LocaleDefaults",
         "CropBox",
+        "PageItemScope",
         "PageNumberDefaults",
         "RunInTitleStyle",
         "ReferenceList",

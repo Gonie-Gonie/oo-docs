@@ -786,7 +786,11 @@ class PdfRenderer:
         )
         if self._story_has_indexing_flowable(story):
             pdf.multiBuild(story, onFirstPage=page_callback, onLaterPages=page_callback)
-        elif settings.theme.uses_header_footer() or settings.theme.blocks.page_background_color != "FFFFFF":
+        elif (
+            settings.theme.uses_header_footer()
+            or settings.theme.blocks.page_background_color != "FFFFFF"
+            or bool(settings.page_items)
+        ):
             pdf.build(story, onFirstPage=page_callback, onLaterPages=page_callback)
         else:
             pdf.build(story)
@@ -2021,6 +2025,9 @@ class PdfRenderer:
         canvas: object,
         document: Document,
         context: PdfRenderContext,
+        *,
+        page_number: int,
+        phase: str,
     ) -> None:
         if not document.settings.page_items:
             return
@@ -2029,6 +2036,8 @@ class PdfRenderer:
             document.settings.page_items,
             document.settings,
             context.unit,
+            page_number=page_number,
+            phase=phase,
         ):
             self._draw_positioned_item(
                 canvas,
@@ -4239,16 +4248,28 @@ class PdfRenderer:
 
         def draw_page(canvas: object, doc: object) -> None:
             canvas.saveState()
+            current_page = canvas.getPageNumber()
+            main_start_page = getattr(doc, "main_matter_start_page", None)
+            page_item_phase = self._page_item_phase(
+                document,
+                has_front_matter=has_front_matter,
+                current_page=current_page,
+                main_start_page=main_start_page,
+            )
             if theme.blocks.page_background_color != "FFFFFF":
                 canvas.setFillColor(colors.HexColor(f"#{theme.blocks.page_background_color}"))
                 canvas.rect(0, 0, doc.pagesize[0], doc.pagesize[1], fill=1, stroke=0)
-            self._draw_page_items(canvas, document, context)
+            self._draw_page_items(
+                canvas,
+                document,
+                context,
+                page_number=current_page,
+                phase=page_item_phase,
+            )
             if not theme.uses_header_footer():
                 canvas.restoreState()
                 return
             canvas.setFont(font_name, theme.resolve_header_footer_font_size())
-            current_page = canvas.getPageNumber()
-            main_start_page = getattr(doc, "main_matter_start_page", None)
             is_front_matter = has_front_matter and (
                 main_start_page is None or current_page < main_start_page
             )
@@ -4276,6 +4297,22 @@ class PdfRenderer:
             canvas.restoreState()
 
         return draw_page
+
+    def _page_item_phase(
+        self,
+        document: Document,
+        *,
+        has_front_matter: bool,
+        current_page: int,
+        main_start_page: int | None,
+    ) -> str:
+        if document.settings.cover_page and current_page == 1:
+            return "cover"
+        if has_front_matter and (
+            main_start_page is None or current_page < main_start_page
+        ):
+            return "front"
+        return "main"
 
     def _static_running_titles(self, render_index: RenderIndex) -> tuple[str, str]:
         chapter = ""

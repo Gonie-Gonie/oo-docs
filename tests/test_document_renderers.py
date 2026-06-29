@@ -93,6 +93,7 @@ from oodocs import (
     PageMargins,
     PageSize,
     PageBreak,
+    PageItemScope,
     Padding,
     PdfPages,
     Paragraph,
@@ -2312,6 +2313,91 @@ def test_page_items_render_without_affecting_document_flow(tmp_path: Path) -> No
     assert "Anchored to the named frame shape." in html_text
     assert html_text.count("data:image/png;base64,") == 1
     assert "oodocs-sheet" not in html_text
+
+
+def test_page_item_scopes_filter_pdf_and_warn_for_static_outputs(tmp_path: Path) -> None:
+    document = Document(
+        "Scoped Overlay Test",
+        Chapter("Main Matter", Paragraph("Main body text.")),
+        settings=DocumentSettings(
+            page_size=PageSize.letter(),
+            cover_page=True,
+            page_items=[
+                TextBox("ALL SCOPE", x=0.3, y=0.2, width=1.8, height=0.25, font_size=8),
+                TextBox(
+                    "COVER SCOPE",
+                    x=0.3,
+                    y=0.5,
+                    width=1.8,
+                    height=0.25,
+                    font_size=8,
+                    scope="cover",
+                ),
+                TextBox(
+                    "MAIN SCOPE",
+                    x=0.3,
+                    y=0.8,
+                    width=1.8,
+                    height=0.25,
+                    font_size=8,
+                    scope=PageItemScope.main(),
+                ),
+                TextBox(
+                    "PAGE TWO SCOPE",
+                    x=0.3,
+                    y=1.1,
+                    width=2.1,
+                    height=0.25,
+                    font_size=8,
+                    scope=PageItemScope.pages(2),
+                ),
+                TextBox(
+                    "FRONT SCOPE",
+                    x=0.3,
+                    y=1.4,
+                    width=1.8,
+                    height=0.25,
+                    font_size=8,
+                    scope="front",
+                ),
+            ],
+        ),
+    )
+
+    validation = document.validate()
+    assert "page-item-scope-static-output" in {issue.code for issue in validation.warnings}
+    assert validation.warnings_for(("pdf",)) == ()
+
+    docx_path = tmp_path / "scoped-page-items.docx"
+    pdf_path = tmp_path / "scoped-page-items.pdf"
+    html_path = tmp_path / "scoped-page-items.html"
+    document.save_docx(docx_path)
+    document.save_pdf(pdf_path)
+    document.save_html(html_path)
+
+    page_texts = [
+        page.extract_text() or ""
+        for page in PdfReader(BytesIO(pdf_path.read_bytes())).pages
+    ]
+    assert len(page_texts) >= 2
+    assert "ALL SCOPE" in page_texts[0]
+    assert "COVER SCOPE" in page_texts[0]
+    assert "MAIN SCOPE" not in page_texts[0]
+    assert "PAGE TWO SCOPE" not in page_texts[0]
+    assert "FRONT SCOPE" not in "\n".join(page_texts)
+    assert "ALL SCOPE" in page_texts[1]
+    assert "MAIN SCOPE" in page_texts[1]
+    assert "PAGE TWO SCOPE" in page_texts[1]
+    assert "COVER SCOPE" not in page_texts[1]
+
+    word_xml = _docx_word_xml(docx_path)
+    assert "COVER SCOPE" in word_xml
+    assert "MAIN SCOPE" in word_xml
+
+    html_text = html_path.read_text(encoding="utf-8")
+    assert "ALL SCOPE" in html_text
+    assert "COVER SCOPE" in html_text
+    assert "MAIN SCOPE" not in html_text
 
 
 def test_header_footer_templates_render_across_outputs(tmp_path: Path) -> None:

@@ -3,6 +3,7 @@
 Attributes:
     PositionAnchor: Page-positioning anchor name or custom named shape anchor.
     PositionPlacement: Placement mode for positioned content.
+    PageItemScopeKind: Supported page overlay scope names.
     ShapeKind: Supported absolute-positioned shape kinds.
     ImageFit: Image fitting modes for positioned image boxes.
     PositionedItem: Union of supported page-positioned item objects.
@@ -26,8 +27,157 @@ if TYPE_CHECKING:
 
 PositionAnchor = Literal["page", "margin", "content"] | str
 PositionPlacement = Literal["absolute", "inline"]
+PageItemScopeKind = Literal["all", "cover", "front", "main", "pages"]
+PageItemPhase = Literal["cover", "front", "main"]
 ShapeKind = Literal["rect", "ellipse", "line"]
 ImageFit = Literal["contain", "stretch"]
+
+
+@dataclass(frozen=True, slots=True, init=False)
+class PageItemScope:
+    """Page selection rule for document-level page items.
+
+    Args:
+        kind: Scope name. Supported values are ``"all"``, ``"cover"``,
+            ``"front"``, ``"main"``, and ``"pages"``.
+        start_page: One-based physical page number for ``"pages"`` scope.
+        end_page: Optional inclusive end page for ``"pages"`` scope.
+
+    Raises:
+        ValueError: If the scope name or page range is invalid.
+
+    Examples:
+        ```python
+        from oodocs import DocumentSettings, PageItemScope, TextBox
+
+        settings = DocumentSettings(
+            page_items=[
+                TextBox("DRAFT", width=2, height=0.5, scope="all"),
+                TextBox("Cover only", width=2, height=0.5, scope=PageItemScope.cover()),
+                TextBox("Page 2", width=2, height=0.5, scope=PageItemScope.pages(2)),
+            ]
+        )
+        ```
+    """
+
+    kind: PageItemScopeKind
+    start_page: int | None
+    end_page: int | None
+
+    def __init__(
+        self,
+        kind: PageItemScopeKind | str = "all",
+        *,
+        start_page: int | None = None,
+        end_page: int | None = None,
+    ) -> None:
+        normalized = str(kind).strip().lower().replace("_", "-")
+        normalized = {
+            "page": "pages",
+            "page-range": "pages",
+            "range": "pages",
+        }.get(normalized, normalized)
+        if normalized not in {"all", "cover", "front", "main", "pages"}:
+            raise ValueError(f"Unsupported PageItemScope kind: {kind!r}")
+
+        start: int | None = None
+        end: int | None = None
+        if normalized == "pages":
+            if start_page is None:
+                raise ValueError("PageItemScope('pages') requires start_page")
+            start = _positive_page_number(start_page, "start_page")
+            end = start if end_page is None else _positive_page_number(end_page, "end_page")
+            if end < start:
+                raise ValueError("PageItemScope end_page must be greater than or equal to start_page")
+        elif start_page is not None or end_page is not None:
+            raise ValueError("PageItemScope start_page and end_page require kind='pages'")
+
+        object.__setattr__(self, "kind", normalized)
+        object.__setattr__(self, "start_page", start)
+        object.__setattr__(self, "end_page", end)
+
+    @classmethod
+    def all(cls) -> PageItemScope:
+        """Return a scope that applies to every page.
+
+        Returns:
+            Scope matching every rendered page.
+        """
+
+        return cls("all")
+
+    @classmethod
+    def cover(cls) -> PageItemScope:
+        """Return a scope for a separate cover page.
+
+        Returns:
+            Scope matching only the cover page when ``cover_page=True``.
+        """
+
+        return cls("cover")
+
+    @classmethod
+    def front(cls) -> PageItemScope:
+        """Return a scope for front matter pages after the cover page.
+
+        Returns:
+            Scope matching front matter pages after the cover page.
+        """
+
+        return cls("front")
+
+    @classmethod
+    def main(cls) -> PageItemScope:
+        """Return a scope for the main document body.
+
+        Returns:
+            Scope matching the numbered main document body.
+        """
+
+        return cls("main")
+
+    @classmethod
+    def pages(cls, start_page: int, end_page: int | None = None) -> PageItemScope:
+        """Return a physical page-number range scope.
+
+        Args:
+            start_page: One-based first physical page.
+            end_page: Optional one-based inclusive last physical page. Defaults
+                to ``start_page``.
+
+        Returns:
+            Scope matching the requested physical page range.
+        """
+
+        return cls("pages", start_page=start_page, end_page=end_page)
+
+    def matches(
+        self,
+        *,
+        page_number: int | None = None,
+        phase: PageItemPhase | str | None = None,
+    ) -> bool:
+        """Return whether this scope applies to a page context.
+
+        Args:
+            page_number: One-based physical page number, when available.
+            phase: Page phase, such as ``"cover"``, ``"front"``, or
+                ``"main"``.
+
+        Returns:
+            ``True`` when the scope applies to the provided page context.
+        """
+
+        if self.kind == "all":
+            return True
+        if self.kind == "pages":
+            if page_number is None or self.start_page is None or self.end_page is None:
+                return False
+            return self.start_page <= page_number <= self.end_page
+        return phase == self.kind
+
+
+PageItemScopeInput = PageItemScope | str | int | tuple[int, int] | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -56,6 +206,46 @@ class PositionedBox:
     y: float
     width: float
     height: float
+
+
+def _positive_page_number(value: int, field_name: str) -> int:
+    if isinstance(value, bool):
+        raise ValueError(f"PageItemScope {field_name} must be a positive page number")
+    page_number = int(value)
+    if page_number < 1:
+        raise ValueError(f"PageItemScope {field_name} must be a positive page number")
+    return page_number
+
+
+def coerce_page_item_scope(value: PageItemScopeInput = None) -> PageItemScope:
+    """Normalize a page item scope value.
+
+    Args:
+        value: ``None``, a scope name, page number, page range tuple, or
+            ``PageItemScope``.
+
+    Returns:
+        Normalized ``PageItemScope``.
+
+    Raises:
+        TypeError: If the value cannot be interpreted as a scope.
+        ValueError: If the scope value is invalid.
+    """
+
+    if value is None:
+        return PageItemScope.all()
+    if isinstance(value, PageItemScope):
+        return value
+    if isinstance(value, str):
+        return PageItemScope(value)
+    if isinstance(value, bool):
+        raise TypeError("Page item scope must not be a boolean")
+    if isinstance(value, int):
+        return PageItemScope.pages(value)
+    if isinstance(value, tuple) and len(value) == 2:
+        start_page, end_page = value
+        return PageItemScope.pages(start_page, end_page)
+    raise TypeError(f"Unsupported page item scope: {type(value)!r}")
 
 
 def _normalize_anchor(anchor: PositionAnchor) -> str:
@@ -88,6 +278,7 @@ class TextBox(Block):
         font_size: Optional font size override.
         unit: Unit for coordinates and dimensions.
         z_index: Stacking order for page-positioned rendering.
+        scope: Page selection for ``DocumentSettings(page_items=...)``.
 
     Raises:
         ValueError: If placement, alignment, or dimensions are invalid.
@@ -121,6 +312,7 @@ class TextBox(Block):
     font_size: float | None
     unit: str | None
     z_index: int
+    scope: PageItemScope
 
     def __init__(
         self,
@@ -136,6 +328,7 @@ class TextBox(Block):
         font_size: float | None = None,
         unit: str | None = None,
         z_index: int = 0,
+        scope: PageItemScopeInput = None,
     ) -> None:
         if placement not in {"absolute", "inline"}:
             raise ValueError(f"Unsupported TextBox placement: {placement!r}")
@@ -157,6 +350,7 @@ class TextBox(Block):
         self.font_size = font_size
         self.unit = normalize_length_unit(unit) if unit is not None else None
         self.z_index = z_index
+        self.scope = coerce_page_item_scope(scope)
 
     def plain_text(self) -> str:
         """Return the textbox content without styling metadata.
@@ -227,6 +421,7 @@ class Shape(Block):
         fill_color: Optional fill color as a hex string.
         unit: Unit for coordinates and dimensions.
         z_index: Stacking order for page-positioned rendering.
+        scope: Page selection for ``DocumentSettings(page_items=...)``.
 
     Raises:
         ValueError: If kind, placement, dimensions, or name are invalid.
@@ -261,6 +456,7 @@ class Shape(Block):
     fill_color: str | None
     unit: str | None
     z_index: int
+    scope: PageItemScope
 
     def __init__(
         self,
@@ -277,6 +473,7 @@ class Shape(Block):
         fill_color: str | None = None,
         unit: str | None = None,
         z_index: int = 0,
+        scope: PageItemScopeInput = None,
     ) -> None:
         if kind not in {"rect", "ellipse", "line"}:
             raise ValueError(f"Unsupported shape kind: {kind!r}")
@@ -301,6 +498,7 @@ class Shape(Block):
         self.fill_color = normalize_color(fill_color)
         self.unit = normalize_length_unit(unit) if unit is not None else None
         self.z_index = z_index
+        self.scope = coerce_page_item_scope(scope)
 
     @classmethod
     def rect(cls, *, width: float, height: float, **kwargs: object) -> Shape:
@@ -431,6 +629,7 @@ class ImageBox(Block):
         image_dpi: Optional image DPI for plot-like sources.
         unit: Unit for coordinates and dimensions.
         z_index: Stacking order for page-positioned rendering.
+        scope: Page selection for ``DocumentSettings(page_items=...)``.
 
     Raises:
         ValueError: If placement, dimensions, or fit are invalid.
@@ -457,6 +656,7 @@ class ImageBox(Block):
     image_dpi: int | None
     unit: str | None
     z_index: int
+    scope: PageItemScope
 
     def __init__(
         self,
@@ -473,6 +673,7 @@ class ImageBox(Block):
         image_dpi: int | None = 150,
         unit: str | None = None,
         z_index: int = 0,
+        scope: PageItemScopeInput = None,
     ) -> None:
         if placement not in {"absolute", "inline"}:
             raise ValueError(f"Unsupported ImageBox placement: {placement!r}")
@@ -496,6 +697,7 @@ class ImageBox(Block):
         self.image_dpi = image_dpi
         self.unit = normalize_length_unit(unit) if unit is not None else None
         self.z_index = z_index
+        self.scope = coerce_page_item_scope(scope)
 
     def render_to_docx(
         self,
@@ -587,6 +789,9 @@ def resolve_positioned_boxes(
     items: Iterable[PositionedItem],
     settings: DocumentSettings,
     default_unit: str,
+    *,
+    page_number: int | None = None,
+    phase: PageItemPhase | str | None = None,
 ) -> list[PositionedBox]:
     """Resolve item coordinates to page-relative inches.
 
@@ -594,6 +799,9 @@ def resolve_positioned_boxes(
         items: Positioned items to resolve.
         settings: Document settings containing page and margin geometry.
         default_unit: Unit to use for items without explicit units.
+        page_number: Optional one-based physical page number used to filter
+            page-scoped items.
+        phase: Optional page phase used to filter cover/front/main items.
 
     Returns:
         Resolved boxes sorted by stacking order.
@@ -614,7 +822,11 @@ def resolve_positioned_boxes(
         ```
     """
 
-    item_list = tuple(items)
+    item_list = tuple(
+        item
+        for item in items
+        if _page_item_scope_matches(item, page_number=page_number, phase=phase)
+    )
     _validate_shape_anchors(item_list)
     shape_indexes = {
         item.name: index
@@ -652,6 +864,17 @@ def resolve_positioned_boxes(
             key=lambda indexed: (indexed[1].item.z_index, indexed[0]),
         )
     ]
+
+
+def _page_item_scope_matches(
+    item: PositionedItem,
+    *,
+    page_number: int | None,
+    phase: PageItemPhase | str | None,
+) -> bool:
+    if page_number is None and phase is None:
+        return True
+    return item.scope.matches(page_number=page_number, phase=phase)
 
 
 def _validate_shape_anchors(items: tuple[PositionedItem, ...]) -> None:
@@ -699,6 +922,10 @@ def _anchor_origin(
 __all__ = [
     "ImageBox",
     "ImageFit",
+    "PageItemPhase",
+    "PageItemScope",
+    "PageItemScopeInput",
+    "PageItemScopeKind",
     "PositionAnchor",
     "PositionPlacement",
     "PositionedBox",
@@ -706,6 +933,7 @@ __all__ = [
     "Shape",
     "ShapeKind",
     "TextBox",
+    "coerce_page_item_scope",
     "coerce_positioned_items",
     "resolve_positioned_boxes",
 ]

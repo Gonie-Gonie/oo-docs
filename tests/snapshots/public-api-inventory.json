@@ -553,6 +553,13 @@
         {
           "category": "media",
           "kind": "class",
+          "module": "oodocs.components.positioning",
+          "name": "PageItemScope",
+          "qualname": "oodocs.components.positioning.PageItemScope"
+        },
+        {
+          "category": "media",
+          "kind": "class",
           "module": "oodocs.components.media",
           "name": "PdfPages",
           "qualname": "oodocs.components.media.PdfPages"

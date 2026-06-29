@@ -717,6 +717,11 @@ class _ValidationContext:
                 item,
                 f"document.settings.page_items[{index}]",
             )
+            if item.scope.kind != "all":
+                self._add_compatibility_warning(
+                    "page-item-scope-static-output",
+                    f"document.settings.page_items[{index}].scope",
+                )
 
         self._validate_citations()
         # Build the render index only after structural checks pass; downstream

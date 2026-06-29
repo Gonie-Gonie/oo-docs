@@ -321,7 +321,7 @@ document = Document(
 )
 """
 
-POSITIONED_DRAWING_SNIPPET = """from oodocs import Document, DocumentSettings, ImageBox, Paragraph, Shape, StrokeStyle, TextBox
+POSITIONED_DRAWING_SNIPPET = """from oodocs import Document, DocumentSettings, ImageBox, PageItemScope, Paragraph, Shape, StrokeStyle, TextBox
 
 frame = Shape.rect(
     name="approval-frame",
@@ -344,6 +344,8 @@ document = Document(
         page_items=[
             frame,
             TextBox("Approval area", anchor="approval-frame", x=0.25, y=0.25, width=2.0, height=0.3),
+            TextBox("Cover draft", x=0.5, y=0.5, width=2.0, height=0.4, scope="cover"),
+            TextBox("Page 2 note", x=0.5, y=1.0, width=2.0, height=0.4, scope=PageItemScope.pages(2)),
         ],
     ),
 )
@@ -1131,6 +1133,7 @@ def build_usage_guide_document() -> Document:
         headers=["Placement", "Use it for", "Anchor behavior"],
         rows=[
             ["DocumentSettings.page_items", "Watermarks, trim guides, fixed approval areas, and form decoration.", "Coordinates start from page, margin/content, or a named Shape."],
+            ["scope='cover' or PageItemScope.pages(...)", "Cover-only stamps, main-matter watermarks, and page-range overlays.", "PDF applies physical page scopes; DOCX and HTML use section/static-frame fallbacks."],
             ["placement='inline'", "Small logos, seals, badges, and simple shapes that should move with nearby prose.", "The object sits in the authored flow like directly inserted Word media."],
         ],
         caption="Coordinate-based drawings can be page overlays or inline flow objects.",
@@ -1926,6 +1929,12 @@ def build_usage_guide_document() -> Document:
                     "Use ",
                     inline_code("DocumentSettings(page_items=...)"),
                     " for page-positioned shapes, text boxes, and image boxes that should not push body text around. Use ",
+                    inline_code("scope='cover'"),
+                    ", ",
+                    inline_code("scope='main'"),
+                    ", or ",
+                    inline_code("PageItemScope.pages(...)"),
+                    " when an overlay should target only specific document pages. PDF applies page scopes exactly; Word and HTML use section/static fallbacks. Use ",
                     inline_code("placement='inline'"),
                     " when the same object should behave more like directly inserted Word media."
                 ),
