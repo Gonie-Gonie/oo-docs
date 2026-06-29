@@ -39,6 +39,7 @@ from oodocs.components.blocks import (
 )
 from oodocs.components.generated import (
     CommentList,
+    ListOfAlgorithms,
     ListOfFigures,
     FootnoteList,
     ReferenceList,
@@ -903,6 +904,7 @@ class _ValidationContext:
             (
                 ListOfTables,
                 ListOfFigures,
+                ListOfAlgorithms,
                 ReferenceList,
                 CommentList,
                 FootnoteList,
@@ -1556,6 +1558,17 @@ class _ValidationContext:
                         "warning",
                         "empty-figure-list",
                         "ListOfFigures has no captioned figures to display.",
+                        path,
+                    )
+                continue
+            if isinstance(page, ListOfAlgorithms):
+                if page.show_page_numbers:
+                    self._add_compatibility_warning("html-algorithm-list-page-numbers", path)
+                if not render_index.scoped_algorithms(page):
+                    self._add(
+                        "warning",
+                        "empty-algorithm-list",
+                        "ListOfAlgorithms has no numbered algorithms to display.",
                         path,
                     )
                 continue

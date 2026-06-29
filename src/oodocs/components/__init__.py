@@ -35,6 +35,7 @@ _EXPORTS = {
     "Equation": "oodocs.components.blocks",
     "Example": "oodocs.components.blocks",
     "Figure": "oodocs.components.media",
+    "ListOfAlgorithms": "oodocs.components.generated",
     "ListOfFigures": "oodocs.components.generated",
     "Footnote": "oodocs.components.inline",
     "FootnoteList": "oodocs.components.generated",

@@ -219,6 +219,7 @@ class GeneratedContentDefaults:
     Attributes:
         list_of_tables_title: Default title for generated table lists.
         list_of_figures_title: Default title for generated figure lists.
+        list_of_algorithms_title: Default title for generated algorithm lists.
         comment_list_title: Default title for generated comment lists.
         footnote_list_title: Default title for generated footnote lists.
         reference_list_title: Default title for generated reference lists.
@@ -238,6 +239,7 @@ class GeneratedContentDefaults:
 
     list_of_tables_title: str = "List of Tables"
     list_of_figures_title: str = "List of Figures"
+    list_of_algorithms_title: str = "List of Algorithms"
     comment_list_title: str = "Comments"
     footnote_list_title: str = "Footnotes"
     reference_list_title: str = "References"
@@ -757,6 +759,7 @@ class Theme:
         kind: Literal[
             "list_of_tables",
             "list_of_figures",
+            "list_of_algorithms",
             "comment_list",
             "footnote_list",
             "reference_list",
@@ -768,6 +771,7 @@ class Theme:
         Args:
             kind: Generated content kind. Supported values are
                 ``"list_of_tables"``, ``"list_of_figures"``,
+                ``"list_of_algorithms"``,
                 ``"comment_list"``, ``"footnote_list"``,
                 ``"reference_list"``, and ``"table_of_contents"``.
 
@@ -791,6 +795,7 @@ class Theme:
         titles = {
             "list_of_tables": self.generated_content.list_of_tables_title,
             "list_of_figures": self.generated_content.list_of_figures_title,
+            "list_of_algorithms": self.generated_content.list_of_algorithms_title,
             "comment_list": self.generated_content.comment_list_title,
             "footnote_list": self.generated_content.footnote_list_title,
             "reference_list": self.generated_content.reference_list_title,

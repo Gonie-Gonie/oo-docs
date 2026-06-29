@@ -23,6 +23,7 @@ from oodocs.components.blocks import (
 from oodocs.components.generated import (
     CommentList,
     GeneratedListScope,
+    ListOfAlgorithms,
     ListOfFigures,
     FootnoteList,
     ReferenceList,
@@ -197,6 +198,7 @@ class CountableEntry:
         block: Countable block.
         counter: Counter namespace.
         anchor: Anchor used by renderers for links.
+        scope: Ancestor scope used by generated lists.
 
     Examples:
         ```python
@@ -212,6 +214,7 @@ class CountableEntry:
     block: CountableBlock
     counter: str
     anchor: str
+    scope: EntryScope = field(default_factory=EntryScope)
 
 
 @dataclass(slots=True)
@@ -314,6 +317,16 @@ class RenderIndex:
             entry
             for entry in self.figures
             if self._entry_in_scope(entry.scope, block.scope, self.generated_scope(block))
+        ]
+
+    def scoped_algorithms(self, block: ListOfAlgorithms) -> list[CountableEntry]:
+        """Return algorithm-list entries visible to ``block`` after scope filtering."""
+
+        return [
+            entry
+            for entry in self.countables
+            if entry.counter == "algorithm"
+            and self._entry_in_scope(entry.scope, block.scope, self.generated_scope(block))
         ]
 
     def generated_scope(self, block: object) -> EntryScope:
@@ -802,6 +815,7 @@ def _index_blocks(
                         block=block,
                         counter=block.counter,
                         anchor=anchor,
+                        scope=scope,
                     )
                 )
             _index_blocks(
@@ -933,6 +947,7 @@ def _index_blocks(
             (
                 ListOfTables,
                 ListOfFigures,
+                ListOfAlgorithms,
                 ReferenceList,
                 CommentList,
                 FootnoteList,

@@ -46,6 +46,7 @@ from oodocs.components.blocks import (
 from oodocs.components.generated import (
     CommentList,
     FootnoteList,
+    ListOfAlgorithms,
     ListOfFigures,
     ReferenceList,
     ListOfTables,
@@ -216,6 +217,7 @@ __all__ = [
     "Equation",
     "Example",
     "Figure",
+    "ListOfAlgorithms",
     "ListOfFigures",
     "Footnote",
     "FootnoteList",

@@ -50,6 +50,7 @@ from oodocs.components.blocks import (
 )
 from oodocs.components.generated import (
     CommentList,
+    ListOfAlgorithms,
     ListOfFigures,
     FootnoteList,
     ReferenceList,
@@ -796,6 +797,30 @@ class DocxRenderer:
             text_width=context.settings.text_width_in_inches(),
         )
 
+    def render_list_of_algorithms(
+        self,
+        block: ListOfAlgorithms,
+        context: DocxRenderContext,
+    ) -> None:
+        """Render the generated list of algorithms into the DOCX document.
+
+        Args:
+            block: Generated algorithm-list block.
+            context: Current DOCX render context.
+        """
+
+        self._render_countable_list(
+            context.word_document,
+            block.title,
+            context.render_index.scoped_algorithms(block),
+            context.theme,
+            context.render_index,
+            context.theme.resolve_generated_page_title("list_of_algorithms"),
+            show_page_numbers=block.show_page_numbers,
+            leader=block.leader,
+            text_width=context.settings.text_width_in_inches(),
+        )
+
     def render_table(
         self,
         container: object,
@@ -1123,7 +1148,7 @@ class DocxRenderer:
         return 3
 
     def _is_paginated_generated_page(self, block: object) -> bool:
-        return isinstance(block, (ListOfTables, ListOfFigures, TableOfContents))
+        return isinstance(block, (ListOfTables, ListOfFigures, ListOfAlgorithms, TableOfContents))
 
     def _should_auto_render_footnote_list(
         self,
@@ -1319,6 +1344,7 @@ class DocxRenderer:
                 TableOfContents,
                 ListOfTables,
                 ListOfFigures,
+                ListOfAlgorithms,
                 Part,
             ),
         ):
@@ -3328,6 +3354,46 @@ class DocxRenderer:
                 paragraph,
                 anchor,
                 self._caption_fragments(label, entry.number, entry.block.caption),
+                internal=True,
+                style=TextStyle(),
+                default_size=theme.caption_size(),
+            )
+            if show_page_numbers:
+                paragraph.add_run("\t")
+                self._append_pageref_field(paragraph, entry.anchor)
+
+    def _render_countable_list(
+        self,
+        word_document: WordDocument,
+        title: list[Text] | None,
+        entries: list[object],
+        theme: Theme,
+        render_index: RenderIndex,
+        default_title: str,
+        *,
+        show_page_numbers: bool,
+        leader: str,
+        text_width: float,
+    ) -> None:
+        self._add_heading(word_document, title or [Text(default_title)], level=theme.generated_content.generated_heading_level, theme=theme, number_label=None)
+        for entry in entries:
+            paragraph = word_document.add_paragraph()
+            paragraph.paragraph_format.left_indent = Inches(0.25)
+            if show_page_numbers:
+                paragraph.paragraph_format.tab_stops.add_tab_stop(
+                    Inches(text_width),
+                    WD_TAB_ALIGNMENT.RIGHT,
+                    WD_TAB_LEADER.DOTS if leader == "." else WD_TAB_LEADER.SPACES,
+                )
+            label = entry.block.reference_text(entry.number)
+            if entry.block.title is not None:
+                fragments = [Text(f"{label}. ")] + entry.block.title
+            else:
+                fragments = [Text(label)]
+            self._append_hyperlink_runs(
+                paragraph,
+                entry.anchor,
+                fragments,
                 internal=True,
                 style=TextStyle(),
                 default_size=theme.caption_size(),

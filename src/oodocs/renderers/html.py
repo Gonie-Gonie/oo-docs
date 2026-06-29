@@ -26,6 +26,7 @@ from oodocs.components.blocks import (
 )
 from oodocs.components.generated import (
     CommentList,
+    ListOfAlgorithms,
     ListOfFigures,
     FootnoteList,
     ReferenceList,
@@ -73,6 +74,13 @@ from oodocs.layout.indexing import RenderIndex, build_render_index
 from oodocs.styles import BoxStyle, HeadingStyle, ParagraphStyle, TableStyle, Theme
 from oodocs.renderers.context import HtmlRenderContext
 from oodocs.renderers.syntax import _syntax_line_html, syntax_html
+
+
+def _countable_entry_fragments(entry: object) -> list[Text]:
+    label = entry.block.reference_text(entry.number)
+    if entry.block.title is None:
+        return [Text(label)]
+    return [Text(f"{label}. ")] + entry.block.title
 
 
 class HtmlRenderer:
@@ -1104,6 +1112,29 @@ class HtmlRenderer:
             section_class="oodocs-generated-page oodocs-figure-list",
         )
 
+    def render_list_of_algorithms(
+        self,
+        block: ListOfAlgorithms,
+        context: HtmlRenderContext,
+    ) -> str:
+        """Render the generated list of algorithms into HTML.
+
+        Args:
+            block: Generated algorithm-list block.
+            context: Current HTML render context.
+
+        Returns:
+            HTML fragment for the generated list of algorithms.
+        """
+
+        return self._render_countable_list(
+            title=block.title,
+            entries=context.render_index.scoped_algorithms(block),
+            default_title=context.theme.resolve_generated_page_title("list_of_algorithms"),
+            context=context,
+            section_class="oodocs-generated-page oodocs-algorithm-list",
+        )
+
     def render_comment_list(
         self,
         block: CommentList,
@@ -1444,6 +1475,38 @@ class HtmlRenderer:
                             entry.number,
                             entry.block.caption,
                         ),
+                        context.theme,
+                        context.render_index,
+                    ),
+                    internal=True,
+                )
+                + "</div>"
+            )
+            for entry in entries
+        )
+        return self._generated_page_html(
+            title=title or [Text(default_title)],
+            body=items,
+            context=context,
+            section_class=section_class,
+        )
+
+    def _render_countable_list(
+        self,
+        *,
+        title: list[Text] | None,
+        entries: list[object],
+        default_title: str,
+        context: HtmlRenderContext,
+        section_class: str,
+    ) -> str:
+        items = "".join(
+            (
+                '<div class="oodocs-caption-list-entry">'
+                + self._link_html(
+                    entry.anchor,
+                    self._inline_html(
+                        _countable_entry_fragments(entry),
                         context.theme,
                         context.render_index,
                     ),
@@ -2502,6 +2565,7 @@ class HtmlRenderer:
             TableOfContents,
             ListOfTables,
             ListOfFigures,
+            ListOfAlgorithms,
             Part,
         )
         for child in children:

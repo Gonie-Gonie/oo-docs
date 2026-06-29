@@ -71,6 +71,7 @@ from oodocs import (
     InlineChip,
     InlineChipStyle,
     Lemma,
+    ListOfAlgorithms,
     ListStyle,
     Math,
     MultiColumn,
@@ -3057,6 +3058,7 @@ def test_algorithm_blocks_render_clauses_steps_code_and_references(tmp_path: Pat
     )
     document = Document(
         "Algorithm Blocks",
+        ListOfAlgorithms(),
         Paragraph("See ", prose_algorithm.reference(), " and ", code_algorithm.reference(), "."),
         prose_algorithm,
         code_algorithm,
@@ -3066,6 +3068,8 @@ def test_algorithm_blocks_render_clauses_steps_code_and_references(tmp_path: Pat
     assert isinstance(prose_algorithm, CountableBlock)
     assert render_index.countable_number(prose_algorithm) == 1
     assert render_index.countable_number(code_algorithm) == 2
+    assert [entry.number for entry in render_index.scoped_algorithms(document.body.children[0])] == [1, 2]
+    assert any(issue.code == "html-algorithm-list-page-numbers" for issue in document.validate().warnings)
 
     docx_path = tmp_path / "algorithms.docx"
     pdf_path = tmp_path / "algorithms.pdf"
@@ -3081,6 +3085,7 @@ def test_algorithm_blocks_render_clauses_steps_code_and_references(tmp_path: Pat
 
     expected_texts = (
         "See Algorithm 1 and Algorithm 2.",
+        "List of Algorithms",
         "Algorithm 1. Coverage aggregation algorithm.",
         "Input: test results, coverage map",
         "Output: coverage summary",
@@ -3094,6 +3099,7 @@ def test_algorithm_blocks_render_clauses_steps_code_and_references(tmp_path: Pat
         assert text in word_text
         assert text in pdf_text
     assert "See Algorithm 1 and Algorithm 2 ." in normalized_html_text
+    assert "List of Algorithms" in normalized_html_text
     assert "Algorithm 1. Coverage aggregation algorithm." in normalized_html_text
     assert "Input: test results, coverage map" in normalized_html_text
     assert "Output: coverage summary" in normalized_html_text

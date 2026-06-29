@@ -69,6 +69,7 @@ from oodocs.components.blocks import (
 )
 from oodocs.components.generated import (
     CommentList,
+    ListOfAlgorithms,
     ListOfFigures,
     FootnoteList,
     ReferenceList,
@@ -115,6 +116,17 @@ from oodocs.layout.indexing import RenderIndex, build_render_index
 from oodocs.styles import ParagraphStyle, TableStyle as OODocsTableStyle, Theme
 from oodocs.renderers.context import PdfRenderContext
 from oodocs.renderers.syntax import SyntaxToken, _syntax_line_tokens, syntax_tokens
+
+
+def _countable_block_fragments(block: CountableBlock, number: int) -> list[Text]:
+    label = block.reference_text(number)
+    if block.title is None:
+        return [Text(label)]
+    return [Text(f"{label}. ")] + block.title
+
+
+def _countable_entry_fragments(entry: object) -> list[Text]:
+    return _countable_block_fragments(entry.block, entry.number)
 
 
 ALIGNMENTS = {
@@ -1187,7 +1199,19 @@ class PdfRenderer:
                 base_size=heading_style.fontSize,
                 base_italic=True,
             )
-        return [RLParagraph(heading_markup, heading_style)] + self._render_flow_children(
+        heading = RLParagraph(heading_markup, heading_style)
+        number = context.render_index.countable_number(block)
+        if block.counter == "algorithm" and number is not None:
+            heading._oodocs_caption_list_entry = (  # type: ignore[attr-defined]
+                "AlgorithmListEntry",
+                self._flatten_fragments(
+                    _countable_block_fragments(block, number),
+                    context.theme,
+                    context.render_index,
+                ),
+                context.render_index.block_anchor(block),
+            )
+        return [heading] + self._render_flow_children(
             block.children,
             context,
             flush_trailing_floats=False,
@@ -1488,6 +1512,31 @@ class PdfRenderer:
             context.theme.resolve_generated_page_title("list_of_figures"),
             context.theme.resolve_caption_label("figure", "caption"),
             notify_kind="FigureListEntry",
+        )
+
+    def render_list_of_algorithms(
+        self,
+        block: ListOfAlgorithms,
+        context: PdfRenderContext,
+    ) -> list[object]:
+        """Render the generated list of algorithms into PDF flowables.
+
+        Args:
+            block: Generated algorithm-list block.
+            context: Current PDF render context.
+
+        Returns:
+            Flowables representing the generated list of algorithms.
+        """
+
+        return self._render_countable_list(
+            block,
+            block.title,
+            context.render_index.scoped_algorithms(block),
+            context.theme,
+            context.styles,
+            context.render_index,
+            context.theme.resolve_generated_page_title("list_of_algorithms"),
         )
 
     def render_comment_list(
@@ -1871,7 +1920,7 @@ class PdfRenderer:
         )
 
     def _is_paginated_generated_page(self, block: object) -> bool:
-        return isinstance(block, (ListOfTables, ListOfFigures, TableOfContents))
+        return isinstance(block, (ListOfTables, ListOfFigures, ListOfAlgorithms, TableOfContents))
 
     def _should_auto_render_footnote_list(
         self,
@@ -2070,6 +2119,7 @@ class PdfRenderer:
                 TableOfContents,
                 ListOfTables,
                 ListOfFigures,
+                ListOfAlgorithms,
                 Part,
             ),
         ):
@@ -3637,6 +3687,74 @@ class PdfRenderer:
                                     entry.number,
                                     entry.block.caption,
                                 ),
+                                theme,
+                                render_index,
+                                base_font_name=entry_style.fontName,
+                                base_size=entry_style.fontSize,
+                            ),
+                            internal=True,
+                        ),
+                        entry_style,
+                    )
+                )
+        if entries:
+            story.append(Spacer(1, 6))
+        return story
+
+    def _render_countable_list(
+        self,
+        block: ListOfAlgorithms,
+        title: list[Text] | None,
+        entries: list[object],
+        theme: Theme,
+        styles: object,
+        render_index: RenderIndex,
+        default_title: str,
+    ) -> list[object]:
+        level = theme.generated_content.generated_heading_level
+        bold, italic = theme.resolve_heading_emphasis(level)
+        title_style = RLParagraphStyle(
+            "GeneratedCountableListTitle",
+            parent=styles["Heading1"],
+            fontName=self._resolve_font(theme.resolve_body_font(), bold, italic),
+            fontSize=theme.resolve_heading_size(level),
+            leading=theme.resolve_heading_size(level) * 1.2,
+            spaceBefore=12,
+            spaceAfter=6,
+            alignment=ALIGNMENTS[theme.resolve_heading_text_alignment(level)],
+            textColor=colors.black,
+        )
+        entry_style = self._paragraph_style(ParagraphStyle(space_after=3), theme, styles["BodyText"])
+        story: list[object] = [
+            RLParagraph(
+                self._inline_markup(
+                    title or [Text(default_title)],
+                    theme,
+                    render_index,
+                    base_font_name=title_style.fontName,
+                    base_size=title_style.fontSize,
+                    base_bold=bold,
+                    base_italic=italic,
+                ),
+                title_style,
+            )
+        ]
+        if block.show_page_numbers:
+            countable_list = FilteredTableOfContents(
+                notifyKind="AlgorithmListEntry",
+                dotsMinLevel=0 if block.leader else -1,
+                allowed_keys={entry.anchor for entry in entries},
+            )
+            countable_list.levelStyles = [entry_style]
+            story.append(countable_list)
+        else:
+            for entry in entries:
+                story.append(
+                    RLParagraph(
+                        self._link_markup(
+                            entry.anchor,
+                            self._inline_markup(
+                                _countable_entry_fragments(entry),
                                 theme,
                                 render_index,
                                 base_font_name=entry_style.fontName,

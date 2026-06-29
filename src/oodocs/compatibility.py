@@ -68,6 +68,14 @@ COMPATIBILITY_NOTES: dict[str, CompatibilityNote] = {
         ),
         formats=("html",),
     ),
+    "html-algorithm-list-page-numbers": CompatibilityNote(
+        code="html-algorithm-list-page-numbers",
+        message=(
+            "HTML output does not have stable rendered page numbers, "
+            "so the list of algorithms is link-only there."
+        ),
+        formats=("html",),
+    ),
 }
 
 

@@ -264,6 +264,88 @@ class ListOfFigures(Block):
 
 
 @dataclass(slots=True, init=False)
+class ListOfAlgorithms(Block):
+    """Generated list of numbered algorithms.
+
+    Args:
+        title: Optional page title. Renderers use their default title when
+            omitted.
+        scope: Document region to include: ``"document"``, ``"part"``,
+            ``"chapter"``, or ``"section"``.
+        show_page_numbers: Whether fixed-page renderers should display page
+            numbers.
+        leader: Leader character between caption text and page number.
+
+    Examples:
+        ```python
+        from oodocs import Algorithm, Document, ListOfAlgorithms
+
+        doc = Document("Methods", ListOfAlgorithms(), Algorithm("Coverage", steps=["Load"]))
+        ```
+    """
+
+    title: list[Text] | None
+    scope: GeneratedListScope
+    show_page_numbers: bool
+    leader: str
+
+    def __init__(
+        self,
+        title: InlineInput | None = None,
+        *,
+        scope: GeneratedListScope | str = "document",
+        show_page_numbers: bool = True,
+        leader: str = ".",
+    ) -> None:
+        self.title = coerce_inlines((title,)) if title is not None else None
+        self.scope = normalize_generated_list_scope(scope)
+        self.show_page_numbers = show_page_numbers
+        self.leader = leader
+
+    def render_to_docx(
+        self,
+        renderer: object,
+        container: object,
+        context: DocxRenderContext,
+    ) -> None:
+        """Render this algorithm list into a DOCX container.
+
+        Args:
+            renderer: DOCX renderer instance.
+            container: Target python-docx container.
+            context: Shared DOCX render context.
+        """
+
+        renderer.render_list_of_algorithms(self, context)
+
+    def render_to_pdf(
+        self,
+        renderer: object,
+        context: PdfRenderContext,
+    ) -> list[object]:
+        """Render this algorithm list into PDF flowables.
+
+        Returns:
+            ReportLab flowables for the generated algorithm list.
+        """
+
+        return renderer.render_list_of_algorithms(self, context)
+
+    def render_to_html(
+        self,
+        renderer: object,
+        context: HtmlRenderContext,
+    ) -> str:
+        """Render this algorithm list into HTML markup.
+
+        Returns:
+            HTML markup for the generated algorithm list.
+        """
+
+        return renderer.render_list_of_algorithms(self, context)
+
+
+@dataclass(slots=True, init=False)
 class ReferenceList(Block):
     """Generated reference list for cited bibliography entries.
 
@@ -586,6 +668,7 @@ class TableOfContents(Block):
 
 __all__ = [
     "CommentList",
+    "ListOfAlgorithms",
     "ListOfFigures",
     "FootnoteList",
     "ReferenceList",

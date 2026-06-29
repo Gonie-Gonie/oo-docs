@@ -39,6 +39,7 @@ from oodocs import (
     GeneratedContentDefaults,
     ImageBox,
     Lemma,
+    ListOfAlgorithms,
     NumberedList,
     OutputBundle,
     PageNumberDefaults,
@@ -928,7 +929,7 @@ def build_usage_guide_document() -> Document:
         headers=["Generated object", "Why it exists", "What triggers it"],
         rows=[
             ["TableOfContents()", "Creates a navigable outline from authored headings.", "Place the block where the contents page should appear."],
-            ["ListOfTables() / ListOfFigures()", "Collects numbered captions in a stable order with page labels in DOCX and PDF.", "Use captioned tables or figures earlier in the document; pass show_page_numbers=False for a link-only list."],
+            ["ListOfTables() / ListOfFigures() / ListOfAlgorithms()", "Collects numbered captions or algorithms in a stable order with page labels in DOCX and PDF.", "Use numbered tables, figures, or algorithms earlier in the document; pass show_page_numbers=False for a link-only list."],
             ["CommentList()", "Exports reviewer comments without disturbing reading flow.", Comment.annotated("Place review remarks inline", "CommentList() collects these review notes onto a dedicated generated page.")],
             ["ReferenceList()", "Renders only the bibliography entries that were cited.", "Cite items from CitationLibrary or CitationSource."],
         ],
@@ -1037,7 +1038,7 @@ def build_usage_guide_document() -> Document:
             ["Box", "border, background_color, title colors, padding, space_after, width, unit, block_alignment", "Use BoxStyle only for named callout or report-panel designs."],
             ["Table", "header/body/alternate colors, border, top_rule, header_rule, bottom_rule, alignment, cell_padding, repeat_header_rows", "Use style=\"booktabs\" for publication-style horizontal rules without vertical grid lines."],
             ["TableCell", "colspan, rowspan, background_color, text_color, bold, italic, text_alignment, vertical_alignment", "Use TableCellStyle only for reusable row, column, or cell styling."],
-            ["TableOfContents, ListOfTables, ListOfFigures", "scope, show_page_numbers, leader; TableOfContents also accepts max_level and level_styles", "Use scope for document, part, chapter, or section-local generated lists."],
+            ["TableOfContents, ListOfTables, ListOfFigures, ListOfAlgorithms", "scope, show_page_numbers, leader; TableOfContents also accepts max_level and level_styles", "Use scope for document, part, chapter, or section-local generated lists."],
             ["Figure, PdfPages, SubFigure, SubFigureGroup, SubTable, SubTableGroup", "width, height, unit, placement, image_dpi, pages, columns, column_gap, label_format, label_style", "Use caption Paragraphs when caption text needs inline styling."],
         ],
         caption="Block-level option scope from quick kwargs to reusable style objects.",
@@ -1114,7 +1115,7 @@ def build_usage_guide_document() -> Document:
             ["Uncaptioned table or figure reference", "Automatic references need a numbered target.", "Add a caption or provide an explicit custom reference label."],
             ["Unnumbered heading or countable reference", "The default label cannot be resolved without a number.", "Set numbered=True, set toc=True for heading anchors, or write reference(obj, 'custom label')."],
             ["Top-level heading below chapter", "A report can look like it skipped its first chapter.", "Wrap imported blocks in Chapter(...) or import with heading_level_shift."],
-            ["HTML generated-list page numbers", "Browsers do not have stable rendered page numbers.", "Accept the warning for HTML or set show_page_numbers=False on TableOfContents, ListOfTables, or ListOfFigures."],
+            ["HTML generated-list page numbers", "Browsers do not have stable rendered page numbers.", "Accept the warning for HTML or set show_page_numbers=False on TableOfContents, ListOfTables, ListOfFigures, or ListOfAlgorithms."],
         ],
         caption="Validation results are structured objects, but they print as a compact table for terminal and CI logs.",
         column_widths=[2.0, 2.7, 2.7],
@@ -1249,6 +1250,7 @@ def build_usage_guide_document() -> Document:
         TableOfContents(),
         ListOfTables(),
         ListOfFigures(),
+        ListOfAlgorithms(),
         Part(
             "Getting Oriented",
             Chapter(
