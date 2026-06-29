@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Sequence
 
 from oodocs import (
+    Algorithm,
     Assumption,
     Author,
     AuthorLayout,
@@ -425,6 +426,23 @@ exercise = Exercise("Custom countable kinds can keep a separate sequence.")
 
 paragraph = Paragraph("Use ", main.reference(), " before the proof.")
 proof = Proof("Proofs are unnumbered by default, so reference them with a custom label.")
+"""
+
+ALGORITHM_SNIPPET = """from oodocs import Algorithm, Paragraph
+
+algorithm = Algorithm(
+    "Coverage aggregation",
+    inputs=["test results", "coverage map"],
+    outputs=["coverage summary"],
+    steps=[
+        "Load evidence records.",
+        "Group records by feature.",
+        "Compute pass/fail counts.",
+    ],
+    caption="Coverage aggregation algorithm.",
+)
+
+paragraph = Paragraph("See ", algorithm.reference(), " for the pseudocode.")
 """
 
 PROJECT_LAYOUT_SNIPPET = """my-report/
@@ -1012,6 +1030,7 @@ def build_usage_guide_document() -> Document:
         rows=[
             ["Text and styled(...)", "font_name, font_size, text_color, highlight_color, bold, italic, underline, strikethrough, small_caps, uppercase, subscript, superscript", "Use TextStyle only when a reusable inline style needs a name."],
             ["Paragraph, CodeBlock, Equation", "text_alignment, space_before, space_after, leading, left_indent, right_indent, first_line_indent, keep_together, keep_with_next, page_break_before, widow_control, unit; CodeBlock also accepts caption, identifier, line_numbers, highlight_lines", "Use ParagraphStyle only for shared paragraph rhythm."],
+            ["Algorithm", "inputs, outputs, steps, code, language, caption, body_style, line_numbers, numbered", "Use prose steps for method summaries and code-style bodies for pseudocode listings."],
             ["Section, Chapter, Subsection", "level, numbered, toc, anchor, run_in_title_style, heading_style", "Use HeadingStyle for per-level theme defaults or one-off heading overrides."],
             ["Part, Appendix", "title, toc; Part also accepts numbered", "Use Appendix when child chapters should switch to A/B/C numbering."],
             ["BulletList, NumberedList", "marker=CounterStyle(...), indent, marker_gap", "Use ListStyle only for repeated list conventions."],
@@ -1113,6 +1132,17 @@ def build_usage_guide_document() -> Document:
     )
     counted_exercise = Exercise(
         "Custom countable kinds can use their own counter, or join the theorem counter by passing counter='theorem'."
+    )
+    counted_algorithm = Algorithm(
+        "Coverage aggregation",
+        inputs=["test results", "coverage map"],
+        outputs=["coverage summary"],
+        steps=[
+            "Load evidence records.",
+            "Group records by feature.",
+            "Compute pass/fail counts.",
+        ],
+        caption="Coverage aggregation algorithm.",
     )
     preset_callout = CalloutBox(
         Paragraph(
@@ -1378,6 +1408,16 @@ def build_usage_guide_document() -> Document:
                     " can be cited after the block is inserted, while the exercise above uses a separate custom sequence."
                 ),
                 CodeBlock(COUNTABLE_BLOCK_SNIPPET, language="python"),
+                Paragraph(
+                    "Algorithms use the same countable-block reference path, but add input/output clauses and a pseudocode body. Use prose steps for readable method summaries or ",
+                    inline_code("body_style='code'"),
+                    " / ",
+                    inline_code("code=..."),
+                    " when the algorithm should look like a listings-style block."
+                ),
+                counted_algorithm,
+                Paragraph("The pseudocode above can be referenced as ", counted_algorithm.reference(), "."),
+                CodeBlock(ALGORITHM_SNIPPET, language="python"),
             ),
             Section(
                 "Inline annotations stay local to the prose",

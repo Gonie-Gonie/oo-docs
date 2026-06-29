@@ -41,6 +41,7 @@ OODocs_API_CATEGORIES: tuple[ApiCategory, ...] = (
             "oodocs.MAX_SECTION_LEVEL",
             "oodocs.Paragraph",
             "oodocs.CodeBlock",
+            "oodocs.Algorithm",
             "oodocs.BulletList",
             "oodocs.NumberedList",
             "oodocs.Box",

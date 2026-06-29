@@ -19,6 +19,8 @@ Attributes:
     Axiom: Generated countable block class for axioms.
     Claim: Generated countable block class for claims.
     Conjecture: Generated countable block class for conjectures.
+    Algorithm: Countable algorithm block with input/output clauses and
+        prose or code-style pseudocode.
     Appendix: Container for document appendices with alphabetic chapter
         numbering.
     CellInput: Type alias for values accepted by table cells.
@@ -62,10 +64,12 @@ if TYPE_CHECKING:
 
 
 CodeLanguagePosition = Literal["top-left", "top-right", "bottom-left", "bottom-right"]
+AlgorithmBodyStyle = Literal["prose", "code"]
 MIN_SECTION_LEVEL = 1
 MAX_SECTION_LEVEL = 6
 DEFAULT_COUNTABLE_COUNTER = "countable"
 THEOREM_COUNTER = "theorem"
+ALGORITHM_COUNTER = "algorithm"
 
 
 @dataclass(slots=True, init=False)
@@ -1862,6 +1866,171 @@ class CountableBlock(Block):
         return renderer.render_countable_block(self, context)
 
 
+@dataclass(slots=True, init=False)
+class Algorithm(CountableBlock):
+    """A numbered algorithm block with optional pseudocode structure.
+
+    Args:
+        name: Algorithm name. Used as the heading title when ``caption`` is
+            omitted.
+        *children: Additional child blocks appended after generated clauses and
+            steps.
+        inputs: Optional input clauses.
+        outputs: Optional output clauses.
+        steps: Optional prose or pseudocode steps.
+        code: Optional code-style pseudocode body. Mutually exclusive with
+            ``steps``.
+        language: Optional Pygments lexer for ``code`` or code-style steps.
+        caption: Optional heading caption shown after ``Algorithm N.``.
+        body_style: ``"prose"`` renders steps as a list; ``"code"`` renders
+            them as a code-style pseudocode block.
+        line_numbers: Whether step lists or code-style pseudocode should show
+            line numbers.
+        numbered: Whether the algorithm participates in numbering.
+        counter: Counter namespace for algorithm numbering.
+        reference_label: Label prefix used by automatic inline references.
+
+    Raises:
+        ValueError: If ``body_style`` is unsupported or ``steps`` and ``code``
+            are both provided.
+
+    Examples:
+        ```python
+        from oodocs import Algorithm, Document, Paragraph
+
+        algorithm = Algorithm(
+            "Coverage aggregation",
+            inputs=["test results", "coverage map"],
+            outputs=["coverage summary"],
+            steps=[
+                "Load evidence records.",
+                "Group records by feature.",
+                "Compute pass/fail counts.",
+            ],
+            caption="Coverage aggregation algorithm.",
+        )
+        document = Document("Methods", Paragraph("See ", algorithm.reference(), "."), algorithm)
+        ```
+    """
+
+    name: list[Text]
+    inputs: tuple[InlineInput, ...]
+    outputs: tuple[InlineInput, ...]
+    steps: tuple[InlineInput, ...]
+    code: str | None
+    language: str | None
+    body_style: AlgorithmBodyStyle
+    line_numbers: bool
+
+    def __init__(
+        self,
+        name: InlineInput,
+        *children: BlockInput,
+        inputs: InlineInput | Sequence[InlineInput] | None = None,
+        outputs: InlineInput | Sequence[InlineInput] | None = None,
+        steps: InlineInput | Sequence[InlineInput] | None = None,
+        code: str | None = None,
+        language: str | None = None,
+        caption: InlineInput | None = None,
+        body_style: AlgorithmBodyStyle = "prose",
+        line_numbers: bool = True,
+        numbered: bool = True,
+        counter: str | None = ALGORITHM_COUNTER,
+        reference_label: str | None = "Algorithm",
+    ) -> None:
+        if body_style not in {"prose", "code"}:
+            raise ValueError("Algorithm body_style must be 'prose' or 'code'")
+        if steps is not None and code is not None:
+            raise ValueError("Algorithm steps and code are mutually exclusive")
+
+        self.name = coerce_inlines((name,))
+        self.inputs = _normalize_algorithm_items(inputs)
+        self.outputs = _normalize_algorithm_items(outputs)
+        self.steps = _normalize_algorithm_items(steps)
+        self.code = code
+        self.language = language
+        self.body_style = body_style
+        self.line_numbers = bool(line_numbers)
+
+        generated_children = self._generated_children()
+        CountableBlock.__init__(
+            self,
+            "Algorithm",
+            *generated_children,
+            *children,
+            title=caption if caption is not None else name,
+            numbered=numbered,
+            counter=counter,
+            reference_label=reference_label,
+        )
+
+    def _generated_children(self) -> list[Block]:
+        children: list[Block] = []
+        if self.inputs:
+            children.append(_algorithm_clause("Input", self.inputs))
+        if self.outputs:
+            children.append(_algorithm_clause("Output", self.outputs))
+        if self.code is not None:
+            children.append(
+                CodeBlock(
+                    self.code,
+                    language=self.language,
+                    show_language=False,
+                    line_numbers=self.line_numbers,
+                )
+            )
+        elif self.steps:
+            if self.body_style == "code":
+                children.append(
+                    CodeBlock(
+                        "\n".join(_algorithm_step_text(step) for step in self.steps),
+                        language=self.language or "text",
+                        show_language=False,
+                        line_numbers=self.line_numbers,
+                    )
+                )
+            elif self.line_numbers:
+                children.append(NumberedList(*self.steps))
+            else:
+                children.append(BulletList(*self.steps))
+        return children
+
+    @property
+    def caption(self) -> list[Text] | None:
+        """Return the algorithm heading caption.
+
+        Returns:
+            Caption fragments shown after the ``Algorithm N.`` label.
+        """
+
+        return self.title
+
+
+def _normalize_algorithm_items(
+    values: InlineInput | Sequence[InlineInput] | None,
+) -> tuple[InlineInput, ...]:
+    if values is None:
+        return ()
+    if isinstance(values, str):
+        return (values,)
+    if isinstance(values, Sequence):
+        return tuple(values)
+    return (values,)
+
+
+def _algorithm_clause(label: str, values: Sequence[InlineInput]) -> Paragraph:
+    content: list[InlineInput] = [Text(f"{label}: ", style=TextStyle(bold=True))]
+    for index, value in enumerate(values):
+        if index:
+            content.append(Text(", "))
+        content.extend(coerce_inlines((value,)))
+    return Paragraph(*content, space_after=2)
+
+
+def _algorithm_step_text(step: InlineInput) -> str:
+    return coerce_cell(step).plain_text()
+
+
 def create_countable_block_type(
     kind: str,
     *,
@@ -2475,6 +2644,7 @@ def coerce_cell(value: CellInput) -> Paragraph:
 
 
 __all__ = [
+    "Algorithm",
     "Box",
     "BulletList",
     "Chapter",

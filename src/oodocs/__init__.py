@@ -5,6 +5,7 @@ from importlib.metadata import PackageNotFoundError, version as package_version
 from oodocs.core import OODocsError
 from oodocs.compatibility import OUTPUT_FORMATS, OutputFormat
 from oodocs.components.blocks import (
+    Algorithm,
     Assumption,
     Appendix,
     Axiom,
@@ -180,6 +181,7 @@ __version__ = _resolve_version()
 
 __all__ = [
     "Affiliation",
+    "Algorithm",
     "Assumption",
     "Appendix",
     "Author",

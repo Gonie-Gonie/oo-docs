@@ -26,6 +26,7 @@ from oodocs.layout.indexing import build_render_index
 from oodocs.renderers.pdf import PdfRenderer
 from oodocs import (
     Affiliation,
+    Algorithm,
     Assumption,
     Author,
     AuthorLayout,
@@ -3032,6 +3033,93 @@ def test_countable_blocks_share_document_counter_and_render_references(tmp_path:
     assert "See Theorem 3 , the proof , and Claim 7 ." in normalized_html_text
     assert 'class="oodocs-countable-block' in html_text
     assert 'href="#countable_' in html_text
+
+
+def test_algorithm_blocks_render_clauses_steps_code_and_references(tmp_path: Path) -> None:
+    prose_algorithm = Algorithm(
+        "Coverage aggregation",
+        inputs=["test results", "coverage map"],
+        outputs=["coverage summary"],
+        steps=[
+            "Load evidence records.",
+            "Group records by feature.",
+            "Compute pass/fail counts.",
+        ],
+        caption="Coverage aggregation algorithm.",
+    )
+    code_algorithm = Algorithm(
+        "Euclidean algorithm",
+        code="while b:\n    a, b = b, a % b\nreturn a",
+        language="python",
+        caption="Euclidean algorithm.",
+        body_style="code",
+        line_numbers=True,
+    )
+    document = Document(
+        "Algorithm Blocks",
+        Paragraph("See ", prose_algorithm.reference(), " and ", code_algorithm.reference(), "."),
+        prose_algorithm,
+        code_algorithm,
+    )
+
+    render_index = build_render_index(document)
+    assert isinstance(prose_algorithm, CountableBlock)
+    assert render_index.countable_number(prose_algorithm) == 1
+    assert render_index.countable_number(code_algorithm) == 2
+
+    docx_path = tmp_path / "algorithms.docx"
+    pdf_path = tmp_path / "algorithms.pdf"
+    html_path = tmp_path / "algorithms.html"
+    document.save_docx(docx_path)
+    document.save_pdf(pdf_path)
+    document.save_html(html_path)
+
+    word_text = "\n".join(paragraph.text for paragraph in WordDocument(docx_path).paragraphs)
+    pdf_text = "\n".join(page.extract_text() or "" for page in PdfReader(BytesIO(pdf_path.read_bytes())).pages)
+    html_text = html_path.read_text(encoding="utf-8")
+    normalized_html_text = _normalized_html_text(html_path)
+
+    expected_texts = (
+        "See Algorithm 1 and Algorithm 2.",
+        "Algorithm 1. Coverage aggregation algorithm.",
+        "Input: test results, coverage map",
+        "Output: coverage summary",
+        "Load evidence records.",
+        "Algorithm 2. Euclidean algorithm.",
+        "1 | while b:",
+        "2 |     a, b = b, a % b",
+        "3 | return a",
+    )
+    for text in expected_texts:
+        assert text in word_text
+        assert text in pdf_text
+    assert "See Algorithm 1 and Algorithm 2 ." in normalized_html_text
+    assert "Algorithm 1. Coverage aggregation algorithm." in normalized_html_text
+    assert "Input: test results, coverage map" in normalized_html_text
+    assert "Output: coverage summary" in normalized_html_text
+    assert "Load evidence records." in normalized_html_text
+    assert "Algorithm 2. Euclidean algorithm." in normalized_html_text
+    assert "1 | while b:" in normalized_html_text
+    assert "2 | a, b = b, a % b" in normalized_html_text
+    assert "3 | return a" in normalized_html_text
+    assert 'class="oodocs-countable-block oodocs-countable-algorithm"' in html_text
+    assert 'href="#countable_' in html_text
+
+
+def test_algorithm_rejects_ambiguous_body_inputs() -> None:
+    try:
+        Algorithm("Broken", steps=["one"], code="one")
+    except ValueError as exc:
+        assert "mutually exclusive" in str(exc)
+    else:
+        raise AssertionError("Expected Algorithm steps and code conflict to fail")
+
+    try:
+        Algorithm("Broken", body_style="table")  # type: ignore[arg-type]
+    except ValueError as exc:
+        assert "body_style" in str(exc)
+    else:
+        raise AssertionError("Expected invalid Algorithm body_style to fail")
 
 
 def test_unnumbered_countable_reference_requires_custom_label() -> None:

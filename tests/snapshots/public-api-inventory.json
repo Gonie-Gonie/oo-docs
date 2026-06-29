@@ -15,6 +15,13 @@
           "category": "block",
           "kind": "class",
           "module": "oodocs.components.blocks",
+          "name": "Algorithm",
+          "qualname": "oodocs.components.blocks.Algorithm"
+        },
+        {
+          "category": "block",
+          "kind": "class",
+          "module": "oodocs.components.blocks",
           "name": "Assumption",
           "qualname": "oodocs.components.blocks.Assumption"
         },
