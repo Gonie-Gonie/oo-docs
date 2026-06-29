@@ -2762,6 +2762,89 @@ def test_caption_lists_can_hide_page_numbers(tmp_path: Path) -> None:
     assert "html-figure-list-page-numbers" not in warning_codes
 
 
+def test_generated_lists_can_filter_to_part_chapter_or_section(tmp_path: Path) -> None:
+    part_figures = ListOfFigures("Part figures", scope="part")
+    chapter_toc = TableOfContents("Chapter contents", scope="chapter")
+    section_tables = ListOfTables("Section tables", scope="section")
+    alpha_table = Table(["Metric"], [["A"]], caption="Alpha table.")
+    alpha_nested_table = Table(["Metric"], [["Nested"]], caption="Alpha nested table.")
+    beta_table = Table(["Metric"], [["B"]], caption="Beta table.")
+    alpha_figure = Figure(ImageData(_build_sample_png()), caption="Alpha figure.", width=1.0)
+    beta_figure = Figure(ImageData(_build_sample_png()), caption="Beta figure.", width=1.0)
+    outside_figure = Figure(ImageData(_build_sample_png()), caption="Outside figure.", width=1.0)
+    document = Document(
+        "Scoped Generated Lists",
+        Part(
+            "Part One",
+            part_figures,
+            Chapter(
+                "Alpha",
+                chapter_toc,
+                Section(
+                    "Alpha Data",
+                    section_tables,
+                    alpha_table,
+                    alpha_figure,
+                    Subsection("Alpha Detail", alpha_nested_table),
+                ),
+                Section("Alpha Notes", Paragraph("Scoped chapter content.")),
+            ),
+            Chapter("Beta", Section("Beta Data", beta_table, beta_figure)),
+        ),
+        Part("Part Two", Chapter("Gamma", Section("Gamma Data", outside_figure))),
+    )
+
+    render_index = build_render_index(document)
+
+    scoped_heading_titles = [
+        "".join(fragment.plain_text() for fragment in entry.title)
+        for entry in render_index.scoped_headings(chapter_toc)
+    ]
+    scoped_table_captions = [
+        entry.block.caption.plain_text()
+        for entry in render_index.scoped_tables(section_tables)
+    ]
+    scoped_figure_captions = [
+        entry.block.caption.plain_text()
+        for entry in render_index.scoped_figures(part_figures)
+    ]
+
+    assert scoped_heading_titles == ["Alpha Data", "Alpha Detail", "Alpha Notes"]
+    assert scoped_table_captions == ["Alpha table.", "Alpha nested table."]
+    assert scoped_figure_captions == ["Alpha figure.", "Beta figure."]
+
+    docx_path = tmp_path / "scoped-generated.docx"
+    pdf_path = tmp_path / "scoped-generated.pdf"
+    html_path = tmp_path / "scoped-generated.html"
+    document.save_docx(docx_path)
+    document.save_pdf(pdf_path)
+    document.save_html(html_path)
+
+    docx_xml = _docx_document_xml(docx_path)
+    html_text = html_path.read_text(encoding="utf-8")
+    pdf_text = "\n".join(page.extract_text() or "" for page in PdfReader(pdf_path).pages)
+
+    assert "PAGEREF heading_" in docx_xml
+    assert "PAGEREF figure_1 \\h" in docx_xml
+    assert "PAGEREF figure_2 \\h" in docx_xml
+    assert "PAGEREF figure_3 \\h" not in docx_xml
+    part_figures_html = html_text.split("Part figures", 1)[1].split("Chapter contents", 1)[0]
+    assert "Alpha figure." in part_figures_html
+    assert "Beta figure." in part_figures_html
+    assert "Outside figure." not in part_figures_html
+    assert "Part figures" in pdf_text
+    assert "Chapter contents" in pdf_text
+    assert "Section tables" in pdf_text
+
+
+def test_generated_list_scope_rejects_unknown_values() -> None:
+    with pytest.raises(ValueError, match="generated list scope"):
+        TableOfContents(scope="page")
+
+    with pytest.raises(ValueError, match="generated list scope"):
+        ListOfTables(scope="appendix")
+
+
 def test_table_of_contents_default_styles_emphasize_only_top_level(tmp_path: Path) -> None:
     document = Document(
         "TOC Style",

@@ -300,6 +300,7 @@ panel = Box(
 CONTENTS_CONTROL_SNIPPET = """from oodocs import TableOfContents, TocLevelStyle
 
 contents = TableOfContents(
+    scope="document",
     show_page_numbers=True,
     leader=".",
     max_level=3,
@@ -850,6 +851,7 @@ def build_usage_guide_document() -> Document:
             ["Part entries", "Shown above chapters when authored.", "Use Part(...) for book-like divisions; set level_styles={0: TocLevelStyle(...)} to tune the part line."],
             ["Page numbers", "Shown by default for contents, table lists, and figure lists in paginated DOCX and PDF output.", "HTML keeps clean link-only generated lists because browsers do not provide stable page labels."],
             ["Leader dots", "Dotted leaders connect the heading text to the page number in paginated output.", "Set leader='' for no leader or another short string for a different visual cue."],
+            ["Scoped lists", "Generated lists cover the whole document.", "Set scope='part', scope='chapter', or scope='section' for local mini contents, table lists, or figure lists."],
             ["Heading depth", "All numbered headings are included.", "Set max_level=2 or max_level=3 for shorter contents pages."],
             ["Hierarchy styling", "Top-level entries are bold; lower levels use normal weight by default.", "Pass level_styles={level: TocLevelStyle(...)} for per-level spacing, indentation, and emphasis."],
         ],
@@ -894,7 +896,7 @@ def build_usage_guide_document() -> Document:
             ["Box", "border, background_color, title colors, padding, space_after, width, unit, block_alignment", "Use BoxStyle only for named callout or report-panel designs."],
             ["Table", "header/body/alternate colors, border, cell/header alignment, cell_padding, repeat_header_rows", "row_styles, column_styles, and header_row_styles accept dictionaries for quick overrides."],
             ["TableCell", "colspan, rowspan, background_color, text_color, bold, italic, text_alignment, vertical_alignment", "Use TableCellStyle only for reusable row, column, or cell styling."],
-            ["TableOfContents", "show_page_numbers, leader, max_level, level_styles", "TocLevelStyle per heading level; dictionaries are accepted for quick overrides."],
+            ["TableOfContents, ListOfTables, ListOfFigures", "scope, show_page_numbers, leader; TableOfContents also accepts max_level and level_styles", "Use scope for document, part, chapter, or section-local generated lists."],
             ["Figure, SubFigure, SubFigureGroup", "width, height, unit, placement, image_dpi, columns, column_gap, label_format", "Use caption Paragraphs when caption text needs inline styling."],
         ],
         caption="Block-level option scope from quick kwargs to reusable style objects.",

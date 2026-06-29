@@ -231,16 +231,25 @@ class FilteredTableOfContents(RLTableOfContents):
 
     Args:
         max_level: Maximum heading level included in the generated TOC.
+        allowed_keys: Optional anchor keys allowed in this generated list.
         **kwargs: Additional ReportLab table-of-contents options forwarded to
             ``RLTableOfContents``.
 
     Attributes:
         max_level: Maximum heading level included in the generated TOC.
+        allowed_keys: Optional anchor keys allowed in this generated list.
     """
 
-    def __init__(self, *, max_level: int | None = None, **kwargs: object) -> None:
+    def __init__(
+        self,
+        *,
+        max_level: int | None = None,
+        allowed_keys: set[str] | None = None,
+        **kwargs: object,
+    ) -> None:
         super().__init__(**kwargs)
         self.max_level = max_level
+        self.allowed_keys = allowed_keys
 
     def notify(self, kind: str, stuff: object) -> None:
         """Receive ReportLab TOC notifications and filter by heading level.
@@ -253,6 +262,10 @@ class FilteredTableOfContents(RLTableOfContents):
         if kind == self._notifyKind and self.max_level is not None:
             level = stuff[0]  # type: ignore[index]
             if level > self.max_level:
+                return
+        if kind == self._notifyKind and self.allowed_keys is not None:
+            key = stuff[3] if len(stuff) > 3 else None  # type: ignore[arg-type]
+            if key not in self.allowed_keys:
                 return
         super().notify(kind, stuff)
 
@@ -1302,7 +1315,7 @@ class PdfRenderer:
         return self._render_caption_list(
             block,
             block.title,
-            context.render_index.tables,
+            context.render_index.scoped_tables(block),
             context.theme,
             context.styles,
             context.render_index,
@@ -1329,7 +1342,7 @@ class PdfRenderer:
         return self._render_caption_list(
             block,
             block.title,
-            context.render_index.figures,
+            context.render_index.scoped_figures(block),
             context.theme,
             context.styles,
             context.render_index,
@@ -3195,9 +3208,10 @@ class PdfRenderer:
             )
         ]
         if block.show_page_numbers:
-            caption_list = RLTableOfContents(
+            caption_list = FilteredTableOfContents(
                 notifyKind=notify_kind,
                 dotsMinLevel=0 if block.leader else -1,
+                allowed_keys={entry.anchor for entry in entries},
             )
             caption_list.levelStyles = [entry_style]
             story.append(caption_list)
@@ -3454,20 +3468,20 @@ class PdfRenderer:
                 title_style,
             )
         ]
+        entries = render_index.scoped_headings(block)
         if block.show_page_numbers:
             toc = FilteredTableOfContents(
                 max_level=block.max_level,
                 dotsMinLevel=0 if block.leader else -1,
+                allowed_keys={entry.anchor for entry in entries if entry.anchor is not None},
             )
             toc.levelStyles = [
                 self._pdf_toc_level_style(block, toc_level, theme, styles)
-                for toc_level in range(max((entry.level for entry in render_index.headings), default=1) + 1)
+                for toc_level in range(max((entry.level for entry in entries), default=1) + 1)
             ]
             story.append(toc)
         else:
-            for entry in render_index.headings:
-                if not block.includes_level(entry.level):
-                    continue
+            for entry in entries:
                 entry_style = self._pdf_toc_level_style(block, entry.level, theme, styles)
                 story.append(
                     RLParagraph(

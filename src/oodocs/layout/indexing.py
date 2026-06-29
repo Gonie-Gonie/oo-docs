@@ -21,6 +21,7 @@ from oodocs.components.blocks import (
 )
 from oodocs.components.generated import (
     CommentList,
+    GeneratedListScope,
     ListOfFigures,
     FootnoteList,
     ReferenceList,
@@ -101,6 +102,38 @@ class FootnoteReferenceEntry:
     footnote: Footnote
 
 
+@dataclass(slots=True, frozen=True)
+class EntryScope:
+    """Ancestor scope for generated lists and index entries.
+
+    Attributes:
+        part_id: Identity of the nearest enclosing ``Part``.
+        chapter_id: Identity of the nearest enclosing level-1 ``Section``.
+        heading_path: Ancestor section identities from outermost heading to
+            innermost heading.
+    """
+
+    part_id: int | None = None
+    chapter_id: int | None = None
+    heading_path: tuple[int, ...] = ()
+
+    def with_part(self, part: Part) -> EntryScope:
+        """Return a scope for descendants of ``part``."""
+
+        return EntryScope(part_id=id(part))
+
+    def with_section(self, section: Section) -> EntryScope:
+        """Return a scope for descendants of ``section``."""
+
+        section_id = id(section)
+        chapter_id = section_id if section.level == 1 else self.chapter_id
+        return EntryScope(
+            part_id=self.part_id,
+            chapter_id=chapter_id,
+            heading_path=self.heading_path + (section_id,),
+        )
+
+
 @dataclass(slots=True)
 class HeadingEntry:
     """A heading included in the generated table of contents.
@@ -110,6 +143,7 @@ class HeadingEntry:
         title: Heading title fragments.
         number: Optional rendered heading number.
         anchor: Optional heading anchor.
+        scope: Ancestor scope containing this heading.
 
     Examples:
         ```python
@@ -124,6 +158,7 @@ class HeadingEntry:
     title: list[Text]
     number: str | None = None
     anchor: str | None = None
+    scope: EntryScope = field(default_factory=EntryScope)
 
 
 @dataclass(slots=True)
@@ -134,6 +169,7 @@ class CaptionEntry:
         number: Assigned caption number.
         block: Captioned table or figure block.
         anchor: Anchor used by renderers for links.
+        scope: Ancestor scope containing this caption.
 
     Examples:
         ```python
@@ -148,6 +184,7 @@ class CaptionEntry:
     number: int
     block: Table | Figure | SubFigureGroup
     anchor: str
+    scope: EntryScope = field(default_factory=EntryScope)
 
 
 @dataclass(slots=True)
@@ -204,6 +241,7 @@ class RenderIndex:
         countable_numbers: Countable block numbers keyed by block identity.
         countable_counters: Latest counter value keyed by countable kind.
         block_anchors: Stable anchors keyed by block identity.
+        generated_scopes: Ancestor scopes keyed by generated block identity.
 
     Examples:
         ```python
@@ -239,6 +277,64 @@ class RenderIndex:
     countable_numbers: dict[int, int] = field(default_factory=dict)
     countable_counters: dict[str, int] = field(default_factory=dict)
     block_anchors: dict[int, str] = field(default_factory=dict)
+    generated_scopes: dict[int, EntryScope] = field(default_factory=dict)
+
+    def scoped_headings(self, block: TableOfContents) -> list[HeadingEntry]:
+        """Return TOC headings visible to ``block`` after scope filtering."""
+
+        return [
+            entry
+            for entry in self.headings
+            if block.includes_level(entry.level)
+            and self._entry_in_scope(entry.scope, block.scope, self.generated_scope(block))
+        ]
+
+    def scoped_tables(self, block: ListOfTables) -> list[CaptionEntry]:
+        """Return table-list entries visible to ``block`` after scope filtering."""
+
+        return [
+            entry
+            for entry in self.tables
+            if self._entry_in_scope(entry.scope, block.scope, self.generated_scope(block))
+        ]
+
+    def scoped_figures(self, block: ListOfFigures) -> list[CaptionEntry]:
+        """Return figure-list entries visible to ``block`` after scope filtering."""
+
+        return [
+            entry
+            for entry in self.figures
+            if self._entry_in_scope(entry.scope, block.scope, self.generated_scope(block))
+        ]
+
+    def generated_scope(self, block: object) -> EntryScope:
+        """Return the ancestor scope where a generated block appears."""
+
+        return self.generated_scopes.get(id(block), EntryScope())
+
+    def _entry_in_scope(
+        self,
+        entry_scope: EntryScope,
+        requested_scope: GeneratedListScope,
+        generated_scope: EntryScope,
+    ) -> bool:
+        if requested_scope == "document":
+            return True
+        if requested_scope == "part":
+            return (
+                generated_scope.part_id is not None
+                and entry_scope.part_id == generated_scope.part_id
+            )
+        if requested_scope == "chapter":
+            return (
+                generated_scope.chapter_id is not None
+                and entry_scope.chapter_id == generated_scope.chapter_id
+            )
+        if requested_scope == "section":
+            if not generated_scope.heading_path:
+                return False
+            return generated_scope.heading_path[-1] in entry_scope.heading_path
+        return False
 
     def table_number(self, table: Table) -> int | None:
         """Return the assigned table number for a captioned table.
@@ -558,6 +654,7 @@ def build_render_index(document: Document) -> RenderIndex:
         document.settings.theme,
         heading_counters=[],
         part_counter=[0],
+        scope=EntryScope(),
     )
     return render_index
 
@@ -602,6 +699,7 @@ def _index_blocks(
     *,
     heading_counters: list[int],
     part_counter: list[int],
+    scope: EntryScope,
 ) -> None:
     for block in blocks:
         if isinstance(block, Paragraph):
@@ -625,6 +723,7 @@ def _index_blocks(
                     theme,
                     heading_counters=heading_counters,
                     part_counter=part_counter,
+                    scope=scope,
                 )
             continue
         if isinstance(block, CodeBlock):
@@ -650,6 +749,7 @@ def _index_blocks(
                 theme,
                 heading_counters=heading_counters,
                 part_counter=part_counter,
+                scope=scope,
             )
             continue
         if isinstance(block, CountableBlock):
@@ -677,6 +777,7 @@ def _index_blocks(
                 theme,
                 heading_counters=heading_counters,
                 part_counter=part_counter,
+                scope=scope,
             )
             continue
         if isinstance(block, (ColumnSpan, MultiColumn)):
@@ -687,6 +788,7 @@ def _index_blocks(
                 theme,
                 heading_counters=heading_counters,
                 part_counter=part_counter,
+                scope=scope,
             )
             continue
         if isinstance(block, Part):
@@ -708,6 +810,7 @@ def _index_blocks(
                         title=block.title,
                         number=number_label,
                         anchor=anchor,
+                        scope=scope,
                     )
                 )
             _index_blocks(
@@ -717,6 +820,7 @@ def _index_blocks(
                 theme,
                 heading_counters=heading_counters,
                 part_counter=part_counter,
+                scope=scope.with_part(block),
             )
             continue
         if isinstance(block, Section):
@@ -745,6 +849,7 @@ def _index_blocks(
                         title=block.title,
                         number=number_label,
                         anchor=anchor,
+                        scope=scope,
                     )
                 )
             _index_blocks(
@@ -754,6 +859,7 @@ def _index_blocks(
                 theme,
                 heading_counters=current_counters,
                 part_counter=part_counter,
+                scope=scope.with_section(block),
             )
             continue
         if isinstance(
@@ -769,6 +875,7 @@ def _index_blocks(
         ):
             if block.title is not None:
                 _index_inlines(block.title, render_index, citations)
+            render_index.generated_scopes[id(block)] = scope
             continue
         if isinstance(block, Table):
             for header_row in block.header_rows:
@@ -785,6 +892,7 @@ def _index_blocks(
                         number=number,
                         block=block,
                         anchor=f"table_{number}",
+                        scope=scope,
                     )
                 )
                 render_index.table_numbers[id(block)] = number
@@ -798,6 +906,7 @@ def _index_blocks(
                         number=number,
                         block=block,
                         anchor=f"figure_{number}",
+                        scope=scope,
                     )
                 )
                 render_index.figure_numbers[id(block)] = number
@@ -814,6 +923,7 @@ def _index_blocks(
                         number=number,
                         block=block,
                         anchor=f"figure_{number}",
+                        scope=scope,
                     )
                 )
                 render_index.figure_numbers[id(block)] = number
@@ -887,6 +997,7 @@ __all__ = [
     "CitationReferenceEntry",
     "CommentReferenceEntry",
     "CountableEntry",
+    "EntryScope",
     "FootnoteReferenceEntry",
     "HeadingEntry",
     "RenderIndex",

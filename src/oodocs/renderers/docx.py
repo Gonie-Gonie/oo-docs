@@ -756,7 +756,7 @@ class DocxRenderer:
         self._render_caption_list(
             context.word_document,
             block.title,
-            context.render_index.tables,
+            context.render_index.scoped_tables(block),
             context.theme,
             context.render_index,
             context.theme.resolve_generated_page_title("list_of_tables"),
@@ -781,7 +781,7 @@ class DocxRenderer:
         self._render_caption_list(
             context.word_document,
             block.title,
-            context.render_index.figures,
+            context.render_index.scoped_figures(block),
             context.theme,
             context.render_index,
             context.theme.resolve_generated_page_title("list_of_figures"),
@@ -3214,13 +3214,12 @@ class DocxRenderer:
             level=theme.generated_content.generated_heading_level,
             theme=theme,
         )
-        if block.show_page_numbers:
+        entries = render_index.scoped_headings(block)
+        if block.show_page_numbers and block.scope == "document":
             self._append_native_toc_field(word_document, block)
             return
 
-        for entry in render_index.headings:
-            if not block.includes_level(entry.level):
-                continue
+        for entry in entries:
             toc_style = self._toc_level_style(block, entry.level)
             paragraph = word_document.add_paragraph()
             paragraph.paragraph_format.left_indent = Inches(toc_style.indent)

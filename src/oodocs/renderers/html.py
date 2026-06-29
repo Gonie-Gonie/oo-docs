@@ -917,7 +917,7 @@ class HtmlRenderer:
 
         return self._render_caption_list(
             title=block.title,
-            entries=context.render_index.tables,
+            entries=context.render_index.scoped_tables(block),
             default_title=context.theme.resolve_generated_page_title("list_of_tables"),
             label=context.theme.resolve_caption_label("table", "caption"),
             context=context,
@@ -941,7 +941,7 @@ class HtmlRenderer:
 
         return self._render_caption_list(
             title=block.title,
-            entries=context.render_index.figures,
+            entries=context.render_index.scoped_figures(block),
             default_title=context.theme.resolve_generated_page_title("list_of_figures"),
             label=context.theme.resolve_caption_label("figure", "caption"),
             context=context,
@@ -1078,8 +1078,7 @@ class HtmlRenderer:
 
         entries = "".join(
             self._toc_entry_html(block, entry, context)
-            for entry in context.render_index.headings
-            if block.includes_level(entry.level)
+            for entry in context.render_index.scoped_headings(block)
         )
         return self._generated_page_html(
             title=block.title or [Text(context.theme.resolve_generated_page_title("table_of_contents"))],

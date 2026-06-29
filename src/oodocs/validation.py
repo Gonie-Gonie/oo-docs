@@ -1387,7 +1387,7 @@ class _ValidationContext:
             if isinstance(page, TableOfContents):
                 if page.show_page_numbers:
                     self._add_compatibility_warning("html-toc-page-numbers", path)
-                if not any(page.includes_level(entry.level) for entry in render_index.headings):
+                if not render_index.scoped_headings(page):
                     self._add(
                         "warning",
                         "empty-table-of-contents",
@@ -1398,7 +1398,7 @@ class _ValidationContext:
             if isinstance(page, ListOfTables):
                 if page.show_page_numbers:
                     self._add_compatibility_warning("html-table-list-page-numbers", path)
-                if not render_index.tables:
+                if not render_index.scoped_tables(page):
                     self._add(
                         "warning",
                         "empty-table-list",
@@ -1409,7 +1409,7 @@ class _ValidationContext:
             if isinstance(page, ListOfFigures):
                 if page.show_page_numbers:
                     self._add_compatibility_warning("html-figure-list-page-numbers", path)
-                if not render_index.figures:
+                if not render_index.scoped_figures(page):
                     self._add(
                         "warning",
                         "empty-figure-list",

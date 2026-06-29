@@ -8,13 +8,38 @@ Attributes:
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Mapping, TYPE_CHECKING
+from typing import Literal, Mapping, TYPE_CHECKING
 
 from oodocs.components.base import Block
 from oodocs.components.inline import InlineInput, Text, coerce_inlines
 
 if TYPE_CHECKING:
     from oodocs.renderers.context import DocxRenderContext, HtmlRenderContext, PdfRenderContext
+
+
+GeneratedListScope = Literal["document", "part", "chapter", "section"]
+_GENERATED_LIST_SCOPES = {"document", "part", "chapter", "section"}
+
+
+def normalize_generated_list_scope(scope: GeneratedListScope | str) -> GeneratedListScope:
+    """Return a normalized generated-list scope.
+
+    Args:
+        scope: Scope name to validate.
+
+    Returns:
+        Normalized scope name.
+
+    Raises:
+        ValueError: If the scope is unsupported.
+    """
+
+    normalized = str(scope).lower()
+    if normalized not in _GENERATED_LIST_SCOPES:
+        raise ValueError(
+            "generated list scope must be 'document', 'part', 'chapter', or 'section'"
+        )
+    return normalized  # type: ignore[return-value]
 
 
 @dataclass(slots=True)
@@ -81,6 +106,8 @@ class ListOfTables(Block):
     Args:
         title: Optional page title. Renderers use their default title when
             omitted.
+        scope: Document region to include: ``"document"``, ``"part"``,
+            ``"chapter"``, or ``"section"``.
         show_page_numbers: Whether fixed-page renderers should display page
             numbers.
         leader: Leader character between caption text and page number.
@@ -89,11 +116,12 @@ class ListOfTables(Block):
         ```python
         from oodocs import Document, ListOfTables
 
-        doc = Document("Report", ListOfTables("Tables", leader="."))
+        doc = Document("Report", ListOfTables("Tables", scope="chapter", leader="."))
         ```
     """
 
     title: list[Text] | None
+    scope: GeneratedListScope
     show_page_numbers: bool
     leader: str
 
@@ -101,10 +129,12 @@ class ListOfTables(Block):
         self,
         title: InlineInput | None = None,
         *,
+        scope: GeneratedListScope | str = "document",
         show_page_numbers: bool = True,
         leader: str = ".",
     ) -> None:
         self.title = coerce_inlines((title,)) if title is not None else None
+        self.scope = normalize_generated_list_scope(scope)
         self.show_page_numbers = show_page_numbers
         self.leader = leader
 
@@ -158,6 +188,8 @@ class ListOfFigures(Block):
     Args:
         title: Optional page title. Renderers use their default title when
             omitted.
+        scope: Document region to include: ``"document"``, ``"part"``,
+            ``"chapter"``, or ``"section"``.
         show_page_numbers: Whether fixed-page renderers should display page
             numbers.
         leader: Leader character between caption text and page number.
@@ -166,11 +198,12 @@ class ListOfFigures(Block):
         ```python
         from oodocs import Document, ListOfFigures
 
-        doc = Document("Report", ListOfFigures("Figures", show_page_numbers=False))
+        doc = Document("Report", ListOfFigures("Figures", scope="part", show_page_numbers=False))
         ```
     """
 
     title: list[Text] | None
+    scope: GeneratedListScope
     show_page_numbers: bool
     leader: str
 
@@ -178,10 +211,12 @@ class ListOfFigures(Block):
         self,
         title: InlineInput | None = None,
         *,
+        scope: GeneratedListScope | str = "document",
         show_page_numbers: bool = True,
         leader: str = ".",
     ) -> None:
         self.title = coerce_inlines((title,)) if title is not None else None
+        self.scope = normalize_generated_list_scope(scope)
         self.show_page_numbers = show_page_numbers
         self.leader = leader
 
@@ -427,6 +462,8 @@ class TableOfContents(Block):
     Args:
         title: Optional page title. Renderers use their default title when
             omitted.
+        scope: Document region to include: ``"document"``, ``"part"``,
+            ``"chapter"``, or ``"section"``.
         show_page_numbers: Whether fixed-page renderers should display page
             numbers.
         leader: Leader character between heading text and page number.
@@ -443,6 +480,7 @@ class TableOfContents(Block):
 
         toc = TableOfContents(
             "Contents",
+            scope="document",
             max_level=2,
             level_styles={1: TocLevelStyle(bold=True)},
         )
@@ -451,6 +489,7 @@ class TableOfContents(Block):
     """
 
     title: list[Text] | None
+    scope: GeneratedListScope
     show_page_numbers: bool
     leader: str
     max_level: int | None
@@ -460,6 +499,7 @@ class TableOfContents(Block):
         self,
         title: InlineInput | None = None,
         *,
+        scope: GeneratedListScope | str = "document",
         show_page_numbers: bool = True,
         leader: str = ".",
         max_level: int | None = None,
@@ -468,6 +508,7 @@ class TableOfContents(Block):
         if max_level is not None and max_level < 0:
             raise ValueError("TableOfContents.max_level must be >= 0")
         self.title = coerce_inlines((title,)) if title is not None else None
+        self.scope = normalize_generated_list_scope(scope)
         self.show_page_numbers = show_page_numbers
         self.leader = leader
         self.max_level = max_level
@@ -553,4 +594,5 @@ __all__ = [
     "TocLevelStyleInput",
     "TocLevelStyle",
     "coerce_toc_level_style",
+    "normalize_generated_list_scope",
 ]
