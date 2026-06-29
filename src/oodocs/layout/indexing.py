@@ -7,6 +7,7 @@ from typing import Sequence
 
 from oodocs.components.base import Block
 from oodocs.components.blocks import (
+    Appendix,
     Box,
     BulletList,
     CodeBlock,
@@ -655,6 +656,7 @@ def build_render_index(document: Document) -> RenderIndex:
         heading_counters=[],
         part_counter=[0],
         scope=EntryScope(),
+        appendix=False,
     )
     return render_index
 
@@ -700,6 +702,7 @@ def _index_blocks(
     heading_counters: list[int],
     part_counter: list[int],
     scope: EntryScope,
+    appendix: bool,
 ) -> None:
     for block in blocks:
         if isinstance(block, Paragraph):
@@ -724,6 +727,7 @@ def _index_blocks(
                     heading_counters=heading_counters,
                     part_counter=part_counter,
                     scope=scope,
+                    appendix=appendix,
                 )
             continue
         if isinstance(block, CodeBlock):
@@ -750,6 +754,7 @@ def _index_blocks(
                 heading_counters=heading_counters,
                 part_counter=part_counter,
                 scope=scope,
+                appendix=appendix,
             )
             continue
         if isinstance(block, CountableBlock):
@@ -778,6 +783,7 @@ def _index_blocks(
                 heading_counters=heading_counters,
                 part_counter=part_counter,
                 scope=scope,
+                appendix=appendix,
             )
             continue
         if isinstance(block, (ColumnSpan, MultiColumn)):
@@ -789,6 +795,31 @@ def _index_blocks(
                 heading_counters=heading_counters,
                 part_counter=part_counter,
                 scope=scope,
+                appendix=appendix,
+            )
+            continue
+        if isinstance(block, Appendix):
+            _index_inlines(block.title, render_index, citations)
+            anchor = _register_heading_anchor(render_index, block) if block.toc else None
+            if block.toc:
+                render_index.headings.append(
+                    HeadingEntry(
+                        level=block.level,
+                        title=block.title,
+                        number=None,
+                        anchor=anchor,
+                        scope=scope,
+                    )
+                )
+            _index_blocks(
+                block.children,
+                render_index,
+                citations,
+                theme,
+                heading_counters=[],
+                part_counter=part_counter,
+                scope=scope.with_part(block),
+                appendix=True,
             )
             continue
         if isinstance(block, Part):
@@ -821,6 +852,7 @@ def _index_blocks(
                 heading_counters=heading_counters,
                 part_counter=part_counter,
                 scope=scope.with_part(block),
+                appendix=appendix,
             )
             continue
         if isinstance(block, Section):
@@ -832,9 +864,13 @@ def _index_blocks(
                     heading_counters,
                     block.level,
                 )
-                number_label = theme.format_heading_label(
-                    current_counters[: block.level],
-                    block.heading_style,
+                number_label = (
+                    theme.format_appendix_heading_label(current_counters[: block.level])
+                    if appendix
+                    else theme.format_heading_label(
+                        current_counters[: block.level],
+                        block.heading_style,
+                    )
                 )
                 render_index.heading_numbers[id(block)] = number_label
             anchor = (
@@ -860,6 +896,7 @@ def _index_blocks(
                 heading_counters=current_counters,
                 part_counter=part_counter,
                 scope=scope.with_section(block),
+                appendix=appendix,
             )
             continue
         if isinstance(

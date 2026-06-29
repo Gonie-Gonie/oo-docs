@@ -123,6 +123,7 @@ def test_theme_resolves_heading_and_caption_defaults() -> None:
     assert theme.resolve_heading_size(3) == 16.0
     assert theme.resolve_heading_emphasis(1) == (True, False)
     assert theme.resolve_heading_text_alignment(2) == "left"
+    assert theme.format_appendix_heading_label([1, 2]) == "A.2"
     assert theme.resolve_caption_label("table", "caption") == "Tbl."
     assert theme.resolve_caption_label("figure", "reference") == "Fig."
 

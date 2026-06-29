@@ -19,6 +19,8 @@ Attributes:
     Axiom: Generated countable block class for axioms.
     Claim: Generated countable block class for claims.
     Conjecture: Generated countable block class for conjectures.
+    Appendix: Container for document appendices with alphabetic chapter
+        numbering.
     CellInput: Type alias for values accepted by table cells.
 """
 
@@ -1360,6 +1362,65 @@ class Part(Block):
 
 
 @dataclass(slots=True, init=False)
+class Appendix(Part):
+    """Appendix container that switches child heading numbers to letters.
+
+    Args:
+        *children: Appendix block content. Level-1 headings inside the appendix
+            are numbered ``A``, ``B``, ``C``, and nested headings become
+            ``A.1``, ``A.1.1``, and so on.
+        title: Appendix separator title.
+        toc: Whether the appendix separator should appear in generated tables
+            of contents.
+
+    Examples:
+        ```python
+        from oodocs import Appendix, Chapter, Document, Paragraph
+
+        appendix = Appendix(
+            Chapter("Input Data Schema", Paragraph("Field definitions.")),
+            Chapter("Validation Cases", Paragraph("Reference checks.")),
+        )
+        document = Document("Report", appendix)
+        ```
+    """
+
+    def __init__(
+        self,
+        *children: BlockInput,
+        title: InlineInput = "Appendices",
+        toc: bool = True,
+    ) -> None:
+        Part.__init__(self, title, *children, numbered=False, toc=toc)
+
+    def add(self, *children: BlockInput) -> Appendix:
+        """Append child blocks.
+
+        Args:
+            *children: Appendix block content to append.
+
+        Returns:
+            This appendix, enabling fluent construction.
+        """
+
+        Part.add(self, *children)
+        return self
+
+    def extend(self, children: Iterable[BlockInput]) -> Appendix:
+        """Append an iterable of child blocks.
+
+        Args:
+            children: Appendix block content to append.
+
+        Returns:
+            This appendix, enabling fluent construction.
+        """
+
+        Part.extend(self, children)
+        return self
+
+
+@dataclass(slots=True, init=False)
 class Box(Block):
     """Bordered container for grouped block content.
 
@@ -2306,6 +2367,7 @@ __all__ = [
     "THEOREM_COUNTER",
     "VerticalSpace",
     "Assumption",
+    "Appendix",
     "Axiom",
     "Claim",
     "Conjecture",

@@ -6,6 +6,7 @@ from oodocs.core import OODocsError
 from oodocs.compatibility import OUTPUT_FORMATS, OutputFormat
 from oodocs.components.blocks import (
     Assumption,
+    Appendix,
     Axiom,
     Box,
     BulletList,
@@ -175,6 +176,7 @@ __version__ = _resolve_version()
 __all__ = [
     "Affiliation",
     "Assumption",
+    "Appendix",
     "Author",
     "AuthorLayout",
     "Axiom",

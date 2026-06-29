@@ -890,6 +890,41 @@ class Theme:
             f"{self.blocks.heading_numbering.suffix}"
         )
 
+    def format_appendix_heading_label(self, counters: Sequence[int]) -> str | None:
+        """Render an appendix heading label such as ``A.1``.
+
+        Args:
+            counters: Counter values from the appendix chapter through the
+                current heading.
+
+        Returns:
+            Formatted appendix heading label, or ``None`` when heading
+            numbering is disabled.
+
+        Examples:
+            ```python
+            assert Theme().format_appendix_heading_label([2, 3]) == "B.3"
+            ```
+        """
+
+        if not self.blocks.heading_numbering.enabled:
+            return None
+        if not counters:
+            return None
+        appendix_styles = (
+            CounterStyle(counter_format="upper-alpha"),
+            *self.blocks.heading_numbering.level_styles[1:],
+        )
+        pieces = [
+            appendix_styles[min(index, len(appendix_styles) - 1)].format_value(value)
+            for index, value in enumerate(counters)
+        ]
+        return (
+            f"{self.blocks.heading_numbering.prefix}"
+            f"{self.blocks.heading_numbering.separator.join(pieces)}"
+            f"{self.blocks.heading_numbering.suffix}"
+        )
+
     def format_part_label(self, value: int) -> str | None:
         """Render a part label such as ``Part I`` from an independent counter.
 

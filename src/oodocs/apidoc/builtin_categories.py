@@ -32,6 +32,7 @@ OODocs_API_CATEGORIES: tuple[ApiCategory, ...] = (
         summary="Create parts, chapters, sections, paragraphs, lists, boxes, and generated pages.",
         include=(
             "oodocs.Part",
+            "oodocs.Appendix",
             "oodocs.Chapter",
             "oodocs.Section",
             "oodocs.Subsection",

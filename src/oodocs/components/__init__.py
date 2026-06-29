@@ -8,6 +8,7 @@ from importlib import import_module
 _EXPORTS = {
     "Affiliation": "oodocs.components.people",
     "Assumption": "oodocs.components.blocks",
+    "Appendix": "oodocs.components.blocks",
     "Author": "oodocs.components.people",
     "AuthorLayout": "oodocs.components.people",
     "Axiom": "oodocs.components.blocks",

@@ -21,6 +21,7 @@ from oodocs.compatibility import (
 )
 from oodocs.components.base import Block
 from oodocs.components.blocks import (
+    Appendix,
     Box,
     BulletList,
     CodeBlock,
@@ -836,6 +837,24 @@ class _ValidationContext:
                 block.children,
                 path,
                 parent_level=parent_level,
+            )
+            return
+
+        if isinstance(block, Appendix):
+            self._register_referenceable(block, path)
+            if parent_level is not None:
+                self._add(
+                    "warning",
+                    "nested-appendix",
+                    "Appendix containers are intended for top-level document appendices.",
+                    path,
+                )
+            self._validate_title(block.title, f"{path}.title", "Appendix title must not be empty.")
+            self._scan_inlines(block.title, f"{path}.title")
+            self._collect_blocks(
+                block.children,
+                path,
+                parent_level=block.level,
             )
             return
 

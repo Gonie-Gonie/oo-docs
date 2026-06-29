@@ -26,6 +26,7 @@ from oodocs import (
     Assumption,
     Author,
     AuthorLayout,
+    Appendix,
     Axiom,
     BlockDefaults,
     BorderStyle,
@@ -1394,6 +1395,79 @@ def test_parts_use_dedicated_pages_without_resetting_chapters(tmp_path: Path) ->
     assert 'oodocs-toc-entry-level-0' in html_text
 
 
+def test_appendix_switches_child_heading_numbers_to_letters(tmp_path: Path) -> None:
+    appendix = Appendix(
+        Chapter(
+            "Input Data Schema",
+            Section("Fields", Paragraph("Field definitions.")),
+        ),
+        Chapter("Validation Cases", Paragraph("Reference checks.")),
+    )
+    document = Document(
+        "Appendix Test",
+        TableOfContents(show_page_numbers=False),
+        Chapter("Main", Paragraph("Body.")),
+        Paragraph("See ", reference(appendix.children[0]), "."),
+        appendix,
+    )
+
+    render_index = build_render_index(document)
+
+    assert render_index.heading_number(document.body.children[1]) == "1"
+    assert render_index.heading_number(appendix) is None
+    assert render_index.heading_number(appendix.children[0]) == "A"
+    assert render_index.heading_number(appendix.children[0].children[0]) == "A.1"
+    assert render_index.heading_number(appendix.children[1]) == "B"
+    assert [
+        ("".join(fragment.plain_text() for fragment in entry.title), entry.number)
+        for entry in render_index.headings
+    ] == [
+        ("Main", "1"),
+        ("Appendices", None),
+        ("Input Data Schema", "A"),
+        ("Fields", "A.1"),
+        ("Validation Cases", "B"),
+    ]
+
+    docx_path = tmp_path / "appendix.docx"
+    pdf_path = tmp_path / "appendix.pdf"
+    html_path = tmp_path / "appendix.html"
+    document.save_docx(docx_path)
+    document.save_pdf(pdf_path)
+    document.save_html(html_path)
+
+    paragraph_texts = [paragraph.text for paragraph in WordDocument(docx_path).paragraphs]
+    assert "Appendices" in paragraph_texts
+    assert "See Chapter A." in paragraph_texts
+    assert "A Input Data Schema" in paragraph_texts
+    assert "A.1 Fields" in paragraph_texts
+    assert "B Validation Cases" in paragraph_texts
+
+    pdf_text = "\n".join(
+        page.extract_text() or "" for page in PdfReader(BytesIO(pdf_path.read_bytes())).pages
+    )
+    assert "Appendices" in pdf_text
+    assert "See Chapter A." in pdf_text
+    assert "A Input Data Schema" in pdf_text
+    assert "A.1 Fields" in pdf_text
+    assert "B Validation Cases" in pdf_text
+
+    normalized_html_text = _normalized_html_text(html_path)
+    assert "Appendices" in normalized_html_text
+    assert "See Chapter A" in normalized_html_text
+    assert "A Input Data Schema" in normalized_html_text
+    assert "A.1 Fields" in normalized_html_text
+    assert "B Validation Cases" in normalized_html_text
+
+
+def test_appendix_validation_warns_when_nested() -> None:
+    document = Document("Nested Appendix", Chapter("Main", Appendix(Chapter("Data"))))
+
+    warning_codes = {issue.code for issue in document.validate().warnings}
+
+    assert "nested-appendix" in warning_codes
+
+
 def test_public_api_prefers_classes_for_structural_nodes() -> None:
     assert hasattr(oodocs, "Document")
     assert hasattr(oodocs, "DocumentSettings")
@@ -1403,6 +1477,7 @@ def test_public_api_prefers_classes_for_structural_nodes() -> None:
     assert hasattr(oodocs, "Shape")
     assert hasattr(oodocs, "Paragraph")
     assert hasattr(oodocs, "Part")
+    assert hasattr(oodocs, "Appendix")
     assert hasattr(oodocs, "BulletList")
     assert hasattr(oodocs, "ColumnSpan")
     assert hasattr(oodocs, "CountableBlock")

@@ -139,6 +139,7 @@ OODocs is not trying to replace every LaTeX workflow. It is meant for documents 
 Common translations:
 
 - LaTeX `\part` -> `Part(...)` separator pages above chapters
+- LaTeX `\appendix` -> `Appendix(Chapter(...), ...)` with child chapters numbered `A`, `B`, `C`
 - LaTeX `\section` / `\subsection` -> `Chapter(...)`, `Section(...)`, `Subsection(...)`
 - LaTeX `\textbf{...}` / `\emph{...}` / `\texttt{...}` -> `bold(...)`, `italic(...)`, `inline_code(...)`
 - LaTeX tag chips / compact inline labels -> `tag(...)`, `badge(...)`, `status(...)`, and `keyboard(...)`
@@ -157,7 +158,7 @@ The main payoff is fewer manual handoffs: a benchmark CSV can become a table, a 
 
 OODocs tries to keep the source readable:
 
-- create objects with classes such as `Document`, `Part`, `Chapter`, `Section`, `Paragraph`, `Table`, and `Figure`
+- create objects with classes such as `Document`, `Part`, `Appendix`, `Chapter`, `Section`, `Paragraph`, `Table`, and `Figure`
 - apply inline actions with helpers such as `bold(...)`, `italic(...)`, `inline_code(...)`, `tag(...)`, `badge(...)`, `status(...)`, `keyboard(...)`, `Text.from_markup(...)`, `Comment.annotated(...)`, `Footnote.annotated(...)`, and `CitationSource.cite()`
 - import existing Markdown with `parse_markdown(...)`, `from_markdown(...)`, or `Document.from_markdown(...)` when release notes, README fragments, or generated Markdown should become editable OODocs objects
 - import Jupyter notebooks with `parse_notebook(...)`, `from_notebook(...)`, or `Document.from_notebook(...)` when notebook markdown, code cells, and textual outputs should become OODocs blocks
@@ -170,6 +171,7 @@ The default behavior is intentionally conventional:
 - paragraphs are justified by default
 - tables, figures, boxes, and their captions are centered by default
 - parts render on their own separator pages and do not reset chapter numbering
+- appendices render on a separator page and switch child chapter numbering to `A`, `B`, `C`
 - headings are numbered as `1`, `1.1`, `1.1.1`, and so on
 - ordered and bullet lists can be customized with direct kwargs such as `indent=...`, `marker=CounterStyle(...)`, and `marker_gap=...`
 - heading numbering can be customized with `HeadingNumbering(...)`
@@ -186,6 +188,7 @@ The default behavior is intentionally conventional:
 - Use `Paragraph(left_indent=..., right_indent=..., first_line_indent=..., unit=...)` when you need Word-like first-line or hanging indents. If `unit` is omitted, indent values follow `DocumentSettings(unit=...)`.
 - Use `subscript(...)`, `superscript(...)`, and `prescript(...)` for ordinary prose. Use `Math(...)` or `Equation(...)` for lightweight LaTeX-style math, including ordinary `x^2` / `x_0` scripts and front scripts such as `\prescript{14}{6}{C}`.
 - Use `Part(...)` for book-like divisions above chapters; each part gets a separator page, while chapter numbers continue across parts by default.
+- Use `Appendix(Chapter(...), ...)` for appendix material; child chapters are numbered `A`, `B`, `C`, nested headings become `A.1`, `A.2`, and the appendix separator can appear in the table of contents.
 - Use `Chapter(...)`, `Section(...)`, `Subsection(...)`, and `SubSubsection(...)` for the visible outline. Their nesting in Python should match how you expect the final document to read.
 - Use `Theme(blocks=BlockDefaults(heading_styles={level: HeadingStyle(...)}))` for document-wide heading styling, or `Section(..., heading_style=HeadingStyle(...))` when one heading needs a local override.
 - Use `TableOfContents(scope="chapter")`, `ListOfTables(scope="section")`, or `ListOfFigures(scope="part")` for mini contents and local generated lists; the default `scope="document"` preserves whole-document lists.

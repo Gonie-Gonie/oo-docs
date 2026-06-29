@@ -19,6 +19,13 @@
           "qualname": "oodocs.components.blocks.Assumption"
         },
         {
+          "category": "block",
+          "kind": "class",
+          "module": "oodocs.components.blocks",
+          "name": "Appendix",
+          "qualname": "oodocs.components.blocks.Appendix"
+        },
+        {
           "category": "settings",
           "kind": "class",
           "module": "oodocs.components.people",
