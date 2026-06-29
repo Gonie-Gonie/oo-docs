@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "oodocs"
 dynamic = ["version"]
 description = "Object-oriented documentation toolkit for authoring DOCX, PDF, and HTML documents from Python object trees."
-readme = "README.md"
+readme = "README-PYPI.md"
 requires-python = ">=3.11"
 license = "MIT"
 license-files = ["LICENSE"]

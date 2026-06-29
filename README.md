@@ -453,6 +453,10 @@ Build distribution artifacts:
 .\.venv\Scripts\python.exe -m build
 ```
 
+PyPI uses `README-PYPI.md` as the package long description. Keep the repository
+README focused on contributor and release workflow details, and keep the PyPI
+README focused on installation, first use, features, and public links.
+
 ## Releases
 
 OODocs versions are derived from git tags through `setuptools-scm`.
