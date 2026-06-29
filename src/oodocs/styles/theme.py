@@ -23,6 +23,16 @@ from oodocs.styles.tables import TableStyle
 from oodocs.styles.text import TextStyle
 
 
+DEFAULT_FOOTNOTE_SYMBOLS: tuple[str, ...] = (
+    "*",
+    "\u2020",
+    "\u2021",
+    "\u00a7",
+    "\u00b6",
+    "\u2016",
+)
+
+
 @dataclass(slots=True)
 class TypographyDefaults:
     """Grouped document-wide font and size defaults for ``Theme``.
@@ -139,6 +149,171 @@ class HeadingStyle:
                 numbering=merged.numbering if other.numbering is None else other.numbering,
             )
         return merged
+
+
+@dataclass(slots=True)
+class FootnoteStyle:
+    """Marker style for one footnote stream.
+
+    Attributes:
+        marker: Counter style used for numeric, alphabetic, roman, or custom
+            prefixed footnote markers.
+        symbols: Optional symbol sequence used instead of ``marker``.
+
+    Examples:
+        ```python
+        from oodocs import FootnoteStyle
+
+        symbol_notes = FootnoteStyle.symbol()
+        assert symbol_notes.format_value(1) == "*"
+        ```
+    """
+
+    marker: CounterStyle = field(default_factory=CounterStyle)
+    symbols: tuple[str, ...] | None = None
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.marker, CounterStyle):
+            raise TypeError("FootnoteStyle.marker must be a CounterStyle")
+        if self.symbols is not None:
+            self.symbols = tuple(str(symbol) for symbol in self.symbols)
+            if not self.symbols or any(not symbol for symbol in self.symbols):
+                raise ValueError("FootnoteStyle.symbols must not contain empty symbols")
+
+    @classmethod
+    def symbol(cls, symbols: Sequence[str] = DEFAULT_FOOTNOTE_SYMBOLS) -> FootnoteStyle:
+        """Return a symbol-based footnote style.
+
+        Args:
+            symbols: Symbol sequence. Values repeat when the stream has more
+                footnotes than symbols.
+
+        Returns:
+            Symbol-marker footnote style.
+        """
+
+        return cls(symbols=tuple(symbols))
+
+    def format_value(self, value: int) -> str:
+        """Format one footnote marker value.
+
+        Args:
+            value: One-based stream-local footnote number.
+
+        Returns:
+            Marker text for the footnote reference.
+        """
+
+        if self.symbols is None:
+            return self.marker.format_value(value)
+        if value < 1:
+            raise ValueError("Footnote marker value must be >= 1")
+        index = (value - 1) % len(self.symbols)
+        repeats = (value - 1) // len(self.symbols) + 1
+        return self.symbols[index] * repeats
+
+    def is_native_docx_compatible(self) -> bool:
+        """Return whether Word native footnotes can represent this style.
+
+        Returns:
+            ``True`` for the default plain decimal marker only.
+        """
+
+        return (
+            self.symbols is None
+            and self.marker.counter_format == "decimal"
+            and self.marker.prefix == ""
+            and self.marker.suffix == ""
+            and self.marker.start == 1
+        )
+
+
+@dataclass(slots=True)
+class FootnoteDefaults:
+    """Document-wide footnote stream and marker defaults.
+
+    Attributes:
+        default_style: Marker style for the default stream.
+        stream_styles: Marker styles keyed by stream name.
+
+    Examples:
+        ```python
+        from oodocs import CounterStyle, FootnoteDefaults, FootnoteStyle, Theme
+
+        theme = Theme(
+            footnotes=FootnoteDefaults(
+                stream_styles={
+                    "symbols": FootnoteStyle.symbol(),
+                    "review": FootnoteStyle(CounterStyle(prefix="R")),
+                }
+            )
+        )
+        ```
+    """
+
+    default_style: FootnoteStyle = field(default_factory=FootnoteStyle)
+    stream_styles: dict[str, FootnoteStyle] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.default_style, FootnoteStyle):
+            raise TypeError("FootnoteDefaults.default_style must be a FootnoteStyle")
+        self.stream_styles = {
+            self._normalize_stream_name(name): self._coerce_style(style)
+            for name, style in self.stream_styles.items()
+        }
+
+    def style_for_stream(self, stream: str) -> FootnoteStyle:
+        """Return the marker style for a footnote stream.
+
+        Args:
+            stream: Footnote stream name.
+
+        Returns:
+            Configured stream style or ``default_style``.
+        """
+
+        return self.stream_styles.get(self._normalize_stream_name(stream), self.default_style)
+
+    def format_marker(self, stream: str, number: int) -> str:
+        """Format a stream-local footnote marker.
+
+        Args:
+            stream: Footnote stream name.
+            number: One-based stream-local footnote number.
+
+        Returns:
+            Marker text for the footnote reference.
+        """
+
+        return self.style_for_stream(stream).format_value(number)
+
+    def is_native_docx_compatible(self, stream: str) -> bool:
+        """Return whether native Word footnotes can represent a stream.
+
+        Args:
+            stream: Footnote stream name.
+
+        Returns:
+            ``True`` only for the default stream with the plain decimal style.
+        """
+
+        return (
+            self._normalize_stream_name(stream) == "default"
+            and self.style_for_stream("default").is_native_docx_compatible()
+        )
+
+    @staticmethod
+    def _coerce_style(style: FootnoteStyle) -> FootnoteStyle:
+        if not isinstance(style, FootnoteStyle):
+            raise TypeError("FootnoteDefaults.stream_styles values must be FootnoteStyle instances")
+        return style
+
+    @staticmethod
+    def _normalize_stream_name(value: str) -> str:
+        normalized = str(value).strip()
+        if not normalized:
+            raise ValueError("Footnote stream names must not be empty")
+        return normalized
 
 
 @dataclass(slots=True)
@@ -785,6 +960,7 @@ class Theme:
         captions: Optional caption defaults group.
         citations: Optional citation defaults group.
         links: Optional hyperlink defaults group.
+        footnotes: Optional footnote defaults group.
         generated_content: Optional generated-content defaults group.
         locale: Optional document language and localization defaults group.
         page_numbers: Optional page-number defaults group.
@@ -798,6 +974,7 @@ class Theme:
         captions: Resolved caption defaults group.
         citations: Resolved citation defaults group.
         links: Resolved hyperlink defaults group.
+        footnotes: Resolved footnote defaults group.
         generated_content: Resolved generated-content defaults group.
         locale: Resolved document language and localization defaults group.
         page_numbers: Resolved page-number defaults group.
@@ -844,8 +1021,8 @@ class Theme:
 
     See Also:
         ``TypographyDefaults``, ``CaptionDefaults``, ``CitationDefaults``,
-        ``LinkDefaults``, ``GeneratedContentDefaults``, ``LocaleDefaults``,
-        ``PageNumberDefaults``, ``HeaderFooterDefaults``,
+        ``LinkDefaults``, ``FootnoteDefaults``, ``GeneratedContentDefaults``,
+        ``LocaleDefaults``, ``PageNumberDefaults``, ``HeaderFooterDefaults``,
         ``TitleMatterDefaults``, and ``BlockDefaults`` for grouped
         configuration.
     """
@@ -854,6 +1031,7 @@ class Theme:
     captions: CaptionDefaults
     citations: CitationDefaults
     links: LinkDefaults
+    footnotes: FootnoteDefaults
     generated_content: GeneratedContentDefaults
     locale: LocaleDefaults
     page_numbers: PageNumberDefaults
@@ -869,6 +1047,7 @@ class Theme:
         captions: CaptionDefaults | None = None,
         citations: CitationDefaults | None = None,
         links: LinkDefaults | None = None,
+        footnotes: FootnoteDefaults | None = None,
         generated_content: GeneratedContentDefaults | None = None,
         locale: LocaleDefaults | str | None = None,
         page_numbers: PageNumberDefaults | None = None,
@@ -891,6 +1070,7 @@ class Theme:
             "captions": (captions, CaptionDefaults),
             "citations": (citations, CitationDefaults),
             "links": (links, LinkDefaults),
+            "footnotes": (footnotes, FootnoteDefaults),
             "generated_content": (generated_content, GeneratedContentDefaults),
             "page_numbers": (page_numbers, PageNumberDefaults),
             "header_footer": (header_footer, HeaderFooterDefaults),
@@ -909,6 +1089,7 @@ class Theme:
         self.captions = captions or self.locale.captions
         self.citations = citations or CitationDefaults()
         self.links = links or LinkDefaults()
+        self.footnotes = footnotes or FootnoteDefaults()
         self.generated_content = generated_content or self.locale.generated_content
         self.page_numbers = page_numbers or PageNumberDefaults()
         self.header_footer = header_footer or HeaderFooterDefaults()
@@ -1498,6 +1679,9 @@ __all__ = [
     "CaptionDefaults",
     "CitationDefaults",
     "CounterStyle",
+    "DEFAULT_FOOTNOTE_SYMBOLS",
+    "FootnoteDefaults",
+    "FootnoteStyle",
     "GeneratedContentDefaults",
     "HeaderFooterDefaults",
     "HeadingStyle",

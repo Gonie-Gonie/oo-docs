@@ -203,6 +203,8 @@ OODocs_API_CATEGORIES: tuple[ApiCategory, ...] = (
             "oodocs.CaptionDefaults",
             "oodocs.CitationDefaults",
             "oodocs.LinkDefaults",
+            "oodocs.FootnoteDefaults",
+            "oodocs.FootnoteStyle",
             "oodocs.GeneratedContentDefaults",
             "oodocs.LocaleDefaults",
             "oodocs.PageNumberDefaults",

@@ -223,9 +223,14 @@ class DocxRenderer:
         self._bookmark_id = 1
         self._native_footnotes_part: FootnotesPart | None = None
         self._rendered_native_footnotes: set[int] = set()
+        self._native_footnotes_enabled = True
         render_index = build_render_index(document)
         self._configure_document(word_document, document)
         settings = document.settings
+        self._native_footnotes_enabled = self._should_use_native_footnotes(
+            settings.theme,
+            render_index,
+        )
         context = DocxRenderContext(
             theme=settings.theme,
             render_index=render_index,
@@ -1219,10 +1224,23 @@ class DocxRenderer:
         render_index: RenderIndex,
     ) -> bool:
         return (
-            document.settings.theme.blocks.footnote_placement == "document"
+            not self._native_footnotes_enabled
             and document.settings.theme.blocks.auto_footnotes_page
             and bool(render_index.footnotes)
             and not any(isinstance(child, FootnoteList) for child in document.body.children)
+        )
+
+    def _should_use_native_footnotes(
+        self,
+        theme: Theme,
+        render_index: RenderIndex,
+    ) -> bool:
+        return (
+            theme.blocks.footnote_placement == "page"
+            and all(
+                theme.footnotes.is_native_docx_compatible(entry.stream)
+                for entry in render_index.footnotes
+            )
         )
 
     def _keep_with_next(self, paragraph: object) -> None:
@@ -2038,7 +2056,7 @@ class DocxRenderer:
             theme is not None
             and word_document is not None
             and render_index is not None
-            and theme.blocks.footnote_placement == "page"
+            and self._native_footnotes_enabled
         ):
             marker_run = paragraph.add_run()
             self._apply_run_style(
@@ -2058,7 +2076,7 @@ class DocxRenderer:
             )
             return
 
-        marker_run = paragraph.add_run(self._footnote_marker(fragment, render_index))
+        marker_run = paragraph.add_run(self._footnote_marker(fragment, render_index, theme))
         self._apply_run_style(marker_run, fragment.style, default_size=max((default_size or 10.0) - 2, 8))
         marker_run.font.superscript = True
 
@@ -3714,9 +3732,10 @@ class DocxRenderer:
             paragraph = word_document.add_paragraph()
             paragraph.paragraph_format.left_indent = Inches(0.3)
             paragraph.paragraph_format.first_line_indent = Inches(-0.3)
+            marker = theme.footnotes.format_marker(entry.stream, entry.number)
             self._append_runs(
                 paragraph,
-                [Text(f"[{entry.number}] ")] + entry.footnote.note,
+                [Text(f"[{marker}] ")] + entry.footnote.note,
                 default_size=theme.typography.body_font_size,
                 theme=theme,
                 render_index=render_index,
@@ -4232,10 +4251,18 @@ class DocxRenderer:
             return "[?]"
         return f"[{render_index.comment_number(fragment)}]"
 
-    def _footnote_marker(self, fragment: Footnote, render_index: RenderIndex | None) -> str:
+    def _footnote_marker(
+        self,
+        fragment: Footnote,
+        render_index: RenderIndex | None,
+        theme: Theme | None,
+    ) -> str:
         if render_index is None:
             return "?"
-        return str(render_index.footnote_number(fragment))
+        number = render_index.footnote_number(fragment)
+        if theme is None:
+            return str(number)
+        return theme.footnotes.format_marker(fragment.stream, number)
 
     def _flatten_fragments(self, fragments: list[Text], theme: Theme | None, render_index: RenderIndex | None) -> str:
         parts: list[str] = []
@@ -4246,7 +4273,7 @@ class DocxRenderer:
                 continue
             if isinstance(fragment, Footnote):
                 parts.append(fragment.value)
-                parts.append(self._footnote_marker(fragment, render_index))
+                parts.append(self._footnote_marker(fragment, render_index, theme))
                 continue
             parts.append(self._resolve_fragment_text(fragment, theme, render_index))
         return "".join(parts)

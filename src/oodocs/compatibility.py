@@ -92,6 +92,15 @@ COMPATIBILITY_NOTES: dict[str, CompatibilityNote] = {
         ),
         formats=("docx", "html"),
     ),
+    "docx-footnote-stream-generated-list": CompatibilityNote(
+        code="docx-footnote-stream-generated-list",
+        message=(
+            "DOCX native page footnotes support only the default plain decimal "
+            "stream; custom footnote streams or symbol markers render through "
+            "the generated footnote list."
+        ),
+        formats=("docx",),
+    ),
 }
 
 

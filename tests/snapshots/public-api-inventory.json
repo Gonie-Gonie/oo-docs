@@ -313,11 +313,25 @@
           "qualname": "oodocs.components.inline.Footnote"
         },
         {
+          "category": "theme",
+          "kind": "class",
+          "module": "oodocs.styles.theme",
+          "name": "FootnoteDefaults",
+          "qualname": "oodocs.styles.theme.FootnoteDefaults"
+        },
+        {
           "category": "generated-page",
           "kind": "class",
           "module": "oodocs.components.generated",
           "name": "FootnoteList",
           "qualname": "oodocs.components.generated.FootnoteList"
+        },
+        {
+          "category": "style",
+          "kind": "class",
+          "module": "oodocs.styles.theme",
+          "name": "FootnoteStyle",
+          "qualname": "oodocs.styles.theme.FootnoteStyle"
         },
         {
           "category": "theme",
@@ -1830,6 +1844,20 @@
           "module": "oodocs.styles.counter",
           "name": "CounterStyle",
           "qualname": "oodocs.styles.counter.CounterStyle"
+        },
+        {
+          "category": "theme",
+          "kind": "class",
+          "module": "oodocs.styles.theme",
+          "name": "FootnoteDefaults",
+          "qualname": "oodocs.styles.theme.FootnoteDefaults"
+        },
+        {
+          "category": "style",
+          "kind": "class",
+          "module": "oodocs.styles.theme",
+          "name": "FootnoteStyle",
+          "qualname": "oodocs.styles.theme.FootnoteStyle"
         },
         {
           "category": "theme",

@@ -10,6 +10,8 @@ from oodocs import (
     BoxStyle,
     CaptionDefaults,
     CounterStyle,
+    FootnoteDefaults,
+    FootnoteStyle,
     GeneratedContentDefaults,
     HeaderFooterDefaults,
     HeadingStyle,
@@ -117,6 +119,30 @@ def test_counter_style_formats_values_and_sequences() -> None:
 
     with pytest.raises(ValueError, match="start"):
         CounterStyle(start=0)
+
+
+def test_footnote_defaults_format_stream_markers() -> None:
+    defaults = FootnoteDefaults(
+        stream_styles={
+            "symbols": FootnoteStyle.symbol(("*", "#")),
+            "review": FootnoteStyle(CounterStyle(prefix="R")),
+        }
+    )
+
+    assert defaults.format_marker("default", 2) == "2"
+    assert defaults.format_marker("symbols", 1) == "*"
+    assert defaults.format_marker("symbols", 3) == "**"
+    assert defaults.format_marker("review", 2) == "R2"
+    assert defaults.is_native_docx_compatible("default")
+    assert not defaults.is_native_docx_compatible("symbols")
+    assert not FootnoteDefaults(
+        stream_styles={"default": FootnoteStyle.symbol()}
+    ).is_native_docx_compatible("default")
+
+    with pytest.raises(ValueError, match="stream"):
+        FootnoteDefaults(stream_styles={"": FootnoteStyle()})
+    with pytest.raises(ValueError, match="symbols"):
+        FootnoteStyle.symbol(())
 
 
 def test_counter_style_drives_list_heading_page_and_part_defaults() -> None:

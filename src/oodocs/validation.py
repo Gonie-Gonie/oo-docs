@@ -730,6 +730,7 @@ class _ValidationContext:
         self._validate_references(render_index)
         self._validate_hyperlinks(render_index)
         if render_index is not None:
+            self._validate_footnote_compatibility(render_index)
             self._validate_generated_content(render_index)
         return self.issues
 
@@ -1759,6 +1760,19 @@ class _ValidationContext:
                     "FootnoteList has no footnotes to display.",
                     path,
                 )
+
+    def _validate_footnote_compatibility(self, render_index: RenderIndex) -> None:
+        theme = self.document.settings.theme
+        if theme.blocks.footnote_placement != "page":
+            return
+        for entry in render_index.footnotes:
+            if theme.footnotes.is_native_docx_compatible(entry.stream):
+                continue
+            self._add_compatibility_warning(
+                "docx-footnote-stream-generated-list",
+                "document.body",
+            )
+            return
 
     def _validate_table_width(self, table: Table, path: str) -> None:
         column_widths = table._column_widths_in_inches(

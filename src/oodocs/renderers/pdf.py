@@ -3453,7 +3453,7 @@ class PdfRenderer:
                 base_bold=base_bold,
                 base_italic=base_italic,
             )
-            return f"{visible}<super>{escape(self._footnote_marker(fragment, render_index))}</super>"
+            return f"{visible}<super>{escape(self._footnote_marker(fragment, render_index, theme))}</super>"
         if isinstance(fragment, Math):
             return self._math_markup(
                 fragment,
@@ -4019,10 +4019,11 @@ class PdfRenderer:
             ),
         ]
         for entry in render_index.footnotes:
+            marker = theme.footnotes.format_marker(entry.stream, entry.number)
             story.append(
                 RLParagraph(
                     self._inline_markup(
-                        [Text(f"[{entry.number}] ")] + entry.footnote.note,
+                        [Text(f"[{marker}] ")] + entry.footnote.note,
                         theme,
                         render_index,
                         base_font_name=entry_style.fontName,
@@ -4389,5 +4390,8 @@ class PdfRenderer:
     def _comment_marker(self, fragment: Comment, render_index: RenderIndex) -> str:
         return f"[{render_index.comment_number(fragment)}]"
 
-    def _footnote_marker(self, fragment: Footnote, render_index: RenderIndex) -> str:
-        return str(render_index.footnote_number(fragment))
+    def _footnote_marker(self, fragment: Footnote, render_index: RenderIndex, theme: Theme) -> str:
+        return theme.footnotes.format_marker(
+            fragment.stream,
+            render_index.footnote_number(fragment),
+        )

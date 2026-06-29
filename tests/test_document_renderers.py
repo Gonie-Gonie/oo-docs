@@ -68,6 +68,8 @@ from oodocs import (
     Figure,
     ListOfFigures,
     Footnote,
+    FootnoteDefaults,
+    FootnoteStyle,
     GeneratedContentDefaults,
     Glossary,
     GlossaryList,
@@ -4611,6 +4613,71 @@ def test_docx_native_page_footnotes_are_default(tmp_path: Path) -> None:
         footnotes_xml = archive.read("word/footnotes.xml").decode("utf-8")
     assert "Default native footnote note." in footnotes_xml
     assert "w:footnoteReference" in _docx_document_xml(docx_path)
+
+
+def test_custom_footnote_streams_use_generated_markers_across_outputs(tmp_path: Path) -> None:
+    document = Document(
+        "Custom Footnote Streams",
+        Paragraph(
+            "Symbol ",
+            footnote("alpha", "Symbol stream note.", stream="symbols"),
+            " review ",
+            footnote("beta", "Review stream note.", stream="review"),
+            " default ",
+            footnote("gamma", "Default stream note."),
+            ".",
+        ),
+        settings=DocumentSettings(
+            theme=Theme(
+                footnotes=FootnoteDefaults(
+                    stream_styles={
+                        "symbols": FootnoteStyle.symbol(("*", "#")),
+                        "review": FootnoteStyle(CounterStyle(prefix="R")),
+                    }
+                )
+            )
+        ),
+    )
+
+    validation = document.validate()
+    assert "docx-footnote-stream-generated-list" in {
+        issue.code for issue in validation.warnings_for(("docx",))
+    }
+    assert validation.warnings_for(("pdf", "html")) == ()
+
+    docx_path = tmp_path / "custom-footnote-streams.docx"
+    pdf_path = tmp_path / "custom-footnote-streams.pdf"
+    html_path = tmp_path / "custom-footnote-streams.html"
+    document.save_docx(docx_path)
+    document.save_pdf(pdf_path)
+    document.save_html(html_path)
+
+    word_text = "\n".join(paragraph.text for paragraph in WordDocument(docx_path).paragraphs)
+    word_xml = _docx_document_xml(docx_path)
+    with zipfile.ZipFile(docx_path) as archive:
+        assert "word/footnotes.xml" not in archive.namelist()
+    assert "Footnotes" in word_text
+    assert "[*] Symbol stream note." in word_text
+    assert "[R1] Review stream note." in word_text
+    assert "[1] Default stream note." in word_text
+    assert "w:footnoteReference" not in word_xml
+
+    pdf_text = "\n".join(
+        page.extract_text() or ""
+        for page in PdfReader(BytesIO(pdf_path.read_bytes())).pages
+    )
+    assert "[*] Symbol stream note." in pdf_text
+    assert "[R1] Review stream note." in pdf_text
+    assert "[1] Default stream note." in pdf_text
+
+    html_text = html_path.read_text(encoding="utf-8")
+    normalized_html_text = _normalized_html_text(html_path)
+    assert 'id="footnote_1"' in html_text
+    assert 'id="footnote_2"' in html_text
+    assert "[*]" in normalized_html_text
+    assert "[R1]" in normalized_html_text
+    assert "[1]" in normalized_html_text
+    assert "Symbol stream note." in normalized_html_text
 
 
 def test_document_renders_to_docx_and_pdf(tmp_path: Path) -> None:

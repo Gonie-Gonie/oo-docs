@@ -70,6 +70,8 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "ColumnSpec",
         "create_countable_block_type",
         "FootnoteList",
+        "FootnoteDefaults",
+        "FootnoteStyle",
         "ListOfFigures",
         "ListOfTables",
         "load_document_from_python",

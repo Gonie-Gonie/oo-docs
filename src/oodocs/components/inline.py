@@ -1100,6 +1100,8 @@ class Footnote(Text):
         value: Visible inline text.
         *note: Footnote body content.
         style: Optional inline style for the visible text.
+        stream: Footnote stream name. Streams are numbered independently and
+            can use separate marker styles through ``Theme(footnotes=...)``.
 
     Examples:
         ```python
@@ -1110,16 +1112,18 @@ class Footnote(Text):
         ```
     """
 
-    __slots__ = ("note",)
+    __slots__ = ("note", "stream")
 
     def __init__(
         self,
         value: str,
         *note: InlineInput,
         style: TextStyle | None = None,
+        stream: str = "default",
     ) -> None:
         super().__init__(value=value, style=style or TextStyle())
         self.note = coerce_inlines(note)
+        self.stream = _normalize_footnote_stream(stream)
 
     def plain_text(self) -> str:
         """Return the visible inline text with a placeholder marker.
@@ -1136,6 +1140,7 @@ class Footnote(Text):
         value: str,
         *note: InlineInput,
         style: TextStyle | None = None,
+        stream: str = "default",
     ) -> Footnote:
         """Create inline text with an attached numbered footnote.
 
@@ -1143,18 +1148,20 @@ class Footnote(Text):
             value: Visible inline text.
             *note: Footnote body content.
             style: Optional inline style for the visible text.
+            stream: Footnote stream name.
 
         Returns:
             Inline footnote fragment.
         """
 
-        return cls(value, *note, style=style)
+        return cls(value, *note, style=style, stream=stream)
 
 
 def footnote(
     value: str,
     *note: InlineInput,
     style: TextStyle | None = None,
+    stream: str = "default",
 ) -> Footnote:
     """Create inline text with an attached numbered footnote.
 
@@ -1162,6 +1169,7 @@ def footnote(
         value: Visible inline text.
         *note: Footnote body content.
         style: Optional inline style for the visible text.
+        stream: Footnote stream name.
 
     Returns:
         Inline footnote fragment.
@@ -1172,7 +1180,14 @@ def footnote(
         ```
     """
 
-    return Footnote.annotated(value, *note, style=style)
+    return Footnote.annotated(value, *note, style=style, stream=stream)
+
+
+def _normalize_footnote_stream(value: str) -> str:
+    normalized = str(value).strip()
+    if not normalized:
+        raise ValueError("Footnote stream must not be empty")
+    return normalized
 
 
 class Math(Text):

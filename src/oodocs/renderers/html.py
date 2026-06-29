@@ -1267,8 +1267,9 @@ class HtmlRenderer:
 
         entries = "".join(
             (
-                f'<p class="oodocs-generated-entry" id="footnote_{entry.number}">'
-                f'<span class="oodocs-generated-marker">[{entry.number}]</span> '
+                f'<p class="oodocs-generated-entry" id="{escape(entry.anchor)}">'
+                f'<span class="oodocs-generated-marker">'
+                f'[{escape(context.theme.footnotes.format_marker(entry.stream, entry.number))}]</span> '
                 + self._inline_html(
                     entry.footnote.note,
                     context.theme,
@@ -2169,9 +2170,10 @@ class HtmlRenderer:
                 base_italic=base_italic,
                 base_size=base_size,
             )
+            marker_text = theme.footnotes.format_marker(fragment.stream, footnote_number)
             marker = self._link_html(
-                f"footnote_{footnote_number}",
-                str(footnote_number),
+                render_index.footnote_anchor(fragment),
+                marker_text,
                 internal=True,
             )
             return f"{visible}<sup>{marker}</sup>"

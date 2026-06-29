@@ -235,6 +235,26 @@ settings = DocumentSettings(
 )
 """
 
+FOOTNOTE_STREAM_SNIPPET = """from oodocs import CounterStyle, FootnoteDefaults, FootnoteStyle, Paragraph, Theme, footnote
+
+theme = Theme(
+    footnotes=FootnoteDefaults(
+        stream_styles={
+            "symbols": FootnoteStyle.symbol(),
+            "review": FootnoteStyle(CounterStyle(prefix="R")),
+        }
+    )
+)
+
+paragraph = Paragraph(
+    "Symbol note ",
+    footnote("alpha", "Reader-facing symbol note.", stream="symbols"),
+    " and review note ",
+    footnote("beta", "Reviewer-facing numbered note.", stream="review"),
+    ".",
+)
+"""
+
 APPENDIX_STRUCTURE_SNIPPET = """from oodocs import Appendix, Chapter, Document, Paragraph, Section
 
 schema = Chapter(
@@ -1787,7 +1807,17 @@ def build_usage_guide_document() -> Document:
                     inline_code("Theme(blocks=BlockDefaults(footnote_placement='document'))"),
                     ".",
                 ),
+                Paragraph(
+                    "When a document needs separate note streams, pass ",
+                    inline_code("stream=..."),
+                    " to ",
+                    inline_code("footnote"),
+                    " and configure markers with ",
+                    inline_code("FootnoteDefaults"),
+                    ". The default stream keeps native DOCX page footnotes; custom streams use the generated notes page in DOCX so their markers stay explicit."
+                ),
                 CodeBlock(LAYOUT_CONTROL_SNIPPET, language="python"),
+                CodeBlock(FOOTNOTE_STREAM_SNIPPET, language="python"),
             ),
             Section(
                 "Citations and bibliography output",

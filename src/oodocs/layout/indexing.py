@@ -98,6 +98,8 @@ class FootnoteReferenceEntry:
     Attributes:
         number: Assigned footnote number.
         footnote: Inline footnote fragment.
+        stream: Footnote stream name.
+        anchor: Stable generated-list anchor.
 
     Examples:
         ```python
@@ -110,6 +112,8 @@ class FootnoteReferenceEntry:
 
     number: int
     footnote: Footnote
+    stream: str = "default"
+    anchor: str = ""
 
 
 @dataclass(slots=True, frozen=True)
@@ -269,6 +273,8 @@ class RenderIndex:
         comment_numbers: Comment numbers keyed by comment identity.
         footnotes: Indexed footnote references.
         footnote_numbers: Footnote numbers keyed by footnote identity.
+        footnote_anchors: Generated-list anchors keyed by footnote identity.
+        footnote_stream_counts: Latest footnote number keyed by stream name.
         headings: Indexed heading entries.
         heading_numbers: Heading numbers keyed by heading identity.
         heading_anchors: Heading anchors keyed by heading identity.
@@ -309,6 +315,8 @@ class RenderIndex:
     comment_numbers: dict[int, int] = field(default_factory=dict)
     footnotes: list[FootnoteReferenceEntry] = field(default_factory=list)
     footnote_numbers: dict[int, int] = field(default_factory=dict)
+    footnote_anchors: dict[int, str] = field(default_factory=dict)
+    footnote_stream_counts: dict[str, int] = field(default_factory=dict)
     headings: list[HeadingEntry] = field(default_factory=list)
     heading_numbers: dict[int, str] = field(default_factory=dict)
     heading_anchors: dict[int, str] = field(default_factory=dict)
@@ -583,6 +591,23 @@ class RenderIndex:
         if id(target) not in self.footnote_numbers:
             raise OODocsError(f"Unknown footnote target: {target.value!r}")
         return self.footnote_numbers[id(target)]
+
+    def footnote_anchor(self, target: Footnote) -> str:
+        """Return the generated-list anchor for a footnote.
+
+        Args:
+            target: Footnote fragment to look up.
+
+        Returns:
+            Stable anchor used by HTML footnote references.
+
+        Raises:
+            OODocsError: If the target was not indexed.
+        """
+
+        if id(target) not in self.footnote_anchors:
+            raise OODocsError(f"Unknown footnote target: {target.value!r}")
+        return self.footnote_anchors[id(target)]
 
     def heading_number(self, target: object) -> str | None:
         """Return the numbering label assigned to a section heading.
@@ -1457,11 +1482,19 @@ def _index_inlines(
             _index_inlines(fragment.note, render_index, citations)
             if id(fragment) in render_index.footnote_numbers:
                 continue
-            number = len(render_index.footnotes) + 1
+            number = render_index.footnote_stream_counts.get(fragment.stream, 0) + 1
+            render_index.footnote_stream_counts[fragment.stream] = number
+            anchor = f"footnote_{len(render_index.footnotes) + 1}"
             render_index.footnotes.append(
-                FootnoteReferenceEntry(number=number, footnote=fragment)
+                FootnoteReferenceEntry(
+                    number=number,
+                    footnote=fragment,
+                    stream=fragment.stream,
+                    anchor=anchor,
+                )
             )
             render_index.footnote_numbers[id(fragment)] = number
+            render_index.footnote_anchors[id(fragment)] = anchor
             continue
         if isinstance(fragment, Citation):
             target = fragment.target
