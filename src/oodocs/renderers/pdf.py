@@ -114,7 +114,7 @@ from oodocs.core import OODocsError, PathLike, length_to_inches
 from oodocs.layout.indexing import RenderIndex, build_render_index
 from oodocs.styles import ParagraphStyle, TableStyle as OODocsTableStyle, Theme
 from oodocs.renderers.context import PdfRenderContext
-from oodocs.renderers.syntax import SyntaxToken, syntax_tokens
+from oodocs.renderers.syntax import SyntaxToken, _syntax_line_tokens, syntax_tokens
 
 
 ALIGNMENTS = {
@@ -284,6 +284,7 @@ class CodeBlockFlowable(Flowable):
         font_size: Code font size in points.
         leading: Line height in points.
         anchor: Optional PDF bookmark anchor.
+        highlight_lines: One-based source line numbers to highlight.
         width: Wrapped code block width in points after measurement.
         height: Wrapped code block height in points after measurement.
     """
@@ -296,6 +297,7 @@ class CodeBlockFlowable(Flowable):
         font_size: float,
         leading: float,
         anchor: str | None = None,
+        highlight_lines: frozenset[int] | None = None,
     ) -> None:
         super().__init__()
         self.tokens = tokens
@@ -303,9 +305,10 @@ class CodeBlockFlowable(Flowable):
         self.font_size = font_size
         self.leading = leading
         self.anchor = anchor
+        self.highlight_lines = highlight_lines or frozenset()
         self.width = 0.0
         self.height = leading
-        self._lines: list[list[SyntaxToken]] = []
+        self._lines: list[tuple[list[SyntaxToken], int]] = []
 
     def wrap(self, available_width: float, available_height: float) -> tuple[float, float]:
         """Measure wrapped code against the available width.
@@ -333,7 +336,10 @@ class CodeBlockFlowable(Flowable):
         if self.anchor:
             self.canv.bookmarkPage(self.anchor)
         y = self.height - self.font_size
-        for line in self._lines or [[]]:
+        for line, source_line in self._lines or [([], 1)]:
+            if source_line in self.highlight_lines:
+                self.canv.setFillColor(colors.HexColor("#FFF3B0"))
+                self.canv.rect(0, y - 2, self.width, self.leading, stroke=0, fill=1)
             text_object = self.canv.beginText(0, y)
             for segment in line:
                 if not segment.text:
@@ -346,31 +352,33 @@ class CodeBlockFlowable(Flowable):
             y -= self.leading
         self.canv.setFillColor(colors.black)
 
-    def _wrap_tokens(self, max_width: float) -> list[list[SyntaxToken]]:
-        lines: list[list[SyntaxToken]] = []
+    def _wrap_tokens(self, max_width: float) -> list[tuple[list[SyntaxToken], int]]:
+        lines: list[tuple[list[SyntaxToken], int]] = []
         current_line: list[SyntaxToken] = []
         current_width = 0.0
+        source_line = 1
 
         for token in self.tokens:
             text = token.text.replace("\r\n", "\n").replace("\r", "\n").replace("\t", "    ")
             for character in text:
                 if character == "\n":
-                    lines.append(current_line)
+                    lines.append((current_line, source_line))
                     current_line = []
                     current_width = 0.0
+                    source_line += 1
                     continue
 
                 font_name = self.font_names[(token.bold, token.italic)]
                 character_width = pdfmetrics.stringWidth(character, font_name, self.font_size)
                 if current_line and current_width + character_width > max_width:
-                    lines.append(current_line)
+                    lines.append((current_line, source_line))
                     current_line = []
                     current_width = 0.0
 
                 current_line = self._append_segment(current_line, character, token)
                 current_width += character_width
 
-        lines.append(current_line)
+        lines.append((current_line, source_line))
         return lines
 
     def _append_segment(
@@ -2597,7 +2605,7 @@ class PdfRenderer:
 
         cell_flowables.append(
             CodeBlockFlowable(
-                syntax_tokens(block.code, block.language),
+                self._code_block_tokens(block),
                 font_names={
                     (False, False): self._resolve_font(theme.resolve_monospace_font(), False, False),
                     (True, False): self._resolve_font(theme.resolve_monospace_font(), True, False),
@@ -2607,6 +2615,7 @@ class PdfRenderer:
                 font_size=code_style.fontSize,
                 leading=code_style.leading,
                 anchor=anchor,
+                highlight_lines=block.highlight_lines,
             )
         )
         if show_label and block.language_position.startswith("bottom"):
@@ -2634,7 +2643,42 @@ class PdfRenderer:
                 ]
             )
         )
-        return [KeepTogether([table, Spacer(1, block_style.space_after or 0)])]
+        elements: list[object] = [table]
+        if block.caption is not None:
+            caption_style = RLParagraphStyle(
+                "CodeBlockCaption",
+                parent=styles["BodyText"],
+                fontSize=theme.caption_size(),
+                alignment=ALIGNMENTS[theme.captions.caption_text_alignment],
+                spaceBefore=4,
+                spaceAfter=0,
+            )
+            elements.append(
+                RLParagraph(
+                    self._inline_markup(
+                        self._caption_fragments("Code block", render_index.code_block_number(block), block.caption),
+                        theme,
+                        render_index,
+                        base_font_name=caption_style.fontName,
+                        base_size=caption_style.fontSize,
+                    ),
+                    caption_style,
+                )
+            )
+        elements.append(Spacer(1, block_style.space_after or 0))
+        return [KeepTogether(elements)]
+
+    def _code_block_tokens(self, block: CodeBlock) -> list[SyntaxToken]:
+        tokens: list[SyntaxToken] = []
+        lines = block.normalized_lines()
+        for line_number, line in enumerate(lines, start=1):
+            prefix = block.line_prefix(line_number)
+            if prefix:
+                tokens.append(SyntaxToken(prefix, color="6F7D90"))
+            tokens.extend(_syntax_line_tokens(line, block.language))
+            if line_number < len(lines):
+                tokens.append(SyntaxToken("\n"))
+        return tokens
 
     def _render_equation(
         self,

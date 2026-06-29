@@ -761,6 +761,8 @@ def _index_blocks(
             if id(block) not in render_index.code_block_numbers:
                 render_index.code_block_numbers[id(block)] = len(render_index.code_block_numbers) + 1
             _register_block_anchor(render_index, block, "code")
+            if block.caption is not None:
+                _index_inlines(block.caption.content, render_index, citations)
             continue
         if isinstance(block, Equation):
             if id(block) not in render_index.equation_numbers:

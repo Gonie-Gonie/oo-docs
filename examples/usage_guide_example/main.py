@@ -612,6 +612,18 @@ YAML_SNIPPET = """report:
     - html
 """
 
+CODE_LISTING_SNIPPET = """from oodocs import CodeBlock
+
+listing = CodeBlock.from_file(
+    "src/report_pipeline.py",
+    language="python",
+    caption="Report pipeline entry point.",
+    identifier="report-pipeline",
+    line_numbers=True,
+    highlight_lines={2, 5},
+)
+"""
+
 PARAGRAPH_INDENT_SNIPPET = """from oodocs import BlockDefaults, DocumentSettings, Paragraph, Theme
 
 settings = DocumentSettings(
@@ -999,7 +1011,7 @@ def build_usage_guide_document() -> Document:
         headers=["Block", "Direct kwargs", "Style object when needed"],
         rows=[
             ["Text and styled(...)", "font_name, font_size, text_color, highlight_color, bold, italic, underline, strikethrough, small_caps, uppercase, subscript, superscript", "Use TextStyle only when a reusable inline style needs a name."],
-            ["Paragraph, CodeBlock, Equation", "text_alignment, space_before, space_after, leading, left_indent, right_indent, first_line_indent, keep_together, keep_with_next, page_break_before, widow_control, unit", "Use ParagraphStyle only for shared paragraph rhythm."],
+            ["Paragraph, CodeBlock, Equation", "text_alignment, space_before, space_after, leading, left_indent, right_indent, first_line_indent, keep_together, keep_with_next, page_break_before, widow_control, unit; CodeBlock also accepts caption, identifier, line_numbers, highlight_lines", "Use ParagraphStyle only for shared paragraph rhythm."],
             ["Section, Chapter, Subsection", "level, numbered, toc, anchor, run_in_title_style, heading_style", "Use HeadingStyle for per-level theme defaults or one-off heading overrides."],
             ["Part, Appendix", "title, toc; Part also accepts numbered", "Use Appendix when child chapters should switch to A/B/C numbering."],
             ["BulletList, NumberedList", "marker=CounterStyle(...), indent, marker_gap", "Use ListStyle only for repeated list conventions."],
@@ -1432,6 +1444,19 @@ def build_usage_guide_document() -> Document:
                 CodeBlock(JAVASCRIPT_SNIPPET, language="javascript"),
                 CodeBlock(SQL_SNIPPET, language="sql"),
                 CodeBlock(YAML_SNIPPET, language="yaml"),
+                Paragraph(
+                    "Listings can also carry their own caption, stable identifier, line numbers, and highlighted source lines. ",
+                    inline_code("CodeBlock.from_file(...)"),
+                    " reads a source file directly and infers the language from the extension unless a language is supplied."
+                ),
+                CodeBlock(
+                    CODE_LISTING_SNIPPET,
+                    language="python",
+                    caption="File-backed listing with highlighted lines.",
+                    identifier="usage-guide-code-listing",
+                    line_numbers=True,
+                    highlight_lines={4, 7},
+                ),
                 Paragraph(
                     "Paragraph-level Word features are also part of the authored source. ",
                     inline_code("Paragraph(...)"),

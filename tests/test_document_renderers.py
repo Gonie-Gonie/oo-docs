@@ -540,7 +540,15 @@ def test_theme_accepts_grouped_defaults_objects() -> None:
 
 def test_common_block_styles_accept_direct_kwargs() -> None:
     paragraph = Paragraph("Right aligned", text_alignment="right", space_after=4)
-    code_block = CodeBlock("print('x')", language="python", left_indent=0.25)
+    code_block = CodeBlock(
+        "print('x')",
+        language="python",
+        caption="Minimal listing.",
+        identifier="minimal-listing",
+        line_numbers=True,
+        highlight_lines={1},
+        left_indent=0.25,
+    )
     equation = Equation("x=1", space_after=2)
     bullet_list = BulletList("one", indent=0.4)
     numbered_list = NumberedList("one", marker=CounterStyle(start=3, suffix=")"))
@@ -558,6 +566,12 @@ def test_common_block_styles_accept_direct_kwargs() -> None:
     assert code_block.style.left_indent == 0.25
     assert code_block.show_language is True
     assert code_block.language_position == "top-right"
+    assert code_block.caption is not None
+    assert code_block.caption.plain_text() == "Minimal listing."
+    assert code_block.identifier == "minimal-listing"
+    assert code_block.line_numbers is True
+    assert code_block.highlight_lines == frozenset({1})
+    assert code_block.display_line(1, "print('x')") == "1 | print('x')"
     assert equation.style.space_after == 2
     assert bullet_list.style is not None
     assert bullet_list.style.marker.counter_format == "bullet"
@@ -583,6 +597,13 @@ def test_common_block_styles_accept_direct_kwargs() -> None:
         assert "language_position" in str(exc)
     else:
         raise AssertionError("Expected invalid CodeBlock language_position to fail")
+
+    try:
+        CodeBlock("x", highlight_lines={0})
+    except ValueError as exc:
+        assert "highlight_lines" in str(exc)
+    else:
+        raise AssertionError("Expected invalid CodeBlock highlight_lines to fail")
 
 
 def test_paragraph_style_defaults_to_justify_alignment() -> None:
@@ -3048,6 +3069,67 @@ def test_code_block_language_label_can_move_or_hide(tmp_path: Path) -> None:
     assert "README.md" in word_text
     assert "README.md" in pdf_text
     assert "README.md" in html_text
+
+
+def test_code_block_caption_line_numbers_highlights_and_from_file(tmp_path: Path) -> None:
+    source_path = tmp_path / "example.py"
+    source_path.write_text("def double(value):\n    return value * 2\n", encoding="utf-8")
+    block = CodeBlock.from_file(
+        source_path,
+        caption="Reusable implementation.",
+        identifier="double-implementation",
+        line_numbers=True,
+        highlight_lines={2},
+        show_language=False,
+    )
+    document = Document(
+        "Code Listing Options",
+        Paragraph("See ", block.reference(), "."),
+        block,
+    )
+
+    docx_path = tmp_path / "code-listing.docx"
+    pdf_path = tmp_path / "code-listing.pdf"
+    html_path = tmp_path / "code-listing.html"
+    document.save_docx(docx_path)
+    document.save_pdf(pdf_path)
+    document.save_html(html_path)
+
+    word_text = "\n".join(paragraph.text for paragraph in WordDocument(docx_path).paragraphs)
+    pdf_text = "\n".join(page.extract_text() or "" for page in PdfReader(BytesIO(pdf_path.read_bytes())).pages)
+    html_text = html_path.read_text(encoding="utf-8")
+    normalized_html_text = _normalized_html_text(html_path)
+
+    assert block.language == "py"
+    assert "See Code block 1." in word_text
+    assert "Code block 1. Reusable implementation." in word_text
+    assert "1 | def double(value):" in word_text
+    assert "2 |     return value * 2" in word_text
+    assert "See Code block 1." in pdf_text
+    assert "Code block 1. Reusable implementation." in pdf_text
+    assert "1 | def double(value):" in pdf_text
+    assert "2 |     return value * 2" in pdf_text
+    assert "See Code block 1 ." in normalized_html_text
+    assert "Code block 1. Reusable implementation." in normalized_html_text
+    assert "1 | def double" in normalized_html_text
+    assert "(value):" in normalized_html_text
+    assert "2 | return value * 2" in normalized_html_text
+    assert 'data-oodocs-identifier="double-implementation"' in html_text
+    assert "oodocs-code-line-highlight" in html_text
+    assert "background-color: #FFF3B0" in html_text
+    assert "FFF3B0" in _docx_document_xml(docx_path)
+
+
+def test_code_block_validation_reports_unrenderable_options() -> None:
+    document = Document(
+        "Code Listing Validation",
+        CodeBlock("print('x')", identifier=" ", highlight_lines={2}),
+    )
+
+    result = document.validate()
+
+    assert [issue.code for issue in result.errors] == ["blank-code-block-identifier"]
+    assert [issue.code for issue in result.warnings] == ["missing-code-highlight-line"]
 
 
 def test_pdf_code_block_flowable_wraps_long_unbroken_lines() -> None:

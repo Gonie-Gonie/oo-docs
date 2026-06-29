@@ -95,6 +95,30 @@ def syntax_tokens(source: str, language: str | None = None) -> list[SyntaxToken]
     return tokens
 
 
+def _without_trailing_newline(tokens: list[SyntaxToken]) -> list[SyntaxToken]:
+    stripped = list(tokens)
+    while stripped:
+        token = stripped[-1]
+        text = token.text.replace("\r\n", "\n").replace("\r", "\n")
+        if not text.endswith("\n"):
+            break
+        text = text[:-1]
+        if text:
+            stripped[-1] = SyntaxToken(
+                text,
+                color=token.color,
+                bold=token.bold,
+                italic=token.italic,
+            )
+            break
+        stripped.pop()
+    return stripped
+
+
+def _syntax_line_tokens(source: str, language: str | None = None) -> list[SyntaxToken]:
+    return _without_trailing_newline(syntax_tokens(source, language))
+
+
 def syntax_html(source: str, language: str | None = None) -> str:
     """Return inline HTML spans for highlighted code inside a ``pre`` block.
 
@@ -116,6 +140,26 @@ def syntax_html(source: str, language: str | None = None) -> str:
 
     pieces: list[str] = []
     for token in syntax_tokens(source, language):
+        text = escape(token.text)
+        styles: list[str] = []
+        if token.color is not None:
+            styles.append(f"color: #{token.color}")
+        if token.bold:
+            styles.append("font-weight: 700")
+        if token.italic:
+            styles.append("font-style: italic")
+        if not styles:
+            pieces.append(text)
+            continue
+        pieces.append(
+            f'<span class="oodocs-code-token" style="{"; ".join(styles)}">{text}</span>'
+        )
+    return "".join(pieces)
+
+
+def _syntax_line_html(source: str, language: str | None = None) -> str:
+    pieces: list[str] = []
+    for token in _syntax_line_tokens(source, language):
         text = escape(token.text)
         styles: list[str] = []
         if token.color is not None:

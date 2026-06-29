@@ -72,7 +72,7 @@ from oodocs.components.equations import SUBSCRIPT, SUPERSCRIPT, parse_latex_segm
 from oodocs.layout.indexing import RenderIndex, build_render_index
 from oodocs.styles import BoxStyle, HeadingStyle, ParagraphStyle, TableStyle, Theme
 from oodocs.renderers.context import HtmlRenderContext
-from oodocs.renderers.syntax import syntax_html
+from oodocs.renderers.syntax import _syntax_line_html, syntax_html
 
 
 class HtmlRenderer:
@@ -336,15 +336,54 @@ class HtmlRenderer:
             code_classes.append(f"oodocs-code-has-label-{block.language_position.split('-', 1)[0]}")
         anchor = context.render_index.block_anchor(block)
         anchor_attr = f' id="{escape(anchor)}"' if anchor else ""
+        identifier_attr = f' data-oodocs-identifier="{escape(block.identifier)}"' if block.identifier else ""
         code_style = context.stylesheet.resolve("paragraph", block.style, ParagraphStyle())
+        caption_html = ""
+        if block.caption is not None:
+            caption_html = (
+                '<div class="oodocs-caption oodocs-code-caption" '
+                f'style="text-align: {context.theme.captions.caption_text_alignment}; '
+                f'font-size: {context.theme.caption_size():.1f}pt;">'
+                + self._inline_html(
+                    self._caption_fragments("Code block", context.render_index.code_block_number(block), block.caption),
+                    context.theme,
+                    context.render_index,
+                    base_size=context.theme.caption_size(),
+                )
+                + "</div>"
+            )
         return (
-            f'<section{anchor_attr} class="oodocs-code-block oodocs-code-label-{escape(block.language_position)}">'
+            f'<section{anchor_attr}{identifier_attr} class="oodocs-code-block oodocs-code-label-{escape(block.language_position)}">'
             + label
             + f'<pre class="{" ".join(code_classes)}" style="margin-bottom: {(code_style.space_after or 0):.1f}pt;">'
-            + syntax_html(block.code, block.language)
+            + self._code_block_html(block)
             + "</pre>"
+            + caption_html
             + "</section>"
         )
+
+    def _code_block_html(self, block: CodeBlock) -> str:
+        lines: list[str] = []
+        for line_number, line in enumerate(block.normalized_lines(), start=1):
+            classes = ["oodocs-code-line"]
+            if line_number in block.highlight_lines:
+                classes.append("oodocs-code-line-highlight")
+            prefix = ""
+            if block.line_numbers:
+                prefix = (
+                    '<span class="oodocs-code-line-number" '
+                    'style="color: #6F7D90; user-select: none;">'
+                    f"{escape(block.line_prefix(line_number))}</span>"
+                )
+            line_html = _syntax_line_html(line, block.language) or " "
+            highlight_style = " background-color: #FFF3B0;" if line_number in block.highlight_lines else ""
+            lines.append(
+                f'<span class="{" ".join(classes)}" style="display: block;{highlight_style}">'
+                + prefix
+                + line_html
+                + "</span>"
+            )
+        return "\n".join(lines)
 
     def render_equation(
         self,

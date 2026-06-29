@@ -28,6 +28,7 @@ from __future__ import annotations
 
 from copy import copy
 from dataclasses import dataclass, replace
+from pathlib import Path
 import re
 from typing import TYPE_CHECKING, Iterable, Literal, Sequence
 
@@ -35,6 +36,7 @@ from oodocs.components.base import Block, BlockInput, coerce_blocks
 from oodocs.components.equations import equation_plain_text
 from oodocs.components.inline import InlineInput, Text, coerce_inlines
 from oodocs.core import (
+    PathLike,
     length_to_inches,
     normalize_color,
     normalize_length_unit,
@@ -455,6 +457,10 @@ class CodeBlock(Block):
         language: Optional lexer or language label.
         show_language: Whether to render the language label.
         language_position: Where to place the language label.
+        caption: Optional caption rendered with the code block number.
+        identifier: Optional stable identifier for downstream renderers or tools.
+        line_numbers: Whether to render source line numbers.
+        highlight_lines: One-based source line numbers to highlight.
         style: Base paragraph style for the code block.
         text_alignment: Optional text alignment override.
         space_before: Optional spacing before the block.
@@ -476,7 +482,13 @@ class CodeBlock(Block):
         ```python
         from oodocs import CodeBlock, Document, Section
 
-        snippet = CodeBlock("print('hello')", language="python")
+        snippet = CodeBlock(
+            "print('hello')",
+            language="python",
+            caption="Minimal example",
+            line_numbers=True,
+            highlight_lines={1},
+        )
         document = Document("Developer Notes", Section("Example", snippet))
         ```
     """
@@ -485,6 +497,10 @@ class CodeBlock(Block):
     language: str | None
     show_language: bool
     language_position: CodeLanguagePosition
+    caption: Paragraph | None
+    identifier: str | None
+    line_numbers: bool
+    highlight_lines: frozenset[int]
     style: ParagraphStyle | str
 
     def __init__(
@@ -494,6 +510,10 @@ class CodeBlock(Block):
         *,
         show_language: bool = True,
         language_position: CodeLanguagePosition = "top-right",
+        caption: CellInput | None = None,
+        identifier: str | None = None,
+        line_numbers: bool = False,
+        highlight_lines: Iterable[int] | None = None,
         style: ParagraphStyle | str | None = None,
         text_alignment: str | None = None,
         space_before: float | None = None,
@@ -514,6 +534,10 @@ class CodeBlock(Block):
         self.language = language
         self.show_language = show_language
         self.language_position = language_position
+        self.caption = coerce_cell(caption) if caption is not None else None
+        self.identifier = identifier
+        self.line_numbers = bool(line_numbers)
+        self.highlight_lines = _normalize_code_highlight_lines(highlight_lines)
         self.style = paragraph_style_with_overrides(
             style or ParagraphStyle(text_alignment="left", space_after=12.0),
             text_alignment=text_alignment,
@@ -529,6 +553,85 @@ class CodeBlock(Block):
             widow_control=widow_control,
             unit=unit,
         )
+
+    @classmethod
+    def from_file(
+        cls,
+        path: PathLike,
+        language: str | None = None,
+        *,
+        encoding: str = "utf-8",
+        **kwargs: object,
+    ) -> CodeBlock:
+        """Create a code block from a source file.
+
+        Args:
+            path: File path to read.
+            language: Optional language override. Defaults to the file suffix.
+            encoding: Text encoding used to read the file.
+            **kwargs: Additional ``CodeBlock`` constructor options.
+
+        Returns:
+            Code block containing the file contents.
+
+        Examples:
+            ```python
+            block = CodeBlock.from_file("example.py", caption="Full source")
+            ```
+        """
+
+        source_path = Path(path)
+        inferred_language = source_path.suffix.lstrip(".") or None
+        return cls(
+            source_path.read_text(encoding=encoding),
+            language=language or inferred_language,
+            **kwargs,
+        )
+
+    def normalized_lines(self) -> list[str]:
+        """Return source lines with normalized newlines.
+
+        Returns:
+            Source lines split on ``\\n`` after normalizing CRLF and CR.
+        """
+
+        return self.code.replace("\r\n", "\n").replace("\r", "\n").split("\n")
+
+    def line_number_width(self) -> int:
+        """Return the display width required for line-number prefixes.
+
+        Returns:
+            Number of digits required to display the largest source line number.
+        """
+
+        return max(1, len(str(len(self.normalized_lines()))))
+
+    def line_prefix(self, line_number: int) -> str:
+        """Return the formatted line-number prefix for a source line.
+
+        Args:
+            line_number: One-based line number.
+
+        Returns:
+            Prefix text, or an empty string when line numbers are disabled.
+        """
+
+        if not self.line_numbers:
+            return ""
+        return f"{line_number:>{self.line_number_width()}} | "
+
+    def display_line(self, line_number: int, text: str) -> str:
+        """Return one rendered source line including any line-number prefix.
+
+        Args:
+            line_number: One-based line number.
+            text: Source text for the line.
+
+        Returns:
+            Display line text.
+        """
+
+        return f"{self.line_prefix(line_number)}{text}"
 
     def render_to_docx(
         self,
@@ -571,6 +674,15 @@ class CodeBlock(Block):
         """
 
         return renderer.render_code_block(self, context)
+
+
+def _normalize_code_highlight_lines(lines: Iterable[int] | None) -> frozenset[int]:
+    if lines is None:
+        return frozenset()
+    normalized = frozenset(int(line) for line in lines)
+    if any(line < 1 for line in normalized):
+        raise ValueError("CodeBlock highlight_lines values must be >= 1")
+    return normalized
 
 
 @dataclass(slots=True, init=False)

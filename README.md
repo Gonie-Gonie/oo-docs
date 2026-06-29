@@ -149,6 +149,7 @@ Common translations:
 - LaTeX subfigures -> `SubFigure(...)` children inside a captioned `SubFigureGroup(...)`
 - LaTeX subtables -> `SubTable(Table(...), caption=...)` children inside a captioned `SubTableGroup(...)`
 - LaTeX `pdfpages` -> `PdfPages("appendix.pdf", pages=[1, 3])` for PDF-page insertion, with DOCX/HTML placeholder fallbacks
+- LaTeX `listings` / `minted` -> `CodeBlock(..., caption=..., line_numbers=True, highlight_lines={...})` or `CodeBlock.from_file(...)`
 - LaTeX `tabular` or copied tables -> `Table(...)` or `Table.from_dataframe(...)`
 - LaTeX `booktabs` -> `Table(..., style="booktabs")` or `TableStyle.booktabs()`
 - LaTeX `tabularx` / `array` column specs -> `ColumnSpec(width=...)`, `ColumnSpec(flex=...)`, and `Table.excerpt(...)` plus a CSV sidecar for very wide matrices
@@ -210,6 +211,7 @@ The default behavior is intentionally conventional:
 - Use `PdfPages("appendix.pdf", pages=[...])` when existing PDF pages should be inserted into PDF output. DOCX and HTML render a link-style placeholder because editable page import is renderer-specific.
 - Use `SubFigureGroup(SubFigure(...), SubFigure(...), caption=...)` when related images should share one figure number and expose `(a)`, `(b)`, and similar subfigure references.
 - Use `SubTableGroup(SubTable(Table(...), caption=...), ...)` when related tables should share one table number and expose references such as `Table 1(a)`.
+- Use `CodeBlock(..., caption=..., line_numbers=True, highlight_lines={...})` for numbered listings, and `CodeBlock.from_file("example.py", caption=...)` when the code should be included from a source file.
 - Use `Theme(captions=CaptionDefaults(table_caption_label=..., table_reference_label=..., figure_caption_label=..., figure_reference_label=...))` when captions and in-text references should use different labels such as `Figure`, `Fig.`, or localized terms.
 - Use `Theme(citations=CitationDefaults(citation_style="apa", reference_style="apa"))` when inline citations and the generated references page should follow an author-year style. Numeric citation output remains the default.
 - Use advanced `placement=...` hints on tables and figures only when needed. Supported values include `here`, `tbp`/`float`, `top`, `bottom`, and `page`.
@@ -268,7 +270,7 @@ doc = Document(
 - Markdown and GitHub Flavored Markdown import for headings, paragraphs, lists, task-list markers, block quotes, fenced code, thematic breaks, tables, local images, links, autolinks, emphasis, inline code, strikethrough, and import diagnostics
 - Jupyter notebook import for markdown cells, code cells, raw cells, textual stream/result/error outputs, tag filtering, output truncation, image captions, and import diagnostics
 - block objects for paragraphs, lists, code blocks, equations, boxes, tables, figures, and generated pages
-- Pygments-backed syntax highlighting for code blocks across Python, JavaScript, SQL, YAML, shell, and other supported languages
+- Pygments-backed syntax highlighting for code blocks across Python, JavaScript, SQL, YAML, shell, and other supported languages, with optional captions, references, line numbers, highlighted lines, and file-backed source loading
 - editable report panels with `Box(...)` kwargs for width, block alignment, title color, and per-side padding
 - portable comments and footnotes that stay stable across DOCX, PDF, and HTML
 - footnotes target page-bottom placement by default when the renderer supports it; `Theme(blocks=BlockDefaults(footnote_placement="document"))` keeps the collected-notes pattern

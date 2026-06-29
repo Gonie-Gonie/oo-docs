@@ -805,6 +805,23 @@ class _ValidationContext:
                     path,
                     parent_level=parent_level,
                 )
+            if isinstance(block, CodeBlock):
+                if block.caption is not None:
+                    self._scan_inlines(block.caption.content, f"{path}.caption")
+                if block.identifier is not None and not block.identifier.strip():
+                    self._add(
+                        "error",
+                        "blank-code-block-identifier",
+                        "CodeBlock identifier must not be empty.",
+                        f"{path}.identifier",
+                    )
+                if block.highlight_lines and max(block.highlight_lines) > len(block.normalized_lines()):
+                    self._add(
+                        "warning",
+                        "missing-code-highlight-line",
+                        "CodeBlock highlight_lines includes a line beyond the source length.",
+                        f"{path}.highlight_lines",
+                    )
             return
 
         if isinstance(block, CountableBlock):

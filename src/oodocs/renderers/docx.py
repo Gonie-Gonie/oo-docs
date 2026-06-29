@@ -96,7 +96,7 @@ from oodocs.core import OODocsError, PathLike, length_to_inches
 from oodocs.layout.indexing import RenderIndex, build_render_index
 from oodocs.styles import HeadingStyle, ParagraphStyle, TableStyle, TextStyle, Theme
 from oodocs.renderers.context import DocxRenderContext
-from oodocs.renderers.syntax import SyntaxToken, syntax_tokens
+from oodocs.renderers.syntax import SyntaxToken, _syntax_line_tokens, syntax_tokens
 
 
 ALIGNMENTS = {
@@ -438,6 +438,7 @@ class DocxRenderer:
             context.theme,
             context.render_index,
             context.unit,
+            word_document=context.word_document,
         )
 
     def render_equation(
@@ -1968,6 +1969,8 @@ class DocxRenderer:
         theme: Theme,
         render_index: RenderIndex,
         unit: str,
+        *,
+        word_document: WordDocument,
     ) -> None:
         anchor = render_index.block_anchor(code_block)
         show_label = bool(code_block.language and code_block.show_language)
@@ -1984,14 +1987,23 @@ class DocxRenderer:
         if show_label and code_block.language_position.startswith("top"):
             self._append_code_language_label_run(paragraph, code_block, theme)
 
-        self._append_code_tokens(
-            paragraph,
-            syntax_tokens(code_block.code, code_block.language),
-            theme=theme,
-        )
+        self._append_code_lines(paragraph, code_block, theme=theme)
         if show_label and code_block.language_position.startswith("bottom"):
             paragraph.add_run().add_break()
             self._append_code_language_label_run(paragraph, code_block, theme, trailing=True)
+        if code_block.caption is not None:
+            caption = self._add_paragraph(container)
+            caption.alignment = ALIGNMENTS[theme.captions.caption_text_alignment]
+            caption.paragraph_format.space_after = Pt(code_style.space_after or 0)
+            self._keep_lines_together(caption)
+            self._append_runs(
+                caption,
+                self._caption_fragments("Code block", render_index.code_block_number(code_block), code_block.caption),
+                default_size=theme.caption_size(),
+                theme=theme,
+                render_index=render_index,
+                word_document=word_document,
+            )
 
     def _append_code_language_label_run(
         self,
@@ -2012,6 +2024,58 @@ class DocxRenderer:
         if not trailing:
             paragraph.add_run().add_break()
 
+    def _append_code_lines(
+        self,
+        paragraph: object,
+        code_block: CodeBlock,
+        *,
+        theme: Theme,
+    ) -> None:
+        default_size = max(theme.typography.body_font_size - 1, 8)
+        for line_index, line in enumerate(code_block.normalized_lines(), start=1):
+            if line_index > 1:
+                paragraph.add_run().add_break()
+            highlighted = line_index in code_block.highlight_lines
+            prefix = code_block.line_prefix(line_index)
+            if prefix:
+                prefix_run = paragraph.add_run(prefix)
+                prefix_run.font.name = theme.resolve_monospace_font()
+                prefix_run.font.size = Pt(default_size)
+                prefix_run.font.color.rgb = RGBColor(0x6F, 0x7D, 0x90)
+                if highlighted:
+                    self._set_run_shading(prefix_run, "FFF3B0")
+            wrote_line = bool(prefix)
+            for token in _syntax_line_tokens(line, code_block.language):
+                if not token.text:
+                    continue
+                run = paragraph.add_run(token.text)
+                self._apply_code_token_run(run, token, theme=theme, default_size=default_size)
+                if highlighted:
+                    self._set_run_shading(run, "FFF3B0")
+                wrote_line = True
+            if highlighted and not wrote_line:
+                run = paragraph.add_run(" ")
+                run.font.name = theme.resolve_monospace_font()
+                run.font.size = Pt(default_size)
+                self._set_run_shading(run, "FFF3B0")
+
+    def _apply_code_token_run(
+        self,
+        run: object,
+        token: SyntaxToken,
+        *,
+        theme: Theme,
+        default_size: float,
+    ) -> None:
+        run.font.name = theme.resolve_monospace_font()
+        run.font.size = Pt(default_size)
+        if token.color is not None:
+            run.font.color.rgb = RGBColor.from_string(token.color.upper())
+        if token.bold:
+            run.font.bold = True
+        if token.italic:
+            run.font.italic = True
+
     def _append_code_tokens(
         self,
         paragraph: object,
@@ -2028,14 +2092,7 @@ class DocxRenderer:
                 if not part:
                     continue
                 run = paragraph.add_run(part)
-                run.font.name = theme.resolve_monospace_font()
-                run.font.size = Pt(default_size)
-                if token.color is not None:
-                    run.font.color.rgb = RGBColor.from_string(token.color.upper())
-                if token.bold:
-                    run.font.bold = True
-                if token.italic:
-                    run.font.italic = True
+                self._apply_code_token_run(run, token, theme=theme, default_size=default_size)
 
     def _render_equation(
         self,
