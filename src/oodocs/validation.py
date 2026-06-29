@@ -54,6 +54,7 @@ from oodocs.components.inline import (
     Footnote,
     Hyperlink,
     InlineChip,
+    MarginNote,
     ReferenceGroup,
     Text,
 )
@@ -1034,6 +1035,11 @@ class _ValidationContext:
                 self._scan_inlines(fragment.label, f"{fragment_path}.label")
                 continue
             if isinstance(fragment, Comment):
+                if isinstance(fragment, MarginNote):
+                    self._add_compatibility_warning(
+                        "margin-note-renderer-fallback",
+                        fragment_path,
+                    )
                 self._scan_inlines(fragment.comment, f"{fragment_path}.comment")
                 continue
             if isinstance(fragment, Footnote):

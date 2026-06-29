@@ -54,6 +54,7 @@ _EXPORTS = {
     "Italic": "oodocs.components.inline",
     "Lemma": "oodocs.components.blocks",
     "LineBreak": "oodocs.components.inline",
+    "MarginNote": "oodocs.components.inline",
     "Math": "oodocs.components.inline",
     "InlineCode": "oodocs.components.inline",
     "MultiColumn": "oodocs.components.blocks",
@@ -84,6 +85,7 @@ _EXPORTS = {
     "Text": "oodocs.components.inline",
     "TextBox": "oodocs.components.positioning",
     "Theorem": "oodocs.components.blocks",
+    "Todo": "oodocs.components.inline",
     "VerticalSpace": "oodocs.components.blocks",
     "badge": "oodocs.components.inline",
     "bold": "oodocs.components.inline",
@@ -98,6 +100,7 @@ _EXPORTS = {
     "keyboard": "oodocs.components.inline",
     "link": "oodocs.components.inline",
     "line_break": "oodocs.components.inline",
+    "margin_note": "oodocs.components.inline",
     "math": "oodocs.components.inline",
     "markup": "oodocs.components.markup",
     "prescript": "oodocs.components.inline",
@@ -115,6 +118,7 @@ _EXPORTS = {
     "superscript": "oodocs.components.inline",
     "tag": "oodocs.components.inline",
     "text_color": "oodocs.components.inline",
+    "todo": "oodocs.components.inline",
     "url": "oodocs.components.inline",
 }
 

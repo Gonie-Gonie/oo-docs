@@ -255,6 +255,25 @@ paragraph = Paragraph(
 )
 """
 
+TODO_MARGIN_NOTE_SNIPPET = """from oodocs import MarginNote, Paragraph, Todo, margin_note, todo
+
+paragraph = Paragraph(
+    "Assumption ",
+    MarginNote("Check this assumption beside the source paragraph.", side="right"),
+    " needs review ",
+    Todo("Verify units before release.", owner="QA"),
+    ".",
+)
+
+same_pattern = Paragraph(
+    "The helper API also works ",
+    margin_note("Keep this context near the claim.", side="left"),
+    " with ",
+    todo("Confirm the source citation.", owner="editor"),
+    ".",
+)
+"""
+
 APPENDIX_STRUCTURE_SNIPPET = """from oodocs import Appendix, Chapter, Document, Paragraph, Section
 
 schema = Chapter(
@@ -1816,8 +1835,20 @@ def build_usage_guide_document() -> Document:
                     inline_code("FootnoteDefaults"),
                     ". The default stream keeps native DOCX page footnotes; custom streams use the generated notes page in DOCX so their markers stay explicit."
                 ),
+                Paragraph(
+                    "For review notes that should not read like footnotes, use ",
+                    inline_code("Todo"),
+                    " or ",
+                    inline_code("todo"),
+                    ". For side notes, use ",
+                    inline_code("MarginNote"),
+                    " or ",
+                    inline_code("margin_note"),
+                    "; HTML keeps them beside the prose, and DOCX/PDF preserve them through comment-style fallback output."
+                ),
                 CodeBlock(LAYOUT_CONTROL_SNIPPET, language="python"),
                 CodeBlock(FOOTNOTE_STREAM_SNIPPET, language="python"),
+                CodeBlock(TODO_MARGIN_NOTE_SNIPPET, language="python"),
             ),
             Section(
                 "Citations and bibliography output",

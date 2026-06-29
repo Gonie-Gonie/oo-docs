@@ -82,6 +82,7 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "GeneratedContentDefaults",
         "HeaderFooterDefaults",
         "LocaleDefaults",
+        "MarginNote",
         "CropBox",
         "PageItemScope",
         "PageNumberDefaults",
@@ -91,8 +92,11 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "ResultLike",
         "SubSubsection",
         "TitleMatterDefaults",
+        "Todo",
         "TypographyDefaults",
         "save_document_outputs",
+        "margin_note",
+        "todo",
         "validate_source_document",
     }
 

@@ -1093,6 +1093,156 @@ def comment(
     )
 
 
+class Todo(Comment):
+    """Inline TODO annotation rendered through the comment workflow.
+
+    Args:
+        *note: TODO note body.
+        owner: Optional responsible person.
+        status: Short TODO status label.
+        value: Visible inline anchor text. Defaults to ``"TODO"``.
+        initials: Optional Word-comment initials.
+        style: Optional inline style for the visible text.
+
+    Examples:
+        ```python
+        from oodocs import Paragraph, Todo
+
+        paragraph = Paragraph("Units ", Todo("Verify unit conversion.", owner="QA"))
+        ```
+    """
+
+    __slots__ = ("owner", "status")
+
+    def __init__(
+        self,
+        *note: InlineInput,
+        owner: str | None = None,
+        status: str = "todo",
+        value: str = "TODO",
+        initials: str | None = None,
+        style: TextStyle | None = None,
+    ) -> None:
+        normalized_status = str(status).strip()
+        if not normalized_status:
+            raise ValueError("Todo.status must not be empty")
+        self.owner = str(owner).strip() if owner is not None else None
+        self.status = normalized_status
+        super().__init__(
+            value,
+            *note,
+            author=self.owner,
+            initials=initials,
+            style=style,
+        )
+
+
+def todo(
+    *note: InlineInput,
+    owner: str | None = None,
+    status: str = "todo",
+    value: str = "TODO",
+    initials: str | None = None,
+    style: TextStyle | None = None,
+) -> Todo:
+    """Create an inline TODO annotation.
+
+    Args:
+        *note: TODO note body.
+        owner: Optional responsible person.
+        status: Short TODO status label.
+        value: Visible inline anchor text.
+        initials: Optional Word-comment initials.
+        style: Optional inline style.
+
+    Returns:
+        Inline TODO fragment.
+    """
+
+    return Todo(
+        *note,
+        owner=owner,
+        status=status,
+        value=value,
+        initials=initials,
+        style=style,
+    )
+
+
+class MarginNote(Comment):
+    """Inline margin note with renderer-specific fallback behavior.
+
+    Args:
+        *note: Margin note body.
+        side: Preferred side, ``"left"`` or ``"right"``.
+        value: Optional visible inline anchor text.
+        author: Optional comment author used by DOCX fallback.
+        initials: Optional Word-comment initials.
+        style: Optional inline style for the visible anchor.
+
+    Examples:
+        ```python
+        from oodocs import MarginNote, Paragraph
+
+        paragraph = Paragraph("Assumption", MarginNote("Check this assumption."))
+        ```
+    """
+
+    __slots__ = ("side",)
+
+    def __init__(
+        self,
+        *note: InlineInput,
+        side: str = "right",
+        value: str = "",
+        author: str | None = None,
+        initials: str | None = None,
+        style: TextStyle | None = None,
+    ) -> None:
+        if side not in {"left", "right"}:
+            raise ValueError("MarginNote.side must be 'left' or 'right'")
+        self.side = side
+        super().__init__(
+            value,
+            *note,
+            author=author,
+            initials=initials,
+            style=style,
+        )
+
+
+def margin_note(
+    *note: InlineInput,
+    side: str = "right",
+    value: str = "",
+    author: str | None = None,
+    initials: str | None = None,
+    style: TextStyle | None = None,
+) -> MarginNote:
+    """Create an inline margin note.
+
+    Args:
+        *note: Margin note body.
+        side: Preferred side, ``"left"`` or ``"right"``.
+        value: Optional visible inline anchor text.
+        author: Optional comment author used by DOCX fallback.
+        initials: Optional Word-comment initials.
+        style: Optional inline style.
+
+    Returns:
+        Inline margin-note fragment.
+    """
+
+    return MarginNote(
+        *note,
+        side=side,
+        value=value,
+        author=author,
+        initials=initials,
+        style=style,
+    )
+
+
 class Footnote(Text):
     """Inline text annotated with a numbered portable footnote.
 
@@ -1834,12 +1984,14 @@ __all__ = [
     "InlineChip",
     "Italic",
     "LineBreak",
+    "MarginNote",
     "Math",
     "InlineCode",
     "ReferenceFormat",
     "ReferenceGroup",
     "Strikethrough",
     "Text",
+    "Todo",
     "_BlockReference",
     "badge",
     "bold",
@@ -1852,6 +2004,7 @@ __all__ = [
     "keyboard",
     "link",
     "line_break",
+    "margin_note",
     "math",
     "prescript",
     "Ref",
@@ -1869,5 +2022,6 @@ __all__ = [
     "superscript",
     "tag",
     "text_color",
+    "todo",
     "url",
 ]

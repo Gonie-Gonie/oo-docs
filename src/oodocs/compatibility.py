@@ -101,6 +101,14 @@ COMPATIBILITY_NOTES: dict[str, CompatibilityNote] = {
         ),
         formats=("docx",),
     ),
+    "margin-note-renderer-fallback": CompatibilityNote(
+        code="margin-note-renderer-fallback",
+        message=(
+            "MarginNote renders as an HTML side note; DOCX and PDF keep the "
+            "note through comment-style fallback output."
+        ),
+        formats=("docx", "pdf"),
+    ),
 }
 
 

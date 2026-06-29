@@ -85,10 +85,12 @@ from oodocs.components.inline import (
     Footnote,
     Hyperlink,
     InlineChip,
+    MarginNote,
     Math,
     ReferenceFormat,
     ReferenceGroup,
     Text,
+    Todo,
 )
 from oodocs.components.media import (
     Figure,
@@ -775,6 +777,9 @@ class PdfRenderer:
                     follows_existing_content=True,
                 )
             )
+
+        if self._should_auto_render_comment_list(document, render_index):
+            story.extend(self.render_comment_list(CommentList(), context))
 
         if self._should_auto_render_footnote_list(document, render_index):
             story.extend(self.render_footnote_list(FootnoteList(), context))
@@ -2005,6 +2010,19 @@ class PdfRenderer:
             document.settings.theme.blocks.auto_footnotes_page
             and bool(render_index.footnotes)
             and not any(isinstance(child, FootnoteList) for child in document.body.children)
+        )
+
+    def _should_auto_render_comment_list(
+        self,
+        document: Document,
+        render_index: RenderIndex,
+    ) -> bool:
+        return (
+            any(
+                isinstance(entry.comment, (Todo, MarginNote))
+                for entry in render_index.comments
+            )
+            and not any(isinstance(child, CommentList) for child in document.body.children)
         )
 
     def _story_has_indexing_flowable(self, story: list[object]) -> bool:

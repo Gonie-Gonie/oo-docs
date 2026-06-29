@@ -42,10 +42,12 @@ from oodocs.components.inline import (
     Footnote,
     Hyperlink,
     InlineChip,
+    MarginNote,
     Math,
     ReferenceFormat,
     ReferenceGroup,
     Text,
+    Todo,
 )
 from oodocs.components.media import (
     Figure,
@@ -168,6 +170,9 @@ class HtmlRenderer:
                 + self._render_children(main_children, context)
                 + "</section>"
             )
+
+        if self._should_auto_render_comment_list(document, render_index):
+            body_parts.append(self.render_comment_list(CommentList(), context))
 
         if self._should_auto_render_footnote_list(document, render_index):
             body_parts.append(self.render_footnote_list(FootnoteList(), context))
@@ -1423,6 +1428,19 @@ class HtmlRenderer:
             and not any(isinstance(child, FootnoteList) for child in document.body.children)
         )
 
+    def _should_auto_render_comment_list(
+        self,
+        document: Document,
+        render_index: RenderIndex,
+    ) -> bool:
+        return (
+            any(
+                isinstance(entry.comment, (Todo, MarginNote))
+                for entry in render_index.comments
+            )
+            and not any(isinstance(child, CommentList) for child in document.body.children)
+        )
+
     def _render_title_matter(
         self,
         document: Document,
@@ -2144,6 +2162,15 @@ class HtmlRenderer:
                 ),
                 internal=True,
             )
+        if isinstance(fragment, MarginNote):
+            return self._margin_note_html(
+                fragment,
+                theme,
+                render_index,
+                base_bold=base_bold,
+                base_italic=base_italic,
+                base_size=base_size,
+            )
         if isinstance(fragment, Comment):
             comment_number = render_index.comment_number(fragment)
             visible = self._styled_text_html(
@@ -2193,6 +2220,37 @@ class HtmlRenderer:
             base_italic=base_italic,
             base_size=base_size,
             default_style=default_style,
+        )
+
+    def _margin_note_html(
+        self,
+        fragment: MarginNote,
+        theme: Theme,
+        render_index: RenderIndex,
+        *,
+        base_bold: bool,
+        base_italic: bool,
+        base_size: float | None,
+    ) -> str:
+        comment_number = render_index.comment_number(fragment)
+        visible = self._styled_text_html(
+            fragment.value,
+            fragment,
+            theme,
+            base_bold=base_bold,
+            base_italic=base_italic,
+            base_size=base_size,
+        )
+        marker = self._link_html(
+            f"comment_{comment_number}",
+            f"[{comment_number}]",
+            internal=True,
+        )
+        note_html = self._inline_html(fragment.comment, theme, render_index)
+        return (
+            f"{visible}"
+            f'<aside class="oodocs-margin-note oodocs-margin-note-{fragment.side}">'
+            f"<sup>{marker}</sup> {note_html}</aside>"
         )
 
     def _inline_chip_html(
@@ -2941,6 +2999,26 @@ body {{
 }}
 .oodocs-paragraph {{
   font-family: {self._css_font_family(theme.resolve_body_font())};
+}}
+.oodocs-margin-note {{
+  float: right;
+  clear: right;
+  width: min(1.55in, 36%);
+  margin: 0 0 8pt 12pt;
+  padding: 6pt 8pt;
+  border-left: 2pt solid #CBD5E1;
+  background: #F8FAFC;
+  color: #475569;
+  font-size: {max(theme.typography.body_font_size - 1.5, 8):.1f}pt;
+  line-height: 1.25;
+  box-sizing: border-box;
+}}
+.oodocs-margin-note-left {{
+  float: left;
+  clear: left;
+  margin: 0 12pt 8pt 0;
+  border-left: 0;
+  border-right: 2pt solid #CBD5E1;
 }}
 .oodocs-list {{
   margin: 0 0 10pt;

@@ -169,7 +169,7 @@ The main payoff is fewer manual handoffs: a benchmark CSV can become a table, a 
 OODocs tries to keep the source readable:
 
 - create objects with classes such as `Document`, `Part`, `Appendix`, `Chapter`, `Section`, `Paragraph`, `Table`, and `Figure`
-- apply inline actions with helpers such as `bold(...)`, `italic(...)`, `inline_code(...)`, `tag(...)`, `badge(...)`, `status(...)`, `keyboard(...)`, `url(...)`, `Text.from_markup(...)`, `Comment.annotated(...)`, `Footnote.annotated(...)`, and `CitationSource.cite()`
+- apply inline actions with helpers such as `bold(...)`, `italic(...)`, `inline_code(...)`, `tag(...)`, `badge(...)`, `status(...)`, `keyboard(...)`, `url(...)`, `Text.from_markup(...)`, `Comment.annotated(...)`, `todo(...)`, `margin_note(...)`, `Footnote.annotated(...)`, and `CitationSource.cite()`
 - import existing Markdown with `parse_markdown(...)`, `from_markdown(...)`, or `Document.from_markdown(...)` when release notes, README fragments, or generated Markdown should become editable OODocs objects
 - import Jupyter notebooks with `parse_notebook(...)`, `from_notebook(...)`, or `Document.from_notebook(...)` when notebook markdown, code cells, and textual outputs should become OODocs blocks
 - collect Python API metadata with `oodocs.apidoc.collect_api(...)` when public classes, functions, methods, parameters, examples, and docstring coverage should become queryable objects before they become document blocks
@@ -224,6 +224,7 @@ The default behavior is intentionally conventional:
 - Use `CitationLibrary.from_bibtex_file("refs.bib")` for BibTeX input, and `Theme(citations=CitationDefaults(citation_style="apa", reference_style="apa", reference_sort="author"))` when inline citations and the generated references page should follow an author-year style. Numeric citation output and citation-order references remain the default; pass `ReferenceList(include_uncited=True)` when the generated bibliography should include uncited library entries.
 - Use `Glossary()` with `glossary.term(...)` and `glossary.acronym(...)` for collected terminology. `glossary.use("API")` expands acronyms on first use, and `GlossaryList(glossary)` renders the generated glossary table.
 - Use `footnote("term", "note", stream="symbols")` with `Theme(footnotes=FootnoteDefaults(stream_styles={"symbols": FootnoteStyle.symbol()}))` when notes need independent numeric or symbol streams. Plain default footnotes still use native DOCX page footnotes; custom streams fall back to the generated notes page in DOCX.
+- Use `todo(...)` for review tasks and `margin_note(...)` for side notes that should stay next to the source prose. `MarginNote(...)` renders as an HTML side note, while DOCX and PDF keep the note through comment-style fallback output.
 - Use advanced `placement=...` hints on tables and figures only when needed. Supported values include `here`, `tbp`/`float`, `top`, `bottom`, and `page`.
 - Use `Box(...)` for callouts, evidence panels, and tcolorbox-like report sections that should stay editable in Word. Add `icon=...`, `title_position="side"`, or `shadow=True` when a panel needs callout-box treatment; shadows render in HTML and degrade to ordinary boxes in DOCX/PDF.
 - Use `Shape(...)`, `TextBox(...)`, and `ImageBox(...)` with `DocumentSettings(page_items=[...])` for page-positioned overlays that do not move the body text. Add `scope="cover"`, `scope="front"`, `scope="main"`, or `scope=PageItemScope.pages(2, 3)` when watermarks or fixed artwork should target only part of the document; PDF applies scopes to physical pages, while DOCX and HTML use section/static-frame fallbacks. Use `placement="inline"` when the same objects should sit in the text flow like Word's inline drawing mode.
@@ -284,7 +285,7 @@ doc = Document(
 - Pygments-backed syntax highlighting for code blocks across Python, JavaScript, SQL, YAML, shell, and other supported languages, with optional captions, references, line numbers, highlighted lines, and file-backed source loading
 - numbered algorithm blocks with input/output clauses, prose steps, code-style pseudocode, line numbering, and cross-references
 - editable report panels with `Box(...)` kwargs for width, block alignment, title color, and per-side padding
-- portable comments and footnotes that stay stable across DOCX, PDF, and HTML
+- portable comments, TODO annotations, margin notes, and footnotes that stay stable across DOCX, PDF, and HTML
 - footnotes target page-bottom placement by default when the renderer supports it; `Theme(blocks=BlockDefaults(footnote_placement="document"))` keeps the collected-notes pattern, and `FootnoteDefaults` supports independent numeric or symbol footnote streams
 - captioned tables and figures with automatic numbering and in-text references
 - independent document-level labels for table/figure captions and in-text references

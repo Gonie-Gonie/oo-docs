@@ -85,6 +85,7 @@ from oodocs import (
     LinkDefaults,
     ListOfAlgorithms,
     ListStyle,
+    MarginNote,
     Math,
     MultiColumn,
     NumberedList,
@@ -129,6 +130,7 @@ from oodocs import (
     TextBox,
     Theorem,
     Theme,
+    Todo,
     TitleMatterDefaults,
     TocLevelStyle,
     TypographyDefaults,
@@ -148,6 +150,7 @@ from oodocs import (
     keyboard,
     link,
     line_break,
+    margin_note,
     math,
     markup,
     prescript,
@@ -163,6 +166,7 @@ from oodocs import (
     subscript,
     superscript,
     tag,
+    todo,
     url,
 )
 from oodocs.presets.components import (
@@ -406,6 +410,8 @@ def test_list_classes_create_block_instances() -> None:
 
 def test_comment_and_math_helpers_create_renderable_fragments() -> None:
     inline_comment = comment("term", "Expanded note", author="pytest", initials="PT")
+    inline_todo = todo("Verify units.", owner="QA", status="review")
+    inline_margin_note = margin_note("Keep near the source paragraph.", side="left")
     inline_footnote = footnote("term", "Portable footnote note")
     inline_math = math(r"\alpha^2 + \beta^2")
     equation = Equation(r"\frac{1}{2}")
@@ -414,6 +420,13 @@ def test_comment_and_math_helpers_create_renderable_fragments() -> None:
     assert inline_comment.plain_text() == "term[?]"
     assert inline_comment.author == "pytest"
     assert inline_comment.initials == "PT"
+    assert isinstance(inline_todo, Todo)
+    assert inline_todo.plain_text() == "TODO[?]"
+    assert inline_todo.owner == "QA"
+    assert inline_todo.status == "review"
+    assert isinstance(inline_margin_note, MarginNote)
+    assert inline_margin_note.side == "left"
+    assert inline_margin_note.plain_text() == "[?]"
     assert isinstance(inline_footnote, Footnote)
     assert inline_footnote.plain_text() == "term[?]"
     assert isinstance(inline_math, Math)
@@ -2048,6 +2061,8 @@ def test_public_api_prefers_classes_for_structural_nodes() -> None:
     assert hasattr(oodocs, "TocLevelStyle")
     assert hasattr(oodocs, "Comment")
     assert hasattr(oodocs, "CommentList")
+    assert hasattr(oodocs, "Todo")
+    assert hasattr(oodocs, "MarginNote")
     assert hasattr(oodocs, "Footnote")
     assert hasattr(oodocs, "FootnoteList")
     assert hasattr(oodocs, "Equation")
@@ -2083,6 +2098,8 @@ def test_public_api_prefers_classes_for_structural_nodes() -> None:
     assert not hasattr(oodocs, "VSpace")
     assert not hasattr(oodocs, "HorizontalRule")
     assert hasattr(oodocs, "comment")
+    assert hasattr(oodocs, "todo")
+    assert hasattr(oodocs, "margin_note")
     assert hasattr(oodocs, "footnote")
     assert hasattr(oodocs, "from_notebook")
     assert hasattr(oodocs, "from_markdown")
@@ -4678,6 +4695,57 @@ def test_custom_footnote_streams_use_generated_markers_across_outputs(tmp_path: 
     assert "[R1]" in normalized_html_text
     assert "[1]" in normalized_html_text
     assert "Symbol stream note." in normalized_html_text
+
+
+def test_todo_and_margin_notes_render_with_comment_fallbacks(tmp_path: Path) -> None:
+    document = Document(
+        "Review Annotations",
+        Paragraph(
+            "Assumption ",
+            MarginNote("Check this assumption beside the source paragraph.", side="left"),
+            " needs review ",
+            Todo("Verify units before release.", owner="QA"),
+            ".",
+        ),
+    )
+
+    validation = document.validate()
+    assert "margin-note-renderer-fallback" in {
+        issue.code for issue in validation.warnings_for(("docx", "pdf"))
+    }
+    assert validation.warnings_for(("html",)) == ()
+
+    docx_path = tmp_path / "review-annotations.docx"
+    pdf_path = tmp_path / "review-annotations.pdf"
+    html_path = tmp_path / "review-annotations.html"
+    document.save_docx(docx_path)
+    document.save_pdf(pdf_path)
+    document.save_html(html_path)
+
+    with zipfile.ZipFile(docx_path) as archive:
+        comments_xml = archive.read("word/comments.xml").decode("utf-8")
+    word_xml = _docx_document_xml(docx_path)
+    assert "Check this assumption beside the source paragraph." in comments_xml
+    assert "Verify units before release." in comments_xml
+    assert "QA" in comments_xml
+    assert "TODO" in word_xml
+    assert "w:commentReference" in word_xml
+
+    pdf_text = "\n".join(
+        page.extract_text() or ""
+        for page in PdfReader(BytesIO(pdf_path.read_bytes())).pages
+    )
+    assert "TODO" in pdf_text
+    assert "Comments" in pdf_text
+    assert "Check this assumption beside the source paragraph." in pdf_text
+    assert "Verify units before release." in pdf_text
+
+    html_text = html_path.read_text(encoding="utf-8")
+    normalized_html_text = _normalized_html_text(html_path)
+    assert 'class="oodocs-margin-note oodocs-margin-note-left"' in html_text
+    assert "TODO" in normalized_html_text
+    assert "Check this assumption beside the source paragraph." in normalized_html_text
+    assert "Verify units before release." in normalized_html_text
 
 
 def test_document_renders_to_docx_and_pdf(tmp_path: Path) -> None:
