@@ -251,6 +251,17 @@ figure = Figure(
 )
 """
 
+FIGURE_TRANSFORM_SNIPPET = """from oodocs import CropBox, Figure
+
+figure = Figure(
+    "assets/system-diagram.png",
+    width=5.0,
+    crop=CropBox(left=8, right=8, unit="px"),
+    rotation=90,
+    alt_text="Rotated and cropped system diagram",
+)
+"""
+
 SUBFIGURE_SNIPPET = """from oodocs import Paragraph, SubFigure, SubFigureGroup
 
 before = SubFigure("assets/before.png", caption="Before calibration.", width=6.0, unit="cm")
@@ -996,6 +1007,7 @@ def build_usage_guide_document() -> Document:
             ["Constrain by height", "Figure(path, height=8, unit='cm')", "The image keeps its aspect ratio while fitting the requested height."],
             ["Force a box", "Figure(path, width=12, height=8, unit='cm')", "Both dimensions are honored, similar to explicit LaTeX graphic sizing."],
             ["Follow text width", "Figure(path, width=settings.get_text_width(0.8))", "The width is computed from page size minus margins."],
+            ["Crop, rotate, and describe", "Figure(path, crop=CropBox(...), rotation=90, alt_text='...')", "The image bytes are transformed consistently for DOCX, PDF, and HTML; HTML and DOCX receive accessible alt text."],
         ],
         caption="Figure sizing patterns for width, height, and document-relative sizing.",
         column_widths=[1.8, 2.9, 2.3],
@@ -1671,6 +1683,20 @@ def build_usage_guide_document() -> Document:
                 ),
                 figure_sizing_table,
                 CodeBlock(FIGURE_SIZING_SNIPPET, language="python"),
+                Paragraph(
+                    "For ",
+                    inline_code("graphicx"),
+                    "-style image adjustments, pass ",
+                    inline_code("CropBox"),
+                    " and ",
+                    inline_code("rotation"),
+                    " directly to ",
+                    inline_code("Figure"),
+                    ". Use ",
+                    inline_code("alt_text"),
+                    " when the image needs explicit accessible text instead of deriving it from the caption."
+                ),
+                CodeBlock(FIGURE_TRANSFORM_SNIPPET, language="python"),
             ),
             Section(
                 "Positioned and inline drawing objects",

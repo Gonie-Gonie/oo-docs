@@ -187,6 +187,13 @@
           "qualname": "oodocs.components.blocks.Corollary"
         },
         {
+          "category": "media",
+          "kind": "class",
+          "module": "oodocs.components.media",
+          "name": "CropBox",
+          "qualname": "oodocs.components.media.CropBox"
+        },
+        {
           "category": "block",
           "kind": "class",
           "module": "oodocs.components.blocks",

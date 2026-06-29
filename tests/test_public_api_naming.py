@@ -76,6 +76,7 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "CaptionDefaults",
         "CitationDefaults",
         "GeneratedContentDefaults",
+        "CropBox",
         "PageNumberDefaults",
         "RunInTitleStyle",
         "ReferenceList",

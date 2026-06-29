@@ -51,6 +51,7 @@ from oodocs.components.media import (
     TablePlacement,
     build_table_layout,
     image_source_to_bytes,
+    processed_image_source_to_buffer,
 )
 from oodocs.components.people import AuthorTitleLine
 from oodocs.components.positioning import (
@@ -795,9 +796,10 @@ class HtmlRenderer:
             image_styles.append("height: auto")
         if image_styles:
             image_style = f' style="{"; ".join(image_styles)};"'
+        alt_text = self._figure_alt_text(block, "Figure")
         image_html = (
-            f'<img class="oodocs-figure-image" src="{self._figure_src(block)}" '
-            f'alt="{escape(block.caption.plain_text() if block.caption is not None else "Figure")}"{image_style} />'
+            f'<img class="oodocs-figure-image" src="{self._figure_src(block, context.unit)}" '
+            f'alt="{escape(alt_text)}"{image_style} />'
         )
         caption_html = (
             self._caption_html(
@@ -909,10 +911,10 @@ class HtmlRenderer:
                 )
                 + "</figcaption>"
             )
-        alt_text = subfigure.caption.plain_text() if subfigure.caption is not None else "Subfigure"
+        alt_text = self._figure_alt_text(subfigure, "Subfigure")
         return (
             f'<figure{container_anchor} class="oodocs-subfigure" style="margin: 0; text-align: {context.theme.blocks.figure_block_alignment};">'
-            f'<img class="oodocs-figure-image" src="{self._figure_src(subfigure)}" alt="{escape(alt_text)}"{image_style} />'
+            f'<img class="oodocs-figure-image" src="{self._figure_src(subfigure, context.unit)}" alt="{escape(alt_text)}"{image_style} />'
             + caption_html
             + "</figure>"
         )
@@ -2069,9 +2071,21 @@ class HtmlRenderer:
             return render_index.heading_anchor(target)
         return render_index.block_anchor(target)
 
-    def _figure_src(self, figure: Figure | SubFigure) -> str:
+    def _figure_src(self, figure: Figure | SubFigure, default_unit: str = "in") -> str:
         source = figure.image_source
-        if isinstance(source, Path):
+        if figure.crop is not None or figure.rotation:
+            buffer = processed_image_source_to_buffer(
+                source,
+                image_format=figure.image_format,
+                image_dpi=figure.image_dpi,
+                crop=figure.crop,
+                rotation=figure.rotation,
+                default_unit=figure.unit or default_unit,
+                usage="HTML rendering",
+            )
+            image_bytes = buffer.getvalue()
+            mime_type = self._mime_type_for_format(figure.image_format)
+        elif isinstance(source, Path):
             image_bytes = source.read_bytes()
             mime_type = guess_type(source.name)[0] or self._mime_type_for_format(
                 source.suffix.lstrip(".") or figure.image_format
@@ -2085,6 +2099,13 @@ class HtmlRenderer:
             )
             mime_type = self._mime_type_for_format(figure.image_format)
         return f"data:{mime_type};base64,{b64encode(image_bytes).decode('ascii')}"
+
+    def _figure_alt_text(self, figure: Figure | SubFigure, fallback: str) -> str:
+        if figure.alt_text is not None:
+            return figure.alt_text
+        if figure.caption is not None:
+            return figure.caption.plain_text()
+        return fallback
 
     def _mime_type_for_format(self, image_format: str) -> str:
         normalized = image_format.strip().lower()

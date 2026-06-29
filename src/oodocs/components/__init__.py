@@ -28,6 +28,7 @@ _EXPORTS = {
     "CommentList": "oodocs.components.generated",
     "Corollary": "oodocs.components.blocks",
     "CountableBlock": "oodocs.components.blocks",
+    "CropBox": "oodocs.components.media",
     "Definition": "oodocs.components.blocks",
     "Divider": "oodocs.components.blocks",
     "Equation": "oodocs.components.blocks",

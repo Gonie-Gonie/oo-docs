@@ -75,6 +75,7 @@ from oodocs.components.media import (
     Table,
     build_table_layout,
     image_source_to_buffer,
+    processed_image_source_to_buffer,
 )
 from oodocs.components.people import AuthorTitleLine
 from oodocs.components.positioning import (
@@ -2733,7 +2734,12 @@ class DocxRenderer:
         resolved_height = figure.height_in_inches(unit)
         width = Inches(resolved_width) if resolved_width is not None else None
         height = Inches(resolved_height) if resolved_height is not None else None
-        run.add_picture(self._figure_picture_source(figure), width=width, height=height)
+        inline_shape = run.add_picture(
+            self._figure_picture_source(figure, unit),
+            width=width,
+            height=height,
+        )
+        self._set_picture_alt_text(inline_shape, self._figure_alt_text(figure, "Figure"))
 
         if figure.caption is not None and theme.captions.figure_caption_position == "below":
             render_caption()
@@ -2805,7 +2811,15 @@ class DocxRenderer:
             resolved_height = subfigure.height_in_inches(unit)
             width = Inches(resolved_width) if resolved_width is not None else None
             height = Inches(resolved_height) if resolved_height is not None else None
-            run.add_picture(self._figure_picture_source(subfigure), width=width, height=height)
+            inline_shape = run.add_picture(
+                self._figure_picture_source(subfigure, unit),
+                width=width,
+                height=height,
+            )
+            self._set_picture_alt_text(
+                inline_shape,
+                self._figure_alt_text(subfigure, "Subfigure"),
+            )
 
             anchor_paragraph = image_paragraph
             if subfigure.caption is not None:
@@ -3139,8 +3153,18 @@ class DocxRenderer:
                 word_document=word_document,
             )
 
-    def _figure_picture_source(self, figure: Figure | SubFigure) -> str | BytesIO:
+    def _figure_picture_source(self, figure: Figure | SubFigure, unit: str) -> str | BytesIO:
         source = figure.image_source
+        if figure.crop is not None or figure.rotation:
+            return processed_image_source_to_buffer(
+                source,
+                image_format=figure.image_format,
+                image_dpi=figure.image_dpi,
+                crop=figure.crop,
+                rotation=figure.rotation,
+                default_unit=figure.unit or unit,
+                usage="DOCX rendering",
+            )
         if isinstance(source, Path):
             return str(source)
         return image_source_to_buffer(
@@ -3149,6 +3173,18 @@ class DocxRenderer:
             image_dpi=figure.image_dpi,
             usage="DOCX rendering",
         )
+
+    def _figure_alt_text(self, figure: Figure | SubFigure, fallback: str) -> str:
+        if figure.alt_text is not None:
+            return figure.alt_text
+        if figure.caption is not None:
+            return figure.caption.plain_text()
+        return fallback
+
+    def _set_picture_alt_text(self, inline_shape: object, alt_text: str) -> None:
+        doc_properties = getattr(getattr(inline_shape, "_inline", None), "docPr", None)
+        if doc_properties is not None:
+            doc_properties.set("descr", alt_text)
 
     def _image_box_picture_source(self, image_box: ImageBox) -> str | BytesIO:
         source = image_box.image_source

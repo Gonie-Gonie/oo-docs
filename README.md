@@ -145,7 +145,7 @@ Common translations:
 - LaTeX tag chips / compact inline labels -> `tag(...)`, `badge(...)`, `status(...)`, and `keyboard(...)`
 - Word highlight / strikethrough / manual line break -> `highlight(...)`, `strikethrough(...)`, `line_break()`
 - LaTeX `\vspace{...}` / `\hrule` and Notion-style separators -> `VerticalSpace(...)` or `Divider(...)`
-- LaTeX `\includegraphics` -> `Figure(path_or_matplotlib_figure, caption=...)`
+- LaTeX `\includegraphics` -> `Figure(path_or_matplotlib_figure, caption=...)`, with optional `CropBox(...)`, `rotation=...`, and `alt_text=...`
 - LaTeX subfigures -> `SubFigure(...)` children inside a captioned `SubFigureGroup(...)`
 - LaTeX `tabular` or copied tables -> `Table(...)` or `Table.from_dataframe(...)`
 - LaTeX `booktabs` -> `Table(..., style="booktabs")` or `TableStyle.booktabs()`
@@ -204,7 +204,7 @@ The default behavior is intentionally conventional:
 - Use `TableCell(text_alignment=..., vertical_alignment=...)` or table-wide `Table(..., cell_text_alignment=..., cell_vertical_alignment=...)` when a table needs Word-like cell alignment. Use dictionaries in `row_styles`, `header_row_styles`, or `column_styles` when rows or columns need background color, text color, bold, or italic formatting.
 - Use `TableCell(colspan=...)` and `TableCell(rowspan=...)` for one-off merged cells. Use `Table.grouped_headers(groups=[("Geometry", 2), ...], columns=[...], rows=[...])` when a table needs a common grouped header row without manually building every spanning cell.
 - Use `Table(split=True, continuation_label="continued")` when a table should render in source order and may break across pages. Leave `split=False` when the table should stay together when possible; very long tables are automatically rendered as split repeated-header tables.
-- Use `Figure(...)` for image files or `savefig()`-compatible Python figure objects. Use `Figure.from_bytes(...)` or `Figure.from_buffer(...)` when image bytes are already in memory.
+- Use `Figure(...)` for image files or `savefig()`-compatible Python figure objects. Use `Figure.from_bytes(...)` or `Figure.from_buffer(...)` when image bytes are already in memory. Add `crop=CropBox(...)`, `rotation=...`, and `alt_text=...` for LaTeX `graphicx`-style image transforms and accessible output text.
 - Use `SubFigureGroup(SubFigure(...), SubFigure(...), caption=...)` when related images should share one figure number and expose `(a)`, `(b)`, and similar subfigure references.
 - Use `Theme(captions=CaptionDefaults(table_caption_label=..., table_reference_label=..., figure_caption_label=..., figure_reference_label=...))` when captions and in-text references should use different labels such as `Figure`, `Fig.`, or localized terms.
 - Use `Theme(citations=CitationDefaults(citation_style="apa", reference_style="apa"))` when inline citations and the generated references page should follow an author-year style. Numeric citation output remains the default.

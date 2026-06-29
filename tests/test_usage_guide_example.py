@@ -160,6 +160,9 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert any("Instructions for Authors" in text for text in paragraph_texts)
     assert "Nomenclature" in table_text
     assert any("Figure sizing patterns for width, height, and document-relative sizing." in text for text in paragraph_texts)
+    assert any("CropBox" in text for text in paragraph_texts)
+    assert any("rotation=90" in text for text in paragraph_texts)
+    assert any("alt_text" in text for text in paragraph_texts)
     assert any("Coordinate-based drawings can be page overlays or inline flow objects." in text for text in paragraph_texts)
     assert any("Advanced table and figure placement controls." in text for text in paragraph_texts)
     assert any("Renderer-specific behavior for notes, review workflows, and cross-reference stability." in text for text in paragraph_texts)
@@ -268,6 +271,9 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "6.4.1 Subsection entries" in pdf_text
     assert "6.4.1.1 Fourth-level section entries" in pdf_text
     assert "Figure sizing patterns for width, height, and document-relative sizing." in pdf_text
+    assert "CropBox" in pdf_text
+    assert "rotation=90" in pdf_text
+    assert "alt_text" in pdf_text
     assert "Coordinate-based drawings can be page overlays or inline flow objects." in pdf_text
     assert "Advanced table and figure placement controls." in pdf_text
     assert "OODocs Contributor Certificate" in pdf_text
@@ -359,6 +365,9 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "6.4.1 Subsection entries" in normalized_html_text
     assert "6.4.1.1 Fourth-level section entries" in normalized_html_text
     assert "Figure sizing patterns for width, height, and document-relative sizing." in normalized_html_text
+    assert "CropBox" in normalized_html_text
+    assert "rotation" in normalized_html_text
+    assert "alt_text" in normalized_html_text
     assert "Coordinate-based drawings can be page overlays or inline flow objects." in normalized_html_text
     assert "Advanced table and figure placement controls." in normalized_html_text
     assert "OODocs Contributor Certificate" in normalized_html_text

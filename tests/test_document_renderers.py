@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from base64 import b64decode
 from importlib.metadata import version as package_version
 from html import unescape
 from io import BytesIO
@@ -50,6 +51,7 @@ from oodocs import (
     CountableBlock,
     Corollary,
     CounterStyle,
+    CropBox,
     Definition,
     Document,
     DocumentSettings,
@@ -970,6 +972,55 @@ def test_image_data_sources_render_without_temp_files(tmp_path: Path) -> None:
     assert set(outputs.keys()) == {"docx", "pdf", "html"}
     assert all(path.exists() for path in outputs.values())
     assert "data:image/png;base64," in outputs["html"].read_text(encoding="utf-8")
+
+
+def test_figure_crop_rotation_and_alt_text_render_to_outputs(
+    tmp_path: Path,
+) -> None:
+    image_path = tmp_path / "graphicx.png"
+    image_path.write_bytes(_build_sample_png(width=120, height=80))
+    figure = Figure(
+        image_path,
+        caption="Transformed figure.",
+        width=1.0,
+        crop=CropBox(left=10, right=20, top=5, bottom=15, unit="px"),
+        rotation=90,
+        alt_text="Cropped rotated sample",
+    )
+    document = Document("Graphicx Figure", figure)
+
+    with pytest.raises(ValueError, match="CropBox"):
+        CropBox(left=-1)
+    with pytest.raises(ValueError, match="rotation"):
+        Figure(image_path, rotation=float("nan"))
+
+    docx_path = tmp_path / "graphicx.docx"
+    pdf_path = tmp_path / "graphicx.pdf"
+    html_path = tmp_path / "graphicx.html"
+    document.save_docx(docx_path)
+    document.save_pdf(pdf_path)
+    document.save_html(html_path)
+
+    docx_xml = _docx_document_xml(docx_path)
+    html_text = html_path.read_text(encoding="utf-8")
+    match = re.search(r'src="data:image/png;base64,([^"]+)" alt="Cropped rotated sample"', html_text)
+
+    assert match is not None
+    assert 'descr="Cropped rotated sample"' in docx_xml
+    assert _pdf_image_draw_count(pdf_path) == 1
+
+    from PIL import Image
+
+    html_image = Image.open(BytesIO(b64decode(match.group(1))))
+    assert html_image.size == (60, 90)
+    with zipfile.ZipFile(docx_path) as archive:
+        media_names = [
+            name for name in archive.namelist()
+            if name.startswith("word/media/")
+        ]
+        assert media_names
+        docx_image = Image.open(BytesIO(archive.read(media_names[0])))
+        assert docx_image.size == (60, 90)
 
 
 def test_document_validate_catches_reference_mistakes() -> None:

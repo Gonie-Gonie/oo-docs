@@ -53,6 +53,7 @@ from oodocs.components.generated import (
 )
 from oodocs.components.media import (
     ColumnSpec,
+    CropBox,
     Figure,
     ImageData,
     SubFigure,
@@ -201,6 +202,7 @@ __all__ = [
     "Conjecture",
     "CountableBlock",
     "Corollary",
+    "CropBox",
     "Definition",
     "Document",
     "DocumentSettings",

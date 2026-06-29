@@ -5,6 +5,8 @@ Attributes:
     TableSplit: Table splitting policy accepted by table rendering options.
     DEFAULT_LONG_TABLE_ROW_THRESHOLD: Row count where tables are treated as
         long tables by default.
+    CropBox: Image crop offsets for figure rendering.
+    CropBoxInput: Accepted input for image crop specifications.
     ColumnSpec: Renderer-neutral table column layout and record-selection
         metadata.
     ColumnSpecInput: Accepted input for table column specifications.
@@ -17,6 +19,7 @@ from __future__ import annotations
 import csv
 from dataclasses import asdict, dataclass, is_dataclass
 import json
+import math
 from io import BytesIO
 from pathlib import Path
 from typing import Callable, Literal, Mapping, Sequence, TYPE_CHECKING
@@ -51,6 +54,94 @@ if TYPE_CHECKING:
 MediaPlacement = Literal["auto", "here", "float", "top", "bottom", "page"]
 TableSplit = bool | Literal["auto"]
 DEFAULT_LONG_TABLE_ROW_THRESHOLD = 12
+
+
+@dataclass(frozen=True, slots=True)
+class CropBox:
+    """Image crop offsets applied before rendering a figure.
+
+    Args:
+        left: Amount to remove from the left edge.
+        right: Amount to remove from the right edge.
+        top: Amount to remove from the top edge.
+        bottom: Amount to remove from the bottom edge.
+        unit: Unit for the crop offsets. Defaults to the figure or document
+            unit; ``px`` values are treated as image pixels.
+
+    Examples:
+        ```python
+        from oodocs import CropBox, Figure
+
+        figure = Figure(
+            "diagram.png",
+            crop=CropBox(left=8, right=8, unit="px"),
+            rotation=90,
+        )
+        ```
+    """
+
+    left: float = 0.0
+    right: float = 0.0
+    top: float = 0.0
+    bottom: float = 0.0
+    unit: str | None = None
+
+    def __post_init__(self) -> None:
+        for name in ("left", "right", "top", "bottom"):
+            value = float(getattr(self, name))
+            if value < 0:
+                raise ValueError("CropBox offsets must be >= 0")
+            object.__setattr__(self, name, value)
+        if self.unit is not None:
+            object.__setattr__(self, "unit", normalize_length_unit(self.unit))
+
+    def offsets_in_pixels(
+        self,
+        default_unit: str,
+        *,
+        dpi_x: float,
+        dpi_y: float,
+    ) -> tuple[int, int, int, int]:
+        """Return crop offsets as left, right, top, and bottom pixels.
+
+        Args:
+            default_unit: Unit to use when this crop box has no explicit unit.
+            dpi_x: Horizontal pixels per inch for physical units.
+            dpi_y: Vertical pixels per inch for physical units.
+
+        Returns:
+            Four integer pixel offsets in left, right, top, bottom order.
+        """
+
+        unit = self.unit or default_unit
+        if unit in {"px", "pixel", "pixels"}:
+            return (
+                round(self.left),
+                round(self.right),
+                round(self.top),
+                round(self.bottom),
+            )
+        return (
+            round(length_to_inches(self.left, unit) * dpi_x),
+            round(length_to_inches(self.right, unit) * dpi_x),
+            round(length_to_inches(self.top, unit) * dpi_y),
+            round(length_to_inches(self.bottom, unit) * dpi_y),
+        )
+
+
+CropBoxInput = CropBox | Mapping[str, object]
+
+
+def coerce_crop_box(value: CropBoxInput | None) -> CropBox | None:
+    """Normalize accepted crop-box inputs."""
+
+    if value is None:
+        return None
+    if isinstance(value, CropBox):
+        return value
+    if isinstance(value, Mapping):
+        return CropBox(**dict(value))
+    raise TypeError(f"Unsupported crop box: {type(value)!r}")
 
 
 @dataclass(frozen=True, slots=True, init=False)
@@ -211,6 +302,125 @@ def image_source_to_bytes(
         image_dpi=image_dpi,
         usage=usage,
     ).getvalue()
+
+
+def processed_image_source_to_buffer(
+    source: object,
+    *,
+    image_format: str,
+    image_dpi: int | None = None,
+    crop: CropBox | None = None,
+    rotation: float = 0.0,
+    default_unit: str = "in",
+    usage: str = "image rendering",
+) -> BytesIO:
+    """Return an image buffer with optional crop and rotation applied.
+
+    Args:
+        source: Path, ``ImageData``, or plot-like image source.
+        image_format: Output image format for processed bytes.
+        image_dpi: Optional image DPI for plot-like sources and physical crop
+            unit conversion.
+        crop: Optional crop offsets.
+        rotation: Counter-clockwise rotation angle in degrees.
+        default_unit: Unit to use when ``crop`` has no explicit unit.
+        usage: Description used in error messages.
+
+    Returns:
+        Image bytes in a ``BytesIO`` buffer.
+    """
+
+    normalized_rotation = _normalize_rotation(rotation)
+    if isinstance(source, Path):
+        image_bytes = source.read_bytes()
+    else:
+        image_bytes = image_source_to_bytes(
+            source,
+            image_format=image_format,
+            image_dpi=image_dpi,
+            usage=usage,
+        )
+    if crop is None and normalized_rotation == 0:
+        return BytesIO(image_bytes)
+    return _process_image_bytes(
+        image_bytes,
+        image_format=image_format,
+        image_dpi=image_dpi,
+        crop=crop,
+        rotation=normalized_rotation,
+        default_unit=default_unit,
+        usage=usage,
+    )
+
+
+def _normalize_rotation(rotation: float) -> float:
+    value = float(rotation)
+    if not math.isfinite(value):
+        raise ValueError("rotation must be a finite number")
+    return value % 360
+
+
+def _process_image_bytes(
+    image_bytes: bytes,
+    *,
+    image_format: str,
+    image_dpi: int | None,
+    crop: CropBox | None,
+    rotation: float,
+    default_unit: str,
+    usage: str,
+) -> BytesIO:
+    try:
+        from PIL import Image
+    except ImportError as exc:  # pragma: no cover - Pillow is a dependency.
+        raise RuntimeError("Pillow is required for image crop and rotation") from exc
+
+    try:
+        image = Image.open(BytesIO(image_bytes))
+        image.load()
+    except Exception as exc:  # pragma: no cover - depends on Pillow parser.
+        raise ValueError(f"Unsupported image source for {usage}: cannot crop or rotate") from exc
+
+    output_dpi = _image_dpi(image, image_dpi)
+    if crop is not None:
+        left, right, top, bottom = crop.offsets_in_pixels(
+            default_unit,
+            dpi_x=output_dpi[0],
+            dpi_y=output_dpi[1],
+        )
+        width, height = image.size
+        if left + right >= width or top + bottom >= height:
+            raise ValueError("CropBox removes the entire image")
+        image = image.crop((left, top, width - right, height - bottom))
+    if rotation:
+        image = image.rotate(rotation, expand=True)
+
+    output_format = _pil_image_format(image_format)
+    if output_format == "JPEG" and image.mode in {"RGBA", "LA", "P"}:
+        image = image.convert("RGB")
+    output = BytesIO()
+    image.save(output, format=output_format, dpi=output_dpi)
+    output.seek(0)
+    return output
+
+
+def _image_dpi(image: object, fallback: int | None) -> tuple[float, float]:
+    dpi = getattr(image, "info", {}).get("dpi")
+    if isinstance(dpi, tuple) and len(dpi) >= 2:
+        return (float(dpi[0] or fallback or 96), float(dpi[1] or fallback or 96))
+    value = float(fallback or 96)
+    return (value, value)
+
+
+def _pil_image_format(image_format: str) -> str:
+    normalized = image_format.strip().lower().lstrip(".")
+    if normalized in {"jpg", "jpeg"}:
+        return "JPEG"
+    if normalized in {"tif", "tiff"}:
+        return "TIFF"
+    if normalized == "webp":
+        return "WEBP"
+    return "PNG"
 
 
 def normalize_media_placement(value: str | None) -> MediaPlacement:
@@ -1910,6 +2120,9 @@ class Figure(Block):
         image_format: Image format for plot-like sources.
         image_dpi: Optional image DPI for plot-like sources.
         placement: Optional placement policy.
+        crop: Optional crop offsets applied before rendering.
+        rotation: Optional counter-clockwise rotation angle in degrees.
+        alt_text: Optional alternative text for accessible outputs.
 
     Examples:
         Add an image from a file path:
@@ -1951,6 +2164,9 @@ class Figure(Block):
     image_format: str
     image_dpi: int | None
     placement: MediaPlacement
+    crop: CropBox | None
+    rotation: float
+    alt_text: str | None
 
     def __init__(
         self,
@@ -1964,6 +2180,9 @@ class Figure(Block):
         image_format: str = "png",
         image_dpi: int | None = 150,
         placement: str | None = None,
+        crop: CropBoxInput | None = None,
+        rotation: float = 0.0,
+        alt_text: str | None = None,
     ) -> None:
         self.image_source = coerce_image_source(image_source)
         self.caption = coerce_cell(caption) if caption is not None else None
@@ -1978,6 +2197,9 @@ class Figure(Block):
         )
         self.image_dpi = image_dpi
         self.placement = normalize_media_placement(placement)
+        self.crop = coerce_crop_box(crop)
+        self.rotation = _normalize_rotation(rotation)
+        self.alt_text = _normalize_optional_text(alt_text, name="alt_text")
 
     @classmethod
     def from_bytes(
@@ -2142,6 +2364,9 @@ class SubFigure:
         image_format: Image format for plot-like sources.
         image_dpi: Optional image DPI for plot-like sources.
         label: Optional explicit subfigure label.
+        crop: Optional crop offsets applied before rendering.
+        rotation: Optional counter-clockwise rotation angle in degrees.
+        alt_text: Optional alternative text for accessible outputs.
 
     Examples:
         ```python
@@ -2162,6 +2387,9 @@ class SubFigure:
     image_format: str
     image_dpi: int | None
     label: str | None
+    crop: CropBox | None
+    rotation: float
+    alt_text: str | None
 
     def __init__(
         self,
@@ -2175,6 +2403,9 @@ class SubFigure:
         image_format: str = "png",
         image_dpi: int | None = 150,
         label: str | None = None,
+        crop: CropBoxInput | None = None,
+        rotation: float = 0.0,
+        alt_text: str | None = None,
     ) -> None:
         self.image_source = coerce_image_source(image_source)
         self.caption = coerce_cell(caption) if caption is not None else None
@@ -2189,6 +2420,9 @@ class SubFigure:
         )
         self.image_dpi = image_dpi
         self.label = label
+        self.crop = coerce_crop_box(crop)
+        self.rotation = _normalize_rotation(rotation)
+        self.alt_text = _normalize_optional_text(alt_text, name="alt_text")
 
     def width_in_inches(self, default_unit: str) -> float | None:
         """Return subfigure width converted through the subfigure or document unit.
@@ -2386,6 +2620,8 @@ class SubFigureGroup(Block):
 __all__ = [
     "ColumnSpec",
     "ColumnSpecInput",
+    "CropBox",
+    "CropBoxInput",
     "Figure",
     "ImageData",
     "MediaPlacement",
@@ -2399,6 +2635,7 @@ __all__ = [
     "TableSplit",
     "build_table_layout",
     "coerce_column_spec",
+    "coerce_crop_box",
     "coerce_image_source",
     "coerce_table_cell",
     "image_source_to_buffer",

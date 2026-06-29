@@ -92,6 +92,7 @@ from oodocs.components.media import (
     Table,
     build_table_layout,
     image_source_to_buffer,
+    processed_image_source_to_buffer,
 )
 from oodocs.components.people import AuthorTitleLine
 from oodocs.components.positioning import (
@@ -2705,7 +2706,7 @@ class PdfRenderer:
         return self._apply_pdf_media_placement([KeepTogether(elements)], placement, in_box=in_box)
 
     def _figure_image(self, block: Figure | SubFigure, theme: Theme, unit: str) -> RLImage:
-        image = RLImage(self._figure_image_source(block))
+        image = RLImage(self._figure_image_source(block, unit))
         image.hAlign = FLOWABLE_ALIGNMENTS[theme.blocks.figure_block_alignment]
         resolved_width = block.width_in_inches(unit)
         resolved_height = block.height_in_inches(unit)
@@ -2724,8 +2725,18 @@ class PdfRenderer:
             image.drawWidth = image.drawWidth * scale
         return image
 
-    def _figure_image_source(self, block: Figure | SubFigure) -> str | BytesIO:
+    def _figure_image_source(self, block: Figure | SubFigure, unit: str) -> str | BytesIO:
         source = block.image_source
+        if block.crop is not None or block.rotation:
+            return processed_image_source_to_buffer(
+                source,
+                image_format=block.image_format,
+                image_dpi=block.image_dpi,
+                crop=block.crop,
+                rotation=block.rotation,
+                default_unit=block.unit or unit,
+                usage="PDF rendering",
+            )
         if isinstance(source, Path):
             return str(source)
         return image_source_to_buffer(
