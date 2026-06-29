@@ -178,7 +178,13 @@ from oodocs.presets.components import (
     success_box,
     warning_box,
 )
-from oodocs.presets.templates import JournalArticleTemplate, ManuscriptSection
+from oodocs.presets.templates import (
+    BookTemplate,
+    JournalArticleTemplate,
+    ManuscriptSection,
+    SoftwareManualTemplate,
+    TechnicalReportTemplate,
+)
 from oodocs.styles import TextStyle
 
 class HighlightedParagraph(Paragraph):
@@ -3156,6 +3162,71 @@ def test_component_and_template_presets_build_renderable_documents(tmp_path: Pat
     ]
     assert "Acknowledgements" in article_headings
     assert "Data Availability" not in article_headings
+
+    report_document = TechnicalReportTemplate(include_references=False).build(
+        "Validation Report",
+        executive_summary="All release checks passed.",
+        sections=[("Findings", [Paragraph("The evidence package is complete.")])],
+        appendices=[("Evidence Tables", [Paragraph("Detailed evidence.")])],
+        back_matter=Paragraph("Distribution list."),
+    )
+    assert report_document.validate().ok
+    assert report_document.settings.cover_page is True
+    report_front_matter, report_main_matter = report_document.split_top_level_children()
+    assert any(isinstance(child, TableOfContents) for child in report_front_matter)
+    assert any(
+        isinstance(child, Section) and child.plain_title() == "Executive Summary"
+        for child in report_front_matter
+    )
+    assert report_main_matter[0].plain_title() == "Findings"
+    assert any(isinstance(child, Appendix) for child in report_main_matter)
+    assert not any(isinstance(child, ReferenceList) for child in report_document.body.children)
+
+    manual_document = SoftwareManualTemplate().build(
+        "Command Manual",
+        overview="This manual explains the release command workflow.",
+        sections=[ManuscriptSection("Install", [Paragraph("Install the package.")])],
+        appendices=[("Command Reference", [Paragraph("Command flags.")])],
+    )
+    assert manual_document.validate().ok
+    manual_titles = [
+        child.plain_title()
+        for child in manual_document.body.children
+        if isinstance(child, Section)
+    ]
+    assert "Overview" in manual_titles
+    assert "Install" in manual_titles
+    assert not any(isinstance(child, ReferenceList) for child in manual_document.body.children)
+
+    book_document = BookTemplate(include_references=True).build(
+        "Engineering Handbook",
+        front_matter=Section(
+            "Preface",
+            Paragraph("Why this handbook exists."),
+            level=1,
+            numbered=False,
+        ),
+        parts=[("Operations", [("Getting Started", [Paragraph("Start here.")])])],
+        chapters=[("Standalone Chapter", [Paragraph("Standalone content.")])],
+        appendices=[("Appendix Data", [Paragraph("Reference tables.")])],
+        back_matter=Paragraph("Index placeholder."),
+    )
+    assert book_document.validate().ok
+    book_front_matter, book_main_matter = book_document.split_top_level_children()
+    assert any(
+        isinstance(child, Section) and child.plain_title() == "Preface"
+        for child in book_front_matter
+    )
+    assert any(
+        isinstance(child, Part) and child.plain_title() == "Operations"
+        for child in book_main_matter
+    )
+    assert any(
+        isinstance(child, Chapter) and child.plain_title() == "Standalone Chapter"
+        for child in book_main_matter
+    )
+    assert any(isinstance(child, Appendix) for child in book_main_matter)
+    assert any(isinstance(child, ReferenceList) for child in book_document.body.children)
 
     unitless = Nomenclature([("x", "value"), ("y", "other value")], double_column=True)
     assert unitless.children[0].header_rows[0][0].content.content[0].value == "Symbol"

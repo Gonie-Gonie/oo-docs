@@ -874,7 +874,7 @@ nomenclature = Nomenclature(
 """
 
 TEMPLATE_PRESETS_SNIPPET = """from oodocs import Author, Paragraph
-from oodocs.presets.templates import JournalArticleTemplate, ManuscriptSection
+from oodocs.presets.templates import JournalArticleTemplate, ManuscriptSection, TechnicalReportTemplate
 
 document = JournalArticleTemplate().build(
     "Readable manuscript generation",
@@ -887,6 +887,12 @@ document = JournalArticleTemplate().build(
     ],
     acknowledgements="The authors thank the internal review group.",
     data_availability=None,
+)
+
+report = TechnicalReportTemplate().build(
+    "Validation Report",
+    executive_summary="All release checks passed.",
+    sections=[("Findings", [Paragraph("The evidence package is complete.")])],
 )
 
 document.save_all("artifacts/manuscript", stem="article-draft")
@@ -1150,6 +1156,9 @@ def build_usage_guide_document() -> Document:
         headers=["Template", "Accepted structure", "Best first use"],
         rows=[
             ["JournalArticleTemplate", "title, authors, abstract, keywords, body sections, optional declarations, citations.", "A content-first manuscript builder where the caller fills article fields and the preset owns routine article assembly."],
+            ["TechnicalReportTemplate", "executive_summary, front_matter, sections, appendices, back_matter.", "A report builder for validation reports, engineering memos, and audit evidence."],
+            ["SoftwareManualTemplate", "overview, front_matter, sections, appendices, back_matter.", "A manual builder for user-facing procedures and command-oriented guides."],
+            ["BookTemplate", "front_matter, parts, chapters, appendices, back_matter.", "A book-like builder for long-form documents with chapters, parts, and appendices."],
             ["ManuscriptSection", "title, children, level, numbered.", "A small descriptor when users prefer data-like section lists over nested Section objects."],
             ["Advanced overrides", "theme, page_layout, author_layout, contents/references flags.", "Use these only when a lab or target journal has explicit layout requirements."],
         ],
@@ -2178,13 +2187,21 @@ def build_usage_guide_document() -> Document:
                     ),
                     Paragraph(
                         inline_code("JournalArticleTemplate"),
-                        " accepts existing ",
+                        ", ",
+                        inline_code("TechnicalReportTemplate"),
+                        ", ",
+                        inline_code("SoftwareManualTemplate"),
+                        ", and ",
+                        inline_code("BookTemplate"),
+                        " accept existing ",
                         inline_code("Section"),
+                        " or ",
+                        inline_code("Chapter"),
                         " blocks, compact ",
                         inline_code("ManuscriptSection"),
                         " descriptors, or simple ",
                         inline_code("(title, children)"),
-                        " tuples for the body."
+                        " tuples for the body, with explicit front/main/back matter arguments on the report, manual, and book templates."
                     ),
                     template_presets_table,
                     CodeBlock(TEMPLATE_PRESETS_SNIPPET, language="python"),

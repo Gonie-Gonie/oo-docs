@@ -1753,6 +1753,13 @@
         {
           "category": "preset",
           "kind": "class",
+          "module": "oodocs.presets.templates",
+          "name": "BookTemplate",
+          "qualname": "oodocs.presets.templates.BookTemplate"
+        },
+        {
+          "category": "preset",
+          "kind": "class",
           "module": "oodocs.presets.components",
           "name": "CalloutBox",
           "qualname": "oodocs.presets.components.CalloutBox"
@@ -1815,10 +1822,24 @@
         },
         {
           "category": "preset",
+          "kind": "class",
+          "module": "oodocs.presets.templates",
+          "name": "SoftwareManualTemplate",
+          "qualname": "oodocs.presets.templates.SoftwareManualTemplate"
+        },
+        {
+          "category": "preset",
           "kind": "function",
           "module": "oodocs.presets.components",
           "name": "success_box",
           "qualname": "oodocs.presets.components.success_box"
+        },
+        {
+          "category": "preset",
+          "kind": "class",
+          "module": "oodocs.presets.templates",
+          "name": "TechnicalReportTemplate",
+          "qualname": "oodocs.presets.templates.TechnicalReportTemplate"
         },
         {
           "category": "preset",

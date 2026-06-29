@@ -12,11 +12,15 @@ from oodocs.presets.components import (
     warning_box,
 )
 from oodocs.presets.templates import (
+    BookTemplate,
     JournalArticleTemplate,
     ManuscriptSection,
+    SoftwareManualTemplate,
+    TechnicalReportTemplate,
 )
 
 __all__ = [
+    "BookTemplate",
     "CalloutBox",
     "CompactTable",
     "info_box",
@@ -26,6 +30,8 @@ __all__ = [
     "Nomenclature",
     "note_box",
     "option_table",
+    "SoftwareManualTemplate",
     "success_box",
+    "TechnicalReportTemplate",
     "warning_box",
 ]

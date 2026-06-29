@@ -77,9 +77,12 @@ def test_template_preset_examples_build_all_outputs(tmp_path: Path) -> None:
         assert "Minimal Article" in word_text
         assert "Data Availability" in word_text
         assert "Acknowledgements" in word_text
-        assert "Template preset catalog, starting with the implemented journal article preset." in word_text
+        assert "Template preset catalog for article, report, manual, and book-shaped documents." in word_text
         assert "JournalArticleTemplate.build(...) input schema." in word_text
         assert "Template responsibility" in table_text
+        assert "TechnicalReportTemplate" in table_text
+        assert "SoftwareManualTemplate" in table_text
+        assert "BookTemplate" in table_text
         assert "Template-first authoring compared with direct manuscript assembly." in word_text
         assert "journal_paper_example" in table_text
         assert "acknowledgements" in table_text

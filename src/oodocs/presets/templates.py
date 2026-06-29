@@ -6,7 +6,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass, field
 
 from oodocs.components.base import Block, BlockInput, coerce_blocks
-from oodocs.components.blocks import Paragraph, Section
+from oodocs.components.blocks import Appendix, Chapter, Paragraph, Part, Section
 from oodocs.components.generated import ReferenceList, TableOfContents
 from oodocs.components.inline import InlineInput, Text, bold
 from oodocs.components.people import AuthorInput, AuthorLayout
@@ -114,6 +114,11 @@ class ManuscriptSection:
 
 
 ArticleSectionInput = Section | ManuscriptSection | tuple[InlineInput, Sequence[BlockInput]]
+ReportSectionInput = ArticleSectionInput
+ManualSectionInput = ArticleSectionInput
+BookChapterInput = Section | ManuscriptSection | tuple[InlineInput, Sequence[BlockInput]]
+BookPartInput = Part | tuple[InlineInput, Sequence[BookChapterInput]]
+MatterInput = BlockInput | Sequence[BlockInput]
 
 
 @dataclass(slots=True)
@@ -300,7 +305,466 @@ class JournalArticleTemplate:
         return Section(title, *children, level=1)
 
 
+def _default_report_theme() -> Theme:
+    """Return defaults for technical report and software manual templates."""
+
+    return Theme(
+        typography=TypographyDefaults(
+            body_font_name="Arial",
+            body_font_size=10.5,
+            title_font_size=18.0,
+            heading_sizes=(15.0, 13.0, 11.5, 11.0),
+            caption_font_size=9.5,
+        ),
+        captions=CaptionDefaults(
+            caption_text_alignment="left",
+            table_caption_position="above",
+            figure_caption_position="below",
+        ),
+        generated_content=GeneratedContentDefaults(
+            generated_heading_level=1,
+            generated_content_page_breaks=True,
+        ),
+        page_numbers=PageNumberDefaults(
+            show_page_numbers=True,
+            page_number_alignment="right",
+        ),
+        title_matter=TitleMatterDefaults(
+            title_text_alignment="left",
+            subtitle_text_alignment="left",
+            author_text_alignment="left",
+            affiliation_text_alignment="left",
+            author_detail_text_alignment="left",
+        ),
+        blocks=BlockDefaults(
+            paragraph_text_alignment="justify",
+            table_block_alignment="center",
+            figure_block_alignment="center",
+        ),
+    )
+
+
+def _default_book_theme() -> Theme:
+    """Return defaults for book-like documents with front matter."""
+
+    return Theme(
+        typography=TypographyDefaults(
+            body_font_name="Georgia",
+            body_font_size=11.0,
+            title_font_size=20.0,
+            heading_sizes=(17.0, 14.0, 12.5, 11.5),
+            caption_font_size=10.0,
+        ),
+        captions=CaptionDefaults(
+            caption_text_alignment="left",
+            table_caption_position="above",
+            figure_caption_position="below",
+        ),
+        generated_content=GeneratedContentDefaults(
+            generated_heading_level=1,
+            generated_content_page_breaks=True,
+        ),
+        page_numbers=PageNumberDefaults(
+            show_page_numbers=True,
+            page_number_alignment="center",
+        ),
+        title_matter=TitleMatterDefaults(
+            title_text_alignment="center",
+            subtitle_text_alignment="center",
+            author_text_alignment="center",
+            affiliation_text_alignment="center",
+            author_detail_text_alignment="center",
+        ),
+        blocks=BlockDefaults(
+            paragraph_text_alignment="justify",
+            table_block_alignment="center",
+            figure_block_alignment="center",
+        ),
+    )
+
+
+def _template_content_blocks(content: MatterInput | None) -> list[Block]:
+    if content is None:
+        return []
+    if isinstance(content, Block):
+        return [content]
+    if isinstance(content, str):
+        return [Paragraph(content)]
+    return coerce_blocks(content)
+
+
+def _statement_section(title: str, content: MatterInput) -> Section:
+    return Section(title, *_template_content_blocks(content), level=1, numbered=False)
+
+
+def _keyword_paragraph(keywords: Sequence[str]) -> Paragraph:
+    return Paragraph(
+        bold("Keywords: "),
+        Text(", ".join(keywords)),
+        space_after=18.0,
+        keep_with_next=True,
+    )
+
+
+def _coerce_report_section(section: ReportSectionInput) -> Section:
+    if isinstance(section, Section):
+        return section
+    if isinstance(section, ManuscriptSection):
+        return section.to_section()
+    title, children = section
+    return Section(title, *children, level=1)
+
+
+def _coerce_report_sections(sections: Sequence[ReportSectionInput]) -> list[Section]:
+    return [_coerce_report_section(section) for section in sections]
+
+
+def _coerce_chapter(chapter: BookChapterInput) -> Section:
+    if isinstance(chapter, Section):
+        return chapter
+    if isinstance(chapter, ManuscriptSection):
+        return Chapter(
+            chapter.title,
+            *chapter.children,
+            numbered=chapter.numbered,
+            toc=chapter.numbered,
+        )
+    title, children = chapter
+    return Chapter(title, *children)
+
+
+def _coerce_chapters(chapters: Sequence[BookChapterInput]) -> list[Section]:
+    return [_coerce_chapter(chapter) for chapter in chapters]
+
+
+def _coerce_part(part: BookPartInput) -> Part:
+    if isinstance(part, Part):
+        return part
+    title, chapters = part
+    return Part(title, *_coerce_chapters(chapters))
+
+
+def _coerce_parts(parts: Sequence[BookPartInput]) -> list[Part]:
+    return [_coerce_part(part) for part in parts]
+
+
+@dataclass(slots=True)
+class TechnicalReportTemplate:
+    """Build a report-style document from front, main, and back matter.
+
+    Attributes:
+        name: Template display name.
+        theme: Document theme used by generated reports.
+        page_size: Default page size.
+        page_margins: Default page margins.
+        author_layout: Default author title-matter layout.
+        include_contents: Whether to include a table of contents by default.
+        include_references: Whether to include a references page by default.
+        cover_page: Whether to render title matter on a cover page by default.
+
+    Examples:
+        ```python
+        from oodocs.presets import TechnicalReportTemplate
+
+        document = TechnicalReportTemplate().build(
+            "Validation Report",
+            executive_summary="All release checks passed.",
+            sections=[("Findings", ["The evidence set is complete."])],
+        )
+        ```
+    """
+
+    name: str = "Technical report"
+    theme: Theme = field(default_factory=_default_report_theme)
+    page_size: PageSize = field(default_factory=PageSize.a4)
+    page_margins: PageMargins = field(default_factory=PageMargins)
+    author_layout: AuthorLayout = field(default_factory=AuthorLayout)
+    include_contents: bool = True
+    include_references: bool = True
+    cover_page: bool = True
+
+    def build(
+        self,
+        title: str,
+        *,
+        executive_summary: MatterInput | None = None,
+        abstract: MatterInput | None = None,
+        sections: Sequence[ReportSectionInput] = (),
+        appendices: Sequence[BookChapterInput] = (),
+        front_matter: MatterInput | None = None,
+        back_matter: MatterInput | None = None,
+        authors: Sequence[AuthorInput] | None = None,
+        keywords: Sequence[str] | None = None,
+        subtitle: InlineInput | None = None,
+        summary: str | None = None,
+        citations: CitationLibrary | Sequence[CitationSource] | str | None = None,
+        include_contents: bool | None = None,
+        include_references: bool | None = None,
+        cover_page: bool | None = None,
+    ) -> Document:
+        """Build a technical report document.
+
+        Args:
+            title: Document title.
+            executive_summary: Optional unnumbered executive summary content.
+            abstract: Optional unnumbered abstract content.
+            sections: Main numbered report sections.
+            appendices: Appendix chapters grouped under an appendix separator.
+            front_matter: Extra blocks before the main numbered body.
+            back_matter: Extra blocks after appendices and before references.
+            authors: Optional document authors.
+            keywords: Optional keyword list rendered near the front matter.
+            subtitle: Optional subtitle inline content.
+            summary: Optional metadata summary. Defaults to ``title``.
+            citations: Optional citation library, citation sources, or BibTeX.
+            include_contents: Override for table-of-contents inclusion.
+            include_references: Override for references-page inclusion.
+            cover_page: Override for cover-page title matter.
+
+        Returns:
+            Built report document.
+        """
+
+        include_contents_value = self.include_contents if include_contents is None else include_contents
+        include_references_value = self.include_references if include_references is None else include_references
+
+        children: list[BlockInput] = []
+        if include_contents_value:
+            children.append(TableOfContents(show_page_numbers=True, max_level=3))
+        children.extend(_template_content_blocks(front_matter))
+        if executive_summary is not None:
+            children.append(_statement_section("Executive Summary", executive_summary))
+        if abstract is not None:
+            children.append(_statement_section("Abstract", abstract))
+        if keywords:
+            children.append(_keyword_paragraph(keywords))
+        children.extend(_coerce_report_sections(sections))
+        if appendices:
+            children.append(Appendix(*_coerce_chapters(appendices)))
+        children.extend(_template_content_blocks(back_matter))
+        if include_references_value:
+            children.append(ReferenceList())
+
+        settings = DocumentSettings(
+            authors=authors,
+            author_layout=self.author_layout,
+            subtitle=subtitle,
+            summary=summary or title,
+            cover_page=self.cover_page if cover_page is None else cover_page,
+            page_size=self.page_size,
+            page_margins=self.page_margins,
+            theme=self.theme,
+        )
+        return Document(title, *children, settings=settings, citations=citations)
+
+
+@dataclass(slots=True)
+class SoftwareManualTemplate:
+    """Build a user-facing software manual or procedural guide.
+
+    Attributes:
+        name: Template display name.
+        theme: Document theme used by generated manuals.
+        page_size: Default page size.
+        page_margins: Default page margins.
+        author_layout: Default author title-matter layout.
+        include_contents: Whether to include a table of contents by default.
+        include_references: Whether to include a references page by default.
+        cover_page: Whether to render title matter on a cover page by default.
+
+    Examples:
+        ```python
+        from oodocs.presets import SoftwareManualTemplate
+
+        document = SoftwareManualTemplate().build(
+            "Command Manual",
+            overview="This manual explains the release command workflow.",
+            sections=[("Install", ["Install the package before running commands."])],
+        )
+        ```
+    """
+
+    name: str = "Software manual"
+    theme: Theme = field(default_factory=_default_report_theme)
+    page_size: PageSize = field(default_factory=PageSize.a4)
+    page_margins: PageMargins = field(default_factory=PageMargins)
+    author_layout: AuthorLayout = field(default_factory=AuthorLayout)
+    include_contents: bool = True
+    include_references: bool = False
+    cover_page: bool = True
+
+    def build(
+        self,
+        title: str,
+        *,
+        overview: MatterInput | None = None,
+        sections: Sequence[ManualSectionInput] = (),
+        appendices: Sequence[BookChapterInput] = (),
+        front_matter: MatterInput | None = None,
+        back_matter: MatterInput | None = None,
+        authors: Sequence[AuthorInput] | None = None,
+        subtitle: InlineInput | None = None,
+        summary: str | None = None,
+        citations: CitationLibrary | Sequence[CitationSource] | str | None = None,
+        include_contents: bool | None = None,
+        include_references: bool | None = None,
+        cover_page: bool | None = None,
+    ) -> Document:
+        """Build a software manual document.
+
+        Args:
+            title: Document title.
+            overview: Optional unnumbered overview content.
+            sections: Main manual sections.
+            appendices: Appendix chapters grouped under an appendix separator.
+            front_matter: Extra blocks before the main numbered body.
+            back_matter: Extra blocks after appendices and before references.
+            authors: Optional document authors.
+            subtitle: Optional subtitle inline content.
+            summary: Optional metadata summary. Defaults to ``title``.
+            citations: Optional citation library, citation sources, or BibTeX.
+            include_contents: Override for table-of-contents inclusion.
+            include_references: Override for references-page inclusion.
+            cover_page: Override for cover-page title matter.
+
+        Returns:
+            Built manual document.
+        """
+
+        include_contents_value = self.include_contents if include_contents is None else include_contents
+        include_references_value = self.include_references if include_references is None else include_references
+
+        children: list[BlockInput] = []
+        if include_contents_value:
+            children.append(TableOfContents(show_page_numbers=True, max_level=3))
+        children.extend(_template_content_blocks(front_matter))
+        if overview is not None:
+            children.append(_statement_section("Overview", overview))
+        children.extend(_coerce_report_sections(sections))
+        if appendices:
+            children.append(Appendix(*_coerce_chapters(appendices)))
+        children.extend(_template_content_blocks(back_matter))
+        if include_references_value:
+            children.append(ReferenceList())
+
+        settings = DocumentSettings(
+            authors=authors,
+            author_layout=self.author_layout,
+            subtitle=subtitle,
+            summary=summary or title,
+            cover_page=self.cover_page if cover_page is None else cover_page,
+            page_size=self.page_size,
+            page_margins=self.page_margins,
+            theme=self.theme,
+        )
+        return Document(title, *children, settings=settings, citations=citations)
+
+
+@dataclass(slots=True)
+class BookTemplate:
+    """Build a book-like document with front matter, parts, and appendices.
+
+    Attributes:
+        name: Template display name.
+        theme: Document theme used by generated books.
+        page_size: Default page size.
+        page_margins: Default page margins.
+        author_layout: Default author title-matter layout.
+        include_contents: Whether to include a table of contents by default.
+        include_references: Whether to include a references page by default.
+        cover_page: Whether to render title matter on a cover page by default.
+
+    Examples:
+        ```python
+        from oodocs.presets import BookTemplate
+
+        document = BookTemplate().build(
+            "Engineering Handbook",
+            front_matter=["Preface text."],
+            chapters=[("Getting Started", ["The first chapter."])],
+        )
+        ```
+    """
+
+    name: str = "Book"
+    theme: Theme = field(default_factory=_default_book_theme)
+    page_size: PageSize = field(default_factory=PageSize.a4)
+    page_margins: PageMargins = field(default_factory=PageMargins)
+    author_layout: AuthorLayout = field(default_factory=AuthorLayout)
+    include_contents: bool = True
+    include_references: bool = False
+    cover_page: bool = True
+
+    def build(
+        self,
+        title: str,
+        *,
+        front_matter: MatterInput | None = None,
+        parts: Sequence[BookPartInput] = (),
+        chapters: Sequence[BookChapterInput] = (),
+        appendices: Sequence[BookChapterInput] = (),
+        back_matter: MatterInput | None = None,
+        authors: Sequence[AuthorInput] | None = None,
+        subtitle: InlineInput | None = None,
+        summary: str | None = None,
+        citations: CitationLibrary | Sequence[CitationSource] | str | None = None,
+        include_contents: bool | None = None,
+        include_references: bool | None = None,
+        cover_page: bool | None = None,
+    ) -> Document:
+        """Build a book-style document.
+
+        Args:
+            title: Document title.
+            front_matter: Blocks before the main numbered body.
+            parts: Optional book parts containing chapters.
+            chapters: Main chapters outside any part.
+            appendices: Appendix chapters grouped under an appendix separator.
+            back_matter: Extra blocks after appendices and before references.
+            authors: Optional document authors.
+            subtitle: Optional subtitle inline content.
+            summary: Optional metadata summary. Defaults to ``title``.
+            citations: Optional citation library, citation sources, or BibTeX.
+            include_contents: Override for table-of-contents inclusion.
+            include_references: Override for references-page inclusion.
+            cover_page: Override for cover-page title matter.
+
+        Returns:
+            Built book document.
+        """
+
+        include_contents_value = self.include_contents if include_contents is None else include_contents
+        include_references_value = self.include_references if include_references is None else include_references
+
+        children: list[BlockInput] = []
+        if include_contents_value:
+            children.append(TableOfContents(show_page_numbers=True, max_level=3))
+        children.extend(_template_content_blocks(front_matter))
+        children.extend(_coerce_parts(parts))
+        children.extend(_coerce_chapters(chapters))
+        if appendices:
+            children.append(Appendix(*_coerce_chapters(appendices)))
+        children.extend(_template_content_blocks(back_matter))
+        if include_references_value:
+            children.append(ReferenceList())
+
+        settings = DocumentSettings(
+            authors=authors,
+            author_layout=self.author_layout,
+            subtitle=subtitle,
+            summary=summary or title,
+            cover_page=self.cover_page if cover_page is None else cover_page,
+            page_size=self.page_size,
+            page_margins=self.page_margins,
+            theme=self.theme,
+        )
+        return Document(title, *children, settings=settings, citations=citations)
+
+
 __all__ = [
+    "BookTemplate",
     "JournalArticleTemplate",
     "ManuscriptSection",
+    "SoftwareManualTemplate",
+    "TechnicalReportTemplate",
 ]
