@@ -34,6 +34,7 @@ from oodocs import (
     Definition,
     Divider,
     Document,
+    DocumentMetadata,
     DocumentSettings,
     Equation,
     Example,
@@ -154,7 +155,7 @@ RELATED_WORK = CitationLibrary(
     ]
 )
 
-QUICK_START_SNIPPET = """from oodocs import Chapter, Document, DocumentSettings, Paragraph, Section, bold
+QUICK_START_SNIPPET = """from oodocs import Chapter, Document, DocumentMetadata, DocumentSettings, Paragraph, Section, bold
 
 report = Document(
     "Hello oodocs",
@@ -165,7 +166,7 @@ report = Document(
             Paragraph("This document was defined with ", bold("Python objects"), "."),
         ),
     ),
-    settings=DocumentSettings(metadata_author="OODocs"),
+    settings=DocumentSettings(metadata=DocumentMetadata(author="OODocs")),
 )
 
 report.save("artifacts/hello.docx")
@@ -955,7 +956,7 @@ def build_usage_guide_document() -> Document:
         rows=[
             ["Structured journal default", "Manuscripts and technical reports with compact title matter.", "DocumentSettings(authors=[...])"],
             ["Structured stacked profiles", "Guides, internal reports, and project documentation.", "DocumentSettings(authors=[...], author_layout=AuthorLayout(mode='stacked'))"],
-            ["Simple metadata string", "Short exports where file properties matter more than visible title blocks.", "DocumentSettings(metadata_author='Team Name')"],
+            ["Structured file metadata", "Short exports where file properties matter more than visible title blocks.", "DocumentSettings(metadata=DocumentMetadata(author='Team Name'))"],
             ["Manual front matter section", "Branded covers or institution-specific title pages.", "Keep metadata simple and author the visible cover with unnumbered sections."],
         ],
         caption="Author-display options from most automated to most manual.",
@@ -1037,9 +1038,10 @@ def build_usage_guide_document() -> Document:
     settings_options_table = Table(
         headers=["Object", "Options", "Scope"],
         rows=[
-            ["DocumentSettings", "metadata_author, summary, subtitle, authors, author_layout, cover_page", "Document metadata and title matter."],
+            ["DocumentSettings", "metadata, metadata_author, summary, subtitle, authors, author_layout, cover_page", "Document metadata and title matter."],
             ["DocumentSettings", "unit, page_layout, page_items", "Page geometry and page-positioned overlays."],
             ["DocumentSettings", "theme", "Document-wide renderer defaults shared by DOCX, PDF, and HTML."],
+            ["DocumentMetadata", "title, author, subject, keywords, description", "DOCX/PDF file properties and HTML head tags."],
             ["PageLayout", "page_size, page_margins, orientation; portrait(...); landscape(...)", "Grouped page geometry comparable to LaTeX geometry options."],
             ["PageSize", "width, height, unit", "Physical page box."],
             ["PageMargins", "top, right, bottom, left, unit; all(...); symmetric(...)", "Printable area around document content."],
@@ -1054,6 +1056,7 @@ def build_usage_guide_document() -> Document:
             ["TypographyDefaults", "body_font_name, monospace_font_name, title_font_size, body_font_size, heading_sizes, caption_font_size", "Fonts and type scale."],
             ["CaptionDefaults", "caption_text_alignment, table_caption_position, figure_caption_position, table_label, figure_label, caption/reference labels", "Caption placement and localized labels."],
             ["CitationDefaults", "citation_style, reference_style, reference_sort", "Inline citation labels, generated reference entry style, and bibliography ordering."],
+            ["LinkDefaults", "text_style", "Default text color, underline, and inline style for hyperlinks."],
             ["GeneratedContentDefaults", "contents/list/comments/footnotes/references titles, generated_heading_level, generated_content_page_breaks", "Generated content titles and heading level."],
             ["PageNumberDefaults", "show_page_numbers, page_number_alignment, page_number_template, front/main matter counters, page_number_font_size", "Footer page labels."],
             ["TitleMatterDefaults", "title_text_alignment, subtitle_text_alignment, author_text_alignment, affiliation_text_alignment, author_detail_text_alignment", "Title-page and metadata alignment."],
@@ -1393,7 +1396,7 @@ def build_usage_guide_document() -> Document:
                 CodeBlock(AUTHOR_LAYOUT_SNIPPET, language="python"),
                 Paragraph(
                     "If even the stacked layout is still too opinionated, keep ",
-                    inline_code("DocumentSettings(metadata_author='Team Name')"),
+                    inline_code("DocumentSettings(metadata=DocumentMetadata(author='Team Name'))"),
                     " for metadata and author the visible cover with ordinary unnumbered sections instead. That preserves a clean file property string while leaving the page design fully under document control."
                 ),
             ),
@@ -2110,8 +2113,12 @@ def build_usage_guide_document() -> Document:
         CommentList(),
         ReferenceList(),
         settings=DocumentSettings(
-            metadata_author="OODocs Contributors",
-            summary="Detailed usage guide and API walkthrough",
+            metadata=DocumentMetadata(
+                author="OODocs Contributors",
+                subject="Detailed usage guide and API walkthrough",
+                keywords=["OODocs", "documentation", "examples"],
+                description="Detailed usage guide and API walkthrough",
+            ),
             subtitle="Reference-style guide for structured Python document authoring",
             authors=[
                 Author("OODocs Contributors"),

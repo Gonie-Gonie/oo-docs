@@ -71,7 +71,7 @@ from oodocs.core import OODocsError, PathLike, length_to_inches
 from oodocs.document import Document
 from oodocs.components.equations import SUBSCRIPT, SUPERSCRIPT, parse_latex_segments
 from oodocs.layout.indexing import RenderIndex, build_render_index
-from oodocs.styles import BoxStyle, HeadingStyle, ParagraphStyle, TableStyle, Theme
+from oodocs.styles import BoxStyle, HeadingStyle, ParagraphStyle, TableStyle, TextStyle, Theme
 from oodocs.renderers.context import HtmlRenderContext
 from oodocs.renderers.syntax import _syntax_line_html, syntax_html
 
@@ -155,6 +155,7 @@ class HtmlRenderer:
         body_parts.append("</div>")
         body_parts.append("</div>")
 
+        metadata_title = settings.resolved_metadata_title(document.title)
         html = "\n".join(
             [
                 "<!DOCTYPE html>",
@@ -162,8 +163,8 @@ class HtmlRenderer:
                 "<head>",
                 '  <meta charset="utf-8" />',
                 '  <meta name="viewport" content="width=device-width, initial-scale=1" />',
-                f"  <title>{escape(document.title)}</title>",
-                f"  <meta name=\"description\" content=\"{escape(settings.summary or document.title)}\" />",
+                f"  <title>{escape(metadata_title)}</title>",
+                *self._metadata_head_tags(document),
                 "  <style>",
                 self._stylesheet(settings),
                 "  </style>",
@@ -176,6 +177,23 @@ class HtmlRenderer:
         )
         path.write_text(html, encoding="utf-8")
         return path
+
+    def _metadata_head_tags(self, document: Document) -> list[str]:
+        settings = document.settings
+        tags = [
+            "  <meta name=\"description\" "
+            f"content=\"{escape(settings.resolved_metadata_description(document.title), quote=True)}\" />"
+        ]
+        author = settings.resolved_author()
+        if author:
+            tags.append(f"  <meta name=\"author\" content=\"{escape(author, quote=True)}\" />")
+        subject = settings.resolved_metadata_subject()
+        if subject:
+            tags.append(f"  <meta name=\"subject\" content=\"{escape(subject, quote=True)}\" />")
+        keywords = settings.resolved_metadata_keywords_text()
+        if keywords:
+            tags.append(f"  <meta name=\"keywords\" content=\"{escape(keywords, quote=True)}\" />")
+        return tags
 
     def render_paragraph(self, block: Paragraph, context: HtmlRenderContext) -> str:
         """Render a paragraph block into HTML.
@@ -1764,6 +1782,7 @@ class HtmlRenderer:
         base_bold: bool = False,
         base_italic: bool = False,
         base_size: float | None = None,
+        default_style: TextStyle | None = None,
     ) -> str:
         return "".join(
             self._fragment_html(
@@ -1773,6 +1792,7 @@ class HtmlRenderer:
                 base_bold=base_bold,
                 base_italic=base_italic,
                 base_size=base_size,
+                default_style=default_style,
             )
             for fragment in fragments
         ) or "&nbsp;"
@@ -1918,6 +1938,7 @@ class HtmlRenderer:
         base_bold: bool,
         base_italic: bool,
         base_size: float | None,
+        default_style: TextStyle | None = None,
     ) -> str:
         if isinstance(fragment, (ImageBox, Shape, TextBox)):
             fragment_unit = fragment.unit or "in"
@@ -1945,6 +1966,7 @@ class HtmlRenderer:
                     theme,
                     render_index,
                     base_size=base_size,
+                    default_style=theme.resolve_link_text_style(fragment.style),
                 ),
                 internal=fragment.internal,
             )
@@ -1972,6 +1994,7 @@ class HtmlRenderer:
                     base_bold=base_bold,
                     base_italic=base_italic,
                     base_size=base_size,
+                    default_style=default_style,
                 )
             )
             return self._link_html(
@@ -2045,6 +2068,7 @@ class HtmlRenderer:
             base_bold=base_bold,
             base_italic=base_italic,
             base_size=base_size,
+            default_style=default_style,
         )
 
     def _inline_chip_html(
@@ -2111,39 +2135,41 @@ class HtmlRenderer:
         base_bold: bool = False,
         base_italic: bool = False,
         base_size: float | None = None,
+        default_style: TextStyle | None = None,
     ) -> str:
-        rendered_text = text_value.upper() if fragment.style.uppercase else text_value
+        style = default_style.merged(fragment.style) if default_style is not None else fragment.style
+        rendered_text = text_value.upper() if style.uppercase else text_value
         text = escape(rendered_text).replace("\n", "<br/>")
         styles: list[str] = []
-        effective_bold = base_bold if fragment.style.bold is None else fragment.style.bold
-        effective_italic = base_italic if fragment.style.italic is None else fragment.style.italic
-        if fragment.style.font_name is not None:
-            styles.append(f"font-family: {self._css_font_family(fragment.style.font_name)}")
-        if fragment.style.font_size is not None and fragment.style.font_size != base_size:
-            styles.append(f"font-size: {fragment.style.font_size:.1f}pt")
+        effective_bold = base_bold if style.bold is None else style.bold
+        effective_italic = base_italic if style.italic is None else style.italic
+        if style.font_name is not None:
+            styles.append(f"font-family: {self._css_font_family(style.font_name)}")
+        if style.font_size is not None and style.font_size != base_size:
+            styles.append(f"font-size: {style.font_size:.1f}pt")
         if effective_bold != base_bold:
             styles.append(f"font-weight: {'700' if effective_bold else '400'}")
         if effective_italic != base_italic:
             styles.append(f"font-style: {'italic' if effective_italic else 'normal'}")
         decorations: list[str] = []
-        if fragment.style.underline:
+        if style.underline:
             decorations.append("underline")
-        if fragment.style.strikethrough:
+        if style.strikethrough:
             decorations.append("line-through")
         if decorations:
             styles.append(f"text-decoration: {' '.join(decorations)}")
-        if fragment.style.text_color is not None:
-            styles.append(f"color: #{fragment.style.text_color}")
-        if fragment.style.highlight_color is not None:
-            styles.append(f"background-color: #{fragment.style.highlight_color}")
-        if fragment.style.small_caps:
+        if style.text_color is not None:
+            styles.append(f"color: #{style.text_color}")
+        if style.highlight_color is not None:
+            styles.append(f"background-color: #{style.highlight_color}")
+        if style.small_caps:
             styles.append("font-variant: small-caps")
-        if fragment.style.uppercase:
+        if style.uppercase:
             styles.append("text-transform: uppercase")
-        if fragment.style.superscript:
+        if style.superscript:
             styles.append("vertical-align: super")
             styles.append("font-size: 75%")
-        if fragment.style.subscript:
+        if style.subscript:
             styles.append("vertical-align: sub")
             styles.append("font-size: 75%")
         if not styles:
@@ -2653,6 +2679,21 @@ class HtmlRenderer:
         escaped_name = font_name.replace('"', '\\"')
         return f'"{escaped_name}", {fallback}'
 
+    def _link_css_declarations(self, style: TextStyle) -> str:
+        declarations: list[str] = []
+        if style.text_color is not None:
+            declarations.append(f"  color: #{style.text_color};")
+        decorations: list[str] = []
+        if style.underline:
+            decorations.append("underline")
+        if style.strikethrough:
+            decorations.append("line-through")
+        declarations.append(
+            f"  text-decoration: {' '.join(decorations) if decorations else 'none'};"
+        )
+        declarations.append("  text-underline-offset: 0.08em;")
+        return "\n".join(declarations)
+
     def _stylesheet(self, settings: object) -> str:
         theme = settings.theme
         margin_top, margin_right, margin_bottom, margin_left = settings.page_margin_inches()
@@ -2963,9 +3004,7 @@ body {{
   letter-spacing: 0.01em;
 }}
 a {{
-  color: #0c5d78;
-  text-decoration: underline;
-  text-underline-offset: 0.08em;
+{self._link_css_declarations(theme.links.text_style)}
 }}
 @media (max-width: 860px) {{
   .oodocs-document {{

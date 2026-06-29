@@ -643,7 +643,7 @@ class Hyperlink(Text):
     ) -> None:
         super().__init__(
             value="",
-            style=TextStyle(text_color="0563C1", underline=True).merged(style),
+            style=TextStyle().merged(style),
         )
         self.target = target
         self.label = coerce_inlines(label or (target,))

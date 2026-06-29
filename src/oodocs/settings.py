@@ -22,6 +22,27 @@ from oodocs.styles import Theme
 PageOrientation = Literal["portrait", "landscape"]
 
 
+def _normalize_optional_metadata_text(value: object, *, name: str) -> str | None:
+    if value is None:
+        return None
+    normalized = str(value).strip()
+    return normalized or None
+
+
+def _normalize_metadata_keywords(keywords: Sequence[object] | str | None) -> tuple[str, ...]:
+    if keywords is None:
+        return ()
+    if isinstance(keywords, str):
+        values: Iterable[object] = keywords.split(",")
+    else:
+        values = keywords
+    return tuple(
+        normalized
+        for value in values
+        if (normalized := str(value).strip())
+    )
+
+
 def _normalize_page_orientation(orientation: str | None) -> PageOrientation | None:
     if orientation is None:
         return None
@@ -31,6 +52,73 @@ def _normalize_page_orientation(orientation: str | None) -> PageOrientation | No
     if normalized == "portrait":
         return "portrait"
     return "landscape"
+
+
+@dataclass(slots=True, init=False)
+class DocumentMetadata:
+    """File and browser metadata written by renderers.
+
+    Args:
+        title: Optional metadata title. Defaults to the visible document title.
+        author: Optional file metadata author. Defaults to ``metadata_author``
+            or structured ``authors`` from ``DocumentSettings``.
+        subject: Optional subject written to DOCX/PDF metadata and HTML meta.
+        keywords: Optional keyword list or comma-separated keyword string.
+        description: Optional HTML description and DOCX comments text. Defaults
+            to ``DocumentSettings.summary`` when omitted.
+
+    Examples:
+        ```python
+        from oodocs import DocumentMetadata, DocumentSettings
+
+        settings = DocumentSettings(
+            metadata=DocumentMetadata(
+                title="Short PDF Title",
+                author="Documentation Team",
+                subject="Release evidence",
+                keywords=["release", "evidence"],
+            )
+        )
+        ```
+    """
+
+    title: str | None
+    author: str | None
+    subject: str | None
+    keywords: tuple[str, ...]
+    description: str | None
+
+    def __init__(
+        self,
+        *,
+        title: str | None = None,
+        author: str | None = None,
+        subject: str | None = None,
+        keywords: Sequence[object] | str | None = None,
+        description: str | None = None,
+    ) -> None:
+        self.title = _normalize_optional_metadata_text(title, name="title")
+        self.author = _normalize_optional_metadata_text(author, name="author")
+        self.subject = _normalize_optional_metadata_text(subject, name="subject")
+        self.keywords = _normalize_metadata_keywords(keywords)
+        self.description = _normalize_optional_metadata_text(
+            description,
+            name="description",
+        )
+
+    def keywords_text(self, separator: str = ", ") -> str | None:
+        """Return keywords as a metadata string.
+
+        Args:
+            separator: Separator used between keywords.
+
+        Returns:
+            Joined keywords, or ``None`` when no keywords are configured.
+        """
+
+        if not self.keywords:
+            return None
+        return separator.join(self.keywords)
 
 
 @dataclass(slots=True, init=False)
@@ -428,8 +516,11 @@ class DocumentSettings:
     """Document-level metadata and rendering configuration.
 
     Args:
+        metadata: Optional structured metadata for DOCX/PDF properties and
+            HTML head tags.
         metadata_author: Author string written to file metadata. Defaults to
-            the configured document authors when omitted.
+            the configured document authors when omitted. Prefer
+            ``DocumentMetadata(author=...)`` for new code.
         summary: Optional document summary or description.
         subtitle: Optional subtitle rendered with title matter.
         authors: Optional author metadata used for title matter.
@@ -482,6 +573,7 @@ class DocumentSettings:
     """
 
     metadata_author: str | None
+    metadata: DocumentMetadata
     summary: str | None
     subtitle: list[Text] | None
     authors: tuple[Author, ...]
@@ -497,6 +589,7 @@ class DocumentSettings:
     def __init__(
         self,
         *,
+        metadata: DocumentMetadata | None = None,
         metadata_author: str | None = None,
         summary: str | None = None,
         subtitle: InlineInput | None = None,
@@ -510,6 +603,9 @@ class DocumentSettings:
         page_items: Sequence[PositionedItem] | None = None,
         theme: Theme | None = None,
     ) -> None:
+        if metadata is not None and not isinstance(metadata, DocumentMetadata):
+            raise TypeError("metadata must be a DocumentMetadata instance")
+        self.metadata = metadata or DocumentMetadata()
         self.metadata_author = metadata_author
         self.summary = summary
         self.subtitle = coerce_inlines((subtitle,)) if subtitle is not None else None
@@ -699,8 +795,9 @@ class DocumentSettings:
         """Return the metadata author string used in file properties.
 
         Returns:
-            The explicit metadata author, a semicolon-separated author list, or
-            ``None`` when no author data is available.
+            The structured metadata author, explicit legacy metadata author, a
+            semicolon-separated author list, or ``None`` when no author data is
+            available.
 
         Examples:
             ```python
@@ -709,11 +806,61 @@ class DocumentSettings:
             ```
         """
 
+        if self.metadata.author is not None:
+            return self.metadata.author
         if self.metadata_author is not None:
             return self.metadata_author
         if not self.authors:
             return None
         return "; ".join(author.name for author in self.authors)
+
+    def resolved_metadata_title(self, document_title: object) -> str:
+        """Return the title written to renderer metadata.
+
+        Args:
+            document_title: Visible document title used as the fallback.
+
+        Returns:
+            Structured metadata title or the visible document title.
+        """
+
+        return self.metadata.title or str(document_title)
+
+    def resolved_metadata_subject(self) -> str | None:
+        """Return the subject written to renderer metadata.
+
+        Returns:
+            Structured metadata subject or legacy ``summary``.
+        """
+
+        return self.metadata.subject or self.summary
+
+    def resolved_metadata_description(self, document_title: object) -> str:
+        """Return the HTML description and descriptive metadata text.
+
+        Args:
+            document_title: Visible document title used as the final fallback.
+
+        Returns:
+            Description, summary, subject, or visible document title.
+        """
+
+        return (
+            self.metadata.description
+            or self.summary
+            or self.metadata.subject
+            or str(document_title)
+        )
+
+    def resolved_metadata_keywords(self) -> tuple[str, ...]:
+        """Return metadata keywords as a tuple."""
+
+        return self.metadata.keywords
+
+    def resolved_metadata_keywords_text(self, separator: str = ", ") -> str | None:
+        """Return metadata keywords as a joined string."""
+
+        return self.metadata.keywords_text(separator)
 
     def iter_author_title_lines(self) -> Iterable[tuple[AuthorTitleLine, bool]]:
         """Yield title matter lines with author-boundary markers.
@@ -831,6 +978,7 @@ __all__ = [
     "Affiliation",
     "Author",
     "AuthorLayout",
+    "DocumentMetadata",
     "DocumentSettings",
     "PageLayout",
     "PageMargins",

@@ -58,6 +58,7 @@ from oodocs import (
     CropBox,
     Definition,
     Document,
+    DocumentMetadata,
     DocumentSettings,
     DocumentValidationError,
     Divider,
@@ -74,6 +75,7 @@ from oodocs import (
     InlineChip,
     InlineChipStyle,
     Lemma,
+    LinkDefaults,
     ListOfAlgorithms,
     ListStyle,
     Math,
@@ -3804,6 +3806,7 @@ def test_reference_list_can_include_uncited_entries_and_sort(tmp_path: Path) -> 
 
 def test_document_accepts_document_settings() -> None:
     settings = DocumentSettings(
+        metadata=DocumentMetadata(keywords="settings, metadata"),
         metadata_author="OODocs",
         summary="Settings test",
         subtitle="Grouped metadata",
@@ -3822,6 +3825,9 @@ def test_document_accepts_document_settings() -> None:
     document = Document("Configured", Paragraph("Body"), settings=settings)
 
     assert document.settings.resolved_author() == "OODocs"
+    assert document.settings.resolved_metadata_title(document.title) == "Configured"
+    assert document.settings.resolved_metadata_subject() == "Settings test"
+    assert document.settings.resolved_metadata_keywords() == ("settings", "metadata")
     assert document.settings.summary == "Settings test"
     assert document.settings.subtitle is not None
     assert document.settings.subtitle[0].plain_text() == "Grouped metadata"
@@ -3832,6 +3838,98 @@ def test_document_accepts_document_settings() -> None:
     assert document.settings.unit == "cm"
     assert round(document.settings.get_text_width(), 2) == 15.92
     assert document.settings.theme.page_numbers.show_page_numbers is True
+
+
+def test_document_metadata_maps_to_renderer_outputs(tmp_path: Path) -> None:
+    settings = DocumentSettings(
+        metadata=DocumentMetadata(
+            title="Metadata Title",
+            author="Metadata Author",
+            subject="Metadata Subject",
+            keywords=["alpha", "beta"],
+            description="Metadata description.",
+        ),
+        summary="Legacy summary fallback",
+    )
+    document = Document("Visible Title", Paragraph("Body"), settings=settings)
+
+    docx_path = tmp_path / "metadata.docx"
+    pdf_path = tmp_path / "metadata.pdf"
+    html_path = tmp_path / "metadata.html"
+    document.save_docx(docx_path)
+    document.save_pdf(pdf_path)
+    document.save_html(html_path)
+
+    properties = WordDocument(docx_path).core_properties
+    assert properties.title == "Metadata Title"
+    assert properties.author == "Metadata Author"
+    assert properties.subject == "Metadata Subject"
+    assert properties.keywords == "alpha, beta"
+    assert properties.comments == "Metadata description."
+
+    pdf_metadata = PdfReader(str(pdf_path)).metadata
+    assert pdf_metadata.title == "Metadata Title"
+    assert pdf_metadata.author == "Metadata Author"
+    assert pdf_metadata.subject == "Metadata Subject"
+    assert pdf_metadata["/Keywords"] == "alpha, beta"
+
+    html_text = html_path.read_text(encoding="utf-8")
+    assert "<title>Metadata Title</title>" in html_text
+    assert 'name="description" content="Metadata description."' in html_text
+    assert 'name="author" content="Metadata Author"' in html_text
+    assert 'name="subject" content="Metadata Subject"' in html_text
+    assert 'name="keywords" content="alpha, beta"' in html_text
+
+
+def test_theme_link_style_controls_html_link_defaults(tmp_path: Path) -> None:
+    document = Document(
+        "Styled Links",
+        Paragraph("Open ", link("https://example.com", "Example")),
+        settings=DocumentSettings(
+            theme=Theme(
+                links=LinkDefaults(
+                    TextStyle(text_color="C00000", underline=False),
+                )
+            )
+        ),
+    )
+
+    html_path = tmp_path / "links.html"
+    document.save_html(html_path)
+    html_text = html_path.read_text(encoding="utf-8")
+
+    assert "color: #C00000;" in html_text
+    assert "text-decoration: none;" in html_text
+
+
+def test_validation_reports_broken_internal_hyperlinks() -> None:
+    document = Document(
+        "Broken Links",
+        Paragraph(
+            "See ",
+            inline_components.Hyperlink.internal_anchor("missing-anchor", "missing"),
+        ),
+    )
+
+    result = document.validate()
+
+    assert "broken-internal-link" in {issue.code for issue in result.errors}
+
+
+def test_validation_accepts_internal_hyperlinks_to_generated_anchors() -> None:
+    target = Section("Target", Paragraph("Details"), anchor="target")
+    document = Document(
+        "Valid Links",
+        target,
+        Paragraph(
+            "See ",
+            inline_components.Hyperlink.internal_anchor("target", "target"),
+        ),
+    )
+
+    result = document.validate()
+
+    assert "broken-internal-link" not in {issue.code for issue in result.errors}
 
 
 def test_print_units_include_common_document_units() -> None:

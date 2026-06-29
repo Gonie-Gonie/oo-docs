@@ -239,6 +239,13 @@
           "category": "settings",
           "kind": "class",
           "module": "oodocs.settings",
+          "name": "DocumentMetadata",
+          "qualname": "oodocs.settings.DocumentMetadata"
+        },
+        {
+          "category": "settings",
+          "kind": "class",
+          "module": "oodocs.settings",
           "name": "DocumentSettings",
           "qualname": "oodocs.settings.DocumentSettings"
         },
@@ -381,6 +388,13 @@
           "module": "oodocs.components.inline",
           "name": "LineBreak",
           "qualname": "oodocs.components.inline.LineBreak"
+        },
+        {
+          "category": "theme",
+          "kind": "class",
+          "module": "oodocs.styles.theme",
+          "name": "LinkDefaults",
+          "qualname": "oodocs.styles.theme.LinkDefaults"
         },
         {
           "category": "style",
@@ -1732,6 +1746,13 @@
           "module": "oodocs.styles.counter",
           "name": "HeadingNumbering",
           "qualname": "oodocs.styles.counter.HeadingNumbering"
+        },
+        {
+          "category": "theme",
+          "kind": "class",
+          "module": "oodocs.styles.theme",
+          "name": "LinkDefaults",
+          "qualname": "oodocs.styles.theme.LinkDefaults"
         },
         {
           "category": "style",

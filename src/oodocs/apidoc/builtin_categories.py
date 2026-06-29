@@ -12,6 +12,7 @@ OODocs_API_CATEGORIES: tuple[ApiCategory, ...] = (
         summary="Create documents, configure settings, validate, and render outputs.",
         include=(
             "oodocs.Document",
+            "oodocs.DocumentMetadata",
             "oodocs.DocumentSettings",
             "oodocs.OODocsError",
             "oodocs.OutputBundle",
@@ -187,6 +188,7 @@ OODocs_API_CATEGORIES: tuple[ApiCategory, ...] = (
             "oodocs.TypographyDefaults",
             "oodocs.CaptionDefaults",
             "oodocs.CitationDefaults",
+            "oodocs.LinkDefaults",
             "oodocs.GeneratedContentDefaults",
             "oodocs.PageNumberDefaults",
             "oodocs.TitleMatterDefaults",

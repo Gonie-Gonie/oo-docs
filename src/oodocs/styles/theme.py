@@ -220,6 +220,36 @@ class CitationDefaults:
 
 
 @dataclass(slots=True)
+class LinkDefaults:
+    """Grouped hyperlink styling defaults for ``Theme``.
+
+    Attributes:
+        text_style: Inline text style used for hyperlink labels unless a link
+            supplies its own style.
+
+    Examples:
+        ```python
+        from oodocs import Document, DocumentSettings, LinkDefaults, Paragraph, TextStyle, Theme, link
+
+        theme = Theme(links=LinkDefaults(TextStyle(text_color="C00000", underline=False)))
+        document = Document(
+            "Links",
+            Paragraph("Open ", link("https://example.com", "Example")),
+            settings=DocumentSettings(theme=theme),
+        )
+        ```
+    """
+
+    text_style: TextStyle = field(
+        default_factory=lambda: TextStyle(text_color="0563C1", underline=True)
+    )
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.text_style, TextStyle):
+            raise TypeError("LinkDefaults.text_style must be a TextStyle")
+
+
+@dataclass(slots=True)
 class GeneratedContentDefaults:
     """Grouped generated-content titles and layout defaults.
 
@@ -433,6 +463,7 @@ class Theme:
         typography: Optional typography defaults group.
         captions: Optional caption defaults group.
         citations: Optional citation defaults group.
+        links: Optional hyperlink defaults group.
         generated_content: Optional generated-content defaults group.
         page_numbers: Optional page-number defaults group.
         title_matter: Optional title-matter defaults group.
@@ -443,6 +474,7 @@ class Theme:
         typography: Resolved typography defaults group.
         captions: Resolved caption defaults group.
         citations: Resolved citation defaults group.
+        links: Resolved hyperlink defaults group.
         generated_content: Resolved generated-content defaults group.
         page_numbers: Resolved page-number defaults group.
         title_matter: Resolved title-matter defaults group.
@@ -487,13 +519,15 @@ class Theme:
 
     See Also:
         ``TypographyDefaults``, ``CaptionDefaults``, ``CitationDefaults``,
-        ``GeneratedContentDefaults``, ``PageNumberDefaults``, ``TitleMatterDefaults``,
-        and ``BlockDefaults`` for grouped configuration.
+        ``LinkDefaults``, ``GeneratedContentDefaults``, ``PageNumberDefaults``,
+        ``TitleMatterDefaults``, and ``BlockDefaults`` for grouped
+        configuration.
     """
 
     typography: TypographyDefaults
     captions: CaptionDefaults
     citations: CitationDefaults
+    links: LinkDefaults
     generated_content: GeneratedContentDefaults
     page_numbers: PageNumberDefaults
     title_matter: TitleMatterDefaults
@@ -506,6 +540,7 @@ class Theme:
         typography: TypographyDefaults | None = None,
         captions: CaptionDefaults | None = None,
         citations: CitationDefaults | None = None,
+        links: LinkDefaults | None = None,
         generated_content: GeneratedContentDefaults | None = None,
         page_numbers: PageNumberDefaults | None = None,
         title_matter: TitleMatterDefaults | None = None,
@@ -516,6 +551,7 @@ class Theme:
             "typography": (typography, TypographyDefaults),
             "captions": (captions, CaptionDefaults),
             "citations": (citations, CitationDefaults),
+            "links": (links, LinkDefaults),
             "generated_content": (generated_content, GeneratedContentDefaults),
             "page_numbers": (page_numbers, PageNumberDefaults),
             "title_matter": (title_matter, TitleMatterDefaults),
@@ -531,6 +567,7 @@ class Theme:
         self.typography = typography or TypographyDefaults()
         self.captions = captions or CaptionDefaults()
         self.citations = citations or CitationDefaults()
+        self.links = links or LinkDefaults()
         self.generated_content = generated_content or GeneratedContentDefaults()
         self.page_numbers = page_numbers or PageNumberDefaults()
         self.title_matter = title_matter or TitleMatterDefaults()
@@ -724,6 +761,18 @@ class Theme:
         """
 
         return paragraph_override or scope_style or self.blocks.run_in_title_style
+
+    def resolve_link_text_style(self, override: TextStyle | None = None) -> TextStyle:
+        """Return the effective text style for hyperlink labels.
+
+        Args:
+            override: Optional per-link style.
+
+        Returns:
+            Theme link style merged with the per-link override.
+        """
+
+        return self.links.text_style.merged(override)
 
     def resolve_caption_label(
         self,
@@ -984,6 +1033,7 @@ __all__ = [
     "GeneratedContentDefaults",
     "HeadingStyle",
     "HeadingNumbering",
+    "LinkDefaults",
     "ListStyle",
     "PageNumberDefaults",
     "ParagraphStyle",

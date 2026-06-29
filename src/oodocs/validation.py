@@ -690,6 +690,7 @@ class _ValidationContext:
         self.referenceable_paths: dict[int, str] = {}
         self.references: list[tuple[BlockReference, str]] = []
         self.citations: list[tuple[Citation, str]] = []
+        self.hyperlinks: list[tuple[Hyperlink, str]] = []
         self.generated_content: list[tuple[object, str]] = []
 
     def validate(self) -> list[ValidationIssue]:
@@ -715,6 +716,7 @@ class _ValidationContext:
         # reference and generated-page validation depends on stable numbering.
         render_index = self._build_render_index_if_possible()
         self._validate_references(render_index)
+        self._validate_hyperlinks(render_index)
         if render_index is not None:
             self._validate_generated_content(render_index)
         return self.issues
@@ -1007,6 +1009,7 @@ class _ValidationContext:
                 self.citations.append((fragment, fragment_path))
                 continue
             if isinstance(fragment, Hyperlink):
+                self.hyperlinks.append((fragment, fragment_path))
                 self._scan_inlines(fragment.label, f"{fragment_path}.label")
                 continue
             if isinstance(fragment, Comment):
@@ -1458,6 +1461,24 @@ class _ValidationContext:
     def _validate_references(self, render_index: RenderIndex | None) -> None:
         for reference, path in self.references:
             self._validate_reference(reference, path, render_index)
+
+    def _validate_hyperlinks(self, render_index: RenderIndex | None) -> None:
+        if render_index is None:
+            return
+        anchors = render_index.anchors()
+        for hyperlink, path in self.hyperlinks:
+            if not hyperlink.internal:
+                continue
+            target = hyperlink.target.lstrip("#")
+            if not target or target in anchors:
+                continue
+            self._add(
+                "error",
+                "broken-internal-link",
+                f"Internal hyperlink target {hyperlink.target!r} does not match a document anchor.",
+                path,
+                formats=("docx", "html", "pdf"),
+            )
 
     def _validate_reference(
         self,

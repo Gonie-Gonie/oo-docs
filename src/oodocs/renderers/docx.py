@@ -947,12 +947,19 @@ class DocxRenderer:
         settings = document.settings
         theme = settings.theme
         properties = word_document.core_properties
-        properties.title = document.title
+        properties.title = settings.resolved_metadata_title(document.title)
         author = settings.resolved_author()
         if author:
             properties.author = author
-        if settings.summary:
-            properties.subject = settings.summary
+        subject = settings.resolved_metadata_subject()
+        if subject:
+            properties.subject = subject
+        keywords = settings.resolved_metadata_keywords_text()
+        if keywords:
+            properties.keywords = keywords
+        description = settings.metadata.description
+        if description:
+            properties.comments = description
         self._enable_field_updates(word_document)
 
         normal_style = word_document.styles["Normal"]
@@ -1457,12 +1464,17 @@ class DocxRenderer:
                 paragraph.add_run().add_break()
                 continue
             if isinstance(fragment, Hyperlink):
+                link_style = (
+                    theme.resolve_link_text_style(fragment_style)
+                    if theme is not None
+                    else fragment_style
+                )
                 self._append_hyperlink_runs(
                     paragraph,
                     fragment.target,
                     fragment.label,
                     internal=fragment.internal,
-                    style=fragment_style,
+                    style=link_style,
                     default_size=default_size,
                 )
                 continue

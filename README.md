@@ -83,7 +83,7 @@ On Windows, the repository also includes a helper that creates `.venv` and insta
 The smallest useful document is just a `Document`, one visible heading, one paragraph, and one save call. Start here before splitting code into helper functions:
 
 ```python
-from oodocs import Chapter, Document, DocumentSettings, Paragraph, Section, bold
+from oodocs import Chapter, Document, DocumentMetadata, DocumentSettings, Paragraph, Section, bold
 
 report = Document(
     "Hello oodocs",
@@ -98,7 +98,7 @@ report = Document(
             ),
         ),
     ),
-    settings=DocumentSettings(metadata_author="OODocs"),
+    settings=DocumentSettings(metadata=DocumentMetadata(author="OODocs")),
 )
 
 report.save("artifacts/hello.docx")
@@ -220,7 +220,7 @@ The default behavior is intentionally conventional:
 - Use advanced `placement=...` hints on tables and figures only when needed. Supported values include `here`, `tbp`/`float`, `top`, `bottom`, and `page`.
 - Use `Box(...)` for callouts, evidence panels, and tcolorbox-like report sections that should stay editable in Word. Add `icon=...`, `title_position="side"`, or `shadow=True` when a panel needs callout-box treatment; shadows render in HTML and degrade to ordinary boxes in DOCX/PDF.
 - Use `Shape(...)`, `TextBox(...)`, and `ImageBox(...)` with `DocumentSettings(page_items=[...])` for page-positioned overlays that do not move the body text. Use `placement="inline"` when the same objects should sit in the text flow like Word's inline drawing mode.
-- Use `DocumentSettings(...)` for document-wide choices: authors, subtitle, page layout, units, page overlays, and theme defaults. Prefer `DocumentSettings(page_layout=PageLayout.landscape(PageSize.a4(), PageMargins.all(1.5, unit="cm")))` when page size, margins, and orientation should move together.
+- Use `DocumentSettings(...)` for document-wide choices: file/browser metadata, authors, subtitle, page layout, units, page overlays, and theme defaults. Prefer `DocumentSettings(metadata=DocumentMetadata(title=..., author=..., keywords=[...]))` when output metadata should differ from visible title matter, and prefer `DocumentSettings(page_layout=PageLayout.landscape(PageSize.a4(), PageMargins.all(1.5, unit="cm")))` when page size, margins, and orientation should move together.
 - Use `document.validate()` when you want a structured preflight check before rendering. The returned `ValidationResult` follows the `ResultLike` protocol, prints as a compact table, can be serialized with `to_dict()`, `to_json()`, or `save_json()`, and each issue records whether it affects Word, PDF, HTML, or all outputs. `save(...)`, `save_docx(...)`, `save_pdf(...)`, `save_html(...)`, and `save_all(...)` validate before rendering by default and stop before writing when errors are found.
 - Use `Document.from_markdown(...)` when a Markdown file should become a full document. Use `parse_markdown(...).blocks` when you want imported blocks that can be inserted, reordered, wrapped in sections, or combined with tables and figures.
 - Use `parse_markdown(...)` or `parse_markdown_file(...)` when you need an `ImportResult` with import issues, `ok`, `errors`, `warnings`, `to_table()`, and JSON sidecar helpers. Use `import_policy="fail-on-lossy"` when lossy Markdown features such as remote images should fail instead of being converted conservatively.
@@ -290,7 +290,7 @@ doc = Document(
 - inline chips through `InlineChip(...)`, `tag(...)`, `badge(...)`, `status(...)`, and `keyboard(...)`
 - bibliography support through `CitationSource`, `CitationLibrary`, direct citation objects, BibTeX import, and configurable inline/Reference styles such as APA
 - optional title matter such as subtitle, structured `Author(...)` metadata, `AuthorLayout(...)`, affiliations, and a cover page
-- inline hyperlinks and heading/caption anchors for cross-references
+- inline hyperlinks, theme-controlled link styling, heading/caption anchors, and validation for broken internal links
 - release evidence adapters for pyproject metadata, GitHub Actions workflows, JSON manifests, CSV/TSV evidence tables, checksums, and generated evidence reports
 - API object collection, docstring coverage checks, API snapshots, API diffs, and composable API-reference sections through `oodocs.apidoc`
 

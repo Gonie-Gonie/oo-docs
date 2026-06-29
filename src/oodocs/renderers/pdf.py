@@ -113,7 +113,7 @@ from oodocs.document import Document
 from oodocs.components.equations import SUBSCRIPT, SUPERSCRIPT, parse_latex_segments
 from oodocs.core import OODocsError, PathLike, length_to_inches
 from oodocs.layout.indexing import RenderIndex, build_render_index
-from oodocs.styles import BoxStyle, ParagraphStyle, TableStyle as OODocsTableStyle, Theme
+from oodocs.styles import BoxStyle, ParagraphStyle, TableStyle as OODocsTableStyle, TextStyle, Theme
 from oodocs.renderers.context import PdfRenderContext
 from oodocs.renderers.syntax import SyntaxToken, _syntax_line_tokens, syntax_tokens
 
@@ -541,6 +541,8 @@ class OODocsPdfTemplate(SimpleDocTemplate):
     def __init__(self, *args: object, **kwargs: object) -> None:
         super().__init__(*args, **kwargs)
         self.main_matter_start_page: int | None = None
+        self._outline_base_level: int | None = None
+        self._outline_last_level: int | None = None
 
     def beforeDocument(self) -> None:
         """Reset per-build page-number state before ReportLab starts.
@@ -550,6 +552,8 @@ class OODocsPdfTemplate(SimpleDocTemplate):
         """
 
         self.main_matter_start_page = None
+        self._outline_base_level = None
+        self._outline_last_level = None
 
     def build(
         self,
@@ -606,6 +610,13 @@ class OODocsPdfTemplate(SimpleDocTemplate):
         if toc_entry is not None:
             level, text, key = toc_entry
             self.notify("TOCEntry", (level, text, self._logical_page(self.page), key))
+            if key:
+                self.canv.addOutlineEntry(
+                    text,
+                    key,
+                    level=self._outline_level(level),
+                    closed=False,
+                )
         caption_list_entry = getattr(flowable, "_oodocs_caption_list_entry", None)
         if caption_list_entry is not None:
             kind, text, key = caption_list_entry
@@ -617,6 +628,16 @@ class OODocsPdfTemplate(SimpleDocTemplate):
         if physical_page < self.main_matter_start_page:
             return physical_page
         return physical_page - self.main_matter_start_page + 1
+
+    def _outline_level(self, heading_level: object) -> int:
+        raw_level = max(int(heading_level) - 1, 0)
+        if self._outline_base_level is None or raw_level < self._outline_base_level:
+            self._outline_base_level = raw_level
+        normalized = raw_level - self._outline_base_level
+        if self._outline_last_level is not None:
+            normalized = min(normalized, self._outline_last_level + 1)
+        self._outline_last_level = normalized
+        return normalized
 
 
 class PdfPagesPlaceholder(Flowable):
@@ -680,8 +701,10 @@ class PdfRenderer:
                 settings.page_width_in_inches() * inch,
                 settings.page_height_in_inches() * inch,
             ),
-            title=document.title,
+            title=settings.resolved_metadata_title(document.title),
             author=settings.resolved_author(),
+            subject=settings.resolved_metadata_subject(),
+            keywords=settings.resolved_metadata_keywords_text(),
             leftMargin=settings.page_margins.left_in_inches(settings.unit) * inch,
             rightMargin=settings.page_margins.right_in_inches(settings.unit) * inch,
             topMargin=settings.page_margins.top_in_inches(settings.unit) * inch,
@@ -3221,6 +3244,7 @@ class PdfRenderer:
         base_size: float | None = None,
         base_bold: bool = False,
         base_italic: bool = False,
+        default_style: TextStyle | None = None,
     ) -> str:
         parts = [
             self._fragment_markup(
@@ -3231,6 +3255,7 @@ class PdfRenderer:
                 base_size=base_size,
                 base_bold=base_bold,
                 base_italic=base_italic,
+                default_style=default_style,
             )
             for fragment in fragments
         ]
@@ -3251,6 +3276,7 @@ class PdfRenderer:
         base_size: float | None,
         base_bold: bool,
         base_italic: bool,
+        default_style: TextStyle | None = None,
     ) -> str:
         if isinstance(fragment, ImageBox):
             source = fragment.image_source
@@ -3271,6 +3297,7 @@ class PdfRenderer:
                 base_size=fragment.font_size or base_size,
                 base_bold=base_bold,
                 base_italic=base_italic,
+                default_style=default_style,
             )
         if isinstance(fragment, Shape):
             return ""
@@ -3292,6 +3319,7 @@ class PdfRenderer:
                     base_size=base_size,
                     base_bold=base_bold,
                     base_italic=base_italic,
+                    default_style=theme.resolve_link_text_style(fragment.style),
                 ),
                 internal=fragment.internal,
             )
@@ -3315,6 +3343,7 @@ class PdfRenderer:
                     base_size=base_size,
                     base_bold=base_bold,
                     base_italic=base_italic,
+                    default_style=default_style,
                 )
             )
             return self._link_markup(
@@ -3381,6 +3410,7 @@ class PdfRenderer:
             base_size=base_size,
             base_bold=base_bold,
             base_italic=base_italic,
+            default_style=default_style,
         )
 
     def _inline_chip_markup(
@@ -3420,40 +3450,42 @@ class PdfRenderer:
         base_size: float | None,
         base_bold: bool,
         base_italic: bool,
+        default_style: TextStyle | None = None,
     ) -> str:
-        rendered_text = text_value.upper() if fragment.style.uppercase else text_value
+        style = default_style.merged(fragment.style) if default_style is not None else fragment.style
+        rendered_text = text_value.upper() if style.uppercase else text_value
         text = escape(rendered_text).replace("\n", "<br/>")
-        bold = base_bold if fragment.style.bold is None else fragment.style.bold
-        italic = base_italic if fragment.style.italic is None else fragment.style.italic
+        bold = base_bold if style.bold is None else style.bold
+        italic = base_italic if style.italic is None else style.italic
         font_name = (
             base_font_name
             if (
-                fragment.style.font_name is None
-                and fragment.style.bold is None
-                and fragment.style.italic is None
+                style.font_name is None
+                and style.bold is None
+                and style.italic is None
                 and base_font_name is not None
             )
-            else self._resolve_font(fragment.style.font_name or theme.resolve_body_font(), bold, italic)
+            else self._resolve_font(style.font_name or theme.resolve_body_font(), bold, italic)
         )
-        size = fragment.style.font_size or base_size or theme.typography.body_font_size
+        size = style.font_size or base_size or theme.typography.body_font_size
 
         font_attrs: list[str] = []
         if base_font_name is None or font_name != base_font_name:
             font_attrs.append(f'face="{font_name}"')
         if base_size is None or size != base_size:
             font_attrs.append(f'size="{size}"')
-        if fragment.style.text_color is not None:
-            font_attrs.append(f'color="#{fragment.style.text_color}"')
-        if fragment.style.highlight_color is not None:
-            font_attrs.append(f'backColor="#{fragment.style.highlight_color}"')
+        if style.text_color is not None:
+            font_attrs.append(f'color="#{style.text_color}"')
+        if style.highlight_color is not None:
+            font_attrs.append(f'backColor="#{style.highlight_color}"')
         wrapped = text if not font_attrs else f"<font {' '.join(font_attrs)}>{text}</font>"
-        if fragment.style.underline:
+        if style.underline:
             wrapped = f"<u>{wrapped}</u>"
-        if fragment.style.strikethrough:
+        if style.strikethrough:
             wrapped = f"<strike>{wrapped}</strike>"
-        if fragment.style.superscript:
+        if style.superscript:
             wrapped = f"<super>{wrapped}</super>"
-        if fragment.style.subscript:
+        if style.subscript:
             wrapped = f"<sub>{wrapped}</sub>"
         return wrapped
 

@@ -117,6 +117,7 @@ from oodocs.components.inline import (
     text_color,
 )
 from oodocs.settings import (
+    DocumentMetadata,
     DocumentSettings,
     PageLayout,
     PageMargins,
@@ -133,6 +134,7 @@ from oodocs.styles import (
     HeadingStyle,
     HeadingNumbering,
     InlineChipStyle,
+    LinkDefaults,
     ListStyle,
     PageNumberDefaults,
     Padding,
@@ -218,6 +220,7 @@ __all__ = [
     "CropBox",
     "Definition",
     "Document",
+    "DocumentMetadata",
     "DocumentSettings",
     "OODocsError",
     "Divider",
@@ -239,6 +242,7 @@ __all__ = [
     "InlineChip",
     "InlineChipStyle",
     "LineBreak",
+    "LinkDefaults",
     "ListStyle",
     "Lemma",
     "Math",

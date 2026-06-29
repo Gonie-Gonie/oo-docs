@@ -708,6 +708,32 @@ class RenderIndex:
 
         return self.block_anchors.get(id(target))
 
+    def anchors(self) -> set[str]:
+        """Return all internal anchor names generated for this document.
+
+        Returns:
+            Heading, block, caption, subcaption, citation, and countable anchors.
+        """
+
+        anchors = set(self.heading_anchors.values()) | set(self.block_anchors.values())
+        anchors.update(entry.anchor for entry in self.tables)
+        anchors.update(entry.anchor for entry in self.figures)
+        anchors.update(entry.anchor for entry in self.citations)
+        anchors.update(entry.anchor for entry in self.countables)
+        for entry in self.tables:
+            if isinstance(entry.block, SubTableGroup):
+                for subtable in entry.block.subtables:
+                    anchor = self.table_anchor(subtable)
+                    if anchor is not None:
+                        anchors.add(anchor)
+        for entry in self.figures:
+            if isinstance(entry.block, SubFigureGroup):
+                for subfigure in entry.block.subfigures:
+                    anchor = self.figure_anchor(subfigure)
+                    if anchor is not None:
+                        anchors.add(anchor)
+        return anchors
+
 
 def _reference_entry_sort_key(
     entry: CitationReferenceEntry,
