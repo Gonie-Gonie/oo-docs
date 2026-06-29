@@ -45,6 +45,9 @@ This file is the shared memory for ongoing work on this repository. Keep it read
 - Example scripts should read like examples, not defensive libraries. Prefer a direct, serialized workflow that shows ordinary Python values becoming document objects; avoid extra wrappers, optional branches, and defensive checks unless they teach something important or the example genuinely needs them.
 - Release versioning rule from 1.0.0 onward: bump the major version for public
   breaking changes, minor for backward-compatible features, and patch for fixes.
+- Treat release note files for tags from `v1.1.0` onward as immutable. After a
+  `vX.Y.Z` tag exists, do not edit `release-notes/vX.Y.Z.md`; document later
+  workflow or packaging changes in the next unreleased/release note instead.
 
 ## Local Environment Notes
 
