@@ -1417,6 +1417,69 @@ class Table(Block):
         ]
 
     @classmethod
+    def grouped_headers(
+        cls,
+        *,
+        groups: Sequence[tuple[TableCellInput, int] | TableCell],
+        columns: Sequence[TableCellInput],
+        rows: Sequence[Sequence[TableCellInput]],
+        column_specs: Sequence[ColumnSpecInput] | None = None,
+        **table_kwargs: object,
+    ) -> Table:
+        """Create a table with a spanning grouped header row.
+
+        Args:
+            groups: Top-level header groups as ``(label, colspan)`` pairs or
+                explicit ``TableCell`` objects.
+            columns: Leaf column header cells under the groups.
+            rows: Body rows.
+            column_specs: Optional layout specifications forwarded to
+                ``Table(columns=...)``.
+            **table_kwargs: Additional arguments forwarded to ``Table``.
+
+        Returns:
+            Table with two header rows: grouped headers and leaf columns.
+
+        Raises:
+            ValueError: If group spans do not match the rendered column count.
+
+        Examples:
+            ```python
+            from oodocs import Table
+
+            table = Table.grouped_headers(
+                groups=[("Geometry", 2), ("Performance", 2)],
+                columns=["Width", "Height", "Latency", "Status"],
+                rows=[["8.5 in", "11 in", "14 ms", "ok"]],
+            )
+            ```
+        """
+
+        group_row: list[TableCell] = []
+        for group in groups:
+            if isinstance(group, TableCell):
+                group_row.append(group)
+                continue
+            label, colspan = group
+            group_row.append(
+                TableCell(
+                    label,
+                    colspan=colspan,
+                    bold=True,
+                    text_alignment="center",
+                )
+            )
+        column_row = [coerce_table_cell(column) for column in columns]
+        group_column_count = sum(cell.colspan for cell in group_row)
+        leaf_column_count = sum(cell.colspan for cell in column_row)
+        if group_column_count != leaf_column_count:
+            raise ValueError("group spans must match the number of rendered columns")
+        if column_specs is not None:
+            table_kwargs = dict(table_kwargs)
+            table_kwargs["columns"] = column_specs
+        return cls([group_row, column_row], rows, **table_kwargs)
+
+    @classmethod
     def from_dataframe(
         cls,
         dataframe: object,

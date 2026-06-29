@@ -132,6 +132,9 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert any("Table(split=True)" in text for text in paragraph_texts)
     assert any("continuation_label" in text for text in paragraph_texts)
     assert any("display: table-header-group" in text for text in paragraph_texts)
+    assert any("CompactTable.grouped_headers" in text for text in paragraph_texts)
+    assert any("TableCell(rowspan=...)" in text for text in paragraph_texts)
+    assert any("rowspan=2" in text for text in paragraph_texts)
     assert any('style="booktabs"' in text for text in paragraph_texts)
     assert any("ColumnSpec(key=" in text for text in paragraph_texts)
     assert any("full_matrix.save_csv" in text for text in paragraph_texts)
@@ -235,6 +238,9 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "Table(split=True)" in pdf_text
     assert "continuation_label" in pdf_text
     assert "display: table-header-group" in pdf_text
+    assert "CompactTable.grouped_headers" in pdf_text
+    assert "TableCell(rowspan=...)" in pdf_text
+    assert "rowspan=2" in pdf_text
     assert 'style="booktabs"' in pdf_text
     assert "ColumnSpec(key=" in pdf_text
     assert "full_matrix.save_csv" in pdf_text
@@ -323,6 +329,9 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "Table(split=True)" in normalized_html_text
     assert "continuation_label" in normalized_html_text
     assert "display: table-header-group" in normalized_html_text
+    assert "CompactTable" in normalized_html_text
+    assert "grouped_headers" in normalized_html_text
+    assert "rowspan" in normalized_html_text
     assert 'style="booktabs"' in normalized_html_text
     assert "ColumnSpec" in normalized_html_text
     assert "save_csv" in normalized_html_text

@@ -624,6 +624,20 @@ Table(
 )
 """
 
+TABLE_SPAN_SNIPPET = """from oodocs import TableCell
+from oodocs.presets.components import CompactTable
+
+CompactTable.grouped_headers(
+    groups=[("Geometry", 2), ("Performance", 2)],
+    columns=["Page", "Orientation", "Latency", "Status"],
+    rows=[
+        [TableCell("Letter", rowspan=2), "portrait", "14 ms", "ok"],
+        ["landscape", "12 ms", "ok"],
+    ],
+    caption="Grouped renderer matrix.",
+)
+"""
+
 BOOKTABS_TABLE_SNIPPET = """from oodocs import Table
 
 Table(
@@ -817,6 +831,7 @@ def build_usage_guide_document() -> Document:
             ["\\includegraphics", "Figure(path_or_matplotlib_figure, caption=...)", "Static images and Python-generated figures use the same captioning and referencing model."],
             ["\\vspace{...}, \\hrule", "VerticalSpace(...), Divider()", "Vertical spacing and separators remain explicit document blocks, including a Notion-like divider for lightweight visual breaks."],
             ["tabular or booktabs", "Table(...), Table.from_dataframe(...), style=\"booktabs\"", "Tables can be created directly from Python data instead of being copied into markup."],
+            ["multirow or multicolumn", "TableCell(rowspan=...), Table.grouped_headers(...)", "Merged cells remain explicit table data, and grouped headers can be generated without hand-building every span."],
             ["\\label and \\ref", "Call reference(figure_obj) or figure_obj.reference() inside Paragraph(...)", "References follow the indexed document order without hand-maintained labels."],
             ["tcolorbox", "Box(..., background_color=..., padding=...)", "Report panels remain editable in Word while keeping a similar grouped visual shape in PDF and HTML."],
             ["BibTeX plus \\cite", "CitationLibrary and CitationSource.cite(...)", "Citations are authored inline, and only cited sources appear on ReferenceList()."],
@@ -959,7 +974,7 @@ def build_usage_guide_document() -> Document:
             ["CalloutBox", "A styled Box using named styles such as info, note, success, or warning.", "style, title, and normal Box options when using a concrete BoxStyle."],
             ["KeyValueTable", "A compact two-column Table for metadata and option lists.", "headers, caption, style, column widths."],
             ["Nomenclature", "A heavy-outlined Box containing a symbol, meaning, and optional unit table with no internal rules.", "double_column, headers, padding, border, title."],
-            ["CompactTable", "A table preset using the compact named table style.", "Any normal Table kwarg, with style objects still available for reusable designs."],
+            ["CompactTable", "A table preset using the compact named table style.", "Any normal Table kwarg, including grouped_headers(...) for spanning preset tables."],
         ],
         caption="Component presets wrap ordinary blocks and still accept the same block/style options.",
         column_widths=[1.5, 3.0, 2.6],
@@ -1396,6 +1411,18 @@ def build_usage_guide_document() -> Document:
                     "."
                 ),
                 CodeBlock(TABLE_ALIGNMENT_SNIPPET, language="python"),
+                Paragraph(
+                    "Merged cells use explicit ",
+                    inline_code("TableCell(rowspan=...)"),
+                    " and ",
+                    inline_code("TableCell(colspan=...)"),
+                    " values. For common grouped-header layouts, ",
+                    inline_code("Table.grouped_headers(...)"),
+                    " builds the top spanning row while presets such as ",
+                    inline_code("CompactTable"),
+                    " keep their normal styling."
+                ),
+                CodeBlock(TABLE_SPAN_SNIPPET, language="python"),
                 Paragraph(
                     "For publication-style tables comparable to LaTeX ",
                     inline_code("booktabs"),

@@ -77,6 +77,12 @@ class CompactTable(Table):
 
         table = CompactTable(["Metric", "Value"], [["Latency", "42 ms"]])
         document = Document("Metrics", table)
+
+        grouped = CompactTable.grouped_headers(
+            groups=[("Geometry", 2), ("Performance", 2)],
+            columns=["Width", "Height", "Latency", "Status"],
+            rows=[["8.5 in", "11 in", "14 ms", "ok"]],
+        )
         ```
     """
 

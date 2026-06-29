@@ -367,6 +367,7 @@ def test_table_public_api_hides_renderer_helper_methods() -> None:
         "from_dataframe",
         "from_records",
         "from_tsv",
+        "grouped_headers",
         "excerpt",
         "save_csv",
     }

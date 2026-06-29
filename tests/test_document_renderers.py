@@ -1188,6 +1188,49 @@ def test_table_accepts_dataframe_like_inputs_and_spans() -> None:
     assert merged_header._layout().row_count == 3
 
 
+def test_table_grouped_headers_helper_renders_spans(
+    tmp_path: Path,
+) -> None:
+    table = Table.grouped_headers(
+        groups=[("Geometry", 2), ("Performance", 2)],
+        columns=["Page", "Orientation", "Latency", "Status"],
+        rows=[
+            [TableCell("Letter", rowspan=2), "portrait", "14 ms", "ok"],
+            ["landscape", "12 ms", "ok"],
+        ],
+        caption="Grouped renderer matrix.",
+    )
+    document = Document("Grouped Headers", table)
+
+    assert table.header_rows[0][0].colspan == 2
+    assert table.header_rows[0][1].colspan == 2
+    assert table.rows[0][0].rowspan == 2
+
+    with pytest.raises(ValueError, match="group spans"):
+        Table.grouped_headers(
+            groups=[("Only one", 1)],
+            columns=["A", "B"],
+            rows=[["a", "b"]],
+        )
+
+    docx_path = tmp_path / "grouped-headers.docx"
+    pdf_path = tmp_path / "grouped-headers.pdf"
+    html_path = tmp_path / "grouped-headers.html"
+    document.save_docx(docx_path)
+    document.save_pdf(pdf_path)
+    document.save_html(html_path)
+
+    docx_xml = _docx_document_xml(docx_path)
+    pdf_text = "\n".join(page.extract_text() or "" for page in PdfReader(pdf_path).pages)
+    html_text = html_path.read_text(encoding="utf-8")
+
+    assert "Geometry" in docx_xml
+    assert "Grouped renderer matrix." in pdf_text
+    assert "landscape" in pdf_text
+    assert 'colspan="2"' in html_text
+    assert 'rowspan="2"' in html_text
+
+
 def test_table_cell_alignment_options_are_validated() -> None:
     cell = TableCell(
         "42",
