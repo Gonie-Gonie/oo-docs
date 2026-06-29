@@ -27,7 +27,7 @@ Programmatic entry points:
 - `journal_article_template.build_minimal_document()` returns a minimal article
   where `acknowledgements=None` and `data_availability=None` omit those headings.
 - The rendered journal template includes a template catalog covering
-  `JournalArticleTemplate`, `TechnicalReportTemplate`,
+  `CoverPagePreset`, `JournalArticleTemplate`, `TechnicalReportTemplate`,
   `SoftwareManualTemplate`, and `BookTemplate`, plus a
   `JournalArticleTemplate.build(...)` input schema, and a comparison with the
   direct assembly workflow in `journal_paper_example`.

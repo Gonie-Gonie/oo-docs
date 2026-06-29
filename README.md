@@ -382,7 +382,7 @@ What they show:
 - `release_notes_digest` collects `release-notes/*.md`, sorts semantic versions from filenames, imports the Markdown bodies, and builds a release-note document with a version-management table and runbook
 - `api_objects_example` collects the OODocs API, renders a help-book API reference as DOCX/PDF/HTML, inserts selected API object sections and summary tables into a separate composable document, and writes API object tree JSON plus coverage JSON/CSV sidecars for release evidence
 - `style_cleanup_smoke` exercises named paragraph, table, box, and chip styles through a document-level `StyleSheet`, including JSON export/import and category-mismatch validation
-- `template_presets` renders ready-to-customize article, technical report, software manual, and book template presets built from ordinary OODocs blocks
+- `template_presets` renders ready-to-customize cover page, article, technical report, software manual, and book template presets built from ordinary OODocs blocks
 - `project_metadata_report` turns `pyproject.toml` and `.github/workflows/release.yml` into a project metadata report plus JSON sidecar
 - `cli_manual_example` turns a runnable `argparse` parser into a command manual with usage, options, subcommands, exit codes, and examples
 - `config_reference_example` turns TOML config and JSON schema inputs into a field reference with required fields, defaults, examples, and environment variables

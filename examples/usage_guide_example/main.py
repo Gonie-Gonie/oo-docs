@@ -873,8 +873,8 @@ nomenclature = Nomenclature(
 )
 """
 
-TEMPLATE_PRESETS_SNIPPET = """from oodocs import Author, Paragraph
-from oodocs.presets.templates import JournalArticleTemplate, ManuscriptSection, TechnicalReportTemplate
+TEMPLATE_PRESETS_SNIPPET = """from oodocs import Author, Document, Paragraph
+from oodocs.presets.templates import CoverPagePreset, JournalArticleTemplate, ManuscriptSection, TechnicalReportTemplate
 
 document = JournalArticleTemplate().build(
     "Readable manuscript generation",
@@ -895,6 +895,8 @@ report = TechnicalReportTemplate().build(
     sections=[("Findings", [Paragraph("The evidence package is complete.")])],
 )
 
+cover_settings = CoverPagePreset.eplus_simple().settings(subtitle="Release evidence")
+cover_document = Document("Validation Report", Paragraph("Body."), settings=cover_settings)
 document.save_all("artifacts/manuscript", stem="article-draft")
 """
 
@@ -1156,6 +1158,7 @@ def build_usage_guide_document() -> Document:
         headers=["Template", "Accepted structure", "Best first use"],
         rows=[
             ["JournalArticleTemplate", "title, authors, abstract, keywords, body sections, optional declarations, citations.", "A content-first manuscript builder where the caller fills article fields and the preset owns routine article assembly."],
+            ["CoverPagePreset", "eplus_simple().settings(subtitle, authors, metadata).", "A cover-page preset that creates DocumentSettings with cover-scoped decorations."],
             ["TechnicalReportTemplate", "executive_summary, front_matter, sections, appendices, back_matter.", "A report builder for validation reports, engineering memos, and audit evidence."],
             ["SoftwareManualTemplate", "overview, front_matter, sections, appendices, back_matter.", "A manual builder for user-facing procedures and command-oriented guides."],
             ["BookTemplate", "front_matter, parts, chapters, appendices, back_matter.", "A book-like builder for long-form documents with chapters, parts, and appendices."],
@@ -2201,7 +2204,11 @@ def build_usage_guide_document() -> Document:
                         inline_code("ManuscriptSection"),
                         " descriptors, or simple ",
                         inline_code("(title, children)"),
-                        " tuples for the body, with explicit front/main/back matter arguments on the report, manual, and book templates."
+                        " tuples for the body, with explicit front/main/back matter arguments on the report, manual, and book templates. ",
+                        inline_code("CoverPagePreset"),
+                        " returns reusable ",
+                        inline_code("DocumentSettings"),
+                        " for EPlusSimple-style title pages with cover-scoped decorations."
                     ),
                     template_presets_table,
                     CodeBlock(TEMPLATE_PRESETS_SNIPPET, language="python"),

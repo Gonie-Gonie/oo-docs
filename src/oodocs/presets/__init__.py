@@ -13,6 +13,7 @@ from oodocs.presets.components import (
 )
 from oodocs.presets.templates import (
     BookTemplate,
+    CoverPagePreset,
     JournalArticleTemplate,
     ManuscriptSection,
     SoftwareManualTemplate,
@@ -23,6 +24,7 @@ __all__ = [
     "BookTemplate",
     "CalloutBox",
     "CompactTable",
+    "CoverPagePreset",
     "info_box",
     "JournalArticleTemplate",
     "KeyValueTable",

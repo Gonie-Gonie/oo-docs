@@ -142,6 +142,12 @@ TEMPLATE_CATALOG_TABLE = Table(
             "Article-like reports with conventional title matter and declarations.",
         ],
         [
+            "CoverPagePreset",
+            "settings(subtitle, authors, metadata)",
+            "cover-page settings",
+            "EPlusSimple-style cover pages with cover-scoped decorations.",
+        ],
+        [
             "SoftwareManualTemplate",
             "title, overview, sections",
             "software manual",
@@ -160,7 +166,7 @@ TEMPLATE_CATALOG_TABLE = Table(
             "Long-form documents with chapters, parts, and appendices.",
         ],
     ],
-    caption="Template preset catalog for article, report, manual, and book-shaped documents.",
+    caption="Template preset catalog for cover pages, articles, reports, manuals, and books.",
     header_background_color="#E8F2EC",
     alternate_row_background_color="#FAFCFA",
     cell_padding=Padding.all(4),

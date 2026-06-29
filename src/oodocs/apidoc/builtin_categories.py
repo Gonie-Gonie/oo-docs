@@ -272,6 +272,7 @@ OODocs_API_CATEGORIES: tuple[ApiCategory, ...] = (
             "oodocs.presets.CalloutBox",
             "oodocs.presets.KeyValueTable",
             "oodocs.presets.Nomenclature",
+            "oodocs.presets.CoverPagePreset",
             "oodocs.presets.TechnicalReportTemplate",
             "oodocs.presets.SoftwareManualTemplate",
             "oodocs.presets.BookTemplate",

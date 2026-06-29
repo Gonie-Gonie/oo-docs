@@ -10,18 +10,21 @@ from oodocs.components.blocks import Appendix, Chapter, Paragraph, Part, Section
 from oodocs.components.generated import ReferenceList, TableOfContents
 from oodocs.components.inline import InlineInput, Text, bold
 from oodocs.components.people import AuthorInput, AuthorLayout
+from oodocs.components.positioning import PositionedItem, Shape, TextBox
 from oodocs.components.references import CitationLibrary, CitationSource
+from oodocs.core import normalize_color
 from oodocs.document import Document
 from oodocs.styles import (
     BlockDefaults,
     CaptionDefaults,
     GeneratedContentDefaults,
     PageNumberDefaults,
+    StrokeStyle,
     TitleMatterDefaults,
     TypographyDefaults,
     Theme,
 )
-from oodocs.settings import DocumentSettings, PageMargins, PageSize
+from oodocs.settings import DocumentMetadata, DocumentSettings, PageLayout, PageMargins, PageSize
 
 
 SectionContentInput = str | Block | Sequence[BlockInput]
@@ -383,6 +386,42 @@ def _default_book_theme() -> Theme:
     )
 
 
+def _default_cover_theme() -> Theme:
+    """Return title-matter defaults for a simple cover page preset."""
+
+    return Theme(
+        typography=TypographyDefaults(
+            body_font_name="Arial",
+            body_font_size=10.5,
+            title_font_size=22.0,
+            heading_sizes=(15.0, 13.0, 11.5, 11.0),
+            caption_font_size=9.5,
+        ),
+        page_numbers=PageNumberDefaults(
+            show_page_numbers=True,
+            page_number_alignment="right",
+        ),
+        title_matter=TitleMatterDefaults(
+            title_text_alignment="left",
+            subtitle_text_alignment="left",
+            author_text_alignment="left",
+            affiliation_text_alignment="left",
+            author_detail_text_alignment="left",
+        ),
+        blocks=BlockDefaults(
+            page_background_color="F8FAFC",
+            paragraph_text_alignment="justify",
+        ),
+    )
+
+
+def _default_cover_page_layout() -> PageLayout:
+    return PageLayout(
+        PageSize.a4(),
+        PageMargins.symmetric(vertical=1.0, horizontal=1.15, unit="in"),
+    )
+
+
 def _template_content_blocks(content: MatterInput | None) -> list[Block]:
     if content is None:
         return []
@@ -446,6 +485,181 @@ def _coerce_part(part: BookPartInput) -> Part:
 
 def _coerce_parts(parts: Sequence[BookPartInput]) -> list[Part]:
     return [_coerce_part(part) for part in parts]
+
+
+@dataclass(slots=True)
+class CoverPagePreset:
+    """Reusable cover-page settings for report-style documents.
+
+    Attributes:
+        name: Preset display name.
+        accent_color: Accent color used by cover-only page decorations.
+        muted_color: Secondary decoration color.
+        footer_label: Optional small footer label on the cover page.
+        page_layout: Page geometry used by generated settings.
+        theme: Theme used by generated settings.
+        author_layout: Structured author layout used by generated settings.
+
+    Examples:
+        ```python
+        from oodocs import Author, Document, Paragraph
+        from oodocs.presets import CoverPagePreset
+
+        cover = CoverPagePreset.eplus_simple(footer_label="Internal review")
+        document = Document(
+            "Validation Report",
+            Paragraph("Findings."),
+            settings=cover.settings(
+                subtitle="Release gate evidence",
+                authors=[Author("QA Team")],
+            ),
+        )
+        ```
+    """
+
+    name: str = "EPlusSimple cover"
+    accent_color: str = "2563EB"
+    muted_color: str = "64748B"
+    footer_label: str | None = "EPlusSimple"
+    page_layout: PageLayout = field(default_factory=_default_cover_page_layout)
+    theme: Theme = field(default_factory=_default_cover_theme)
+    author_layout: AuthorLayout = field(
+        default_factory=lambda: AuthorLayout(
+            mode="stacked",
+            affiliation_label_format="{label}",
+        )
+    )
+
+    def __post_init__(self) -> None:
+        self.accent_color = normalize_color(self.accent_color) or "2563EB"
+        self.muted_color = normalize_color(self.muted_color) or "64748B"
+        if not isinstance(self.page_layout, PageLayout):
+            raise TypeError("CoverPagePreset.page_layout must be a PageLayout")
+        if not isinstance(self.theme, Theme):
+            raise TypeError("CoverPagePreset.theme must be a Theme")
+        if not isinstance(self.author_layout, AuthorLayout):
+            raise TypeError("CoverPagePreset.author_layout must be an AuthorLayout")
+
+    @classmethod
+    def eplus_simple(
+        cls,
+        *,
+        accent_color: str = "2563EB",
+        muted_color: str = "64748B",
+        footer_label: str | None = "EPlusSimple",
+        page_layout: PageLayout | None = None,
+        theme: Theme | None = None,
+    ) -> CoverPagePreset:
+        """Return the EPlusSimple-style cover preset.
+
+        Args:
+            accent_color: Cover accent color.
+            muted_color: Secondary cover decoration color.
+            footer_label: Optional footer label rendered only on the cover page.
+            page_layout: Optional page geometry override.
+            theme: Optional theme override.
+
+        Returns:
+            Configured cover page preset.
+        """
+
+        return cls(
+            accent_color=accent_color,
+            muted_color=muted_color,
+            footer_label=footer_label,
+            page_layout=page_layout or _default_cover_page_layout(),
+            theme=theme or _default_cover_theme(),
+        )
+
+    def page_items(self) -> tuple[PositionedItem, ...]:
+        """Return cover-scoped page decorations for this preset.
+
+        Returns:
+            Page-positioned items scoped to the cover page.
+        """
+
+        page_width = self.page_layout.page_width_in_inches("in")
+        page_height = self.page_layout.page_height_in_inches("in")
+        content_width = max(page_width - 1.45, 0.5)
+        accent_height = max(page_height - 1.1, 0.5)
+        items: list[PositionedItem] = [
+            Shape.rect(
+                x=0.55,
+                y=0.55,
+                width=0.09,
+                height=accent_height,
+                fill_color=self.accent_color,
+                stroke=StrokeStyle.none(),
+                unit="in",
+                z_index=0,
+                scope="cover",
+            ),
+            Shape.rect(
+                x=0.72,
+                y=0.55,
+                width=content_width,
+                height=0.025,
+                fill_color=self.muted_color,
+                stroke=StrokeStyle.none(),
+                unit="in",
+                z_index=0,
+                scope="cover",
+            ),
+        ]
+        if self.footer_label:
+            items.append(
+                TextBox(
+                    self.footer_label,
+                    x=0.72,
+                    y=max(page_height - 0.85, 0.1),
+                    width=content_width,
+                    height=0.3,
+                    font_size=8.0,
+                    unit="in",
+                    z_index=1,
+                    scope="cover",
+                )
+            )
+        return tuple(items)
+
+    def settings(
+        self,
+        *,
+        metadata: DocumentMetadata | None = None,
+        metadata_author: str | None = None,
+        summary: str | None = None,
+        subtitle: InlineInput | None = None,
+        authors: Sequence[AuthorInput] | None = None,
+        page_items: Sequence[PositionedItem] | None = None,
+        theme: Theme | None = None,
+    ) -> DocumentSettings:
+        """Return ``DocumentSettings`` configured for this cover preset.
+
+        Args:
+            metadata: Optional file/browser metadata.
+            metadata_author: Optional file metadata author.
+            summary: Optional document summary.
+            subtitle: Optional visible subtitle.
+            authors: Optional structured authors.
+            page_items: Additional page items appended after preset items.
+            theme: Optional theme override for the returned settings.
+
+        Returns:
+            Document settings with cover page enabled.
+        """
+
+        return DocumentSettings(
+            metadata=metadata,
+            metadata_author=metadata_author,
+            summary=summary,
+            subtitle=subtitle,
+            authors=authors,
+            author_layout=self.author_layout,
+            cover_page=True,
+            page_layout=self.page_layout,
+            page_items=(*self.page_items(), *(page_items or ())),
+            theme=theme or self.theme,
+        )
 
 
 @dataclass(slots=True)
@@ -763,6 +977,7 @@ class BookTemplate:
 
 __all__ = [
     "BookTemplate",
+    "CoverPagePreset",
     "JournalArticleTemplate",
     "ManuscriptSection",
     "SoftwareManualTemplate",

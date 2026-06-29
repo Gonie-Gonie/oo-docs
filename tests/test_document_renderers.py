@@ -180,6 +180,7 @@ from oodocs.presets.components import (
 )
 from oodocs.presets.templates import (
     BookTemplate,
+    CoverPagePreset,
     JournalArticleTemplate,
     ManuscriptSection,
     SoftwareManualTemplate,
@@ -3227,6 +3228,28 @@ def test_component_and_template_presets_build_renderable_documents(tmp_path: Pat
     )
     assert any(isinstance(child, Appendix) for child in book_main_matter)
     assert any(isinstance(child, ReferenceList) for child in book_document.body.children)
+
+    cover_preset = CoverPagePreset.eplus_simple(footer_label="Internal Review")
+    cover_settings = cover_preset.settings(
+        metadata=DocumentMetadata(subject="Cover preset test"),
+        subtitle="Release gate evidence",
+        authors=[Author("QA Lead", affiliations=["Example Lab"])],
+    )
+    assert cover_settings.cover_page is True
+    assert cover_settings.author_layout.mode == "stacked"
+    assert len(cover_settings.page_items) == 3
+    assert all(item.scope.kind == "cover" for item in cover_settings.page_items)
+    cover_document = Document(
+        "Cover Preset",
+        Paragraph("Body content."),
+        settings=cover_settings,
+    )
+    assert cover_document.validate().ok
+    cover_html_path = tmp_path / "cover-preset.html"
+    cover_document.save_html(cover_html_path)
+    cover_html = cover_html_path.read_text(encoding="utf-8")
+    assert "Internal Review" in cover_html
+    assert "#2563EB" in cover_html
 
     unitless = Nomenclature([("x", "value"), ("y", "other value")], double_column=True)
     assert unitless.children[0].header_rows[0][0].content.content[0].value == "Symbol"

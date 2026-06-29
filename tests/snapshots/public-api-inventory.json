@@ -1773,6 +1773,13 @@
         },
         {
           "category": "preset",
+          "kind": "class",
+          "module": "oodocs.presets.templates",
+          "name": "CoverPagePreset",
+          "qualname": "oodocs.presets.templates.CoverPagePreset"
+        },
+        {
+          "category": "preset",
           "kind": "function",
           "module": "oodocs.presets.components",
           "name": "info_box",
