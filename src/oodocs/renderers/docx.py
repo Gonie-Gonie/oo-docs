@@ -736,7 +736,7 @@ class DocxRenderer:
 
         self._render_reference_list(
             context.word_document,
-            block.title,
+            block,
             context.theme,
             context.render_index,
         )
@@ -3563,13 +3563,13 @@ class DocxRenderer:
     def _render_reference_list(
         self,
         word_document: WordDocument,
-        title: list[Text] | None,
+        block: ReferenceList,
         theme: Theme,
         render_index: RenderIndex,
     ) -> None:
         word_document.add_page_break()
-        self._add_heading(word_document, title or [Text(theme.resolve_generated_page_title("reference_list"))], level=theme.generated_content.generated_heading_level, theme=theme, number_label=None)
-        for entry in render_index.citations:
+        self._add_heading(word_document, block.title or [Text(theme.resolve_generated_page_title("reference_list"))], level=theme.generated_content.generated_heading_level, theme=theme, number_label=None)
+        for entry in render_index.reference_entries(block, reference_sort=theme.citations.reference_sort):
             paragraph = word_document.add_paragraph()
             paragraph.paragraph_format.left_indent = Inches(0.3)
             paragraph.paragraph_format.first_line_indent = Inches(-0.3)

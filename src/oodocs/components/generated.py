@@ -12,6 +12,7 @@ from typing import Literal, Mapping, TYPE_CHECKING
 
 from oodocs.components.base import Block
 from oodocs.components.inline import InlineInput, Text, coerce_inlines
+from oodocs.components.references import normalize_reference_sort
 
 if TYPE_CHECKING:
     from oodocs.renderers.context import DocxRenderContext, HtmlRenderContext, PdfRenderContext
@@ -347,11 +348,21 @@ class ListOfAlgorithms(Block):
 
 @dataclass(slots=True, init=False)
 class ReferenceList(Block):
-    """Generated reference list for cited bibliography entries.
+    """Generated reference list for bibliography entries.
 
     Args:
         title: Optional page title. Renderers use their default title when
             omitted.
+        include_uncited: Whether to include entries from the document citation
+            library that were not cited inline.
+        sort: Optional reference sort override. Supported values are
+            ``"citation"``, ``"author"``, ``"year"``, ``"title"``, and
+            ``"key"``.
+
+    Attributes:
+        title: Optional generated page title fragments.
+        include_uncited: Whether uncited library entries are displayed.
+        sort: Optional normalized reference sort override.
 
     Examples:
         ```python
@@ -362,9 +373,31 @@ class ReferenceList(Block):
     """
 
     title: list[Text] | None
+    include_uncited: bool
+    sort: str | None
 
-    def __init__(self, title: InlineInput | None = None) -> None:
+    def __init__(
+        self,
+        title: InlineInput | None = None,
+        *,
+        include_uncited: bool = False,
+        sort: str | None = None,
+    ) -> None:
         self.title = coerce_inlines((title,)) if title is not None else None
+        self.include_uncited = bool(include_uncited)
+        self.sort = None if sort is None else normalize_reference_sort(sort)
+
+    def sort_style(self, default: str) -> str:
+        """Return the effective reference sort style.
+
+        Args:
+            default: Theme-level default sort style.
+
+        Returns:
+            Normalized reference sort style.
+        """
+
+        return self.sort or normalize_reference_sort(default)
 
     def render_to_docx(
         self,

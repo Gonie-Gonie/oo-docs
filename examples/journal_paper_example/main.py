@@ -97,6 +97,13 @@ def load_inputs() -> ManuscriptInputs:
                 year="2026",
                 url="https://yihui.org/knitr/",
             ),
+            CitationSource(
+                "Journal Reference Checklist",
+                key="journal-reference-checklist",
+                organization="OODocs Maintainers",
+                year="2026",
+                note="Uncited planning source included by the reference-list policy.",
+            ),
         ]
     )
     return ManuscriptInputs(
@@ -456,7 +463,7 @@ def build_journal_paper_document(inputs: ManuscriptInputs | None = None) -> Docu
             level=2,
             numbered=False,
         ),
-        ReferenceList(),
+        ReferenceList(include_uncited=True),
         settings=DocumentSettings(
             summary="Journal-style development philosophy paper",
             authors=[
@@ -484,7 +491,7 @@ def build_journal_paper_document(inputs: ManuscriptInputs | None = None) -> Docu
             ],
             theme=Theme(
                 page_numbers=PageNumberDefaults(show_page_numbers=True, page_number_template="{page}"),
-                citations=CitationDefaults(citation_style="apa", reference_style="apa"),
+                citations=CitationDefaults(citation_style="apa", reference_style="apa", reference_sort="author"),
             ),
         ),
         citations=manuscript_sources,

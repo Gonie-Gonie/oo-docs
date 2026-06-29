@@ -32,7 +32,7 @@ from oodocs.components.generated import (
 )
 from oodocs.components.inline import BlockReference, Citation, Comment, Footnote, Hyperlink, Text
 from oodocs.components.media import Figure, SubFigure, SubFigureGroup, SubTable, SubTableGroup, Table
-from oodocs.components.references import CitationLibrary, CitationSource
+from oodocs.components.references import CitationLibrary, CitationSource, normalize_reference_sort
 from oodocs.core import OODocsError
 from oodocs.document import Document
 from oodocs.styles import Theme
@@ -272,6 +272,7 @@ class RenderIndex:
     subtable_labels: dict[int, str] = field(default_factory=dict)
     subtable_reference_labels: dict[int, str] = field(default_factory=dict)
     citations: list[CitationReferenceEntry] = field(default_factory=list)
+    citation_library: CitationLibrary | None = None
     citation_numbers: dict[str, int] = field(default_factory=dict)
     citation_source_numbers: dict[int, int] = field(default_factory=dict)
     comments: list[CommentReferenceEntry] = field(default_factory=list)
@@ -328,6 +329,47 @@ class RenderIndex:
             if entry.counter == "algorithm"
             and self._entry_in_scope(entry.scope, block.scope, self.generated_scope(block))
         ]
+
+    def reference_entries(
+        self,
+        block: ReferenceList,
+        *,
+        reference_sort: str = "citation",
+    ) -> list[CitationReferenceEntry]:
+        """Return reference-list entries after uncited and sort policy.
+
+        Args:
+            block: Reference list block requesting entries.
+            reference_sort: Theme-level sort style.
+
+        Returns:
+            Citation entries to display in the generated reference list.
+        """
+
+        entries = list(self.citations)
+        if block.include_uncited and self.citation_library is not None:
+            seen_keys = {entry.source.key for entry in entries if entry.source.key is not None}
+            seen_sources = {id(entry.source) for entry in entries}
+            next_number = len(entries) + 1
+            for source in self.citation_library.entries.values():
+                if id(source) in seen_sources or (source.key is not None and source.key in seen_keys):
+                    continue
+                entries.append(
+                    CitationReferenceEntry(
+                        number=next_number,
+                        source=source,
+                        anchor=f"citation_{next_number}",
+                    )
+                )
+                next_number += 1
+                seen_sources.add(id(source))
+                if source.key is not None:
+                    seen_keys.add(source.key)
+
+        sort_style = block.sort_style(reference_sort)
+        if sort_style == "citation":
+            return entries
+        return sorted(entries, key=lambda entry: _reference_entry_sort_key(entry, sort_style))
 
     def generated_scope(self, block: object) -> EntryScope:
         """Return the ancestor scope where a generated block appears."""
@@ -667,6 +709,26 @@ class RenderIndex:
         return self.block_anchors.get(id(target))
 
 
+def _reference_entry_sort_key(
+    entry: CitationReferenceEntry,
+    sort_style: str,
+) -> tuple[object, ...]:
+    normalized = normalize_reference_sort(sort_style)
+    source = entry.source
+    if normalized == "author":
+        author = source.authors[0] if source.authors else source.organization or ""
+        return (not bool(author), author.lower(), source.year or "", source.title.lower(), entry.number)
+    if normalized == "year":
+        year = source.year or ""
+        return (not bool(year), year, source.title.lower(), entry.number)
+    if normalized == "title":
+        return (source.title.lower(), entry.number)
+    if normalized == "key":
+        key = source.key or ""
+        return (not bool(key), key.lower(), source.title.lower(), entry.number)
+    return (entry.number,)
+
+
 def build_render_index(document: Document) -> RenderIndex:
     """Scan a document tree and assign render-time numbering.
 
@@ -688,6 +750,7 @@ def build_render_index(document: Document) -> RenderIndex:
     """
 
     render_index = RenderIndex()
+    render_index.citation_library = document.citations
     _index_blocks(
         document.body.children,
         render_index,

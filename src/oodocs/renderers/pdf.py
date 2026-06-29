@@ -1625,7 +1625,7 @@ class PdfRenderer:
         """
 
         return self._render_reference_list(
-            block.title,
+            block,
             context.theme,
             context.styles,
             context.render_index,
@@ -3965,7 +3965,7 @@ class PdfRenderer:
 
     def _render_reference_list(
         self,
-        title: list[Text] | None,
+        block: ReferenceList,
         theme: Theme,
         styles: object,
         render_index: RenderIndex,
@@ -3998,7 +3998,7 @@ class PdfRenderer:
             RLPageBreak(),
             RLParagraph(
                 self._inline_markup(
-                    title or [Text(theme.resolve_generated_page_title("reference_list"))],
+                    block.title or [Text(theme.resolve_generated_page_title("reference_list"))],
                     theme,
                     render_index,
                     base_font_name=title_style.fontName,
@@ -4009,7 +4009,7 @@ class PdfRenderer:
                 title_style,
             ),
         ]
-        for entry in render_index.citations:
+        for entry in render_index.reference_entries(block, reference_sort=theme.citations.reference_sort):
             marker = reference_entry_marker(
                 entry.number,
                 citation_style=theme.citations.citation_style,

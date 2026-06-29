@@ -1631,11 +1631,17 @@ class _ValidationContext:
                         path,
                     )
                 continue
-            if isinstance(page, ReferenceList) and not render_index.citations:
+            if (
+                isinstance(page, ReferenceList)
+                and not render_index.reference_entries(
+                    page,
+                    reference_sort=self.document.settings.theme.citations.reference_sort,
+                )
+            ):
                 self._add(
                     "warning",
                     "empty-references-page",
-                    "ReferenceList has no cited sources to display.",
+                    "ReferenceList has no sources to display.",
                     path,
                 )
                 continue

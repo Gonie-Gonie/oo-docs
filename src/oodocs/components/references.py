@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from pathlib import Path
 import re
 from typing import TYPE_CHECKING, Sequence
 
-from oodocs.core import OODocsError
+from oodocs.core import OODocsError, PathLike
 
 if TYPE_CHECKING:
     from oodocs.components.inline import Citation, Text
@@ -33,6 +34,18 @@ _REFERENCE_STYLE_ALIASES = {
     "mla": "mla",
     "chicago": "chicago",
     "ieee": "ieee",
+}
+
+_REFERENCE_SORT_ALIASES = {
+    "citation": "citation",
+    "citation-order": "citation",
+    "cited": "citation",
+    "author": "author",
+    "authors": "author",
+    "year": "year",
+    "date": "year",
+    "title": "title",
+    "key": "key",
 }
 
 
@@ -96,6 +109,37 @@ def normalize_reference_style(value: str) -> str:
             f"Unsupported reference_style: {value!r}. Supported values: {supported}"
         )
     return _REFERENCE_STYLE_ALIASES[key]
+
+
+def normalize_reference_sort(value: str) -> str:
+    """Return the canonical name for reference-list sorting.
+
+    Args:
+        value: Reference sort style name or alias.
+
+    Returns:
+        Canonical reference sort style.
+
+    Raises:
+        TypeError: If ``value`` is not a string.
+        ValueError: If the sort style is unsupported.
+
+    Examples:
+        ```python
+        normalize_reference_sort("citation-order")
+        # "citation"
+        ```
+    """
+
+    if not isinstance(value, str):
+        raise TypeError("reference_sort must be a string")
+    key = re.sub(r"[\s_]+", "-", value.strip().lower())
+    if key not in _REFERENCE_SORT_ALIASES:
+        supported = ", ".join(sorted(_REFERENCE_SORT_ALIASES))
+        raise ValueError(
+            f"Unsupported reference_sort: {value!r}. Supported values: {supported}"
+        )
+    return _REFERENCE_SORT_ALIASES[key]
 
 
 def format_citation_label(
@@ -399,6 +443,30 @@ class CitationLibrary:
             )
         return cls(entries)
 
+    @classmethod
+    def from_bibtex_file(
+        cls,
+        path: PathLike,
+        *,
+        encoding: str = "utf-8",
+    ) -> CitationLibrary:
+        """Load a BibTeX file into a citation library.
+
+        Args:
+            path: BibTeX file path.
+            encoding: Text encoding used to read the file.
+
+        Returns:
+            Citation library containing parsed entries.
+
+        Examples:
+            ```python
+            library = CitationLibrary.from_bibtex_file("references.bib")
+            ```
+        """
+
+        return cls.from_bibtex(Path(path).read_text(encoding=encoding))
+
 
 def coerce_citation_library(
     value: CitationLibrary | Sequence[CitationSource] | str | None,
@@ -642,24 +710,33 @@ def _parse_bibtex_entries(source: str) -> list[tuple[str, dict[str, str]]]:
     cursor = 0
 
     while True:
-        match = re.search(r"@\w+\s*\{", source[cursor:])
+        match = re.search(r"@(?P<kind>\w+)\s*\{", source[cursor:])
         if match is None:
             break
+        entry_type = match.group("kind").lower()
         entry_start = cursor + match.start()
         body_start = entry_start + match.group(0).rfind("{") + 1
         depth = 1
+        quote: str | None = None
         position = body_start
         # Track brace depth so commas and closing braces inside field values do
         # not prematurely terminate the entry body.
         while position < len(source) and depth > 0:
             char = source[position]
-            if char == "{":
+            if quote is not None:
+                if char == quote and source[position - 1] != "\\":
+                    quote = None
+            elif char in {'"', "'"}:
+                quote = char
+            elif char == "{":
                 depth += 1
             elif char == "}":
                 depth -= 1
             position += 1
         body = source[body_start : position - 1].strip()
         cursor = position
+        if entry_type in {"comment", "preamble", "string"}:
+            continue
         if not body:
             continue
 
@@ -676,29 +753,30 @@ def _parse_bibtex_fields(source: str) -> dict[str, str]:
         if "=" not in part:
             continue
         key, value = part.split("=", 1)
-        cleaned = value.strip().rstrip(",").strip()
-        if cleaned.startswith("{") and cleaned.endswith("}"):
-            cleaned = cleaned[1:-1]
-        elif cleaned.startswith('"') and cleaned.endswith('"'):
-            cleaned = cleaned[1:-1]
-        fields[key.strip().lower()] = cleaned.strip()
+        fields[key.strip().lower()] = _clean_bibtex_value(value)
     return fields
 
 
 def _split_bibtex_fields(source: str) -> list[str]:
     parts: list[str] = []
     depth = 0
+    quote: str | None = None
     current: list[str] = []
 
     for char in source:
-        if char == "{":
+        if quote is not None:
+            if char == quote:
+                quote = None
+        elif char in {'"', "'"}:
+            quote = char
+        elif char == "{":
             depth += 1
         elif char == "}":
             depth = max(depth - 1, 0)
 
         # Top-level commas separate fields; commas inside braced values remain
         # part of the current field.
-        if char == "," and depth == 0:
+        if char == "," and depth == 0 and quote is None:
             part = "".join(current).strip()
             if part:
                 parts.append(part)
@@ -712,6 +790,17 @@ def _split_bibtex_fields(source: str) -> list[str]:
     return parts
 
 
+def _clean_bibtex_value(value: str) -> str:
+    cleaned = value.strip().rstrip(",").strip()
+    if (
+        len(cleaned) >= 2
+        and ((cleaned[0] == "{" and cleaned[-1] == "}") or (cleaned[0] == cleaned[-1] == '"'))
+    ):
+        cleaned = cleaned[1:-1]
+    cleaned = re.sub(r"\s+", " ", cleaned).strip()
+    return cleaned.replace("{", "").replace("}", "")
+
+
 __all__ = [
     "CitationLibrary",
     "CitationSource",
@@ -719,5 +808,6 @@ __all__ = [
     "format_citation_label",
     "normalize_citation_style",
     "normalize_reference_style",
+    "normalize_reference_sort",
     "reference_entry_marker",
 ]

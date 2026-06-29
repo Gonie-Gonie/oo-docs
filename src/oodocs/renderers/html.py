@@ -1261,7 +1261,10 @@ class HtmlRenderer:
                 )
                 + "</p>"
             )
-            for entry in context.render_index.citations
+            for entry in context.render_index.reference_entries(
+                block,
+                reference_sort=context.theme.citations.reference_sort,
+            )
         )
         return self._generated_page_html(
             title=block.title or [Text(context.theme.resolve_generated_page_title("reference_list"))],

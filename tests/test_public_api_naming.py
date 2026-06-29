@@ -131,7 +131,7 @@ def test_citation_defaults_use_style_field_names() -> None:
     theme_fields = {field.name for field in fields(oodocs.Theme)}
 
     assert {"citation_format", "reference_format"}.isdisjoint(citation_fields)
-    assert {"citation_style", "reference_style"} <= citation_fields
+    assert {"citation_style", "reference_style", "reference_sort"} <= citation_fields
     assert {"citation_format", "reference_format"}.isdisjoint(theme_fields)
     assert {"citation_style", "reference_style"}.isdisjoint(theme_fields)
     assert "citation_options" not in theme_fields
@@ -140,6 +140,7 @@ def test_citation_defaults_use_style_field_names() -> None:
     assert "normalize_reference_format" not in references.__all__
     assert "normalize_citation_style" in references.__all__
     assert "normalize_reference_style" in references.__all__
+    assert "normalize_reference_sort" in references.__all__
 
 
 def test_list_style_uses_counter_style_marker_field() -> None:

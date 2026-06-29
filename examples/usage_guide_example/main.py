@@ -945,7 +945,7 @@ def build_usage_guide_document() -> Document:
             ["multirow or multicolumn", "TableCell(rowspan=...), Table.grouped_headers(...)", "Merged cells remain explicit table data, and grouped headers can be generated without hand-building every span."],
             ["\\label and \\ref", "Call reference(figure_obj) or figure_obj.reference() inside Paragraph(...)", "References follow the indexed document order without hand-maintained labels."],
             ["tcolorbox", "Box(..., icon=..., title_position='side') or CalloutBox(variant='danger')", "Report panels remain editable in Word while keeping a similar grouped visual shape in PDF and HTML."],
-            ["BibTeX plus \\cite", "CitationLibrary and CitationSource.cite(...)", "Citations are authored inline, and only cited sources appear on ReferenceList()."],
+            ["BibTeX plus \\cite", "CitationLibrary.from_bibtex_file(...), CitationSource.cite(...), and ReferenceList()", "Citations are authored inline, BibTeX files can seed the library, and ReferenceList can stay cited-only or include uncited entries."],
         ],
         caption="LaTeX habits translated into oodocs's Python-first authoring model.",
         column_widths=[1.9, 2.1, 2.8],
@@ -967,7 +967,7 @@ def build_usage_guide_document() -> Document:
             ["TableOfContents()", "Creates a navigable outline from authored headings.", "Place the block where the contents page should appear."],
             ["ListOfTables() / ListOfFigures() / ListOfAlgorithms()", "Collects numbered captions or algorithms in a stable order with page labels in DOCX and PDF.", "Use numbered tables, figures, or algorithms earlier in the document; pass show_page_numbers=False for a link-only list."],
             ["CommentList()", "Exports reviewer comments without disturbing reading flow.", Comment.annotated("Place review remarks inline", "CommentList() collects these review notes onto a dedicated generated page.")],
-            ["ReferenceList()", "Renders only the bibliography entries that were cited.", "Cite items from CitationLibrary or CitationSource."],
+            ["ReferenceList()", "Renders cited bibliography entries by default.", "Cite items from CitationLibrary or CitationSource; pass include_uncited=True to include the whole library."],
         ],
         caption="Generated pages that help a long document stay navigable.",
         column_widths=[1.8, 2.3, 2.5],
@@ -1053,7 +1053,7 @@ def build_usage_guide_document() -> Document:
         rows=[
             ["TypographyDefaults", "body_font_name, monospace_font_name, title_font_size, body_font_size, heading_sizes, caption_font_size", "Fonts and type scale."],
             ["CaptionDefaults", "caption_text_alignment, table_caption_position, figure_caption_position, table_label, figure_label, caption/reference labels", "Caption placement and localized labels."],
-            ["CitationDefaults", "citation_style, reference_style", "Inline citation labels and generated reference entry style."],
+            ["CitationDefaults", "citation_style, reference_style, reference_sort", "Inline citation labels, generated reference entry style, and bibliography ordering."],
             ["GeneratedContentDefaults", "contents/list/comments/footnotes/references titles, generated_heading_level, generated_content_page_breaks", "Generated content titles and heading level."],
             ["PageNumberDefaults", "show_page_numbers, page_number_alignment, page_number_template, front/main matter counters, page_number_font_size", "Footer page labels."],
             ["TitleMatterDefaults", "title_text_alignment, subtitle_text_alignment, author_text_alignment, affiliation_text_alignment, author_detail_text_alignment", "Title-page and metadata alignment."],
@@ -1780,12 +1780,16 @@ def build_usage_guide_document() -> Document:
                     ", which is useful when a guide or report needs to point back to the implementation source directly."
                 ),
                 Paragraph(
-                    "Only cited sources are rendered on the final references page. That keeps the bibliography stable even when a project carries a larger citation library than any single document uses."
+                    "Only cited sources are rendered on the final references page by default. Pass ",
+                    inline_code("ReferenceList(include_uncited=True)"),
+                    " when a document should include the whole citation library."
                 ),
                 Paragraph(
                     "The visible style is configured on the theme: ",
                     inline_code('Theme(citations=CitationDefaults(...))'),
-                    " switches inline citations to author-year labels and formats the generated references entries in APA-style order."
+                    " switches inline citations to author-year labels, formats generated references in APA-style order, and can set ",
+                    inline_code("reference_sort"),
+                    " to citation, author, year, title, or key ordering."
                 ),
             ),
         ),

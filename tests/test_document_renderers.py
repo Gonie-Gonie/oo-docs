@@ -79,6 +79,7 @@ from oodocs import (
     Math,
     MultiColumn,
     NumberedList,
+    OODocsError,
     OutputBundle,
     PageNumberDefaults,
     PageLayout,
@@ -3677,6 +3678,37 @@ def test_bibtex_string_creates_citation_library() -> None:
     assert "GitHub repository" in entry.format_reference()
 
 
+def test_bibtex_file_parser_handles_quotes_and_duplicate_keys(tmp_path: Path) -> None:
+    bib_path = tmp_path / "references.bib"
+    bib_path.write_text(
+        """@string{ignored = "Journal"}
+@article{doe2024,
+  title = "Reliable {APIs}, Revisited",
+  author = "Doe, Jane and Smith, John",
+  journal = {Journal of Docs},
+  year = {2024},
+  url = {https://example.com/reliable-apis}
+}
+""",
+        encoding="utf-8",
+    )
+
+    library = CitationLibrary.from_bibtex_file(bib_path)
+    entry = library.resolve("doe2024")
+
+    assert entry.title == "Reliable APIs, Revisited"
+    assert entry.authors == ("Doe, Jane", "Smith, John")
+    assert entry.publisher == "Journal of Docs"
+    assert entry.url == "https://example.com/reliable-apis"
+
+    with pytest.raises(OODocsError, match="Duplicate citation key"):
+        CitationLibrary.from_bibtex(
+            """@misc{same, title={First}}
+@misc{same, title={Second}}
+"""
+        )
+
+
 def test_citation_and_reference_styles_can_be_configured(tmp_path: Path) -> None:
     source = CitationSource(
         "Literate Programming",
@@ -3726,6 +3758,48 @@ def test_citation_and_reference_styles_can_be_configured(tmp_path: Path) -> None
     assert 'href="#citation_1"' in html_text
     assert 'id="citation_1"' in html_text
     assert '<span class="oodocs-generated-marker">' not in html_text
+
+
+def test_reference_list_can_include_uncited_entries_and_sort(tmp_path: Path) -> None:
+    cited = CitationSource(
+        "Beta Work",
+        key="beta",
+        authors=("Zed, Zelda",),
+        publisher="Journal B",
+        year="2020",
+    )
+    uncited = CitationSource(
+        "Alpha Work",
+        key="alpha",
+        authors=("Able, Alice",),
+        publisher="Journal A",
+        year="2021",
+    )
+    document = Document(
+        "Reference Policy",
+        Paragraph("Cited work ", cite("beta"), "."),
+        ReferenceList(include_uncited=True),
+        settings=DocumentSettings(
+            theme=Theme(
+                citations=CitationDefaults(
+                    citation_style="apa",
+                    reference_style="apa",
+                    reference_sort="author",
+                )
+            ),
+        ),
+        citations=[cited, uncited],
+    )
+
+    html_path = tmp_path / "references.html"
+    document.save_html(html_path)
+
+    html_text = _normalized_html_text(html_path)
+    assert "Cited work (Zed, 2020)" in html_text
+    assert "Able, A. (2021). Alpha Work." in html_text
+    assert "Zed, Z. (2020). Beta Work." in html_text
+    assert html_text.index("Able, A. (2021). Alpha Work.") < html_text.index("Zed, Z. (2020). Beta Work.")
+    assert "empty-references-page" not in {issue.code for issue in document.validate().warnings}
 
 
 def test_document_accepts_document_settings() -> None:

@@ -5,7 +5,11 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Literal, Sequence
 
-from oodocs.components.references import normalize_citation_style, normalize_reference_style
+from oodocs.components.references import (
+    normalize_citation_style,
+    normalize_reference_sort,
+    normalize_reference_style,
+)
 from oodocs.core import (
     normalize_color,
     normalize_text_alignment,
@@ -188,6 +192,7 @@ class CitationDefaults:
     Attributes:
         citation_style: Inline citation style identifier.
         reference_style: Reference list style identifier.
+        reference_sort: Reference list sort style.
 
     Examples:
         ```python
@@ -206,10 +211,12 @@ class CitationDefaults:
 
     citation_style: str = "numeric"
     reference_style: str = "plain"
+    reference_sort: str = "citation"
 
     def __post_init__(self) -> None:
         self.citation_style = normalize_citation_style(self.citation_style)
         self.reference_style = normalize_reference_style(self.reference_style)
+        self.reference_sort = normalize_reference_sort(self.reference_sort)
 
 
 @dataclass(slots=True)
