@@ -1174,7 +1174,7 @@ class MultiColumn(Block):
         if not self.span_wide_media or self.columns <= 1:
             return False
 
-        from oodocs.components.media import Figure, SubFigureGroup, Table
+        from oodocs.components.media import Figure, SubFigureGroup, SubTableGroup, Table
 
         column_width = self.column_width_in_inches(available_width, default_unit)
         if isinstance(child, Figure):
@@ -1196,6 +1196,27 @@ class MultiColumn(Block):
             # Only the first visual row determines whether the group can fit in
             # a column, matching how renderers lay out subfigure grids.
             group_gap = length_to_inches(child.column_gap, child.unit or default_unit)
+            group_width = sum(width for width in widths if width is not None)
+            group_width += group_gap * max(len(row) - 1, 0)
+            return group_width > column_width
+        if isinstance(child, SubTableGroup):
+            row = child.subtables[: child.columns]
+            if not row:
+                return False
+            group_gap = length_to_inches(child.column_gap, child.unit or default_unit)
+            available_child_width = max(
+                (column_width - group_gap * max(child.columns - 1, 0)) / child.columns,
+                0,
+            )
+            widths = [
+                subtable.width_in_inches(
+                    default_unit,
+                    available_width=available_child_width,
+                )
+                for subtable in row
+            ]
+            if any(width is None for width in widths):
+                return True
             group_width = sum(width for width in widths if width is not None)
             group_width += group_gap * max(len(row) - 1, 0)
             return group_width > column_width

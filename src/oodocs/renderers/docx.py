@@ -72,6 +72,8 @@ from oodocs.components.media import (
     Figure,
     SubFigure,
     SubFigureGroup,
+    SubTable,
+    SubTableGroup,
     Table,
     build_table_layout,
     image_source_to_buffer,
@@ -861,6 +863,31 @@ class DocxRenderer:
             context.render_index,
             context.unit,
             word_document=context.word_document,
+            in_box=context.in_box,
+        )
+
+    def render_subtable_group(
+        self,
+        container: object,
+        group: SubTableGroup,
+        context: DocxRenderContext,
+    ) -> None:
+        """Render a subtable group into the current DOCX container.
+
+        Args:
+            container: Active DOCX document, cell, or other paragraph owner.
+            group: Subtable group to render.
+            context: Current DOCX render context.
+        """
+
+        self._render_subtable_group(
+            container,
+            group,
+            context.theme,
+            context.render_index,
+            context.unit,
+            word_document=context.word_document,
+            text_width=context.settings.text_width_in_inches(),
             in_box=context.in_box,
         )
 
@@ -1746,7 +1773,7 @@ class DocxRenderer:
         target: object,
         render_index: RenderIndex,
     ) -> str | None:
-        if isinstance(target, Table):
+        if isinstance(target, (Table, SubTable, SubTableGroup)):
             return render_index.table_anchor(target)
         if isinstance(target, (Figure, SubFigure, SubFigureGroup)):
             return render_index.figure_anchor(target)
@@ -2846,6 +2873,107 @@ class DocxRenderer:
             render_caption()
         self._apply_media_placement_after(container, word_document, placement)
 
+    def _render_subtable_group(
+        self,
+        container: object,
+        group: SubTableGroup,
+        theme: Theme,
+        render_index: RenderIndex,
+        unit: str,
+        *,
+        word_document: WordDocument,
+        text_width: float,
+        in_box: bool = False,
+    ) -> None:
+        placement = group.resolved_placement()
+        self._apply_media_placement_before(container, word_document, placement)
+
+        def render_caption() -> None:
+            if group.caption is None:
+                return
+            caption = self._add_paragraph(container)
+            caption.alignment = ALIGNMENTS[theme.captions.caption_text_alignment]
+            caption.paragraph_format.space_after = Pt(0 if in_box else 12)
+            self._keep_lines_together(caption)
+            self._append_runs(
+                caption,
+                self._caption_fragments(
+                    theme.resolve_caption_label("table", "caption"),
+                    render_index.table_number(group),
+                    group.caption,
+                ),
+                default_size=theme.caption_size(),
+                theme=theme,
+                render_index=render_index,
+                word_document=word_document,
+            )
+            anchor = render_index.table_anchor(group)
+            if anchor is not None:
+                self._add_bookmark(caption, anchor)
+            if theme.captions.table_caption_position == "above":
+                self._keep_with_next(caption)
+
+        if group.caption is not None and theme.captions.table_caption_position == "above":
+            render_caption()
+
+        row_count = (len(group.subtables) + group.columns - 1) // group.columns
+        table = container.add_table(rows=row_count, cols=group.columns)
+        table.alignment = TABLE_ALIGNMENTS[theme.blocks.table_block_alignment]
+        self._prevent_table_row_split(table)
+        self._keep_table_together(table)
+        gap_inches = length_to_inches(group.column_gap, group.unit or unit)
+        gap_points = gap_inches * 72
+        cell_text_width = max(
+            (text_width - gap_inches * max(group.columns - 1, 0)) / group.columns,
+            0,
+        )
+
+        for index, subtable in enumerate(group.subtables):
+            row_index = index // group.columns
+            column_index = index % group.columns
+            cell = table.cell(row_index, column_index)
+            self._set_cell_margins(
+                cell,
+                0,
+                gap_points / 2 if column_index < group.columns - 1 else 0,
+                0,
+                gap_points / 2 if column_index > 0 else 0,
+            )
+            self._render_table(
+                cell,
+                subtable.table_without_caption(),
+                theme,
+                render_index,
+                unit,
+                text_width=cell_text_width,
+                word_document=word_document,
+            )
+
+            anchor_paragraph = cell.paragraphs[0]
+            if subtable.caption is not None:
+                subcaption = cell.add_paragraph()
+                subcaption.alignment = ALIGNMENTS[theme.captions.caption_text_alignment]
+                subcaption.paragraph_format.space_after = Pt(0)
+                self._append_runs(
+                    subcaption,
+                    self._subfigure_caption_fragments(
+                        group.formatted_label_for_index(index),
+                        subtable.caption,
+                    ),
+                    default_size=theme.caption_size(),
+                    theme=theme,
+                    render_index=render_index,
+                    word_document=word_document,
+                )
+                anchor_paragraph = subcaption
+            anchor = render_index.table_anchor(subtable)
+            if anchor is not None:
+                self._add_bookmark(anchor_paragraph, anchor)
+
+        if group.caption is not None and theme.captions.table_caption_position == "below":
+            render_caption()
+        self._apply_media_placement_after(container, word_document, placement)
+
     def _set_paragraph_shading(self, paragraph: object, fill: str) -> None:
         paragraph_properties = paragraph._p.get_or_add_pPr()
         shading = OxmlElement("w:shd")
@@ -3018,11 +3146,16 @@ class DocxRenderer:
         theme: Theme,
         render_index: RenderIndex,
     ) -> str:
-        if isinstance(target, Table):
+        if isinstance(target, (Table, SubTable, SubTableGroup)):
             number = render_index.table_number(target)
             if number is None:
                 raise OODocsError("Table references require the target table to have a caption and be included in the document")
             label = theme.resolve_caption_label("table", "reference")
+            if isinstance(target, SubTable):
+                subtable_label = render_index.subtable_reference_label(target)
+                if subtable_label is None:
+                    raise OODocsError("Subtable references require the target subtable to belong to a captioned SubTableGroup")
+                return f"{label} {number}{subtable_label}"
             return f"{label} {number}"
 
         if isinstance(target, (Figure, SubFigure, SubFigureGroup)):
@@ -3034,7 +3167,8 @@ class DocxRenderer:
                 if label is None:
                     raise OODocsError("Subfigure references require the target subfigure to belong to a captioned SubFigureGroup")
                 figure_label = theme.resolve_caption_label("figure", "reference")
-                return f"{figure_label} {number}({label})"
+                reference_label = render_index.subfigure_reference_label(target)
+                return f"{figure_label} {number}{reference_label or f'({label})'}"
             label = theme.resolve_caption_label("figure", "reference")
             return f"{label} {number}"
 

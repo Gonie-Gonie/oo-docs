@@ -123,7 +123,7 @@ OODocs_API_CATEGORIES: tuple[ApiCategory, ...] = (
     ApiCategory(
         id="tables-figures",
         title="Tables and Figures",
-        summary="Create structured tables, figures, image data, subfigures, and media references.",
+        summary="Create structured tables, figures, image data, subfigures, subtables, and media references.",
         include=(
             "oodocs.Table",
             "oodocs.TableCell",
@@ -134,6 +134,8 @@ OODocs_API_CATEGORIES: tuple[ApiCategory, ...] = (
             "oodocs.ImageData",
             "oodocs.SubFigure",
             "oodocs.SubFigureGroup",
+            "oodocs.SubTable",
+            "oodocs.SubTableGroup",
             "oodocs.TextBox",
             "oodocs.ImageBox",
             "oodocs.Shape",

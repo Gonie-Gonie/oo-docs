@@ -117,11 +117,12 @@ def test_journal_paper_example_builds_outputs(tmp_path: Path) -> None:
     assert any("pandas.read_csv" in text for text in paragraph_texts)
     assert any("matplotlib" in text for text in paragraph_texts)
     assert any("Traceability pipeline used in the study. Source: examples/journal_paper_example/assets/traceability-diagram.png." in text for text in paragraph_texts)
-    assert any("Quality-latency frontier generated from examples/journal_paper_example/assets/benchmark_results.csv." in text for text in paragraph_texts)
-    assert any("Estimated late-revision synchronization effort generated from the in-script model." in text for text in paragraph_texts)
+    assert "Quality-latency frontier generated from examples/journal_paper_example/assets/benchmark_results.csv." in table_text
+    assert "Estimated late-revision synchronization effort generated from the in-script model." in table_text
+    assert any("Generated study plots used to interpret benchmark quality and revision effort." in text for text in paragraph_texts)
     assert "Full control over manuscript structure" in table_text
     assert "Fast article skeleton" in table_text
-    assert len(word_document.tables) == 4
+    assert len(word_document.tables) == 5
     assert len(word_document.inline_shapes) == 3
     assert 'w:num="2"' in _docx_document_xml(docx_path)
     assert_docx_structure(
@@ -132,7 +133,7 @@ def test_journal_paper_example_builds_outputs(tmp_path: Path) -> None:
             "Highlights",
             "References",
         ),
-        table_count=4,
+        table_count=5,
         inline_shape_count=3,
     )
 
@@ -202,7 +203,7 @@ def test_journal_paper_example_builds_outputs(tmp_path: Path) -> None:
     assert 'href="#figure_2"' in html_text
     assert_html_internal_links_resolve(
         html_path,
-        required_hrefs=("#table_2", "#figure_2"),
+        required_hrefs=("#table_2", "#figure_2", "#figure_2_a", "#figure_2_b"),
         required_text=("OODocs Development Philosophy", "Benchmark Frontier"),
     )
 

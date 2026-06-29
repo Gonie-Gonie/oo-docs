@@ -492,6 +492,8 @@ def _reference_label_prefix(target: object) -> str:
         return "Table"
     if target_name in {"Figure", "SubFigure", "SubFigureGroup"}:
         return "Figure"
+    if target_name in {"SubTable", "SubTableGroup"}:
+        return "Table"
     if target_name == "Equation":
         return "Equation"
     if target_name == "Paragraph":
@@ -1445,9 +1447,11 @@ def _is_referenceable(value: object) -> bool:
         "Paragraph",
         "Part",
         "Section",
-        "SubFigure",
-        "SubFigureGroup",
-        "Subsection",
+            "SubFigure",
+            "SubFigureGroup",
+            "SubTable",
+            "SubTableGroup",
+            "Subsection",
         "SubSubsection",
         "Table",
     }

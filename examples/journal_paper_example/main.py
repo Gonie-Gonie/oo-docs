@@ -29,6 +29,8 @@ from oodocs import (
     Paragraph,
     ReferenceList,
     Section,
+    SubFigure,
+    SubFigureGroup,
     Table,
     Theme,
     inline_code,
@@ -230,20 +232,26 @@ def build_journal_paper_document(inputs: ManuscriptInputs | None = None) -> Docu
         ),
         width=6.2,
     )
-    quality_latency_figure = Figure(
+    quality_latency_subfigure = SubFigure(
         build_quality_latency_figure(results_df),
         caption=Paragraph(
             f"Quality-latency frontier generated from {results_source}."
         ),
         width=2.7,
-        placement="here",
     )
-    revision_effort_figure = Figure(
+    revision_effort_subfigure = SubFigure(
         build_revision_effort_figure(),
         caption=Paragraph(
             "Estimated late-revision synchronization effort generated from the in-script model."
         ),
         width=2.7,
+    )
+    study_plot_group = SubFigureGroup(
+        quality_latency_subfigure,
+        revision_effort_subfigure,
+        caption="Generated study plots used to interpret benchmark quality and revision effort.",
+        columns=2,
+        column_gap=0.2,
         placement="here",
     )
 
@@ -365,8 +373,10 @@ def build_journal_paper_document(inputs: ManuscriptInputs | None = None) -> Docu
                     "The benchmark data in ",
                     benchmark_table.reference(),
                     " shows a steady quality gain as more structure is added to the workflow. The same CSV is also rendered into ",
-                    quality_latency_figure.reference(),
-                    ", which makes the trade-off between quality and latency easier to interpret during revision discussions."
+                    quality_latency_subfigure.reference(),
+                    ", which makes the trade-off between quality and latency easier to interpret during revision discussions. The paired generated plots are grouped in ",
+                    study_plot_group.reference(),
+                    "."
                 ),
                 Paragraph(
                     "The relevant result is not merely the best final score. The more useful observation is that the quality improvement remains interpretable because the comparison table and the comparison plot are generated from the same underlying CSV."
@@ -377,7 +387,7 @@ def build_journal_paper_document(inputs: ManuscriptInputs | None = None) -> Docu
                 level=2,
             ),
             benchmark_table,
-            quality_latency_figure,
+            ColumnSpan(study_plot_group),
             Section(
                 "Ablation Signals",
                 Paragraph(
@@ -398,7 +408,7 @@ def build_journal_paper_document(inputs: ManuscriptInputs | None = None) -> Docu
                 "Late-Revision Cost",
                 Paragraph(
                     "The workflow benefit becomes most visible late in the writing cycle. ",
-                    revision_effort_figure.reference(),
+                    revision_effort_subfigure.reference(),
                     " reports an estimated operational curve for repeated late updates. The estimate is intentionally approximate, but it captures a practical pattern: manual synchronization cost tends to rise more quickly than code-backed synchronization cost when the manuscript is revised several times close to submission."
                 ),
                 Paragraph(
@@ -409,7 +419,6 @@ def build_journal_paper_document(inputs: ManuscriptInputs | None = None) -> Docu
                 ),
                 level=2,
             ),
-            revision_effort_figure,
             Section(
                 "Discussion",
                 Paragraph(

@@ -54,7 +54,7 @@ from oodocs.components.inline import (
     InlineChip,
     Text,
 )
-from oodocs.components.media import Figure, ImageData, SubFigure, SubFigureGroup, Table
+from oodocs.components.media import Figure, ImageData, SubFigure, SubFigureGroup, SubTable, SubTableGroup, Table
 from oodocs.components.positioning import ImageBox, Shape, TextBox
 from oodocs.components.references import CitationSource
 from oodocs.core import OODocsError, PathLike, length_to_inches
@@ -913,6 +913,11 @@ class _ValidationContext:
             self._validate_subfigure_group(block, path)
             return
 
+        if isinstance(block, SubTableGroup):
+            self._register_referenceable(block, path)
+            self._validate_subtable_group(block, path)
+            return
+
         if isinstance(block, (TextBox, Shape, ImageBox)):
             self._collect_positioned_item(block, path)
             return
@@ -1062,7 +1067,14 @@ class _ValidationContext:
                 path,
             )
 
-    def _validate_table(self, table: Table, path: str) -> None:
+    def _validate_table(
+        self,
+        table: Table,
+        path: str,
+        *,
+        warn_missing_caption: bool = True,
+        scan_caption: bool = True,
+    ) -> None:
         layout = table._layout()
         if layout.column_count < 1:
             self._add(
@@ -1094,7 +1106,7 @@ class _ValidationContext:
                 formats=("docx", "pdf"),
             )
 
-        if table.caption is None:
+        if table.caption is None and warn_missing_caption:
             self._add(
                 "warning",
                 "missing-table-caption",
@@ -1139,7 +1151,7 @@ class _ValidationContext:
                 style,
                 f"{path}.header_row_styles[{index}]",
             )
-        if table.caption is not None:
+        if table.caption is not None and scan_caption:
             self._scan_inlines(table.caption.content, f"{path}.caption")
 
     def _validate_figure(
@@ -1206,6 +1218,30 @@ class _ValidationContext:
                 f"{path}.caption",
             )
         self._validate_subfigure_group_size(group, path)
+
+    def _validate_subtable_group(self, group: SubTableGroup, path: str) -> None:
+        for subtable_index, subtable in enumerate(group.subtables):
+            subtable_path = f"{path}.subtables[{subtable_index}]"
+            self._register_referenceable(subtable, subtable_path)
+            self._validate_table(
+                subtable.table,
+                f"{subtable_path}.table",
+                warn_missing_caption=False,
+                scan_caption=False,
+            )
+            if subtable.caption is not None:
+                self._scan_inlines(subtable.caption.content, f"{subtable_path}.caption")
+        if group.caption is not None:
+            self._scan_inlines(group.caption.content, f"{path}.caption")
+        else:
+            self._add(
+                "warning",
+                "missing-table-caption",
+                "Captionless SubTableGroup objects cannot appear in generated table "
+                "lists and cannot be referenced with an automatic table number.",
+                f"{path}.caption",
+            )
+        self._validate_subtable_group_size(group, path)
 
     def _validate_image_source(self, source: object, path: str) -> None:
         if isinstance(source, ImageData):
@@ -1334,6 +1370,27 @@ class _ValidationContext:
                     "error",
                     "uncaptioned-reference-target",
                     "Table references require the target table to have a caption.",
+                    path,
+                )
+            return
+
+        if isinstance(target, SubTableGroup):
+            if target.caption is None:
+                self._add(
+                    "error",
+                    "uncaptioned-reference-target",
+                    "SubTableGroup references require the target to have a caption.",
+                    path,
+                )
+            return
+
+        if isinstance(target, SubTable):
+            if render_index is not None and render_index.subtable_label(target) is None:
+                self._add(
+                    "error",
+                    "unanchored-subtable-reference",
+                    "SubTable references require the target to belong to a "
+                    "captioned SubTableGroup.",
                     path,
                 )
             return
@@ -1525,6 +1582,46 @@ class _ValidationContext:
             f"SubFigureGroup first row is {group_width:.2f}in wide, wider than the "
             f"document text width of {text_width:.2f}in. Fixed-page renderers may "
             "scale or overflow it.",
+            path,
+            formats=("docx", "pdf"),
+        )
+
+    def _validate_subtable_group_size(self, group: SubTableGroup, path: str) -> None:
+        first_row = group.subtables[: group.columns]
+        if not first_row:
+            return
+        gap = length_to_inches(
+            group.column_gap,
+            group.unit or self.document.settings.unit,
+        )
+        available_width = max(
+            (
+                self.document.settings.text_width_in_inches()
+                - gap * max(group.columns - 1, 0)
+            )
+            / group.columns,
+            0,
+        )
+        widths = [
+            subtable.width_in_inches(
+                self.document.settings.unit,
+                available_width=available_width,
+            )
+            for subtable in first_row
+        ]
+        if any(width is None for width in widths):
+            return
+        group_width = sum(width for width in widths if width is not None)
+        group_width += gap * max(len(first_row) - 1, 0)
+        text_width = self.document.settings.text_width_in_inches()
+        if group_width <= text_width:
+            return
+        self._add(
+            "warning",
+            "wide-table",
+            f"SubTableGroup first row is {group_width:.2f}in wide, wider than the "
+            f"document text width of {text_width:.2f}in. Fixed-page renderers may "
+            "wrap or overflow it.",
             path,
             formats=("docx", "pdf"),
         )

@@ -89,6 +89,8 @@ from oodocs.components.media import (
     Figure,
     SubFigure,
     SubFigureGroup,
+    SubTable,
+    SubTableGroup,
     Table,
     build_table_layout,
     image_source_to_buffer,
@@ -1299,6 +1301,31 @@ class PdfRenderer:
             in_box=context.in_box,
         )
 
+    def render_subtable_group(
+        self,
+        block: SubTableGroup,
+        context: PdfRenderContext,
+    ) -> list[object]:
+        """Render a subtable group into PDF flowables.
+
+        Args:
+            block: Subtable group to render.
+            context: Current PDF render context.
+
+        Returns:
+            Flowables representing grouped subtables and optional caption.
+        """
+
+        return self._render_subtable_group(
+            block,
+            context.theme,
+            context.styles,
+            context.render_index,
+            context.unit,
+            text_width=context.settings.text_width_in_inches(),
+            in_box=context.in_box,
+        )
+
     def render_list_of_tables(
         self,
         block: ListOfTables,
@@ -1932,6 +1959,7 @@ class PdfRenderer:
         *,
         text_width: float,
         in_box: bool = False,
+        keep_together: bool = True,
     ) -> list[object]:
         table_style = theme.stylesheet.resolve("table", block.style, OODocsTableStyle())
         split_table = block._resolve_split()
@@ -2109,7 +2137,7 @@ class PdfRenderer:
             )
         elif not in_box:
             story.append(Spacer(1, 12))
-        if not split_table:
+        if not split_table and keep_together:
             story = [KeepTogether(story)]
         return self._apply_pdf_media_placement(story, media_placement, in_box=in_box)
 
@@ -2705,6 +2733,147 @@ class PdfRenderer:
             elements.append(Spacer(1, 12))
         return self._apply_pdf_media_placement([KeepTogether(elements)], placement, in_box=in_box)
 
+    def _render_subtable_group(
+        self,
+        block: SubTableGroup,
+        theme: Theme,
+        styles: object,
+        render_index: RenderIndex,
+        unit: str,
+        *,
+        text_width: float,
+        in_box: bool = False,
+    ) -> list[object]:
+        placement = block.resolved_placement()
+        body_style = self._paragraph_style(ParagraphStyle(space_after=0), theme, styles["BodyText"])
+        caption_style = RLParagraphStyle(
+            "TableCaption",
+            parent=body_style,
+            fontSize=theme.caption_size(),
+            alignment=ALIGNMENTS[theme.captions.caption_text_alignment],
+            spaceBefore=0,
+            spaceAfter=6,
+        )
+        subcaption_style = RLParagraphStyle(
+            "SubTableCaption",
+            parent=body_style,
+            fontSize=theme.caption_size(),
+            alignment=ALIGNMENTS[theme.captions.caption_text_alignment],
+            spaceBefore=2,
+            spaceAfter=0,
+        )
+
+        gap_inches = length_to_inches(block.column_gap, block.unit or unit)
+        gap_points = gap_inches * inch
+        cell_text_width = max(
+            (text_width - gap_inches * max(block.columns - 1, 0)) / block.columns,
+            0,
+        )
+
+        table_rows: list[list[object]] = []
+        for row_start in range(0, len(block.subtables), block.columns):
+            row: list[object] = []
+            for column_index in range(block.columns):
+                index = row_start + column_index
+                if index >= len(block.subtables):
+                    row.append(Spacer(1, 1))
+                    continue
+                subtable = block.subtables[index]
+                cell_elements = list(
+                    self._render_table(
+                        subtable.table_without_caption(),
+                        theme,
+                        styles,
+                        render_index,
+                        unit,
+                        text_width=cell_text_width,
+                        in_box=True,
+                        keep_together=False,
+                    )
+                )
+                if subtable.caption is not None:
+                    cell_elements.append(
+                        RLParagraph(
+                            self._anchor_markup(render_index.table_anchor(subtable))
+                            + self._inline_markup(
+                                self._subfigure_caption_fragments(
+                                    block.formatted_label_for_index(index),
+                                    subtable.caption,
+                                ),
+                                theme,
+                                render_index,
+                                base_font_name=subcaption_style.fontName,
+                                base_size=subcaption_style.fontSize,
+                            ),
+                            subcaption_style,
+                        )
+                    )
+                else:
+                    anchor = render_index.table_anchor(subtable)
+                    if anchor is not None:
+                        cell_elements.insert(0, RLParagraph(self._anchor_markup(anchor), subcaption_style))
+                row.append(cell_elements)
+            table_rows.append(row)
+
+        subtable_grid = RLTable(
+            table_rows,
+            hAlign=FLOWABLE_ALIGNMENTS[theme.blocks.table_block_alignment],
+            repeatRows=0,
+        )
+        subtable_grid.setStyle(
+            TableStyle(
+                [
+                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                    ("LEFTPADDING", (0, 0), (-1, -1), gap_points / 2),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), gap_points / 2),
+                    ("TOPPADDING", (0, 0), (-1, -1), 0),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+                ]
+            )
+        )
+
+        elements: list[object] = []
+        if block.caption is not None and theme.captions.table_caption_position == "above":
+            elements.append(
+                self._caption_paragraph(
+                    render_index.table_anchor(block),
+                    self._caption_fragments(
+                        theme.resolve_caption_label("table", "caption"),
+                        render_index.table_number(block),
+                        block.caption,
+                    ),
+                    caption_style,
+                    theme,
+                    render_index,
+                    notify_kind="TableListEntry",
+                )
+            )
+        elements.append(subtable_grid)
+        if block.caption is not None and theme.captions.table_caption_position == "below":
+            below_caption_style = RLParagraphStyle(
+                "TableCaptionBelow",
+                parent=caption_style,
+                spaceBefore=6,
+                spaceAfter=0 if in_box else 12,
+            )
+            elements.append(
+                self._caption_paragraph(
+                    render_index.table_anchor(block),
+                    self._caption_fragments(
+                        theme.resolve_caption_label("table", "caption"),
+                        render_index.table_number(block),
+                        block.caption,
+                    ),
+                    below_caption_style,
+                    theme,
+                    render_index,
+                    notify_kind="TableListEntry",
+                )
+            )
+        elif not in_box:
+            elements.append(Spacer(1, 12))
+        return self._apply_pdf_media_placement([KeepTogether(elements)], placement, in_box=in_box)
+
     def _figure_image(self, block: Figure | SubFigure, theme: Theme, unit: str) -> RLImage:
         image = RLImage(self._figure_image_source(block, unit))
         image.hAlign = FLOWABLE_ALIGNMENTS[theme.blocks.figure_block_alignment]
@@ -3119,7 +3288,7 @@ class PdfRenderer:
         target: object,
         render_index: RenderIndex,
     ) -> str | None:
-        if isinstance(target, Table):
+        if isinstance(target, (Table, SubTable, SubTableGroup)):
             return render_index.table_anchor(target)
         if isinstance(target, (Figure, SubFigure, SubFigureGroup)):
             return render_index.figure_anchor(target)
@@ -3133,11 +3302,16 @@ class PdfRenderer:
         theme: Theme,
         render_index: RenderIndex,
     ) -> str:
-        if isinstance(target, Table):
+        if isinstance(target, (Table, SubTable, SubTableGroup)):
             number = render_index.table_number(target)
             if number is None:
                 raise OODocsError("Table references require the target table to have a caption and be included in the document")
             label = theme.resolve_caption_label("table", "reference")
+            if isinstance(target, SubTable):
+                subtable_label = render_index.subtable_reference_label(target)
+                if subtable_label is None:
+                    raise OODocsError("Subtable references require the target subtable to belong to a captioned SubTableGroup")
+                return f"{label} {number}{subtable_label}"
             return f"{label} {number}"
 
         if isinstance(target, (Figure, SubFigure, SubFigureGroup)):
@@ -3149,7 +3323,8 @@ class PdfRenderer:
                 if label is None:
                     raise OODocsError("Subfigure references require the target subfigure to belong to a captioned SubFigureGroup")
                 figure_label = theme.resolve_caption_label("figure", "reference")
-                return f"{figure_label} {number}({label})"
+                reference_label = render_index.subfigure_reference_label(target)
+                return f"{figure_label} {number}{reference_label or f'({label})'}"
             label = theme.resolve_caption_label("figure", "reference")
             return f"{label} {number}"
 

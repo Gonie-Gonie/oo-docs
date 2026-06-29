@@ -47,6 +47,8 @@ from oodocs.components.media import (
     Figure,
     SubFigure,
     SubFigureGroup,
+    SubTable,
+    SubTableGroup,
     Table,
     TablePlacement,
     build_table_layout,
@@ -917,6 +919,87 @@ class HtmlRenderer:
             f'<img class="oodocs-figure-image" src="{self._figure_src(subfigure, context.unit)}" alt="{escape(alt_text)}"{image_style} />'
             + caption_html
             + "</figure>"
+        )
+
+    def render_subtable_group(self, block: SubTableGroup, context: HtmlRenderContext) -> str:
+        """Render a subtable group into HTML.
+
+        Args:
+            block: Subtable group to render.
+            context: Current HTML render context.
+
+        Returns:
+            HTML fragment for the grouped subtables and optional caption.
+        """
+
+        placement = block.resolved_placement()
+        caption_html = (
+            self._caption_html(
+                block.caption,
+                label=context.theme.resolve_caption_label("table", "caption"),
+                number=context.render_index.table_number(block),
+                anchor=context.render_index.table_anchor(block),
+                context=context,
+                kind="table",
+            )
+            if block.caption is not None
+            else ""
+        )
+        subtables = "".join(
+            self._subtable_html(subtable, index, block, context)
+            for index, subtable in enumerate(block.subtables)
+        )
+        grid_style = (
+            f"display: grid; grid-template-columns: repeat({block.columns}, minmax(0, 1fr)); "
+            f"gap: {length_to_inches(block.column_gap, block.unit or context.unit):.2f}in;"
+        )
+        content_parts = []
+        if block.caption is not None and context.theme.captions.table_caption_position == "above":
+            content_parts.append(caption_html)
+        content_parts.append(f'<div class="oodocs-subtable-grid" style="{grid_style}">{subtables}</div>')
+        if block.caption is not None and context.theme.captions.table_caption_position == "below":
+            content_parts.append(caption_html)
+        return (
+            '<div class="oodocs-table-wrapper oodocs-subtable-group '
+            f'oodocs-placement-{placement}" '
+            f'style="{self._table_wrapper_css(context.theme, in_box=context.in_box)} '
+            f'{self._media_placement_css(placement, in_box=context.in_box)}">'
+            + "".join(content_parts)
+            + "</div>"
+        )
+
+    def _subtable_html(
+        self,
+        subtable: SubTable,
+        index: int,
+        group: SubTableGroup,
+        context: HtmlRenderContext,
+    ) -> str:
+        anchor = context.render_index.table_anchor(subtable)
+        caption_html = ""
+        container_anchor = f' id="{escape(anchor)}"' if anchor and subtable.caption is None else ""
+        if subtable.caption is not None:
+            anchor_attr = f' id="{escape(anchor)}"' if anchor else ""
+            caption_html = (
+                f'<div{anchor_attr} class="oodocs-caption oodocs-subtable-caption" '
+                f'style="text-align: {context.theme.captions.caption_text_alignment}; '
+                f'font-size: {context.theme.caption_size():.1f}pt;">'
+                + self._inline_html(
+                    self._subfigure_caption_fragments(
+                        group.formatted_label_for_index(index),
+                        subtable.caption,
+                    ),
+                    context.theme,
+                    context.render_index,
+                    base_size=context.theme.caption_size(),
+                )
+                + "</div>"
+            )
+        return (
+            f'<div{container_anchor} class="oodocs-subtable" style="margin: 0;">'
+            + self.render_table(subtable.table_without_caption(), context)
+            + caption_html
+            + "</div>"
         )
 
     def render_list_of_tables(
@@ -1984,13 +2067,20 @@ class HtmlRenderer:
         theme: Theme,
         render_index: RenderIndex,
     ) -> str:
-        if isinstance(target, Table):
+        if isinstance(target, (Table, SubTable, SubTableGroup)):
             number = render_index.table_number(target)
             if number is None:
                 raise OODocsError(
                     "Table references require the target table to have a caption and be included in the document"
                 )
             label = theme.resolve_caption_label("table", "reference")
+            if isinstance(target, SubTable):
+                subtable_label = render_index.subtable_reference_label(target)
+                if subtable_label is None:
+                    raise OODocsError(
+                        "Subtable references require the target subtable to belong to a captioned SubTableGroup"
+                    )
+                return f"{label} {number}{subtable_label}"
             return f"{label} {number}"
 
         if isinstance(target, (Figure, SubFigure, SubFigureGroup)):
@@ -2006,7 +2096,8 @@ class HtmlRenderer:
                         "Subfigure references require the target subfigure to belong to a captioned SubFigureGroup"
                     )
                 figure_label = theme.resolve_caption_label("figure", "reference")
-                return f"{figure_label} {number}({label})"
+                reference_label = render_index.subfigure_reference_label(target)
+                return f"{figure_label} {number}{reference_label or f'({label})'}"
             label = theme.resolve_caption_label("figure", "reference")
             return f"{label} {number}"
 
@@ -2063,7 +2154,7 @@ class HtmlRenderer:
         target: object,
         render_index: RenderIndex,
     ) -> str | None:
-        if isinstance(target, Table):
+        if isinstance(target, (Table, SubTable, SubTableGroup)):
             return render_index.table_anchor(target)
         if isinstance(target, (Figure, SubFigure, SubFigureGroup)):
             return render_index.figure_anchor(target)

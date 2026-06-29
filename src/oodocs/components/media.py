@@ -17,6 +17,7 @@ Attributes:
 from __future__ import annotations
 
 import csv
+from copy import copy
 from dataclasses import asdict, dataclass, is_dataclass
 import json
 import math
@@ -28,7 +29,6 @@ from oodocs.components.base import Block
 from oodocs.components.blocks import CellInput, Paragraph, coerce_cell
 from oodocs.core import (
     PathLike,
-    format_counter_value,
     length_to_inches,
     normalize_color,
     normalize_length_unit,
@@ -37,6 +37,7 @@ from oodocs.core import (
 )
 from oodocs.styles import (
     BorderStyle,
+    CounterStyle,
     Padding,
     TableCellStyle,
     TableCellStyleInput,
@@ -1013,6 +1014,24 @@ def _normalize_optional_text(value: str | None, *, name: str) -> str | None:
         raise TypeError(f"{name} must be a string or None")
     normalized = value.strip()
     return normalized or None
+
+
+def _coerce_child_label_style(value: CounterStyle | str | None) -> CounterStyle:
+    if value is None:
+        return CounterStyle(counter_format="lower-alpha")
+    if isinstance(value, CounterStyle):
+        return value
+    if isinstance(value, str):
+        return CounterStyle(counter_format=value)
+    raise TypeError("child label styles must be CounterStyle instances or counter format strings")
+
+
+def _validate_child_label_format(value: str, *, name: str) -> str:
+    if not isinstance(value, str):
+        raise TypeError(f"{name} must be a string")
+    if "{label}" not in value:
+        raise ValueError(f"{name} must contain '{{label}}'")
+    return value
 
 
 def _normalize_continued_caption_template(value: str) -> str:
@@ -2483,6 +2502,10 @@ class SubFigureGroup(Block):
         identifier: Optional stable identifier.
         placement: Optional placement policy.
         label_format: Format string containing ``"{label}"``.
+        label_style: Counter style or counter-format name used for generated
+            child labels.
+        reference_label_format: Optional format string for references to child
+            figures. Defaults to ``label_format``.
 
     Raises:
         ValueError: If no subfigures are provided or layout values are invalid.
@@ -2509,6 +2532,8 @@ class SubFigureGroup(Block):
     identifier: str | None
     placement: MediaPlacement
     label_format: str
+    label_style: CounterStyle
+    reference_label_format: str
 
     def __init__(
         self,
@@ -2520,6 +2545,8 @@ class SubFigureGroup(Block):
         identifier: str | None = None,
         placement: str | None = None,
         label_format: str = "({label})",
+        label_style: CounterStyle | str | None = None,
+        reference_label_format: str | None = None,
     ) -> None:
         if not subfigures:
             raise ValueError("SubFigureGroup requires at least one SubFigure")
@@ -2527,8 +2554,6 @@ class SubFigureGroup(Block):
             raise ValueError("SubFigureGroup.columns must be >= 1")
         if column_gap < 0:
             raise ValueError("SubFigureGroup.column_gap must be >= 0")
-        if "{label}" not in label_format:
-            raise ValueError("SubFigureGroup.label_format must contain '{label}'")
         self.subfigures = list(subfigures)
         self.caption = coerce_cell(caption) if caption is not None else None
         self.columns = columns
@@ -2536,7 +2561,15 @@ class SubFigureGroup(Block):
         self.unit = normalize_length_unit(unit) if unit is not None else None
         self.identifier = identifier
         self.placement = normalize_media_placement(placement)
-        self.label_format = label_format
+        self.label_format = _validate_child_label_format(
+            label_format,
+            name="SubFigureGroup.label_format",
+        )
+        self.label_style = _coerce_child_label_style(label_style)
+        self.reference_label_format = _validate_child_label_format(
+            reference_label_format if reference_label_format is not None else label_format,
+            name="SubFigureGroup.reference_label_format",
+        )
 
     def label_for_index(self, index: int) -> str:
         """Return the raw subfigure label for a zero-based child index.
@@ -2545,11 +2578,11 @@ class SubFigureGroup(Block):
             index: Zero-based child index.
 
         Returns:
-            Explicit label or generated lower-alpha label.
+            Explicit label or generated counter-style label.
         """
 
         subfigure = self.subfigures[index]
-        return subfigure.label or format_counter_value(index + 1, "lower-alpha")
+        return subfigure.label or self.label_style.format_value(self.label_style.start + index)
 
     def formatted_label_for_index(self, index: int) -> str:
         """Return the display label for a zero-based child index.
@@ -2562,6 +2595,18 @@ class SubFigureGroup(Block):
         """
 
         return self.label_format.format(label=self.label_for_index(index))
+
+    def formatted_reference_label_for_index(self, index: int) -> str:
+        """Return the child label suffix used in references.
+
+        Args:
+            index: Zero-based child index.
+
+        Returns:
+            Label formatted with ``reference_label_format``.
+        """
+
+        return self.reference_label_format.format(label=self.label_for_index(index))
 
     def resolved_placement(self) -> MediaPlacement:
         """Return the effective placement for this figure group.
@@ -2617,6 +2662,227 @@ class SubFigureGroup(Block):
         return renderer.render_subfigure_group(self, context)
 
 
+@dataclass(slots=True, init=False)
+class SubTable:
+    """A child table inside a numbered subtable group.
+
+    Args:
+        table: Table content rendered as a child table.
+        caption: Optional subtable caption. Defaults to ``table.caption`` when
+            omitted.
+        identifier: Optional stable identifier.
+        label: Optional explicit subtable label.
+
+    Examples:
+        ```python
+        from oodocs import SubTable, SubTableGroup, Table
+
+        baseline = SubTable(Table(["Metric"], [["AUC"]]), caption="Baseline")
+        tuned = SubTable(Table(["Metric"], [["AUC"]]), caption="Tuned")
+        group = SubTableGroup(baseline, tuned, caption="Sensitivity tables")
+        ```
+    """
+
+    table: Table
+    caption: Paragraph | None
+    identifier: str | None
+    label: str | None
+
+    def __init__(
+        self,
+        table: Table,
+        caption: CellInput | None = None,
+        identifier: str | None = None,
+        *,
+        label: str | None = None,
+    ) -> None:
+        if not isinstance(table, Table):
+            raise TypeError("SubTable.table must be a Table instance")
+        self.table = table
+        self.caption = coerce_cell(caption) if caption is not None else table.caption
+        self.identifier = identifier if identifier is not None else table.identifier
+        self.label = label
+
+    def table_without_caption(self) -> Table:
+        """Return a shallow table copy suitable for child rendering.
+
+        Returns:
+            Table copy with captions suppressed and placement constrained to
+            the current position.
+        """
+
+        table = copy(self.table)
+        table.caption = None
+        table.placement = "here"
+        return table
+
+    def width_in_inches(
+        self,
+        default_unit: str,
+        *,
+        available_width: float | None = None,
+    ) -> float | None:
+        """Return the rendered child-table width when it is explicitly known."""
+
+        column_widths = self.table._column_widths_in_inches(
+            default_unit,
+            available_width=available_width,
+        )
+        if column_widths is None:
+            return None
+        return sum(column_widths)
+
+    def reference(
+        self,
+        *label: InlineInput,
+    ) -> BlockReference:
+        """Create an explicit inline reference to this subtable."""
+
+        from oodocs.components.inline import reference
+
+        return reference(self, *label)
+
+
+@dataclass(slots=True, init=False)
+class SubTableGroup(Block):
+    """A numbered table composed of labeled child tables.
+
+    Args:
+        *subtables: Child subtables.
+        caption: Optional group caption.
+        columns: Number of columns in the subtable grid.
+        column_gap: Gap between columns in ``unit``.
+        unit: Unit for ``column_gap``.
+        identifier: Optional stable identifier.
+        placement: Optional placement policy.
+        label_format: Format string containing ``"{label}"``.
+        label_style: Counter style or counter-format name used for generated
+            child labels.
+        reference_label_format: Optional format string for references to child
+            tables. Defaults to ``label_format``.
+
+    Examples:
+        ```python
+        from oodocs import SubTable, SubTableGroup, Table
+
+        group = SubTableGroup(
+            SubTable(Table(["Case", "Value"], [["A", "0.91"]]), caption="Baseline"),
+            SubTable(Table(["Case", "Value"], [["B", "0.94"]]), caption="Tuned"),
+            caption="Sensitivity tables.",
+            columns=2,
+        )
+        ```
+    """
+
+    subtables: list[SubTable]
+    caption: Paragraph | None
+    columns: int
+    column_gap: float
+    unit: str | None
+    identifier: str | None
+    placement: MediaPlacement
+    label_format: str
+    label_style: CounterStyle
+    reference_label_format: str
+
+    def __init__(
+        self,
+        *subtables: SubTable,
+        caption: CellInput | None = None,
+        columns: int = 2,
+        column_gap: float = 0.18,
+        unit: str | None = None,
+        identifier: str | None = None,
+        placement: str | None = None,
+        label_format: str = "({label})",
+        label_style: CounterStyle | str | None = None,
+        reference_label_format: str | None = None,
+    ) -> None:
+        if not subtables:
+            raise ValueError("SubTableGroup requires at least one SubTable")
+        if columns < 1:
+            raise ValueError("SubTableGroup.columns must be >= 1")
+        if column_gap < 0:
+            raise ValueError("SubTableGroup.column_gap must be >= 0")
+        self.subtables = list(subtables)
+        self.caption = coerce_cell(caption) if caption is not None else None
+        self.columns = columns
+        self.column_gap = column_gap
+        self.unit = normalize_length_unit(unit) if unit is not None else None
+        self.identifier = identifier
+        self.placement = normalize_media_placement(placement)
+        self.label_format = _validate_child_label_format(
+            label_format,
+            name="SubTableGroup.label_format",
+        )
+        self.label_style = _coerce_child_label_style(label_style)
+        self.reference_label_format = _validate_child_label_format(
+            reference_label_format if reference_label_format is not None else label_format,
+            name="SubTableGroup.reference_label_format",
+        )
+
+    def label_for_index(self, index: int) -> str:
+        """Return the raw subtable label for a zero-based child index."""
+
+        subtable = self.subtables[index]
+        return subtable.label or self.label_style.format_value(self.label_style.start + index)
+
+    def formatted_label_for_index(self, index: int) -> str:
+        """Return the display label for a zero-based child index."""
+
+        return self.label_format.format(label=self.label_for_index(index))
+
+    def formatted_reference_label_for_index(self, index: int) -> str:
+        """Return the child label suffix used in references."""
+
+        return self.reference_label_format.format(label=self.label_for_index(index))
+
+    def resolved_placement(self) -> MediaPlacement:
+        """Return the effective placement for this table group."""
+
+        if self.placement == "auto":
+            return "float"
+        return self.placement
+
+    def reference(
+        self,
+        *label: InlineInput,
+    ) -> BlockReference:
+        """Create an explicit inline reference to this subtable group."""
+
+        from oodocs.components.inline import reference
+
+        return reference(self, *label)
+
+    def render_to_docx(
+        self,
+        renderer: object,
+        container: object,
+        context: DocxRenderContext,
+    ) -> None:
+        """Render this subtable group into a DOCX container."""
+
+        renderer.render_subtable_group(container, self, context)
+
+    def render_to_pdf(
+        self,
+        renderer: object,
+        context: PdfRenderContext,
+    ) -> list[object]:
+        """Render this subtable group into PDF flowables."""
+
+        return renderer.render_subtable_group(self, context)
+
+    def render_to_html(
+        self,
+        renderer: object,
+        context: HtmlRenderContext,
+    ) -> str:
+        """Render this subtable group into HTML markup."""
+
+        return renderer.render_subtable_group(self, context)
+
+
 __all__ = [
     "ColumnSpec",
     "ColumnSpecInput",
@@ -2627,6 +2893,8 @@ __all__ = [
     "MediaPlacement",
     "SubFigure",
     "SubFigureGroup",
+    "SubTable",
+    "SubTableGroup",
     "Table",
     "TableCell",
     "TableCellInput",

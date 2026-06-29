@@ -30,7 +30,7 @@ from oodocs.components.generated import (
     TableOfContents,
 )
 from oodocs.components.inline import BlockReference, Citation, Comment, Footnote, Hyperlink, Text
-from oodocs.components.media import Figure, SubFigure, SubFigureGroup, Table
+from oodocs.components.media import Figure, SubFigure, SubFigureGroup, SubTable, SubTableGroup, Table
 from oodocs.components.references import CitationLibrary, CitationSource
 from oodocs.core import OODocsError
 from oodocs.document import Document
@@ -183,7 +183,7 @@ class CaptionEntry:
     """
 
     number: int
-    block: Table | Figure | SubFigureGroup
+    block: Table | SubTableGroup | Figure | SubFigureGroup
     anchor: str
     scope: EntryScope = field(default_factory=EntryScope)
 
@@ -224,6 +224,11 @@ class RenderIndex:
         table_numbers: Table numbers keyed by table identity.
         figure_numbers: Figure numbers keyed by figure identity.
         subfigure_labels: Subfigure labels keyed by subfigure identity.
+        subfigure_reference_labels: Formatted subfigure reference suffixes keyed
+            by subfigure identity.
+        subtable_labels: Subtable labels keyed by subtable identity.
+        subtable_reference_labels: Formatted subtable reference suffixes keyed
+            by subtable identity.
         citations: Indexed citation references.
         citation_numbers: Citation numbers keyed by citation key.
         citation_source_numbers: Citation numbers keyed by source identity.
@@ -260,6 +265,9 @@ class RenderIndex:
     table_numbers: dict[int, int] = field(default_factory=dict)
     figure_numbers: dict[int, int] = field(default_factory=dict)
     subfigure_labels: dict[int, str] = field(default_factory=dict)
+    subfigure_reference_labels: dict[int, str] = field(default_factory=dict)
+    subtable_labels: dict[int, str] = field(default_factory=dict)
+    subtable_reference_labels: dict[int, str] = field(default_factory=dict)
     citations: list[CitationReferenceEntry] = field(default_factory=list)
     citation_numbers: dict[str, int] = field(default_factory=dict)
     citation_source_numbers: dict[int, int] = field(default_factory=dict)
@@ -337,7 +345,7 @@ class RenderIndex:
             return generated_scope.heading_path[-1] in entry_scope.heading_path
         return False
 
-    def table_number(self, table: Table) -> int | None:
+    def table_number(self, table: Table | SubTable | SubTableGroup) -> int | None:
         """Return the assigned table number for a captioned table.
 
         Args:
@@ -382,6 +390,21 @@ class RenderIndex:
         """
 
         return self.subfigure_labels.get(id(subfigure))
+
+    def subfigure_reference_label(self, subfigure: SubFigure) -> str | None:
+        """Return the formatted child suffix for a subfigure reference."""
+
+        return self.subfigure_reference_labels.get(id(subfigure))
+
+    def subtable_label(self, subtable: SubTable) -> str | None:
+        """Return the assigned label for a subtable inside a numbered group."""
+
+        return self.subtable_labels.get(id(subtable))
+
+    def subtable_reference_label(self, subtable: SubTable) -> str | None:
+        """Return the formatted child suffix for a subtable reference."""
+
+        return self.subtable_reference_labels.get(id(subtable))
 
     def citation_number(self, target: CitationSource | str) -> int:
         """Return the assigned citation number for a source or key.
@@ -488,7 +511,7 @@ class RenderIndex:
 
         return self.heading_numbers.get(id(target))
 
-    def table_anchor(self, table: Table) -> str | None:
+    def table_anchor(self, table: Table | SubTable | SubTableGroup) -> str | None:
         """Return the bookmark name for a captioned table.
 
         Args:
@@ -501,6 +524,10 @@ class RenderIndex:
         number = self.table_number(table)
         if number is None:
             return None
+        if isinstance(table, SubTable):
+            label = self.subtable_label(table)
+            if label is not None:
+                return f"table_{number}_{label}"
         return f"table_{number}"
 
     def figure_anchor(self, figure: Figure | SubFigure | SubFigureGroup) -> str | None:
@@ -968,6 +995,40 @@ def _index_blocks(
                     label = block.label_for_index(index)
                     render_index.figure_numbers[id(subfigure)] = number
                     render_index.subfigure_labels[id(subfigure)] = label
+                    render_index.subfigure_reference_labels[id(subfigure)] = (
+                        block.formatted_reference_label_for_index(index)
+                    )
+            continue
+        if isinstance(block, SubTableGroup):
+            for subtable in block.subtables:
+                table = subtable.table
+                for header_row in table.header_rows:
+                    for header in header_row:
+                        _index_inlines(header.content.content, render_index, citations)
+                for row in table.rows:
+                    for cell in row:
+                        _index_inlines(cell.content.content, render_index, citations)
+                if subtable.caption is not None:
+                    _index_inlines(subtable.caption.content, render_index, citations)
+            if block.caption is not None:
+                _index_inlines(block.caption.content, render_index, citations)
+                number = len(render_index.tables) + 1
+                render_index.tables.append(
+                    CaptionEntry(
+                        number=number,
+                        block=block,
+                        anchor=f"table_{number}",
+                        scope=scope,
+                    )
+                )
+                render_index.table_numbers[id(block)] = number
+                for index, subtable in enumerate(block.subtables):
+                    label = block.label_for_index(index)
+                    render_index.table_numbers[id(subtable)] = number
+                    render_index.subtable_labels[id(subtable)] = label
+                    render_index.subtable_reference_labels[id(subtable)] = (
+                        block.formatted_reference_label_for_index(index)
+                    )
 
 
 def _index_inlines(

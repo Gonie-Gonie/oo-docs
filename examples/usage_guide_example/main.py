@@ -55,6 +55,8 @@ from oodocs import (
     StrokeStyle,
     SubFigure,
     SubFigureGroup,
+    SubTable,
+    SubTableGroup,
     Subsection,
     SubSubsection,
     ColumnSpec,
@@ -275,6 +277,27 @@ comparison = SubFigureGroup(
 )
 
 Paragraph("The post-calibration case is shown in ", after.reference(), ".")
+"""
+
+SUBTABLE_SNIPPET = """from oodocs import Paragraph, SubTable, SubTableGroup, Table
+
+baseline = SubTable(
+    Table(["Metric", "Value"], [["AUC", "0.91"], ["F1", "0.84"]]),
+    caption="Baseline.",
+)
+tuned = SubTable(
+    Table(["Metric", "Value"], [["AUC", "0.94"], ["F1", "0.88"]]),
+    caption="Tuned.",
+)
+
+sensitivity = SubTableGroup(
+    baseline,
+    tuned,
+    caption="Sensitivity tables.",
+    columns=2,
+)
+
+Paragraph("The tuned table is shown in ", tuned.reference(), ".")
 """
 
 POSITIONED_DRAWING_SNIPPET = """from oodocs import Document, DocumentSettings, ImageBox, Paragraph, Shape, StrokeStyle, TextBox
@@ -974,7 +997,7 @@ def build_usage_guide_document() -> Document:
             ["Table", "header/body/alternate colors, border, top_rule, header_rule, bottom_rule, alignment, cell_padding, repeat_header_rows", "Use style=\"booktabs\" for publication-style horizontal rules without vertical grid lines."],
             ["TableCell", "colspan, rowspan, background_color, text_color, bold, italic, text_alignment, vertical_alignment", "Use TableCellStyle only for reusable row, column, or cell styling."],
             ["TableOfContents, ListOfTables, ListOfFigures", "scope, show_page_numbers, leader; TableOfContents also accepts max_level and level_styles", "Use scope for document, part, chapter, or section-local generated lists."],
-            ["Figure, SubFigure, SubFigureGroup", "width, height, unit, placement, image_dpi, columns, column_gap, label_format", "Use caption Paragraphs when caption text needs inline styling."],
+            ["Figure, SubFigure, SubFigureGroup, SubTable, SubTableGroup", "width, height, unit, placement, image_dpi, columns, column_gap, label_format, label_style", "Use caption Paragraphs when caption text needs inline styling."],
         ],
         caption="Block-level option scope from quick kwargs to reusable style objects.",
         column_widths=[1.8, 3.6, 2.0],
@@ -1501,6 +1524,18 @@ def build_usage_guide_document() -> Document:
                     " label and can be referenced from prose."
                 ),
                 CodeBlock(SUBFIGURE_SNIPPET, language="python"),
+                Paragraph(
+                    "Related tables can use the same pattern with ",
+                    inline_code("SubTable"),
+                    " children inside a ",
+                    inline_code("SubTableGroup"),
+                    ". The group owns one table number, and each child can be referenced as ",
+                    inline_code("Table 1(a)"),
+                    ", ",
+                    inline_code("Table 1(b)"),
+                    ", and so on."
+                ),
+                CodeBlock(SUBTABLE_SNIPPET, language="python"),
             ),
             Section(
                 "Use figures to explain the authoring model, not just decorate it",

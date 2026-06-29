@@ -572,6 +572,20 @@
           "qualname": "oodocs.components.media.SubFigureGroup"
         },
         {
+          "category": "media",
+          "kind": "class",
+          "module": "oodocs.components.media",
+          "name": "SubTable",
+          "qualname": "oodocs.components.media.SubTable"
+        },
+        {
+          "category": "media",
+          "kind": "class",
+          "module": "oodocs.components.media",
+          "name": "SubTableGroup",
+          "qualname": "oodocs.components.media.SubTableGroup"
+        },
+        {
           "category": "block",
           "kind": "class",
           "module": "oodocs.components.blocks",

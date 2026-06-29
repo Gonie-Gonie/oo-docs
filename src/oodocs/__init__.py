@@ -58,6 +58,8 @@ from oodocs.components.media import (
     ImageData,
     SubFigure,
     SubFigureGroup,
+    SubTable,
+    SubTableGroup,
     Table,
     TableCell,
 )
@@ -257,6 +259,8 @@ __all__ = [
     "StyleSheet",
     "SubFigure",
     "SubFigureGroup",
+    "SubTable",
+    "SubTableGroup",
     "Subsection",
     "SubSubsection",
     "Table",

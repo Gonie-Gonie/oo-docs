@@ -95,6 +95,8 @@ from oodocs import (
     StyleSheet,
     SubFigure,
     SubFigureGroup,
+    SubTable,
+    SubTableGroup,
     Subsection,
     SubSubsection,
     Table,
@@ -2704,6 +2706,83 @@ def test_subfigure_group_renders_labels_and_references(tmp_path: Path) -> None:
     assert 'id="figure_1_a"' in html_text
     assert 'id="figure_1_b"' in html_text
     assert html_text.count("data:image/png;base64,") == 2
+
+
+def test_subtable_group_renders_labels_and_references(tmp_path: Path) -> None:
+    baseline = SubTable(
+        Table(
+            ["Metric", "Value"],
+            [["AUC", "0.91"], ["F1", "0.84"]],
+            caption="Baseline sensitivity.",
+            column_widths=[0.7, 0.7],
+        )
+    )
+    tuned = SubTable(
+        Table(
+            ["Metric", "Value"],
+            [["AUC", "0.94"], ["F1", "0.88"]],
+            column_widths=[0.7, 0.7],
+        ),
+        caption="Tuned sensitivity.",
+    )
+    group = SubTableGroup(
+        baseline,
+        tuned,
+        caption="Sensitivity table variants.",
+        columns=2,
+        column_gap=0.15,
+    )
+    document = Document(
+        "Subtable Test",
+        Paragraph("Compare ", baseline.reference(), " with ", tuned.reference(), " in ", group.reference(), "."),
+        group,
+    )
+
+    docx_path = tmp_path / "subtable.docx"
+    pdf_path = tmp_path / "subtable.pdf"
+    html_path = tmp_path / "subtable.html"
+    document.save_docx(docx_path)
+    document.save_pdf(pdf_path)
+    document.save_html(html_path)
+
+    word_document = WordDocument(docx_path)
+    paragraph_text = "\n".join(paragraph.text for paragraph in word_document.paragraphs)
+
+    def collect_table_text(tables: list[object]) -> list[str]:
+        parts: list[str] = []
+        for table in tables:
+            for row in table.rows:
+                for cell in row.cells:
+                    parts.extend(paragraph.text for paragraph in cell.paragraphs)
+                    parts.extend(collect_table_text(list(cell.tables)))
+        return parts
+
+    table_text = "\n".join(collect_table_text(list(word_document.tables)))
+    assert "Compare Table 1(a) with Table 1(b) in Table 1." in paragraph_text
+    assert "(a) Baseline sensitivity." in table_text
+    assert "(b) Tuned sensitivity." in table_text
+    assert "Table 1. Sensitivity table variants." in paragraph_text
+    assert "AUC" in table_text
+    assert "0.94" in table_text
+
+    pdf_text = "\n".join(page.extract_text() or "" for page in PdfReader(BytesIO(pdf_path.read_bytes())).pages)
+    assert "Compare Table 1(a) with Table 1(b) in Table 1." in pdf_text
+    assert "(a) Baseline sensitivity." in pdf_text
+    assert "(b) Tuned sensitivity." in pdf_text
+    assert "Table 1. Sensitivity table variants." in pdf_text
+    assert "Table 2." not in pdf_text
+
+    html_text = html_path.read_text(encoding="utf-8")
+    normalized_html_text = _normalized_html_text(html_path)
+    assert "Compare Table 1(a) with Table 1(b) in Table 1" in normalized_html_text
+    assert "(a) Baseline sensitivity." in normalized_html_text
+    assert "(b) Tuned sensitivity." in normalized_html_text
+    assert "Table 1. Sensitivity table variants." in normalized_html_text
+    assert "Table 2." not in normalized_html_text
+    assert 'href="#table_1_a"' in html_text
+    assert 'href="#table_1_b"' in html_text
+    assert 'id="table_1_a"' in html_text
+    assert 'id="table_1_b"' in html_text
 
 
 def test_caption_and_reference_labels_can_differ_by_theme(tmp_path: Path) -> None:
