@@ -159,6 +159,13 @@
           "qualname": "oodocs.components.blocks.ColumnSpan"
         },
         {
+          "category": "media",
+          "kind": "class",
+          "module": "oodocs.components.media",
+          "name": "ColumnSpec",
+          "qualname": "oodocs.components.media.ColumnSpec"
+        },
+        {
           "category": "block",
           "kind": "class",
           "module": "oodocs.components.blocks",

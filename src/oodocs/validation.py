@@ -1081,13 +1081,15 @@ class _ValidationContext:
                         f"{path}.column_widths[{index}]",
                     )
             self._validate_table_width(table, path)
+        elif table.columns is not None:
+            self._validate_table_width(table, path)
         elif layout.column_count >= 8:
             self._add(
                 "warning",
                 "many-table-columns",
                 f"Table has {layout.column_count} columns. Wide tables may wrap poorly "
-                "in fixed-page renderers; consider column_widths, split=True, or a "
-                "narrower table.",
+                "in fixed-page renderers; consider columns, column_widths, "
+                "split=True, or a narrower table.",
                 path,
                 formats=("docx", "pdf"),
             )
@@ -1461,7 +1463,10 @@ class _ValidationContext:
                 )
 
     def _validate_table_width(self, table: Table, path: str) -> None:
-        column_widths = table._column_widths_in_inches(self.document.settings.unit)
+        column_widths = table._column_widths_in_inches(
+            self.document.settings.unit,
+            available_width=self.document.settings.text_width_in_inches(),
+        )
         if column_widths is None:
             return
         table_width = sum(column_widths)
@@ -1472,7 +1477,9 @@ class _ValidationContext:
             "warning",
             "wide-table",
             f"Table width is {table_width:.2f}in, wider than the document text "
-            f"width of {text_width:.2f}in. Fixed-page renderers may wrap or clip it.",
+            f"width of {text_width:.2f}in. Fixed-page renderers may wrap or clip "
+            "it; consider ColumnSpec(flex=...), Table.excerpt(...), or "
+            "Table.save_csv(...) for the full matrix sidecar.",
             path,
             formats=("docx", "pdf"),
         )

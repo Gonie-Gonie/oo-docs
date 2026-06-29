@@ -57,6 +57,7 @@ from oodocs import (
     SubFigureGroup,
     Subsection,
     SubSubsection,
+    ColumnSpec,
     Table,
     ListOfTables,
     TableOfContents,
@@ -631,6 +632,23 @@ Table(
     caption="Publication-style metrics.",
     style="booktabs",
 )
+"""
+
+TABLE_COLUMN_SPEC_SNIPPET = """from oodocs import ColumnSpec, Table
+
+full_matrix = Table.from_records(
+    records,
+    columns=[
+        ColumnSpec(key="case", header="Case", width=0.9, unit="in", wrap=False),
+        ColumnSpec(key="status", header="Status", width=0.8, unit="in"),
+        ColumnSpec(key="notes", header="Notes", flex=2, text_alignment="left"),
+        ColumnSpec(key="raw_trace", visible=False),
+    ],
+    caption="Readable matrix excerpt.",
+)
+
+excerpt = full_matrix.excerpt(max_rows=12, max_columns=3)
+full_matrix.save_csv("artifacts/full-matrix.csv")
 """
 
 TABLE_PLACEMENT_SNIPPET = """from oodocs import Figure, Table
@@ -1394,6 +1412,16 @@ def build_usage_guide_document() -> Document:
                     "."
                 ),
                 CodeBlock(BOOKTABS_TABLE_SNIPPET, language="python"),
+                Paragraph(
+                    "For LaTeX ",
+                    inline_code("tabularx"),
+                    " or ",
+                    inline_code("array"),
+                    " habits, use ",
+                    inline_code("ColumnSpec"),
+                    " to mix fixed widths, flexible text columns, alignment, wrapping, and record-column visibility. A wide table can render as an excerpt while the complete matrix is written as a CSV sidecar."
+                ),
+                CodeBlock(TABLE_COLUMN_SPEC_SNIPPET, language="python"),
                 Paragraph(
                     "That local authorship pattern is also why the guide can stay detailed without becoming confusing. The content reads like a normal reference document, but the source remains inspectable because the formatting instructions are still attached to the words they affect."
                 ),

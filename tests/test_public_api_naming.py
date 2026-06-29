@@ -65,6 +65,7 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "OutputBundle",
         "build_source_outputs",
         "CommentList",
+        "ColumnSpec",
         "create_countable_block_type",
         "FootnoteList",
         "ListOfFigures",
@@ -366,6 +367,8 @@ def test_table_public_api_hides_renderer_helper_methods() -> None:
         "from_dataframe",
         "from_records",
         "from_tsv",
+        "excerpt",
+        "save_csv",
     }
 
     assert forbidden.isdisjoint(members)

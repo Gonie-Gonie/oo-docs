@@ -691,7 +691,10 @@ class HtmlRenderer:
         split_table = block._resolve_split()
         placement = block._resolve_placement()
         colgroup = ""
-        column_widths = block._column_widths_in_inches(context.unit)
+        column_widths = block._column_widths_in_inches(
+            context.unit,
+            available_width=context.settings.text_width_in_inches(),
+        )
         if column_widths is not None:
             columns = "".join(
                 f'<col style="width: {width:.2f}in;" />'
@@ -1427,6 +1430,8 @@ class HtmlRenderer:
             style_parts.append(f"font-weight: {'700' if effective_style.bold else '400'}")
         if effective_style.italic is not None:
             style_parts.append(f"font-style: {'italic' if effective_style.italic else 'normal'}")
+        if not block._column_wrap_enabled(placement.column):
+            style_parts.append("white-space: nowrap")
         attrs = []
         if placement.cell.colspan > 1:
             attrs.append(f' colspan="{placement.cell.colspan}"')

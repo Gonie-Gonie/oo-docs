@@ -127,6 +127,7 @@ OODocs_API_CATEGORIES: tuple[ApiCategory, ...] = (
         include=(
             "oodocs.Table",
             "oodocs.TableCell",
+            "oodocs.ColumnSpec",
             "oodocs.TableCellStyle",
             "oodocs.Figure",
             "oodocs.ImageData",

@@ -22,6 +22,7 @@ _EXPORTS = {
     "Claim": "oodocs.components.blocks",
     "CodeBlock": "oodocs.components.blocks",
     "ColumnSpan": "oodocs.components.blocks",
+    "ColumnSpec": "oodocs.components.media",
     "Comment": "oodocs.components.inline",
     "Conjecture": "oodocs.components.blocks",
     "CommentList": "oodocs.components.generated",

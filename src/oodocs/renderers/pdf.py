@@ -1246,6 +1246,7 @@ class PdfRenderer:
             context.styles,
             context.render_index,
             context.unit,
+            text_width=context.settings.text_width_in_inches(),
             in_box=context.in_box,
         )
 
@@ -1928,6 +1929,7 @@ class PdfRenderer:
         render_index: RenderIndex,
         unit: str,
         *,
+        text_width: float,
         in_box: bool = False,
     ) -> list[object]:
         table_style = theme.stylesheet.resolve("table", block.style, OODocsTableStyle())
@@ -2040,7 +2042,10 @@ class PdfRenderer:
                     )
                 )
 
-        resolved_widths = block._column_widths_in_inches(unit)
+        resolved_widths = block._column_widths_in_inches(
+            unit,
+            available_width=text_width,
+        )
         column_widths = [width * inch for width in resolved_widths] if resolved_widths is not None else None
         table = RLTable(
             table_rows,

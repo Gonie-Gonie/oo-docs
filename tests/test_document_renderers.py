@@ -45,6 +45,7 @@ from oodocs import (
     CommentList,
     CodeBlock,
     ColumnSpan,
+    ColumnSpec,
     Conjecture,
     CountableBlock,
     Corollary,
@@ -1037,7 +1038,13 @@ def test_document_validate_reports_preflight_warnings(tmp_path: Path) -> None:
         "wide-table",
     }
     assert "missing-image-file" in error_codes
-    assert any(issue.formats == ("docx", "pdf") for issue in result.warnings if issue.code == "wide-table")
+    wide_table_warnings = [
+        issue for issue in result.warnings
+        if issue.code == "wide-table"
+    ]
+    assert any(issue.formats == ("docx", "pdf") for issue in wide_table_warnings)
+    assert any("ColumnSpec(flex=...)" in issue.message for issue in wide_table_warnings)
+    assert any("save_csv" in issue.message for issue in wide_table_warnings)
 
 
 def test_document_validate_treats_subfigure_group_caption_as_reference_target(
@@ -1214,6 +1221,65 @@ def test_table_cell_alignment_options_are_validated() -> None:
         assert "vertical" in str(exc)
     else:
         raise AssertionError("Expected invalid vertical alignment to fail")
+
+
+def test_table_column_specs_render_flex_widths_and_wrapping(
+    tmp_path: Path,
+) -> None:
+    table = Table(
+        headers=["Case", "Status", "Notes"],
+        rows=[["case-001", "pass", "Fixed-page renderers share remaining text width."]],
+        caption="Column spec table.",
+        columns=[
+            ColumnSpec(width=1.0, unit="in", text_alignment="right", wrap=False),
+            ColumnSpec(flex=1, text_alignment="center"),
+            ColumnSpec(flex=2, text_alignment="left"),
+        ],
+    )
+    settings = DocumentSettings(
+        unit="in",
+        page_size=PageSize.letter(),
+        page_margins=PageMargins.all(0.75, unit="in"),
+    )
+    document = Document("Column Specs", table, settings=settings)
+
+    assert table._column_widths_in_inches("in", available_width=7.0) == [
+        1.0,
+        2.0,
+        4.0,
+    ]
+
+    with pytest.raises(ValueError, match="mutually exclusive"):
+        Table(
+            headers=["A"],
+            rows=[["B"]],
+            column_widths=[1.0],
+            columns=[ColumnSpec(flex=1)],
+        )
+
+    docx_path = tmp_path / "column-specs.docx"
+    pdf_path = tmp_path / "column-specs.pdf"
+    html_path = tmp_path / "column-specs.html"
+    document.save_docx(docx_path)
+    document.save_pdf(pdf_path)
+    document.save_html(html_path)
+
+    docx_xml = _docx_document_xml(docx_path)
+    pdf_text = "\n".join(page.extract_text() or "" for page in PdfReader(pdf_path).pages)
+    html_text = html_path.read_text(encoding="utf-8")
+
+    assert 'w:w="1440"' in docx_xml
+    assert 'w:w="2880"' in docx_xml
+    assert 'w:w="5760"' in docx_xml
+    assert '<w:jc w:val="right"' in docx_xml
+    assert "Column spec table." in pdf_text
+    assert "case-001" in pdf_text
+    assert 'style="width: 1.00in;"' in html_text
+    assert 'style="width: 2.00in;"' in html_text
+    assert 'style="width: 4.00in;"' in html_text
+    assert "white-space: nowrap" in html_text
+    assert "text-align: right" in html_text
+    assert "text-align: center" in html_text
 
 
 def test_table_split_and_media_placement_options_render(tmp_path: Path) -> None:

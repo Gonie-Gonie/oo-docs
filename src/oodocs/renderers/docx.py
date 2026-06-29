@@ -812,6 +812,7 @@ class DocxRenderer:
             context.render_index,
             context.unit,
             word_document=context.word_document,
+            text_width=context.settings.text_width_in_inches(),
         )
 
     def render_figure(
@@ -2545,6 +2546,7 @@ class DocxRenderer:
         render_index: RenderIndex,
         unit: str,
         *,
+        text_width: float,
         word_document: WordDocument,
     ) -> None:
         table_style = theme.stylesheet.resolve("table", table_block.style, TableStyle())
@@ -2588,7 +2590,10 @@ class DocxRenderer:
             self._repeat_table_header_rows(table, layout.header_row_count)
         else:
             self._keep_table_together(table)
-        column_widths = table_block._column_widths_in_inches(unit)
+        column_widths = table_block._column_widths_in_inches(
+            unit,
+            available_width=text_width,
+        )
         if column_widths is not None:
             for column_index, width in enumerate(column_widths):
                 table.columns[column_index].width = Inches(width)

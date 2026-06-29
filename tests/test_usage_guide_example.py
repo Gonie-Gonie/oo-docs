@@ -133,6 +133,8 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert any("continuation_label" in text for text in paragraph_texts)
     assert any("display: table-header-group" in text for text in paragraph_texts)
     assert any('style="booktabs"' in text for text in paragraph_texts)
+    assert any("ColumnSpec(key=" in text for text in paragraph_texts)
+    assert any("full_matrix.save_csv" in text for text in paragraph_texts)
     assert any("'tbp'" in text or 'placement="tbp"' in text for text in paragraph_texts)
     assert any("TableOfContents" in text for text in paragraph_texts)
     assert any("TocLevelStyle" in text for text in paragraph_texts)
@@ -234,6 +236,8 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "continuation_label" in pdf_text
     assert "display: table-header-group" in pdf_text
     assert 'style="booktabs"' in pdf_text
+    assert "ColumnSpec(key=" in pdf_text
+    assert "full_matrix.save_csv" in pdf_text
     assert ("'tbp'" in pdf_text) or ('placement="tbp"' in pdf_text)
     assert "TableOfContents" in pdf_text
     assert "TocLevelStyle" in pdf_text
@@ -320,6 +324,8 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "continuation_label" in normalized_html_text
     assert "display: table-header-group" in normalized_html_text
     assert 'style="booktabs"' in normalized_html_text
+    assert "ColumnSpec" in normalized_html_text
+    assert "save_csv" in normalized_html_text
     assert ("'tbp'" in normalized_html_text) or ('placement="tbp"' in normalized_html_text)
     assert "TableOfContents" in normalized_html_text
     assert "TocLevelStyle" in normalized_html_text

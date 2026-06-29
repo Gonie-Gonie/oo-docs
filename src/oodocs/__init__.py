@@ -52,6 +52,7 @@ from oodocs.components.generated import (
     TocLevelStyle,
 )
 from oodocs.components.media import (
+    ColumnSpec,
     Figure,
     ImageData,
     SubFigure,
@@ -196,6 +197,7 @@ __all__ = [
     "CommentList",
     "CodeBlock",
     "ColumnSpan",
+    "ColumnSpec",
     "Conjecture",
     "CountableBlock",
     "Corollary",

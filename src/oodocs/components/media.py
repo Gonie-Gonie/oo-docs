@@ -5,6 +5,9 @@ Attributes:
     TableSplit: Table splitting policy accepted by table rendering options.
     DEFAULT_LONG_TABLE_ROW_THRESHOLD: Row count where tables are treated as
         long tables by default.
+    ColumnSpec: Renderer-neutral table column layout and record-selection
+        metadata.
+    ColumnSpecInput: Accepted input for table column specifications.
     TableCellStyleInput: Accepted input for table-cell style coercion.
     TableCellInput: Accepted input for table cells.
 """
@@ -403,6 +406,93 @@ def coerce_table_cell(value: TableCellInput) -> TableCell:
     if isinstance(value, TableCell):
         return value
     return TableCell(value)
+
+
+@dataclass(frozen=True, slots=True)
+class ColumnSpec:
+    """Renderer-neutral column layout and record-selection metadata.
+
+    Attributes:
+        width: Fixed column width in ``unit``.
+        flex: Relative share of remaining text width.
+        unit: Unit for ``width``.
+        text_alignment: Optional default text alignment for this column.
+        vertical_alignment: Optional default vertical alignment for this
+            column.
+        wrap: Whether renderers should allow text wrapping when supported.
+        key: Optional record key used by ``Table.from_records``.
+        header: Optional header cell used by ``Table.from_records``.
+        visible: Whether ``Table.from_records`` includes this column.
+
+    Examples:
+        ```python
+        from oodocs import ColumnSpec, Table
+
+        table = Table(
+            ["Metric", "Description"],
+            [["Latency", "End-to-end response time"]],
+            columns=[
+                ColumnSpec(width=0.9, unit="in"),
+                ColumnSpec(flex=1, text_alignment="left"),
+            ],
+        )
+        ```
+    """
+
+    width: float | None = None
+    flex: float | None = None
+    unit: str | None = None
+    text_alignment: str | None = None
+    vertical_alignment: str | None = None
+    wrap: bool = True
+    key: object | None = None
+    header: TableCellInput | None = None
+    visible: bool = True
+
+    def __post_init__(self) -> None:
+        if self.width is not None and self.flex is not None:
+            raise ValueError("ColumnSpec accepts width or flex, not both")
+        if self.width is not None and self.width <= 0:
+            raise ValueError("ColumnSpec.width must be greater than zero")
+        if self.flex is not None and self.flex <= 0:
+            raise ValueError("ColumnSpec.flex must be greater than zero")
+        if self.unit is not None:
+            object.__setattr__(self, "unit", normalize_length_unit(self.unit))
+        if self.text_alignment is not None:
+            object.__setattr__(
+                self,
+                "text_alignment",
+                normalize_text_alignment(self.text_alignment),
+            )
+        if self.vertical_alignment is not None:
+            object.__setattr__(
+                self,
+                "vertical_alignment",
+                normalize_vertical_alignment(self.vertical_alignment),
+            )
+        object.__setattr__(self, "wrap", bool(self.wrap))
+        object.__setattr__(self, "visible", bool(self.visible))
+
+    def cell_style(self) -> TableCellStyle:
+        """Return the cell style implied by this column specification."""
+
+        return TableCellStyle(
+            text_alignment=self.text_alignment,
+            vertical_alignment=self.vertical_alignment,
+        )
+
+
+ColumnSpecInput = ColumnSpec | Mapping[str, object]
+
+
+def coerce_column_spec(value: ColumnSpecInput) -> ColumnSpec:
+    """Normalize supported column specification inputs."""
+
+    if isinstance(value, ColumnSpec):
+        return value
+    if isinstance(value, Mapping):
+        return ColumnSpec(**dict(value))
+    raise TypeError(f"Unsupported column specification: {type(value)!r}")
 
 
 def _is_nested_table_input(values: Sequence[object]) -> bool:
@@ -837,6 +927,8 @@ class Table(Block):
         rows: Body rows. Required unless ``headers`` is dataframe-like.
         caption: Optional table caption.
         column_widths: Optional widths for the expanded rendered columns.
+        columns: Optional column specifications. Mutually exclusive with
+            ``column_widths``.
         unit: Unit for ``column_widths``.
         identifier: Optional stable identifier for references or renderer use.
         style: Base table style.
@@ -872,6 +964,7 @@ class Table(Block):
         rows: Normalized body rows.
         caption: Optional normalized caption paragraph.
         column_widths: Optional expanded column widths.
+        columns: Optional expanded column specifications.
         unit: Unit for column widths.
         identifier: Stable identifier for references or renderer use.
         style: Resolved table style after overrides are merged.
@@ -933,6 +1026,7 @@ class Table(Block):
     rows: list[list[TableCell]]
     caption: Paragraph | None
     column_widths: list[float] | None
+    columns: list[ColumnSpec] | None
     unit: str | None
     identifier: str | None
     style: TableStyle | str
@@ -953,6 +1047,7 @@ class Table(Block):
         *,
         caption: CellInput | None = None,
         column_widths: Sequence[float] | None = None,
+        columns: Sequence[ColumnSpecInput] | None = None,
         unit: str | None = None,
         identifier: str | None = None,
         style: TableStyle | str | None = None,
@@ -999,7 +1094,14 @@ class Table(Block):
             ]
 
         self.caption = coerce_cell(caption) if caption is not None else None
+        if column_widths is not None and columns is not None:
+            raise ValueError("column_widths and columns are mutually exclusive")
         self.column_widths = list(column_widths) if column_widths is not None else None
+        self.columns = (
+            [coerce_column_spec(column) for column in columns]
+            if columns is not None
+            else None
+        )
         self.unit = normalize_length_unit(unit) if unit is not None else None
         self.identifier = identifier
         self.style = table_style_with_overrides(
@@ -1042,6 +1144,8 @@ class Table(Block):
         layout = self._layout()
         if self.column_widths is not None and len(self.column_widths) != layout.column_count:
             raise ValueError("column_widths must match the expanded number of table columns")
+        if self.columns is not None and len(self.columns) != layout.column_count:
+            raise ValueError("columns must match the expanded number of table columns")
 
     @property
     def headers(self) -> list[TableCell]:
@@ -1065,6 +1169,105 @@ class Table(Block):
         """
 
         return len(self.header_rows) + len(self.rows)
+
+    def excerpt(
+        self,
+        *,
+        max_rows: int | None = 10,
+        max_columns: int | None = 6,
+        caption: CellInput | None = None,
+    ) -> Table:
+        """Return a compact plain-text excerpt of this table.
+
+        Args:
+            max_rows: Maximum body rows to include, or ``None`` for all rows.
+            max_columns: Maximum rendered columns to include, or ``None`` for
+                all columns.
+            caption: Optional caption for the excerpt. Defaults to the source
+                table caption.
+
+        Returns:
+            New ``Table`` containing a flattened preview suitable for fixed-page
+            outputs.
+
+        Examples:
+            ```python
+            excerpt = full_table.excerpt(max_rows=12, max_columns=5)
+            full_table.save_csv("artifacts/full-table.csv")
+            ```
+        """
+
+        if max_rows is None and max_columns is None:
+            raise ValueError("max_rows or max_columns is required")
+        if max_rows is not None and max_rows < 1:
+            raise ValueError("max_rows must be >= 1")
+        if max_columns is not None and max_columns < 1:
+            raise ValueError("max_columns must be >= 1")
+
+        matrix = self._plain_text_matrix()
+        header_count = len(self.header_rows)
+        column_limit = max_columns if max_columns is not None else None
+        row_limit = max_rows if max_rows is not None else None
+        header_rows = [
+            row[:column_limit] if column_limit is not None else list(row)
+            for row in matrix[:header_count]
+        ]
+        body_rows = [
+            row[:column_limit] if column_limit is not None else list(row)
+            for row in matrix[header_count : header_count + row_limit]
+        ]
+        if not header_rows:
+            header_rows = [[]]
+        excerpt_column_count = len(header_rows[0]) if header_rows else 0
+        excerpt_columns = (
+            self.columns[:excerpt_column_count]
+            if self.columns is not None
+            else None
+        )
+        excerpt_column_widths = (
+            self.column_widths[:excerpt_column_count]
+            if self.column_widths is not None and excerpt_columns is None
+            else None
+        )
+        return Table(
+            header_rows,
+            body_rows,
+            caption=caption if caption is not None else self.caption,
+            column_widths=excerpt_column_widths,
+            columns=excerpt_columns,
+            unit=self.unit,
+            style=self.style,
+            split=self.split,
+            placement=self.placement,
+            long_table_threshold=self.long_table_threshold,
+        )
+
+    def save_csv(
+        self,
+        path: PathLike,
+        *,
+        encoding: str = "utf-8",
+        include_headers: bool = True,
+    ) -> Path:
+        """Write the full flattened table as a CSV sidecar.
+
+        Args:
+            path: Destination CSV path.
+            encoding: File encoding.
+            include_headers: Whether to include header rows.
+
+        Returns:
+            Written path.
+        """
+
+        output_path = Path(path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        with output_path.open("w", encoding=encoding, newline="") as handle:
+            writer = csv.writer(handle)
+            writer.writerows(
+                self._plain_text_matrix(include_headers=include_headers)
+            )
+        return output_path
 
     def _resolve_split(self, default_threshold: int = DEFAULT_LONG_TABLE_ROW_THRESHOLD) -> bool:
         if self.split is True:
@@ -1111,10 +1314,41 @@ class Table(Block):
             )
         )
         return self._base_cell_style(placement, table_style=table_style).merged(
+            self._column_spec_cell_style(placement.column),
             _resolve_table_cell_style(self.column_styles.get(placement.column), stylesheet),
             _resolve_table_cell_style(row_style, stylesheet),
             _resolve_table_cell_style(placement.cell.style, stylesheet),
         )
+
+    def _column_spec_cell_style(self, column: int) -> TableCellStyle | None:
+        if self.columns is None or column >= len(self.columns):
+            return None
+        return self.columns[column].cell_style()
+
+    def _column_wrap_enabled(self, column: int) -> bool:
+        if self.columns is None or column >= len(self.columns):
+            return True
+        return self.columns[column].wrap
+
+    def _plain_text_matrix(self, *, include_headers: bool = True) -> list[list[str]]:
+        layout = self._layout()
+        matrix = [
+            ["" for _ in range(layout.column_count)]
+            for _ in range(layout.row_count)
+        ]
+        for placement in layout.placements:
+            text = placement.cell.content.plain_text()
+            for row_offset in range(placement.cell.rowspan):
+                row_index = placement.row + row_offset
+                if row_index >= layout.row_count:
+                    continue
+                for column_offset in range(placement.cell.colspan):
+                    column_index = placement.column + column_offset
+                    if column_index < layout.column_count:
+                        matrix[row_index][column_index] = text
+        if include_headers:
+            return matrix
+        return matrix[layout.header_row_count:]
 
     def _base_cell_style(
         self,
@@ -1147,11 +1381,40 @@ class Table(Block):
             vertical_alignment=style.cell_vertical_alignment,
         )
 
-    def _column_widths_in_inches(self, default_unit: str) -> list[float] | None:
-        if self.column_widths is None:
+    def _column_widths_in_inches(
+        self,
+        default_unit: str,
+        *,
+        available_width: float | None = None,
+    ) -> list[float] | None:
+        if self.column_widths is None and self.columns is None:
             return None
-        unit = self.unit or default_unit
-        return [length_to_inches(width, unit) for width in self.column_widths]
+        if self.column_widths is not None:
+            unit = self.unit or default_unit
+            return [length_to_inches(width, unit) for width in self.column_widths]
+        assert self.columns is not None
+        fixed_widths: list[float | None] = []
+        fixed_total = 0.0
+        flexible_total = 0.0
+        for column in self.columns:
+            if column.width is not None:
+                width = length_to_inches(column.width, column.unit or self.unit or default_unit)
+                fixed_widths.append(width)
+                fixed_total += width
+            else:
+                fixed_widths.append(None)
+                flexible_total += column.flex or 1.0
+        if all(width is not None for width in fixed_widths):
+            return [width for width in fixed_widths if width is not None]
+        if available_width is None:
+            return None
+        remaining = max(available_width - fixed_total, 0.0)
+        return [
+            width
+            if width is not None
+            else remaining * ((column.flex or 1.0) / flexible_total)
+            for width, column in zip(fixed_widths, self.columns)
+        ]
 
     @classmethod
     def from_dataframe(
@@ -1160,6 +1423,7 @@ class Table(Block):
         *,
         caption: CellInput | None = None,
         column_widths: Sequence[float] | None = None,
+        columns: Sequence[ColumnSpecInput] | None = None,
         unit: str | None = None,
         identifier: str | None = None,
         style: TableStyle | str | None = None,
@@ -1193,6 +1457,8 @@ class Table(Block):
             dataframe: Object with dataframe-like columns and rows.
             caption: Optional table caption.
             column_widths: Optional widths for expanded rendered columns.
+            columns: Optional column specifications. Mutually exclusive with
+                ``column_widths``.
             unit: Unit for ``column_widths``.
             identifier: Optional stable identifier.
             style: Base table style.
@@ -1237,6 +1503,7 @@ class Table(Block):
             dataframe,
             caption=caption,
             column_widths=column_widths,
+            columns=columns,
             unit=unit,
             identifier=identifier,
             style=style,
@@ -1281,8 +1548,11 @@ class Table(Block):
 
         Args:
             records: Source records.
-            columns: Column keys or sequence indexes to extract.
-            headers: Optional visible header cells.
+            columns: Column keys or sequence indexes to extract. ``ColumnSpec``
+                entries may also set layout and visibility policy.
+            headers: Optional visible header cells. When omitted, visible
+                ``ColumnSpec.header`` values are used before falling back to
+                column keys.
             formatters: Optional per-column callable or format-spec strings.
             missing: Value used when a record is missing a column and
                 ``fail_on_missing`` is false.
@@ -1320,17 +1590,38 @@ class Table(Block):
                 normalized_columns = list(range(len(headers)))
             else:
                 raise ValueError("columns or headers is required for sequence records")
+            inferred_headers = [str(column) for column in normalized_columns]
         else:
-            normalized_columns = list(columns)
+            raw_columns = list(columns)
+            if any(isinstance(column, (ColumnSpec, Mapping)) for column in raw_columns):
+                normalized_columns = []
+                inferred_headers: list[TableCellInput] = []
+                table_columns: list[ColumnSpec] = []
+                for column in raw_columns:
+                    if isinstance(column, ColumnSpec):
+                        spec = column
+                    elif isinstance(column, Mapping):
+                        spec = coerce_column_spec(column)
+                    else:
+                        spec = ColumnSpec(key=column)
+                    if not spec.visible:
+                        continue
+                    if spec.key is None:
+                        raise ValueError("ColumnSpec.key is required in Table.from_records")
+                    normalized_columns.append(spec.key)
+                    inferred_headers.append(spec.header if spec.header is not None else str(spec.key))
+                    table_columns.append(spec)
+                table_kwargs = dict(table_kwargs)
+                table_kwargs["columns"] = table_columns
+            else:
+                normalized_columns = raw_columns
+                inferred_headers = [str(column) for column in normalized_columns]
 
         if not normalized_columns:
             raise ValueError("columns must not be empty")
 
         if headers is None:
-            normalized_headers: Sequence[TableCellInput] = [
-                str(column)
-                for column in normalized_columns
-            ]
+            normalized_headers: Sequence[TableCellInput] = inferred_headers
         else:
             if len(headers) != len(normalized_columns):
                 raise ValueError("headers must match the number of columns")
@@ -2030,6 +2321,8 @@ class SubFigureGroup(Block):
 
 
 __all__ = [
+    "ColumnSpec",
+    "ColumnSpecInput",
     "Figure",
     "ImageData",
     "MediaPlacement",
@@ -2042,6 +2335,7 @@ __all__ = [
     "TablePlacement",
     "TableSplit",
     "build_table_layout",
+    "coerce_column_spec",
     "coerce_image_source",
     "coerce_table_cell",
     "image_source_to_buffer",

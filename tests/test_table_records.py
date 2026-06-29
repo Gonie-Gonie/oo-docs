@@ -5,7 +5,7 @@ from io import BytesIO
 
 import pytest
 
-from oodocs import Figure, ImageData, Table, TableStyle
+from oodocs import ColumnSpec, Figure, ImageData, Table, TableStyle
 
 _TINY_PNG = (
     b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01"
@@ -63,6 +63,70 @@ def test_table_from_records_supports_sequence_records() -> None:
 
     with pytest.raises(ValueError, match="missing column"):
         Table.from_records([{"a": 1}], columns=["a", "b"], fail_on_missing=True)
+
+
+def test_table_from_records_accepts_column_specs_and_sidecar_helpers(
+    tmp_path,
+) -> None:
+    table = Table.from_records(
+        [
+            {
+                "case": "case-001",
+                "status": "pass",
+                "notes": "stable",
+                "raw_trace": "debug-only",
+            },
+            {
+                "case": "case-002",
+                "status": "review",
+                "notes": "needs follow-up",
+                "raw_trace": "debug-only",
+            },
+        ],
+        columns=[
+            ColumnSpec(key="case", header="Case", width=0.9, unit="in", wrap=False),
+            {"key": "status", "header": "Status", "width": 0.8, "unit": "in"},
+            ColumnSpec(key="notes", header="Notes", flex=1, text_alignment="left"),
+            ColumnSpec(key="raw_trace", visible=False),
+        ],
+        caption="Matrix.",
+    )
+
+    assert [cell.content.plain_text() for cell in table.headers] == [
+        "Case",
+        "Status",
+        "Notes",
+    ]
+    assert _cell_text(table, 0, 0) == "case-001"
+    assert _cell_text(table, 0, 2) == "stable"
+    assert len(table.columns or []) == 3
+    assert table.columns is not None
+    assert table.columns[0].wrap is False
+    assert table._column_widths_in_inches("in", available_width=4.7) == [
+        0.9,
+        0.8,
+        3.0,
+    ]
+
+    excerpt = table.excerpt(max_rows=1, max_columns=2, caption="Excerpt.")
+    assert [cell.content.plain_text() for cell in excerpt.headers] == [
+        "Case",
+        "Status",
+    ]
+    assert len(excerpt.rows) == 1
+    assert _cell_text(excerpt, 0, 0) == "case-001"
+    assert excerpt.caption is not None
+    assert excerpt.caption.plain_text() == "Excerpt."
+
+    csv_path = table.save_csv(tmp_path / "full-matrix.csv")
+    assert csv_path.read_text(encoding="utf-8").splitlines() == [
+        "Case,Status,Notes",
+        "case-001,pass,stable",
+        "case-002,review,needs follow-up",
+    ]
+
+    with pytest.raises(ValueError, match="ColumnSpec.key"):
+        Table.from_records([{"case": "case-001"}], columns=[ColumnSpec(width=1.0)])
 
 
 def test_table_from_mapping_stringifies_nested_values() -> None:
