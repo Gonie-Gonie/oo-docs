@@ -148,6 +148,7 @@ Common translations:
 - LaTeX `\includegraphics` -> `Figure(path_or_matplotlib_figure, caption=...)`, with optional `CropBox(...)`, `rotation=...`, and `alt_text=...`
 - LaTeX subfigures -> `SubFigure(...)` children inside a captioned `SubFigureGroup(...)`
 - LaTeX subtables -> `SubTable(Table(...), caption=...)` children inside a captioned `SubTableGroup(...)`
+- LaTeX `pdfpages` -> `PdfPages("appendix.pdf", pages=[1, 3])` for PDF-page insertion, with DOCX/HTML placeholder fallbacks
 - LaTeX `tabular` or copied tables -> `Table(...)` or `Table.from_dataframe(...)`
 - LaTeX `booktabs` -> `Table(..., style="booktabs")` or `TableStyle.booktabs()`
 - LaTeX `tabularx` / `array` column specs -> `ColumnSpec(width=...)`, `ColumnSpec(flex=...)`, and `Table.excerpt(...)` plus a CSV sidecar for very wide matrices
@@ -206,6 +207,7 @@ The default behavior is intentionally conventional:
 - Use `TableCell(colspan=...)` and `TableCell(rowspan=...)` for one-off merged cells. Use `Table.grouped_headers(groups=[("Geometry", 2), ...], columns=[...], rows=[...])` when a table needs a common grouped header row without manually building every spanning cell.
 - Use `Table(split=True, continuation_label="continued")` when a table should render in source order and may break across pages. Leave `split=False` when the table should stay together when possible; very long tables are automatically rendered as split repeated-header tables.
 - Use `Figure(...)` for image files or `savefig()`-compatible Python figure objects. Use `Figure.from_bytes(...)` or `Figure.from_buffer(...)` when image bytes are already in memory. Add `crop=CropBox(...)`, `rotation=...`, and `alt_text=...` for LaTeX `graphicx`-style image transforms and accessible output text.
+- Use `PdfPages("appendix.pdf", pages=[...])` when existing PDF pages should be inserted into PDF output. DOCX and HTML render a link-style placeholder because editable page import is renderer-specific.
 - Use `SubFigureGroup(SubFigure(...), SubFigure(...), caption=...)` when related images should share one figure number and expose `(a)`, `(b)`, and similar subfigure references.
 - Use `SubTableGroup(SubTable(Table(...), caption=...), ...)` when related tables should share one table number and expose references such as `Table 1(a)`.
 - Use `Theme(captions=CaptionDefaults(table_caption_label=..., table_reference_label=..., figure_caption_label=..., figure_reference_label=...))` when captions and in-text references should use different labels such as `Figure`, `Fig.`, or localized terms.
@@ -276,7 +278,7 @@ doc = Document(
 - automatic split-table rendering for long tables, with repeated headers where renderers support them
 - advanced table and figure placement hints for here/float/top/bottom/page-style workflows
 - figure support for stored image files, in-memory bytes, buffers, and `savefig()`-compatible Python objects
-- subfigure and subtable groups with automatic child labels and references such as `Figure 1(a)` or `Table 1(a)`
+- PDF page insertion with `PdfPages(...)`, plus subfigure and subtable groups with automatic child labels and references such as `Figure 1(a)` or `Table 1(a)`
 - page-positioned `Shape.rect(...)`, `Shape.ellipse(...)`, `Shape.line(...)`, `TextBox(...)`, and `ImageBox(...)` objects with anchors to the page, the margin box, or an earlier named shape
 - inline drawing placement for `Shape(...)`, `TextBox(...)`, and `ImageBox(...)`, similar to using an image directly in the document flow
 - inline chips through `InlineChip(...)`, `tag(...)`, `badge(...)`, `status(...)`, and `keyboard(...)`

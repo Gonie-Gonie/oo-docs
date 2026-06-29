@@ -54,7 +54,7 @@ from oodocs.components.inline import (
     InlineChip,
     Text,
 )
-from oodocs.components.media import Figure, ImageData, SubFigure, SubFigureGroup, SubTable, SubTableGroup, Table
+from oodocs.components.media import Figure, ImageData, PdfPages, SubFigure, SubFigureGroup, SubTable, SubTableGroup, Table
 from oodocs.components.positioning import ImageBox, Shape, TextBox
 from oodocs.components.references import CitationSource
 from oodocs.core import OODocsError, PathLike, length_to_inches
@@ -903,6 +903,10 @@ class _ValidationContext:
             self._validate_table(block, path)
             return
 
+        if isinstance(block, PdfPages):
+            self._validate_pdf_pages(block, path)
+            return
+
         if isinstance(block, Figure):
             self._register_referenceable(block, path)
             self._validate_figure(block, path)
@@ -1153,6 +1157,49 @@ class _ValidationContext:
             )
         if table.caption is not None and scan_caption:
             self._scan_inlines(table.caption.content, f"{path}.caption")
+
+    def _validate_pdf_pages(self, block: PdfPages, path: str) -> None:
+        if block.source.suffix.lower() != ".pdf":
+            self._add(
+                "error",
+                "invalid-pdf-pages-source",
+                f"PdfPages source must be a PDF file: {block.source}.",
+                f"{path}.source",
+            )
+            return
+        if not block.source.exists():
+            self._add(
+                "error",
+                "missing-pdf-pages-source",
+                f"PDF file does not exist: {block.source}.",
+                f"{path}.source",
+            )
+            return
+        if not block.source.is_file():
+            self._add(
+                "error",
+                "invalid-pdf-pages-source",
+                f"PDF source is not a file: {block.source}.",
+                f"{path}.source",
+            )
+            return
+        try:
+            block.selected_page_indexes()
+        except Exception as exc:
+            self._add(
+                "error",
+                "invalid-pdf-pages-selection",
+                str(exc),
+                f"{path}.pages",
+            )
+        self._add(
+            "warning",
+            "pdf-pages-fallback",
+            "PdfPages inserts actual pages in PDF output. DOCX and HTML output "
+            "render a link-style placeholder instead.",
+            path,
+            formats=("docx", "html"),
+        )
 
     def _validate_figure(
         self,

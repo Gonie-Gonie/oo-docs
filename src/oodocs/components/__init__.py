@@ -51,6 +51,7 @@ _EXPORTS = {
     "NumberedList": "oodocs.components.blocks",
     "Paragraph": "oodocs.components.blocks",
     "Part": "oodocs.components.blocks",
+    "PdfPages": "oodocs.components.media",
     "Proposition": "oodocs.components.blocks",
     "Proof": "oodocs.components.blocks",
     "ReferenceList": "oodocs.components.generated",

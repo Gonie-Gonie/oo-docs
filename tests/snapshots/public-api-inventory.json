@@ -460,6 +460,13 @@
           "qualname": "oodocs.components.blocks.PageBreak"
         },
         {
+          "category": "media",
+          "kind": "class",
+          "module": "oodocs.components.media",
+          "name": "PdfPages",
+          "qualname": "oodocs.components.media.PdfPages"
+        },
+        {
           "category": "block",
           "kind": "class",
           "module": "oodocs.components.blocks",

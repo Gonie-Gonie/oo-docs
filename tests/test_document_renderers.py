@@ -81,6 +81,7 @@ from oodocs import (
     PageSize,
     PageBreak,
     Padding,
+    PdfPages,
     Paragraph,
     ParagraphStyle,
     RunInTitleStyle,
@@ -2783,6 +2784,50 @@ def test_subtable_group_renders_labels_and_references(tmp_path: Path) -> None:
     assert 'href="#table_1_b"' in html_text
     assert 'id="table_1_a"' in html_text
     assert 'id="table_1_b"' in html_text
+
+
+def test_pdf_pages_inserts_external_pdf_pages_with_fallbacks(tmp_path: Path) -> None:
+    external_path = tmp_path / "external.pdf"
+    Document(
+        "External Appendix",
+        Paragraph("External page one."),
+        PageBreak(),
+        Paragraph("External page two."),
+    ).save_pdf(external_path)
+
+    imported_pages = PdfPages(external_path, pages=[2], title="External appendix")
+    document = Document(
+        "PDF Pages Test",
+        Paragraph("Before external."),
+        imported_pages,
+        Paragraph("After external."),
+    )
+    validation = document.validate()
+    assert validation.ok_for(("pdf",))
+    assert any(issue.code == "pdf-pages-fallback" for issue in validation.warnings_for(("docx", "html")))
+
+    pdf_path = tmp_path / "merged.pdf"
+    docx_path = tmp_path / "merged.docx"
+    html_path = tmp_path / "merged.html"
+    document.save_pdf(pdf_path)
+    document.save_docx(docx_path)
+    document.save_html(html_path)
+
+    page_texts = [page.extract_text() or "" for page in PdfReader(BytesIO(pdf_path.read_bytes())).pages]
+    before_index = next(index for index, text in enumerate(page_texts) if "Before external." in text)
+    external_index = next(index for index, text in enumerate(page_texts) if "External page two." in text)
+    after_index = next(index for index, text in enumerate(page_texts) if "After external." in text)
+    assert before_index < external_index < after_index
+    assert "External page one." not in "\n".join(page_texts)
+    assert "oodocs-pdfpages-" not in "\n".join(page_texts)
+
+    word_document = WordDocument(docx_path)
+    paragraph_text = "\n".join(paragraph.text for paragraph in word_document.paragraphs)
+    assert "PDF pages: External appendix (page 2)" in paragraph_text
+
+    html_text = _normalized_html_text(html_path)
+    assert "PDF pages: External appendix" in html_text
+    assert "(page 2)" in html_text
 
 
 def test_caption_and_reference_labels_can_differ_by_theme(tmp_path: Path) -> None:

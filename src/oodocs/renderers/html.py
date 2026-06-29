@@ -45,6 +45,7 @@ from oodocs.components.inline import (
 )
 from oodocs.components.media import (
     Figure,
+    PdfPages,
     SubFigure,
     SubFigureGroup,
     SubTable,
@@ -769,6 +770,20 @@ class HtmlRenderer:
                 f' data-continued-caption="{escape(continued_caption)}"'
             )
         return "".join(attrs)
+
+    def render_pdf_pages(self, block: PdfPages, context: HtmlRenderContext) -> str:
+        """Render an HTML fallback for external PDF pages."""
+
+        label = escape(block.title or block.source.name)
+        href = escape(str(block.source))
+        pages = escape(block.page_label())
+        return (
+            '<div class="oodocs-pdf-pages" '
+            f'style="{self._table_wrapper_css(context.theme, in_box=context.in_box)}">'
+            f'<a href="{href}">PDF pages: {label}</a> '
+            f'<span class="oodocs-pdf-pages-selection">({pages})</span>'
+            "</div>"
+        )
 
     def render_figure(self, block: Figure, context: HtmlRenderContext) -> str:
         """Render a figure block into HTML.

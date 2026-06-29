@@ -23,6 +23,7 @@ from dataclasses import replace
 from html import escape
 from io import BytesIO
 from pathlib import Path
+from uuid import uuid4
 
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
@@ -87,6 +88,7 @@ from oodocs.components.inline import (
 )
 from oodocs.components.media import (
     Figure,
+    PdfPages,
     SubFigure,
     SubFigureGroup,
     SubTable,
@@ -597,6 +599,25 @@ class OODocsPdfTemplate(SimpleDocTemplate):
         return physical_page - self.main_matter_start_page + 1
 
 
+class PdfPagesPlaceholder(Flowable):
+    """Invisible marker page replaced with an external PDF page after build."""
+
+    def __init__(self, marker: str) -> None:
+        super().__init__()
+        self.marker = marker
+
+    def wrap(self, available_width: float, available_height: float) -> tuple[float, float]:
+        return 1, 1
+
+    def draw(self) -> None:
+        canvas = self.canv
+        canvas.saveState()
+        canvas.setFont("Helvetica", 1)
+        canvas.setFillColorRGB(1, 1, 1)
+        canvas.drawString(1, 1, self.marker)
+        canvas.restoreState()
+
+
 class PdfRenderer:
     """Render OODocs documents into PDF files.
 
@@ -608,11 +629,13 @@ class PdfRenderer:
         _registered_system_fonts: Cache of registered system font variants.
         _pending_float_flowables: Float flowables deferred until a safe flush
             point in the story.
+        _pdf_page_replacements: External PDF pages keyed by invisible marker.
     """
 
     def __init__(self) -> None:
         self._registered_system_fonts: dict[tuple[str, bool, bool], str] = {}
         self._pending_float_flowables: list[object] = []
+        self._pdf_page_replacements: dict[str, tuple[Path, int]] = {}
 
     def render(self, document: Document, output_path: PathLike) -> Path:
         """Render an OODocs document to a PDF file.
@@ -628,6 +651,7 @@ class PdfRenderer:
         path = Path(output_path)
         path.parent.mkdir(parents=True, exist_ok=True)
         self._pending_float_flowables = []
+        self._pdf_page_replacements = {}
         settings = document.settings
 
         pdf = OODocsPdfTemplate(
@@ -702,7 +726,59 @@ class PdfRenderer:
             pdf.build(story, onFirstPage=page_callback, onLaterPages=page_callback)
         else:
             pdf.build(story)
+        self._replace_pdf_page_placeholders(path)
         return path
+
+    def _replace_pdf_page_placeholders(self, path: Path) -> None:
+        if not self._pdf_page_replacements:
+            return
+
+        from pypdf import PdfReader, PdfWriter
+
+        reader = PdfReader(str(path))
+        writer = PdfWriter()
+        external_readers: dict[Path, PdfReader] = {}
+        replaced_markers: set[str] = set()
+
+        for page in reader.pages:
+            marker = None
+            text = page.extract_text() or ""
+            for candidate in self._pdf_page_replacements:
+                if candidate in text:
+                    marker = candidate
+                    break
+            if marker is None:
+                writer.add_page(page)
+                continue
+
+            source, page_index = self._pdf_page_replacements[marker]
+            external_reader = external_readers.get(source)
+            if external_reader is None:
+                external_reader = PdfReader(str(source))
+                external_readers[source] = external_reader
+            writer.add_page(external_reader.pages[page_index])
+            replaced_markers.add(marker)
+
+        missing_markers = set(self._pdf_page_replacements) - replaced_markers
+        if missing_markers:
+            raise OODocsError(
+                f"Could not locate {len(missing_markers)} PdfPages placeholder page(s) in rendered PDF"
+            )
+
+        if reader.metadata:
+            writer.add_metadata(
+                {
+                    str(key): str(value)
+                    for key, value in reader.metadata.items()
+                    if value is not None
+                }
+            )
+        temporary_path = path.with_name(
+            f"{path.stem}.oodocs-pdfpages-{uuid4().hex}{path.suffix}"
+        )
+        with temporary_path.open("wb") as handle:
+            writer.write(handle)
+        temporary_path.replace(path)
 
     def make_section_heading(
         self,
@@ -1253,6 +1329,32 @@ class PdfRenderer:
             in_box=context.in_box,
         )
 
+    def render_pdf_pages(
+        self,
+        block: PdfPages,
+        context: PdfRenderContext,
+    ) -> list[object]:
+        """Render external PDF page placeholders for later replacement.
+
+        Args:
+            block: External PDF page block.
+            context: Current PDF render context.
+
+        Returns:
+            Flowables containing one invisible marker page per selected
+            external PDF page.
+        """
+
+        page_indexes = block.selected_page_indexes()
+        story: list[object] = []
+        for index, page_index in enumerate(page_indexes):
+            if index > 0:
+                story.append(RLPageBreak())
+            marker = f"oodocs-pdfpages-{uuid4().hex}"
+            self._pdf_page_replacements[marker] = (block.source, page_index)
+            story.append(PdfPagesPlaceholder(marker))
+        return story
+
     def render_figure(
         self,
         block: Figure,
@@ -1484,6 +1586,16 @@ class PdfRenderer:
     ) -> list[object]:
         story: list[object] = []
         for index, child in enumerate(children):
+            if isinstance(child, PdfPages):
+                story.extend(self._pop_pending_float_flowables())
+                if story and not isinstance(story[-1], RLPageBreak):
+                    story.append(RLPageBreak())
+                elif not story and follows_existing_content:
+                    story.append(RLPageBreak())
+                story.extend(child.render_to_pdf(self, context))
+                if index < len(children) - 1:
+                    story.append(RLPageBreak())
+                continue
             if isinstance(child, Part):
                 story.extend(self._pop_pending_float_flowables())
                 if story and not isinstance(story[-1], RLPageBreak):
@@ -1521,7 +1633,15 @@ class PdfRenderer:
         flush_trailing_floats: bool,
     ) -> list[object]:
         story: list[object] = []
-        for child in children:
+        for index, child in enumerate(children):
+            if isinstance(child, PdfPages):
+                story.extend(self._pop_pending_float_flowables())
+                if story and not isinstance(story[-1], RLPageBreak):
+                    story.append(RLPageBreak())
+                story.extend(child.render_to_pdf(self, context))
+                if index < len(children) - 1:
+                    story.append(RLPageBreak())
+                continue
             pending_before_child = bool(self._pending_float_flowables)
             child_story = child.render_to_pdf(self, context)
             if self._is_float_story(child_story):

@@ -5,6 +5,7 @@ Attributes:
     TableSplit: Table splitting policy accepted by table rendering options.
     DEFAULT_LONG_TABLE_ROW_THRESHOLD: Row count where tables are treated as
         long tables by default.
+    PdfPagesInput: Accepted input for external PDF page selection.
     CropBox: Image crop offsets for figure rendering.
     CropBoxInput: Accepted input for image crop specifications.
     ColumnSpec: Renderer-neutral table column layout and record-selection
@@ -55,6 +56,7 @@ if TYPE_CHECKING:
 MediaPlacement = Literal["auto", "here", "float", "top", "bottom", "page"]
 TableSplit = bool | Literal["auto"]
 DEFAULT_LONG_TABLE_ROW_THRESHOLD = 12
+PdfPagesInput = Sequence[int] | range | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -1014,6 +1016,20 @@ def _normalize_optional_text(value: str | None, *, name: str) -> str | None:
         raise TypeError(f"{name} must be a string or None")
     normalized = value.strip()
     return normalized or None
+
+
+def _normalize_pdf_pages(pages: PdfPagesInput) -> tuple[int, ...] | None:
+    if pages is None:
+        return None
+    if isinstance(pages, (str, bytes)):
+        raise TypeError("PdfPages.pages must be a sequence of 1-based page numbers")
+    normalized: list[int] = []
+    for page in pages:
+        page_number = int(page)
+        if page_number < 1:
+            raise ValueError("PdfPages.pages values must be >= 1")
+        normalized.append(page_number)
+    return tuple(normalized)
 
 
 def _coerce_child_label_style(value: CounterStyle | str | None) -> CounterStyle:
@@ -2126,6 +2142,100 @@ class Table(Block):
 
 
 @dataclass(slots=True, init=False)
+class PdfPages(Block):
+    """External PDF pages inserted into PDF output.
+
+    Args:
+        source: Existing PDF file to insert.
+        pages: Optional 1-based page numbers to include. Defaults to all
+            pages.
+        title: Optional human-readable label used by DOCX/HTML fallback
+            renderers.
+
+    Examples:
+        ```python
+        from oodocs import Document, PdfPages
+
+        appendix = PdfPages("appendix/material-safety-data.pdf", pages=[1, 3])
+        document = Document("Report", appendix)
+        ```
+    """
+
+    source: Path
+    pages: tuple[int, ...] | None
+    title: str | None
+
+    def __init__(
+        self,
+        source: PathLike,
+        *,
+        pages: PdfPagesInput = None,
+        title: str | None = None,
+    ) -> None:
+        self.source = Path(source)
+        self.pages = _normalize_pdf_pages(pages)
+        self.title = _normalize_optional_text(title, name="title")
+
+    def page_label(self) -> str:
+        """Return a compact label describing the selected pages."""
+
+        if self.pages is None:
+            return "all pages"
+        return "page " + ", ".join(str(page) for page in self.pages)
+
+    def selected_page_indexes(self) -> list[int]:
+        """Return selected external PDF page indexes in zero-based form.
+
+        Raises:
+            FileNotFoundError: If ``source`` does not exist.
+            ValueError: If a requested page is outside the external PDF.
+        """
+
+        from pypdf import PdfReader
+
+        reader = PdfReader(str(self.source))
+        page_count = len(reader.pages)
+        if self.pages is None:
+            return list(range(page_count))
+        indexes: list[int] = []
+        for page in self.pages:
+            if page > page_count:
+                raise ValueError(
+                    f"PdfPages page {page} is outside {self.source} ({page_count} pages)"
+                )
+            indexes.append(page - 1)
+        return indexes
+
+    def render_to_docx(
+        self,
+        renderer: object,
+        container: object,
+        context: DocxRenderContext,
+    ) -> None:
+        """Render a DOCX fallback for this external PDF."""
+
+        renderer.render_pdf_pages(container, self, context)
+
+    def render_to_pdf(
+        self,
+        renderer: object,
+        context: PdfRenderContext,
+    ) -> list[object]:
+        """Render PDF page placeholders that are replaced after PDF build."""
+
+        return renderer.render_pdf_pages(self, context)
+
+    def render_to_html(
+        self,
+        renderer: object,
+        context: HtmlRenderContext,
+    ) -> str:
+        """Render an HTML fallback for this external PDF."""
+
+        return renderer.render_pdf_pages(self, context)
+
+
+@dataclass(slots=True, init=False)
 class Figure(Block):
     """An image block backed by a path or ``savefig()``-compatible object.
 
@@ -2891,6 +3001,8 @@ __all__ = [
     "Figure",
     "ImageData",
     "MediaPlacement",
+    "PdfPages",
+    "PdfPagesInput",
     "SubFigure",
     "SubFigureGroup",
     "SubTable",

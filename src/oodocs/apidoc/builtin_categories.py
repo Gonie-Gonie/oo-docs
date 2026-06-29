@@ -132,6 +132,7 @@ OODocs_API_CATEGORIES: tuple[ApiCategory, ...] = (
             "oodocs.Figure",
             "oodocs.CropBox",
             "oodocs.ImageData",
+            "oodocs.PdfPages",
             "oodocs.SubFigure",
             "oodocs.SubFigureGroup",
             "oodocs.SubTable",

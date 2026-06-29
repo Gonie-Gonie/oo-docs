@@ -45,6 +45,7 @@ from oodocs import (
     PageMargins,
     PageSize,
     Padding,
+    PdfPages,
     Paragraph,
     Part,
     Proof,
@@ -298,6 +299,15 @@ sensitivity = SubTableGroup(
 )
 
 Paragraph("The tuned table is shown in ", tuned.reference(), ".")
+"""
+
+PDFPAGES_SNIPPET = """from oodocs import Document, Paragraph, PdfPages
+
+document = Document(
+    "Appendix bundle",
+    Paragraph("The signed appendix follows in the PDF output."),
+    PdfPages("appendices/signed-approval.pdf", pages=[1], title="Signed approval"),
+)
 """
 
 POSITIONED_DRAWING_SNIPPET = """from oodocs import Document, DocumentSettings, ImageBox, Paragraph, Shape, StrokeStyle, TextBox
@@ -997,7 +1007,7 @@ def build_usage_guide_document() -> Document:
             ["Table", "header/body/alternate colors, border, top_rule, header_rule, bottom_rule, alignment, cell_padding, repeat_header_rows", "Use style=\"booktabs\" for publication-style horizontal rules without vertical grid lines."],
             ["TableCell", "colspan, rowspan, background_color, text_color, bold, italic, text_alignment, vertical_alignment", "Use TableCellStyle only for reusable row, column, or cell styling."],
             ["TableOfContents, ListOfTables, ListOfFigures", "scope, show_page_numbers, leader; TableOfContents also accepts max_level and level_styles", "Use scope for document, part, chapter, or section-local generated lists."],
-            ["Figure, SubFigure, SubFigureGroup, SubTable, SubTableGroup", "width, height, unit, placement, image_dpi, columns, column_gap, label_format, label_style", "Use caption Paragraphs when caption text needs inline styling."],
+            ["Figure, PdfPages, SubFigure, SubFigureGroup, SubTable, SubTableGroup", "width, height, unit, placement, image_dpi, pages, columns, column_gap, label_format, label_style", "Use caption Paragraphs when caption text needs inline styling."],
         ],
         caption="Block-level option scope from quick kwargs to reusable style objects.",
         column_widths=[1.8, 3.6, 2.0],
@@ -1536,6 +1546,12 @@ def build_usage_guide_document() -> Document:
                     ", and so on."
                 ),
                 CodeBlock(SUBTABLE_SNIPPET, language="python"),
+                Paragraph(
+                    "Existing PDF pages can be inserted into PDF output with ",
+                    inline_code("PdfPages"),
+                    ". DOCX and HTML render a link-style placeholder because those formats cannot preserve arbitrary PDF pages as editable document content."
+                ),
+                CodeBlock(PDFPAGES_SNIPPET, language="python"),
             ),
             Section(
                 "Use figures to explain the authoring model, not just decorate it",

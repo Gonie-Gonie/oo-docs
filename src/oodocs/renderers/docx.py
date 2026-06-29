@@ -70,6 +70,7 @@ from oodocs.components.inline import (
 )
 from oodocs.components.media import (
     Figure,
+    PdfPages,
     SubFigure,
     SubFigureGroup,
     SubTable,
@@ -817,6 +818,19 @@ class DocxRenderer:
             word_document=context.word_document,
             text_width=context.settings.text_width_in_inches(),
         )
+
+    def render_pdf_pages(
+        self,
+        container: object,
+        block: PdfPages,
+        context: DocxRenderContext,
+    ) -> None:
+        """Render a DOCX fallback for external PDF pages."""
+
+        paragraph = self._add_paragraph(container)
+        paragraph.alignment = ALIGNMENTS[context.theme.blocks.paragraph_text_alignment]
+        label = block.title or block.source.name
+        paragraph.add_run(f"PDF pages: {label} ({block.page_label()})")
 
     def render_figure(
         self,
