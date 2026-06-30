@@ -193,6 +193,9 @@ class InlineChip(Text):
     def display_text(self, chip_style: InlineChipStyle | None = None) -> str:
         """Return display text after chip style transforms.
 
+        Args:
+            chip_style: Optional resolved chip style used for text transforms.
+
         Returns:
             Uppercased or original chip text depending on the style.
 
