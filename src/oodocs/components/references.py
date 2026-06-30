@@ -320,7 +320,7 @@ class CitationSource:
 
         from oodocs.components.inline import Citation
 
-        return Citation.reference(self, style=style)
+        return Citation(self, style=style)
 
 
 @dataclass(slots=True)
@@ -397,7 +397,7 @@ class CitationLibrary:
 
         from oodocs.components.inline import Citation
 
-        return Citation.reference(key, style=style)
+        return Citation(key, style=style)
 
     @classmethod
     def from_bibtex(cls, source: str) -> CitationLibrary:

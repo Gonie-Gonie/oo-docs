@@ -725,25 +725,6 @@ class Citation(Text):
 
         return "[?]"
 
-    @classmethod
-    def reference(
-        cls,
-        target: CitationSource | str,
-        *,
-        style: TextStyle | None = None,
-    ) -> Citation:
-        """Create an inline citation fragment.
-
-        Args:
-            target: Citation source object or citation key.
-            style: Optional inline style.
-
-        Returns:
-            Inline citation fragment.
-        """
-
-        return cls(target, style=style)
-
 
 def cite(target: CitationSource | str, *, style: TextStyle | None = None) -> Citation:
     """Create an inline citation fragment.
@@ -763,7 +744,7 @@ def cite(target: CitationSource | str, *, style: TextStyle | None = None) -> Cit
         ```
     """
 
-    return Citation.reference(target, style=style)
+    return Citation(target, style=style)
 
 
 class Hyperlink(Text):

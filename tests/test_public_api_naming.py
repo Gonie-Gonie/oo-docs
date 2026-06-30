@@ -217,6 +217,19 @@ def test_component_namespace_uses_inline_math_name() -> None:
     assert not hasattr(components, "math")
 
 
+def test_citation_api_uses_cite_name_not_reference() -> None:
+    source = oodocs.CitationSource("Reliable APIs", key="doe2024")
+    library = oodocs.CitationLibrary([source])
+
+    assert "Citation" in components.__all__
+    assert "cite" in components.__all__
+    assert "reference" not in _public_members(inline_components.Citation)
+    assert not hasattr(inline_components.Citation, "reference")
+    assert isinstance(oodocs.cite("doe2024"), inline_components.Citation)
+    assert isinstance(source.cite(), inline_components.Citation)
+    assert isinstance(library.cite("doe2024"), inline_components.Citation)
+
+
 def test_styles_namespace_hides_table_cell_coercion_helper() -> None:
     assert "coerce_table_cell_style" not in styles.__all__
     assert not hasattr(styles, "coerce_table_cell_style")
