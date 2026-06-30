@@ -137,6 +137,8 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert any("display: table-header-group" in text for text in paragraph_texts)
     assert any("CompactTable.grouped_headers" in text for text in paragraph_texts)
     assert any("TableCell(rowspan=...)" in text for text in paragraph_texts)
+    assert any("TableCell(colspan=...)" in text for text in paragraph_texts)
+    assert any("Table.grouped_headers(...)" in text for text in paragraph_texts)
     assert any("rowspan=2" in text for text in paragraph_texts)
     assert any('style="booktabs"' in text for text in paragraph_texts)
     assert "top_rule, header_rule, bottom_rule" in table_text
@@ -266,6 +268,8 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "display: table-header-group" in pdf_text
     assert "CompactTable.grouped_headers" in pdf_text
     assert "TableCell(rowspan=...)" in pdf_text
+    assert "TableCell(colspan=...)" in pdf_text
+    assert "Table.grouped_headers(...)" in pdf_text
     assert "rowspan=2" in pdf_text
     assert 'style="booktabs"' in pdf_text
     assert "top_rule" in pdf_text
@@ -379,6 +383,7 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "CompactTable" in normalized_html_text
     assert "grouped_headers" in normalized_html_text
     assert "rowspan" in normalized_html_text
+    assert "colspan" in normalized_html_text
     assert 'style="booktabs"' in normalized_html_text
     assert "top_rule, header_rule, bottom_rule" in normalized_html_text
     assert "publication-style horizontal rules without vertical grid lines" in normalized_html_text

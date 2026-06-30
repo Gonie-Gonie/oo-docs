@@ -102,6 +102,8 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "oodocs.Document" in all_titles
     assert "oodocs.Paragraph" in all_titles
     assert "oodocs.Table" in all_titles
+    assert "oodocs.TableCell" in all_titles
+    assert "oodocs.TableCellStyle" in all_titles
     assert "oodocs.Figure" in all_titles
     assert "oodocs.TableOfContents" in all_titles
     assert "oodocs.ListOfTables" in all_titles
@@ -149,6 +151,9 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "Table.excerpt" in text
     assert "save_csv" in text
     assert "visible" in text
+    assert "Table.grouped_headers" in text
+    assert "colspan" in text
+    assert "rowspan" in text
 
 
 def test_help_book_renders_uncategorized_api_appendix_from_category_gate() -> None:

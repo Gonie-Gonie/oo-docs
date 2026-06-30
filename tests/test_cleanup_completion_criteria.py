@@ -217,6 +217,19 @@ def test_readme_latex_translations_include_tabularx_array_policy() -> None:
     assert "CSV sidecar for very wide matrices" in translations
 
 
+def test_readme_latex_translations_include_multirow_multicolumn_policy() -> None:
+    readme = _readme()
+    translations = readme.split("Common translations:", 1)[1].split(
+        "The main payoff",
+        1,
+    )[0]
+
+    assert "LaTeX `multirow` / `multicolumn`" in translations
+    assert "`TableCell(rowspan=...)`" in translations
+    assert "`TableCell(colspan=...)`" in translations
+    assert "`Table.grouped_headers(...)`" in translations
+
+
 def test_public_api_policy_doc_defines_tiers_and_guards() -> None:
     policy = Path("docs/reference/public-api-policy.md").read_text(encoding="utf-8")
 
