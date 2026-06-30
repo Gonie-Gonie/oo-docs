@@ -719,20 +719,6 @@
           "qualname": "oodocs.components.inline.strikethrough"
         },
         {
-          "category": "document-core",
-          "kind": "function",
-          "module": "oodocs.components.markup",
-          "name": "markup",
-          "qualname": "oodocs.components.markup.markup"
-        },
-        {
-          "category": "inline",
-          "kind": "function",
-          "module": "oodocs.components.inline",
-          "name": "styled",
-          "qualname": "oodocs.components.inline.styled"
-        },
-        {
           "category": "inline",
           "kind": "function",
           "module": "oodocs.components.inline",

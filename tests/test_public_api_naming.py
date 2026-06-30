@@ -9,6 +9,8 @@ import oodocs
 import oodocs.adapters as adapters
 import oodocs.apidoc as apidoc
 import oodocs.components.blocks as block_components
+import oodocs.components.inline as inline_components
+import oodocs.components.markup as markup_components
 import oodocs.components.references as references
 import oodocs.engineering as engineering
 import oodocs.generated as generated
@@ -211,6 +213,7 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "load_python_document",
         "load_source_document",
         "margin_note",
+        "markup",
         "MAX_SECTION_LEVEL",
         "MIN_SECTION_LEVEL",
         "NotebookImportOptions",
@@ -244,6 +247,7 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "SubTableGroup",
         "save_document_outputs",
         "section_for_level",
+        "styled",
         "TitleMatterOptions",
         "TextBox",
         "Theorem",
@@ -285,6 +289,8 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
     assert hasattr(block_components, "section_for_level")
     assert hasattr(block_components, "shift_heading_level")
     assert hasattr(block_components, "shift_heading_levels")
+    assert hasattr(markup_components, "markup")
+    assert hasattr(inline_components, "styled")
 
 
 def test_apidoc_namespace_uses_canonical_exports() -> None:

@@ -21,6 +21,7 @@ import pytest
 import oodocs.components.generated as generated_components
 import oodocs.components.inline as inline_components
 import oodocs.components.blocks as block_components
+import oodocs.components.markup as markup_components
 import oodocs.engineering as engineering_components
 import oodocs.importers as importer_components
 import oodocs.media as media_components
@@ -155,18 +156,17 @@ from oodocs import (
     link,
     line_break,
     math,
-    markup,
     prescript,
     ref_range,
     refs,
     status,
     strikethrough,
-    styled,
     subscript,
     superscript,
     tag,
     url,
 )
+from oodocs.components.markup import markup
 from oodocs.presets.components import (
     CalloutBox,
     info_box,
@@ -2242,6 +2242,10 @@ def test_public_api_prefers_classes_for_structural_nodes() -> None:
     assert hasattr(inline_components, "status")
     assert hasattr(inline_components, "keyboard")
     assert hasattr(inline_components, "reference")
+    assert not hasattr(oodocs, "markup")
+    assert not hasattr(oodocs, "styled")
+    assert hasattr(markup_components, "markup")
+    assert hasattr(inline_components, "styled")
     assert ImageData(_build_sample_png()).data
 
     for removed_name in (

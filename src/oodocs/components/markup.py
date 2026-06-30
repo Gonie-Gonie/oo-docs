@@ -51,7 +51,8 @@ def markup(
 
     Examples:
         ```python
-        from oodocs import Paragraph, markup
+        from oodocs import Paragraph
+        from oodocs.components.markup import markup
 
         paragraph = Paragraph(markup("Use **bold** and `code`."))
         ```

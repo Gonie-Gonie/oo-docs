@@ -38,7 +38,6 @@ from oodocs.components.media import (
     Table,
     TableCell,
 )
-from oodocs.components.markup import markup
 from oodocs.components.people import Affiliation, Author, AuthorLayout
 from oodocs.components.references import CitationLibrary, CitationSource
 from oodocs.document import Document
@@ -68,7 +67,6 @@ from oodocs.components.inline import (
     refs,
     status,
     strikethrough,
-    styled,
     subscript,
     superscript,
     tag,
@@ -245,8 +243,6 @@ __all__ = [
     "refs",
     "status",
     "strikethrough",
-    "markup",
-    "styled",
     "subscript",
     "superscript",
     "tag",
