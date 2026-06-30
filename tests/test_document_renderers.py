@@ -20,6 +20,7 @@ import pytest
 import oodocs.components.generated as generated_components
 import oodocs.components.inline as inline_components
 import oodocs.engineering as engineering_components
+import oodocs.positioning as positioning_components
 import oodocs.review as review_components
 from oodocs.components.equations import BASELINE, SUBSCRIPT, SUPERSCRIPT, parse_latex_segments
 from oodocs.components.media import build_table_layout
@@ -35,6 +36,7 @@ from oodocs.engineering import (
     chemical_formula,
 )
 from oodocs.generated import ListOfAlgorithms
+from oodocs.positioning import ImageBox, PageItemScope, Shape, TextBox
 from oodocs.review import MarginNote, Todo, margin_note, todo
 from oodocs import (
     Affiliation,
@@ -85,7 +87,6 @@ from oodocs import (
     HeaderFooterDefaults,
     HeadingStyle,
     HeadingNumbering,
-    ImageBox,
     ImageData,
     InlineChip,
     InlineChipStyle,
@@ -102,7 +103,6 @@ from oodocs import (
     PageMargins,
     PageSize,
     PageBreak,
-    PageItemScope,
     Padding,
     PdfPages,
     Paragraph,
@@ -115,7 +115,6 @@ from oodocs import (
     ReferenceFormat,
     Remark,
     Section,
-    Shape,
     StrokeStyle,
     StyleSheet,
     SubFigure,
@@ -132,7 +131,6 @@ from oodocs import (
     ListOfTables,
     Text,
     TextStyle,
-    TextBox,
     Theorem,
     Theme,
     TitleMatterDefaults,
@@ -2025,7 +2023,8 @@ def test_public_api_prefers_classes_for_structural_nodes() -> None:
     assert hasattr(oodocs, "Chapter")
     assert hasattr(oodocs, "AuthorLayout")
     assert hasattr(oodocs, "Section")
-    assert hasattr(oodocs, "Shape")
+    assert not hasattr(oodocs, "Shape")
+    assert hasattr(positioning_components, "Shape")
     assert hasattr(oodocs, "Paragraph")
     assert hasattr(oodocs, "Part")
     assert hasattr(oodocs, "Appendix")
@@ -2058,7 +2057,8 @@ def test_public_api_prefers_classes_for_structural_nodes() -> None:
     assert hasattr(oodocs, "CitationDefaults")
     assert hasattr(oodocs, "HeadingStyle")
     assert hasattr(oodocs, "HeadingNumbering")
-    assert hasattr(oodocs, "ImageBox")
+    assert not hasattr(oodocs, "ImageBox")
+    assert hasattr(positioning_components, "ImageBox")
     assert hasattr(oodocs, "ImageData")
     assert hasattr(oodocs, "ListStyle")
     assert hasattr(oodocs, "Table")
@@ -2092,7 +2092,10 @@ def test_public_api_prefers_classes_for_structural_nodes() -> None:
     assert hasattr(oodocs, "InlineChip")
     assert hasattr(oodocs, "InlineChipStyle")
     assert hasattr(oodocs, "TextStyle")
-    assert hasattr(oodocs, "TextBox")
+    assert not hasattr(oodocs, "TextBox")
+    assert not hasattr(oodocs, "PageItemScope")
+    assert hasattr(positioning_components, "TextBox")
+    assert hasattr(positioning_components, "PageItemScope")
     assert hasattr(oodocs, "LineBreak")
     assert hasattr(oodocs, "VerticalSpace")
     assert hasattr(oodocs, "Divider")

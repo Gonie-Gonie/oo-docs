@@ -39,7 +39,6 @@ from oodocs import (
     Footnote,
     GeneratedContentDefaults,
     HeaderFooterDefaults,
-    ImageBox,
     Lemma,
     LocaleDefaults,
     NumberedList,
@@ -56,7 +55,6 @@ from oodocs import (
     ReferenceList,
     Remark,
     Section,
-    Shape,
     StrokeStyle,
     SubFigure,
     SubFigureGroup,
@@ -69,7 +67,6 @@ from oodocs import (
     ListOfTables,
     TableOfContents,
     Text,
-    TextBox,
     Theme,
     Theorem,
     TitleMatterDefaults,
@@ -101,6 +98,7 @@ from oodocs.engineering import (
     chemical_formula,
 )
 from oodocs.generated import ListOfAlgorithms
+from oodocs.positioning import ImageBox, PageItemScope, Shape, TextBox
 from oodocs.presets.components import CalloutBox, KeyValueTable, Nomenclature
 from oodocs.presets.templates import JournalArticleTemplate, ManuscriptSection
 

@@ -211,7 +211,8 @@ class StrokeStyle:
         Apply a stroke to a positioned shape:
 
         ```python
-        from oodocs import Document, DocumentSettings, Shape, StrokeStyle
+        from oodocs import Document, DocumentSettings, StrokeStyle
+        from oodocs.positioning import Shape
 
         frame = Shape.rect(
             width=2.0,
@@ -243,7 +244,8 @@ class StrokeStyle:
 
         Examples:
             ```python
-            from oodocs import Shape, StrokeStyle
+            from oodocs import StrokeStyle
+            from oodocs.positioning import Shape
 
             shape = Shape.rect(width=2, height=1, stroke=StrokeStyle.none())
             ```
@@ -271,7 +273,8 @@ class StrokeStyle:
 
         Examples:
             ```python
-            from oodocs import Shape, StrokeStyle
+            from oodocs import StrokeStyle
+            from oodocs.positioning import Shape
 
             shape = Shape.line(width=3, height=0, stroke=StrokeStyle.solid("334155", width=0.75))
             ```

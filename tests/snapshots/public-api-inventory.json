@@ -350,13 +350,6 @@
         {
           "category": "media",
           "kind": "class",
-          "module": "oodocs.components.positioning",
-          "name": "ImageBox",
-          "qualname": "oodocs.components.positioning.ImageBox"
-        },
-        {
-          "category": "media",
-          "kind": "class",
           "module": "oodocs.components.media",
           "name": "ImageData",
           "qualname": "oodocs.components.media.ImageData"
@@ -532,13 +525,6 @@
         {
           "category": "media",
           "kind": "class",
-          "module": "oodocs.components.positioning",
-          "name": "PageItemScope",
-          "qualname": "oodocs.components.positioning.PageItemScope"
-        },
-        {
-          "category": "media",
-          "kind": "class",
           "module": "oodocs.components.media",
           "name": "PdfPages",
           "qualname": "oodocs.components.media.PdfPages"
@@ -626,13 +612,6 @@
           "module": "oodocs.components.blocks",
           "name": "Section",
           "qualname": "oodocs.components.blocks.Section"
-        },
-        {
-          "category": "media",
-          "kind": "class",
-          "module": "oodocs.components.positioning",
-          "name": "Shape",
-          "qualname": "oodocs.components.positioning.Shape"
         },
         {
           "category": "style",
@@ -738,13 +717,6 @@
           "module": "oodocs.components.inline",
           "name": "Text",
           "qualname": "oodocs.components.inline.Text"
-        },
-        {
-          "category": "media",
-          "kind": "class",
-          "module": "oodocs.components.positioning",
-          "name": "TextBox",
-          "qualname": "oodocs.components.positioning.TextBox"
         },
         {
           "category": "style",

@@ -557,7 +557,8 @@ class DocumentSettings:
         Add a page-positioned watermark:
 
         ```python
-        from oodocs import Document, DocumentSettings, Paragraph, TextBox
+        from oodocs import Document, DocumentSettings, Paragraph
+        from oodocs.positioning import TextBox
 
         watermark = TextBox("DRAFT", x=0.75, y=0.75, width=2.0, height=0.5, font_size=24)
         cover_stamp = TextBox(

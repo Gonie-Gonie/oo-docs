@@ -48,7 +48,8 @@ class PageItemScope:
 
     Examples:
         ```python
-        from oodocs import DocumentSettings, PageItemScope, TextBox
+        from oodocs import DocumentSettings
+        from oodocs.positioning import PageItemScope, TextBox
 
         settings = DocumentSettings(
             page_items=[
@@ -193,7 +194,8 @@ class PositionedBox:
 
     Examples:
         ```python
-        from oodocs import DocumentSettings, TextBox
+        from oodocs import DocumentSettings
+        from oodocs.positioning import TextBox
         from oodocs.components.positioning import resolve_positioned_boxes
 
         settings = DocumentSettings()
@@ -285,7 +287,8 @@ class TextBox(Block):
 
     Examples:
         ```python
-        from oodocs import Document, DocumentSettings, Paragraph, TextBox
+        from oodocs import Document, DocumentSettings, Paragraph
+        from oodocs.positioning import TextBox
 
         watermark = TextBox(
             "DRAFT",
@@ -428,7 +431,8 @@ class Shape(Block):
 
     Examples:
         ```python
-        from oodocs import Document, DocumentSettings, Paragraph, Shape, StrokeStyle
+        from oodocs import Document, DocumentSettings, Paragraph, StrokeStyle
+        from oodocs.positioning import Shape
 
         anchor = Shape.rect(
             width=2,
@@ -636,7 +640,8 @@ class ImageBox(Block):
 
     Examples:
         ```python
-        from oodocs import Document, DocumentSettings, ImageBox, Paragraph
+        from oodocs import Document, DocumentSettings, Paragraph
+        from oodocs.positioning import ImageBox
 
         logo = ImageBox("logo.png", x=0.5, y=0.5, width=1.2, height=0.6)
         settings = DocumentSettings(page_items=[logo])
@@ -811,7 +816,8 @@ def resolve_positioned_boxes(
 
     Examples:
         ```python
-        from oodocs import DocumentSettings, TextBox
+        from oodocs import DocumentSettings
+        from oodocs.positioning import TextBox
 
         settings = DocumentSettings()
         boxes = resolve_positioned_boxes(

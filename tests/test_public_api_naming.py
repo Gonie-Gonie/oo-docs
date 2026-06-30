@@ -121,6 +121,7 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "FigureList",
         "FootnotesPage",
         "GeneratedPageDefaults",
+        "ImageBox",
         "ListOfAlgorithms",
         "MarginNote",
         "load_document",
@@ -138,8 +139,11 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "CitationOptions",
         "GeneratedPageOptions",
         "PageNumberOptions",
+        "PageItemScope",
         "ParagraphTitleStyle",
+        "Shape",
         "TitleMatterOptions",
+        "TextBox",
         "TypographyOptions",
         "validate_source",
     }
@@ -168,7 +172,6 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "HeaderFooterDefaults",
         "LocaleDefaults",
         "CropBox",
-        "PageItemScope",
         "PageNumberDefaults",
         "RunInTitleStyle",
         "ReferenceList",
@@ -435,14 +438,19 @@ def test_theme_caption_and_title_matter_use_text_alignment_names() -> None:
 
 
 def test_image_components_use_image_format_field_name() -> None:
-    for cls in (oodocs.ImageData, oodocs.Figure, oodocs.SubFigure, oodocs.ImageBox):
+    for cls in (
+        oodocs.ImageData,
+        oodocs.Figure,
+        oodocs.SubFigure,
+        positioning.ImageBox,
+    ):
         field_names = {field.name for field in fields(cls)}
         assert "format" not in field_names, cls.__name__
         assert "image_format" in field_names, cls.__name__
 
 
 def test_image_components_use_image_dpi_field_name() -> None:
-    for cls in (oodocs.Figure, oodocs.SubFigure, oodocs.ImageBox):
+    for cls in (oodocs.Figure, oodocs.SubFigure, positioning.ImageBox):
         field_names = {field.name for field in fields(cls)}
         assert "dpi" not in field_names, cls.__name__
         assert "image_dpi" in field_names, cls.__name__
@@ -562,8 +570,8 @@ def test_block_alignment_fields_use_block_alignment_names() -> None:
 
 
 def test_textbox_uses_explicit_alignment_field_names() -> None:
-    field_names = {field.name for field in fields(oodocs.TextBox)}
-    parameter_names = set(inspect.signature(oodocs.TextBox).parameters)
+    field_names = {field.name for field in fields(positioning.TextBox)}
+    parameter_names = set(inspect.signature(positioning.TextBox).parameters)
 
     assert {"align", "valign"}.isdisjoint(field_names)
     assert {"text_alignment", "vertical_alignment"} <= field_names
