@@ -5,7 +5,10 @@ from __future__ import annotations
 from typing import Sequence
 
 from oodocs.apidoc.builtin_categories import OODocs_API_CATEGORIES
-from oodocs.apidoc.categories import ApiCategory, select_uncategorized_api_objects
+from oodocs.apidoc.categories import (
+    ApiCategory,
+    select_uncategorized_api_objects,
+)
 from oodocs.apidoc.coverage import check_api_docs
 from oodocs.apidoc.model import ApiObject, ApiPackage, ApiParameter
 from oodocs.apidoc.profiles import ApiPresentationProfile, resolve_presentation_profile
@@ -612,30 +615,47 @@ def _constants_table(objects: Sequence[ApiObject]) -> Table | None:
 def _objects_for_category(api: ApiPackage, category: ApiCategory) -> tuple[ApiObject, ...]:
     found: list[ApiObject] = []
     seen: set[str] = set()
+    seen_equivalent: set[str] = set()
     public_objects: tuple[ApiObject, ...] | None = None
+    dedupe_reexports = api.name == "oodocs"
+
+    def public_object_inventory() -> tuple[ApiObject, ...]:
+        nonlocal public_objects
+        if public_objects is None:
+            public_objects = tuple(
+                api.select_objects(
+                    kind=("class", "function", "data", "attribute"),
+                    visibility="public",
+                    recursive=False,
+                )
+            )
+        return public_objects
+
+    def add_if_new(obj: ApiObject) -> None:
+        equivalents = {obj.qualname}
+        if dedupe_reexports:
+            target = obj.metadata.get("reexported_from")
+            if isinstance(target, str):
+                equivalents.add(target)
+        if equivalents & seen_equivalent:
+            return
+        found.append(obj)
+        seen.add(obj.qualname)
+        seen_equivalent.update(equivalents)
+
     for name in category.include:
         if name.endswith(".*"):
             prefix = name[:-1]
-            if public_objects is None:
-                public_objects = tuple(
-                    api.select_objects(
-                        kind=("class", "function", "data", "attribute"),
-                        visibility="public",
-                        recursive=False,
-                    )
-                )
-            for obj in public_objects:
+            for obj in public_object_inventory():
                 if obj.qualname.startswith(prefix) and obj.qualname not in seen:
-                    found.append(obj)
-                    seen.add(obj.qualname)
+                    add_if_new(obj)
             continue
         obj = api.find_object(name)
         if obj is None:
             obj = api.find_object(name.rsplit(".", 1)[-1])
         if obj is None or obj.qualname in seen:
             continue
-        found.append(obj)
-        seen.add(obj.qualname)
+        add_if_new(obj)
     return tuple(found)
 
 

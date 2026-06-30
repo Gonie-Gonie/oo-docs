@@ -140,10 +140,21 @@ def select_uncategorized_api_objects(
         visibility="public",
         recursive=recursive,
     )
+    covered_reexport_targets: set[str] = set()
+    if api.name == "oodocs":
+        for obj in objects:
+            target = obj.metadata.get("reexported_from")
+            if isinstance(target, str) and _is_category_match(
+                obj,
+                exact_names=exact_names,
+                prefixes=prefixes,
+            ):
+                covered_reexport_targets.add(target)
     return [
         obj
         for obj in objects
         if not _is_category_match(obj, exact_names=exact_names, prefixes=prefixes)
+        and obj.qualname not in covered_reexport_targets
     ]
 
 

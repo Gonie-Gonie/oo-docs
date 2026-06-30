@@ -101,6 +101,10 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "oodocs.components.blocks.MIN_SECTION_LEVEL" in all_titles
     assert "oodocs.Theme" in all_titles
     assert "oodocs.ValidationResult" in all_titles
+    assert "oodocs.document.Document" not in all_titles
+    assert "oodocs.validation.ValidationResult" not in all_titles
+    assert "oodocs.components.media.Table" not in all_titles
+    assert "oodocs.settings.PageLayout" not in all_titles
     assert "oodocs.presets.components.CompactTable" in all_titles
     assert "oodocs.presets.templates.JournalArticleTemplate" in all_titles
     assert "oodocs.presets.CompactTable" not in all_titles
@@ -193,6 +197,56 @@ def test_api_category_prefix_include_matches_rendering_and_gate() -> None:
     assert "connect" in text
     assert "samplepkg.extras.debug" not in text
     assert [obj.qualname for obj in uncategorized] == ["samplepkg.extras.debug"]
+
+
+def test_help_book_uses_canonical_reexport_path_once() -> None:
+    api = ApiPackage(
+        "oodocs",
+        modules=[
+            ApiModule(
+                "oodocs",
+                [
+                    ApiObject(
+                        "class",
+                        "Widget",
+                        "oodocs.Widget",
+                        "oodocs",
+                        metadata={"reexported_from": "oodocs.core.Widget"},
+                    )
+                ],
+            ),
+            ApiModule(
+                "oodocs.core",
+                [
+                    ApiObject(
+                        "class",
+                        "Widget",
+                        "oodocs.core.Widget",
+                        "oodocs.core",
+                    )
+                ],
+            ),
+        ],
+    )
+    categories = [
+        ApiCategory(
+            id="core",
+            title="Core API",
+            summary="Primary sample API.",
+            include=("oodocs.Widget", "oodocs.core.*"),
+            order=10,
+        )
+    ]
+
+    chapter = api_category_to_chapter(categories[0], api, max_heading_level=2)
+    uncategorized = select_uncategorized_api_objects(api, categories)
+    issues = check_api_help_categories(api, categories)
+    all_titles = _all_titles(chapter)
+
+    assert "oodocs.Widget" in all_titles
+    assert "oodocs.core.Widget" not in all_titles
+    assert uncategorized == []
+    assert issues == ()
 
 
 def test_help_function_section_uses_matlab_style_argument_layout() -> None:
