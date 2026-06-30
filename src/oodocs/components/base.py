@@ -31,12 +31,12 @@ class Block:
         from oodocs import Document, Paragraph
 
         target = Paragraph("Deployment note")
-        paragraph = Paragraph("See ", target.reference("the deployment note"))
+        paragraph = Paragraph("See ", target.ref("the deployment note"))
         document = Document("Release Notes", target, paragraph)
         ```
     """
 
-    def reference(
+    def ref(
         self,
         *label: InlineInput,
         style: TextStyle | None = None,
@@ -58,13 +58,13 @@ class Block:
             from oodocs import Paragraph
 
             target = Paragraph("Important details")
-            reference = target.reference("details")
+            reference = target.ref("details")
             ```
         """
 
-        from oodocs.components.inline import reference
+        from oodocs.components.inline import ref
 
-        return reference(self, *label, style=style, reference_format=reference_format)
+        return ref(self, *label, style=style, reference_format=reference_format)
 
     def _render_to_docx(
         self,

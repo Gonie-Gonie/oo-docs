@@ -2584,7 +2584,7 @@ class SubFigure:
             return None
         return length_to_inches(self.height, self.unit or default_unit)
 
-    def reference(
+    def ref(
         self,
         *label: InlineInput,
         style: TextStyle | None = None,
@@ -2599,9 +2599,9 @@ class SubFigure:
             Inline reference targeting this subfigure.
         """
 
-        from oodocs.components.inline import reference
+        from oodocs.components.inline import ref
 
-        return reference(self, *label, style=style, reference_format=reference_format)
+        return ref(self, *label, style=style, reference_format=reference_format)
 
 
 @dataclass(slots=True, init=False)
@@ -2848,7 +2848,7 @@ class SubTable:
             return None
         return sum(column_widths)
 
-    def reference(
+    def ref(
         self,
         *label: InlineInput,
         style: TextStyle | None = None,
@@ -2856,9 +2856,9 @@ class SubTable:
     ) -> BlockReference:
         """Create an explicit inline reference to this subtable."""
 
-        from oodocs.components.inline import reference
+        from oodocs.components.inline import ref
 
-        return reference(self, *label, style=style, reference_format=reference_format)
+        return ref(self, *label, style=style, reference_format=reference_format)
 
 
 @dataclass(slots=True, init=False)
@@ -2963,7 +2963,7 @@ class SubTableGroup(Block):
             return "float"
         return self.placement
 
-    def reference(
+    def ref(
         self,
         *label: InlineInput,
         style: TextStyle | None = None,
@@ -2971,9 +2971,9 @@ class SubTableGroup(Block):
     ) -> BlockReference:
         """Create an explicit inline reference to this subtable group."""
 
-        from oodocs.components.inline import reference
+        from oodocs.components.inline import ref
 
-        return reference(self, *label, style=style, reference_format=reference_format)
+        return ref(self, *label, style=style, reference_format=reference_format)
 
     def _render_to_docx(
         self,

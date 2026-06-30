@@ -1219,7 +1219,7 @@ class ReactionEquation(Equation):
         from oodocs.chemistry import ReactionEquation
 
         combustion = ReactionEquation("CH4 + 2O2 -> CO2 + 2H2O")
-        document = Document("Combustion", Paragraph("See ", combustion.reference(), "."), combustion)
+        document = Document("Combustion", Paragraph("See ", combustion.ref(), "."), combustion)
         ```
     """
 
@@ -2490,7 +2490,7 @@ class Algorithm(CountableBlock):
             ],
             caption="Coverage aggregation algorithm.",
         )
-        document = Document("Methods", Paragraph("See ", algorithm.reference(), "."), algorithm)
+        document = Document("Methods", Paragraph("See ", algorithm.ref(), "."), algorithm)
         ```
     """
 

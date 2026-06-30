@@ -90,7 +90,7 @@ def build_document() -> Document:
             ),
             Section(
                 "Quality Gate Algorithm",
-                Paragraph("The method is summarized in ", quality_algorithm.reference(), "."),
+                Paragraph("The method is summarized in ", quality_algorithm.ref(), "."),
                 quality_algorithm,
             ),
             Section(

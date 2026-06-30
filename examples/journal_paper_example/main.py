@@ -323,7 +323,7 @@ def build_journal_paper_document(inputs: ManuscriptInputs | None = None) -> Docu
                 "Evidence Traceability",
                 Paragraph(
                     "The study begins from a straightforward design requirement: every visible claim should remain traceable to either structured input data, a generated figure, or a cited source. ",
-                    traceability_figure.reference(),
+                    traceability_figure.ref(),
                     " summarizes the resulting workflow."
                 ),
                 Paragraph(
@@ -362,7 +362,7 @@ def build_journal_paper_document(inputs: ManuscriptInputs | None = None) -> Docu
             Section("Study Assets", level=1),
             Paragraph(
                 "The evaluation uses a small but realistic asset bundle: benchmark result CSV files, an ablation CSV, structured citation metadata, and an authored manuscript script. The corpus summary is shown in ",
-                dataset_table.reference(),
+                dataset_table.ref(),
                 "."
             ),
             dataset_table,
@@ -380,11 +380,11 @@ def build_journal_paper_document(inputs: ManuscriptInputs | None = None) -> Docu
                 "Benchmark Frontier",
                 Paragraph(
                     "The benchmark data in ",
-                    benchmark_table.reference(),
+                    benchmark_table.ref(),
                     " shows a steady quality gain as more structure is added to the workflow. The same CSV is also rendered into ",
-                    quality_latency_subfigure.reference(),
+                    quality_latency_subfigure.ref(),
                     ", which makes the trade-off between quality and latency easier to interpret during revision discussions. The paired generated plots are grouped in ",
-                    study_plot_group.reference(),
+                    study_plot_group.ref(),
                     "."
                 ),
                 Paragraph(
@@ -401,7 +401,7 @@ def build_journal_paper_document(inputs: ManuscriptInputs | None = None) -> Docu
                 "Ablation Signals",
                 Paragraph(
                     "Ablation results are summarized in ",
-                    ablation_table.reference(),
+                    ablation_table.ref(),
                     ". Removing table automation, citation checks, or asset reuse each weakens the final result, which supports the claim that the workflow benefit comes from coordinated authoring behavior rather than from any single isolated feature."
                 ),
                 Paragraph(
@@ -417,7 +417,7 @@ def build_journal_paper_document(inputs: ManuscriptInputs | None = None) -> Docu
                 "Late-Revision Cost",
                 Paragraph(
                     "The workflow benefit becomes most visible late in the writing cycle. ",
-                    revision_effort_subfigure.reference(),
+                    revision_effort_subfigure.ref(),
                     " reports an estimated operational curve for repeated late updates. The estimate is intentionally approximate, but it captures a practical pattern: manual synchronization cost tends to rise more quickly than code-backed synchronization cost when the manuscript is revised several times close to submission."
                 ),
                 Paragraph(

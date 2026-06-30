@@ -59,7 +59,7 @@ from oodocs.media import ColumnSpec, CropBox, SubTable, SubTableGroup
 from oodocs.pdf import PdfPages
 from oodocs.positioning import ImageBox, PageItemScope, Shape, TextBox
 from oodocs.styles.generated import TableOfContentsLevelStyle
-from oodocs.references import Ref, ReferenceFormat, page_ref, paren_ref, reference
+from oodocs.references import ReferenceFormat, page_ref, paren_ref, ref
 from oodocs.review import MarginNote, Todo, margin_note, todo
 from oodocs.structure import (
     Appendix,
@@ -506,7 +506,7 @@ def test_amsmath_equation_blocks_number_reference_and_validate(tmp_path: Path) -
     assert isinstance(cases, CasesEquation)
     document = Document(
         "AMSMath Blocks",
-        Paragraph("See ", aligned.reference(), " and ", unnumbered.reference("the loss definition"), "."),
+        Paragraph("See ", aligned.ref(), " and ", unnumbered.ref("the loss definition"), "."),
         aligned,
         cases,
         unnumbered,
@@ -524,7 +524,7 @@ def test_amsmath_equation_blocks_number_reference_and_validate(tmp_path: Path) -
     unnumbered_target = Equation("x=1", numbered=False)
     invalid_reference = Document(
         "Invalid Equation Reference",
-        Paragraph("See ", unnumbered_target.reference(), "."),
+        Paragraph("See ", unnumbered_target.ref(), "."),
         unnumbered_target,
     )
     error_codes = {issue.code for issue in invalid_reference.validate().errors}
@@ -564,7 +564,7 @@ def test_mhchem_formula_and_reaction_render_to_all_outputs(tmp_path: Path) -> No
     document = Document(
         "Chemistry Blocks",
         Paragraph("Water is ", water, "; sulfate is ", sulfate, "; ammonium is ", ammonium, "."),
-        Paragraph("See ", reaction.reference(), "."),
+        Paragraph("See ", reaction.ref(), "."),
         reaction,
     )
 
@@ -1252,7 +1252,7 @@ def test_document_validate_catches_reference_mistakes() -> None:
     uncaptioned_table = Table(headers=["Area"], rows=[["Validation"]])
     document = Document(
         "Reference Mistakes",
-        Paragraph("See ", orphan.reference(), " and ", uncaptioned_table.reference(), "."),
+        Paragraph("See ", orphan.ref(), " and ", uncaptioned_table.ref(), "."),
         uncaptioned_table,
     )
 
@@ -1340,7 +1340,7 @@ def test_document_validate_treats_subfigure_group_caption_as_reference_target(
 
     valid_result = Document(
         "Grouped",
-        Paragraph("See ", grouped.reference(), "."),
+        Paragraph("See ", grouped.ref(), "."),
         grouped,
     ).validate()
     warning_codes = {issue.code for issue in valid_result.warnings}
@@ -1349,7 +1349,7 @@ def test_document_validate_treats_subfigure_group_caption_as_reference_target(
 
     invalid_result = Document(
         "Captionless Group",
-        Paragraph("See ", captionless_group.reference(), "."),
+        Paragraph("See ", captionless_group.ref(), "."),
         captionless_group,
     ).validate()
     assert "missing-figure-caption" in {issue.code for issue in invalid_result.warnings}
@@ -1964,7 +1964,7 @@ def test_appendix_switches_child_heading_numbers_to_letters(tmp_path: Path) -> N
         "Appendix Test",
         TableOfContents(show_page_numbers=False),
         Chapter("Main", Paragraph("Body.")),
-        Paragraph("See ", reference(appendix.children[0]), "."),
+        Paragraph("See ", ref(appendix.children[0]), "."),
         appendix,
     )
 
@@ -2223,8 +2223,9 @@ def test_public_api_prefers_classes_for_structural_nodes() -> None:
     assert not hasattr(oodocs, "page_ref")
     assert not hasattr(oodocs, "paren_ref")
     assert hasattr(reference_components, "ReferenceFormat")
-    assert hasattr(reference_components, "Ref")
-    assert hasattr(reference_components, "reference")
+    assert not hasattr(reference_components, "Ref")
+    assert not hasattr(reference_components, "reference")
+    assert hasattr(reference_components, "ref")
     assert hasattr(reference_components, "page_ref")
     assert hasattr(reference_components, "paren_ref")
     assert hasattr(oodocs, "bold")
@@ -2262,7 +2263,8 @@ def test_public_api_prefers_classes_for_structural_nodes() -> None:
     assert hasattr(inline_components, "badge")
     assert hasattr(inline_components, "status")
     assert hasattr(inline_components, "keyboard")
-    assert hasattr(inline_components, "reference")
+    assert hasattr(inline_components, "ref")
+    assert not hasattr(inline_components, "reference")
     assert not hasattr(oodocs, "markup")
     assert not hasattr(oodocs, "styled")
     assert hasattr(markup_components, "markup")
@@ -3404,7 +3406,7 @@ def test_subfigure_group_renders_labels_and_references(tmp_path: Path) -> None:
     )
     document = Document(
         "Subfigure Test",
-        Paragraph("Compare ", baseline.reference(), " with ", treatment.reference(), " in ", group.reference(), "."),
+        Paragraph("Compare ", baseline.ref(), " with ", treatment.ref(), " in ", group.ref(), "."),
         group,
     )
 
@@ -3475,7 +3477,7 @@ def test_subtable_group_renders_labels_and_references(tmp_path: Path) -> None:
     )
     document = Document(
         "Subtable Test",
-        Paragraph("Compare ", baseline.reference(), " with ", tuned.reference(), " in ", group.reference(), "."),
+        Paragraph("Compare ", baseline.ref(), " with ", tuned.ref(), " in ", group.ref(), "."),
         group,
     )
 
@@ -3581,7 +3583,7 @@ def test_caption_and_reference_labels_can_differ_by_theme(tmp_path: Path) -> Non
     figure = Figure(image_path, caption="Localized figure caption.", width=1.0)
     document = Document(
         "Caption Labels Test",
-        Paragraph("See ", table.reference(), " and ", figure.reference(), "."),
+        Paragraph("See ", table.ref(), " and ", figure.ref(), "."),
         table,
         figure,
         ListOfTables(),
@@ -3631,7 +3633,11 @@ def test_cleveref_style_reference_helpers_render_lists_ranges_and_wrappers(tmp_p
         section,
         Paragraph(
             "See ",
-            Ref(first, style=TextStyle(text_color="C00000")),
+            ref(
+                first,
+                style=TextStyle(text_color="C00000"),
+                reference_format=ReferenceFormat(capitalized=True),
+            ),
             ", ",
             refs([first, second], plural_label="Tables", style=TextStyle(bold=True)),
             ", ",
@@ -3717,15 +3723,15 @@ def test_explicit_reference_api_covers_numbered_blocks(tmp_path: Path) -> None:
     section = Section("Reference Targets", intro)
     section.children.append(Paragraph(
         "Targets: ",
-        intro.reference(),
+        intro.ref(),
         ", ",
-        reference(equation),
+        ref(equation),
         ", ",
-        snippet.reference(),
+        snippet.ref(),
         ", ",
-        detail_box.reference("the boxed note"),
+        detail_box.ref("the boxed note"),
         ", and ",
-        section.reference(),
+        section.ref(),
         ".",
     ))
     document = Document(
@@ -3769,7 +3775,7 @@ def test_explicit_reference_api_covers_numbered_blocks(tmp_path: Path) -> None:
     try:
         Paragraph("Ambiguous ", equation, ".")
     except TypeError as exc:
-        assert "reference(obj)" in str(exc)
+        assert "ref(obj)" in str(exc)
     else:
         raise AssertionError("Expected raw document object references in Paragraph to fail")
 
@@ -3786,7 +3792,7 @@ def test_countable_blocks_share_document_counter_and_render_references(tmp_path:
     claim = CustomClaim("Custom countable kinds can join the same counter.")
     document = Document(
         "Countable Blocks",
-        Paragraph("See ", theorem.reference(), ", ", proof.reference("the proof"), ", and ", claim.reference(), "."),
+        Paragraph("See ", theorem.ref(), ", ", proof.ref("the proof"), ", and ", claim.ref(), "."),
         definition,
         lemma,
         theorem,
@@ -3855,7 +3861,7 @@ def test_countable_blocks_can_render_as_theorem_boxes(tmp_path: Path) -> None:
     )
     document = Document(
         "Boxed Countable Blocks",
-        Paragraph("See ", definition.reference(), "."),
+        Paragraph("See ", definition.ref(), "."),
         definition,
     )
 
@@ -3911,7 +3917,7 @@ def test_algorithm_blocks_render_clauses_steps_code_and_references(tmp_path: Pat
     document = Document(
         "Algorithm Blocks",
         ListOfAlgorithms(),
-        Paragraph("See ", prose_algorithm.reference(), " and ", code_algorithm.reference(), "."),
+        Paragraph("See ", prose_algorithm.ref(), " and ", code_algorithm.ref(), "."),
         prose_algorithm,
         code_algorithm,
     )
@@ -3982,7 +3988,7 @@ def test_algorithm_rejects_ambiguous_body_inputs() -> None:
 
 def test_unnumbered_countable_reference_requires_custom_label() -> None:
     proof = Proof("No counter is assigned to proofs by default.")
-    document = Document("Proof Reference", Paragraph("See ", proof.reference(), "."), proof)
+    document = Document("Proof Reference", Paragraph("See ", proof.ref(), "."), proof)
 
     result = document.validate()
 
@@ -4030,7 +4036,7 @@ def test_code_block_caption_line_numbers_highlights_and_from_file(tmp_path: Path
     )
     document = Document(
         "Code Listing Options",
-        Paragraph("See ", block.reference(), "."),
+        Paragraph("See ", block.ref(), "."),
         block,
     )
 
@@ -5145,9 +5151,9 @@ def test_document_renders_to_docx_and_pdf(tmp_path: Path) -> None:
                 ),
                 Paragraph(
                     "See ",
-                    reference(artifacts_table),
+                    ref(artifacts_table),
                     " and ",
-                    preview_figure.reference(),
+                    preview_figure.ref(),
                     " for the generated outputs.",
                 ),
                 Paragraph(

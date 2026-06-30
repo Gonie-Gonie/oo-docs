@@ -404,7 +404,7 @@ class BlockReference(Text):
         from oodocs import Document, Paragraph
 
         target = Paragraph("Details")
-        document = Document("Report", target, Paragraph("See ", target.reference("the details"), "."))
+        document = Document("Report", target, Paragraph("See ", target.ref("the details"), "."))
         ```
     """
 
@@ -461,7 +461,7 @@ def _reference_label_prefix(target: object) -> str:
     return type(target).__name__
 
 
-def reference(
+def ref(
     target: object,
     *label: InlineInput,
     style: TextStyle | None = None,
@@ -482,49 +482,16 @@ def reference(
 
     Examples:
         ```python
-        from oodocs import Figure, Paragraph
-        from oodocs.references import reference
+        from oodocs import Figure, Paragraph, ref
 
         figure = Figure("diagram.png", caption="System diagram")
-        paragraph = Paragraph("See ", reference(figure), ".")
+        paragraph = Paragraph("See ", ref(figure), ".")
         ```
     """
 
     if not _is_referenceable(target):
         raise TypeError(f"Unsupported reference target: {type(target)!r}")
     return BlockReference(target, *label, style=style, reference_format=reference_format)
-
-
-def ref(
-    target: object,
-    *label: InlineInput,
-    style: TextStyle | None = None,
-    reference_format: ReferenceFormat | None = None,
-) -> BlockReference:
-    """Create an inline object reference.
-
-    This is a shorter alias for ``reference(...)`` matching common LaTeX
-    ``cleveref`` authoring style.
-    """
-
-    return reference(target, *label, style=style, reference_format=reference_format)
-
-
-def Ref(
-    target: object,
-    *label: InlineInput,
-    style: TextStyle | None = None,
-    reference_format: ReferenceFormat | None = None,
-) -> BlockReference:
-    """Create a capitalized inline object reference."""
-
-    base = reference_format or ReferenceFormat()
-    return reference(
-        target,
-        *label,
-        style=style,
-        reference_format=base.merged(capitalized=True),
-    )
 
 
 class ReferenceGroup(Text):
@@ -641,7 +608,7 @@ def paren_ref(
     """Create a parenthesized inline object reference."""
 
     base = reference_format or ReferenceFormat()
-    return reference(
+    return ref(
         target,
         style=style,
         reference_format=base.merged(prefix="(", suffix=")"),
@@ -661,7 +628,7 @@ def page_ref(
     """
 
     base = reference_format or ReferenceFormat()
-    return reference(
+    return ref(
         target,
         style=style,
         reference_format=base.merged(page=True),
@@ -1790,8 +1757,8 @@ def coerce_inlines(values: Iterable[InlineInput]) -> list[Text]:
             continue
         if _is_referenceable(value):
             raise TypeError(
-                "Document objects must be cited explicitly with reference(obj) "
-                "or obj.reference() before they are placed inside Paragraph(...)"
+                "Document objects must be cited explicitly with ref(obj) "
+                "or obj.ref() before they are placed inside Paragraph(...)"
             )
         if isinstance(value, str):
             normalized.append(Text(value))
@@ -1890,9 +1857,7 @@ __all__ = [
     "margin_note",
     "math",
     "prescript",
-    "Ref",
     "ref",
-    "reference",
     "ref_range",
     "refs",
     "page_ref",

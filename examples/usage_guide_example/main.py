@@ -334,7 +334,7 @@ comparison = SubFigureGroup(
     columns=2,
 )
 
-Paragraph("The post-calibration case is shown in ", after.reference(), ".")
+Paragraph("The post-calibration case is shown in ", after.ref(), ".")
 """
 
 SUBTABLE_SNIPPET = """from oodocs import Paragraph, Table
@@ -356,7 +356,7 @@ sensitivity = SubTableGroup(
     columns=2,
 )
 
-Paragraph("The tuned table is shown in ", tuned.reference(), ".")
+Paragraph("The tuned table is shown in ", tuned.ref(), ".")
 """
 
 PDFPAGES_SNIPPET = """from oodocs import Document, Paragraph
@@ -489,7 +489,7 @@ setup = Lemma("Shared theorem-like blocks advance the same counter.")
 main = Theorem("The numbered statement can be referenced later.", title="Main result")
 exercise = Exercise("Custom countable kinds can keep a separate sequence.")
 
-paragraph = Paragraph("Use ", main.reference(), " before the proof.")
+paragraph = Paragraph("Use ", main.ref(), " before the proof.")
 proof = Proof("Proofs are unnumbered by default, so reference them with a custom label.")
 """
 
@@ -508,7 +508,7 @@ algorithm = Algorithm(
     caption="Coverage aggregation algorithm.",
 )
 
-paragraph = Paragraph("See ", algorithm.reference(), " for the pseudocode.")
+paragraph = Paragraph("See ", algorithm.ref(), " for the pseudocode.")
 """
 
 PROJECT_LAYOUT_SNIPPET = """my-report/
@@ -633,7 +633,7 @@ summary = Box(
     block_alignment="center",
 )
 
-Paragraph("See ", summary.reference(), " for the editable evidence package.")
+Paragraph("See ", summary.ref(), " for the editable evidence package.")
 """
 
 INLINE_WORD_FEATURES_SNIPPET = """from oodocs import Paragraph, Text, highlight, line_break, prescript, strikethrough, subscript, superscript
@@ -676,7 +676,7 @@ piecewise = Equation.cases(
 )
 
 local_definition = Equation(r"\\operatorname{loss}(x)", numbered=False)
-paragraph = Paragraph("See ", derivation.reference(), " and ", local_definition.reference("the loss definition"), ".")
+paragraph = Paragraph("See ", derivation.ref(), " and ", local_definition.ref("the loss definition"), ".")
 """
 
 CHEMISTRY_SNIPPET = """from oodocs import Paragraph
@@ -686,7 +686,7 @@ water = chemical_formula("H2O")
 sulfate = chemical_formula("SO4^2-")
 reaction = ReactionEquation("2H2 + O2 -> 2H2O")
 
-paragraph = Paragraph("Water is ", water, ", sulfate is ", sulfate, ", and the reaction is ", reaction.reference(), ".")
+paragraph = Paragraph("Water is ", water, ", sulfate is ", sulfate, ", and the reaction is ", reaction.ref(), ".")
 """
 
 INLINE_CHIPS_SNIPPET = """from oodocs import Paragraph, badge, keyboard, status, tag
@@ -1012,7 +1012,7 @@ def build_usage_guide_document() -> Document:
             ["\\vspace{...}, \\hrule", "VerticalSpace(...), Divider()", "Vertical spacing and separators remain explicit document blocks, including a Notion-like divider for lightweight visual breaks."],
             ["tabular or booktabs", "Table(...), Table.from_dataframe(...), style=\"booktabs\"", "Tables can be created directly from Python data instead of being copied into markup."],
             ["multirow or multicolumn", "TableCell(rowspan=...), Table.grouped_headers(...)", "Merged cells remain explicit table data, and grouped headers can be generated without hand-building every span."],
-            ["\\label, \\ref, and \\cref", "Call reference(obj), Ref(obj), refs([...]), ref_range(a, b), paren_ref(obj), or obj.reference() inside Paragraph(...)", "References follow the indexed document order without hand-maintained labels."],
+            ["\\label, \\ref, and \\cref", "Call ref(obj), refs([...]), ref_range(a, b), paren_ref(obj), or obj.ref() inside Paragraph(...)", "References follow the indexed document order without hand-maintained labels."],
             ["\\url or \\href", "url(long_target) or link(target, label)", "Visible URLs get soft break points while external link targets stay unchanged in DOCX, PDF, and HTML."],
             ["enumitem", "NumberedList(start=...), NumberedList(resume_from=...), or ListStyle(...)", "List spacing, marker formatting, and resumed numbering are explicit Python options instead of package-level state."],
             ["glossaries, acronym, or nomencl", "Glossary() and ListOfGlossaryTerms(glossary) from oodocs.glossary, or Nomenclature(...)", "Terms and acronyms live in a Python registry; symbol tables can still use the boxed Nomenclature preset."],
@@ -1050,7 +1050,7 @@ def build_usage_guide_document() -> Document:
         rows=[
             ["Insert a benchmark table from code", "Table.from_dataframe(...)", "The rendered table stays attached to the data-processing step that created it."],
             ["Insert an architecture figure from disk", "Figure('assets/diagram.png')", "Static diagrams can stay under version control without manual copy-paste."],
-            ["Refer to a caption from prose", "Paragraph('See ', figure_obj.reference(), '.')", "Block references update automatically when figure order changes."],
+            ["Refer to a caption from prose", "Paragraph('See ', figure_obj.ref(), '.')", "Block references update automatically when figure order changes."],
             ["Refer to several objects", "refs([fig1, fig2]) or ref_range(fig1, fig3)", "Reference helpers collapse shared labels into plural labels or ranges."],
             ["Keep a note near evidence", Footnote.annotated("page-footnote default", "DOCX uses page footnotes by default. PDF and HTML keep a generated notes page because their layout engines do not share Word's native footnote model."), "Footnotes stay authored inline instead of being managed in a separate editor pane."],
         ],
@@ -1073,7 +1073,7 @@ def build_usage_guide_document() -> Document:
         rows=[
             ["Heading numbering", "Document structure drives numbering in all outputs.", "Part entries use independent Roman labels; appendix child chapters switch to A, B, C labels."],
             ["Captions", "Tables and figures receive automatic numbers and can be referenced inline.", "Captions are kept visually closer to their table or figure to avoid page-break confusion."],
-            ["Object references", "reference(obj), Ref(obj), refs([...]), ref_range(a, b), paren_ref(obj), and page_ref(obj) share one numbering index.", "Page-aware references currently degrade with an explicit validation warning."],
+            ["Object references", "ref(obj), refs([...]), ref_range(a, b), paren_ref(obj), and page_ref(obj) share one numbering index.", "Page-aware references currently degrade with an explicit validation warning."],
             ["Footnotes", "Footnotes are authored with the same inline API everywhere.", "DOCX uses native page footnotes; PDF and HTML fall back to generated note pages."],
             ["Hyperlinks", "External links, breakable URL labels, and block anchors remain visible in all outputs.", "HTML makes them directly clickable while DOCX and PDF preserve original link targets in exported files."],
         ],
@@ -1236,7 +1236,7 @@ def build_usage_guide_document() -> Document:
         rows=[
             ["Missing image file", "DOCX, PDF, and HTML cannot render media that is not present.", "Keep assets under version control or pass an existing Path."],
             ["Uncaptioned table or figure reference", "Automatic references need a numbered target.", "Add a caption or provide an explicit custom reference label."],
-            ["Unnumbered heading or countable reference", "The default label cannot be resolved without a number.", "Set numbered=True, set toc=True for heading anchors, or write reference(obj, 'custom label')."],
+            ["Unnumbered heading or countable reference", "The default label cannot be resolved without a number.", "Set numbered=True, set toc=True for heading anchors, or write ref(obj, 'custom label')."],
             ["Top-level heading below chapter", "A report can look like it skipped its first chapter.", "Wrap imported blocks in Chapter(...) or import with heading_level_shift."],
             ["HTML generated-list page numbers", "Browsers do not have stable rendered page numbers.", "Accept the warning for HTML or set show_page_numbers=False on TableOfContents, ListOfTables, ListOfFigures, or ListOfAlgorithms."],
         ],
@@ -1409,7 +1409,7 @@ def build_usage_guide_document() -> Document:
                 pipeline_figure,
                 Paragraph(
                     "The pipeline shown in ",
-                    pipeline_figure.reference(),
+                    pipeline_figure.ref(),
                     " is the real payoff of the package. Data files, static assets, title metadata, generated pages, and renderer output all remain downstream of one explicit document tree."
                 ),
                 navigation_table,
@@ -1547,7 +1547,7 @@ def build_usage_guide_document() -> Document:
                 counted_exercise,
                 Paragraph(
                     "For example, ",
-                    counted_theorem.reference(),
+                    counted_theorem.ref(),
                     " can be cited after the block is inserted, while the exercise above uses a separate custom sequence."
                 ),
                 CodeBlock(COUNTABLE_BLOCK_SNIPPET, language="python"),
@@ -1559,7 +1559,7 @@ def build_usage_guide_document() -> Document:
                     " when the algorithm should look like a listings-style block."
                 ),
                 counted_algorithm,
-                Paragraph("The pseudocode above can be referenced as ", counted_algorithm.reference(), "."),
+                Paragraph("The pseudocode above can be referenced as ", counted_algorithm.ref(), "."),
                 CodeBlock(ALGORITHM_SNIPPET, language="python"),
             ),
             Section(
@@ -1617,9 +1617,9 @@ def build_usage_guide_document() -> Document:
                     " for piecewise definitions, and ",
                     inline_code("numbered=False"),
                     " when a local display should not consume an equation number. For example, see ",
-                    math_derivation.reference(),
+                    math_derivation.ref(),
                     " and ",
-                    math_local_definition.reference("the local loss definition"),
+                    math_local_definition.ref("the local loss definition"),
                     ".",
                 ),
                 math_derivation,
@@ -1636,7 +1636,7 @@ def build_usage_guide_document() -> Document:
                     ", while ",
                     inline_code("ReactionEquation"),
                     " gives reactions their own reference label. For example, see ",
-                    combustion_reaction.reference(),
+                    combustion_reaction.ref(),
                     ".",
                 ),
                 combustion_reaction,
@@ -1797,15 +1797,15 @@ def build_usage_guide_document() -> Document:
                 "Use figures to explain the authoring model, not just decorate it",
                 Paragraph(
                     "The diagrams in this guide are intentionally explanatory. ",
-                    pipeline_figure.reference(),
+                    pipeline_figure.ref(),
                     " captures the project-level data flow, while ",
-                    author_layout_figure.reference(),
+                    author_layout_figure.ref(),
                     " explains how the same metadata can support multiple presentation styles."
                 ),
                 renderer_behavior_figure,
                 Paragraph(
                     "Likewise, ",
-                    renderer_behavior_figure.reference(),
+                    renderer_behavior_figure.ref(),
                     " is not decorative. It surfaces the concrete behavior differences a user needs to know before choosing which output to send to collaborators."
                 ),
             ),

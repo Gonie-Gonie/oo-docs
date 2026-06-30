@@ -191,13 +191,11 @@ def test_tier_two_namespaces_export_domain_symbols() -> None:
         pdf: {"PdfPages"},
         positioning: {"ImageBox", "PageItemScope", "Shape", "TextBox"},
         reference_helpers: {
-            "Ref",
             "ReferenceFormat",
             "page_ref",
             "paren_ref",
             "ref",
             "ref_range",
-            "reference",
             "refs",
         },
         workflows: {
@@ -1113,6 +1111,22 @@ def test_block_renderer_hooks_are_private() -> None:
 
         assert forbidden.isdisjoint(public_members), cls.__name__
         assert expected_private <= all_members, cls.__name__
+
+
+def test_reference_targets_use_ref_method_name() -> None:
+    for cls in (
+        base_components.Block,
+        oodocs.Paragraph,
+        oodocs.Table,
+        oodocs.Figure,
+        oodocs.SubFigure,
+        media.SubTable,
+        media.SubTableGroup,
+    ):
+        members = _public_members(cls)
+
+        assert "ref" in members, cls.__name__
+        assert "reference" not in members, cls.__name__
 
 
 def test_raw_value_helpers_use_as_prefix() -> None:
