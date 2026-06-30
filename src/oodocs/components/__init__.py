@@ -62,7 +62,6 @@ _EXPORTS = {
     "PageItemScope": "oodocs.components.positioning",
     "Paragraph": "oodocs.components.blocks",
     "Part": "oodocs.components.blocks",
-    "PdfPages": "oodocs.components.media",
     "Proposition": "oodocs.components.blocks",
     "Proof": "oodocs.components.blocks",
     "ReactionEquation": "oodocs.components.blocks",

@@ -13,6 +13,7 @@ import zlib
 import zipfile
 
 import oodocs
+import oodocs.components as component_namespace
 import oodocs.chemistry as chemistry_components
 import oodocs.compatibility as compatibility_components
 from docx import Document as WordDocument
@@ -2170,6 +2171,8 @@ def test_public_api_prefers_classes_for_structural_nodes() -> None:
     assert not hasattr(oodocs, "SubTable")
     assert not hasattr(oodocs, "SubTableGroup")
     assert not hasattr(oodocs, "TableOverflowPolicy")
+    assert not hasattr(media_components, "PdfPages")
+    assert not hasattr(component_namespace, "PdfPages")
     assert hasattr(media_components, "ColumnSpec")
     assert hasattr(media_components, "CropBox")
     assert hasattr(media_components, "TableOverflowPolicy")

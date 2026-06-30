@@ -348,6 +348,10 @@ def test_tier_two_namespaces_export_domain_symbols() -> None:
     for name in ("MarginNote", "Todo", "margin_note", "todo"):
         assert not hasattr(components, name)
 
+    assert "PdfPages" not in components.__all__
+    assert not hasattr(components, "PdfPages")
+    assert not hasattr(media, "PdfPages")
+
     for module, names in expected_exports.items():
         assert names == set(module.__all__)
         for name in names:
