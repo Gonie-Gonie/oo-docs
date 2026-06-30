@@ -402,6 +402,25 @@ def test_preset_namespaces_keep_component_and_template_boundaries() -> None:
     assert not hasattr(cover, "page_items")
 
 
+def test_template_presets_use_page_layout_for_geometry() -> None:
+    template_classes = (
+        preset_templates.JournalArticleTemplate,
+        preset_templates.TechnicalReportTemplate,
+        preset_templates.SoftwareManualTemplate,
+        preset_templates.BookTemplate,
+    )
+
+    for template_class in template_classes:
+        parameters = set(inspect.signature(template_class).parameters)
+        template = template_class()
+
+        assert "page_layout" in parameters
+        assert {"page_size", "page_margins"}.isdisjoint(parameters)
+        assert isinstance(template.page_layout, oodocs.PageLayout)
+        assert not hasattr(template, "page_size")
+        assert not hasattr(template, "page_margins")
+
+
 def test_top_level_public_api_uses_completed_canonical_names() -> None:
     forbidden = {
         "Algorithm",

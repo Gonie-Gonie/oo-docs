@@ -78,6 +78,12 @@ def _default_journal_theme() -> Theme:
     )
 
 
+def _default_template_page_layout() -> PageLayout:
+    """Return the default page geometry used by document template presets."""
+
+    return PageLayout(PageSize.a4(), PageMargins())
+
+
 @dataclass(slots=True)
 class ManuscriptSection:
     """A lightweight section descriptor accepted by article templates.
@@ -138,8 +144,7 @@ class JournalArticleTemplate:
     Attributes:
         name: Template display name.
         theme: Document theme used by generated documents.
-        page_size: Default page size.
-        page_margins: Default page margins.
+        page_layout: Default page geometry.
         author_layout: Default author title-matter layout.
         include_contents: Whether to include a table of contents by default.
         include_references: Whether to include a references page by default.
@@ -186,8 +191,7 @@ class JournalArticleTemplate:
 
     name: str = "Journal article"
     theme: Theme = field(default_factory=_default_journal_theme)
-    page_size: PageSize = field(default_factory=PageSize.a4)
-    page_margins: PageMargins = field(default_factory=PageMargins)
+    page_layout: PageLayout = field(default_factory=_default_template_page_layout)
     author_layout: AuthorLayout = field(default_factory=AuthorLayout)
     include_contents: bool = False
     include_references: bool = True
@@ -281,7 +285,7 @@ class JournalArticleTemplate:
                 author_layout=self.author_layout,
                 cover_page=self.cover_page if cover_page is None else cover_page,
             ),
-            page_layout=PageLayout(self.page_size, self.page_margins),
+            page_layout=self.page_layout,
             theme=self.theme,
         )
         return Document(title, *children, settings=settings, citations=citations)
@@ -673,8 +677,7 @@ class TechnicalReportTemplate:
     Attributes:
         name: Template display name.
         theme: Document theme used by generated reports.
-        page_size: Default page size.
-        page_margins: Default page margins.
+        page_layout: Default page geometry.
         author_layout: Default author title-matter layout.
         include_contents: Whether to include a table of contents by default.
         include_references: Whether to include a references page by default.
@@ -694,8 +697,7 @@ class TechnicalReportTemplate:
 
     name: str = "Technical report"
     theme: Theme = field(default_factory=_default_report_theme)
-    page_size: PageSize = field(default_factory=PageSize.a4)
-    page_margins: PageMargins = field(default_factory=PageMargins)
+    page_layout: PageLayout = field(default_factory=_default_template_page_layout)
     author_layout: AuthorLayout = field(default_factory=AuthorLayout)
     include_contents: bool = True
     include_references: bool = True
@@ -771,7 +773,7 @@ class TechnicalReportTemplate:
                 author_layout=self.author_layout,
                 cover_page=self.cover_page if cover_page is None else cover_page,
             ),
-            page_layout=PageLayout(self.page_size, self.page_margins),
+            page_layout=self.page_layout,
             theme=self.theme,
         )
         return Document(title, *children, settings=settings, citations=citations)
@@ -784,8 +786,7 @@ class SoftwareManualTemplate:
     Attributes:
         name: Template display name.
         theme: Document theme used by generated manuals.
-        page_size: Default page size.
-        page_margins: Default page margins.
+        page_layout: Default page geometry.
         author_layout: Default author title-matter layout.
         include_contents: Whether to include a table of contents by default.
         include_references: Whether to include a references page by default.
@@ -805,8 +806,7 @@ class SoftwareManualTemplate:
 
     name: str = "Software manual"
     theme: Theme = field(default_factory=_default_report_theme)
-    page_size: PageSize = field(default_factory=PageSize.a4)
-    page_margins: PageMargins = field(default_factory=PageMargins)
+    page_layout: PageLayout = field(default_factory=_default_template_page_layout)
     author_layout: AuthorLayout = field(default_factory=AuthorLayout)
     include_contents: bool = True
     include_references: bool = False
@@ -874,7 +874,7 @@ class SoftwareManualTemplate:
                 author_layout=self.author_layout,
                 cover_page=self.cover_page if cover_page is None else cover_page,
             ),
-            page_layout=PageLayout(self.page_size, self.page_margins),
+            page_layout=self.page_layout,
             theme=self.theme,
         )
         return Document(title, *children, settings=settings, citations=citations)
@@ -887,8 +887,7 @@ class BookTemplate:
     Attributes:
         name: Template display name.
         theme: Document theme used by generated books.
-        page_size: Default page size.
-        page_margins: Default page margins.
+        page_layout: Default page geometry.
         author_layout: Default author title-matter layout.
         include_contents: Whether to include a table of contents by default.
         include_references: Whether to include a references page by default.
@@ -908,8 +907,7 @@ class BookTemplate:
 
     name: str = "Book"
     theme: Theme = field(default_factory=_default_book_theme)
-    page_size: PageSize = field(default_factory=PageSize.a4)
-    page_margins: PageMargins = field(default_factory=PageMargins)
+    page_layout: PageLayout = field(default_factory=_default_template_page_layout)
     author_layout: AuthorLayout = field(default_factory=AuthorLayout)
     include_contents: bool = True
     include_references: bool = False
@@ -976,7 +974,7 @@ class BookTemplate:
                 author_layout=self.author_layout,
                 cover_page=self.cover_page if cover_page is None else cover_page,
             ),
-            page_layout=PageLayout(self.page_size, self.page_margins),
+            page_layout=self.page_layout,
             theme=self.theme,
         )
         return Document(title, *children, settings=settings, citations=citations)
