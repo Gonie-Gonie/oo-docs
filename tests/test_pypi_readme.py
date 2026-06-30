@@ -22,3 +22,12 @@ def test_pypi_readme_excludes_repository_operations() -> None:
     assert "GitHub Release assets" not in readme
     assert "release-notes/" not in readme
     assert "artifacts/usage-guide/" not in readme
+
+
+def test_pypi_readme_quick_start_uses_current_metadata_api() -> None:
+    readme = Path("README-PYPI.md").read_text(encoding="utf-8")
+    quick_start = readme.split("## Quick Start", 1)[1].split("## Command Line", 1)[0]
+
+    assert "DocumentMetadata" in quick_start
+    assert 'metadata=DocumentMetadata(author="OODocs")' in quick_start
+    assert "metadata_author" not in readme

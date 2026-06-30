@@ -32,7 +32,7 @@ pip install "oodocs[apidoc]"
 ## Quick Start
 
 ```python
-from oodocs import Chapter, Document, DocumentSettings, Paragraph, Section, bold
+from oodocs import Chapter, Document, DocumentMetadata, DocumentSettings, Paragraph, Section, bold
 
 report = Document(
     "Hello oodocs",
@@ -47,7 +47,7 @@ report = Document(
             ),
         ),
     ),
-    settings=DocumentSettings(metadata_author="OODocs"),
+    settings=DocumentSettings(metadata=DocumentMetadata(author="OODocs")),
 )
 
 report.save("artifacts/hello.docx")
