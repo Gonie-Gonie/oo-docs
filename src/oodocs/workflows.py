@@ -113,17 +113,29 @@ class OutputBundle:
         return self.outputs[normalized[0]]
 
     def keys(self) -> tuple[OutputFormat, ...]:
-        """Return normalized output format keys."""
+        """Return normalized output format keys.
+
+        Returns:
+            Tuple of rendered output format names in bundle order.
+        """
 
         return tuple(self.outputs.keys())
 
     def values(self) -> tuple[Path, ...]:
-        """Return rendered output paths."""
+        """Return rendered output paths.
+
+        Returns:
+            Tuple of rendered file paths in bundle order.
+        """
 
         return tuple(self.outputs.values())
 
     def items(self) -> tuple[tuple[OutputFormat, Path], ...]:
-        """Return rendered output pairs."""
+        """Return rendered output pairs.
+
+        Returns:
+            Tuple of ``(format, path)`` pairs in bundle order.
+        """
 
         return tuple(self.outputs.items())
 
