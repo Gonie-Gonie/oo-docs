@@ -432,7 +432,11 @@ class ListOfGlossaryTerms(Block):
         self.sort = normalized_sort
 
     def rows(self) -> list[list[str]]:
-        """Return table rows for the configured glossary."""
+        """Return table rows for the configured glossary.
+
+        Returns:
+            Rows containing display label and definition text.
+        """
 
         return [
             [entry.list_label(), entry.list_definition()]
@@ -440,7 +444,15 @@ class ListOfGlossaryTerms(Block):
         ]
 
     def to_table(self, headers: tuple[str, str] | None = None) -> Table:
-        """Return the generated glossary as a table block."""
+        """Return the generated glossary as a table block.
+
+        Args:
+            headers: Optional fallback headers used when this list keeps the
+                default headers.
+
+        Returns:
+            Table block containing glossary entries.
+        """
 
         resolved_headers = (
             headers
