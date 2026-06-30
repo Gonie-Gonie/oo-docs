@@ -93,6 +93,9 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "Core Document Model" in titles
     assert "Tables and Figures" in titles
     assert "Layout and Theme" in titles
+    assert "Imports" in titles
+    assert "Automation API" in titles
+    assert titles.index("Imports") < titles.index("Automation API")
     assert "oodocs.Document" in all_titles
     assert "oodocs.Paragraph" in all_titles
     assert "oodocs.Table" in all_titles
@@ -105,6 +108,9 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "oodocs.validation.ValidationResult" not in all_titles
     assert "oodocs.components.media.Table" not in all_titles
     assert "oodocs.settings.PageLayout" not in all_titles
+    assert "oodocs.workflows.save_document_outputs" in all_titles
+    assert "oodocs.workflows.build_source_outputs" in all_titles
+    assert "oodocs.workflows.validate_source_document" in all_titles
     assert "oodocs.presets.components.CompactTable" in all_titles
     assert "oodocs.presets.templates.JournalArticleTemplate" in all_titles
     assert "oodocs.presets.CompactTable" not in all_titles

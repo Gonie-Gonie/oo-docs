@@ -440,6 +440,30 @@ def test_template_presets_use_page_layout_for_geometry() -> None:
         assert not hasattr(template, "page_margins")
 
 
+def test_workflow_functions_use_separate_automation_api_category() -> None:
+    categories = {category.id: category for category in apidoc.OODocs_API_CATEGORIES}
+    imports_category = categories["imports"]
+    automation_category = categories["automation-api"]
+
+    assert imports_category.title == "Imports"
+    assert automation_category.title == "Automation API"
+    assert not any(
+        name.startswith("oodocs.workflows") for name in imports_category.include
+    )
+    assert {
+        "oodocs.compatibility.*",
+        "oodocs.importers.*",
+    } <= set(imports_category.include)
+    assert {
+        "oodocs.workflows.load_source_document",
+        "oodocs.workflows.load_document_from_python",
+        "oodocs.workflows.save_document_outputs",
+        "oodocs.workflows.build_source_outputs",
+        "oodocs.workflows.validate_source_document",
+    } <= set(automation_category.include)
+    assert "oodocs.workflows.*" not in automation_category.include
+
+
 def test_top_level_public_api_uses_completed_canonical_names() -> None:
     forbidden = {
         "Algorithm",
