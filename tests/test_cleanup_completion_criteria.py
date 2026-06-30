@@ -308,6 +308,21 @@ def test_readme_latex_translations_include_glossary_policy() -> None:
     assert "`Nomenclature`" in translations
 
 
+def test_readme_latex_translations_include_locale_policy() -> None:
+    readme = _readme()
+    translations = readme.split("Common translations:", 1)[1].split(
+        "The main payoff",
+        1,
+    )[0]
+
+    assert "LaTeX `babel` / `polyglossia` document language" in translations
+    assert "`Theme.from_locale(\"ko-KR\")`" in translations
+    assert "`LocaleDefaults.from_locale(...)`" in translations
+    assert "localized labels, generated titles, dates" in translations
+    assert "HTML `lang`" in translations
+    assert "PDF font guidance" in translations
+
+
 def test_readme_latex_translations_include_graphicx_policy() -> None:
     readme = _readme()
     translations = readme.split("Common translations:", 1)[1].split(
@@ -448,6 +463,24 @@ def test_chemistry_support_reference_documents_mhchem_policy() -> None:
         "Unicode superscript digits and signs normalize to superscript runs.",
         "Reaction arrows such as `->`",
         "full mhchem grammar",
+    ):
+        assert phrase in reference
+
+
+def test_locale_support_reference_documents_babel_policy() -> None:
+    reference = Path("docs/reference/locale-support.md").read_text(encoding="utf-8")
+
+    for phrase in (
+        "common `babel` and `polyglossia` document-language needs",
+        "`Theme.from_locale(\"ko-KR\")`",
+        "`LocaleDefaults.from_locale(\"ko-KR\")`",
+        "`CaptionDefaults(...)`",
+        "`GeneratedContentDefaults(...)`",
+        "`theme.format_date(value)`",
+        "`theme.resolve_language_tag()`",
+        "HTML `lang` and DOCX language settings",
+        "`theme.pdf_font_fallback_guide()`",
+        "Hyphenation and script shaping remain renderer-dependent.",
     ):
         assert phrase in reference
 
