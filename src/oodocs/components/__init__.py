@@ -44,7 +44,7 @@ _EXPORTS = {
     "Footnote": "oodocs.components.inline",
     "ListOfFootnotes": "oodocs.components.generated",
     "Glossary": "oodocs.components.glossary",
-    "GlossaryList": "oodocs.components.generated",
+    "ListOfGlossaryTerms": "oodocs.components.generated",
     "GlossaryTerm": "oodocs.components.glossary",
     "Highlight": "oodocs.components.inline",
     "Hyperlink": "oodocs.components.inline",

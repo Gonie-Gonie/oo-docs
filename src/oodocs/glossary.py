@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from oodocs.components.generated import GlossaryList
+from oodocs.components.generated import ListOfGlossaryTerms
 from oodocs.components.glossary import Acronym, Glossary, GlossaryTerm
 
 __all__ = [
     "Acronym",
     "Glossary",
-    "GlossaryList",
+    "ListOfGlossaryTerms",
     "GlossaryTerm",
 ]

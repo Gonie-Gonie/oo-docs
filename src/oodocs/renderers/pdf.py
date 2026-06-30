@@ -70,7 +70,7 @@ from oodocs.components.blocks import (
 )
 from oodocs.components.generated import (
     ListOfComments,
-    GlossaryList,
+    ListOfGlossaryTerms,
     ListOfAlgorithms,
     ListOfFigures,
     ListOfFootnotes,
@@ -2156,7 +2156,7 @@ class PdfRenderer:
         )
 
     def _is_paginated_generated_page(self, block: object) -> bool:
-        return isinstance(block, (GlossaryList, ListOfTables, ListOfFigures, ListOfAlgorithms, TableOfContents))
+        return isinstance(block, (ListOfGlossaryTerms, ListOfTables, ListOfFigures, ListOfAlgorithms, TableOfContents))
 
     def _should_auto_render_footnote_list(
         self,
@@ -2369,7 +2369,7 @@ class PdfRenderer:
             (
                 ListOfComments,
                 ListOfFootnotes,
-                GlossaryList,
+                ListOfGlossaryTerms,
                 ListOfReferences,
                 TableOfContents,
                 ListOfTables,

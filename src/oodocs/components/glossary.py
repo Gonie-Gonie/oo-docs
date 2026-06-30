@@ -117,12 +117,12 @@ class Glossary:
     Examples:
         ```python
         from oodocs import Paragraph
-        from oodocs.glossary import Glossary, GlossaryList
+        from oodocs.glossary import Glossary, ListOfGlossaryTerms
 
         glossary = Glossary()
         glossary.acronym("HVAC", "Heating, ventilation, and air conditioning")
         paragraph = Paragraph(glossary.use("HVAC"), " requirements are tracked.")
-        glossary_page = GlossaryList(glossary)
+        glossary_page = ListOfGlossaryTerms(glossary)
         ```
     """
 

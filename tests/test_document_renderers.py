@@ -45,7 +45,7 @@ from oodocs.engineering import (
     chemical_formula,
 )
 from oodocs.generated import ListOfComments, ListOfFootnotes, ListOfAlgorithms, TocLevelStyle
-from oodocs.glossary import Acronym, Glossary, GlossaryList, GlossaryTerm
+from oodocs.glossary import Acronym, Glossary, ListOfGlossaryTerms, GlossaryTerm
 from oodocs.media import ColumnSpec, CropBox, PdfPages, SubTable, SubTableGroup
 from oodocs.positioning import ImageBox, PageItemScope, Shape, TextBox
 from oodocs.references import Ref, ReferenceFormat, page_ref, paren_ref, reference
@@ -1434,7 +1434,7 @@ def test_glossary_acronym_and_generated_list_render_to_outputs(tmp_path: Path) -
             glossary.use("HVAC"),
             ".",
         ),
-        GlossaryList(glossary, sort="key"),
+        ListOfGlossaryTerms(glossary, sort="key"),
     )
 
     result = document.validate()
@@ -1474,10 +1474,10 @@ def test_glossary_acronym_and_generated_list_render_to_outputs(tmp_path: Path) -
     duplicate_glossary = Glossary()
     duplicate_glossary.term("API", "Application programming interface")
     duplicate_glossary.term("API", "Duplicate application term")
-    duplicate_result = Document("Duplicate Glossary", GlossaryList(duplicate_glossary)).validate()
+    duplicate_result = Document("Duplicate Glossary", ListOfGlossaryTerms(duplicate_glossary)).validate()
     assert "duplicate-glossary-key" in {issue.code for issue in duplicate_result.errors}
 
-    empty_result = Document("Empty Glossary", GlossaryList(Glossary())).validate()
+    empty_result = Document("Empty Glossary", ListOfGlossaryTerms(Glossary())).validate()
     assert "empty-glossary-list" in {issue.code for issue in empty_result.warnings}
 
 
@@ -1491,7 +1491,7 @@ def test_locale_theme_localizes_html_language_and_generated_labels(tmp_path: Pat
         Paragraph("본문 ", cite("locale2026"), "."),
         table,
         ListOfTables(),
-        GlossaryList(glossary),
+        ListOfGlossaryTerms(glossary),
         ListOfReferences(),
         settings=DocumentSettings(theme=Theme.from_locale("ko-KR")),
         citations=[source],
@@ -2129,11 +2129,11 @@ def test_public_api_prefers_classes_for_structural_nodes() -> None:
     assert hasattr(inline_components, "InlineCode")
     assert not hasattr(oodocs, "Acronym")
     assert not hasattr(oodocs, "Glossary")
-    assert not hasattr(oodocs, "GlossaryList")
+    assert not hasattr(oodocs, "ListOfGlossaryTerms")
     assert not hasattr(oodocs, "GlossaryTerm")
     assert hasattr(glossary_components, "Acronym")
     assert hasattr(glossary_components, "Glossary")
-    assert hasattr(glossary_components, "GlossaryList")
+    assert hasattr(glossary_components, "ListOfGlossaryTerms")
     assert hasattr(glossary_components, "GlossaryTerm")
     assert hasattr(generated_components, "ListOfFootnotes")
     assert not hasattr(oodocs, "ListBlock")

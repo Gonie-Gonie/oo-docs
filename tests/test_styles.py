@@ -265,7 +265,7 @@ def test_theme_from_locale_resolves_korean_labels_dates_and_font_guidance() -> N
     assert theme.resolve_caption_label("figure", "reference") == "그림"
     assert theme.resolve_generated_page_title("table_of_contents") == "목차"
     assert theme.resolve_generated_page_title("list_of_references") == "참고문헌"
-    assert theme.resolve_generated_page_title("glossary_list") == "용어집"
+    assert theme.resolve_generated_page_title("list_of_glossary_terms") == "용어집"
     assert theme.resolve_glossary_headers() == ("용어", "정의")
     assert theme.format_date(date(2026, 6, 29)) == "2026. 6. 29."
     assert theme.format_date("2026-06-29") == "2026. 6. 29."

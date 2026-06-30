@@ -80,7 +80,7 @@ def test_top_level_public_api_excludes_internal_helper_patterns() -> None:
 def test_tier_two_namespaces_export_domain_symbols() -> None:
     expected_exports = {
         review: {"MarginNote", "Todo", "margin_note", "todo"},
-        glossary: {"Acronym", "Glossary", "GlossaryList", "GlossaryTerm"},
+        glossary: {"Acronym", "Glossary", "ListOfGlossaryTerms", "GlossaryTerm"},
         importers: {
             "ImportIssue",
             "ImportPolicyError",
@@ -135,7 +135,7 @@ def test_tier_two_namespaces_export_domain_symbols() -> None:
         generated: {
             "ListOfComments",
             "ListOfFootnotes",
-            "GlossaryList",
+            "ListOfGlossaryTerms",
             "ListOfAlgorithms",
             "ListOfFigures",
             "ListOfTables",
@@ -204,6 +204,7 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "Acronym",
         "Glossary",
         "GlossaryList",
+        "ListOfGlossaryTerms",
         "GlossaryTerm",
         "ImageBox",
         "ListOfAlgorithms",
@@ -429,6 +430,7 @@ def test_generated_content_defaults_use_document_language_field_names() -> None:
     forbidden_fields = {
         "comments_title",
         "footnotes_title",
+        "glossary_list_title",
         "references_title",
         "contents_title",
         "generated_section_level",
@@ -438,7 +440,7 @@ def test_generated_content_defaults_use_document_language_field_names() -> None:
         "list_of_comments_title",
         "list_of_footnotes_title",
         "list_of_references_title",
-        "glossary_list_title",
+        "list_of_glossary_terms_title",
         "table_of_contents_title",
         "generated_heading_level",
         "generated_content_page_breaks",

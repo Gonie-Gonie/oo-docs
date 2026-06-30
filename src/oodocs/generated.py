@@ -5,7 +5,7 @@ from __future__ import annotations
 from oodocs.components.generated import (
     ListOfComments,
     ListOfFootnotes,
-    GlossaryList,
+    ListOfGlossaryTerms,
     ListOfAlgorithms,
     ListOfFigures,
     ListOfReferences,
@@ -17,7 +17,7 @@ from oodocs.components.generated import (
 __all__ = [
     "ListOfComments",
     "ListOfFootnotes",
-    "GlossaryList",
+    "ListOfGlossaryTerms",
     "ListOfAlgorithms",
     "ListOfFigures",
     "ListOfTables",

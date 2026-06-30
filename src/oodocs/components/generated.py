@@ -449,7 +449,7 @@ class ListOfReferences(Block):
 
 
 @dataclass(slots=True, init=False)
-class GlossaryList(Block):
+class ListOfGlossaryTerms(Block):
     """Generated glossary table from a ``Glossary`` registry.
 
     Args:
@@ -473,12 +473,12 @@ class GlossaryList(Block):
         sort: str = "insertion",
     ) -> None:
         if not isinstance(glossary, Glossary):
-            raise TypeError("GlossaryList.glossary must be a Glossary")
+            raise TypeError("ListOfGlossaryTerms.glossary must be a Glossary")
         if len(headers) != 2:
-            raise ValueError("GlossaryList.headers must contain two labels")
+            raise ValueError("ListOfGlossaryTerms.headers must contain two labels")
         normalized_sort = str(sort).lower()
         if normalized_sort not in {"insertion", "key", "term"}:
-            raise ValueError("GlossaryList.sort must be 'insertion', 'key', or 'term'")
+            raise ValueError("ListOfGlossaryTerms.sort must be 'insertion', 'key', or 'term'")
         self.glossary = glossary
         self.title = coerce_inlines((title,)) if title is not None else None
         self.headers = (str(headers[0]), str(headers[1]))
@@ -525,7 +525,7 @@ class GlossaryList(Block):
         """Render this glossary list into a DOCX container."""
 
         self._section(
-            default_title=context.theme.resolve_generated_page_title("glossary_list"),
+            default_title=context.theme.resolve_generated_page_title("list_of_glossary_terms"),
             default_headers=context.theme.resolve_glossary_headers(),
         )._render_to_docx(renderer, container, context)
 
@@ -537,7 +537,7 @@ class GlossaryList(Block):
         """Render this glossary list into PDF flowables."""
 
         return self._section(
-            default_title=context.theme.resolve_generated_page_title("glossary_list"),
+            default_title=context.theme.resolve_generated_page_title("list_of_glossary_terms"),
             default_headers=context.theme.resolve_glossary_headers(),
         )._render_to_pdf(renderer, context)
 
@@ -549,7 +549,7 @@ class GlossaryList(Block):
         """Render this glossary list into HTML markup."""
 
         return self._section(
-            default_title=context.theme.resolve_generated_page_title("glossary_list"),
+            default_title=context.theme.resolve_generated_page_title("list_of_glossary_terms"),
             default_headers=context.theme.resolve_glossary_headers(),
         )._render_to_html(renderer, context)
 
@@ -816,7 +816,7 @@ class TableOfContents(Block):
 
 __all__ = [
     "ListOfComments",
-    "GlossaryList",
+    "ListOfGlossaryTerms",
     "ListOfAlgorithms",
     "ListOfFigures",
     "ListOfFootnotes",

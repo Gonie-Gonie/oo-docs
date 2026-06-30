@@ -39,7 +39,7 @@ from oodocs.components.blocks import (
 )
 from oodocs.components.generated import (
     ListOfComments,
-    GlossaryList,
+    ListOfGlossaryTerms,
     ListOfAlgorithms,
     ListOfFigures,
     ListOfFootnotes,
@@ -935,7 +935,7 @@ class _ValidationContext:
                 ListOfTables,
                 ListOfFigures,
                 ListOfAlgorithms,
-                GlossaryList,
+                ListOfGlossaryTerms,
                 ListOfReferences,
                 ListOfComments,
                 ListOfFootnotes,
@@ -1725,7 +1725,7 @@ class _ValidationContext:
                         path,
                     )
                 continue
-            if isinstance(page, GlossaryList):
+            if isinstance(page, ListOfGlossaryTerms):
                 duplicates = page.glossary.duplicate_keys()
                 for key in sorted(duplicates):
                     self._add(
@@ -1738,7 +1738,7 @@ class _ValidationContext:
                     self._add(
                         "warning",
                         "empty-glossary-list",
-                        "GlossaryList has no glossary entries to display.",
+                        "ListOfGlossaryTerms has no glossary entries to display.",
                         path,
                     )
                 continue

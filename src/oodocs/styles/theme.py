@@ -437,7 +437,7 @@ class GeneratedContentDefaults:
         list_of_comments_title: Default title for generated comment lists.
         list_of_footnotes_title: Default title for generated footnote lists.
         list_of_references_title: Default title for generated reference lists.
-        glossary_list_title: Default title for generated glossary lists.
+        list_of_glossary_terms_title: Default title for generated glossary lists.
         table_of_contents_title: Default title for generated tables of contents.
         generated_heading_level: Heading level used by generated content.
         generated_content_page_breaks: Whether generated content starts on new
@@ -458,7 +458,7 @@ class GeneratedContentDefaults:
     list_of_comments_title: str = "Comments"
     list_of_footnotes_title: str = "Footnotes"
     list_of_references_title: str = "References"
-    glossary_list_title: str = "Glossary"
+    list_of_glossary_terms_title: str = "Glossary"
     table_of_contents_title: str = "Contents"
     generated_heading_level: int = 2
     generated_content_page_breaks: bool = True
@@ -578,7 +578,7 @@ class LocaleDefaults:
                     list_of_comments_title="주석",
                     list_of_footnotes_title="각주",
                     list_of_references_title="참고문헌",
-                    glossary_list_title="용어집",
+                    list_of_glossary_terms_title="용어집",
                     table_of_contents_title="목차",
                 ),
                 glossary_headers=("용어", "정의"),
@@ -1373,7 +1373,7 @@ class Theme:
             "list_of_comments",
             "list_of_footnotes",
             "list_of_references",
-            "glossary_list",
+            "list_of_glossary_terms",
             "table_of_contents",
         ],
     ) -> str:
@@ -1384,7 +1384,7 @@ class Theme:
                 ``"list_of_tables"``, ``"list_of_figures"``,
                 ``"list_of_algorithms"``,
                 ``"list_of_comments"``, ``"list_of_footnotes"``,
-                ``"list_of_references"``, ``"glossary_list"``, and
+                ``"list_of_references"``, ``"list_of_glossary_terms"``, and
                 ``"table_of_contents"``.
 
         Returns:
@@ -1411,7 +1411,7 @@ class Theme:
             "list_of_comments": self.generated_content.list_of_comments_title,
             "list_of_footnotes": self.generated_content.list_of_footnotes_title,
             "list_of_references": self.generated_content.list_of_references_title,
-            "glossary_list": self.generated_content.glossary_list_title,
+            "list_of_glossary_terms": self.generated_content.list_of_glossary_terms_title,
             "table_of_contents": self.generated_content.table_of_contents_title,
         }
         try:
