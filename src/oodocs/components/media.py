@@ -2757,6 +2757,8 @@ class SubFigure:
 
         Args:
             *label: Optional inline label override.
+            style: Optional inline style.
+            reference_format: Optional automatic reference formatting rules.
 
         Returns:
             Inline reference targeting this subfigure.
