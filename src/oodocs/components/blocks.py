@@ -2499,6 +2499,7 @@ class Algorithm(CountableBlock):
         numbered: Whether the algorithm participates in numbering.
         counter: Counter namespace for algorithm numbering.
         reference_label: Label prefix used by automatic inline references.
+        box_style: Optional box style used to render the algorithm as a box.
 
     Raises:
         ValueError: If ``body_style`` is unsupported or ``steps`` and ``code``
