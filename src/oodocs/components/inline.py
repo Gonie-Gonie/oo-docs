@@ -666,6 +666,42 @@ def paren_ref(
     )
 
 
+def bracket_ref(
+    target: object,
+    *,
+    style: TextStyle | None = None,
+    reference_format: ReferenceFormat | None = None,
+) -> BlockReference:
+    """Create a square-bracketed inline object reference.
+
+    Args:
+        target: Document object to reference.
+        style: Optional inline style.
+        reference_format: Optional automatic reference formatting rules.
+
+    Returns:
+        Bracketed inline reference fragment.
+
+    Examples:
+        ```python
+        from oodocs.references import ReferenceFormat, bracket_ref
+
+        paragraph = Paragraph(
+            "See ",
+            bracket_ref(figure, reference_format=ReferenceFormat(label="그림")),
+            ".",
+        )
+        ```
+    """
+
+    base = reference_format or ReferenceFormat()
+    return ref(
+        target,
+        style=style,
+        reference_format=base.merged(prefix="[", suffix="]"),
+    )
+
+
 def page_ref(
     target: object,
     *,
@@ -1864,6 +1900,7 @@ __all__ = [
     "Text",
     "badge",
     "bold",
+    "bracket_ref",
     "cite",
     "comment",
     "footnote",

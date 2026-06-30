@@ -88,6 +88,7 @@ _EXPORTS = {
     "VerticalSpace": "oodocs.components.blocks",
     "badge": "oodocs.components.inline",
     "bold": "oodocs.components.inline",
+    "bracket_ref": "oodocs.components.inline",
     "chemical_formula": "oodocs.components.chemistry",
     "cite": "oodocs.components.inline",
     "comment": "oodocs.components.inline",

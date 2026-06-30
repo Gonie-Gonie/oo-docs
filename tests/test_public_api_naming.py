@@ -290,6 +290,7 @@ def test_tier_two_namespaces_export_domain_symbols() -> None:
         positioning: {"ImageBox", "PageItemScope", "Shape", "TextBox"},
         reference_helpers: {
             "ReferenceFormat",
+            "bracket_ref",
             "page_ref",
             "paren_ref",
             "ref",
@@ -522,6 +523,7 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "GeneratedPageOptions",
         "PageNumberOptions",
         "PageItemScope",
+        "bracket_ref",
         "page_ref",
         "paren_ref",
         "PdfPages",

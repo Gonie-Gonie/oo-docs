@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from oodocs.components.inline import (
     ReferenceFormat,
+    bracket_ref,
     page_ref,
     paren_ref,
     ref,
@@ -13,6 +14,7 @@ from oodocs.components.inline import (
 
 __all__ = [
     "ReferenceFormat",
+    "bracket_ref",
     "page_ref",
     "paren_ref",
     "ref",

@@ -73,7 +73,7 @@ from oodocs.media import (
 from oodocs.pdf import PdfPages
 from oodocs.positioning import ImageBox, PageItemScope, Shape, TextBox
 from oodocs.styles.generated import TableOfContentsLevelStyle
-from oodocs.references import ReferenceFormat, page_ref, paren_ref, ref
+from oodocs.references import ReferenceFormat, bracket_ref, page_ref, paren_ref, ref
 from oodocs.review import MarginNote, Todo, margin_note, todo
 from oodocs.structure import (
     Appendix,
@@ -2342,11 +2342,13 @@ def test_public_api_prefers_classes_for_structural_nodes() -> None:
     assert not hasattr(oodocs, "ReferenceFormat")
     assert not hasattr(oodocs, "Ref")
     assert not hasattr(oodocs, "reference")
+    assert not hasattr(oodocs, "bracket_ref")
     assert not hasattr(oodocs, "page_ref")
     assert not hasattr(oodocs, "paren_ref")
     assert hasattr(reference_components, "ReferenceFormat")
     assert not hasattr(reference_components, "Ref")
     assert not hasattr(reference_components, "reference")
+    assert hasattr(reference_components, "bracket_ref")
     assert hasattr(reference_components, "ref")
     assert hasattr(reference_components, "page_ref")
     assert hasattr(reference_components, "paren_ref")
@@ -3874,6 +3876,8 @@ def test_reference_format_overrides_labels_for_helpers(tmp_path: Path) -> None:
                 reference_format=ReferenceFormat(label="fig.", plural_label="figs."),
                 last_separator=" + ",
             ),
+            " and ",
+            bracket_ref(first, reference_format=ReferenceFormat(label="그림")),
             ".",
         ),
         first,
@@ -3883,7 +3887,7 @@ def test_reference_format_overrides_labels_for_helpers(tmp_path: Path) -> None:
     html_path = tmp_path / "reference-format.html"
     document.save_html(html_path)
 
-    assert "Compare figs. 1 + 2" in _normalized_html_text(html_path)
+    assert "Compare figs. 1 + 2 and [그림 1]" in _normalized_html_text(html_path)
 
 
 def test_explicit_reference_api_covers_numbered_blocks(tmp_path: Path) -> None:

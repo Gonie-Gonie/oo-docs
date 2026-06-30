@@ -1147,11 +1147,17 @@ def _wrap_reference_pieces(
     pieces: list[ReferenceTextPiece],
     reference_format: ReferenceFormat,
 ) -> list[ReferenceTextPiece]:
+    wrapped = list(pieces)
+    if not wrapped:
+        wrapper_text = f"{reference_format.prefix}{reference_format.suffix}"
+        return [ReferenceTextPiece(wrapper_text)] if wrapper_text else []
     if reference_format.prefix:
-        pieces.insert(0, ReferenceTextPiece(reference_format.prefix))
+        first = wrapped[0]
+        wrapped[0] = ReferenceTextPiece(f"{reference_format.prefix}{first.text}", first.anchor)
     if reference_format.suffix:
-        pieces.append(ReferenceTextPiece(reference_format.suffix))
-    return pieces
+        last = wrapped[-1]
+        wrapped[-1] = ReferenceTextPiece(f"{last.text}{reference_format.suffix}", last.anchor)
+    return wrapped
 
 
 def _format_reference_text(
