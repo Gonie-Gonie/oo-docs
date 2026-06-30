@@ -40,6 +40,7 @@ def test_examples_expose_common_entry_points() -> None:
         "config_reference_example",
         "validation_gate_report",
         "conformance_matrix_report",
+        "review_notes_example",
     }
 
     for example_dir in example_dirs:

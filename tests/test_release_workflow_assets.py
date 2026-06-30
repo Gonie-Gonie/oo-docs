@@ -42,6 +42,7 @@ def test_release_workflow_uploads_curated_assets_only() -> None:
     assert "python examples/config_reference_example/main.py" not in workflow
     assert "python examples/validation_gate_report/main.py" not in workflow
     assert "python examples/conformance_matrix_report/main.py" not in workflow
+    assert "python examples/review_notes_example/main.py" not in workflow
 
     assert "--save-json" not in workflow
     assert "--save-csv" not in workflow
