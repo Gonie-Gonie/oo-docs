@@ -307,7 +307,7 @@ doc = Document(
 
 ## Example Scripts
 
-The repository includes fourteen standalone example directories:
+The repository includes fifteen standalone example directories:
 
 - `examples/usage_guide_example/`
 - `examples/journal_paper_example/`
@@ -323,6 +323,7 @@ The repository includes fourteen standalone example directories:
 - `examples/conformance_matrix_report/`
 - `examples/review_notes_example/`
 - `examples/engineering_report_example/`
+- `examples/page_overlay_example/`
 
 Choose the example by task. The usage guide explains OODocs concepts; the other
 examples are workflow entry points and intentionally avoid repeating the guide.
@@ -343,6 +344,7 @@ examples are workflow entry points and intentionally avoid repeating the guide.
 | Report a conformance matrix | `conformance_matrix_report` | You want a readable PDF excerpt plus full JSON sidecar for a wide test/simulation matrix. |
 | Prepare a review copy | `review_notes_example` | You want comments, TODOs, margin notes, footnotes, and generated review pages from one source. |
 | Write an engineering method report | `engineering_report_example` | You want numbered pseudocode, requirements, and verification evidence without crowding the general user guide. |
+| Design page overlays | `page_overlay_example` | You want watermarks, approval frames, scoped badges, or inline drawing placement without crowding the general user guide. |
 
 Run them directly from the repository checkout:
 
@@ -361,6 +363,7 @@ Run them directly from the repository checkout:
 .\.venv\Scripts\python.exe .\examples\conformance_matrix_report\main.py --output-dir artifacts/conformance-matrix-report
 .\.venv\Scripts\python.exe .\examples\review_notes_example\main.py --output-dir artifacts/review-notes-example
 .\.venv\Scripts\python.exe .\examples\engineering_report_example\main.py --output-dir artifacts/engineering-report-example
+.\.venv\Scripts\python.exe .\examples\page_overlay_example\main.py --output-dir artifacts/page-overlay-example
 ```
 
 Most examples accept repeatable `--outputs` and `--quiet` flags:
@@ -397,6 +400,7 @@ What they show:
 - `conformance_matrix_report` keeps a wide conformance matrix in JSON while rendering a readable claim boundary, summary, excerpt, and failure appendix
 - `review_notes_example` keeps comments and footnotes in the core inline workflow while importing TODOs and margin notes from `oodocs.review`
 - `engineering_report_example` isolates `oodocs.engineering.Algorithm` usage in a focused report with requirements and verification tables
+- `page_overlay_example` isolates `oodocs.positioning` overlays, scoped page items, and inline drawing placement in a focused report
 
 By default they write outputs under:
 
