@@ -139,7 +139,7 @@ OODocs is not trying to replace every LaTeX workflow. It is meant for documents 
 Common translations:
 
 - LaTeX `\part` -> `Part(...)` separator pages above chapters
-- LaTeX `\appendix` -> `Appendix(Chapter(...), ...)` from `oodocs.structure` with child chapters numbered `A`, `B`, `C`
+- LaTeX `\appendix` -> `Appendix(Chapter(...), ...)` from `oodocs.structure` with child chapters numbered `A`, `B`, `C`; heading references use those labels while table and figure counters stay document-wide
 - LaTeX `\section` / `\subsection` -> `Chapter(...)`, `Section(...)`, `Subsection(...)`
 - LaTeX `titlesec` / `sectsty` heading styles -> `HeadingStyle(...)`, document-wide `Theme(blocks=BlockDefaults(heading_styles={...}))`, or local `Section(..., heading_style=...)`
 - LaTeX `tocloft` / `titletoc` / `minitoc` -> `TableOfContents(scope=..., level_styles=...)`, `ListOfTables(scope=...)`, and `ListOfFigures(scope=...)`
@@ -183,7 +183,7 @@ The default behavior is intentionally conventional:
 - paragraphs are justified by default
 - tables, figures, boxes, and their captions are centered by default
 - parts render on their own separator pages and do not reset chapter numbering
-- appendices render on a separator page and switch child chapter numbering to `A`, `B`, `C`
+- appendices render on a separator page, switch child chapter numbering to `A`, `B`, `C`, and validate that top-level main matter does not continue after them
 - headings are numbered as `1`, `1.1`, `1.1.1`, and so on
 - ordered and bullet lists can be customized with direct kwargs such as `indent=...`, `marker=CounterStyle(...)`, `marker_gap=...`, `item_spacing=...`, `block_spacing=...`, `start=...`, and `resume_from=...`
 - heading numbering can be customized with `HeadingNumbering(...)`
@@ -202,7 +202,7 @@ The default behavior is intentionally conventional:
 - Use `subscript(...)`, `superscript(...)`, `prescript(...)`, and `inline_math(...)` for ordinary prose. Use `Equation(...)`, `Equation.aligned(...)`, and `Equation.cases(...)` for displayed expressions, including ordinary `x^2` / `x_0` scripts, aligned derivations, piecewise cases, and front scripts such as `\prescript{14}{6}{C}`. Pass `numbered=False` when a displayed equation should not consume an equation number, or use `Equation.from_sympy(...)` when SymPy is installed and the expression already lives in symbolic form. OODocs supports a lightweight LaTeX-like subset rather than raw TeX environments; see [docs/reference/math-support.md](docs/reference/math-support.md) before using matrix-like or package-specific math commands.
 - Import `chemical_formula(...)`, `ChemicalFormula(...)`, and `ReactionEquation(...)` from `oodocs.chemistry` for mhchem-style inline chemistry and displayed reactions with automatic references. See [docs/reference/chemistry-support.md](docs/reference/chemistry-support.md) for the supported formula, charge, Unicode subscript/superscript, and reaction-arrow policy.
 - Use `Part(...)` for book-like divisions above chapters; each part gets a separator page, while chapter numbers continue across parts by default.
-- Import `Appendix(...)` from `oodocs.structure` for appendix material; child chapters are numbered `A`, `B`, `C`, nested headings become `A.1`, `A.2`, and the appendix separator can appear in the table of contents.
+- Import `Appendix(...)` from `oodocs.structure` for appendix material; child chapters are numbered `A`, `B`, `C`, nested headings become `A.1`, `A.2`, and the appendix separator can appear in the table of contents. Place appendices after the main chapters and parts so validation can keep the document outline conventional.
 - Use `Chapter(...)`, `Section(...)`, `Subsection(...)`, and `SubSubsection(...)` for the visible outline. Their nesting in Python should match how you expect the final document to read.
 - Use `Theme(blocks=BlockDefaults(heading_styles={level: HeadingStyle(...)}))` for document-wide heading styling, or `Section(..., heading_style=HeadingStyle(...))` when one heading needs a local override.
 - Use `TableOfContents(scope="chapter")`, `ListOfTables(scope="section")`, `ListOfFigures(scope="part")`, `ListOfAlgorithms(scope="chapter")`, or `ListOfListings(scope="chapter")` for mini contents and local generated lists. Import `ListOfAlgorithms` and `ListOfListings` from `oodocs.generated`; the default `scope="document"` preserves whole-document lists.

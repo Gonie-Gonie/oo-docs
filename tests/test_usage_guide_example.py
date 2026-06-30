@@ -147,6 +147,9 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "scope='section'" in table_text
     assert "HTML generated-list page numbers" in table_text
     assert "show_page_numbers=False" in table_text
+    assert "Appendix child chapters use A, B, C numbering" in table_text
+    assert "Table and figure captions keep document-wide numbering." in table_text
+    assert "validation warns if main chapters continue afterward." in table_text
     assert any("A reading map for the guide." in text for text in paragraph_texts)
     assert any("Example catalog" in text for text in paragraph_texts)
     assert any("Purpose-based entry points for the bundled examples." in text for text in paragraph_texts)
@@ -263,6 +266,9 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "scope='part'" in pdf_text
     assert "scope='chapter'" in pdf_text
     assert "scope='section'" in pdf_text
+    assert "Appendix child chapters use A, B, C" in pdf_text
+    assert "Table and figure captions keep" in pdf_text
+    assert "document-wide numbering" in pdf_text
     assert "A reading map for the guide." in pdf_text
     assert "Example catalog" in pdf_text
     assert "api_objects_example" in pdf_text
@@ -366,6 +372,9 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "scope='section'" in normalized_html_text
     assert "HTML generated-list page numbers" in normalized_html_text
     assert "show_page_numbers=False" in normalized_html_text
+    assert "Appendix child chapters use A, B, C numbering" in normalized_html_text
+    assert "Table and figure captions keep document-wide numbering." in normalized_html_text
+    assert "validation warns if main chapters continue afterward." in normalized_html_text
     assert "ListOfComments() collects these review notes onto a dedicated generated page." in normalized_html_text
     assert "Example catalog" in normalized_html_text
     assert "api_objects_example" in normalized_html_text

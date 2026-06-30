@@ -2134,10 +2134,17 @@ class Appendix(Part):
     Args:
         *children: Appendix block content. Level-1 headings inside the appendix
             are numbered ``A``, ``B``, ``C``, and nested headings become
-            ``A.1``, ``A.1.1``, and so on.
+            ``A.1``, ``A.1.1``, and so on. References to appendix headings use
+            those generated labels. Table and figure caption counters remain
+            document-wide.
         title: Appendix separator title.
         toc: Whether the appendix separator should appear in generated tables
             of contents.
+
+    Notes:
+        Place top-level appendices after the main chapters and parts.
+        Validation emits an ``appendix-order`` warning when top-level main
+        matter follows an appendix.
 
     Examples:
         ```python

@@ -1057,10 +1057,22 @@ class _ValidationContext:
         *,
         parent_level: int | None,
     ) -> None:
+        appendix_started = False
         for index, block in enumerate(blocks):
+            block_path = f"{path}.children[{index}]"
+            if parent_level is None:
+                if isinstance(block, Appendix):
+                    appendix_started = True
+                elif appendix_started and isinstance(block, (Part, Section)):
+                    self._add(
+                        "warning",
+                        "appendix-order",
+                        "Appendix containers should appear after top-level chapters and parts.",
+                        block_path,
+                    )
             self._collect_block(
                 block,
-                f"{path}.children[{index}]",
+                block_path,
                 parent_level=parent_level,
             )
 

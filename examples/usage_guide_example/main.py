@@ -1015,7 +1015,7 @@ def build_usage_guide_document() -> Document:
         headers=["If you reach for this in LaTeX", "Use this in oodocs", "Why it is easier here"],
         rows=[
             ["\\part", "Part(...)", "Parts render on their own separator pages and do not reset chapter numbering, matching the usual LaTeX book/report behavior."],
-            ["\\appendix", "Appendix(Chapter(...), ...)", "Appendix child chapters use A, B, C numbering, and references to those chapters use the same generated labels."],
+            ["\\appendix", "Appendix(Chapter(...), ...)", "Appendix child chapters use A, B, C numbering, and references to those chapters use the same generated labels. Table and figure captions keep document-wide numbering."],
             ["\\section, \\subsection", "Chapter, Section, Subsection", "The Python object tree is also the document outline, so headings, contents, and anchors stay synchronized."],
             ["\\textbf, \\emph, \\texttt", "bold(...), italic(...), inline_code(...)", "Inline styling stays attached to the words being styled and works in DOCX, PDF, and HTML."],
             ["\\includegraphics", "Figure(path_or_matplotlib_figure, caption=...)", "Static images and Python-generated figures use the same captioning and referencing model."],
@@ -1082,7 +1082,7 @@ def build_usage_guide_document() -> Document:
         headers=["Concern", "Shared behavior", "Important renderer detail"],
         rows=[
             ["Heading numbering", "Document structure drives numbering in all outputs.", "Part entries use independent Roman labels; appendix child chapters switch to A, B, C labels."],
-            ["Captions", "Tables and figures receive automatic numbers and can be referenced inline.", "Captions are kept visually closer to their table or figure to avoid page-break confusion."],
+            ["Captions", "Tables and figures receive automatic document-wide numbers and can be referenced inline.", "Appendix heading labels switch to A/B/C, but caption counters intentionally stay in the document-wide table and figure sequences."],
             ["Object references", "ref(obj), refs([...]), ref_range(a, b), paren_ref(obj), and page_ref(obj) share one numbering index.", "Page-aware references currently degrade with an explicit validation warning."],
             ["Footnotes", "Footnotes are authored with the same inline API everywhere.", "DOCX uses native page footnotes; PDF and HTML fall back to generated note pages."],
             ["Hyperlinks", "External links, breakable URL labels, and block anchors remain visible in all outputs.", "HTML makes them directly clickable while DOCX and PDF preserve original link targets in exported files."],
@@ -1110,7 +1110,7 @@ def build_usage_guide_document() -> Document:
         headers=["Concern", "Default", "Customization path"],
         rows=[
             ["Part entries", "Shown above chapters when authored.", "Use Part(...) for book-like divisions; set level_styles={0: TableOfContentsLevelStyle(...)} to tune the part line."],
-            ["Appendix entries", "Shown as an unnumbered separator followed by A/B/C child chapters.", "Import Appendix from oodocs.structure when end matter needs appendix numbering and contents entries."],
+            ["Appendix entries", "Shown as an unnumbered separator followed by A/B/C child chapters.", "Import Appendix from oodocs.structure when end matter needs appendix numbering and contents entries; validation warns if main chapters continue afterward."],
             ["Page numbers", "Shown by default for contents, table lists, and figure lists in paginated DOCX and PDF output.", "HTML keeps clean link-only generated lists because browsers do not provide stable page labels."],
             ["Leader dots", "Dotted leaders connect the heading text to the page number in paginated output.", "Set leader='' for no leader or another short string for a different visual cue."],
             ["Scoped lists", "Generated lists cover the whole document.", "Set scope='part', scope='chapter', or scope='section' for local mini contents, table lists, or figure lists."],

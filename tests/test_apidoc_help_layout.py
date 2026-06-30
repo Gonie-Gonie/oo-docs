@@ -106,6 +106,7 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "oodocs.TableOfContents" in all_titles
     assert "oodocs.ListOfTables" in all_titles
     assert "oodocs.ListOfFigures" in all_titles
+    assert "oodocs.structure.Appendix" in all_titles
     assert "oodocs.compatibility.OUTPUT_FORMATS" in all_titles
     assert "oodocs.components.blocks.MIN_SECTION_LEVEL" in all_titles
     assert "oodocs.Theme" in all_titles

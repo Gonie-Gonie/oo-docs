@@ -2143,6 +2143,22 @@ def test_appendix_validation_warns_when_nested() -> None:
     assert "nested-appendix" in warning_codes
 
 
+def test_appendix_validation_warns_when_top_level_main_matter_follows() -> None:
+    document = Document(
+        "Misordered Appendix",
+        Chapter("Main", Paragraph("Body.")),
+        Appendix(Chapter("Data", Paragraph("Appendix body."))),
+        TableOfContents(show_page_numbers=False),
+        Chapter("Late Main Matter", Paragraph("This should be before appendices.")),
+    )
+
+    warnings = document.validate().warnings
+
+    assert [(issue.code, issue.path) for issue in warnings] == [
+        ("appendix-order", "document.body.children[3]"),
+    ]
+
+
 def test_public_api_prefers_classes_for_structural_nodes() -> None:
     assert hasattr(oodocs, "Document")
     assert hasattr(oodocs, "DocumentSettings")

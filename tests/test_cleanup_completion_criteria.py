@@ -161,6 +161,20 @@ def test_readme_latex_translations_include_generated_list_packages() -> None:
     assert "`ListOfFigures(scope=...)`" in translations
 
 
+def test_readme_latex_translations_include_appendix_policy() -> None:
+    readme = _readme()
+    translations = readme.split("Common translations:", 1)[1].split(
+        "The main payoff",
+        1,
+    )[0]
+
+    assert "LaTeX `\\appendix`" in translations
+    assert "`Appendix(Chapter(...), ...)`" in translations
+    assert "child chapters numbered `A`, `B`, `C`" in translations
+    assert "heading references use those labels" in translations
+    assert "table and figure counters stay document-wide" in translations
+
+
 def test_public_api_policy_doc_defines_tiers_and_guards() -> None:
     policy = Path("docs/reference/public-api-policy.md").read_text(encoding="utf-8")
 
