@@ -128,6 +128,11 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "oodocs.NumberedList" in all_titles
     assert "oodocs.CounterStyle" in all_titles
     assert "oodocs.ListStyle" in all_titles
+    assert "oodocs.glossary.Glossary" in all_titles
+    assert "oodocs.glossary.Acronym" in all_titles
+    assert "oodocs.glossary.GlossaryTerm" in all_titles
+    assert "oodocs.glossary.ListOfGlossaryTerms" in all_titles
+    assert "oodocs.presets.components.Nomenclature" in all_titles
     assert "oodocs.refs" in all_titles
     assert "oodocs.ref_range" in all_titles
     assert "oodocs.references.ReferenceFormat" in all_titles
@@ -242,6 +247,10 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "item_spacing" in text
     assert "block_spacing" in text
     assert "item_children" in text
+    assert "Glossary.use" in text
+    assert "ListOfGlossaryTerms" in text
+    assert "acronym" in text
+    assert "Nomenclature" in text
     assert "ReferenceFormat" in text
     assert "plural_label" in text
     assert "capitalized" in text

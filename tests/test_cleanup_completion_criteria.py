@@ -292,6 +292,22 @@ def test_readme_latex_translations_include_enumitem_policy() -> None:
     assert "nested item children" in translations
 
 
+def test_readme_latex_translations_include_glossary_policy() -> None:
+    readme = _readme()
+    translations = readme.split("Common translations:", 1)[1].split(
+        "The main payoff",
+        1,
+    )[0]
+
+    assert "LaTeX `glossaries` / `acronym` / `nomencl`" in translations
+    assert "`Glossary(...)`" in translations
+    assert "`glossary.term(...)`" in translations
+    assert "`glossary.acronym(...)`" in translations
+    assert "`glossary.use(...)`" in translations
+    assert "`ListOfGlossaryTerms(...)`" in translations
+    assert "`Nomenclature`" in translations
+
+
 def test_readme_latex_translations_include_graphicx_policy() -> None:
     readme = _readme()
     translations = readme.split("Common translations:", 1)[1].split(
@@ -432,6 +448,25 @@ def test_chemistry_support_reference_documents_mhchem_policy() -> None:
         "Unicode superscript digits and signs normalize to superscript runs.",
         "Reaction arrows such as `->`",
         "full mhchem grammar",
+    ):
+        assert phrase in reference
+
+
+def test_glossary_support_reference_documents_glossaries_policy() -> None:
+    reference = Path("docs/reference/glossary-support.md").read_text(encoding="utf-8")
+
+    for phrase in (
+        "common `glossaries`, `acronym`, and `nomencl` authoring needs",
+        "`Glossary(...)`",
+        "`glossary.term(key, definition, term=...)`",
+        "`glossary.acronym(key, long, short=...)`",
+        "`glossary.use(key)`",
+        "acronyms expand on first use and use short form later",
+        "`ListOfGlossaryTerms(glossary, sort=...)`",
+        "sorted by insertion order, key, or term",
+        "`Nomenclature(...)`",
+        "`duplicate-glossary-key` validation error",
+        "`empty-glossary-list` warning",
     ):
         assert phrase in reference
 
