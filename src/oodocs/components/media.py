@@ -3021,8 +3021,6 @@ __all__ = [
     "Table",
     "TableCell",
     "TableCellInput",
-    "TableLayout",
-    "TablePlacement",
     "TableSplit",
     "coerce_column_spec",
     "coerce_crop_box",

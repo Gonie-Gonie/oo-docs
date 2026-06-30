@@ -152,6 +152,8 @@ def test_leaf_component_modules_hide_internal_helpers_from_all() -> None:
             "image_source_to_bytes",
             "normalize_media_placement",
             "normalize_table_split",
+            "TableLayout",
+            "TablePlacement",
         },
         positioning_components: {
             "coerce_positioned_items",
