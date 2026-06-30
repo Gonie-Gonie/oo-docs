@@ -9,6 +9,7 @@ import oodocs
 import oodocs.adapters as adapters
 import oodocs.apidoc as apidoc
 import oodocs.components.references as references
+import oodocs.public_api as public_api
 from oodocs.apidoc.cli import _build_parser as _build_apidoc_parser
 from oodocs.cli import _build_parser as _build_oodocs_parser
 from oodocs.importers.results import normalize_import_policy
@@ -23,6 +24,43 @@ def _subcommand_help(parser, args: list[str], capsys) -> str:
         parser.parse_args([*args, "--help"])
     assert exc_info.value.code == 0
     return capsys.readouterr().out
+
+
+def test_top_level_public_api_has_tier_policy_and_export_cap() -> None:
+    export_names = set(oodocs.__all__)
+    tier_names = set(public_api.TOP_LEVEL_SYMBOL_TIERS)
+    allowed_tiers = {"core", "domain", "internal"}
+
+    assert len(oodocs.__all__) <= public_api.TOP_LEVEL_EXPORT_LIMIT
+    assert export_names == tier_names
+    assert set(public_api.TOP_LEVEL_SYMBOL_TIERS.values()) <= allowed_tiers
+    assert public_api.CORE_TOP_LEVEL_EXPORTS
+    assert public_api.DOMAIN_TOP_LEVEL_EXPORTS
+    assert public_api.INTERNAL_TOP_LEVEL_EXPORTS
+    assert (
+        public_api.CORE_TOP_LEVEL_EXPORTS
+        | public_api.DOMAIN_TOP_LEVEL_EXPORTS
+        | public_api.INTERNAL_TOP_LEVEL_EXPORTS
+    ) == tier_names
+    assert not (
+        public_api.CORE_TOP_LEVEL_EXPORTS
+        & public_api.DOMAIN_TOP_LEVEL_EXPORTS
+        | public_api.CORE_TOP_LEVEL_EXPORTS
+        & public_api.INTERNAL_TOP_LEVEL_EXPORTS
+        | public_api.DOMAIN_TOP_LEVEL_EXPORTS
+        & public_api.INTERNAL_TOP_LEVEL_EXPORTS
+    )
+
+
+def test_top_level_public_api_excludes_internal_helper_patterns() -> None:
+    leaked_names = {
+        name
+        for name in oodocs.__all__
+        for pattern in public_api.FORBIDDEN_TOP_LEVEL_NAME_PATTERNS
+        if pattern in name
+    }
+
+    assert leaked_names == set()
 
 
 def test_top_level_public_api_uses_completed_canonical_names() -> None:
