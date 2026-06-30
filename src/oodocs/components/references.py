@@ -710,17 +710,20 @@ def _parse_bibtex_entries(source: str) -> list[tuple[str, dict[str, str]]]:
     cursor = 0
 
     while True:
-        match = re.search(r"@(?P<kind>\w+)\s*\{", source[cursor:])
+        match = re.search(r"@(?P<kind>\w+)\s*(?P<open>[{(])", source[cursor:])
         if match is None:
             break
         entry_type = match.group("kind").lower()
+        opening_delimiter = match.group("open")
+        closing_delimiter = "}" if opening_delimiter == "{" else ")"
         entry_start = cursor + match.start()
-        body_start = entry_start + match.group(0).rfind("{") + 1
+        body_start = entry_start + match.group(0).rfind(opening_delimiter) + 1
         depth = 1
+        brace_depth = 0
         quote: str | None = None
         position = body_start
-        # Track brace depth so commas and closing braces inside field values do
-        # not prematurely terminate the entry body.
+        # Track the entry delimiter separately from braces so both BibTeX
+        # @entry{...} and @entry(...) forms can contain braced field values.
         while position < len(source) and depth > 0:
             char = source[position]
             if quote is not None:
@@ -729,8 +732,18 @@ def _parse_bibtex_entries(source: str) -> list[tuple[str, dict[str, str]]]:
             elif char in {'"', "'"}:
                 quote = char
             elif char == "{":
-                depth += 1
+                if opening_delimiter == "{":
+                    depth += 1
+                else:
+                    brace_depth += 1
             elif char == "}":
+                if opening_delimiter == "{":
+                    depth -= 1
+                else:
+                    brace_depth = max(brace_depth - 1, 0)
+            elif char == opening_delimiter and opening_delimiter == "(" and brace_depth == 0:
+                depth += 1
+            elif char == closing_delimiter and opening_delimiter == "(" and brace_depth == 0:
                 depth -= 1
             position += 1
         body = source[body_start : position - 1].strip()

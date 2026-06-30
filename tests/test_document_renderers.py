@@ -4602,6 +4602,24 @@ def test_bibtex_file_parser_handles_quotes_and_duplicate_keys(tmp_path: Path) ->
         )
 
 
+def test_bibtex_parser_accepts_parenthesized_entries() -> None:
+    library = CitationLibrary.from_bibtex(
+        """@book(knuth1984,
+  title = {The TeXbook (Revised)},
+  author = {Knuth, Donald E.},
+  publisher = {Addison-Wesley},
+  year = {1984}
+)
+"""
+    )
+
+    entry = library.resolve("knuth1984")
+    assert entry.title == "The TeXbook (Revised)"
+    assert entry.authors == ("Knuth, Donald E.",)
+    assert entry.publisher == "Addison-Wesley"
+    assert entry.year == "1984"
+
+
 def test_citation_and_reference_styles_can_be_configured(tmp_path: Path) -> None:
     source = CitationSource(
         "Literate Programming",
