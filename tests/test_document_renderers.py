@@ -7,6 +7,8 @@ from io import BytesIO
 from pathlib import Path
 import re
 import struct
+import sys
+from types import SimpleNamespace
 import zlib
 import zipfile
 
@@ -560,6 +562,27 @@ def test_amsmath_equation_blocks_number_reference_and_validate(tmp_path: Path) -
     assert "(1)" in normalized_html_text
     assert "(2)" in normalized_html_text
     assert "(3)" not in normalized_html_text
+
+
+def test_equation_from_sympy_uses_optional_latex_adapter(monkeypatch) -> None:
+    fake_sympy = SimpleNamespace(
+        latex=lambda expression: rf"\operatorname{{sympy}}\left({expression}\right)"
+    )
+    monkeypatch.setitem(sys.modules, "sympy", fake_sympy)
+
+    equation = Equation.from_sympy(
+        "x**2 + 1",
+        numbered=False,
+        reference_label="Eq.",
+    )
+
+    assert equation.expression == r"\operatorname{sympy}\left(x**2 + 1\right)"
+    assert equation.numbered is False
+    assert equation.reference_label == "Eq."
+
+    monkeypatch.setitem(sys.modules, "sympy", None)
+    with pytest.raises(ImportError, match="Equation.from_sympy requires SymPy"):
+        Equation.from_sympy("x")
 
 
 def test_mhchem_formula_and_reaction_render_to_all_outputs(tmp_path: Path) -> None:
