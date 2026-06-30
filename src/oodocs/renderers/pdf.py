@@ -836,7 +836,7 @@ class PdfRenderer:
         elif (
             settings.theme.uses_header_footer()
             or settings.theme.blocks.page_background_color != "FFFFFF"
-            or bool(settings.page_items)
+            or bool(settings.overlays)
         ):
             pdf.build(story, onFirstPage=page_callback, onLaterPages=page_callback)
         else:
@@ -2204,11 +2204,11 @@ class PdfRenderer:
         page_number: int,
         phase: str,
     ) -> None:
-        if not document.settings.page_items:
+        if not document.settings.overlays:
             return
         page_height = document.settings.page_height_in_inches() * inch
         for box in resolve_positioned_boxes(
-            document.settings.page_items,
+            document.settings.overlays,
             document.settings,
             context.unit,
             page_number=page_number,

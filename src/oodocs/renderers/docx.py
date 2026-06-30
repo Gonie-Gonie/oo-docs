@@ -2670,7 +2670,7 @@ class DocxRenderer:
         *,
         has_front_matter: bool,
     ) -> None:
-        if not document.settings.page_items:
+        if not document.settings.overlays:
             return
         section = word_document.sections[0]
         if document.settings.cover_page:
@@ -2706,7 +2706,7 @@ class DocxRenderer:
         document: Document,
         context: DocxRenderContext,
     ) -> None:
-        if not document.settings.page_items:
+        if not document.settings.overlays:
             return
         self._unlink_page_item_header(section.header)
         self._render_section_page_items(
@@ -2727,7 +2727,7 @@ class DocxRenderer:
         page_number: int | None,
     ) -> None:
         boxes = resolve_positioned_boxes(
-            document.settings.page_items,
+            document.settings.overlays,
             document.settings,
             context.unit,
             page_number=page_number,

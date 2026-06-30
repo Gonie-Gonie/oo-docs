@@ -2355,10 +2355,10 @@ def test_multicolumn_layout_renders_across_outputs(tmp_path: Path) -> None:
     assert "Figure 1. Wide result figure." in normalized_html_text
 
 
-def test_page_items_render_without_affecting_document_flow(tmp_path: Path) -> None:
+def test_overlays_render_without_affecting_document_flow(tmp_path: Path) -> None:
     image_path = tmp_path / "page-logo.png"
     _write_sample_image(image_path)
-    page_items = [
+    overlays = [
         Shape.rect(
             name="frame",
             x=0.25,
@@ -2412,7 +2412,7 @@ def test_page_items_render_without_affecting_document_flow(tmp_path: Path) -> No
         Paragraph("Body text keeps its normal position."),
         settings=DocumentSettings(
             page_size=PageSize.letter(),
-            page_items=page_items,
+            overlays=overlays,
             theme=Theme(page_numbers=PageNumberDefaults(show_page_numbers=True)),
         ),
     )
@@ -2456,7 +2456,7 @@ def test_page_item_scopes_filter_pdf_and_warn_for_static_outputs(tmp_path: Path)
         settings=DocumentSettings(
             page_size=PageSize.letter(),
             cover_page=True,
-            page_items=[
+            overlays=[
                 TextBox("ALL SCOPE", x=0.3, y=0.2, width=1.8, height=0.25, font_size=8),
                 TextBox(
                     "COVER SCOPE",
@@ -3345,8 +3345,9 @@ def test_component_and_template_presets_build_renderable_documents(tmp_path: Pat
     )
     assert cover_settings.cover_page is True
     assert cover_settings.author_layout.mode == "stacked"
-    assert len(cover_settings.page_items) == 3
-    assert all(item.scope.kind == "cover" for item in cover_settings.page_items)
+    assert len(cover_settings.overlays) == 3
+    assert cover_settings.page_items == cover_settings.overlays
+    assert all(item.scope.kind == "cover" for item in cover_settings.overlays)
     cover_document = Document(
         "Cover Preset",
         Paragraph("Body content."),

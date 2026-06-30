@@ -1897,10 +1897,10 @@ class HtmlRenderer:
         phase: str,
         page_number: int | None,
     ) -> str:
-        if not document.settings.page_items:
+        if not document.settings.overlays:
             return ""
         boxes = resolve_positioned_boxes(
-            document.settings.page_items,
+            document.settings.overlays,
             document.settings,
             context.unit,
             page_number=page_number,

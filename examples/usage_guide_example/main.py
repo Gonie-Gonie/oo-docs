@@ -383,7 +383,7 @@ document = Document(
         " stays in the sentence flow.",
     ),
     settings=DocumentSettings(
-        page_items=[
+        overlays=[
             frame,
             TextBox("Approval area", anchor="approval-frame", x=0.25, y=0.25, width=2.0, height=0.3),
             TextBox("Cover draft", x=0.5, y=0.5, width=2.0, height=0.4, scope="cover"),
@@ -1107,7 +1107,7 @@ def build_usage_guide_document() -> Document:
         headers=["Object", "Options", "Scope"],
         rows=[
             ["DocumentSettings", "metadata, metadata_author, summary, subtitle, authors, author_layout, cover_page", "Document metadata and title matter."],
-            ["DocumentSettings", "unit, page_layout, page_items", "Page geometry and page-positioned overlays."],
+            ["DocumentSettings", "unit, page_layout, overlays", "Page geometry and page-positioned overlays."],
             ["DocumentSettings", "theme", "Document-wide renderer defaults shared by DOCX, PDF, and HTML."],
             ["DocumentMetadata", "title, author, subject, keywords, description", "DOCX/PDF file properties and HTML head tags."],
             ["Section", "page_layout", "Scoped page geometry for one section, with HTML print fallback warning."],
@@ -1195,7 +1195,7 @@ def build_usage_guide_document() -> Document:
     drawing_placement_table = Table(
         headers=["Placement", "Use it for", "Anchor behavior"],
         rows=[
-            ["DocumentSettings.page_items", "Watermarks, trim guides, fixed approval areas, and form decoration.", "Coordinates start from page, margin/content, or a named Shape."],
+            ["DocumentSettings.overlays", "Watermarks, trim guides, fixed approval areas, and form decoration.", "Coordinates start from page, margin/content, or a named Shape."],
             ["scope='cover' or PageItemScope.pages(...)", "Cover-only stamps, main-matter watermarks, and page-range overlays.", "PDF applies physical page scopes; DOCX and HTML use section/static-frame fallbacks."],
             ["placement='inline'", "Small logos, seals, badges, and simple shapes that should move with nearby prose.", "The object sits in the authored flow like directly inserted Word media."],
         ],
@@ -2012,7 +2012,7 @@ def build_usage_guide_document() -> Document:
                 "Positioned and inline drawing objects",
                 Paragraph(
                     "Use ",
-                    inline_code("DocumentSettings(page_items=...)"),
+                    inline_code("DocumentSettings(overlays=...)"),
                     " for page-positioned shapes, text boxes, and image boxes that should not push body text around. Use ",
                     inline_code("scope='cover'"),
                     ", ",

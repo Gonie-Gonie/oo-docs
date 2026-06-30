@@ -713,15 +713,15 @@ class _ValidationContext:
             )
 
         self._collect_blocks(self.document.body.children, "document.body", parent_level=None)
-        for index, item in enumerate(self.document.settings.page_items):
+        for index, item in enumerate(self.document.settings.overlays):
             self._collect_positioned_item(
                 item,
-                f"document.settings.page_items[{index}]",
+                f"document.settings.overlays[{index}]",
             )
             if item.scope.kind != "all":
                 self._add_compatibility_warning(
                     "page-item-scope-static-output",
-                    f"document.settings.page_items[{index}].scope",
+                    f"document.settings.overlays[{index}].scope",
                 )
 
         self._validate_citations()

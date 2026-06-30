@@ -52,7 +52,7 @@ class PageItemScope:
         from oodocs.positioning import PageItemScope, TextBox
 
         settings = DocumentSettings(
-            page_items=[
+            overlays=[
                 TextBox("DRAFT", width=2, height=0.5, scope="all"),
                 TextBox("Cover only", width=2, height=0.5, scope=PageItemScope.cover()),
                 TextBox("Page 2", width=2, height=0.5, scope=PageItemScope.pages(2)),
@@ -280,7 +280,7 @@ class TextBox(Block):
         font_size: Optional font size override.
         unit: Unit for coordinates and dimensions.
         z_index: Stacking order for page-positioned rendering.
-        scope: Page selection for ``DocumentSettings(page_items=...)``.
+        scope: Page selection for ``DocumentSettings(overlays=...)``.
 
     Raises:
         ValueError: If placement, alignment, or dimensions are invalid.
@@ -298,7 +298,7 @@ class TextBox(Block):
             height=0.5,
             font_size=24,
         )
-        settings = DocumentSettings(page_items=[watermark])
+        settings = DocumentSettings(overlays=[watermark])
         document = Document("Draft Report", Paragraph("Body"), settings=settings)
         ```
     """
@@ -424,7 +424,7 @@ class Shape(Block):
         fill_color: Optional fill color as a hex string.
         unit: Unit for coordinates and dimensions.
         z_index: Stacking order for page-positioned rendering.
-        scope: Page selection for ``DocumentSettings(page_items=...)``.
+        scope: Page selection for ``DocumentSettings(overlays=...)``.
 
     Raises:
         ValueError: If kind, placement, dimensions, or name are invalid.
@@ -443,7 +443,7 @@ class Shape(Block):
             stroke=StrokeStyle.solid("CBD5E1", width=0.75),
             fill_color="F7FAFC",
         )
-        settings = DocumentSettings(page_items=[anchor])
+        settings = DocumentSettings(overlays=[anchor])
         document = Document("Branded Report", Paragraph("Body"), settings=settings)
         ```
     """
@@ -633,7 +633,7 @@ class ImageBox(Block):
         image_dpi: Optional image DPI for plot-like sources.
         unit: Unit for coordinates and dimensions.
         z_index: Stacking order for page-positioned rendering.
-        scope: Page selection for ``DocumentSettings(page_items=...)``.
+        scope: Page selection for ``DocumentSettings(overlays=...)``.
 
     Raises:
         ValueError: If placement, dimensions, or fit are invalid.
@@ -644,7 +644,7 @@ class ImageBox(Block):
         from oodocs.positioning import ImageBox
 
         logo = ImageBox("logo.png", x=0.5, y=0.5, width=1.2, height=0.6)
-        settings = DocumentSettings(page_items=[logo])
+        settings = DocumentSettings(overlays=[logo])
         document = Document("Branded Report", Paragraph("Body"), settings=settings)
         ```
     """

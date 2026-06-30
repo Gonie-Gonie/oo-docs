@@ -220,7 +220,7 @@ class StrokeStyle:
             stroke=StrokeStyle.solid("476172", width=1.2),
             fill_color="EEF6FF",
         )
-        document = Document("Cover", settings=DocumentSettings(page_items=[frame]))
+        document = Document("Cover", settings=DocumentSettings(overlays=[frame]))
         ```
     """
 

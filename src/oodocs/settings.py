@@ -534,9 +534,10 @@ class DocumentSettings:
             ``page_layout`` when setting orientation.
         page_margins: Physical page margins. Preserved for compatibility;
             prefer ``page_layout`` when setting orientation.
-        page_items: Absolute-positioned page decorations or overlays. Pass
+        overlays: Absolute-positioned page decorations or overlays. Pass
             ``scope=...`` on each item for all, cover, front, main, or physical
             page-range selection.
+        page_items: Compatibility alias for ``overlays``.
         theme: Rendering theme.
 
     Examples:
@@ -569,13 +570,13 @@ class DocumentSettings:
             height=0.5,
             scope="cover",
         )
-        settings = DocumentSettings(page_items=[watermark, cover_stamp])
+        settings = DocumentSettings(overlays=[watermark, cover_stamp])
         document = Document("Draft Report", Paragraph("Internal review."), settings=settings)
         ```
 
     Notes:
         Length values without their own unit use ``unit`` as the default when
-        renderers resolve physical page geometry. ``page_items`` are absolute
+        renderers resolve physical page geometry. ``overlays`` are absolute
         overlays or decorations and are validated when settings are created.
         PDF applies page scopes to physical pages. DOCX applies scopes at
         section/header level, and HTML applies them to the static page frame.
@@ -596,6 +597,7 @@ class DocumentSettings:
     page_layout: PageLayout
     page_size: PageSize
     page_margins: PageMargins
+    overlays: tuple[PositionedItem, ...]
     page_items: tuple[PositionedItem, ...]
     theme: Theme
 
@@ -613,6 +615,7 @@ class DocumentSettings:
         page_layout: PageLayout | None = None,
         page_size: PageSize | None = None,
         page_margins: PageMargins | None = None,
+        overlays: Sequence[PositionedItem] | None = None,
         page_items: Sequence[PositionedItem] | None = None,
         theme: Theme | None = None,
     ) -> None:
@@ -634,7 +637,13 @@ class DocumentSettings:
         )
         self.page_size = self.page_layout.page_size
         self.page_margins = self.page_layout.page_margins
-        self.page_items = coerce_positioned_items(page_items)
+        if overlays is not None and page_items is not None:
+            raise ValueError("overlays cannot be combined with page_items")
+        positioned_items = coerce_positioned_items(
+            overlays if overlays is not None else page_items
+        )
+        self.overlays = positioned_items
+        self.page_items = positioned_items
         self.theme = theme or Theme()
 
     def page_width_in_inches(self) -> float:

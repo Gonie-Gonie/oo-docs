@@ -503,6 +503,19 @@ def test_theme_constructor_uses_grouped_defaults_only() -> None:
     assert direct_parameters.isdisjoint(theme_parameters)
 
 
+def test_document_settings_use_overlays_for_page_positioned_items() -> None:
+    parameters = set(inspect.signature(oodocs.DocumentSettings).parameters)
+    overlay = positioning.TextBox("DRAFT", width=1.0, height=0.2)
+
+    assert "overlays" in parameters
+    assert "page_items" in parameters
+    settings = oodocs.DocumentSettings(overlays=[overlay])
+    assert settings.overlays == (overlay,)
+    assert settings.page_items == settings.overlays
+    with pytest.raises(ValueError, match="overlays"):
+        oodocs.DocumentSettings(overlays=[], page_items=[])
+
+
 def test_theme_resolver_methods_use_explicit_resolve_names() -> None:
     members = _public_members(oodocs.Theme)
     forbidden = {

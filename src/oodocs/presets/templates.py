@@ -630,6 +630,7 @@ class CoverPagePreset:
         summary: str | None = None,
         subtitle: InlineInput | None = None,
         authors: Sequence[AuthorInput] | None = None,
+        overlays: Sequence[PositionedItem] | None = None,
         page_items: Sequence[PositionedItem] | None = None,
         theme: Theme | None = None,
     ) -> DocumentSettings:
@@ -641,12 +642,17 @@ class CoverPagePreset:
             summary: Optional document summary.
             subtitle: Optional visible subtitle.
             authors: Optional structured authors.
-            page_items: Additional page items appended after preset items.
+            overlays: Additional overlays appended after preset items.
+            page_items: Compatibility alias for ``overlays``.
             theme: Optional theme override for the returned settings.
 
         Returns:
             Document settings with cover page enabled.
         """
+
+        if overlays is not None and page_items is not None:
+            raise ValueError("overlays cannot be combined with page_items")
+        extra_items = overlays if overlays is not None else page_items
 
         return DocumentSettings(
             metadata=metadata,
@@ -657,7 +663,7 @@ class CoverPagePreset:
             author_layout=self.author_layout,
             cover_page=True,
             page_layout=self.page_layout,
-            page_items=(*self.page_items(), *(page_items or ())),
+            overlays=(*self.page_items(), *(extra_items or ())),
             theme=theme or self.theme,
         )
 
