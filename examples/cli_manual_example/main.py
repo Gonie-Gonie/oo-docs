@@ -11,6 +11,7 @@ from oodocs import (
     Chapter,
     CodeBlock,
     Document,
+    DocumentMetadata,
     DocumentSettings,
     OutputBundle,
     Paragraph,
@@ -164,9 +165,11 @@ def build_document(parser: argparse.ArgumentParser | None = None) -> Document:
             examples_table,
         ),
         settings=DocumentSettings(
-            metadata_author="OODocs Contributors",
+            metadata=DocumentMetadata(
+                author="OODocs Contributors",
+                description="CLI manual generated from a sample argparse parser",
+            ),
             subtitle="argparse command reference generated as DOCX, PDF, and HTML",
-            summary="CLI manual generated from a sample argparse parser",
         ),
     )
 

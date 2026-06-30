@@ -60,12 +60,11 @@ class DocumentMetadata:
 
     Args:
         title: Optional metadata title. Defaults to the visible document title.
-        author: Optional file metadata author. Defaults to ``metadata_author``
-            or structured ``authors`` from ``DocumentSettings``.
+        author: Optional file metadata author. Defaults to structured
+            ``authors`` from ``DocumentSettings``.
         subject: Optional subject written to DOCX/PDF metadata and HTML meta.
         keywords: Optional keyword list or comma-separated keyword string.
-        description: Optional HTML description and DOCX comments text. Defaults
-            to ``DocumentSettings.summary`` when omitted.
+        description: Optional HTML description and DOCX comments text.
 
     Examples:
         ```python
@@ -133,9 +132,9 @@ class PageSize:
 
     Examples:
         ```python
-        from oodocs import Document, DocumentSettings, PageSize, Paragraph
+        from oodocs import Document, DocumentSettings, PageLayout, PageSize, Paragraph
 
-        settings = DocumentSettings(page_size=PageSize.letter())
+        settings = DocumentSettings(page_layout=PageLayout(PageSize.letter()))
         document = Document("Letter Report", Paragraph("Body text."), settings=settings)
         ```
     """
@@ -280,9 +279,11 @@ class PageMargins:
 
     Examples:
         ```python
-        from oodocs import Document, DocumentSettings, PageMargins, Paragraph
+        from oodocs import Document, DocumentSettings, PageLayout, PageMargins, Paragraph
 
-        settings = DocumentSettings(page_margins=PageMargins(1.0, 0.8, 1.0, 0.8, unit="in"))
+        settings = DocumentSettings(
+            page_layout=PageLayout(page_margins=PageMargins(1.0, 0.8, 1.0, 0.8, unit="in"))
+        )
         document = Document("Margin Report", Paragraph("Body text."), settings=settings)
         ```
     """
@@ -518,22 +519,13 @@ class DocumentSettings:
     Args:
         metadata: Optional structured metadata for DOCX/PDF properties and
             HTML head tags.
-        metadata_author: Author string written to file metadata. Defaults to
-            the configured document authors when omitted. Prefer
-            ``DocumentMetadata(author=...)`` for new code.
-        summary: Optional document summary or description.
         subtitle: Optional subtitle rendered with title matter.
         authors: Optional author metadata used for title matter.
         author_layout: Layout rules for author title matter.
         cover_page: Whether renderers should place title matter on a separate
             cover page when supported.
         unit: Default length unit for values that do not carry an explicit unit.
-        page_layout: Grouped page geometry. When supplied, ``page_size`` and
-            ``page_margins`` must be omitted.
-        page_size: Physical page size. Preserved for compatibility; prefer
-            ``page_layout`` when setting orientation.
-        page_margins: Physical page margins. Preserved for compatibility;
-            prefer ``page_layout`` when setting orientation.
+        page_layout: Grouped page geometry.
         overlays: Absolute-positioned page decorations or overlays. Pass
             ``scope=...`` on each item for all, cover, front, main, or physical
             page-range selection.
@@ -544,12 +536,14 @@ class DocumentSettings:
         Configure page metadata and geometry:
 
         ```python
-        from oodocs import Author, Document, DocumentSettings, PageMargins, PageSize, Paragraph
+        from oodocs import Author, Document, DocumentSettings, PageLayout, PageMargins, PageSize, Paragraph
 
         settings = DocumentSettings(
             authors=[Author("Jane Doe", email="jane@example.edu")],
-            page_size=PageSize.letter(),
-            page_margins=PageMargins.symmetric(vertical=1.0, horizontal=0.8, unit="in"),
+            page_layout=PageLayout(
+                PageSize.letter(),
+                PageMargins.symmetric(vertical=1.0, horizontal=0.8, unit="in"),
+            ),
             cover_page=True,
         )
         document = Document("Study Report", Paragraph("Findings."), settings=settings)
@@ -586,17 +580,13 @@ class DocumentSettings:
         renderer defaults, and ``Author``/``AuthorLayout`` for title matter.
     """
 
-    metadata_author: str | None
     metadata: DocumentMetadata
-    summary: str | None
     subtitle: list[Text] | None
     authors: tuple[Author, ...]
     author_layout: AuthorLayout
     cover_page: bool
     unit: str
     page_layout: PageLayout
-    page_size: PageSize
-    page_margins: PageMargins
     overlays: tuple[PositionedItem, ...]
     page_items: tuple[PositionedItem, ...]
     theme: Theme
@@ -605,16 +595,12 @@ class DocumentSettings:
         self,
         *,
         metadata: DocumentMetadata | None = None,
-        metadata_author: str | None = None,
-        summary: str | None = None,
         subtitle: InlineInput | None = None,
         authors: Sequence[AuthorInput] | None = None,
         author_layout: AuthorLayout | None = None,
         cover_page: bool = False,
         unit: str = "in",
         page_layout: PageLayout | None = None,
-        page_size: PageSize | None = None,
-        page_margins: PageMargins | None = None,
         overlays: Sequence[PositionedItem] | None = None,
         page_items: Sequence[PositionedItem] | None = None,
         theme: Theme | None = None,
@@ -622,21 +608,12 @@ class DocumentSettings:
         if metadata is not None and not isinstance(metadata, DocumentMetadata):
             raise TypeError("metadata must be a DocumentMetadata instance")
         self.metadata = metadata or DocumentMetadata()
-        self.metadata_author = metadata_author
-        self.summary = summary
         self.subtitle = coerce_inlines((subtitle,)) if subtitle is not None else None
         self.authors = coerce_authors(authors)
         self.author_layout = coerce_author_layout(author_layout)
         self.cover_page = cover_page
         self.unit = normalize_length_unit(unit)
-        if page_layout is not None and (page_size is not None or page_margins is not None):
-            raise ValueError("page_layout cannot be combined with page_size or page_margins")
-        self.page_layout = page_layout or PageLayout(
-            page_size=page_size or PageSize.a4(),
-            page_margins=page_margins or PageMargins(),
-        )
-        self.page_size = self.page_layout.page_size
-        self.page_margins = self.page_layout.page_margins
+        self.page_layout = page_layout or PageLayout()
         if overlays is not None and page_items is not None:
             raise ValueError("overlays cannot be combined with page_items")
         positioned_items = coerce_positioned_items(
@@ -654,7 +631,7 @@ class DocumentSettings:
 
         Examples:
             ```python
-            settings = DocumentSettings(page_size=PageSize.letter())
+            settings = DocumentSettings(page_layout=PageLayout(PageSize.letter()))
             assert settings.page_width_in_inches() == 8.5
             ```
         """
@@ -669,7 +646,7 @@ class DocumentSettings:
 
         Examples:
             ```python
-            settings = DocumentSettings(page_size=PageSize.letter())
+            settings = DocumentSettings(page_layout=PageLayout(PageSize.letter()))
             assert settings.page_height_in_inches() == 11.0
             ```
         """
@@ -684,7 +661,9 @@ class DocumentSettings:
 
         Examples:
             ```python
-            settings = DocumentSettings(page_margins=PageMargins.all(1.0, unit="in"))
+            settings = DocumentSettings(
+                page_layout=PageLayout(page_margins=PageMargins.all(1.0, unit="in"))
+            )
             assert settings.page_margin_inches() == (1.0, 1.0, 1.0, 1.0)
             ```
         """
@@ -700,8 +679,10 @@ class DocumentSettings:
         Examples:
             ```python
             settings = DocumentSettings(
-                page_size=PageSize.letter(),
-                page_margins=PageMargins.all(1.0, unit="in"),
+                page_layout=PageLayout(
+                    PageSize.letter(),
+                    PageMargins.all(1.0, unit="in"),
+                ),
             )
             assert settings.text_width_in_inches() == 6.5
             ```
@@ -718,8 +699,10 @@ class DocumentSettings:
         Examples:
             ```python
             settings = DocumentSettings(
-                page_size=PageSize.letter(),
-                page_margins=PageMargins.all(1.0, unit="in"),
+                page_layout=PageLayout(
+                    PageSize.letter(),
+                    PageMargins.all(1.0, unit="in"),
+                ),
             )
             assert settings.text_height_in_inches() == 9.0
             ```
@@ -739,7 +722,7 @@ class DocumentSettings:
 
         Examples:
             ```python
-            settings = DocumentSettings(page_size=PageSize.letter())
+            settings = DocumentSettings(page_layout=PageLayout(PageSize.letter()))
             assert settings.get_page_width(unit="in") == 8.5
             ```
         """
@@ -759,7 +742,7 @@ class DocumentSettings:
 
         Examples:
             ```python
-            settings = DocumentSettings(page_size=PageSize.letter())
+            settings = DocumentSettings(page_layout=PageLayout(PageSize.letter()))
             assert settings.get_page_height(unit="in") == 11.0
             ```
         """
@@ -780,8 +763,10 @@ class DocumentSettings:
         Examples:
             ```python
             settings = DocumentSettings(
-                page_size=PageSize.letter(),
-                page_margins=PageMargins.all(1.0, unit="in"),
+                page_layout=PageLayout(
+                    PageSize.letter(),
+                    PageMargins.all(1.0, unit="in"),
+                ),
             )
             assert settings.get_text_width(unit="in") == 6.5
             ```
@@ -803,8 +788,10 @@ class DocumentSettings:
         Examples:
             ```python
             settings = DocumentSettings(
-                page_size=PageSize.letter(),
-                page_margins=PageMargins.all(1.0, unit="in"),
+                page_layout=PageLayout(
+                    PageSize.letter(),
+                    PageMargins.all(1.0, unit="in"),
+                ),
             )
             assert settings.get_text_height(unit="in") == 9.0
             ```
@@ -817,8 +804,8 @@ class DocumentSettings:
         """Return the metadata author string used in file properties.
 
         Returns:
-            The structured metadata author, explicit legacy metadata author, a
-            semicolon-separated author list, or ``None`` when no author data is
+            The structured metadata author, a semicolon-separated author list,
+            or ``None`` when no author data is
             available.
 
         Examples:
@@ -830,8 +817,6 @@ class DocumentSettings:
 
         if self.metadata.author is not None:
             return self.metadata.author
-        if self.metadata_author is not None:
-            return self.metadata_author
         if not self.authors:
             return None
         return "; ".join(author.name for author in self.authors)
@@ -852,10 +837,10 @@ class DocumentSettings:
         """Return the subject written to renderer metadata.
 
         Returns:
-            Structured metadata subject or legacy ``summary``.
+            Structured metadata subject.
         """
 
-        return self.metadata.subject or self.summary
+        return self.metadata.subject
 
     def resolved_metadata_description(self, document_title: object) -> str:
         """Return the HTML description and descriptive metadata text.
@@ -864,12 +849,11 @@ class DocumentSettings:
             document_title: Visible document title used as the final fallback.
 
         Returns:
-            Description, summary, subject, or visible document title.
+            Description, subject, or visible document title.
         """
 
         return (
             self.metadata.description
-            or self.summary
             or self.metadata.subject
             or str(document_title)
         )

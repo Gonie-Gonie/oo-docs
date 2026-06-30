@@ -293,9 +293,12 @@ report = Document(
 # The appendix chapters render as A, B; nested headings render as A.1, A.2, ...
 """
 
-FIGURE_SIZING_SNIPPET = """from oodocs import DocumentSettings, Figure, PageMargins
+FIGURE_SIZING_SNIPPET = """from oodocs import DocumentSettings, Figure, PageLayout, PageMargins
 
-settings = DocumentSettings(unit="cm", page_margins=PageMargins.all(2.0, unit="cm"))
+settings = DocumentSettings(
+    unit="cm",
+    page_layout=PageLayout(page_margins=PageMargins.all(2.0, unit="cm")),
+)
 
 figure = Figure(
     "assets/system-diagram.png",
@@ -1107,7 +1110,7 @@ def build_usage_guide_document() -> Document:
     settings_options_table = Table(
         headers=["Object", "Options", "Scope"],
         rows=[
-            ["DocumentSettings", "metadata, metadata_author, summary, subtitle, authors, author_layout, cover_page", "Document metadata and title matter."],
+            ["DocumentSettings", "metadata, subtitle, authors, author_layout, cover_page", "Document metadata and title matter."],
             ["DocumentSettings", "unit, page_layout, overlays", "Page geometry and page-positioned overlays."],
             ["DocumentSettings", "theme", "Document-wide renderer defaults shared by DOCX, PDF, and HTML."],
             ["DocumentMetadata", "title, author, subject, keywords, description", "DOCX/PDF file properties and HTML head tags."],
@@ -2247,7 +2250,9 @@ def build_usage_guide_document() -> Document:
                 show_affiliations=False,
                 show_details=False,
             ),
-            page_margins=PageMargins.symmetric(vertical=2.0, horizontal=2.2, unit="cm"),
+            page_layout=PageLayout(
+                page_margins=PageMargins.symmetric(vertical=2.0, horizontal=2.2, unit="cm")
+            ),
             theme=Theme(
                 page_numbers=PageNumberDefaults(
                     show_page_numbers=True,

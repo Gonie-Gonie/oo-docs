@@ -758,6 +758,7 @@ class PdfRenderer:
         self._pdf_page_replacements = {}
         self._pdf_page_layout_template_ids = {}
         settings = document.settings
+        page_margins = settings.page_layout.page_margins
 
         pdf = OODocsPdfTemplate(
             str(path),
@@ -769,10 +770,10 @@ class PdfRenderer:
             author=settings.resolved_author(),
             subject=settings.resolved_metadata_subject(),
             keywords=settings.resolved_metadata_keywords_text(),
-            leftMargin=settings.page_margins.left_in_inches(settings.unit) * inch,
-            rightMargin=settings.page_margins.right_in_inches(settings.unit) * inch,
-            topMargin=settings.page_margins.top_in_inches(settings.unit) * inch,
-            bottomMargin=settings.page_margins.bottom_in_inches(settings.unit) * inch,
+            leftMargin=page_margins.left_in_inches(settings.unit) * inch,
+            rightMargin=page_margins.right_in_inches(settings.unit) * inch,
+            topMargin=page_margins.top_in_inches(settings.unit) * inch,
+            bottomMargin=page_margins.bottom_in_inches(settings.unit) * inch,
         )
         self._register_pdf_page_layout_templates(pdf, document)
         story: list[object] = []

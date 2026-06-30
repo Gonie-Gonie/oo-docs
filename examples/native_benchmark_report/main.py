@@ -15,6 +15,7 @@ from oodocs import (
     Chapter,
     CodeBlock,
     Document,
+    DocumentMetadata,
     DocumentSettings,
     NumberedList,
     OutputBundle,
@@ -396,9 +397,11 @@ def build_benchmark_document(
             ),
         ),
         settings=DocumentSettings(
-            metadata_author="OODocs Contributors",
+            metadata=DocumentMetadata(
+                author="OODocs Contributors",
+                description="Example report generated from native Python benchmark data",
+            ),
             subtitle="Documenting measured Python work without leaving Python",
-            summary="Example report generated from native Python benchmark data",
             theme=Theme(
                 page_numbers=PageNumberDefaults(
                     show_page_numbers=True,

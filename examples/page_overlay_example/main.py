@@ -13,6 +13,7 @@ from oodocs import (
     DocumentSettings,
     OutputBundle,
     PageNumberDefaults,
+    PageLayout,
     PageSize,
     Paragraph,
     Section,
@@ -155,7 +156,7 @@ def build_document() -> Document:
             ),
         ),
         settings=DocumentSettings(
-            page_size=PageSize.letter(),
+            page_layout=PageLayout(PageSize.letter()),
             cover_page=True,
             overlays=build_overlays(),
             metadata=DocumentMetadata(

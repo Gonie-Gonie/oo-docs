@@ -11,6 +11,7 @@ from typing import Sequence
 from oodocs import (
     Chapter,
     Document,
+    DocumentMetadata,
     DocumentSettings,
     OutputBundle,
     Paragraph,
@@ -204,9 +205,11 @@ def build_document(
             ),
         ),
         settings=DocumentSettings(
-            metadata_author="OODocs Contributors",
+            metadata=DocumentMetadata(
+                author="OODocs Contributors",
+                description="Project metadata report generated from repository configuration files",
+            ),
             subtitle="pyproject.toml and GitHub Actions workflow as document inputs",
-            summary="Project metadata report generated from repository configuration files",
         ),
     )
 

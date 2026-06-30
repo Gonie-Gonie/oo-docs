@@ -14,6 +14,7 @@ from oodocs import (
     AuthorLayout,
     Chapter,
     Document,
+    DocumentMetadata,
     DocumentSettings,
     Figure,
     NumberedList,
@@ -389,8 +390,10 @@ def build_release_notes_document(
             release_sections,
         ),
         settings=DocumentSettings(
-            metadata_author="OODocs Contributors",
-            summary="Release-note digest generated from repository Markdown files",
+            metadata=DocumentMetadata(
+                author="OODocs Contributors",
+                description="Release-note digest generated from repository Markdown files",
+            ),
             subtitle="Markdown import, semantic sorting, and release workflow documentation",
             authors=[Author("OODocs Contributors")],
             author_layout=AuthorLayout(

@@ -267,13 +267,12 @@ class JournalArticleTemplate:
             children.append(ListOfReferences())
 
         settings = DocumentSettings(
+            metadata=DocumentMetadata(description=summary or title),
             authors=authors,
             author_layout=self.author_layout,
             subtitle=subtitle,
-            summary=summary or title,
             cover_page=self.cover_page if cover_page is None else cover_page,
-            page_size=self.page_size,
-            page_margins=self.page_margins,
+            page_layout=PageLayout(self.page_size, self.page_margins),
             theme=self.theme,
         )
         return Document(title, *children, settings=settings, citations=citations)
@@ -626,8 +625,6 @@ class CoverPagePreset:
         self,
         *,
         metadata: DocumentMetadata | None = None,
-        metadata_author: str | None = None,
-        summary: str | None = None,
         subtitle: InlineInput | None = None,
         authors: Sequence[AuthorInput] | None = None,
         overlays: Sequence[PositionedItem] | None = None,
@@ -638,8 +635,6 @@ class CoverPagePreset:
 
         Args:
             metadata: Optional file/browser metadata.
-            metadata_author: Optional file metadata author.
-            summary: Optional document summary.
             subtitle: Optional visible subtitle.
             authors: Optional structured authors.
             overlays: Additional overlays appended after preset items.
@@ -656,8 +651,6 @@ class CoverPagePreset:
 
         return DocumentSettings(
             metadata=metadata,
-            metadata_author=metadata_author,
-            summary=summary,
             subtitle=subtitle,
             authors=authors,
             author_layout=self.author_layout,
@@ -766,13 +759,12 @@ class TechnicalReportTemplate:
             children.append(ListOfReferences())
 
         settings = DocumentSettings(
+            metadata=DocumentMetadata(description=summary or title),
             authors=authors,
             author_layout=self.author_layout,
             subtitle=subtitle,
-            summary=summary or title,
             cover_page=self.cover_page if cover_page is None else cover_page,
-            page_size=self.page_size,
-            page_margins=self.page_margins,
+            page_layout=PageLayout(self.page_size, self.page_margins),
             theme=self.theme,
         )
         return Document(title, *children, settings=settings, citations=citations)
@@ -868,13 +860,12 @@ class SoftwareManualTemplate:
             children.append(ListOfReferences())
 
         settings = DocumentSettings(
+            metadata=DocumentMetadata(description=summary or title),
             authors=authors,
             author_layout=self.author_layout,
             subtitle=subtitle,
-            summary=summary or title,
             cover_page=self.cover_page if cover_page is None else cover_page,
-            page_size=self.page_size,
-            page_margins=self.page_margins,
+            page_layout=PageLayout(self.page_size, self.page_margins),
             theme=self.theme,
         )
         return Document(title, *children, settings=settings, citations=citations)
@@ -969,13 +960,12 @@ class BookTemplate:
             children.append(ListOfReferences())
 
         settings = DocumentSettings(
+            metadata=DocumentMetadata(description=summary or title),
             authors=authors,
             author_layout=self.author_layout,
             subtitle=subtitle,
-            summary=summary or title,
             cover_page=self.cover_page if cover_page is None else cover_page,
-            page_size=self.page_size,
-            page_margins=self.page_margins,
+            page_layout=PageLayout(self.page_size, self.page_margins),
             theme=self.theme,
         )
         return Document(title, *children, settings=settings, citations=citations)

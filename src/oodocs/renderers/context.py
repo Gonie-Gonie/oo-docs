@@ -21,8 +21,6 @@ def _settings_with_page_layout(
         return settings
     scoped = copy(settings)
     scoped.page_layout = page_layout
-    scoped.page_size = page_layout.page_size
-    scoped.page_margins = page_layout.page_margins
     return scoped
 
 

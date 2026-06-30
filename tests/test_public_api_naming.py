@@ -601,10 +601,15 @@ def test_theme_constructor_uses_grouped_defaults_only() -> None:
 def test_document_settings_use_overlays_for_page_positioned_items() -> None:
     parameters = set(inspect.signature(oodocs.DocumentSettings).parameters)
     overlay = positioning.TextBox("DRAFT", width=1.0, height=0.2)
+    forbidden = {"metadata_author", "summary", "page_size", "page_margins"}
 
+    assert forbidden.isdisjoint(parameters)
+    assert {"metadata", "page_layout"} <= parameters
     assert "overlays" in parameters
     assert "page_items" in parameters
     settings = oodocs.DocumentSettings(overlays=[overlay])
+    for name in forbidden:
+        assert not hasattr(settings, name)
     assert settings.overlays == (overlay,)
     assert settings.page_items == settings.overlays
     with pytest.raises(ValueError, match="overlays"):

@@ -9,6 +9,7 @@ from typing import Sequence
 from oodocs import (
     Chapter,
     Document,
+    DocumentMetadata,
     DocumentSettings,
     OutputBundle,
     Paragraph,
@@ -159,9 +160,11 @@ def build_document(
             stale_artifact_table,
         ),
         settings=DocumentSettings(
-            metadata_author="OODocs Contributors",
+            metadata=DocumentMetadata(
+                author="OODocs Contributors",
+                description="Validation gate report with JSON diagnostics sidecar",
+            ),
             subtitle="Document.validate() as a release gate",
-            summary="Validation gate report with JSON diagnostics sidecar",
         ),
     )
 

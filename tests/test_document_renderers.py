@@ -1276,8 +1276,10 @@ def test_document_validate_reports_preflight_warnings(tmp_path: Path) -> None:
     missing_inline_image = tmp_path / "missing-inline.png"
     settings = DocumentSettings(
         unit="in",
-        page_size=PageSize.letter(),
-        page_margins=PageMargins.all(1.0, unit="in"),
+        page_layout=PageLayout(
+            PageSize.letter(),
+            PageMargins.all(1.0, unit="in"),
+        ),
     )
     wide_table = Table(
         headers=["A", "B"],
@@ -1701,8 +1703,10 @@ def test_table_column_specs_render_flex_widths_and_wrapping(
     )
     settings = DocumentSettings(
         unit="in",
-        page_size=PageSize.letter(),
-        page_margins=PageMargins.all(0.75, unit="in"),
+        page_layout=PageLayout(
+            PageSize.letter(),
+            PageMargins.all(0.75, unit="in"),
+        ),
     )
     document = Document("Column Specs", table, settings=settings)
 
@@ -1786,8 +1790,10 @@ def test_table_split_and_media_placement_options_render(tmp_path: Path) -> None:
         here_table,
         top_figure,
         settings=DocumentSettings(
-            page_size=PageSize.letter(),
-            page_margins=PageMargins.all(0.5, unit="in"),
+            page_layout=PageLayout(
+                PageSize.letter(),
+                PageMargins.all(0.5, unit="in"),
+            ),
         ),
     )
 
@@ -2414,7 +2420,7 @@ def test_overlays_render_without_affecting_document_flow(tmp_path: Path) -> None
         "Page Item Test",
         Paragraph("Body text keeps its normal position."),
         settings=DocumentSettings(
-            page_size=PageSize.letter(),
+            page_layout=PageLayout(PageSize.letter()),
             overlays=overlays,
             theme=Theme(page_numbers=PageNumberDefaults(show_page_numbers=True)),
         ),
@@ -2457,7 +2463,7 @@ def test_page_item_scopes_filter_pdf_and_warn_for_static_outputs(tmp_path: Path)
         "Scoped Overlay Test",
         Chapter("Main Matter", Paragraph("Main body text.")),
         settings=DocumentSettings(
-            page_size=PageSize.letter(),
+            page_layout=PageLayout(PageSize.letter()),
             cover_page=True,
             overlays=[
                 TextBox("ALL SCOPE", x=0.3, y=0.2, width=1.8, height=0.25, font_size=8),
@@ -2631,7 +2637,7 @@ def test_positioned_items_can_render_inline_like_text(tmp_path: Path) -> None:
             " inside text.",
         ),
         Paragraph("After inline drawing."),
-        settings=DocumentSettings(page_size=PageSize.letter()),
+        settings=DocumentSettings(page_layout=PageLayout(PageSize.letter())),
     )
 
     docx_path = tmp_path / "inline-drawing.docx"
@@ -4458,9 +4464,11 @@ def test_reference_list_can_include_uncited_entries_and_sort(tmp_path: Path) -> 
 
 def test_document_accepts_document_settings() -> None:
     settings = DocumentSettings(
-        metadata=DocumentMetadata(keywords="settings, metadata"),
-        metadata_author="OODocs",
-        summary="Settings test",
+        metadata=DocumentMetadata(
+            author="OODocs",
+            subject="Settings test",
+            keywords="settings, metadata",
+        ),
         subtitle="Grouped metadata",
         authors=[
             Author(
@@ -4480,7 +4488,6 @@ def test_document_accepts_document_settings() -> None:
     assert document.settings.resolved_metadata_title(document.title) == "Configured"
     assert document.settings.resolved_metadata_subject() == "Settings test"
     assert document.settings.resolved_metadata_keywords() == ("settings", "metadata")
-    assert document.settings.summary == "Settings test"
     assert document.settings.subtitle is not None
     assert document.settings.subtitle[0].plain_text() == "Grouped metadata"
     assert document.settings.authors[0].name == "Example Author"
@@ -4501,7 +4508,6 @@ def test_document_metadata_maps_to_renderer_outputs(tmp_path: Path) -> None:
             keywords=["alpha", "beta"],
             description="Metadata description.",
         ),
-        summary="Legacy summary fallback",
     )
     document = Document("Visible Title", Paragraph("Body"), settings=settings)
 
@@ -4661,8 +4667,10 @@ def test_document_unit_applies_to_media_dimensions(tmp_path: Path) -> None:
 def test_page_size_and_margins_render_to_all_outputs(tmp_path: Path) -> None:
     settings = DocumentSettings(
         unit="cm",
-        page_size=PageSize(20, 10, unit="cm"),
-        page_margins=PageMargins.symmetric(vertical=1.5, horizontal=2.0, unit="cm"),
+        page_layout=PageLayout(
+            PageSize(20, 10, unit="cm"),
+            PageMargins.symmetric(vertical=1.5, horizontal=2.0, unit="cm"),
+        ),
     )
     document = Document("Margins", Paragraph("Body"), settings=settings)
 
@@ -4716,12 +4724,9 @@ def test_page_layout_landscape_renders_to_all_outputs(tmp_path: Path) -> None:
     assert "max-width: 10.91in;" in html_text
 
 
-def test_page_layout_rejects_ambiguous_settings_geometry() -> None:
-    with pytest.raises(ValueError, match="page_layout cannot be combined"):
-        DocumentSettings(
-            page_layout=PageLayout.landscape(),
-            page_size=PageSize.letter(),
-        )
+def test_document_settings_rejects_legacy_geometry_aliases() -> None:
+    with pytest.raises(TypeError, match="page_size"):
+        DocumentSettings(page_size=PageSize.letter())  # type: ignore[call-arg]
 
 
 def test_section_page_layout_switches_docx_pdf_and_html(tmp_path: Path) -> None:
@@ -4805,8 +4810,10 @@ def test_figure_height_and_text_width_helpers_render(tmp_path: Path) -> None:
     _write_sample_image(image_path)
     settings = DocumentSettings(
         unit="cm",
-        page_size=PageSize.a4(),
-        page_margins=PageMargins.all(2.0, unit="cm"),
+        page_layout=PageLayout(
+            PageSize.a4(),
+            PageMargins.all(2.0, unit="cm"),
+        ),
     )
     figure = Figure(
         image_path,
@@ -5183,8 +5190,10 @@ def test_document_renders_to_docx_and_pdf(tmp_path: Path) -> None:
         ListOfComments(),
         ListOfReferences(),
         settings=DocumentSettings(
-            metadata_author="pytest",
-            summary="Renderer integration test",
+            metadata=DocumentMetadata(
+                author="pytest",
+                description="Renderer integration test",
+            ),
             theme=Theme(
                 page_numbers=PageNumberDefaults(
                     show_page_numbers=True,

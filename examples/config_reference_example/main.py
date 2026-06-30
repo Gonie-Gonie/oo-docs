@@ -10,6 +10,7 @@ from typing import Sequence
 from oodocs import (
     Chapter,
     Document,
+    DocumentMetadata,
     DocumentSettings,
     OutputBundle,
     Paragraph,
@@ -202,9 +203,11 @@ def build_document(reference: ConfigReference | None = None) -> Document:
             examples_table,
         ),
         settings=DocumentSettings(
-            metadata_author="OODocs Contributors",
+            metadata=DocumentMetadata(
+                author="OODocs Contributors",
+                description="Configuration reference generated from example config files",
+            ),
             subtitle="TOML config and JSON schema as a field reference",
-            summary="Configuration reference generated from example config files",
         ),
     )
 

@@ -21,6 +21,7 @@ from oodocs import (
     CitationLibrary,
     CitationSource,
     Document,
+    DocumentMetadata,
     DocumentSettings,
     Figure,
     MultiColumn,
@@ -465,7 +466,7 @@ def build_journal_paper_document(inputs: ManuscriptInputs | None = None) -> Docu
         ),
         ListOfReferences(include_uncited=True),
         settings=DocumentSettings(
-            summary="Journal-style development philosophy paper",
+            metadata=DocumentMetadata(description="Journal-style development philosophy paper"),
             authors=[
                 Author(
                     "Hyeong-Gon Jo",

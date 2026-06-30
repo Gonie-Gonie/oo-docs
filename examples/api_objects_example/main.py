@@ -11,6 +11,7 @@ from oodocs import (
     AuthorLayout,
     Chapter,
     Document,
+    DocumentMetadata,
     DocumentSettings,
     Figure,
     Paragraph,
@@ -51,7 +52,7 @@ def _official_example_settings(subtitle: str) -> DocumentSettings:
     """Return compact title matter shared by official documentation examples."""
 
     return DocumentSettings(
-        metadata_author="OODocs Contributors",
+        metadata=DocumentMetadata(author="OODocs Contributors"),
         subtitle=subtitle,
         authors=[Author("OODocs Contributors")],
         author_layout=AuthorLayout(

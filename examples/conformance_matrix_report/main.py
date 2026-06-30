@@ -11,6 +11,7 @@ from typing import Sequence
 from oodocs import (
     Chapter,
     Document,
+    DocumentMetadata,
     DocumentSettings,
     NumberedList,
     OutputBundle,
@@ -169,9 +170,11 @@ def build_document(records: Sequence[dict[str, str]] | None = None) -> Document:
             failure_table,
         ),
         settings=DocumentSettings(
-            metadata_author="OODocs Contributors",
+            metadata=DocumentMetadata(
+                author="OODocs Contributors",
+                description="Conformance matrix report with wide evidence sidecar",
+            ),
             subtitle="PDF excerpt plus full matrix sidecar",
-            summary="Conformance matrix report with wide evidence sidecar",
         ),
     )
 

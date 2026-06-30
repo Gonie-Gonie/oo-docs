@@ -49,10 +49,12 @@ class Document:
         Combine document settings, citations, and authored content:
 
         ```python
-        from oodocs import CitationSource, Document, DocumentSettings, Paragraph, PageMargins, cite
+        from oodocs import CitationSource, Document, DocumentSettings, PageLayout, PageMargins, Paragraph, cite
 
         source = CitationSource("Reliable APIs", key="api2024", authors=("Jane Doe",))
-        settings = DocumentSettings(page_margins=PageMargins.all(1.0, unit="in"))
+        settings = DocumentSettings(
+            page_layout=PageLayout(page_margins=PageMargins.all(1.0, unit="in"))
+        )
         doc = Document(
             "Research Note",
             Paragraph("Prior work ", cite("api2024"), " motivates the design."),
