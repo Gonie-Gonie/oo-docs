@@ -939,5 +939,4 @@ __all__ = [
     "Shape",
     "ShapeKind",
     "TextBox",
-    "coerce_page_item_scope",
 ]

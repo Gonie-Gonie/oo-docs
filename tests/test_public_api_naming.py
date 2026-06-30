@@ -166,6 +166,7 @@ def test_leaf_component_modules_hide_internal_helpers_from_all() -> None:
             "TablePlacement",
         },
         positioning_components: {
+            "coerce_page_item_scope",
             "coerce_positioned_items",
             "resolve_positioned_boxes",
         },
