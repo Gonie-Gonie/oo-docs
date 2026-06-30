@@ -230,6 +230,21 @@ def test_readme_latex_translations_include_multirow_multicolumn_policy() -> None
     assert "`Table.grouped_headers(...)`" in translations
 
 
+def test_readme_latex_translations_include_hyperref_policy() -> None:
+    readme = _readme()
+    translations = readme.split("Common translations:", 1)[1].split(
+        "The main payoff",
+        1,
+    )[0]
+
+    assert "LaTeX `hyperref`, `\\url{...}`, and `\\href{...}{...}`" in translations
+    assert "`url(...)`" in translations
+    assert "`link(...)`" in translations
+    assert "`ref(obj)`" in translations
+    assert "`DocumentSettings(metadata=DocumentMetadata(...))`" in translations
+    assert "`Theme(links=LinkDefaults(...))`" in translations
+
+
 def test_readme_latex_translations_include_graphicx_policy() -> None:
     readme = _readme()
     translations = readme.split("Common translations:", 1)[1].split(
@@ -370,6 +385,27 @@ def test_chemistry_support_reference_documents_mhchem_policy() -> None:
         "Unicode superscript digits and signs normalize to superscript runs.",
         "Reaction arrows such as `->`",
         "full mhchem grammar",
+    ):
+        assert phrase in reference
+
+
+def test_hyperref_support_reference_documents_metadata_policy() -> None:
+    reference = Path("docs/reference/hyperref-support.md").read_text(encoding="utf-8")
+
+    for phrase in (
+        "hyperlink, anchor, metadata, and outline behavior",
+        "`link(target, label)`",
+        "`url(target, breakable=True)`",
+        "`ref(obj)`, `obj.ref()`, `refs(...)`, or `ref_range(...)`",
+        "`Hyperlink.internal_anchor(...)`",
+        "`DocumentSettings(metadata=DocumentMetadata(...))`",
+        "`Theme(links=LinkDefaults(TextStyle(...)))`",
+        "Core properties",
+        "PDF info dictionary",
+        "`<title>` and meta tags",
+        "PDF outline/bookmarks",
+        "Broken internal link validation",
+        "Preflight error",
     ):
         assert phrase in reference
 

@@ -159,7 +159,7 @@ Common translations:
 - LaTeX `tabularx` / `array` column specs -> `ColumnSpec(width=...)` and `ColumnSpec(flex=...)` from `oodocs.media`, plus `Table.excerpt(...)`, `TableOverflowPolicy(action="allow")`, and a CSV sidecar for very wide matrices
 - LaTeX `multirow` / `multicolumn` -> `TableCell(rowspan=...)`, `TableCell(colspan=...)`, or `Table.grouped_headers(...)`
 - LaTeX `\label` / `\ref` -> use `ref(obj)` or `obj.ref()` inside `Paragraph(...)`
-- LaTeX `\url{...}` / `\href{...}{...}` -> use `url(...)` for visible URLs and `link(...)` for named links
+- LaTeX `hyperref`, `\url{...}`, and `\href{...}{...}` -> `url(...)`, `link(...)`, `ref(obj)`, `DocumentSettings(metadata=DocumentMetadata(...))`, and `Theme(links=LinkDefaults(...))`
 - LaTeX `enumitem` list options -> use `BulletList(...)`, `NumberedList(start=...)`, `NumberedList(resume_from=...)`, and `ListStyle(...)`
 - LaTeX `glossaries` / `acronym` / `nomencl` -> use `Glossary` and `ListOfGlossaryTerms` from `oodocs.glossary`, plus `Nomenclature`
 - LaTeX `tcolorbox` / `mdframed` report panels -> editable `Box(..., icon=..., title_position="side")` or `CalloutBox(..., variant="danger", icon="!")`
