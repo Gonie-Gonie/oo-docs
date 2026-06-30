@@ -92,8 +92,11 @@ def test_project_metadata_report_example_builds_outputs(tmp_path: Path) -> None:
         required_text=("Project Metadata Report", "pyproject.toml", "release.yml"),
         min_pages=1,
     )
+    raw_html = outputs["html"].read_text(encoding="utf-8")
     assert "Project Metadata Report" in html_text
     assert "ProjectMetadata.from_pyproject(...)" in html_text
+    assert str(Path.home()).replace("\\", "/") not in raw_html
+    assert not re.search(r"\b[A-Za-z]:/", raw_html)
     assert_html_internal_links_resolve(outputs["html"])
 
 

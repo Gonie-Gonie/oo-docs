@@ -12,7 +12,7 @@ from oodocs.adapters import (
     ReleaseEvidence,
     ReleaseManifestSummary,
 )
-from oodocs.adapters.evidence import CHECKSUM_NAME, MANIFEST_NAME
+from oodocs.adapters.evidence import CHECKSUM_NAME, MANIFEST_NAME, _manifest_payload
 from oodocs.components.blocks import Section
 from oodocs.components.media import Table
 
@@ -54,6 +54,28 @@ def test_pyproject_and_manifest_adapters_create_sections(tmp_path: Path) -> None
     assert isinstance(pyproject_section, Section)
     assert pyproject_section.children[1].rows[0][1].content.plain_text() == "oodocs-test"
     assert isinstance(manifest_section, Section)
+
+
+def test_adapters_render_repository_source_paths_without_local_absolute_prefixes() -> None:
+    pyproject_section = ProjectMetadata.from_pyproject(Path.cwd() / "pyproject.toml").to_section()
+    manifest = ReleaseManifestSummary(
+        source_path=Path.cwd() / "artifacts" / "evidence" / "manifest.json",
+        data={"tag": "v1.0.0"},
+    )
+    manifest_section = manifest.to_section()
+
+    assert pyproject_section.children[0].plain_text() == "Read from pyproject.toml."
+    assert manifest_section.children[0].plain_text() == "Read from artifacts/evidence/manifest.json."
+
+
+def test_release_evidence_manifest_uses_repository_relative_paths() -> None:
+    payload = _manifest_payload(
+        Path.cwd() / "artifacts" / "evidence",
+        pyproject=Path.cwd() / "pyproject.toml",
+    )
+
+    assert payload["pyproject"] == "pyproject.toml"
+    assert payload["evidence_dir"] == "artifacts/evidence"
 
 
 def test_github_actions_adapter_uses_optional_yaml(tmp_path: Path) -> None:

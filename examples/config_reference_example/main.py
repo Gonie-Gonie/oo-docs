@@ -29,6 +29,15 @@ SAMPLE_CONFIG_PATH = EXAMPLE_DIR / "sample_config.toml"
 SAMPLE_SCHEMA_PATH = EXAMPLE_DIR / "sample_schema.json"
 
 
+def repo_relative(path: Path) -> str:
+    """Return a repository-relative source path when possible."""
+
+    try:
+        return path.resolve().relative_to(EXAMPLE_DIR.parents[1]).as_posix()
+    except ValueError:
+        return path.as_posix()
+
+
 @dataclass(frozen=True, slots=True)
 class ConfigField:
     """One documented configuration field."""
@@ -94,9 +103,9 @@ class ConfigReference:
             "Configuration Reference",
             Paragraph(
                 "Read from ",
-                inline_code(self.config_path.as_posix()),
+                inline_code(repo_relative(self.config_path)),
                 " and ",
-                inline_code(self.schema_path.as_posix()),
+                inline_code(repo_relative(self.schema_path)),
                 ".",
             ),
             self.to_summary_table(),

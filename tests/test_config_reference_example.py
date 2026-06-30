@@ -84,8 +84,11 @@ def test_config_reference_example_builds_outputs(tmp_path: Path) -> None:
         required_text=("Configuration Reference Example", "build.output_dir", "OODOCS_STRICT"),
         min_pages=1,
     )
+    raw_html = outputs["html"].read_text(encoding="utf-8")
     assert "Configuration Reference Example" in html_text
     assert "build.strict = true" in html_text
+    assert str(Path.home()).replace("\\", "/") not in raw_html
+    assert not re.search(r"\b[A-Za-z]:/", raw_html)
     assert_html_internal_links_resolve(outputs["html"])
 
 

@@ -6,6 +6,7 @@ from dataclasses import dataclass
 import json
 from pathlib import Path
 
+from oodocs.adapters._paths import _display_path
 from oodocs.components.blocks import Paragraph, Section
 from oodocs.components.inline import inline_code
 from oodocs.components.media import Table
@@ -98,7 +99,7 @@ class ReleaseManifestSummary:
 
         return Section(
             "Reproducibility manifest",
-            Paragraph("Read from ", inline_code(self.source_path.as_posix()), "."),
+            Paragraph("Read from ", inline_code(_display_path(self.source_path)), "."),
             self.to_table(),
             numbered=False,
             toc=True,

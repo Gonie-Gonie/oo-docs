@@ -18,6 +18,7 @@ import subprocess
 import sys
 from typing import Iterable, Literal
 
+from oodocs.adapters._paths import _display_path
 from oodocs.components.blocks import Chapter, CodeBlock, Paragraph, Section
 from oodocs.components.generated import TableOfContents
 from oodocs.components.inline import inline_code
@@ -402,8 +403,8 @@ def _manifest_payload(output_dir: Path, *, pyproject: PathLike) -> dict[str, obj
         "commit": os.environ.get("GITHUB_SHA", _git_output("rev-parse", "HEAD")),
         "python": platform.python_version(),
         "python_executable": sys.executable,
-        "pyproject": str(Path(pyproject).as_posix()),
-        "evidence_dir": output_dir.as_posix(),
+        "pyproject": _display_path(Path(pyproject)),
+        "evidence_dir": _display_path(output_dir),
     }
 
 
@@ -453,7 +454,7 @@ def _iter_checksum_files(output_dir: Path) -> Iterable[Path]:
 def _section_from_csv(path: Path) -> Section:
     return Section(
         path.stem.replace("-", " ").title(),
-        Paragraph("Read from ", inline_code(path.as_posix()), "."),
+        Paragraph("Read from ", inline_code(_display_path(path)), "."),
         Table.from_csv(
             path,
             caption=f"Evidence rows from {path.name}.",
@@ -467,7 +468,7 @@ def _section_from_csv(path: Path) -> Section:
 def _section_from_checksums(path: Path) -> Section:
     return Section(
         "Artifact checksums",
-        Paragraph("Read from ", inline_code(path.as_posix()), "."),
+        Paragraph("Read from ", inline_code(_display_path(path)), "."),
         CodeBlock(path.read_text(encoding="utf-8").strip(), language="text"),
         numbered=False,
         toc=True,
