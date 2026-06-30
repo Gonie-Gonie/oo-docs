@@ -12,6 +12,7 @@ import oodocs.components.references as references
 import oodocs.engineering as engineering
 import oodocs.generated as generated
 import oodocs.glossary as glossary
+import oodocs.importers as importers
 import oodocs.media as media
 import oodocs.positioning as positioning
 import oodocs.public_api as public_api
@@ -75,6 +76,18 @@ def test_tier_two_namespaces_export_domain_symbols() -> None:
     expected_exports = {
         review: {"MarginNote", "Todo", "margin_note", "todo"},
         glossary: {"Acronym", "Glossary", "GlossaryList", "GlossaryTerm"},
+        importers: {
+            "ImportIssue",
+            "ImportPolicyError",
+            "ImportResult",
+            "NotebookImportOptions",
+            "from_markdown",
+            "from_markdown_file",
+            "from_notebook",
+            "parse_markdown",
+            "parse_markdown_file",
+            "parse_notebook",
+        },
         media: {"ColumnSpec", "CropBox", "PdfPages", "SubTable", "SubTableGroup"},
         positioning: {"ImageBox", "PageItemScope", "Shape", "TextBox"},
         reference_helpers: {
@@ -158,7 +171,13 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "color",
         "countable_kind",
         "from_ipynb",
+        "from_markdown",
+        "from_markdown_file",
+        "from_notebook",
         "parse_ipynb",
+        "parse_markdown",
+        "parse_markdown_file",
+        "parse_notebook",
         "RenderedOutputs",
         "build_python_document",
         "CommentsPage",
@@ -177,6 +196,7 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "load_document",
         "load_python_document",
         "margin_note",
+        "NotebookImportOptions",
         "ReferencesPage",
         "ReactionEquation",
         "ReferenceFormat",
@@ -213,8 +233,6 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "strikethrough",
         "inline_code",
         "text_color",
-        "from_notebook",
-        "parse_notebook",
         "OutputBundle",
         "build_source_outputs",
         "CommentList",
@@ -774,11 +792,15 @@ def test_import_policy_names_describe_lossy_behavior() -> None:
 
 
 def test_parse_importers_return_import_result_without_diagnostics_switch() -> None:
-    for callable_obj in (oodocs.parse_markdown, oodocs.parse_markdown_file, oodocs.parse_notebook):
+    for callable_obj in (
+        importers.parse_markdown,
+        importers.parse_markdown_file,
+        importers.parse_notebook,
+    ):
         assert "diagnostics" not in inspect.signature(callable_obj).parameters
 
-    markdown_result = oodocs.parse_markdown("# Title")
-    notebook_result = oodocs.parse_notebook(
+    markdown_result = importers.parse_markdown("# Title")
+    notebook_result = importers.parse_notebook(
         {
             "nbformat": 4,
             "nbformat_minor": 5,
@@ -792,7 +814,7 @@ def test_parse_importers_return_import_result_without_diagnostics_switch() -> No
 
 
 def test_notebook_import_options_use_explicit_field_names() -> None:
-    option_fields = {field.name for field in fields(oodocs.NotebookImportOptions)}
+    option_fields = {field.name for field in fields(importers.NotebookImportOptions)}
     forbidden = {"include_raw", "code_language", "image_caption"}
     expected = {"include_raw_cells", "default_code_language", "output_image_caption"}
 
@@ -800,8 +822,8 @@ def test_notebook_import_options_use_explicit_field_names() -> None:
     assert expected <= option_fields
 
     for callable_obj in (
-        oodocs.parse_notebook,
-        oodocs.from_notebook,
+        importers.parse_notebook,
+        importers.from_notebook,
         oodocs.Document.from_notebook,
     ):
         parameters = set(inspect.signature(callable_obj).parameters)

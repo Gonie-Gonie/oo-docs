@@ -341,13 +341,6 @@
           "qualname": "oodocs.components.blocks.MultiColumn"
         },
         {
-          "category": "importer",
-          "kind": "class",
-          "module": "oodocs.importers.notebook",
-          "name": "NotebookImportOptions",
-          "qualname": "oodocs.importers.notebook.NotebookImportOptions"
-        },
-        {
           "category": "block",
           "kind": "class",
           "module": "oodocs.components.blocks",
@@ -670,27 +663,6 @@
           "qualname": "oodocs.components.inline.footnote"
         },
         {
-          "category": "importer",
-          "kind": "function",
-          "module": "oodocs.importers.markdown",
-          "name": "from_markdown",
-          "qualname": "oodocs.importers.markdown.from_markdown"
-        },
-        {
-          "category": "importer",
-          "kind": "function",
-          "module": "oodocs.importers.markdown",
-          "name": "from_markdown_file",
-          "qualname": "oodocs.importers.markdown.from_markdown_file"
-        },
-        {
-          "category": "importer",
-          "kind": "function",
-          "module": "oodocs.importers.notebook",
-          "name": "from_notebook",
-          "qualname": "oodocs.importers.notebook.from_notebook"
-        },
-        {
           "category": "inline",
           "kind": "function",
           "module": "oodocs.components.inline",
@@ -815,27 +787,6 @@
           "module": "oodocs.components.inline",
           "name": "styled",
           "qualname": "oodocs.components.inline.styled"
-        },
-        {
-          "category": "importer",
-          "kind": "function",
-          "module": "oodocs.importers.markdown",
-          "name": "parse_markdown",
-          "qualname": "oodocs.importers.markdown.parse_markdown"
-        },
-        {
-          "category": "importer",
-          "kind": "function",
-          "module": "oodocs.importers.markdown",
-          "name": "parse_markdown_file",
-          "qualname": "oodocs.importers.markdown.parse_markdown_file"
-        },
-        {
-          "category": "importer",
-          "kind": "function",
-          "module": "oodocs.importers.notebook",
-          "name": "parse_notebook",
-          "qualname": "oodocs.importers.notebook.parse_notebook"
         },
         {
           "category": "block",

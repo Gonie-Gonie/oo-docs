@@ -14,14 +14,16 @@ from oodocs import (
     SubSubsection,
     Table,
     TableOfContents,
-    from_markdown_file,
-    from_markdown,
-    parse_markdown,
-    parse_markdown_file,
     shift_heading_levels,
 )
 from oodocs.components.inline import Hyperlink
 from oodocs.components.markup import markup
+from oodocs.importers import (
+    from_markdown,
+    from_markdown_file,
+    parse_markdown,
+    parse_markdown_file,
+)
 from oodocs.layout.indexing import build_render_index
 
 _TINY_PNG = (

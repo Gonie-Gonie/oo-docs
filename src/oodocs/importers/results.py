@@ -126,7 +126,7 @@ class ImportResult:
         Inspect diagnostics returned by an importer:
 
         ```python
-        from oodocs import parse_markdown
+        from oodocs.importers import parse_markdown
 
         result = parse_markdown("# Title")
         if result.warnings:
@@ -136,7 +136,8 @@ class ImportResult:
         Reuse imported blocks in a document:
 
         ```python
-        from oodocs import Document, parse_markdown
+        from oodocs import Document
+        from oodocs.importers import parse_markdown
 
         result = parse_markdown("# Title")
         document = Document("Imported", result.blocks)
@@ -205,7 +206,7 @@ class ImportResult:
 
         Examples:
             ```python
-            from oodocs import parse_markdown
+            from oodocs.importers import parse_markdown
 
             result = parse_markdown("# Title")
             payload = result.to_dict()

@@ -48,17 +48,6 @@ from oodocs.components.markup import markup
 from oodocs.components.people import Affiliation, Author, AuthorLayout
 from oodocs.components.references import CitationLibrary, CitationSource
 from oodocs.document import Document
-from oodocs.importers.markdown import (
-    from_markdown,
-    from_markdown_file,
-    parse_markdown,
-    parse_markdown_file,
-)
-from oodocs.importers.notebook import (
-    NotebookImportOptions,
-    from_notebook,
-    parse_notebook,
-)
 from oodocs.importers.results import ImportIssue, ImportPolicyError, ImportResult
 from oodocs.components.inline import (
     Comment,
@@ -215,7 +204,6 @@ __all__ = [
     "MAX_SECTION_LEVEL",
     "MIN_SECTION_LEVEL",
     "MultiColumn",
-    "NotebookImportOptions",
     "NumberedList",
     "OUTPUT_FORMATS",
     "OutputFormat",
@@ -262,9 +250,6 @@ __all__ = [
     "cite",
     "comment",
     "footnote",
-    "from_markdown",
-    "from_markdown_file",
-    "from_notebook",
     "highlight",
     "inline_code",
     "italic",
@@ -283,9 +268,6 @@ __all__ = [
     "strikethrough",
     "markup",
     "styled",
-    "parse_markdown",
-    "parse_markdown_file",
-    "parse_notebook",
     "section_for_level",
     "shift_heading_level",
     "shift_heading_levels",

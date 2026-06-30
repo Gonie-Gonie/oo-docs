@@ -5,8 +5,9 @@ from base64 import b64encode
 
 import pytest
 
-from oodocs import Document, ImportPolicyError, ImportResult, NotebookImportOptions
+from oodocs import Document, ImportPolicyError, ImportResult
 from oodocs.cli import main
+from oodocs.importers import NotebookImportOptions
 from oodocs.importers.markdown import parse_markdown, parse_markdown_file
 from oodocs.importers.notebook import parse_notebook
 

@@ -5,8 +5,9 @@ from base64 import b64encode
 from pathlib import Path
 
 import oodocs.importers.notebook as notebook_importer
-from oodocs import Document, Figure, ImageData, Table, from_notebook, parse_notebook
+from oodocs import Document, Figure, ImageData, Table
 from oodocs.components.blocks import Chapter, CodeBlock, Paragraph, Section
+from oodocs.importers import from_notebook, parse_notebook
 
 _TINY_PNG = (
     b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01"

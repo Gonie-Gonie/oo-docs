@@ -48,7 +48,7 @@ class NotebookImportOptions:
         Limit noisy notebook outputs while keeping code and Markdown cells:
 
         ```python
-        from oodocs import NotebookImportOptions, from_notebook
+        from oodocs.importers import NotebookImportOptions, from_notebook
 
         options = NotebookImportOptions(max_output_lines=25, exclude_tags=("skip-doc",))
         doc = from_notebook("analysis.ipynb", options=options)
@@ -299,7 +299,7 @@ def from_notebook(
 
     Examples:
         ```python
-        from oodocs import NotebookImportOptions, from_notebook
+        from oodocs.importers import NotebookImportOptions, from_notebook
 
         doc = from_notebook(
             "analysis.ipynb",

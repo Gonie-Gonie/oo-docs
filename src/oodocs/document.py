@@ -277,7 +277,8 @@ class Document:
 
         Examples:
             ```python
-            from oodocs import Document, NotebookImportOptions
+            from oodocs import Document
+            from oodocs.importers import NotebookImportOptions
 
             doc = Document.from_notebook(
                 "analysis.ipynb",

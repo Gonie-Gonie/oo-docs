@@ -20,6 +20,7 @@ import pytest
 import oodocs.components.generated as generated_components
 import oodocs.components.inline as inline_components
 import oodocs.engineering as engineering_components
+import oodocs.importers as importer_components
 import oodocs.media as media_components
 import oodocs.glossary as glossary_components
 import oodocs.positioning as positioning_components
@@ -2154,9 +2155,14 @@ def test_public_api_prefers_classes_for_structural_nodes() -> None:
     assert hasattr(review_components, "todo")
     assert hasattr(review_components, "margin_note")
     assert hasattr(oodocs, "footnote")
-    assert hasattr(oodocs, "from_notebook")
-    assert hasattr(oodocs, "from_markdown")
-    assert hasattr(oodocs, "from_markdown_file")
+    assert not hasattr(oodocs, "NotebookImportOptions")
+    assert not hasattr(oodocs, "from_notebook")
+    assert not hasattr(oodocs, "from_markdown")
+    assert not hasattr(oodocs, "from_markdown_file")
+    assert hasattr(importer_components, "NotebookImportOptions")
+    assert hasattr(importer_components, "from_notebook")
+    assert hasattr(importer_components, "from_markdown")
+    assert hasattr(importer_components, "from_markdown_file")
     assert not hasattr(oodocs, "from_ipynb")
     assert hasattr(oodocs, "math")
     assert not hasattr(oodocs, "chemical_formula")
@@ -2191,9 +2197,12 @@ def test_public_api_prefers_classes_for_structural_nodes() -> None:
     assert hasattr(oodocs, "keyboard")
     assert hasattr(oodocs, "subscript")
     assert hasattr(oodocs, "superscript")
-    assert hasattr(oodocs, "parse_notebook")
-    assert hasattr(oodocs, "parse_markdown")
-    assert hasattr(oodocs, "parse_markdown_file")
+    assert not hasattr(oodocs, "parse_notebook")
+    assert not hasattr(oodocs, "parse_markdown")
+    assert not hasattr(oodocs, "parse_markdown_file")
+    assert hasattr(importer_components, "parse_notebook")
+    assert hasattr(importer_components, "parse_markdown")
+    assert hasattr(importer_components, "parse_markdown_file")
     assert not hasattr(oodocs, "parse_ipynb")
     assert hasattr(inline_components, "InlineChip")
     assert hasattr(inline_components, "InlineChipStyle")

@@ -554,7 +554,8 @@ if not result.ok:
 document.save_all("artifacts", stem="operational-report")
 """
 
-MARKDOWN_RELEASE_NOTES_SNIPPET = """from oodocs import Document, Section, Table, parse_markdown
+MARKDOWN_RELEASE_NOTES_SNIPPET = """from oodocs import Document, Section, Table
+from oodocs.importers import parse_markdown
 
 release_notes = {
     "v0.8.0": "# v0.8.0\\n\\n## Added\\n- [x] Markdown import\\n- [x] Release digest",
@@ -587,7 +588,8 @@ ad_hoc_blocks = parse_markdown("## Follow-up\\n\\n- Publish DOCX\\n- Publish PDF
 digest.body.children.extend(ad_hoc_blocks)
 """
 
-NOTEBOOK_IMPORT_SNIPPET = """from oodocs import Document, Section, parse_notebook
+NOTEBOOK_IMPORT_SNIPPET = """from oodocs import Document, Section
+from oodocs.importers import parse_notebook
 
 analysis = Document.from_notebook(
     "analysis.ipynb",
