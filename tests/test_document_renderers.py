@@ -1100,7 +1100,7 @@ def test_named_styles_validate_and_render_across_formats(tmp_path: Path) -> None
             caption="Styled metrics.",
             style="evidence",
             row_styles={0: "muted"},
-            column_styles={1: "numeric"},
+            columns=[ColumnSpec(), ColumnSpec(style="numeric")],
         ),
         Paragraph("Status: ", status("ready", chip_style="status.success")),
         settings=DocumentSettings(theme=Theme(stylesheet=styles)),
@@ -1153,6 +1153,11 @@ def test_document_validate_reports_unknown_and_wrong_named_styles() -> None:
             rows=[[TableCell("B", style="info")]],
             style="info",
         ),
+        Table(
+            headers=["C"],
+            rows=[["D"]],
+            columns=[ColumnSpec(style="missing-cell-style")],
+        ),
     )
 
     result = document.validate()
@@ -1161,8 +1166,10 @@ def test_document_validate_reports_unknown_and_wrong_named_styles() -> None:
         "unknown-style-name",
         "wrong-style-category",
         "wrong-style-category",
+        "unknown-style-name",
     ]
     assert result.errors[0].path == "document.body.children[0].style"
+    assert result.errors[-1].path == "document.body.children[3].columns[0].style"
 
 
 def test_document_validate_reports_authoring_errors_and_blocks_render(
@@ -1741,7 +1748,18 @@ def test_table_column_specs_render_flex_widths_and_wrapping(
         rows=[["case-001", "pass", "Fixed-page renderers share remaining text width."]],
         caption="Column spec table.",
         columns=[
-            ColumnSpec(width=1.0, unit="in", text_alignment="right", wrap=False),
+            ColumnSpec(
+                width=1.0,
+                unit="in",
+                style={
+                    "background_color": "#E0F2FE",
+                    "text_color": "#1F4E79",
+                    "text_alignment": "left",
+                    "bold": True,
+                },
+                text_alignment="right",
+                wrap=False,
+            ),
             ColumnSpec(flex=1, text_alignment="center"),
             ColumnSpec(flex=2, text_alignment="left"),
         ],
@@ -1784,12 +1802,16 @@ def test_table_column_specs_render_flex_widths_and_wrapping(
     assert 'w:w="2880"' in docx_xml
     assert 'w:w="5760"' in docx_xml
     assert '<w:jc w:val="right"' in docx_xml
+    assert "E0F2FE" in docx_xml
+    assert "1F4E79" in docx_xml
     assert "Column spec table." in pdf_text
     assert "case-001" in pdf_text
     assert 'style="width: 1.00in;"' in html_text
     assert 'style="width: 2.00in;"' in html_text
     assert 'style="width: 4.00in;"' in html_text
     assert "white-space: nowrap" in html_text
+    assert "background: #E0F2FE" in html_text
+    assert "color: #1F4E79" in html_text
     assert "text-align: right" in html_text
     assert "text-align: center" in html_text
 

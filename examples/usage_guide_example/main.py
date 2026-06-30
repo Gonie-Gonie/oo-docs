@@ -769,6 +769,7 @@ Paragraph(
 """
 
 TABLE_ALIGNMENT_SNIPPET = """from oodocs import Table, TableCell
+from oodocs.media import ColumnSpec
 
 Table(
     headers=[["Metric", "Value"]],
@@ -787,7 +788,10 @@ Table(
         ["Quality", "Stable"],
     ],
     row_styles={1: {"background_color": "#E2F0D9", "italic": True}},
-    column_styles={0: {"text_color": "#1F4E79", "bold": True}},
+    columns=[
+        ColumnSpec(style={"text_color": "#1F4E79", "bold": True}),
+        ColumnSpec(),
+    ],
     header_row_styles={0: {"background_color": "#1F4E79", "text_color": "#FFFFFF"}},
     header_text_alignment="center",
     cell_vertical_alignment="middle",
@@ -826,7 +830,13 @@ full_matrix = Table.from_records(
     columns=[
         ColumnSpec(key="case", header="Case", width=0.9, unit="in", wrap=False),
         ColumnSpec(key="status", header="Status", width=0.8, unit="in"),
-        ColumnSpec(key="notes", header="Notes", flex=2, text_alignment="left"),
+        ColumnSpec(
+            key="notes",
+            header="Notes",
+            flex=2,
+            style={"text_color": "#1F4E79"},
+            text_alignment="left",
+        ),
         ColumnSpec(key="raw_trace", visible=False),
     ],
     caption="Readable matrix excerpt.",
@@ -1691,9 +1701,9 @@ def build_usage_guide_document() -> Document:
                     inline_code("row_styles"),
                     ", ",
                     inline_code("header_row_styles"),
-                    ", or ",
-                    inline_code("column_styles"),
-                    "."
+                    ", or prefer ",
+                    inline_code("ColumnSpec(style=...)"),
+                    " for column formatting."
                 ),
                 CodeBlock(TABLE_ALIGNMENT_SNIPPET, language="python"),
                 Paragraph(

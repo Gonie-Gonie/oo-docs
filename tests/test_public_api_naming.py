@@ -913,6 +913,10 @@ def test_table_public_api_hides_renderer_helper_methods() -> None:
 
 
 def test_table_data_constructors_expose_canonical_layout_options() -> None:
+    column_spec_fields = {field.name for field in fields(media.ColumnSpec)}
+
+    assert "style" in column_spec_fields
+
     for callable_obj in (
         oodocs.Table,
         oodocs.Table.from_dataframe,

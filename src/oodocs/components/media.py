@@ -685,6 +685,7 @@ class ColumnSpec:
         width: Fixed column width in ``unit``.
         flex: Relative share of remaining text width.
         unit: Unit for ``width``.
+        style: Optional cell style for this column.
         text_alignment: Optional default text alignment for this column.
         vertical_alignment: Optional default vertical alignment for this
             column.
@@ -703,7 +704,11 @@ class ColumnSpec:
             [["Latency", "End-to-end response time"]],
             columns=[
                 ColumnSpec(width=0.9, unit="in"),
-                ColumnSpec(flex=1, text_alignment="left"),
+                ColumnSpec(
+                    flex=1,
+                    style={"text_color": "#1F4E79", "bold": True},
+                    text_alignment="left",
+                ),
             ],
         )
         ```
@@ -712,6 +717,7 @@ class ColumnSpec:
     width: float | None = None
     flex: float | None = None
     unit: str | None = None
+    style: TableCellStyleInput | None = None
     text_alignment: str | None = None
     vertical_alignment: str | None = None
     wrap: bool = True
@@ -728,6 +734,8 @@ class ColumnSpec:
             raise ValueError("ColumnSpec.flex must be greater than zero")
         if self.unit is not None:
             object.__setattr__(self, "unit", normalize_length_unit(self.unit))
+        if self.style is not None:
+            object.__setattr__(self, "style", coerce_table_cell_style(self.style))
         if self.text_alignment is not None:
             object.__setattr__(
                 self,
@@ -743,13 +751,24 @@ class ColumnSpec:
         object.__setattr__(self, "wrap", bool(self.wrap))
         object.__setattr__(self, "visible", bool(self.visible))
 
-    def cell_style(self) -> TableCellStyle:
-        """Return the cell style implied by this column specification."""
+    def cell_style(self, *, stylesheet: object | None = None) -> TableCellStyle:
+        """Return the cell style implied by this column specification.
 
-        return TableCellStyle(
+        Args:
+            stylesheet: Optional stylesheet used to resolve named cell styles.
+
+        Returns:
+            Resolved table cell style for this column.
+        """
+
+        column_style = _resolve_table_cell_style(self.style, stylesheet)
+        alignment_style = TableCellStyle(
             text_alignment=self.text_alignment,
             vertical_alignment=self.vertical_alignment,
         )
+        if column_style is None:
+            return alignment_style
+        return column_style.merged(alignment_style)
 
 
 ColumnSpecInput = ColumnSpec | Mapping[str, object]
@@ -1622,16 +1641,21 @@ class Table(Block):
             )
         )
         return self._base_cell_style(placement, table_style=table_style).merged(
-            self._column_spec_cell_style(placement.column),
+            self._column_spec_cell_style(placement.column, stylesheet=stylesheet),
             _resolve_table_cell_style(self.column_styles.get(placement.column), stylesheet),
             _resolve_table_cell_style(row_style, stylesheet),
             _resolve_table_cell_style(placement.cell.style, stylesheet),
         )
 
-    def _column_spec_cell_style(self, column: int) -> TableCellStyle | None:
+    def _column_spec_cell_style(
+        self,
+        column: int,
+        *,
+        stylesheet: object | None = None,
+    ) -> TableCellStyle | None:
         if self.columns is None or column >= len(self.columns):
             return None
-        return self.columns[column].cell_style()
+        return self.columns[column].cell_style(stylesheet=stylesheet)
 
     def _column_wrap_enabled(self, column: int) -> bool:
         if self.columns is None or column >= len(self.columns):

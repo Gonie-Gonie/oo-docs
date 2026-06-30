@@ -1420,6 +1420,13 @@ class _ValidationContext:
             self._validate_style_reference("table_cell", style, f"{path}.row_styles[{index}]")
         for index, style in table.column_styles.items():
             self._validate_style_reference("table_cell", style, f"{path}.column_styles[{index}]")
+        if table.columns is not None:
+            for index, column in enumerate(table.columns):
+                self._validate_style_reference(
+                    "table_cell",
+                    column.style,
+                    f"{path}.columns[{index}].style",
+                )
         for index, style in table.header_row_styles.items():
             self._validate_style_reference(
                 "table_cell",
