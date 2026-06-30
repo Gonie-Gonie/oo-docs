@@ -579,7 +579,13 @@ class OODocsPdfTemplate(SimpleDocTemplate):
         pagesize: tuple[float, float],
         margins: tuple[float, float, float, float],
     ) -> None:
-        """Register an additional page template for scoped page geometry."""
+        """Register an additional page template for scoped page geometry.
+
+        Args:
+            template_id: Identifier used by flowables to activate the template.
+            pagesize: ReportLab page size in points.
+            margins: Left, right, top, and bottom margins in points.
+        """
 
         self._oodocs_page_layout_templates.append((template_id, pagesize, margins))
 
@@ -700,16 +706,39 @@ class OODocsPdfTemplate(SimpleDocTemplate):
 
 
 class PdfPagesPlaceholder(Flowable):
-    """Invisible marker page replaced with an external PDF page after build."""
+    """Invisible marker page replaced with an external PDF page after build.
+
+    Args:
+        marker: Unique marker text embedded on the placeholder page.
+
+    Attributes:
+        marker: Unique marker text embedded on the placeholder page.
+    """
 
     def __init__(self, marker: str) -> None:
         super().__init__()
         self.marker = marker
 
     def wrap(self, available_width: float, available_height: float) -> tuple[float, float]:
+        """Return the placeholder footprint.
+
+        Args:
+            available_width: Width available from ReportLab.
+            available_height: Height available from ReportLab.
+
+        Returns:
+            Minimal visible footprint used to keep the marker page.
+        """
+
         return 1, 1
 
     def draw(self) -> None:
+        """Draw the hidden replacement marker on the current canvas.
+
+        Returns:
+            ``None``.
+        """
+
         canvas = self.canv
         canvas.saveState()
         canvas.setFont("Helvetica", 1)

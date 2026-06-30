@@ -387,7 +387,13 @@ class DocxRenderer:
         block: Section,
         context: DocxRenderContext,
     ) -> None:
-        """Render a section heading and child blocks into DOCX."""
+        """Render a section heading and child blocks into DOCX.
+
+        Args:
+            container: Active DOCX document container.
+            block: Section block to render.
+            context: Current DOCX render context.
+        """
 
         section_context = context
         if block.page_layout is not None:
@@ -932,7 +938,13 @@ class DocxRenderer:
         block: PdfPages,
         context: DocxRenderContext,
     ) -> None:
-        """Render a DOCX fallback for external PDF pages."""
+        """Render a DOCX fallback for external PDF pages.
+
+        Args:
+            container: Active DOCX document, cell, or other paragraph owner.
+            block: External PDF page block to render.
+            context: Current DOCX render context.
+        """
 
         paragraph = self._add_paragraph(container)
         paragraph.alignment = ALIGNMENTS[context.theme.blocks.paragraph_text_alignment]

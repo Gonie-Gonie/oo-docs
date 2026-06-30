@@ -938,7 +938,15 @@ class HtmlRenderer:
         return "".join(attrs)
 
     def render_pdf_pages(self, block: PdfPages, context: HtmlRenderContext) -> str:
-        """Render an HTML fallback for external PDF pages."""
+        """Render an HTML fallback for external PDF pages.
+
+        Args:
+            block: External PDF page block to render.
+            context: Current HTML render context.
+
+        Returns:
+            HTML fragment linking to the source PDF and selected pages.
+        """
 
         label = escape(block.title or block.source.name)
         href = escape(str(block.source))
