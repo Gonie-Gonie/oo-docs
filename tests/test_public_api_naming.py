@@ -15,6 +15,7 @@ import oodocs.components.inline as inline_components
 import oodocs.components.markup as markup_components
 import oodocs.components.references as references
 import oodocs.engineering as engineering
+import oodocs.equations as equations
 import oodocs.generated as generated
 import oodocs.glossary as glossary
 import oodocs.importers as importers
@@ -152,6 +153,8 @@ def test_tier_two_namespaces_export_domain_symbols() -> None:
         },
         engineering: {
             "Algorithm",
+        },
+        equations: {
             "AlignedEquation",
             "CasesEquation",
         },

@@ -15,6 +15,7 @@ from typing import Any, Literal, get_origin
 INVENTORY_MODULES = (
     "oodocs",
     "oodocs.chemistry",
+    "oodocs.equations",
     "oodocs.apidoc",
     "oodocs.adapters",
     "oodocs.importers.markdown",
@@ -227,6 +228,8 @@ def category_for(
         if export_name == "ReactionEquation":
             return "block"
         return "inline"
+    if inventory_module == "oodocs.equations":
+        return "block"
     if inventory_module.startswith("oodocs.importers."):
         return "importer"
     if inventory_module == "oodocs.validation":

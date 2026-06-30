@@ -24,6 +24,7 @@ import oodocs.components.inline as inline_components
 import oodocs.components.blocks as block_components
 import oodocs.components.markup as markup_components
 import oodocs.engineering as engineering_components
+import oodocs.equations as equation_components
 import oodocs.importers as importer_components
 import oodocs.media as media_components
 import oodocs.glossary as glossary_components
@@ -39,6 +40,8 @@ from oodocs.layout.indexing import build_render_index
 from oodocs.renderers.pdf import PdfRenderer
 from oodocs.engineering import (
     Algorithm,
+)
+from oodocs.equations import (
     AlignedEquation,
     CasesEquation,
 )
@@ -2106,8 +2109,10 @@ def test_public_api_prefers_classes_for_structural_nodes() -> None:
     assert not hasattr(oodocs, "ChemicalFormula")
     assert not hasattr(oodocs, "ReactionEquation")
     assert hasattr(engineering_components, "Algorithm")
-    assert hasattr(engineering_components, "AlignedEquation")
-    assert hasattr(engineering_components, "CasesEquation")
+    assert not hasattr(engineering_components, "AlignedEquation")
+    assert not hasattr(engineering_components, "CasesEquation")
+    assert hasattr(equation_components, "AlignedEquation")
+    assert hasattr(equation_components, "CasesEquation")
     assert not hasattr(engineering_components, "ChemicalFormula")
     assert not hasattr(engineering_components, "ReactionEquation")
     assert hasattr(chemistry_components, "ChemicalFormula")

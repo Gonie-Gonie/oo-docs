@@ -1060,7 +1060,7 @@ class AlignedEquation(Equation):
     Examples:
         ```python
         from oodocs import Document
-        from oodocs.engineering import AlignedEquation
+        from oodocs.equations import AlignedEquation
 
         derivation = AlignedEquation(r"a &= b + c", r"  &= d")
         document = Document("Derivation", derivation)
@@ -1132,7 +1132,7 @@ class CasesEquation(Equation):
 
     Examples:
         ```python
-        from oodocs.engineering import CasesEquation
+        from oodocs.equations import CasesEquation
 
         piecewise = CasesEquation(("0", "x < 0"), ("x^2", "x >= 0"), left="f(x)")
         ```

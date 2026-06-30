@@ -1208,6 +1208,24 @@
         }
       ]
     },
+    "oodocs.equations": {
+      "exports": [
+        {
+          "category": "block",
+          "kind": "class",
+          "module": "oodocs.components.blocks",
+          "name": "AlignedEquation",
+          "qualname": "oodocs.components.blocks.AlignedEquation"
+        },
+        {
+          "category": "block",
+          "kind": "class",
+          "module": "oodocs.components.blocks",
+          "name": "CasesEquation",
+          "qualname": "oodocs.components.blocks.CasesEquation"
+        }
+      ]
+    },
     "oodocs.importers.markdown": {
       "exports": [
         {
