@@ -110,9 +110,10 @@ assert [parameter.name for parameter in parsed.parameters] == ["path", "timeout"
 ```
 
 Sphinx `.. seealso::` and renderer-note admonitions are normalized into
-sections that render in reference profiles. Sphinx keyword fields are merged
-into the same parameter list, so keyword-only parameters render in the normal
-parameter table:
+sections that render in reference profiles. Symbol-like See Also lines become
+related API entries, while sentence-like See Also prose remains a normal
+paragraph. Sphinx keyword fields are merged into the same parameter list, so
+keyword-only parameters render in the normal parameter table:
 
 ```python
 from oodocs.apidoc import parse_docstring
@@ -130,6 +131,7 @@ parsed = parse_docstring(
     .. seealso::
 
         :func:`open_data`: Open the source file.
+        DocumentSettings for metadata and layout configuration.
 
     .. admonition:: Renderer Notes
 
@@ -140,6 +142,7 @@ parsed = parse_docstring(
 
 assert [parameter.name for parameter in parsed.parameters] == ["path", "cache"]
 assert parsed.see_also[0].label == "open_data"
+assert parsed.see_also_notes == ["DocumentSettings for metadata and layout configuration."]
 assert parsed.renderer_notes[0].output_format == "html"
 ```
 

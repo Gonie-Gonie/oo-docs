@@ -487,21 +487,24 @@ def api_see_also_blocks(
     """
 
     resolved = resolve_presentation_profile(presentation)
-    if not resolved.include_see_also or not obj.see_also:
+    notes = [note for note in obj.see_also_notes if note.strip()]
+    if not resolved.include_see_also or (not obj.see_also and not notes):
         return []
     items = list(_unique_see_also_items(obj))
-    if not items:
+    if not items and not notes:
         return []
+    blocks = [Paragraph(note) for note in notes]
+    blocks.extend(item.to_paragraph() for item in items)
     if resolved.name == "manual":
         return [
             Box(
-                *(item.to_paragraph() for item in items),
+                *blocks,
                 title="See also",
                 border=BorderStyle.solid("93C5FD", width=0.75),
                 background_color="EFF6FF",
             )
         ]
-    return [Paragraph(bold("See also")), *(item.to_paragraph() for item in items)]
+    return [Paragraph(bold("See also")), *blocks]
 
 
 def api_notes_blocks(

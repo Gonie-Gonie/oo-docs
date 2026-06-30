@@ -19,6 +19,14 @@ def test_google_docstring_fixture_extracts_shared_fields() -> None:
     assert function.returns is not None
     assert function.exceptions[0].exception == "ValueError"
     assert function.examples
+    assert [item.label for item in function.see_also] == [
+        "Widget.render",
+        "WidgetRecord",
+        "Widget.title",
+    ]
+    assert function.see_also_notes == [
+        "DocumentSettings for metadata and layout configuration."
+    ]
     assert function.notes
     assert function.renderer_notes[0].output_format == "html"
     assert class_doc.parameters[0].name == "name"

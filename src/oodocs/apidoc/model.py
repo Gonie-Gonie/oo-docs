@@ -1223,6 +1223,8 @@ class ApiObject:
         exceptions: Documented exceptions.
         examples: Parsed code examples.
         see_also: Parsed related API entries.
+        see_also_notes: Free-form See Also prose that is rendered as normal
+            paragraphs instead of related API rows.
         notes: Parsed general notes.
         warnings: Parsed warning notes.
         renderer_notes: Renderer-specific notes.
@@ -1272,6 +1274,7 @@ class ApiObject:
     deprecated: bool = False
     deprecation_message: str | None = None
     metadata: dict[str, object] = field(default_factory=dict)
+    see_also_notes: list[str] = field(default_factory=list)
 
     @property
     def documented(self) -> bool:
@@ -1321,6 +1324,7 @@ class ApiObject:
             "exceptions": [item.to_dict() for item in self.exceptions],
             "examples": [item.to_dict() for item in self.examples],
             "see_also": [item.to_dict() for item in self.see_also],
+            "see_also_notes": list(self.see_also_notes),
             "notes": list(self.notes),
             "warnings": list(self.warnings),
             "renderer_notes": [item.to_dict() for item in self.renderer_notes],
@@ -1381,6 +1385,9 @@ class ApiObject:
             see_also=[
                 ApiSeeAlso.from_dict(item)
                 for item in data.get("see_also", [])  # type: ignore[union-attr]
+            ],
+            see_also_notes=[
+                str(item) for item in data.get("see_also_notes", [])  # type: ignore[union-attr]
             ],
             notes=[str(item) for item in data.get("notes", [])],  # type: ignore[union-attr]
             warnings=[str(item) for item in data.get("warnings", [])],  # type: ignore[union-attr]

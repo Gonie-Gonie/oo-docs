@@ -209,7 +209,10 @@ def test_docstring_see_also_keeps_symbol_entries_only() -> None:
         See Also:
             open_file: Lower-level file opener.
             DocumentSettings for document-level metadata.
+            DocumentSettings for metadata and layout configuration.
+            - Widget.from_path
             `close_file`
+            reset_cache
             load, save : Shared lifecycle helpers.
             Widget.render: Render the loaded widget.
                 Includes output serialization.
@@ -219,15 +222,20 @@ def test_docstring_see_also_keeps_symbol_entries_only() -> None:
 
     assert [item.label for item in parsed.see_also] == [
         "open_file",
+        "Widget.from_path",
         "close_file",
+        "reset_cache",
         "load",
         "save",
         "Widget.render",
     ]
     assert parsed.see_also[0].description == "Lower-level file opener."
-    assert parsed.see_also[2].description == "Shared lifecycle helpers."
-    assert parsed.see_also[3].description == "Shared lifecycle helpers."
-    assert parsed.see_also[4].description == "Render the loaded widget. Includes output serialization."
+    assert parsed.see_also[4].description == "Shared lifecycle helpers."
+    assert parsed.see_also[5].description == "Shared lifecycle helpers."
+    assert parsed.see_also[6].description == "Render the loaded widget. Includes output serialization."
+    assert parsed.see_also_notes == [
+        "DocumentSettings for document-level metadata. DocumentSettings for metadata and layout configuration."
+    ]
 
 
 def test_docstring_parsers_normalize_yields_sections() -> None:

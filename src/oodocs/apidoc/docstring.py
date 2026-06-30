@@ -48,6 +48,8 @@ class ParsedDocstring:
         exceptions: Parsed exception documentation.
         examples: Parsed code examples.
         see_also: Related API references.
+        see_also_notes: Free-form See Also prose that is not a related API
+            symbol entry.
         renderer_notes: Renderer-specific behavior notes.
         notes: Additional notes.
         warnings: Warning notes.
@@ -84,6 +86,7 @@ class ParsedDocstring:
     issues: list[ApiDocIssue] = field(default_factory=list)
     deprecated: bool = False
     deprecation_message: str | None = None
+    see_also_notes: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, object]:
         """Return deterministic serialized parser output.
@@ -112,6 +115,7 @@ class ParsedDocstring:
             "exceptions": [item.to_dict() for item in self.exceptions],
             "examples": [item.to_dict() for item in self.examples],
             "see_also": [item.to_dict() for item in self.see_also],
+            "see_also_notes": list(self.see_also_notes),
             "renderer_notes": [item.to_dict() for item in self.renderer_notes],
             "notes": list(self.notes),
             "warnings": list(self.warnings),
@@ -165,6 +169,9 @@ class ParsedDocstring:
             see_also=[
                 ApiSeeAlso.from_dict(item)
                 for item in data.get("see_also", [])  # type: ignore[union-attr]
+            ],
+            see_also_notes=[
+                str(item) for item in data.get("see_also_notes", [])  # type: ignore[union-attr]
             ],
             renderer_notes=[
                 ApiRendererNote.from_dict(item)
@@ -952,7 +959,7 @@ def _parse_google(text: str, qualname: str | None, module: str | None) -> Parsed
         elif normalized in {"examples", "example"} and not parsed.examples:
             parsed.examples.extend(_examples_or_text(body))
         elif normalized == "see also":
-            parsed.see_also.extend(_parse_see_also(body))
+            _extend_see_also(parsed, body)
         elif normalized in {"notes", "note"}:
             parsed.notes.extend(_paragraphs(body))
         elif normalized in {"warnings", "warning"}:
@@ -992,7 +999,7 @@ def _parse_numpy(text: str, qualname: str | None, module: str | None) -> ParsedD
         elif normalized == "examples" and not parsed.examples:
             parsed.examples.extend(_examples_or_text(body))
         elif normalized == "see also":
-            parsed.see_also.extend(_parse_see_also(body))
+            _extend_see_also(parsed, body)
         elif normalized == "notes":
             parsed.notes.extend(_paragraphs(body))
         elif normalized == "warnings":
@@ -1129,7 +1136,7 @@ def _parse_sphinx(text: str, qualname: str | None, module: str | None) -> Parsed
             i = _skip_sphinx_body(lines, i) - 1
         elif stripped.startswith(".. seealso::"):
             body = _plain_sphinx_text(_collect_directive_body(lines, i)) or ""
-            parsed.see_also.extend(_parse_see_also(body))
+            _extend_see_also(parsed, body)
             i = _skip_sphinx_body(lines, i) - 1
         elif match := re.match(r"^\.\. admonition::\s*(.*)$", stripped):
             title = _plain_sphinx_text(match.group(1)) or ""
@@ -1138,7 +1145,7 @@ def _parse_sphinx(text: str, qualname: str | None, module: str | None) -> Parsed
             if normalized_title == "renderer notes":
                 parsed.renderer_notes.extend(_parse_renderer_notes(body))
             elif normalized_title == "see also":
-                parsed.see_also.extend(_parse_see_also(_plain_sphinx_text(body) or ""))
+                _extend_see_also(parsed, _plain_sphinx_text(body) or "")
             elif normalized_title in {"note", "notes"}:
                 parsed.notes.extend(_paragraphs(body))
             elif normalized_title in {"warning", "warnings"}:
@@ -1341,7 +1348,7 @@ def _parse_markdown(text: str, qualname: str | None, module: str | None) -> Pars
         elif normalized in {"examples", "example"}:
             parsed.examples.extend(_examples_or_text(body))
         elif normalized == "see also":
-            parsed.see_also.extend(_parse_see_also(body))
+            _extend_see_also(parsed, body)
         elif normalized in {"notes", "note"}:
             parsed.notes.extend(_paragraphs(body))
         elif normalized in {"warnings", "warning"}:
@@ -1683,9 +1690,25 @@ def _parse_return_section(text: str) -> ApiReturn:
     return ApiReturn(description=" ".join(lines), documented=True)
 
 
-def _parse_see_also(text: str) -> list[ApiSeeAlso]:
+def _extend_see_also(parsed: ParsedDocstring, text: str) -> None:
+    items, notes = _parse_see_also(text)
+    parsed.see_also.extend(items)
+    parsed.see_also_notes.extend(notes)
+
+
+def _parse_see_also(text: str) -> tuple[list[ApiSeeAlso], list[str]]:
     items: list[ApiSeeAlso] = []
+    notes: list[str] = []
     current_items: list[ApiSeeAlso] = []
+    current_note_lines: list[str] = []
+
+    def flush_note() -> None:
+        if current_note_lines:
+            note = " ".join(" ".join(line.split()) for line in current_note_lines if line.strip())
+            if note:
+                notes.append(note)
+            current_note_lines.clear()
+
     for raw_line in text.splitlines():
         if current_items and raw_line.startswith((" ", "\t")) and raw_line.strip():
             for item in current_items:
@@ -1694,14 +1717,17 @@ def _parse_see_also(text: str) -> list[ApiSeeAlso]:
         stripped = raw_line.strip().lstrip("-*").strip()
         if not stripped:
             current_items = []
+            flush_note()
             continue
         if ":" in stripped:
             label_text, description = stripped.split(":", 1)
             labels = _see_also_labels(label_text)
             if not labels:
                 current_items = []
+                current_note_lines.append(stripped)
                 continue
             current_items = []
+            flush_note()
             for label in labels:
                 item = ApiSeeAlso(label, target=label, description=description.strip() or None)
                 items.append(item)
@@ -1710,13 +1736,16 @@ def _parse_see_also(text: str) -> list[ApiSeeAlso]:
             labels = _see_also_labels(stripped)
             if not labels:
                 current_items = []
+                current_note_lines.append(stripped)
                 continue
             current_items = []
+            flush_note()
             for label in labels:
                 item = ApiSeeAlso(label, target=label)
                 items.append(item)
                 current_items.append(item)
-    return items
+    flush_note()
+    return items, notes
 
 
 _SEE_ALSO_SYMBOL_RE = re.compile(r"^~?[A-Za-z_][\w]*(?:\.[A-Za-z_][\w]*)*$")

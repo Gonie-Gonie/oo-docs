@@ -10,8 +10,8 @@ Core objects:
   attributes, and data.
 - `ApiParameter`: signature or docstring parameter/attribute metadata.
 - `ApiReturn`, `ApiException`, `ApiExample`, `ApiSeeAlso`, `ApiRendererNote`,
-  plus `ApiObject.notes` and `ApiObject.warnings`: normalized docstring
-  subsections.
+  plus `ApiObject.see_also_notes`, `ApiObject.notes`, and
+  `ApiObject.warnings`: normalized docstring subsections.
 - `ApiDocIssue`: stable diagnostics from parsing, collection, coverage, and
   examples.
 - `ApiSnapshot` and `ApiDiffResult`: release comparison sidecars for added,
@@ -35,10 +35,11 @@ Diff sidecars preserve parameter annotation and return annotation changes as
 first-class lists so compatibility reports do not need to infer them from the
 rendered signature string.
 
-Parsed notes and warnings remain on each `ApiObject`, survive JSON sidecars, and
-can be inserted directly with `obj.to_notes_blocks()` or
-`obj.to_warnings_blocks()` when a document wants those sections outside the
-full `obj.to_section(...)` rendering.
+Parsed free-form See Also prose, notes, and warnings remain on each
+`ApiObject`, survive JSON sidecars, and can be inserted directly with
+`obj.to_see_also_blocks()`, `obj.to_notes_blocks()`, or
+`obj.to_warnings_blocks()` when a document wants those sections outside the full
+`obj.to_section(...)` rendering.
 
 Leaf metadata objects are composable too. `ApiReturn`, `ApiException`,
 `ApiExample`, `ApiSeeAlso`, and `ApiRendererNote` expose row helpers for custom

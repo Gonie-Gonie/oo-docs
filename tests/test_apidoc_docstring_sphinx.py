@@ -118,6 +118,7 @@ def test_sphinx_parser_extracts_seealso_and_renderer_admonitions() -> None:
         .. seealso::
 
             :func:`load_widget`: Load one widget from disk.
+            DocumentSettings for metadata and layout configuration.
             :class:`~widgets.Widget`
                 Runtime widget object.
 
@@ -133,6 +134,9 @@ def test_sphinx_parser_extracts_seealso_and_renderer_admonitions() -> None:
     assert [item.description for item in parsed.see_also] == [
         "Load one widget from disk.",
         "Runtime widget object.",
+    ]
+    assert parsed.see_also_notes == [
+        "DocumentSettings for metadata and layout configuration."
     ]
     assert parsed.renderer_notes[0].output_format == "pdf"
     assert parsed.renderer_notes[0].message == "Wide signatures may wrap."
@@ -222,6 +226,7 @@ def test_sphinx_fallback_parser_extracts_seealso_and_renderer_admonitions(monkey
         .. seealso::
 
             :func:`load_widget`: Load one widget from disk.
+            DocumentSettings for metadata and layout configuration.
             :class:`~widgets.Widget`
                 Runtime widget object.
 
@@ -237,6 +242,9 @@ def test_sphinx_fallback_parser_extracts_seealso_and_renderer_admonitions(monkey
     assert [item.description for item in parsed.see_also] == [
         "Load one widget from disk.",
         "Runtime widget object.",
+    ]
+    assert parsed.see_also_notes == [
+        "DocumentSettings for metadata and layout configuration."
     ]
     assert parsed.renderer_notes[0].output_format == "pdf"
     assert parsed.renderer_notes[0].message == "Wide signatures may wrap."

@@ -21,6 +21,9 @@ def load_widget(path: str) -> bool:
 
     See Also:
         Widget.render: Render the loaded widget.
+        - WidgetRecord
+        Widget.title
+        DocumentSettings for metadata and layout configuration.
 
     Notes:
         Used by Google-style parser fixtures.
