@@ -595,10 +595,27 @@ def test_mhchem_formula_and_reaction_render_to_all_outputs(tmp_path: Path) -> No
     water = chemical_formula("H2O")
     sulfate = ChemicalFormula("SO4^2-")
     ammonium = ce("NH4+")
+    calcium_hydroxide = ChemicalFormula("Ca(OH)\u2082")
+    ferric = ChemicalFormula("Fe\u00b3+")
+    unicode_sulfate = ChemicalFormula("SO\u2084\u00b2\u207b")
     reaction = ReactionEquation("2H2 + O2 -> 2H2O")
     document = Document(
         "Chemistry Blocks",
-        Paragraph("Water is ", water, "; sulfate is ", sulfate, "; ammonium is ", ammonium, "."),
+        Paragraph(
+            "Water is ",
+            water,
+            "; sulfate is ",
+            sulfate,
+            "; ammonium is ",
+            ammonium,
+            "; calcium hydroxide is ",
+            calcium_hydroxide,
+            "; ferric iron is ",
+            ferric,
+            "; Unicode sulfate is ",
+            unicode_sulfate,
+            ".",
+        ),
         Paragraph("See ", reaction.ref(), "."),
         reaction,
     )
@@ -607,6 +624,9 @@ def test_mhchem_formula_and_reaction_render_to_all_outputs(tmp_path: Path) -> No
     assert water.plain_text() == "H2O"
     assert sulfate.plain_text() == "SO42-"
     assert ammonium.value == "NH_{4}^{+}"
+    assert calcium_hydroxide.value == "Ca(OH)_2"
+    assert ferric.plain_text() == "Fe3+"
+    assert unicode_sulfate.value == "SO_4^{2-}"
     assert build_render_index(document).equation_number(reaction) == 1
     assert reaction.reference_text(1) == "Reaction 1"
 
@@ -623,6 +643,7 @@ def test_mhchem_formula_and_reaction_render_to_all_outputs(tmp_path: Path) -> No
     assert any(run.text == "2" and run.font.subscript for run in formula_paragraph.runs)
     assert any(run.text == "2-" and run.font.superscript for run in formula_paragraph.runs)
     assert any(run.text == "+" and run.font.superscript for run in formula_paragraph.runs)
+    assert any(run.text == "3+" and run.font.superscript for run in formula_paragraph.runs)
     assert any(run.text == "2" and run.font.subscript for run in reaction_paragraph.runs)
 
     pdf_text = "\n".join(page.extract_text() or "" for page in PdfReader(BytesIO(pdf_path.read_bytes())).pages)
@@ -635,6 +656,8 @@ def test_mhchem_formula_and_reaction_render_to_all_outputs(tmp_path: Path) -> No
     assert "H<sub>2</sub>O" in html_text
     assert "SO<sub>4</sub><sup>2-</sup>" in html_text
     assert "NH<sub>4</sub><sup>+</sup>" in html_text
+    assert "Ca(OH)<sub>2</sub>" in html_text
+    assert "Fe<sup>3+</sup>" in html_text
     assert "2H<sub>2</sub> + O<sub>2</sub> -&gt; 2H<sub>2</sub>O" in html_text
     assert "Reaction 1" in normalized_html_text
     assert "(1)" in normalized_html_text
