@@ -520,10 +520,10 @@ OODocs versions are derived from git tags through `setuptools-scm`.
 Create and push a release tag like this:
 
 ```powershell
-.\scripts\release.ps1 1.1.0
+.\scripts\release.ps1 <version>
 ```
 
-That pushes `v1.1.0`, and the GitHub release workflow runs the test suite, enforces API documentation coverage with `oodocs apidoc check`, builds the wheel/sdist artifacts, renders the user guide and API reference PDFs, attaches the user-facing assets to the matching GitHub Release, and uploads the Python distributions to PyPI.
+That pushes `v<version>`, and the GitHub release workflow runs the test suite, enforces API documentation coverage with `oodocs apidoc check`, builds the wheel/sdist artifacts, renders the user guide and API reference PDFs, attaches the user-facing assets to the matching GitHub Release, and uploads the Python distributions to PyPI.
 
 GitHub Release assets are intentionally limited to:
 
@@ -533,7 +533,7 @@ GitHub Release assets are intentionally limited to:
 
 Example outputs, machine-readable sidecars, DOCX variants, and HTML variants stay out of the release download list. Build them locally from the example scripts when needed.
 
-If you want a curated release body instead of GitHub's generated notes, add a file such as `release-notes/v1.1.0.md` before pushing the tag.
+If you want a curated release body instead of GitHub's generated notes, add a matching file such as `release-notes/v<version>.md` before pushing the tag.
 
 The `examples/release_notes_digest/` script demonstrates the same convention as a document workflow: it scans the semantic-versioned Markdown files under `release-notes/`, builds an index, includes the version-management rules, and imports each release body into one DOCX/PDF/HTML bundle.
 

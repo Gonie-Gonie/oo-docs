@@ -72,3 +72,14 @@ def test_release_notes_for_existing_tags_from_v1_1_0_are_immutable() -> None:
 
     if not tagged_notes:
         pytest.skip("No local release-note tags are available to compare.")
+
+
+def test_release_docs_do_not_reuse_published_1_1_0_as_new_release_example() -> None:
+    readme = Path("README.md").read_text(encoding="utf-8")
+    release_section = readme.split("## Releases", 1)[1]
+
+    assert r".\scripts\release.ps1 1.1.0" not in release_section
+    assert "`v1.1.0`" not in release_section
+    assert "release-notes/v1.1.0.md" not in release_section
+    assert r".\scripts\release.ps1 <version>" in release_section
+    assert "release-notes/v<version>.md" in release_section
