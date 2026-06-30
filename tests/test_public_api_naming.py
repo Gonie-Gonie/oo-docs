@@ -10,6 +10,7 @@ import oodocs
 import oodocs.adapters as adapters
 import oodocs.apidoc as apidoc
 import oodocs.chemistry as chemistry
+import oodocs.components as components
 import oodocs.components.base as base_components
 import oodocs.components.blocks as block_components
 import oodocs.components.inline as inline_components
@@ -144,7 +145,13 @@ def test_recommended_user_import_experience_keeps_domains_explicit() -> None:
 def test_leaf_component_modules_hide_internal_helpers_from_all() -> None:
     forbidden_by_module = {
         base_components: {"coerce_blocks"},
-        inline_components: {"coerce_inlines"},
+        inline_components: {
+            "coerce_inlines",
+            "MarginNote",
+            "Todo",
+            "margin_note",
+            "todo",
+        },
         media_components: {
             "build_table_layout",
             "coerce_image_source",
@@ -254,6 +261,9 @@ def test_tier_two_namespaces_export_domain_symbols() -> None:
             "CasesEquation",
         },
     }
+
+    for name in ("MarginNote", "Todo", "margin_note", "todo"):
+        assert not hasattr(components, name)
 
     for module, names in expected_exports.items():
         assert names == set(module.__all__)
