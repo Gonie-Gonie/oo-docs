@@ -718,10 +718,18 @@ class HeaderFooterDefaults:
         footer_left: Left footer template for ordinary pages.
         footer_center: Center footer template for ordinary pages.
         footer_right: Right footer template for ordinary pages.
-        first_*: Optional first-page overrides used when
-            ``different_first_page`` is true.
-        even_*: Optional even-page overrides used when
-            ``different_odd_even_pages`` is true.
+        first_header_left: Left header override for first pages.
+        first_header_center: Center header override for first pages.
+        first_header_right: Right header override for first pages.
+        first_footer_left: Left footer override for first pages.
+        first_footer_center: Center footer override for first pages.
+        first_footer_right: Right footer override for first pages.
+        even_header_left: Left header override for even pages.
+        even_header_center: Center header override for even pages.
+        even_header_right: Right header override for even pages.
+        even_footer_left: Left footer override for even pages.
+        even_footer_center: Center footer override for even pages.
+        even_footer_right: Right footer override for even pages.
         different_first_page: Whether first pages use first-page overrides.
         different_odd_even_pages: Whether even pages use even-page overrides.
         font_size: Optional header/footer font size in points.
@@ -793,7 +801,11 @@ class HeaderFooterDefaults:
             raise ValueError("HeaderFooterDefaults.font_size must be > 0")
 
     def has_content(self) -> bool:
-        """Return whether any header/footer slot has visible template text."""
+        """Return whether any header/footer slot has visible template text.
+
+        Returns:
+            ``True`` when at least one header or footer template is configured.
+        """
 
         return any(
             bool(getattr(self, field_name))
@@ -807,7 +819,19 @@ class HeaderFooterDefaults:
         *,
         page_kind: Literal["default", "first", "even"] = "default",
     ) -> str | None:
-        """Return the template for one header/footer slot."""
+        """Return the template for one header/footer slot.
+
+        Args:
+            region: Header/footer region to resolve.
+            position: Horizontal slot within the region.
+            page_kind: Page variant to resolve.
+
+        Returns:
+            Template string for the requested slot, or ``None`` when unset.
+
+        Raises:
+            ValueError: If ``region`` or ``position`` is unsupported.
+        """
 
         if region not in {"header", "footer"}:
             raise ValueError("region must be 'header' or 'footer'")
