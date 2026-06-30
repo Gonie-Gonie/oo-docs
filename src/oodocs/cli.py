@@ -210,7 +210,7 @@ def _run_build(args: argparse.Namespace) -> int:
         args.out,
         source_type=args.source_type,
         title=args.title,
-        outputs=formats,
+        formats=formats,
         stem=args.stem,
         document_factory=args.document_factory,
         validate=not args.no_validate,
@@ -228,7 +228,7 @@ def _run_validate(args: argparse.Namespace) -> int:
         source_type=args.source_type,
         title=args.title,
         document_factory=args.document_factory,
-        outputs=formats,
+        formats=formats,
         chdir=not args.no_chdir,
     )
     if args.report_format == "json":
@@ -298,7 +298,7 @@ def _run_render_warning_policy(
         source_type=source_type,
         title=title,
         document_factory=document_factory,
-        outputs=formats,
+        formats=formats,
         chdir=chdir,
     )
     errors = result.errors_for(formats)

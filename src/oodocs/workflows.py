@@ -36,7 +36,7 @@ class OutputBundle:
         Render Markdown to one format and index the result by format:
 
         ```python
-        rendered = build_source_outputs("notes.md", "dist", outputs=("pdf",))
+        rendered = build_source_outputs("notes.md", "dist", formats=("pdf",))
         print(rendered["pdf"])
         ```
 
@@ -253,7 +253,7 @@ def save_document_outputs(
     output_dir: str | Path,
     *,
     stem: str,
-    outputs: Iterable[str] | None = None,
+    formats: Iterable[str] | None = None,
     validate: bool = True,
     verbose: bool = False,
 ) -> OutputBundle:
@@ -263,7 +263,7 @@ def save_document_outputs(
         document: Document to render.
         output_dir: Directory where rendered files are written.
         stem: Base output filename without extension.
-        outputs: Output formats to render. Defaults to all supported formats.
+        formats: Output formats to render. Defaults to all supported formats.
         validate: Whether to validate before rendering.
         verbose: Whether to print slow major rendering steps.
 
@@ -279,18 +279,18 @@ def save_document_outputs(
             Document("Memo", Paragraph("Ready.")),
             "dist",
             stem="memo",
-            outputs=("html",),
+            formats=("html",),
         )
         ```
     """
 
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
-    normalized_outputs = normalize_output_formats(outputs)
+    normalized_formats = normalize_output_formats(formats)
     return document.save_all(
         output_path,
         stem=stem,
-        formats=normalized_outputs,
+        formats=normalized_formats,
         validate=validate,
         verbose=verbose,
     )
@@ -303,7 +303,7 @@ def build_source_outputs(
     source_type: str | None = None,
     title: str | None = None,
     document_factory: str | None = None,
-    outputs: Iterable[str] | None = None,
+    formats: Iterable[str] | None = None,
     stem: str | None = None,
     validate: bool = True,
     chdir: bool = True,
@@ -319,7 +319,7 @@ def build_source_outputs(
         title: Optional title override for imported Markdown or notebooks.
         document_factory: Optional function or variable name for Python
             sources.
-        outputs: Output formats to render. Defaults to all supported formats.
+        formats: Output formats to render. Defaults to all supported formats.
         stem: Base output filename without extension. Defaults to the source
             file stem.
         validate: Whether to validate before rendering.
@@ -336,7 +336,7 @@ def build_source_outputs(
         outputs = build_source_outputs(
             "reports/monthly.py",
             "dist",
-            outputs=("pdf",),
+            formats=("pdf",),
         )
         ```
     """
@@ -355,7 +355,7 @@ def build_source_outputs(
                 document,
                 output_path,
                 stem=stem or source_path.stem,
-                outputs=outputs,
+                formats=formats,
                 validate=validate,
                 verbose=verbose,
             )
@@ -367,7 +367,7 @@ def build_source_outputs(
         document,
         output_path,
         stem=stem or source_path.stem,
-        outputs=outputs,
+        formats=formats,
         validate=validate,
         verbose=verbose,
     )
@@ -379,7 +379,7 @@ def validate_source_document(
     source_type: str | None = None,
     title: str | None = None,
     document_factory: str | None = None,
-    outputs: Iterable[str] | None = None,
+    formats: Iterable[str] | None = None,
     chdir: bool = True,
 ) -> ValidationResult:
     """Load a source document and return its validation result.
@@ -390,7 +390,7 @@ def validate_source_document(
             ``"notebook"``.
         title: Optional title override for imported Markdown or notebooks.
         document_factory: Optional factory name for Python document sources.
-        outputs: Output formats to validate for. Defaults to all formats.
+        formats: Output formats to validate for. Defaults to all formats.
         chdir: Whether Python sources should execute with their directory as
             the current working directory.
 
@@ -401,7 +401,7 @@ def validate_source_document(
         ```python
         from oodocs.workflows import validate_source_document
 
-        result = validate_source_document("notes.md", outputs=("pdf",))
+        result = validate_source_document("notes.md", formats=("pdf",))
         assert result.ok_for(("pdf",))
         ```
     """
@@ -418,7 +418,7 @@ def validate_source_document(
                 document_factory=document_factory,
                 chdir=False,
             )
-            return document.validate(formats=outputs)
+            return document.validate(formats=formats)
 
     document = load_source_document(
         source_path,
@@ -427,7 +427,7 @@ def validate_source_document(
         document_factory=None,
         chdir=chdir,
     )
-    return document.validate(formats=outputs)
+    return document.validate(formats=formats)
 
 
 def _resolve_source_type(source_path: Path, source_type: str | None) -> str:

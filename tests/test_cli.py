@@ -135,11 +135,11 @@ def test_workflow_api_converts_and_validates_sources(tmp_path: Path) -> None:
     markdown_path = tmp_path / "notes.md"
     markdown_path.write_text("# Workflow API\n\nBody paragraph.\n", encoding="utf-8")
 
-    result = validate_source_document(markdown_path, outputs=("html",))
+    result = validate_source_document(markdown_path, formats=("html",))
     outputs = build_source_outputs(
         markdown_path,
         tmp_path / "outputs",
-        outputs=("html",),
+        formats=("html",),
     )
 
     assert result.ok

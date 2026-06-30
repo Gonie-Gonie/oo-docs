@@ -860,6 +860,18 @@ def test_notebook_import_options_use_explicit_field_names() -> None:
         assert {"include_raw_cells", "default_code_language"} <= parameters
 
 
+def test_workflow_api_uses_formats_parameter_name() -> None:
+    for callable_obj in (
+        workflows.save_document_outputs,
+        workflows.build_source_outputs,
+        workflows.validate_source_document,
+    ):
+        parameters = inspect.signature(callable_obj).parameters
+
+        assert "formats" in parameters
+        assert "outputs" not in parameters
+
+
 def test_apidoc_raw_value_helpers_use_as_prefix() -> None:
     forbidden_by_class = {
         apidoc.ApiParameter: {"to_row", "to_table_cell_values"},
