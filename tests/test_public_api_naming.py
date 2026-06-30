@@ -121,6 +121,7 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "FigureList",
         "FootnotesPage",
         "GeneratedPageDefaults",
+        "ListOfAlgorithms",
         "MarginNote",
         "load_document",
         "load_python_document",

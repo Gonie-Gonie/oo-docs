@@ -267,13 +267,6 @@
           "category": "generated-page",
           "kind": "class",
           "module": "oodocs.components.generated",
-          "name": "ListOfAlgorithms",
-          "qualname": "oodocs.components.generated.ListOfAlgorithms"
-        },
-        {
-          "category": "generated-page",
-          "kind": "class",
-          "module": "oodocs.components.generated",
           "name": "ListOfFigures",
           "qualname": "oodocs.components.generated.ListOfFigures"
         },

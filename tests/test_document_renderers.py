@@ -34,6 +34,7 @@ from oodocs.engineering import (
     ReactionEquation,
     chemical_formula,
 )
+from oodocs.generated import ListOfAlgorithms
 from oodocs.review import MarginNote, Todo, margin_note, todo
 from oodocs import (
     Affiliation,
@@ -90,7 +91,6 @@ from oodocs import (
     InlineChipStyle,
     Lemma,
     LinkDefaults,
-    ListOfAlgorithms,
     ListStyle,
     Math,
     MultiColumn,
@@ -2066,6 +2066,8 @@ def test_public_api_prefers_classes_for_structural_nodes() -> None:
     assert hasattr(oodocs, "TableStyle")
     assert hasattr(oodocs, "Figure")
     assert hasattr(oodocs, "TableOfContents")
+    assert not hasattr(oodocs, "ListOfAlgorithms")
+    assert hasattr(generated_components, "ListOfAlgorithms")
     assert hasattr(oodocs, "TocLevelStyle")
     assert hasattr(oodocs, "Comment")
     assert hasattr(oodocs, "CommentList")

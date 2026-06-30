@@ -41,7 +41,6 @@ from oodocs import (
     HeaderFooterDefaults,
     ImageBox,
     Lemma,
-    ListOfAlgorithms,
     LocaleDefaults,
     NumberedList,
     OutputBundle,
@@ -101,6 +100,7 @@ from oodocs.engineering import (
     ReactionEquation,
     chemical_formula,
 )
+from oodocs.generated import ListOfAlgorithms
 from oodocs.presets.components import CalloutBox, KeyValueTable, Nomenclature
 from oodocs.presets.templates import JournalArticleTemplate, ManuscriptSection
 
