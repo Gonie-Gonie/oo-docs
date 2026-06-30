@@ -4,6 +4,8 @@ Attributes:
     PositionAnchor: Page-positioning anchor name or custom named shape anchor.
     PositionPlacement: Placement mode for positioned content.
     PageItemScopeKind: Supported page overlay scope names.
+    PageItemPhase: Rendered page phase names used by scoped overlays.
+    PageItemScopeInput: Accepted input values for page overlay scopes.
     ShapeKind: Supported absolute-positioned shape kinds.
     ImageFit: Image fitting modes for positioned image boxes.
     PositionedItem: Union of supported page-positioned item objects.
