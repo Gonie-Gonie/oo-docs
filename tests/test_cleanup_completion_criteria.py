@@ -272,6 +272,18 @@ def test_readme_latex_translations_include_pdfpages_policy() -> None:
     assert "DOCX/HTML placeholder fallbacks" in translations
 
 
+def test_readme_latex_translations_include_listings_minted_policy() -> None:
+    readme = _readme()
+    translations = readme.split("Common translations:", 1)[1].split(
+        "The main payoff",
+        1,
+    )[0]
+
+    assert "LaTeX `listings` / `minted`" in translations
+    assert "`CodeBlock(..., caption=..., line_numbers=True, highlight_lines={...})`" in translations
+    assert "`CodeBlock.from_file(...)`" in translations
+
+
 def test_public_api_policy_doc_defines_tiers_and_guards() -> None:
     policy = Path("docs/reference/public-api-policy.md").read_text(encoding="utf-8")
 

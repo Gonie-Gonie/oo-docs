@@ -128,6 +128,10 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert any("JAVASCRIPT" in text for text in paragraph_texts)
     assert any("SQL" in text for text in paragraph_texts)
     assert any("YAML" in text for text in paragraph_texts)
+    assert any("CodeBlock.from_file(...)" in text for text in paragraph_texts)
+    assert any("line_numbers" in text for text in paragraph_texts)
+    assert any("highlight_lines" in text for text in paragraph_texts)
+    assert "ListOfListings" in table_text
     assert any("Table(split=False)" in text for text in paragraph_texts)
     assert any("Table(split=True)" in text for text in paragraph_texts)
     assert any("continuation_label" in text for text in paragraph_texts)
@@ -266,6 +270,10 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "JAVASCRIPT" in pdf_text
     assert "SQL" in pdf_text
     assert "YAML" in pdf_text
+    assert "CodeBlock.from_file(...)" in pdf_text
+    assert "line_numbers" in pdf_text
+    assert "highlight_lines" in pdf_text
+    assert "ListOfListings" in pdf_text
     assert "Table(split=False)" in pdf_text
     assert "Table(split=True)" in pdf_text
     assert "continuation_label" in pdf_text
@@ -387,6 +395,10 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "JAVASCRIPT" in normalized_html_text
     assert "SQL" in normalized_html_text
     assert "YAML" in normalized_html_text
+    assert "CodeBlock.from_file(...)" in normalized_html_text
+    assert "line_numbers" in normalized_html_text
+    assert "highlight_lines" in normalized_html_text
+    assert "ListOfListings" in normalized_html_text
     assert "Table(split=False)" in normalized_html_text
     assert "Table(split=True)" in normalized_html_text
     assert "continuation_label" in normalized_html_text
