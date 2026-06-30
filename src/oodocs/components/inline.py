@@ -463,7 +463,8 @@ class ReferenceFormat:
 
     Examples:
         ```python
-        from oodocs import ReferenceFormat, refs
+        from oodocs import refs
+        from oodocs.references import ReferenceFormat
 
         fragments = refs([figure_a, figure_b], reference_format=ReferenceFormat(plural_label="Figures"))
         ```
@@ -620,7 +621,8 @@ def reference(
 
     Examples:
         ```python
-        from oodocs import Figure, Paragraph, reference
+        from oodocs import Figure, Paragraph
+        from oodocs.references import reference
 
         figure = Figure("diagram.png", caption="System diagram")
         paragraph = Paragraph("See ", reference(figure), ".")

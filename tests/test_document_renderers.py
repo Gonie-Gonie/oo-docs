@@ -23,6 +23,7 @@ import oodocs.engineering as engineering_components
 import oodocs.media as media_components
 import oodocs.glossary as glossary_components
 import oodocs.positioning as positioning_components
+import oodocs.references as reference_components
 import oodocs.review as review_components
 import oodocs.structure as structure_components
 from oodocs.components.equations import BASELINE, SUBSCRIPT, SUPERSCRIPT, parse_latex_segments
@@ -42,6 +43,7 @@ from oodocs.generated import ListOfAlgorithms
 from oodocs.glossary import Acronym, Glossary, GlossaryList, GlossaryTerm
 from oodocs.media import ColumnSpec, CropBox, PdfPages, SubTable, SubTableGroup
 from oodocs.positioning import ImageBox, PageItemScope, Shape, TextBox
+from oodocs.references import Ref, ReferenceFormat, page_ref, paren_ref, reference
 from oodocs.review import MarginNote, Todo, margin_note, todo
 from oodocs.structure import (
     Appendix,
@@ -115,7 +117,6 @@ from oodocs import (
     RunInTitleStyle,
     Part,
     ReferenceList,
-    ReferenceFormat,
     Section,
     StrokeStyle,
     StyleSheet,
@@ -152,12 +153,8 @@ from oodocs import (
     math,
     markup,
     prescript,
-    Ref,
     ref_range,
     refs,
-    page_ref,
-    paren_ref,
-    reference,
     status,
     strikethrough,
     styled,
@@ -2165,7 +2162,16 @@ def test_public_api_prefers_classes_for_structural_nodes() -> None:
     assert not hasattr(oodocs, "chemical_formula")
     assert hasattr(engineering_components, "chemical_formula")
     assert hasattr(oodocs, "prescript")
-    assert hasattr(oodocs, "reference")
+    assert not hasattr(oodocs, "ReferenceFormat")
+    assert not hasattr(oodocs, "Ref")
+    assert not hasattr(oodocs, "reference")
+    assert not hasattr(oodocs, "page_ref")
+    assert not hasattr(oodocs, "paren_ref")
+    assert hasattr(reference_components, "ReferenceFormat")
+    assert hasattr(reference_components, "Ref")
+    assert hasattr(reference_components, "reference")
+    assert hasattr(reference_components, "page_ref")
+    assert hasattr(reference_components, "paren_ref")
     assert hasattr(oodocs, "bold")
     assert hasattr(oodocs, "italic")
     assert hasattr(oodocs, "inline_code")

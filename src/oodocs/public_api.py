@@ -7,7 +7,7 @@ from typing import Literal
 
 PublicApiTier = Literal["core", "domain", "internal"]
 
-TOP_LEVEL_EXPORT_LIMIT = 133
+TOP_LEVEL_EXPORT_LIMIT = 128
 
 CORE_TOP_LEVEL_EXPORTS = frozenset(
     {
@@ -123,7 +123,6 @@ DOMAIN_TOP_LEVEL_EXPORTS = frozenset(
         "NotebookImportOptions",
         "OUTPUT_FORMATS",
         "OutputFormat",
-        "ReferenceFormat",
         "ResultLike",
         "RunInTitleStyle",
         "TocLevelStyle",
@@ -134,12 +133,9 @@ DOMAIN_TOP_LEVEL_EXPORTS = frozenset(
         "load_document_from_python",
         "load_source_document",
         "markup",
-        "page_ref",
-        "paren_ref",
         "parse_markdown",
         "parse_markdown_file",
         "parse_notebook",
-        "reference",
         "save_document_outputs",
         "styled",
         "validate_source_document",
@@ -150,7 +146,6 @@ INTERNAL_TOP_LEVEL_EXPORTS = frozenset(
     {
         "MAX_SECTION_LEVEL",
         "MIN_SECTION_LEVEL",
-        "Ref",
         "section_for_level",
         "shift_heading_level",
         "shift_heading_levels",

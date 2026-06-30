@@ -15,6 +15,7 @@ import oodocs.glossary as glossary
 import oodocs.media as media
 import oodocs.positioning as positioning
 import oodocs.public_api as public_api
+import oodocs.references as reference_helpers
 import oodocs.review as review
 import oodocs.structure as structure
 from oodocs.apidoc.cli import _build_parser as _build_apidoc_parser
@@ -76,6 +77,16 @@ def test_tier_two_namespaces_export_domain_symbols() -> None:
         glossary: {"Acronym", "Glossary", "GlossaryList", "GlossaryTerm"},
         media: {"ColumnSpec", "CropBox", "PdfPages", "SubTable", "SubTableGroup"},
         positioning: {"ImageBox", "PageItemScope", "Shape", "TextBox"},
+        reference_helpers: {
+            "Ref",
+            "ReferenceFormat",
+            "page_ref",
+            "paren_ref",
+            "ref",
+            "ref_range",
+            "reference",
+            "refs",
+        },
         structure: {
             "Appendix",
             "Assumption",
@@ -168,7 +179,10 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "margin_note",
         "ReferencesPage",
         "ReactionEquation",
+        "ReferenceFormat",
         "render_document",
+        "Ref",
+        "reference",
         "Subsubsection",
         "TableList",
         "Todo",
@@ -179,6 +193,8 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "GeneratedPageOptions",
         "PageNumberOptions",
         "PageItemScope",
+        "page_ref",
+        "paren_ref",
         "PdfPages",
         "ParagraphTitleStyle",
         "Proof",
