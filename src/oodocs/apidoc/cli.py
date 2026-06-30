@@ -232,6 +232,10 @@ def _add_collect_options(parser: argparse.ArgumentParser, *, include_config: boo
         help="Remove source paths and line numbers from API trees and diagnostics.",
     )
     parser.add_argument(
+        "--source-root",
+        help="Filesystem root used to store retained source locations as relative paths.",
+    )
+    parser.add_argument(
         "--class-signature-from-init",
         action="store_true",
         default=None,
@@ -290,6 +294,7 @@ def _run_init(args: argparse.Namespace) -> int:
             include_properties=args.include_properties,
             include_methods=args.include_methods,
             include_source_locations=args.include_source_locations,
+            source_root=args.source_root,
             class_signature_from_init=args.class_signature_from_init,
             module_include_patterns=args.module_include_patterns,
             module_exclude_patterns=args.module_exclude_patterns,
@@ -419,6 +424,7 @@ def _collect_config_from_args(
         include_properties=args.include_properties,
         include_methods=args.include_methods,
         include_source_locations=args.include_source_locations,
+        source_root=args.source_root,
         class_signature_from_init=args.class_signature_from_init,
         module_include_patterns=args.module_include_patterns,
         module_exclude_patterns=args.module_exclude_patterns,

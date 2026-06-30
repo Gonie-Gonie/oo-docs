@@ -50,6 +50,7 @@ _COLLECT_CONFIG_KEYS = {
     "object_include_patterns",
     "public_api_policy",
     "public_policy",
+    "source_root",
 }
 _BUILD_CONFIG_KEYS = {
     "include_coverage",
@@ -331,6 +332,9 @@ class ApiCollectConfig:
             trees.
         include_source_locations: Whether source paths and line numbers are
             retained in collected API trees and diagnostics.
+        source_root: Optional filesystem root used to store source locations
+            as relative paths. Relative values are resolved against the
+            collected target when possible.
         class_signature_from_init: Whether class signatures use ``__init__``.
         module_include_patterns: Optional glob-style module names to include.
         module_exclude_patterns: Optional glob-style module names to exclude.
@@ -365,6 +369,7 @@ class ApiCollectConfig:
     include_properties: bool = True
     include_methods: bool = True
     include_source_locations: bool = True
+    source_root: str | None = None
     class_signature_from_init: bool = True
     module_include_patterns: tuple[str, ...] = field(default_factory=tuple)
     module_exclude_patterns: tuple[str, ...] = field(default_factory=tuple)
@@ -387,6 +392,7 @@ class ApiCollectConfig:
         else:
             object.__setattr__(self, "docstring_style", str(self.docstring_style).strip().lower())
         object.__setattr__(self, "docstring_parser_modules", _string_tuple(self.docstring_parser_modules))
+        object.__setattr__(self, "source_root", _optional_config_str("source_root", self.source_root))
         if self.docstring_parser_modules:
             from oodocs.apidoc.docstring import load_docstring_parser_modules
 
@@ -651,6 +657,7 @@ class ApiCollectConfig:
             "include_properties": self.include_properties,
             "include_methods": self.include_methods,
             "include_source_locations": self.include_source_locations,
+            "source_root": self.source_root,
             "class_signature_from_init": self.class_signature_from_init,
             "module_include_patterns": list(self.module_include_patterns),
             "module_exclude_patterns": list(self.module_exclude_patterns),

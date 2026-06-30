@@ -29,6 +29,13 @@ from oodocs.apidoc import (
 from oodocs.cli import main
 
 
+LOCAL_ABSOLUTE_PATH_MARKERS = ("C:\\Users", "/home/", "/Users/")
+
+
+def _assert_no_local_absolute_paths(text: str) -> None:
+    assert not any(marker in text for marker in LOCAL_ABSOLUTE_PATH_MARKERS)
+
+
 def test_apidoc_build_config_saves_html_and_sidecars_for_general_repo(tmp_path) -> None:
     package_dir = write_sample_package(tmp_path)
     output_dir = tmp_path / "api"
@@ -782,10 +789,52 @@ def test_apidoc_build_config_saves_setuptools_package_dir_repo(tmp_path) -> None
     ).save_all(repo)
 
     api = ApiPackage.load_json(output_dir / "samplepkg-api-object-tree.json")
+    api_json = (output_dir / "samplepkg-api-object-tree.json").read_text(encoding="utf-8")
+    coverage_json = (output_dir / "samplepkg-api-coverage.json").read_text(encoding="utf-8")
+    html = (output_dir / "samplepkg-api.html").read_text(encoding="utf-8")
+    run = api.find_object("samplepkg.run")
 
     assert (output_dir / "samplepkg-api.html").exists()
-    assert api.find_object("samplepkg.run") is not None
+    assert api.metadata.get("source_root") is None
+    assert run is not None
+    assert run.source_path == "lib/samplepkg/core.py"
     assert api.find_object("lib.samplepkg.run") is None
+    _assert_no_local_absolute_paths(api_json)
+    _assert_no_local_absolute_paths(coverage_json)
+    _assert_no_local_absolute_paths(html)
+
+
+def test_apidoc_cli_source_root_controls_relative_source_paths(tmp_path) -> None:
+    repo = write_setuptools_package_dir_repo(tmp_path)
+    output_path = tmp_path / "samplepkg-api-object-tree.json"
+
+    assert (
+        main(
+            [
+                "apidoc",
+                "collect",
+                str(repo),
+                "--collector",
+                "inspect",
+                "--public-policy",
+                "__all__",
+                "--source-root",
+                "lib",
+                "--save-json",
+                str(output_path),
+            ]
+        )
+        == 0
+    )
+
+    api = ApiPackage.load_json(output_path)
+    run = api.find_object("samplepkg.run")
+    payload = output_path.read_text(encoding="utf-8")
+
+    assert run is not None
+    assert run.source_path == "samplepkg/core.py"
+    assert api.metadata.get("source_root") is None
+    _assert_no_local_absolute_paths(payload)
 
 
 def test_apidoc_build_config_respects_explicit_public_policy(tmp_path) -> None:

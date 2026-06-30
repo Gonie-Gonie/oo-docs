@@ -72,6 +72,7 @@ def collect_api(
     include_properties: bool | None = None,
     include_methods: bool | None = None,
     include_source_locations: bool | None = None,
+    source_root: str | PathLike | None = None,
     class_signature_from_init: bool | None = None,
     module_include_patterns: Iterable[str] | None = None,
     module_exclude_patterns: Iterable[str] | None = None,
@@ -110,6 +111,9 @@ def collect_api(
         include_methods: Whether class methods should be included.
         include_source_locations: Whether source paths and line numbers should
             be retained in the returned API tree and diagnostics.
+        source_root: Optional filesystem root used to store retained source
+            locations as relative paths. When omitted, path targets are
+            normalized relative to the target repository or package root.
         class_signature_from_init: Whether class signatures use ``__init__``.
         module_include_patterns: Optional glob-style module names to include
             before collection.
@@ -178,6 +182,7 @@ def collect_api(
         "include_properties": include_properties,
         "include_methods": include_methods,
         "include_source_locations": include_source_locations,
+        "source_root": str(source_root) if source_root is not None else None,
         "class_signature_from_init": class_signature_from_init,
         "module_include_patterns": tuple(module_include_patterns)
         if module_include_patterns is not None
@@ -231,6 +236,7 @@ def collect_api(
                     )
                 )
     api = _filter_collected_objects(api, config=resolved)
+    _normalize_source_locations(api, package=package, config=resolved)
     if not resolved.include_source_locations:
         _strip_source_locations(api)
     return api
@@ -647,6 +653,96 @@ def _strip_source_locations(api: ApiPackage) -> None:
             obj.line_number = None
             obj.end_line_number = None
             _strip_source_location_metadata(obj.metadata)
+
+
+def _normalize_source_locations(
+    api: ApiPackage,
+    *,
+    package: str | PathLike,
+    config: ApiCollectConfig,
+) -> None:
+    source_root = _source_root_for_collection(api, package=package, config=config)
+    _normalize_source_location_metadata(api.metadata, source_root=source_root)
+    for issue in api.issues:
+        issue.path = _relative_source_path_text(issue.path, source_root=source_root)
+    for module in api.modules:
+        module.source_path = _relative_source_path_text(module.source_path, source_root=source_root)
+        _normalize_source_location_metadata(module.metadata, source_root=source_root)
+        for obj in module.iter_objects(recursive=True):
+            obj.source_path = _relative_source_path_text(obj.source_path, source_root=source_root)
+            _normalize_source_location_metadata(obj.metadata, source_root=source_root)
+
+
+def _source_root_for_collection(
+    api: ApiPackage,
+    *,
+    package: str | PathLike,
+    config: ApiCollectConfig,
+) -> Path:
+    if config.source_root:
+        return _resolve_config_source_root(config.source_root, package)
+
+    candidate = Path(str(package))
+    if candidate.exists():
+        resolved = candidate.resolve(strict=False)
+        if resolved.is_file():
+            return resolved.parent
+        if (resolved / "__init__.py").exists():
+            return resolved.parent
+        return resolved
+
+    metadata_root = api.metadata.get("source_root")
+    if isinstance(metadata_root, str) and metadata_root:
+        return Path(metadata_root).resolve(strict=False)
+    return Path.cwd().resolve(strict=False)
+
+
+def _resolve_config_source_root(source_root: str, package: str | PathLike) -> Path:
+    source_root_path = Path(source_root)
+    if source_root_path.is_absolute():
+        return source_root_path.resolve(strict=False)
+
+    package_path = Path(str(package))
+    if package_path.exists():
+        base = package_path.resolve(strict=False)
+        if base.is_file():
+            base = base.parent
+    else:
+        base = Path.cwd().resolve(strict=False)
+    return (base / source_root_path).resolve(strict=False)
+
+
+def _normalize_source_location_metadata(value: object, *, source_root: Path) -> None:
+    if isinstance(value, dict):
+        value.pop("source_root", None)
+        for key, child in list(value.items()):
+            if key in {"path", "source_path"}:
+                value[key] = _relative_source_path_text(child, source_root=source_root)
+            else:
+                _normalize_source_location_metadata(child, source_root=source_root)
+    elif isinstance(value, list):
+        for child in value:
+            _normalize_source_location_metadata(child, source_root=source_root)
+
+
+def _relative_source_path_text(value: object, *, source_root: Path) -> str | None:
+    if value is None:
+        return None
+    text = str(value).strip()
+    if not text:
+        return None
+
+    path = Path(text)
+    if path.is_absolute():
+        try:
+            return (
+                path.resolve(strict=False)
+                .relative_to(source_root.resolve(strict=False))
+                .as_posix()
+            )
+        except (OSError, ValueError):
+            return path.name
+    return path.as_posix()
 
 
 def _stamp_source_root(module: ApiModule, source_root: Path) -> None:

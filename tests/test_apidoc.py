@@ -1175,6 +1175,7 @@ def test_collect_api_filters_modules_before_collection(tmp_path: Path) -> None:
                 'collector = "inspect"',
                 'public-policy = "underscore"',
                 'docstring-style = "auto"',
+                'source-root = "."',
                 'module-include-patterns = ["filtermods.*"]',
                 'module-exclude-patterns = ["filtermods.tests", "filtermods.experimental"]',
                 'object-exclude-patterns = ["filtermods.core.run"]',
@@ -1190,6 +1191,7 @@ def test_collect_api_filters_modules_before_collection(tmp_path: Path) -> None:
     pyproject_config = ApiCollectConfig.from_pyproject(tmp_path)
     assert pyproject_config.collector == "inspect"
     assert pyproject_config.public_policy == "underscore"
+    assert pyproject_config.source_root == "."
     assert pyproject_config.module_include_patterns == ("filtermods.*",)
     assert pyproject_config.module_exclude_patterns == (
         "filtermods.tests",

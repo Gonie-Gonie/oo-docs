@@ -405,11 +405,24 @@ api = collect_api(
 )
 ```
 
-Use `include_source_locations=False` when generated sidecars or rendered
-references should not expose local source paths and line numbers. Collection
-still uses source positions internally to keep stable object ordering, then
-strips source paths, line numbers, and location-like metadata from the returned
-API tree.
+Retained source locations are stored relative to the collected repository or
+package root by default, so generated sidecars and rendered references do not
+expose local checkout paths such as home directories. Use `source_root` when a
+custom target needs a different relative base. Use
+`include_source_locations=False` when generated sidecars or rendered references
+should omit source paths and line numbers entirely. Collection still uses source
+positions internally to keep stable object ordering, then strips source paths,
+line numbers, and location-like metadata from the returned API tree.
+
+```python
+api = collect_api(
+    ".",
+    collector="inspect",
+    public_policy="__all__",
+    source_root=".",
+)
+api.to_help_book(presentation="website").save_html("artifacts/api/index.html")
+```
 
 ```python
 api = collect_api(

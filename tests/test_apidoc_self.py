@@ -9,6 +9,13 @@ from example_regression import (
 from oodocs.apidoc import ApiCoverageResult, ApiPackage, check_api_docs, collect_api
 
 
+LOCAL_ABSOLUTE_PATH_MARKERS = ("C:\\Users", "/home/", "/Users/")
+
+
+def _assert_no_local_absolute_paths(text: str) -> None:
+    assert not any(marker in text for marker in LOCAL_ABSOLUTE_PATH_MARKERS)
+
+
 def test_apidoc_collects_oodocs_public_api_for_self_reference() -> None:
     api = collect_api("oodocs", collector="auto", public_policy="__all__")
 
@@ -64,7 +71,10 @@ def test_apidoc_renders_oodocs_public_api_reference_bundle(tmp_path) -> None:
     html = outputs["html"].read_text(encoding="utf-8")
     assert "Uncategorized API" not in html
     assert "Renderer Extension API" not in html
-    assert "C:\\Users" not in html
+    _assert_no_local_absolute_paths(html)
+    _assert_no_local_absolute_paths(api_path.read_text(encoding="utf-8"))
+    _assert_no_local_absolute_paths(coverage_json_path.read_text(encoding="utf-8"))
+    _assert_no_local_absolute_paths(coverage_csv_path.read_text(encoding="utf-8"))
     assert not ("<th>Label</th>" in html and "See Also" in html)
     assert html.find("API Contents") < html.find("API Documentation Coverage")
     assert ApiPackage.load_json(api_path).find_object("oodocs.Document") is not None

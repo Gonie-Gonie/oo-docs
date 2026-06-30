@@ -122,7 +122,7 @@ Common collection options are `--collector`, `--public-policy`,
 `--include-attributes`, `--no-attributes`, `--include-properties`,
 `--no-properties`, `--include-methods`, `--no-methods`,
 `--include-source-locations`, `--no-source-locations`,
-`--class-signature-from-init`, `--no-class-signature-from-init`,
+`--source-root`, `--class-signature-from-init`, `--no-class-signature-from-init`,
 `--module-include`, `--module-exclude`, `--object-include`, and
 `--object-exclude`.
 
