@@ -151,6 +151,9 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert any("Document-level configuration options." in text for text in paragraph_texts)
     assert any("Grouped Theme defaults" in text for text in paragraph_texts)
     assert any("Block-level option scope" in text for text in paragraph_texts)
+    assert any("HeadingStyle" in text for text in paragraph_texts)
+    assert "heading_styles" in table_text
+    assert "heading_style" in table_text
     assert any("Component presets wrap ordinary blocks" in text for text in paragraph_texts)
     assert any("Template presets build full Document objects" in text for text in paragraph_texts)
     assert any("oodocs.presets.components" in text for text in paragraph_texts)
@@ -261,6 +264,9 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "Document-level configuration options." in pdf_text
     assert "Grouped Theme defaults" in pdf_text
     assert "Block-level option scope" in pdf_text
+    assert "HeadingStyle" in pdf_text
+    assert "heading_styles" in pdf_text
+    assert "heading_style" in pdf_text
     assert "Component presets wrap ordinary blocks" in pdf_text
     assert "Template presets build full Document objects" in pdf_text
     assert "oodocs.presets.components" in pdf_text
@@ -355,6 +361,9 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "Document-level configuration options." in normalized_html_text
     assert "Grouped Theme defaults" in normalized_html_text
     assert "Block-level option scope" in normalized_html_text
+    assert "HeadingStyle" in normalized_html_text
+    assert "heading_styles" in normalized_html_text
+    assert "heading_style" in normalized_html_text
     assert "Component presets wrap ordinary blocks" in normalized_html_text
     assert "Template presets build full Document objects" in normalized_html_text
     assert "oodocs.presets.components" in normalized_html_text

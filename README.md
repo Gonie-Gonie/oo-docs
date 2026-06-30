@@ -141,6 +141,7 @@ Common translations:
 - LaTeX `\part` -> `Part(...)` separator pages above chapters
 - LaTeX `\appendix` -> `Appendix(Chapter(...), ...)` from `oodocs.structure` with child chapters numbered `A`, `B`, `C`
 - LaTeX `\section` / `\subsection` -> `Chapter(...)`, `Section(...)`, `Subsection(...)`
+- LaTeX `titlesec` / `sectsty` heading styles -> `HeadingStyle(...)`, document-wide `Theme(blocks=BlockDefaults(heading_styles={...}))`, or local `Section(..., heading_style=...)`
 - LaTeX `\textbf{...}` / `\emph{...}` / `\texttt{...}` -> `bold(...)`, `italic(...)`, `inline_code(...)`
 - LaTeX tag chips / compact inline labels -> `tag(...)`, `badge(...)`, `status(...)`, and `keyboard(...)`
 - Word highlight / strikethrough / manual line break -> `highlight(...)`, `strikethrough(...)`, `line_break()`

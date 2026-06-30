@@ -106,6 +106,8 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "oodocs.compatibility.OUTPUT_FORMATS" in all_titles
     assert "oodocs.components.blocks.MIN_SECTION_LEVEL" in all_titles
     assert "oodocs.Theme" in all_titles
+    assert "oodocs.HeadingStyle" in all_titles
+    assert "oodocs.HeadingNumbering" in all_titles
     assert "oodocs.ValidationResult" in all_titles
     assert "oodocs.document.Document" not in all_titles
     assert "oodocs.validation.ValidationResult" not in all_titles
@@ -124,6 +126,9 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "Coverage evidence is appended at the end." not in text
     assert "Uncategorized API" not in titles
     assert "Renderer Extension API" not in titles
+    assert "heading = HeadingStyle(" in text
+    assert "heading_style=HeadingStyle(text_style=TextStyle(font_size=14))" in text
+    assert "heading_styles: dict[int, HeadingStyle]" in text
 
 
 def test_help_book_renders_uncategorized_api_appendix_from_category_gate() -> None:
