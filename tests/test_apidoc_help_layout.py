@@ -103,6 +103,9 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "oodocs.Paragraph" in all_titles
     assert "oodocs.Table" in all_titles
     assert "oodocs.Figure" in all_titles
+    assert "oodocs.TableOfContents" in all_titles
+    assert "oodocs.ListOfTables" in all_titles
+    assert "oodocs.ListOfFigures" in all_titles
     assert "oodocs.compatibility.OUTPUT_FORMATS" in all_titles
     assert "oodocs.components.blocks.MIN_SECTION_LEVEL" in all_titles
     assert "oodocs.Theme" in all_titles
@@ -129,6 +132,9 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "heading = HeadingStyle(" in text
     assert "heading_style=HeadingStyle(text_style=TextStyle(font_size=14))" in text
     assert "heading_styles: dict[int, HeadingStyle]" in text
+    assert "toc = TableOfContents(" in text
+    assert "scope=\"document\"" in text
+    assert "level_styles={1: TableOfContentsLevelStyle(bold=True)}" in text
 
 
 def test_help_book_renders_uncategorized_api_appendix_from_category_gate() -> None:

@@ -148,6 +148,19 @@ def test_readme_latex_translations_include_heading_style_packages() -> None:
     assert "`Section(..., heading_style=...)`" in translations
 
 
+def test_readme_latex_translations_include_generated_list_packages() -> None:
+    readme = _readme()
+    translations = readme.split("Common translations:", 1)[1].split(
+        "The main payoff",
+        1,
+    )[0]
+
+    assert "LaTeX `tocloft` / `titletoc` / `minitoc`" in translations
+    assert "`TableOfContents(scope=..., level_styles=...)`" in translations
+    assert "`ListOfTables(scope=...)`" in translations
+    assert "`ListOfFigures(scope=...)`" in translations
+
+
 def test_public_api_policy_doc_defines_tiers_and_guards() -> None:
     policy = Path("docs/reference/public-api-policy.md").read_text(encoding="utf-8")
 
