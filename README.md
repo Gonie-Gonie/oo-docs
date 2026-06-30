@@ -312,7 +312,7 @@ doc = Document(
 - glossary and acronym registries through `oodocs.glossary`, plus the existing `Nomenclature` preset
 - optional title matter such as subtitle, structured `Author(...)` metadata, `AuthorLayout(...)`, affiliations, and a cover page
 - inline hyperlinks, breakable URL labels, theme-controlled link styling, heading/caption anchors, plural/range object-reference helpers, and validation for broken internal links
-- release evidence adapters for pyproject metadata, GitHub Actions workflows, JSON manifests, CSV/TSV evidence tables, checksums, and generated evidence reports
+- release evidence adapters for pyproject metadata, GitHub Actions workflows, validation JSON sidecars, JSON manifests, CSV/TSV evidence tables, checksums, and generated evidence reports
 - API object collection, docstring coverage checks, API snapshots, API diffs, and composable API-reference sections through `oodocs.apidoc`
 
 ## Example Scripts

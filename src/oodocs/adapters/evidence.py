@@ -2,6 +2,7 @@
 
 Attributes:
     DEFAULT_CSV_FILES: Default CSV evidence files included in release bundles.
+    VALIDATION_RESULT_NAME: Default validation result JSON filename.
     MANIFEST_NAME: Default reproducibility manifest filename.
     CHECKSUM_NAME: Default SHA-256 checksum filename.
 """
@@ -27,6 +28,7 @@ from oodocs.core import PathLike
 from oodocs.document import Document
 from oodocs.styles import PageNumberDefaults, TableStyle, Theme
 from oodocs.settings import DocumentMetadata, DocumentSettings, TitleMatter
+from oodocs.validation import ValidationResult
 
 from oodocs.adapters.github_actions import GithubWorkflowSummary
 from oodocs.adapters.manifest import ReleaseManifestSummary
@@ -39,6 +41,7 @@ DEFAULT_CSV_FILES = (
     "validation-results.csv",
     "compatibility-matrix.csv",
 )
+VALIDATION_RESULT_NAME = "validation-result.json"
 MANIFEST_NAME = "reproducibility-manifest.json"
 CHECKSUM_NAME = "artifact-checksums.sha256"
 MissingInputPolicy = Literal["error", "warn", "skeleton"]
@@ -152,7 +155,7 @@ class ReleaseEvidence:
 
         Returns:
             Document summarizing release metadata, workflow metadata, evidence
-            tables, manifest values, and checksums.
+            tables, validation diagnostics, manifest values, and checksums.
 
         Raises:
             FileNotFoundError: If evidence files are missing and
@@ -186,6 +189,14 @@ class ReleaseEvidence:
                 evidence_sections.append(_section_from_csv(path))
             else:
                 missing.append(filename)
+
+        validation_result_path = self.evidence_dir / VALIDATION_RESULT_NAME
+        if validation_result_path.exists():
+            evidence_sections.append(
+                _section_from_validation_result(validation_result_path)
+            )
+        else:
+            missing.append(VALIDATION_RESULT_NAME)
 
         manifest_path = self.evidence_dir / MANIFEST_NAME
         if manifest_path.exists():
@@ -251,8 +262,8 @@ class ReleaseEvidence:
                 Defaults to ``evidence_dir``.
 
         Returns:
-            Paths for CSV and manifest skeleton files. Existing files are left
-            unchanged.
+            Paths for CSV, validation JSON, and manifest skeleton files.
+            Existing files are left unchanged.
         """
 
         output_path = Path(output_dir) if output_dir is not None else self.evidence_dir
@@ -272,9 +283,9 @@ class ReleaseEvidence:
                 to ``evidence_dir``.
 
         Returns:
-            Paths for CSV, manifest, and checksum inputs. Existing files are
-            left unchanged except the checksum file, which is regenerated from
-            current input files.
+            Paths for CSV, validation JSON, manifest, and checksum inputs.
+            Existing files are left unchanged except the checksum file, which
+            is regenerated from current input files.
         """
 
         output_path = Path(output_dir) if output_dir is not None else self.evidence_dir
@@ -372,6 +383,11 @@ def _write_machine_readable_skeleton(
             "older-documents,no-error-result-may-differ,1.0.3\n",
         ),
     ]
+    files.append(
+        ValidationResult(()).save_json(output_dir / VALIDATION_RESULT_NAME)
+        if not (output_dir / VALIDATION_RESULT_NAME).exists()
+        else output_dir / VALIDATION_RESULT_NAME
+    )
     manifest_path = output_dir / MANIFEST_NAME
     if not manifest_path.exists():
         manifest_path.write_text(
@@ -390,7 +406,11 @@ def _write_machine_readable_skeleton(
 def _existing_machine_readable_evidence(output_dir: Path) -> tuple[Path, ...]:
     return tuple(
         path
-        for path in [*(output_dir / name for name in DEFAULT_CSV_FILES), output_dir / MANIFEST_NAME]
+        for path in [
+            *(output_dir / name for name in DEFAULT_CSV_FILES),
+            output_dir / VALIDATION_RESULT_NAME,
+            output_dir / MANIFEST_NAME,
+        ]
         if path.exists()
     )
 
@@ -465,6 +485,17 @@ def _section_from_csv(path: Path) -> Section:
     )
 
 
+def _section_from_validation_result(path: Path) -> Section:
+    result = ValidationResult.load_json(path)
+    return Section(
+        "Validation Result",
+        Paragraph("Read from ", inline_code(_display_path(path)), "."),
+        result.to_table(caption=f"Validation issues from {path.name}."),
+        numbered=False,
+        toc=True,
+    )
+
+
 def _section_from_checksums(path: Path) -> Section:
     return Section(
         "Artifact checksums",
@@ -490,4 +521,5 @@ __all__ = [
     "MANIFEST_NAME",
     "ReleaseEvidence",
     "ReleaseEvidenceBundle",
+    "VALIDATION_RESULT_NAME",
 ]

@@ -12,7 +12,13 @@ from oodocs.adapters import (
     ReleaseEvidence,
     ReleaseManifestSummary,
 )
-from oodocs.adapters.evidence import CHECKSUM_NAME, MANIFEST_NAME, _manifest_payload
+from oodocs.adapters.evidence import (
+    CHECKSUM_NAME,
+    MANIFEST_NAME,
+    VALIDATION_RESULT_NAME,
+    _manifest_payload,
+)
+from oodocs.validation import ValidationResult
 from oodocs.components.blocks import Section
 from oodocs.components.media import Table
 
@@ -124,6 +130,7 @@ def test_release_evidence_save_bundle_default_requires_existing_inputs(
         ).save_bundle()
 
     assert not (evidence_dir / "feature-coverage.csv").exists()
+    assert not (evidence_dir / VALIDATION_RESULT_NAME).exists()
     assert not (evidence_dir / MANIFEST_NAME).exists()
 
 
@@ -154,6 +161,7 @@ def test_release_evidence_ensure_inputs_then_save_bundle_renders_existing_inputs
     bundle = evidence.save_bundle(missing_input_policy="warn")
 
     assert (bundle.output_dir / "feature-coverage.csv").exists()
+    assert (bundle.output_dir / VALIDATION_RESULT_NAME).exists()
     assert (bundle.output_dir / MANIFEST_NAME).exists()
     assert (bundle.output_dir / CHECKSUM_NAME).exists()
     assert bundle.outputs["html"].exists()
@@ -161,7 +169,11 @@ def test_release_evidence_ensure_inputs_then_save_bundle_renders_existing_inputs
     assert bundle.outputs["pdf"].exists()
     assert "oodocs-evidence-report.html" in bundle.outputs["html"].name
     assert any(path.name == CHECKSUM_NAME for path in input_files)
+    assert any(path.name == VALIDATION_RESULT_NAME for path in input_files)
+    assert any(path.name == VALIDATION_RESULT_NAME for path in bundle.data_files)
     assert any(path.name == MANIFEST_NAME for path in bundle.data_files)
+    assert ValidationResult.load_json(bundle.output_dir / VALIDATION_RESULT_NAME).ok
+    assert VALIDATION_RESULT_NAME in bundle.outputs["html"].read_text(encoding="utf-8")
 
 
 def test_release_evidence_save_bundle_skeleton_policy_creates_machine_inputs(
@@ -177,6 +189,7 @@ def test_release_evidence_save_bundle_skeleton_policy_creates_machine_inputs(
     ).save_bundle(missing_input_policy="skeleton")
 
     assert (bundle.output_dir / "feature-coverage.csv").exists()
+    assert (bundle.output_dir / VALIDATION_RESULT_NAME).exists()
     assert (bundle.output_dir / MANIFEST_NAME).exists()
     assert (bundle.output_dir / CHECKSUM_NAME).exists()
     assert bundle.outputs["html"].exists()
