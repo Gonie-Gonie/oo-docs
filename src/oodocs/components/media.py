@@ -2157,7 +2157,7 @@ class PdfPages(Block):
     Examples:
         ```python
         from oodocs import Document
-        from oodocs.media import PdfPages
+        from oodocs.pdf import PdfPages
 
         appendix = PdfPages("appendix/material-safety-data.pdf", pages=[1, 3])
         document = Document("Report", appendix)

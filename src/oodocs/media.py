@@ -1,4 +1,4 @@
-"""Advanced media, table-layout, and PDF-page helpers."""
+"""Advanced media and table-layout helpers."""
 
 from __future__ import annotations
 
@@ -13,7 +13,6 @@ from oodocs.components.media import (
 __all__ = [
     "ColumnSpec",
     "CropBox",
-    "PdfPages",
     "SubTable",
     "SubTableGroup",
 ]

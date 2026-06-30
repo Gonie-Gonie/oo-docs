@@ -20,6 +20,7 @@ import oodocs.generated as generated
 import oodocs.glossary as glossary
 import oodocs.importers as importers
 import oodocs.media as media
+import oodocs.pdf as pdf
 import oodocs.positioning as positioning
 import oodocs.public_api as public_api
 import oodocs.references as reference_helpers
@@ -101,7 +102,8 @@ def test_tier_two_namespaces_export_domain_symbols() -> None:
             "parse_markdown_file",
             "parse_notebook",
         },
-        media: {"ColumnSpec", "CropBox", "PdfPages", "SubTable", "SubTableGroup"},
+        media: {"ColumnSpec", "CropBox", "SubTable", "SubTableGroup"},
+        pdf: {"PdfPages"},
         positioning: {"ImageBox", "PageItemScope", "Shape", "TextBox"},
         reference_helpers: {
             "Ref",

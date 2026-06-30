@@ -20,6 +20,7 @@ INVENTORY_MODULES = (
     "oodocs.adapters",
     "oodocs.importers.markdown",
     "oodocs.importers.notebook",
+    "oodocs.pdf",
     "oodocs.styles",
     "oodocs.validation",
     "oodocs.workflows",
@@ -232,6 +233,8 @@ def category_for(
         return "block"
     if inventory_module.startswith("oodocs.importers."):
         return "importer"
+    if inventory_module == "oodocs.pdf":
+        return "media"
     if inventory_module == "oodocs.validation":
         return "validation"
     if inventory_module == "oodocs.workflows":

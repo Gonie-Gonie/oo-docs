@@ -148,7 +148,7 @@ Common translations:
 - LaTeX `\includegraphics` -> `Figure(path_or_matplotlib_figure, caption=...)`, with optional `CropBox(...)` from `oodocs.media`, `rotation=...`, and `alt_text=...`
 - LaTeX subfigures -> `SubFigure(...)` children inside a captioned `SubFigureGroup(...)`
 - LaTeX subtables -> `SubTable(Table(...), caption=...)` children from `oodocs.media` inside a captioned `SubTableGroup(...)`
-- LaTeX `pdfpages` -> `PdfPages("appendix.pdf", pages=[1, 3])` from `oodocs.media` for PDF-page insertion, with DOCX/HTML placeholder fallbacks
+- LaTeX `pdfpages` -> `PdfPages("appendix.pdf", pages=[1, 3])` from `oodocs.pdf` for PDF-page insertion, with DOCX/HTML placeholder fallbacks
 - LaTeX `listings` / `minted` -> `CodeBlock(..., caption=..., line_numbers=True, highlight_lines={...})` or `CodeBlock.from_file(...)`
 - LaTeX `algorithm` / `algorithmicx` -> `Algorithm(..., inputs=..., outputs=..., steps=...)` from `oodocs.engineering` with automatic numbering and references
 - LaTeX `tabular` or copied tables -> `Table(...)` or `Table.from_dataframe(...)`
@@ -214,7 +214,7 @@ The default behavior is intentionally conventional:
 - Use `TableCell(colspan=...)` and `TableCell(rowspan=...)` for one-off merged cells. Use `Table.grouped_headers(groups=[("Geometry", 2), ...], columns=[...], rows=[...])` when a table needs a common grouped header row without manually building every spanning cell.
 - Use `Table(split=True, continuation_label="continued")` when a table should render in source order and may break across pages. Leave `split=False` when the table should stay together when possible; very long tables are automatically rendered as split repeated-header tables.
 - Use `Figure(...)` for image files or `savefig()`-compatible Python figure objects. Use `Figure.from_bytes(...)` or `Figure.from_buffer(...)` when image bytes are already in memory. Add `crop=CropBox(...)` from `oodocs.media`, `rotation=...`, and `alt_text=...` for LaTeX `graphicx`-style image transforms and accessible output text.
-- Import `PdfPages(...)` from `oodocs.media` when existing PDF pages should be inserted into PDF output. DOCX and HTML render a link-style placeholder because editable page import is renderer-specific.
+- Import `PdfPages(...)` from `oodocs.pdf` when existing PDF pages should be inserted into PDF output. DOCX and HTML render a link-style placeholder because editable page import is renderer-specific.
 - Use `SubFigureGroup(SubFigure(...), SubFigure(...), caption=...)` when related images should share one figure number and expose `(a)`, `(b)`, and similar subfigure references.
 - Import `SubTable(...)` and `SubTableGroup(...)` from `oodocs.media` when related tables should share one table number and expose references such as `Table 1(a)`.
 - Use `CodeBlock(..., caption=..., line_numbers=True, highlight_lines={...})` for numbered listings, and `CodeBlock.from_file("example.py", caption=...)` when the code should be included from a source file.
@@ -294,7 +294,7 @@ doc = Document(
 - automatic split-table rendering for long tables, with repeated headers where renderers support them
 - advanced table and figure placement hints for here/float/top/bottom/page-style workflows
 - figure support for stored image files, in-memory bytes, buffers, and `savefig()`-compatible Python objects
-- PDF page insertion with `oodocs.media.PdfPages(...)`, plus subfigure and subtable groups with automatic child labels and references such as `Figure 1(a)` or `Table 1(a)`
+- PDF page insertion with `oodocs.pdf.PdfPages(...)`, plus subfigure and subtable groups with automatic child labels and references such as `Figure 1(a)` or `Table 1(a)`
 - page-positioned `Shape.rect(...)`, `Shape.ellipse(...)`, `Shape.line(...)`, `TextBox(...)`, and `ImageBox(...)` objects imported from `oodocs.positioning`, with anchors to the page, the margin box, or an earlier named shape, plus all/cover/front/main/page-range scopes for overlays and watermarks
 - inline drawing placement for positioning objects, similar to using an image directly in the document flow
 - inline chips through `InlineChip(...)`, `tag(...)`, `badge(...)`, `status(...)`, and `keyboard(...)`

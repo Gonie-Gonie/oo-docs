@@ -29,6 +29,7 @@ import oodocs.importers as importer_components
 import oodocs.media as media_components
 import oodocs.glossary as glossary_components
 import oodocs.positioning as positioning_components
+import oodocs.pdf as pdf_components
 import oodocs.references as reference_components
 import oodocs.review as review_components
 import oodocs.structure as structure_components
@@ -53,7 +54,8 @@ from oodocs.chemistry import (
 )
 from oodocs.generated import ListOfComments, ListOfFootnotes, ListOfAlgorithms, TocLevelStyle
 from oodocs.glossary import Acronym, Glossary, ListOfGlossaryTerms, GlossaryTerm
-from oodocs.media import ColumnSpec, CropBox, PdfPages, SubTable, SubTableGroup
+from oodocs.media import ColumnSpec, CropBox, SubTable, SubTableGroup
+from oodocs.pdf import PdfPages
 from oodocs.positioning import ImageBox, PageItemScope, Shape, TextBox
 from oodocs.references import Ref, ReferenceFormat, page_ref, paren_ref, reference
 from oodocs.review import MarginNote, Todo, margin_note, todo
@@ -2071,7 +2073,8 @@ def test_public_api_prefers_classes_for_structural_nodes() -> None:
     assert not hasattr(oodocs, "SubTableGroup")
     assert hasattr(media_components, "ColumnSpec")
     assert hasattr(media_components, "CropBox")
-    assert hasattr(media_components, "PdfPages")
+    assert "PdfPages" not in media_components.__all__
+    assert hasattr(pdf_components, "PdfPages")
     assert hasattr(media_components, "SubTable")
     assert hasattr(media_components, "SubTableGroup")
     assert hasattr(oodocs, "Box")

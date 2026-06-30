@@ -1290,6 +1290,17 @@
         }
       ]
     },
+    "oodocs.pdf": {
+      "exports": [
+        {
+          "category": "media",
+          "kind": "class",
+          "module": "oodocs.components.media",
+          "name": "PdfPages",
+          "qualname": "oodocs.components.media.PdfPages"
+        }
+      ]
+    },
     "oodocs.presets": {
       "exports": [
         {

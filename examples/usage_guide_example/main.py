@@ -82,7 +82,8 @@ from oodocs.chemistry import (
     chemical_formula,
 )
 from oodocs.generated import ListOfComments, ListOfAlgorithms, TocLevelStyle
-from oodocs.media import ColumnSpec, CropBox, PdfPages, SubTable, SubTableGroup
+from oodocs.media import ColumnSpec, CropBox, SubTable, SubTableGroup
+from oodocs.pdf import PdfPages
 from oodocs.positioning import ImageBox, PageItemScope, Shape, TextBox
 from oodocs.structure import (
     Appendix,
@@ -352,7 +353,7 @@ Paragraph("The tuned table is shown in ", tuned.reference(), ".")
 """
 
 PDFPAGES_SNIPPET = """from oodocs import Document, Paragraph
-from oodocs.media import PdfPages
+from oodocs.pdf import PdfPages
 
 document = Document(
     "Appendix bundle",

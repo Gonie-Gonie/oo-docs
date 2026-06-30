@@ -127,6 +127,7 @@ OODocs_API_CATEGORIES: tuple[ApiCategory, ...] = (
             "oodocs.SubFigure",
             "oodocs.SubFigureGroup",
             "oodocs.media.*",
+            "oodocs.pdf.*",
             "oodocs.positioning.*",
             "oodocs.components.media.*",
             "oodocs.components.positioning.*",
