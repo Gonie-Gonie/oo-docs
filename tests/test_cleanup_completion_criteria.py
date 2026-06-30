@@ -112,18 +112,27 @@ def test_readme_quick_start_uses_small_top_level_import_surface() -> None:
     assert domain_only_names.isdisjoint(oodocs_imports)
 
 
-def test_readme_recommended_advanced_imports_use_domain_namespaces() -> None:
+def test_readme_what_to_use_when_keeps_core_import_checkpoint() -> None:
     readme = _readme()
-    expected_lines = {
-        "from oodocs import Chapter, Document, Paragraph, Table, ref",
-        "from oodocs.apidoc import collect_api",
-        "from oodocs.engineering import Algorithm",
-        "from oodocs.positioning import Shape, TextBox",
-        "from oodocs.review import MarginNote, Todo",
+    section = readme.split("## What To Use When", 1)[1].split("## Features", 1)[0]
+    first_block = _python_blocks(section)[0]
+    module = ast.parse(first_block)
+    imports = [
+        alias.name
+        for node in module.body
+        if isinstance(node, ast.ImportFrom) and node.module == "oodocs"
+        for alias in node.names
+    ]
+    focused_examples = {
+        "`examples/engineering_report_example/`",
+        "`examples/review_notes_example/`",
+        "`examples/page_overlay_example/`",
+        "`examples/api_objects_example/`",
     }
 
-    for line in expected_lines:
-        assert line in readme
+    assert imports == ["Chapter", "Document", "Paragraph", "Table", "ref"]
+    for example in focused_examples:
+        assert example in section
 
 
 def test_public_api_policy_doc_defines_tiers_and_guards() -> None:

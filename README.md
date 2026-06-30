@@ -231,13 +231,17 @@ The default behavior is intentionally conventional:
 - Import `Shape(...)`, `TextBox(...)`, `ImageBox(...)`, and `PageItemScope` from `oodocs.positioning` for page-positioned overlays that do not move the body text. Use them with `DocumentSettings(overlays=[...])`; PDF applies scopes to physical pages, while DOCX and HTML use section/static-frame fallbacks. Use `placement="inline"` when the same objects should sit in the text flow like Word's inline drawing mode.
 - Prefer explicit domain namespaces for advanced features: `oodocs.structure` for appendices and theorem-like blocks; `oodocs.media` for advanced media/table helpers; `oodocs.references` for advanced reference formatting helpers; `oodocs.engineering` for algorithms; `oodocs.equations` for advanced equation classes; `oodocs.chemistry` for chemistry notation; `oodocs.glossary` for glossary/acronym registries; `oodocs.review` for TODOs and margin notes; `oodocs.positioning` for page overlays; and `oodocs.generated` for generated list pages.
 
+Core report assembly should still start from the small Tier 1 surface:
+
 ```python
 from oodocs import Chapter, Document, Paragraph, Table, ref
-from oodocs.apidoc import collect_api
-from oodocs.engineering import Algorithm
-from oodocs.positioning import Shape, TextBox
-from oodocs.review import MarginNote, Todo
 ```
+
+Use focused examples for specialized workflows instead of treating this section
+as a full domain catalog: `examples/engineering_report_example/` for
+`oodocs.engineering`, `examples/review_notes_example/` for `oodocs.review`,
+`examples/page_overlay_example/` for `oodocs.positioning`, and
+`examples/api_objects_example/` for API object composition.
 
 - Use `Theme(header_footer=HeaderFooterDefaults(header_left="{chapter}", header_right="{page}", footer_center="{title}", different_first_page=True))` for LaTeX `fancyhdr`-style running headers and footers. `{page}`, `{title}`, `{chapter}`, and `{section}` are supported; DOCX uses Word fields, PDF draws them in the page callback, and HTML emits a sticky/fixed degrade layer.
 - Use `DocumentSettings(...)` for document-wide choices: file/browser metadata, visible title matter, page layout, units, page overlays, and theme defaults. Prefer `DocumentSettings(title_matter=TitleMatter(authors=[...], subtitle=...))` for visible author/subtitle content, prefer `DocumentSettings(metadata=DocumentMetadata(title=..., author=..., keywords=[...]))` when output metadata should differ from visible title matter, and prefer `DocumentSettings(page_layout=PageLayout.landscape(PageSize.a4(), PageMargins.all(1.5, unit="cm")))` when page size, margins, and orientation should move together. Use `Section(..., page_layout=PageLayout.landscape(...))` when one section needs a different page box; DOCX/PDF create page layout sections and HTML emits a page-break CSS fallback with a validation warning.
