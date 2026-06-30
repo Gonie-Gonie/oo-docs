@@ -3010,7 +3010,15 @@ class SubTable:
         *,
         available_width: float | None = None,
     ) -> float | None:
-        """Return the rendered child-table width when it is explicitly known."""
+        """Return the rendered child-table width when it is explicitly known.
+
+        Args:
+            default_unit: Unit used for table widths without an explicit unit.
+            available_width: Optional containing width for flexible columns.
+
+        Returns:
+            Child table width in inches, or ``None`` when automatic.
+        """
 
         column_widths = self.table._column_widths_in_inches(
             default_unit,
@@ -3026,7 +3034,16 @@ class SubTable:
         style: TextStyle | None = None,
         reference_format: ReferenceFormat | None = None,
     ) -> BlockReference:
-        """Create an explicit inline reference to this subtable."""
+        """Create an explicit inline reference to this subtable.
+
+        Args:
+            *label: Optional inline label override.
+            style: Optional inline style.
+            reference_format: Optional automatic reference formatting rules.
+
+        Returns:
+            Inline reference targeting this subtable.
+        """
 
         from oodocs.components.inline import ref
 
