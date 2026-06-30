@@ -109,6 +109,8 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "oodocs.BoxStyle" in all_titles
     assert "oodocs.StyleSheet" in all_titles
     assert "oodocs.Figure" in all_titles
+    assert "oodocs.equations.AlignedEquation" in all_titles
+    assert "oodocs.equations.CasesEquation" in all_titles
     assert "oodocs.engineering.Algorithm" in all_titles
     assert "oodocs.SubFigure" in all_titles
     assert "oodocs.SubFigureGroup" in all_titles
@@ -192,6 +194,10 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "title_position" in text
     assert "shadow" in text
     assert "box_style" in text
+    assert "Equation.aligned" in text
+    assert "Equation.cases" in text
+    assert "Equation.from_sympy" in text
+    assert "numbered" in text
 
 
 def test_help_book_renders_uncategorized_api_appendix_from_category_gate() -> None:

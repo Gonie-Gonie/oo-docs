@@ -309,6 +309,37 @@ def test_readme_latex_translations_include_tcolorbox_policy() -> None:
     assert "`CalloutBox(..., variant=\"danger\", icon=\"!\")`" in translations
 
 
+def test_readme_latex_translations_include_amsmath_policy() -> None:
+    readme = _readme()
+    translations = readme.split("Common translations:", 1)[1].split(
+        "The main payoff",
+        1,
+    )[0]
+
+    assert "LaTeX `amsmath` / `mathtools` display math" in translations
+    assert "`Equation(...)`" in translations
+    assert "`Equation.aligned(...)`" in translations
+    assert "`Equation.cases(...)`" in translations
+    assert "`Equation.from_sympy(...)`" in translations
+    assert "parser limits covered in `docs/reference/math-support.md`" in translations
+
+
+def test_math_support_reference_documents_amsmath_policy() -> None:
+    reference = Path("docs/reference/math-support.md").read_text(encoding="utf-8")
+
+    for phrase in (
+        "`Equation(numbered=True)` is the default",
+        "`Equation(numbered=False)` does not consume a number",
+        "`Equation.aligned(...)`",
+        "`Equation.cases(...)`",
+        "`Equation.from_sympy(...)`",
+        "`aligned`, `align`, `split`, and `multline` environments",
+        "`matrix`, `pmatrix`, `bmatrix`, `array` environments",
+        "`unsupported-latex-command` warnings",
+    ):
+        assert phrase in reference
+
+
 def test_public_api_policy_doc_defines_tiers_and_guards() -> None:
     policy = Path("docs/reference/public-api-policy.md").read_text(encoding="utf-8")
 

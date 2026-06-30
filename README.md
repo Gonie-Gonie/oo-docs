@@ -163,6 +163,7 @@ Common translations:
 - LaTeX `enumitem` list options -> use `BulletList(...)`, `NumberedList(start=...)`, `NumberedList(resume_from=...)`, and `ListStyle(...)`
 - LaTeX `glossaries` / `acronym` / `nomencl` -> use `Glossary` and `ListOfGlossaryTerms` from `oodocs.glossary`, plus `Nomenclature`
 - LaTeX `tcolorbox` / `mdframed` report panels -> editable `Box(..., icon=..., title_position="side")` or `CalloutBox(..., variant="danger", icon="!")`
+- LaTeX `amsmath` / `mathtools` display math -> `Equation(...)`, `Equation.aligned(...)`, `Equation.cases(...)`, or `Equation.from_sympy(...)`, with numbering, references, and parser limits covered in `docs/reference/math-support.md`
 - BibTeX-style references -> `CitationLibrary`, `CitationSource.cite(...)`, and `ListOfReferences()`
 
 The main payoff is fewer manual handoffs: a benchmark CSV can become a table, a matplotlib object can become a figure, and the same authored structure can render to DOCX for review, PDF for release, and HTML for lightweight sharing.
