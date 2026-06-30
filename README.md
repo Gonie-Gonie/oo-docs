@@ -307,7 +307,7 @@ doc = Document(
 
 ## Example Scripts
 
-The repository includes thirteen standalone example directories:
+The repository includes fourteen standalone example directories:
 
 - `examples/usage_guide_example/`
 - `examples/journal_paper_example/`
@@ -322,6 +322,7 @@ The repository includes thirteen standalone example directories:
 - `examples/validation_gate_report/`
 - `examples/conformance_matrix_report/`
 - `examples/review_notes_example/`
+- `examples/engineering_report_example/`
 
 Choose the example by task. The usage guide explains OODocs concepts; the other
 examples are workflow entry points and intentionally avoid repeating the guide.
@@ -341,6 +342,7 @@ examples are workflow entry points and intentionally avoid repeating the guide.
 | Document a validation gate | `validation_gate_report` | You want `Document.validate()` diagnostics rendered as a release-gate report and JSON sidecar. |
 | Report a conformance matrix | `conformance_matrix_report` | You want a readable PDF excerpt plus full JSON sidecar for a wide test/simulation matrix. |
 | Prepare a review copy | `review_notes_example` | You want comments, TODOs, margin notes, footnotes, and generated review pages from one source. |
+| Write an engineering method report | `engineering_report_example` | You want numbered pseudocode, requirements, and verification evidence without crowding the general user guide. |
 
 Run them directly from the repository checkout:
 
@@ -358,6 +360,7 @@ Run them directly from the repository checkout:
 .\.venv\Scripts\python.exe .\examples\validation_gate_report\main.py --output-dir artifacts/validation-gate-report
 .\.venv\Scripts\python.exe .\examples\conformance_matrix_report\main.py --output-dir artifacts/conformance-matrix-report
 .\.venv\Scripts\python.exe .\examples\review_notes_example\main.py --output-dir artifacts/review-notes-example
+.\.venv\Scripts\python.exe .\examples\engineering_report_example\main.py --output-dir artifacts/engineering-report-example
 ```
 
 Most examples accept repeatable `--outputs` and `--quiet` flags:
@@ -393,6 +396,7 @@ What they show:
 - `validation_gate_report` turns `Document.validate()` output into a release-gate report with warning policy and JSON diagnostics
 - `conformance_matrix_report` keeps a wide conformance matrix in JSON while rendering a readable claim boundary, summary, excerpt, and failure appendix
 - `review_notes_example` keeps comments and footnotes in the core inline workflow while importing TODOs and margin notes from `oodocs.review`
+- `engineering_report_example` isolates `oodocs.engineering.Algorithm` usage in a focused report with requirements and verification tables
 
 By default they write outputs under:
 
