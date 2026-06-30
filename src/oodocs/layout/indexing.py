@@ -299,6 +299,8 @@ class RenderIndex:
         subtable_reference_labels: Formatted subtable reference suffixes keyed
             by subtable identity.
         citations: Indexed citation references.
+        citation_library: Optional citation library used for uncited reference
+            list entries.
         citation_numbers: Citation numbers keyed by citation key.
         citation_source_numbers: Citation numbers keyed by source identity.
         comments: Indexed inline comments.
@@ -363,7 +365,14 @@ class RenderIndex:
     generated_scopes: dict[int, EntryScope] = field(default_factory=dict)
 
     def scoped_headings(self, block: TableOfContents) -> list[HeadingEntry]:
-        """Return TOC headings visible to ``block`` after scope filtering."""
+        """Return TOC headings visible to ``block`` after scope filtering.
+
+        Args:
+            block: Table of contents block requesting scoped entries.
+
+        Returns:
+            Heading entries visible to the block.
+        """
 
         return [
             entry
@@ -373,7 +382,14 @@ class RenderIndex:
         ]
 
     def scoped_tables(self, block: ListOfTables) -> list[CaptionEntry]:
-        """Return table-list entries visible to ``block`` after scope filtering."""
+        """Return table-list entries visible to ``block`` after scope filtering.
+
+        Args:
+            block: List of tables block requesting scoped entries.
+
+        Returns:
+            Table caption entries visible to the block.
+        """
 
         return [
             entry
@@ -382,7 +398,14 @@ class RenderIndex:
         ]
 
     def scoped_figures(self, block: ListOfFigures) -> list[CaptionEntry]:
-        """Return figure-list entries visible to ``block`` after scope filtering."""
+        """Return figure-list entries visible to ``block`` after scope filtering.
+
+        Args:
+            block: List of figures block requesting scoped entries.
+
+        Returns:
+            Figure caption entries visible to the block.
+        """
 
         return [
             entry
@@ -391,7 +414,14 @@ class RenderIndex:
         ]
 
     def scoped_algorithms(self, block: ListOfAlgorithms) -> list[CountableEntry]:
-        """Return algorithm-list entries visible to ``block`` after scope filtering."""
+        """Return algorithm-list entries visible to ``block`` after scope filtering.
+
+        Args:
+            block: List of algorithms block requesting scoped entries.
+
+        Returns:
+            Algorithm entries visible to the block.
+        """
 
         return [
             entry
@@ -442,7 +472,14 @@ class RenderIndex:
         return sorted(entries, key=lambda entry: _reference_entry_sort_key(entry, sort_style))
 
     def generated_scope(self, block: object) -> EntryScope:
-        """Return the ancestor scope where a generated block appears."""
+        """Return the ancestor scope where a generated block appears.
+
+        Args:
+            block: Generated list block to look up.
+
+        Returns:
+            Ancestor scope where the generated block appears.
+        """
 
         return self.generated_scopes.get(id(block), EntryScope())
 
@@ -517,17 +554,38 @@ class RenderIndex:
         return self.subfigure_labels.get(id(subfigure))
 
     def subfigure_reference_label(self, subfigure: SubFigure) -> str | None:
-        """Return the formatted child suffix for a subfigure reference."""
+        """Return the formatted child suffix for a subfigure reference.
+
+        Args:
+            subfigure: Subfigure to look up.
+
+        Returns:
+            Formatted subfigure reference suffix, or ``None`` when unanchored.
+        """
 
         return self.subfigure_reference_labels.get(id(subfigure))
 
     def subtable_label(self, subtable: SubTable) -> str | None:
-        """Return the assigned label for a subtable inside a numbered group."""
+        """Return the assigned label for a subtable inside a numbered group.
+
+        Args:
+            subtable: Subtable to look up.
+
+        Returns:
+            Assigned subtable label, or ``None`` when unanchored.
+        """
 
         return self.subtable_labels.get(id(subtable))
 
     def subtable_reference_label(self, subtable: SubTable) -> str | None:
-        """Return the formatted child suffix for a subtable reference."""
+        """Return the formatted child suffix for a subtable reference.
+
+        Args:
+            subtable: Subtable to look up.
+
+        Returns:
+            Formatted subtable reference suffix, or ``None`` when unanchored.
+        """
 
         return self.subtable_reference_labels.get(id(subtable))
 
