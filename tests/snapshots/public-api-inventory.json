@@ -1009,30 +1009,9 @@
         {
           "category": "apidoc-composition",
           "kind": "function",
-          "module": "oodocs.apidoc.render",
-          "name": "api_objects_to_summary_table",
-          "qualname": "oodocs.apidoc.render.api_objects_to_summary_table"
-        },
-        {
-          "category": "apidoc-composition",
-          "kind": "function",
           "module": "oodocs.apidoc.help",
           "name": "api_category_to_chapter",
           "qualname": "oodocs.apidoc.help.api_category_to_chapter"
-        },
-        {
-          "category": "apidoc-composition",
-          "kind": "function",
-          "module": "oodocs.apidoc.help",
-          "name": "api_object_to_help_section",
-          "qualname": "oodocs.apidoc.help.api_object_to_help_section"
-        },
-        {
-          "category": "apidoc-composition",
-          "kind": "function",
-          "module": "oodocs.apidoc.help",
-          "name": "api_package_to_help_book",
-          "qualname": "oodocs.apidoc.help.api_package_to_help_book"
         },
         {
           "category": "apidoc-coverage",

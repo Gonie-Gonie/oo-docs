@@ -12,7 +12,6 @@ from oodocs.apidoc import (
     ApiReturn,
     ApiSeeAlso,
     api_category_to_chapter,
-    api_object_to_help_section,
     check_api_help_categories,
     collect_api,
     select_uncategorized_api_objects,
@@ -218,7 +217,7 @@ def test_help_function_section_uses_matlab_style_argument_layout() -> None:
         see_also=[ApiSeeAlso("Widget", target="samplepkg.Widget")],
     )
 
-    section = api_object_to_help_section(obj, level=2)
+    section = obj.to_help_section(level=2)
     text = _all_plain_text(section)
 
     _assert_text_order(
@@ -285,7 +284,7 @@ def test_help_class_section_separates_creation_properties_and_methods() -> None:
         ],
     )
 
-    section = api_object_to_help_section(obj, level=2)
+    section = obj.to_help_section(level=2)
     text = _all_plain_text(section)
 
     _assert_text_order(
@@ -317,7 +316,7 @@ def test_help_value_section_uses_compact_definition_layout() -> None:
         metadata={"default": "('docx', 'pdf', 'html')"},
     )
 
-    section = api_object_to_help_section(obj, level=2)
+    section = obj.to_help_section(level=2)
     text = _all_plain_text(section)
 
     _assert_text_order(
@@ -394,7 +393,7 @@ def test_help_examples_use_basic_role_and_preview_long_code() -> None:
         ],
     )
 
-    section = api_object_to_help_section(obj, level=2)
+    section = obj.to_help_section(level=2)
     text = _all_plain_text(section)
 
     assert "line_0()" in text

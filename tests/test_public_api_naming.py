@@ -317,14 +317,16 @@ def test_apidoc_namespace_uses_canonical_exports() -> None:
         "ApiDocProfile",
         "ApiRaises",
         "api_package_to_document",
+        "api_objects_to_summary_table",
+        "api_object_to_help_section",
         "profile_names",
         "register_profile",
         "resolve_profile",
+        "api_package_to_help_book",
     }
     expected = {
         "ApiPresentationProfile",
         "ApiException",
-        "api_package_to_help_book",
         "presentation_profile_names",
         "register_presentation_profile",
         "resolve_presentation_profile",
@@ -1112,9 +1114,8 @@ def test_apidoc_heading_depth_uses_explicit_parameter_name() -> None:
         apidoc.ApiPackage.to_chapters,
         apidoc.ApiPackage.to_blocks,
         apidoc.ApiPackage.to_help_book,
-        apidoc.api_object_to_help_section,
+        apidoc.ApiObject.to_help_section,
         apidoc.api_category_to_chapter,
-        apidoc.api_package_to_help_book,
     )
 
     for callable_obj in callables:

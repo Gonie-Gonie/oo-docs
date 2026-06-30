@@ -2054,6 +2054,49 @@ class ApiObject:
             max_heading_level=max_heading_level,
         )
 
+    def to_help_section(
+        self,
+        *,
+        level: int = 2,
+        presentation: object = "help",
+        max_heading_level: int | None = None,
+    ):
+        """Return this object as a MATLAB-style help section.
+
+        Args:
+            level: Section heading level.
+            presentation: Presentation profile name or object. The default
+                ``"help"`` profile keeps a single symbol page concise.
+            max_heading_level: Optional deepest heading level to render for
+                nested member sections.
+
+        Returns:
+            OODocs ``Section``/``Chapter`` containing help-page content for
+            this API object.
+
+        Examples:
+            Compose a selected symbol help page through the object API:
+
+            ```python
+            from oodocs import Document
+            from oodocs.apidoc import collect_api
+
+            api = collect_api(".")
+            obj = api.find_object("mypkg.load")
+            assert obj is not None
+            document = Document("Selected API", obj.to_help_section(level=2))
+            ```
+        """
+
+        from oodocs.apidoc.help import api_object_to_help_section
+
+        return api_object_to_help_section(
+            self,
+            level=level,
+            presentation=presentation,
+            max_heading_level=max_heading_level,
+        )
+
     def to_box(self, presentation: object = "compact"):
         """Return this object as a compact OODocs box.
 

@@ -65,12 +65,9 @@ from oodocs.apidoc.render import (
     api_coverage_to_chapter,
     api_diff_to_chapter,
     api_objects_to_chapter,
-    api_objects_to_summary_table,
 )
 from oodocs.apidoc.help import (
     api_category_to_chapter,
-    api_object_to_help_section,
-    api_package_to_help_book,
 )
 from oodocs.apidoc.profiles import (
     ApiPresentationProfile,
@@ -114,10 +111,7 @@ __all__ = [
     "api_coverage_to_chapter",
     "api_diff_to_chapter",
     "api_objects_to_chapter",
-    "api_objects_to_summary_table",
     "api_category_to_chapter",
-    "api_object_to_help_section",
-    "api_package_to_help_book",
     "check_api_docs",
     "check_api_help_categories",
     "check_doctest_examples",

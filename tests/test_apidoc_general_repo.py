@@ -37,8 +37,6 @@ from oodocs.apidoc import (
     ApiSnapshot,
     api_coverage_to_chapter,
     api_objects_to_chapter,
-    api_objects_to_summary_table,
-    api_package_to_help_book,
     check_api_docs,
     collect_api,
     collect_module_api,
@@ -691,7 +689,7 @@ def test_general_repo_render_helpers_compose_selected_api(tmp_path) -> None:
         ),
         Chapter(
             "Function Summary",
-            api_objects_to_summary_table(
+            api.to_summary_table(
                 api.select_functions(),
                 presentation="compact",
                 caption="Mixed package functions.",
@@ -747,7 +745,7 @@ def test_general_repo_package_help_book_helper_builds_complete_reference(tmp_pat
         docstring_style=ApiDocstringParser.auto(),
     )
 
-    document = api_package_to_help_book(api, presentation="compact", max_heading_level=3)
+    document = api.to_help_book(presentation="compact", max_heading_level=3)
     outputs = document.save_all(
         tmp_path / "package-rendered",
         stem="mixedpkg-api",

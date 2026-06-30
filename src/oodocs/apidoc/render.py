@@ -34,7 +34,7 @@ def api_objects_to_summary_table(
 
         ```python
         from oodocs import Chapter, Document
-        from oodocs.apidoc import collect_api, api_objects_to_summary_table
+        from oodocs.apidoc import collect_api
 
         api = collect_api("mypkg")
         functions = api.select_objects(kind="function")
@@ -42,7 +42,7 @@ def api_objects_to_summary_table(
             "Release Notes",
             Chapter(
                 "Public Function Index",
-                api_objects_to_summary_table(functions, presentation="compact"),
+                api.to_summary_table(functions, presentation="compact"),
             ),
         )
         ```
@@ -116,5 +116,4 @@ __all__ = [
     "api_coverage_to_chapter",
     "api_diff_to_chapter",
     "api_objects_to_chapter",
-    "api_objects_to_summary_table",
 ]

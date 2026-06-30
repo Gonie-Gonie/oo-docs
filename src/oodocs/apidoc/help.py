@@ -40,11 +40,11 @@ def api_object_to_help_section(
     Examples:
         ```python
         from oodocs import Document
-        from oodocs.apidoc import collect_api, api_object_to_help_section
+        from oodocs.apidoc import collect_api
 
         api = collect_api("oodocs", public_policy="__all__")
         paragraph = api.find_object("oodocs.Paragraph")
-        section = api_object_to_help_section(paragraph, level=2)
+        section = paragraph.to_help_section(level=2)
         document = Document("Selected API", section)
         ```
     """
@@ -430,11 +430,10 @@ def api_package_to_help_book(
         ```python
         from pathlib import Path
         from oodocs import DocumentSettings
-        from oodocs.apidoc import collect_api, api_package_to_help_book
+        from oodocs.apidoc import collect_api
 
         api = collect_api("oodocs", public_policy="__all__")
-        reference = api_package_to_help_book(
-            api,
+        reference = api.to_help_book(
             title="OODocs API Reference",
             settings=DocumentSettings(cover_page=True),
         )
@@ -699,6 +698,4 @@ def _preview_text(value: object, *, max_chars: int) -> str:
 
 __all__ = [
     "api_category_to_chapter",
-    "api_object_to_help_section",
-    "api_package_to_help_book",
 ]
