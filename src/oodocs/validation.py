@@ -108,31 +108,103 @@ class ResultLike(Protocol):
         """Return informational entries."""
 
     def to_dict(self, *args: object, **kwargs: object) -> dict[str, object]:
-        """Return a JSON-serializable mapping."""
+        """Return a JSON-serializable mapping.
+
+        Args:
+            *args: Positional serialization options accepted by the concrete
+                result type.
+            **kwargs: Keyword serialization options accepted by the concrete
+                result type.
+
+        Returns:
+            JSON-serializable result payload.
+        """
 
     @classmethod
     def from_dict(cls, data: dict[str, object]) -> ResultLike:
-        """Reconstruct a result from a JSON-serializable mapping."""
+        """Reconstruct a result from a JSON-serializable mapping.
+
+        Args:
+            data: Payload previously returned by ``to_dict``.
+
+        Returns:
+            Reconstructed result object.
+        """
 
     def to_json(self, *args: object, **kwargs: object) -> str:
-        """Serialize this result to JSON text."""
+        """Serialize this result to JSON text.
+
+        Args:
+            *args: Positional serialization options accepted by the concrete
+                result type.
+            **kwargs: Keyword serialization options accepted by the concrete
+                result type.
+
+        Returns:
+            JSON text for this result.
+        """
 
     @classmethod
     def from_json(cls, text: str) -> ResultLike:
-        """Deserialize a result from JSON text."""
+        """Deserialize a result from JSON text.
+
+        Args:
+            text: JSON text previously returned by ``to_json``.
+
+        Returns:
+            Reconstructed result object.
+        """
 
     def save_json(self, path: PathLike, *args: object, **kwargs: object) -> Path:
-        """Write this result to a JSON sidecar."""
+        """Write this result to a JSON sidecar.
+
+        Args:
+            path: Output JSON sidecar path.
+            *args: Positional serialization options accepted by the concrete
+                result type.
+            **kwargs: Keyword serialization options accepted by the concrete
+                result type.
+
+        Returns:
+            Path that was written.
+        """
 
     @classmethod
     def load_json(cls, path: PathLike) -> ResultLike:
-        """Read a result from a JSON sidecar."""
+        """Read a result from a JSON sidecar.
+
+        Args:
+            path: JSON sidecar path.
+
+        Returns:
+            Reconstructed result object.
+        """
 
     def to_table(self, *args: object, **kwargs: object) -> Table:
-        """Return this result as an OODocs table."""
+        """Return this result as an OODocs table.
+
+        Args:
+            *args: Positional table options accepted by the concrete result
+                type.
+            **kwargs: Keyword table options accepted by the concrete result
+                type.
+
+        Returns:
+            OODocs table representation of this result.
+        """
 
     def format_text(self, *args: object, **kwargs: object) -> str:
-        """Format this result as human-readable console text."""
+        """Format this result as human-readable console text.
+
+        Args:
+            *args: Positional formatting options accepted by the concrete
+                result type.
+            **kwargs: Keyword formatting options accepted by the concrete
+                result type.
+
+        Returns:
+            Human-readable summary text.
+        """
 
 
 @dataclass(frozen=True, slots=True)
