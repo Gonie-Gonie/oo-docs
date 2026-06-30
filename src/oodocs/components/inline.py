@@ -1106,7 +1106,8 @@ class Todo(Comment):
 
     Examples:
         ```python
-        from oodocs import Paragraph, Todo
+        from oodocs import Paragraph
+        from oodocs.review import Todo
 
         paragraph = Paragraph("Units ", Todo("Verify unit conversion.", owner="QA"))
         ```
@@ -1182,7 +1183,8 @@ class MarginNote(Comment):
 
     Examples:
         ```python
-        from oodocs import MarginNote, Paragraph
+        from oodocs import Paragraph
+        from oodocs.review import MarginNote
 
         paragraph = Paragraph("Assumption", MarginNote("Check this assumption."))
         ```

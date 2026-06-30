@@ -19,11 +19,13 @@ import pytest
 
 import oodocs.components.generated as generated_components
 import oodocs.components.inline as inline_components
+import oodocs.review as review_components
 from oodocs.components.equations import BASELINE, SUBSCRIPT, SUPERSCRIPT, parse_latex_segments
 from oodocs.components.media import build_table_layout
 from oodocs.core import length_to_inches
 from oodocs.layout.indexing import build_render_index
 from oodocs.renderers.pdf import PdfRenderer
+from oodocs.review import MarginNote, Todo, margin_note, todo
 from oodocs import (
     Affiliation,
     Acronym,
@@ -85,7 +87,6 @@ from oodocs import (
     LinkDefaults,
     ListOfAlgorithms,
     ListStyle,
-    MarginNote,
     Math,
     MultiColumn,
     NumberedList,
@@ -130,7 +131,6 @@ from oodocs import (
     TextBox,
     Theorem,
     Theme,
-    Todo,
     TitleMatterDefaults,
     TocLevelStyle,
     TypographyDefaults,
@@ -150,7 +150,6 @@ from oodocs import (
     keyboard,
     link,
     line_break,
-    margin_note,
     math,
     markup,
     prescript,
@@ -166,7 +165,6 @@ from oodocs import (
     subscript,
     superscript,
     tag,
-    todo,
     url,
 )
 from oodocs.presets.components import (
@@ -2068,8 +2066,10 @@ def test_public_api_prefers_classes_for_structural_nodes() -> None:
     assert hasattr(oodocs, "TocLevelStyle")
     assert hasattr(oodocs, "Comment")
     assert hasattr(oodocs, "CommentList")
-    assert hasattr(oodocs, "Todo")
-    assert hasattr(oodocs, "MarginNote")
+    assert not hasattr(oodocs, "Todo")
+    assert not hasattr(oodocs, "MarginNote")
+    assert hasattr(review_components, "Todo")
+    assert hasattr(review_components, "MarginNote")
     assert hasattr(oodocs, "Footnote")
     assert hasattr(oodocs, "FootnoteList")
     assert hasattr(oodocs, "Equation")
@@ -2105,8 +2105,10 @@ def test_public_api_prefers_classes_for_structural_nodes() -> None:
     assert not hasattr(oodocs, "VSpace")
     assert not hasattr(oodocs, "HorizontalRule")
     assert hasattr(oodocs, "comment")
-    assert hasattr(oodocs, "todo")
-    assert hasattr(oodocs, "margin_note")
+    assert not hasattr(oodocs, "todo")
+    assert not hasattr(oodocs, "margin_note")
+    assert hasattr(review_components, "todo")
+    assert hasattr(review_components, "margin_note")
     assert hasattr(oodocs, "footnote")
     assert hasattr(oodocs, "from_notebook")
     assert hasattr(oodocs, "from_markdown")

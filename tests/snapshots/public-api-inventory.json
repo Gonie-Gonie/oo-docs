@@ -470,13 +470,6 @@
           "category": "inline",
           "kind": "class",
           "module": "oodocs.components.inline",
-          "name": "MarginNote",
-          "qualname": "oodocs.components.inline.MarginNote"
-        },
-        {
-          "category": "inline",
-          "kind": "class",
-          "module": "oodocs.components.inline",
           "name": "Math",
           "qualname": "oodocs.components.inline.Math"
         },
@@ -824,13 +817,6 @@
           "qualname": "oodocs.styles.theme.Theme"
         },
         {
-          "category": "inline",
-          "kind": "class",
-          "module": "oodocs.components.inline",
-          "name": "Todo",
-          "qualname": "oodocs.components.inline.Todo"
-        },
-        {
           "category": "generated-page",
           "kind": "class",
           "module": "oodocs.components.generated",
@@ -1016,13 +1002,6 @@
           "category": "inline",
           "kind": "function",
           "module": "oodocs.components.inline",
-          "name": "margin_note",
-          "qualname": "oodocs.components.inline.margin_note"
-        },
-        {
-          "category": "inline",
-          "kind": "function",
-          "module": "oodocs.components.inline",
           "name": "math",
           "qualname": "oodocs.components.inline.math"
         },
@@ -1186,13 +1165,6 @@
           "module": "oodocs.components.inline",
           "name": "text_color",
           "qualname": "oodocs.components.inline.text_color"
-        },
-        {
-          "category": "inline",
-          "kind": "function",
-          "module": "oodocs.components.inline",
-          "name": "todo",
-          "qualname": "oodocs.components.inline.todo"
         },
         {
           "category": "inline",
