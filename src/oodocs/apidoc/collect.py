@@ -560,10 +560,6 @@ def _filter_collected_objects(api: ApiPackage, *, config: ApiCollectConfig) -> A
 
     included_modules = {module.name for module in modules}
     metadata = dict(api.metadata)
-    metadata["object_filters"] = {
-        "include": list(config.object_include_patterns),
-        "exclude": list(config.object_exclude_patterns),
-    }
     return ApiPackage(
         api.name,
         version=api.version,
