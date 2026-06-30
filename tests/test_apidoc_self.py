@@ -31,6 +31,7 @@ STALE_RENDERED_API_REFERENCE_MARKERS = (
     "coerce_citation_library",
     "coerce_list_item",
     "normalize_citation_style",
+    "normalize_generated_list_scope",
     "normalize_reference_sort",
     "normalize_reference_style",
 )

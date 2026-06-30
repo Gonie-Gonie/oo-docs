@@ -452,6 +452,4 @@ __all__ = [
     "ImportPolicyError",
     "ImportResult",
     "ImportSeverity",
-    "normalize_import_policy",
-    "resolve_import_result",
 ]

@@ -770,5 +770,4 @@ __all__ = [
     "ListOfReferences",
     "ListOfTables",
     "TableOfContents",
-    "normalize_generated_list_scope",
 ]

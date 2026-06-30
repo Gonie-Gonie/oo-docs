@@ -13,6 +13,7 @@ import oodocs.chemistry as chemistry
 import oodocs.components as components
 import oodocs.components.base as base_components
 import oodocs.components.blocks as block_components
+import oodocs.components.generated as generated_components
 import oodocs.components.inline as inline_components
 import oodocs.components.markup as markup_components
 import oodocs.components.media as media_components
@@ -39,7 +40,7 @@ import oodocs.styles.generated as generated_styles
 import oodocs.workflows as workflows
 from oodocs.apidoc.cli import _build_parser as _build_apidoc_parser
 from oodocs.cli import _build_parser as _build_oodocs_parser
-from oodocs.importers.results import normalize_import_policy
+import oodocs.importers.results as importer_results
 
 
 _PUBLIC_API_MODULE_NAMES = (
@@ -150,6 +151,9 @@ def test_leaf_component_modules_hide_internal_helpers_from_all() -> None:
         block_components: {
             "coerce_cell",
             "coerce_list_item",
+        },
+        generated_components: {
+            "normalize_generated_list_scope",
         },
         inline_components: {
             "coerce_inlines",
@@ -1083,13 +1087,15 @@ def test_issue_objects_share_common_location_fields() -> None:
 
 
 def test_import_policy_names_describe_lossy_behavior() -> None:
-    assert normalize_import_policy(" ALLOW-LOSSY ") == "allow-lossy"
-    assert normalize_import_policy("record-lossy") == "record-lossy"
-    assert normalize_import_policy("fail-on-lossy") == "fail-on-lossy"
+    assert "normalize_import_policy" not in importer_results.__all__
+    assert "resolve_import_result" not in importer_results.__all__
+    assert importer_results.normalize_import_policy(" ALLOW-LOSSY ") == "allow-lossy"
+    assert importer_results.normalize_import_policy("record-lossy") == "record-lossy"
+    assert importer_results.normalize_import_policy("fail-on-lossy") == "fail-on-lossy"
 
     for old_policy in ("lossy", "warn", "strict"):
         with pytest.raises(ValueError):
-            normalize_import_policy(old_policy)
+            importer_results.normalize_import_policy(old_policy)
 
 
 def test_parse_importers_return_import_result_without_diagnostics_switch() -> None:
