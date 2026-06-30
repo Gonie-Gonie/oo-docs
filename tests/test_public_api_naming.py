@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import fields
+import importlib
 import inspect
 
 import pytest
@@ -33,8 +34,33 @@ from oodocs.cli import _build_parser as _build_oodocs_parser
 from oodocs.importers.results import normalize_import_policy
 
 
+_PUBLIC_API_MODULE_NAMES = (
+    "oodocs",
+    "oodocs.chemistry",
+    "oodocs.equations",
+    "oodocs.apidoc",
+    "oodocs.adapters",
+    "oodocs.importers.markdown",
+    "oodocs.importers.notebook",
+    "oodocs.pdf",
+    "oodocs.styles",
+    "oodocs.styles.generated",
+    "oodocs.validation",
+    "oodocs.workflows",
+    "oodocs.presets",
+)
+
+
 def _public_members(cls: type[object]) -> set[str]:
     return {name for name, _ in inspect.getmembers(cls) if not name.startswith("_")}
+
+
+def _public_api_exports():
+    for module_name in _PUBLIC_API_MODULE_NAMES:
+        module = importlib.import_module(module_name)
+        for export_name in getattr(module, "__all__", ()):
+            if hasattr(module, export_name):
+                yield module_name, export_name, getattr(module, export_name)
 
 
 def _subcommand_help(parser, args: list[str], capsys) -> str:
@@ -1001,6 +1027,72 @@ def test_raw_value_helpers_use_as_prefix() -> None:
         members = _public_members(cls)
         assert forbidden.isdisjoint(members), cls.__name__
         assert expected_by_class[cls] <= members, cls.__name__
+
+        for member_name in expected_by_class[cls]:
+            if member_name.startswith("as_") and (
+                member_name.endswith("_row") or member_name.endswith("_cells")
+            ):
+                signature = inspect.signature(getattr(cls, member_name))
+                assert signature.return_annotation == "list[object]", member_name
+
+
+def test_public_api_uses_global_conversion_io_prefix_rules() -> None:
+    forbidden_exact_names = {
+        "write_json",
+        "read_json",
+        "write_csv",
+        "format_table",
+        "format_issues",
+    }
+    forbidden_prefixes = ("write_", "read_")
+
+    for module_name, export_name, obj in _public_api_exports():
+        assert export_name not in forbidden_exact_names, f"{module_name}.{export_name}"
+        assert not export_name.startswith(forbidden_prefixes), f"{module_name}.{export_name}"
+
+        if not inspect.isclass(obj):
+            continue
+
+        members = _public_members(obj)
+        forbidden_members = {
+            name
+            for name in members
+            if name in forbidden_exact_names or name.startswith(forbidden_prefixes)
+        }
+        to_row_helpers = {
+            name
+            for name in members
+            if name == "to_row" or (name.startswith("to_") and name.endswith("_row"))
+        }
+
+        assert not forbidden_members, (
+            f"{module_name}.{export_name}: {sorted(forbidden_members)}"
+        )
+        assert not to_row_helpers, f"{module_name}.{export_name}: {sorted(to_row_helpers)}"
+
+
+def test_apidoc_raw_text_helpers_stay_model_scoped() -> None:
+    raw_text_helpers = {
+        "annotation_text",
+        "default_text",
+        "signature_text",
+        "summary_text",
+    }
+    expected_owners = {
+        "oodocs.apidoc:ApiParameter.annotation_text",
+        "oodocs.apidoc:ApiParameter.default_text",
+        "oodocs.apidoc:ApiObject.signature_text",
+        "oodocs.apidoc:ApiObject.summary_text",
+    }
+    owners: set[str] = set()
+
+    for module_name, export_name, obj in _public_api_exports():
+        if not inspect.isclass(obj):
+            continue
+        for member_name in raw_text_helpers & _public_members(obj):
+            owners.add(f"{module_name}:{export_name}.{member_name}")
+
+    assert owners == expected_owners
 
 
 def test_apidoc_selection_and_json_api_use_canonical_names() -> None:
