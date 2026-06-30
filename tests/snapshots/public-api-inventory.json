@@ -1611,13 +1611,6 @@
         {
           "category": "style",
           "kind": "function",
-          "module": "oodocs.styles.tables",
-          "name": "coerce_table_cell_style",
-          "qualname": "oodocs.styles.tables.coerce_table_cell_style"
-        },
-        {
-          "category": "style",
-          "kind": "function",
           "module": "oodocs.styles.counter",
           "name": "list_style_with_overrides",
           "qualname": "oodocs.styles.counter.list_style_with_overrides"

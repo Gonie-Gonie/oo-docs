@@ -46,9 +46,9 @@ from oodocs.styles import (
     TableCellStyleInput,
     TableStyle,
     TextStyle,
-    coerce_table_cell_style,
     table_style_with_overrides,
 )
+from oodocs.styles.tables import coerce_table_cell_style
 
 if TYPE_CHECKING:
     from oodocs.components.inline import BlockReference, InlineInput, ReferenceFormat

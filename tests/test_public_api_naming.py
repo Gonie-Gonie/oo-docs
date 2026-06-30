@@ -34,6 +34,7 @@ import oodocs.public_api as public_api
 import oodocs.references as reference_helpers
 import oodocs.review as review
 import oodocs.structure as structure
+import oodocs.styles as styles
 import oodocs.styles.generated as generated_styles
 import oodocs.workflows as workflows
 from oodocs.apidoc.cli import _build_parser as _build_apidoc_parser
@@ -191,6 +192,11 @@ def test_leaf_component_modules_hide_internal_helpers_from_all() -> None:
         assert forbidden_names.isdisjoint(module.__all__), module.__name__
         for name in forbidden_names:
             assert hasattr(module, name), f"{module.__name__}.{name}"
+
+
+def test_styles_namespace_hides_table_cell_coercion_helper() -> None:
+    assert "coerce_table_cell_style" not in styles.__all__
+    assert not hasattr(styles, "coerce_table_cell_style")
 
 
 def test_tier_two_namespaces_export_domain_symbols() -> None:

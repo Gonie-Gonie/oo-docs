@@ -20,7 +20,6 @@ from oodocs.styles.tables import (
     TableCellStyle,
     TableCellStyleInput,
     TableStyle,
-    coerce_table_cell_style,
     table_style_with_overrides,
 )
 from oodocs.styles.spacing import Padding
@@ -74,7 +73,6 @@ __all__ = [
     "TitleMatterDefaults",
     "TypographyDefaults",
     "box_style_with_overrides",
-    "coerce_table_cell_style",
     "list_style_with_overrides",
     "paragraph_style_with_overrides",
     "table_style_with_overrides",

@@ -370,6 +370,5 @@ __all__ = [
     "TableCellStyle",
     "TableCellStyleInput",
     "TableStyle",
-    "coerce_table_cell_style",
     "table_style_with_overrides",
 ]
