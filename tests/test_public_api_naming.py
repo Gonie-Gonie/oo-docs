@@ -912,6 +912,42 @@ def test_table_public_api_hides_renderer_helper_methods() -> None:
     assert "fail_on_missing" in from_records_parameters
 
 
+def test_table_data_constructors_expose_canonical_layout_options() -> None:
+    for callable_obj in (
+        oodocs.Table,
+        oodocs.Table.from_dataframe,
+        oodocs.Table.from_csv,
+        oodocs.Table.from_tsv,
+    ):
+        parameters = list(inspect.signature(callable_obj).parameters)
+
+        assert "columns" in parameters, callable_obj
+        assert "column_widths" in parameters, callable_obj
+        assert parameters.index("columns") < parameters.index("column_widths")
+
+    common_order = [
+        "columns",
+        "headers",
+        "caption",
+        "style",
+        "split",
+        "column_widths",
+        "unit",
+        "overflow_policy",
+    ]
+    for callable_obj in (
+        oodocs.Table.from_records,
+        oodocs.Table.from_csv,
+        oodocs.Table.from_tsv,
+    ):
+        parameters = list(inspect.signature(callable_obj).parameters)
+
+        assert set(common_order) <= set(parameters), callable_obj
+        assert [parameters.index(name) for name in common_order] == sorted(
+            parameters.index(name) for name in common_order
+        )
+
+
 def test_adapter_public_api_uses_canonical_missing_input_policy_names() -> None:
     forbidden_exports = {
         "EvidenceBundle",

@@ -150,13 +150,35 @@ def test_table_from_csv_and_tsv(tmp_path) -> None:
     tsv_path = tmp_path / "results.tsv"
     tsv_path.write_text("metric\tvalue\nspeed\t0.81\n", encoding="utf-8")
 
-    csv_table = Table.from_csv(csv_path)
-    tsv_table = Table.from_tsv(tsv_path)
+    csv_table = Table.from_csv(
+        csv_path,
+        columns=[
+            ColumnSpec(width=0.8, unit="in", wrap=False),
+            ColumnSpec(flex=1, text_alignment="right"),
+        ],
+        caption="CSV results.",
+        style="compact",
+        split=True,
+    )
+    tsv_table = Table.from_tsv(
+        tsv_path,
+        columns=[ColumnSpec(flex=1), ColumnSpec(flex=2)],
+    )
     no_header = Table.from_csv(csv_path, headers=False)
 
     assert [cell.content.plain_text() for cell in csv_table.headers] == ["metric", "value"]
     assert _cell_text(csv_table, 1, 1) == "0.94"
+    assert csv_table.caption is not None
+    assert csv_table.caption.plain_text() == "CSV results."
+    assert csv_table.split is True
+    assert csv_table.columns is not None
+    assert csv_table.columns[0].wrap is False
+    assert csv_table._column_widths_in_inches("in", available_width=3.0) == [
+        0.8,
+        2.2,
+    ]
     assert _cell_text(tsv_table, 0, 0) == "speed"
+    assert tsv_table._column_widths_in_inches("in", available_width=3.0) == [1.0, 2.0]
     assert [cell.content.plain_text() for cell in no_header.headers] == [
         "Column 1",
         "Column 2",

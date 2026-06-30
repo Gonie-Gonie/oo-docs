@@ -1228,9 +1228,9 @@ class Table(Block):
             ``rows`` is omitted.
         rows: Body rows. Required unless ``headers`` is dataframe-like.
         caption: Optional table caption.
-        column_widths: Optional widths for the expanded rendered columns.
         columns: Optional column specifications. Mutually exclusive with
             ``column_widths``.
+        column_widths: Optional widths for the expanded rendered columns.
         unit: Unit for ``column_widths``.
         identifier: Optional stable identifier for references or renderer use.
         style: Base table style.
@@ -1266,8 +1266,8 @@ class Table(Block):
         header_rows: Normalized header rows.
         rows: Normalized body rows.
         caption: Optional normalized caption paragraph.
-        column_widths: Optional expanded column widths.
         columns: Optional expanded column specifications.
+        column_widths: Optional expanded column widths.
         unit: Unit for column widths.
         identifier: Stable identifier for references or renderer use.
         style: Resolved table style after overrides are merged.
@@ -1351,8 +1351,8 @@ class Table(Block):
         rows: Sequence[Sequence[TableCellInput]] | None = None,
         *,
         caption: CellInput | None = None,
-        column_widths: Sequence[float] | None = None,
         columns: Sequence[ColumnSpecInput] | None = None,
+        column_widths: Sequence[float] | None = None,
         unit: str | None = None,
         identifier: str | None = None,
         style: TableStyle | str | None = None,
@@ -1793,8 +1793,8 @@ class Table(Block):
         dataframe: object,
         *,
         caption: CellInput | None = None,
-        column_widths: Sequence[float] | None = None,
         columns: Sequence[ColumnSpecInput] | None = None,
+        column_widths: Sequence[float] | None = None,
         unit: str | None = None,
         identifier: str | None = None,
         style: TableStyle | str | None = None,
@@ -1828,9 +1828,9 @@ class Table(Block):
         Args:
             dataframe: Object with dataframe-like columns and rows.
             caption: Optional table caption.
-            column_widths: Optional widths for expanded rendered columns.
             columns: Optional column specifications. Mutually exclusive with
                 ``column_widths``.
+            column_widths: Optional widths for expanded rendered columns.
             unit: Unit for ``column_widths``.
             identifier: Optional stable identifier.
             style: Base table style.
@@ -1876,8 +1876,8 @@ class Table(Block):
         return cls(
             dataframe,
             caption=caption,
-            column_widths=column_widths,
             columns=columns,
+            column_widths=column_widths,
             unit=unit,
             identifier=identifier,
             style=style,
@@ -1914,6 +1914,12 @@ class Table(Block):
         *,
         columns: Sequence[object] | None = None,
         headers: Sequence[TableCellInput] | None = None,
+        caption: CellInput | None = None,
+        style: TableStyle | str | None = None,
+        split: TableSplit = False,
+        column_widths: Sequence[float] | None = None,
+        unit: str | None = None,
+        overflow_policy: TableOverflowPolicyInput = None,
         formatters: Mapping[object, RecordFormatter] | None = None,
         missing: object = "",
         fail_on_missing: bool = False,
@@ -1928,6 +1934,13 @@ class Table(Block):
             headers: Optional visible header cells. When omitted, visible
                 ``ColumnSpec.header`` values are used before falling back to
                 column keys.
+            caption: Optional table caption.
+            style: Base table style.
+            split: Whether renderers may split the table across pages.
+            column_widths: Optional widths for expanded rendered columns.
+            unit: Unit for ``column_widths``.
+            overflow_policy: Policy for validation of intentionally wide
+                tables.
             formatters: Optional per-column callable or format-spec strings.
             missing: Value used when a record is missing a column and
                 ``fail_on_missing`` is false.
@@ -1952,6 +1965,15 @@ class Table(Block):
             ```
         """
 
+        table_kwargs = dict(table_kwargs)
+        table_kwargs.update(
+            caption=caption,
+            style=style,
+            split=split,
+            column_widths=column_widths,
+            unit=unit,
+            overflow_policy=overflow_policy,
+        )
         record_list = list(records)
         if columns is None:
             # Prefer mapping keys when available; sequence records need explicit
@@ -2082,7 +2104,14 @@ class Table(Block):
         cls,
         path: PathLike,
         *,
+        columns: Sequence[ColumnSpecInput] | None = None,
         headers: bool | Sequence[TableCellInput] = True,
+        caption: CellInput | None = None,
+        style: TableStyle | str | None = None,
+        split: TableSplit = False,
+        column_widths: Sequence[float] | None = None,
+        unit: str | None = None,
+        overflow_policy: TableOverflowPolicyInput = None,
         encoding: str = "utf-8-sig",
         delimiter: str = ",",
         **table_kwargs: object,
@@ -2091,8 +2120,18 @@ class Table(Block):
 
         Args:
             path: CSV file path.
+            columns: Optional column layout specifications. CSV columns are
+                not selected or hidden here; use this for widths, flex
+                behavior, wrapping, and cell alignment.
             headers: ``True`` to use the first row, ``False`` to generate
                 generic headers, or explicit header cells.
+            caption: Optional table caption.
+            style: Base table style.
+            split: Whether renderers may split the table across pages.
+            column_widths: Optional widths for expanded rendered columns.
+            unit: Unit for ``column_widths``.
+            overflow_policy: Policy for validation of intentionally wide
+                tables.
             encoding: File encoding.
             delimiter: CSV delimiter.
             **table_kwargs: Additional arguments forwarded to ``Table``.
@@ -2126,14 +2165,32 @@ class Table(Block):
         else:
             table_headers = list(headers)
             rows = matrix
-        return cls(table_headers, rows, **table_kwargs)
+        return cls(
+            table_headers,
+            rows,
+            columns=columns,
+            caption=caption,
+            style=style,
+            split=split,
+            column_widths=column_widths,
+            unit=unit,
+            overflow_policy=overflow_policy,
+            **table_kwargs,
+        )
 
     @classmethod
     def from_tsv(
         cls,
         path: PathLike,
         *,
+        columns: Sequence[ColumnSpecInput] | None = None,
         headers: bool | Sequence[TableCellInput] = True,
+        caption: CellInput | None = None,
+        style: TableStyle | str | None = None,
+        split: TableSplit = False,
+        column_widths: Sequence[float] | None = None,
+        unit: str | None = None,
+        overflow_policy: TableOverflowPolicyInput = None,
         encoding: str = "utf-8-sig",
         **table_kwargs: object,
     ) -> Table:
@@ -2141,8 +2198,18 @@ class Table(Block):
 
         Args:
             path: TSV file path.
+            columns: Optional column layout specifications. TSV columns are
+                not selected or hidden here; use this for widths, flex
+                behavior, wrapping, and cell alignment.
             headers: ``True`` to use the first row, ``False`` to generate
                 generic headers, or explicit header cells.
+            caption: Optional table caption.
+            style: Base table style.
+            split: Whether renderers may split the table across pages.
+            column_widths: Optional widths for expanded rendered columns.
+            unit: Unit for ``column_widths``.
+            overflow_policy: Policy for validation of intentionally wide
+                tables.
             encoding: File encoding.
             **table_kwargs: Additional arguments forwarded to ``Table``.
 
@@ -2159,7 +2226,14 @@ class Table(Block):
 
         return cls.from_csv(
             path,
+            columns=columns,
             headers=headers,
+            caption=caption,
+            style=style,
+            split=split,
+            column_widths=column_widths,
+            unit=unit,
+            overflow_policy=overflow_policy,
             encoding=encoding,
             delimiter="\t",
             **table_kwargs,
