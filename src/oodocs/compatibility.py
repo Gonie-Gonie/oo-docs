@@ -244,6 +244,4 @@ __all__ = [
     "OutputFormat",
     "compatibility_note",
     "format_output_formats",
-    "normalize_output_format",
-    "normalize_output_formats",
 ]

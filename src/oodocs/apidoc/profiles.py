@@ -530,13 +530,11 @@ def normalize_parameter_columns(columns: Sequence[str]) -> tuple[str, ...]:
         Validate columns before building a custom profile:
 
         ```python
-        from oodocs.apidoc.profiles import ApiPresentationProfile, normalize_parameter_columns
+        from oodocs.apidoc.profiles import ApiPresentationProfile
 
         profile = ApiPresentationProfile(
             name="compact",
-            parameter_columns=normalize_parameter_columns(
-                ("name", "type", "description"),
-            ),
+            parameter_columns=("name", "type", "description"),
         )
         ```
     """
@@ -552,7 +550,6 @@ def normalize_parameter_columns(columns: Sequence[str]) -> tuple[str, ...]:
 
 __all__ = [
     "ApiPresentationProfile",
-    "normalize_parameter_columns",
     "presentation_profile_names",
     "register_presentation_profile",
     "resolve_presentation_profile",

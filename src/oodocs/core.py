@@ -323,3 +323,6 @@ def format_counter_value(value: int, counter_format: str, *, bullet: str = "\u20
     if normalized == "bullet":
         return bullet
     return ""
+
+
+__all__ = ["OODocsError"]

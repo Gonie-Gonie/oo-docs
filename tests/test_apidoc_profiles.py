@@ -12,7 +12,7 @@ from oodocs.apidoc import (
     presentation_profile_names,
     resolve_presentation_profile,
 )
-from oodocs.apidoc.profiles import normalize_parameter_columns
+import oodocs.apidoc.profiles as apidoc_profiles
 
 
 def _imported_modules(path: Path) -> set[str]:
@@ -42,7 +42,8 @@ def test_apidoc_profile_validates_parameter_columns() -> None:
     )
 
     assert profile.parameter_columns == ("name", "required", "source")
-    assert normalize_parameter_columns(("type", "description")) == (
+    assert "normalize_parameter_columns" not in apidoc_profiles.__all__
+    assert apidoc_profiles.normalize_parameter_columns(("type", "description")) == (
         "type",
         "description",
     )

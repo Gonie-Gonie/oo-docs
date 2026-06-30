@@ -9,7 +9,10 @@ import pytest
 import oodocs
 import oodocs.adapters as adapters
 import oodocs.apidoc as apidoc
+import oodocs.apidoc.config as apidoc_config
+import oodocs.apidoc.profiles as apidoc_profiles
 import oodocs.chemistry as chemistry
+import oodocs.compatibility as compatibility
 import oodocs.components as components
 import oodocs.components.base as base_components
 import oodocs.components.blocks as block_components
@@ -31,6 +34,7 @@ import oodocs.positioning as positioning
 import oodocs.presets as presets
 import oodocs.presets.components as preset_components
 import oodocs.presets.templates as preset_templates
+import oodocs.core as core
 import oodocs.public_api as public_api
 import oodocs.references as reference_helpers
 import oodocs.review as review
@@ -201,6 +205,28 @@ def test_leaf_component_modules_hide_internal_helpers_from_all() -> None:
 def test_styles_namespace_hides_table_cell_coercion_helper() -> None:
     assert "coerce_table_cell_style" not in styles.__all__
     assert not hasattr(styles, "coerce_table_cell_style")
+
+
+def test_core_and_apidoc_namespaces_hide_normalization_helpers() -> None:
+    assert set(core.__all__) == {"OODocsError"}
+    for name in (
+        "normalize_color",
+        "normalize_counter_format",
+        "normalize_length_unit",
+        "normalize_text_alignment",
+        "normalize_vertical_alignment",
+    ):
+        assert name not in core.__all__
+        assert hasattr(core, name)
+
+    assert "normalize_explicit_names" not in apidoc_config.__all__
+    assert hasattr(apidoc_config, "normalize_explicit_names")
+    assert "normalize_parameter_columns" not in apidoc_profiles.__all__
+    assert hasattr(apidoc_profiles, "normalize_parameter_columns")
+    assert "normalize_output_format" not in compatibility.__all__
+    assert "normalize_output_formats" not in compatibility.__all__
+    assert hasattr(compatibility, "normalize_output_format")
+    assert hasattr(compatibility, "normalize_output_formats")
 
 
 def test_tier_two_namespaces_export_domain_symbols() -> None:
