@@ -3130,23 +3130,48 @@ class SubTableGroup(Block):
         )
 
     def label_for_index(self, index: int) -> str:
-        """Return the raw subtable label for a zero-based child index."""
+        """Return the raw subtable label for a zero-based child index.
+
+        Args:
+            index: Zero-based child index.
+
+        Returns:
+            Explicit label or generated counter-style label.
+        """
 
         subtable = self.subtables[index]
         return subtable.label or self.label_style.format_value(self.label_style.start + index)
 
     def formatted_label_for_index(self, index: int) -> str:
-        """Return the display label for a zero-based child index."""
+        """Return the display label for a zero-based child index.
+
+        Args:
+            index: Zero-based child index.
+
+        Returns:
+            Label formatted with ``label_format``.
+        """
 
         return self.label_format.format(label=self.label_for_index(index))
 
     def formatted_reference_label_for_index(self, index: int) -> str:
-        """Return the child label suffix used in references."""
+        """Return the child label suffix used in references.
+
+        Args:
+            index: Zero-based child index.
+
+        Returns:
+            Label formatted with ``reference_label_format``.
+        """
 
         return self.reference_label_format.format(label=self.label_for_index(index))
 
     def resolved_placement(self) -> MediaPlacement:
-        """Return the effective placement for this table group."""
+        """Return the effective placement for this table group.
+
+        Returns:
+            Effective media placement.
+        """
 
         if self.placement == "auto":
             return "float"
@@ -3158,7 +3183,16 @@ class SubTableGroup(Block):
         style: TextStyle | None = None,
         reference_format: ReferenceFormat | None = None,
     ) -> BlockReference:
-        """Create an explicit inline reference to this subtable group."""
+        """Create an explicit inline reference to this subtable group.
+
+        Args:
+            *label: Optional inline label override.
+            style: Optional inline style.
+            reference_format: Optional automatic reference formatting rules.
+
+        Returns:
+            Inline reference targeting this subtable group.
+        """
 
         from oodocs.components.inline import ref
 
