@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Iterable, Sequence
 
 from oodocs.apidoc.model import ApiModule, ApiObject, ApiPackage, ApiSeeAlso
+from oodocs.apidoc.paths import _safe_source_path_text
 from oodocs.apidoc.profiles import ApiPresentationProfile, resolve_presentation_profile
 from oodocs.components.base import Block
 from oodocs.components.blocks import Box, CodeBlock, Paragraph, Section, section_for_level
@@ -1238,17 +1238,7 @@ def _source_location_text(
     *,
     source_root: str | None = None,
 ) -> str:
-    display_path = source_path
-    if source_root:
-        try:
-            display_path = (
-                Path(source_path)
-                .resolve(strict=False)
-                .relative_to(Path(source_root).resolve(strict=False))
-                .as_posix()
-            )
-        except (OSError, ValueError):
-            display_path = source_path
+    display_path = _safe_source_path_text(source_path, source_root=source_root) or "source"
     if line_number is not None:
         return f"{display_path}:{line_number}"
     return display_path

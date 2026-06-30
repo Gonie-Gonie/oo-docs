@@ -33,6 +33,7 @@ from oodocs.apidoc.model import (
     ApiParameter,
     ApiReturn,
 )
+from oodocs.apidoc.paths import _safe_source_path_text
 from oodocs.core import PathLike
 
 
@@ -724,21 +725,7 @@ def _normalize_source_location_metadata(value: object, *, source_root: Path) -> 
 def _relative_source_path_text(value: object, *, source_root: Path) -> str | None:
     if value is None:
         return None
-    text = str(value).strip()
-    if not text:
-        return None
-
-    path = Path(text)
-    if path.is_absolute():
-        try:
-            return (
-                path.resolve(strict=False)
-                .relative_to(source_root.resolve(strict=False))
-                .as_posix()
-            )
-        except (OSError, ValueError):
-            return path.name
-    return path.as_posix()
+    return _safe_source_path_text(value, source_root=source_root)
 
 
 def _stamp_source_root(module: ApiModule, source_root: Path) -> None:

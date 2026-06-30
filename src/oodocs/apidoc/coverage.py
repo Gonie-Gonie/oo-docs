@@ -10,6 +10,7 @@ from typing import Mapping
 
 from oodocs.apidoc.examples import check_doctest_examples, check_example_syntax
 from oodocs.apidoc.model import ApiDocIssue, ApiObject, ApiPackage
+from oodocs.apidoc.paths import _safe_source_path_text
 from oodocs.components.blocks import Chapter, Paragraph
 from oodocs.components.media import Table
 from oodocs.core import PathLike
@@ -633,17 +634,10 @@ def _relative_source_path(obj: ApiObject) -> str | None:
     if obj.source_path is None:
         return None
     source_root = obj.metadata.get("source_root")
-    if isinstance(source_root, str):
-        try:
-            return (
-                Path(obj.source_path)
-                .resolve(strict=False)
-                .relative_to(Path(source_root).resolve(strict=False))
-                .as_posix()
-            )
-        except (OSError, ValueError):
-            return obj.source_path
-    return obj.source_path
+    return _safe_source_path_text(
+        obj.source_path,
+        source_root=source_root if isinstance(source_root, str) else None,
+    )
 
 
 __all__ = [

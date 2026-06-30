@@ -3,6 +3,7 @@ from __future__ import annotations
 from apidoc_samples import collect_sample_api
 from oodocs import Box, Paragraph, Table
 from oodocs.apidoc import ApiModule, ApiObject, ApiRendererNote, ApiSeeAlso
+from oodocs.apidoc.blocks import api_source_location_paragraph
 
 
 def test_apidoc_object_converts_to_blocks(tmp_path) -> None:
@@ -70,3 +71,29 @@ def test_module_renderer_notes_use_leaf_row_helper() -> None:
     assert len(blocks) == 1
     assert isinstance(blocks[0], Table)
     assert [cell.content.plain_text() for cell in blocks[0].rows[0]] == note.as_output_note_row()
+
+
+def test_source_location_paragraph_sanitizes_legacy_absolute_paths() -> None:
+    local_absolute_paths = (
+        r"C:\Users\me\repo\src\samplepkg\core.py",
+        "/home/me/repo/src/samplepkg/core.py",
+        "/Users/me/repo/src/samplepkg/core.py",
+    )
+
+    for source_path in local_absolute_paths:
+        obj = ApiObject(
+            "function",
+            "run",
+            "samplepkg.run",
+            "samplepkg",
+            source_path=source_path,
+            line_number=12,
+        )
+        paragraph = api_source_location_paragraph(obj, presentation="reference")
+
+        assert paragraph is not None
+        text = paragraph.plain_text()
+        assert "core.py:12" in text
+        assert "C:\\Users" not in text
+        assert "/home/" not in text
+        assert "/Users/" not in text

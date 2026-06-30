@@ -151,6 +151,57 @@ def test_apidoc_coverage_reports_quality_gate_issues(tmp_path) -> None:
     assert "missing-renderer-notes" in csv_text
 
 
+def test_apidoc_coverage_sanitizes_legacy_absolute_source_paths() -> None:
+    api = ApiPackage(
+        "legacypkg",
+        modules=[
+            ApiModule(
+                "legacypkg",
+                members=[
+                    ApiObject(
+                        kind="function",
+                        name="win",
+                        qualname="legacypkg.win",
+                        module="legacypkg",
+                        source_path=r"C:\Users\me\repo\src\legacypkg\win.py",
+                    ),
+                    ApiObject(
+                        kind="function",
+                        name="linux",
+                        qualname="legacypkg.linux",
+                        module="legacypkg",
+                        source_path="/home/me/repo/src/legacypkg/linux.py",
+                    ),
+                    ApiObject(
+                        kind="function",
+                        name="mac",
+                        qualname="legacypkg.mac",
+                        module="legacypkg",
+                        source_path="/Users/me/repo/src/legacypkg/mac.py",
+                    ),
+                ],
+            )
+        ],
+    )
+
+    coverage = check_api_docs(api)
+    missing_doc_paths = {
+        issue.qualname: issue.path
+        for issue in coverage.issues
+        if issue.code == "missing-docstring"
+    }
+
+    assert missing_doc_paths == {
+        "legacypkg.win": "win.py",
+        "legacypkg.linux": "linux.py",
+        "legacypkg.mac": "mac.py",
+    }
+    assert not any(
+        marker in coverage.to_json()
+        for marker in ("C:\\Users", "/home/", "/Users/")
+    )
+
+
 def test_apidoc_coverage_can_execute_doctest_examples() -> None:
     def echo(value: str) -> str:
         return value
