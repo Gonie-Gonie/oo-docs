@@ -9,6 +9,7 @@ from oodocs.components.generated import (
     ListOfAlgorithms,
     ListOfFigures,
     ListOfReferences,
+    ListOfListings,
     ListOfTables,
     TableOfContents,
 )
@@ -19,6 +20,7 @@ __all__ = [
     "ListOfGlossaryTerms",
     "ListOfAlgorithms",
     "ListOfFigures",
+    "ListOfListings",
     "ListOfTables",
     "ListOfReferences",
     "TableOfContents",

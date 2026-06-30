@@ -329,6 +329,7 @@ def test_tier_two_namespaces_export_domain_symbols() -> None:
             "ListOfGlossaryTerms",
             "ListOfAlgorithms",
             "ListOfFigures",
+            "ListOfListings",
             "ListOfTables",
             "ListOfReferences",
             "TableOfContents",
@@ -484,6 +485,7 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "GlossaryTerm",
         "ImageBox",
         "ListOfAlgorithms",
+        "ListOfListings",
         "MarginNote",
         "Lemma",
         "load_document",
@@ -750,6 +752,7 @@ def test_generated_content_defaults_use_document_language_field_names() -> None:
     expected_fields = {
         "list_of_comments_title",
         "list_of_footnotes_title",
+        "list_of_listings_title",
         "list_of_references_title",
         "list_of_glossary_terms_title",
         "table_of_contents_title",

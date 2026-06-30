@@ -43,6 +43,7 @@ from oodocs.components.generated import (
     ListOfAlgorithms,
     ListOfFigures,
     ListOfFootnotes,
+    ListOfListings,
     ListOfReferences,
     ListOfTables,
     TableOfContents,
@@ -1238,6 +1239,7 @@ class _ValidationContext:
                 ListOfTables,
                 ListOfFigures,
                 ListOfAlgorithms,
+                ListOfListings,
                 ListOfGlossaryTerms,
                 ListOfReferences,
                 ListOfComments,
@@ -2032,6 +2034,20 @@ class _ValidationContext:
                         "warning",
                         "empty-algorithm-list",
                         "ListOfAlgorithms has no numbered algorithms to display.",
+                        path,
+                    )
+                continue
+            if isinstance(page, ListOfListings):
+                if page.show_page_numbers:
+                    self._add_compatibility_warning(
+                        "html-listing-list-page-numbers",
+                        path,
+                    )
+                if not render_index.scoped_listings(page):
+                    self._add(
+                        "warning",
+                        "empty-listing-list",
+                        "ListOfListings has no captioned code blocks to display.",
                         path,
                     )
                 continue

@@ -82,7 +82,7 @@ from oodocs.chemistry import (
     ReactionEquation,
     chemical_formula,
 )
-from oodocs.generated import ListOfComments, ListOfAlgorithms
+from oodocs.generated import ListOfComments, ListOfAlgorithms, ListOfListings
 from oodocs.media import ColumnSpec, CropBox, SubTable, SubTableGroup
 from oodocs.pdf import PdfPages
 from oodocs.positioning import ImageBox, PageItemScope, Shape, TextBox
@@ -1047,7 +1047,7 @@ def build_usage_guide_document() -> Document:
         headers=["Generated object", "Why it exists", "What triggers it"],
         rows=[
             ["TableOfContents()", "Creates a navigable outline from authored headings.", "Place the block where the contents page should appear."],
-            ["ListOfTables() / ListOfFigures() / ListOfAlgorithms()", "Collects numbered captions or algorithms in a stable order with page labels in DOCX and PDF.", "Use numbered tables, figures, or algorithms earlier in the document; pass show_page_numbers=False for a link-only list."],
+            ["ListOfTables() / ListOfFigures() / ListOfAlgorithms() / ListOfListings()", "Collects numbered captions, algorithms, or code listings in a stable order with page labels in DOCX and PDF.", "Use numbered tables, figures, algorithms, or captioned CodeBlock objects earlier in the document; pass show_page_numbers=False for a link-only list."],
             ["ListOfComments()", "Exports reviewer comments without disturbing reading flow.", Comment.annotated("Place review remarks inline", "ListOfComments() collects these review notes onto a dedicated generated page.")],
             ["ListOfReferences()", "Renders cited bibliography entries by default.", "Cite items from CitationLibrary or CitationSource; pass include_uncited=True to include the whole library."],
             ["ListOfGlossaryTerms(glossary)", "Renders registered terms and acronyms as a generated table.", "Use glossary.term(...), glossary.acronym(...), and glossary.use(...) while authoring the body."],
@@ -1166,7 +1166,7 @@ def build_usage_guide_document() -> Document:
             ["Box", "icon, title_position, shadow, border, background_color, title colors, padding, space_after, width, unit, block_alignment", "Use BoxStyle only for named callout or report-panel designs."],
             ["Table", "header/body/alternate colors, border, top_rule, header_rule, bottom_rule, alignment, cell_padding, repeat_header_rows", "Use style=\"booktabs\" for publication-style horizontal rules without vertical grid lines."],
             ["TableCell", "colspan, rowspan, background_color, text_color, bold, italic, text_alignment, vertical_alignment", "Use TableCellStyle only for reusable row, column, or cell styling."],
-            ["TableOfContents, ListOfTables, ListOfFigures, ListOfAlgorithms", "scope, show_page_numbers, leader; TableOfContents also accepts max_level and level_styles", "Use scope for document, part, chapter, or section-local generated lists."],
+            ["TableOfContents, ListOfTables, ListOfFigures, ListOfAlgorithms, ListOfListings", "scope, show_page_numbers, leader; TableOfContents also accepts max_level and level_styles", "Use scope for document, part, chapter, or section-local generated lists."],
             ["Figure, PdfPages, SubFigure, SubFigureGroup, SubTable, SubTableGroup", "width, height, unit, placement, image_dpi, pages, columns, column_gap, label_format, label_style", "Use caption Paragraphs when caption text needs inline styling."],
         ],
         caption="Block-level option scope from quick kwargs to reusable style objects.",
@@ -1402,6 +1402,7 @@ def build_usage_guide_document() -> Document:
         ListOfTables(),
         ListOfFigures(),
         ListOfAlgorithms(),
+        ListOfListings(),
         Part(
             "Getting Oriented",
             Chapter(

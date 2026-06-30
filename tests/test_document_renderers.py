@@ -56,7 +56,12 @@ from oodocs.chemistry import (
     ce,
     chemical_formula,
 )
-from oodocs.generated import ListOfComments, ListOfFootnotes, ListOfAlgorithms
+from oodocs.generated import (
+    ListOfAlgorithms,
+    ListOfComments,
+    ListOfFootnotes,
+    ListOfListings,
+)
 from oodocs.glossary import Acronym, Glossary, ListOfGlossaryTerms, GlossaryTerm
 from oodocs.media import (
     ColumnSpec,
@@ -4166,6 +4171,61 @@ def test_code_block_caption_line_numbers_highlights_and_from_file(tmp_path: Path
     assert "oodocs-code-line-highlight" in html_text
     assert "background-color: #FFF3B0" in html_text
     assert "FFF3B0" in _docx_document_xml(docx_path)
+
+
+def test_list_of_listings_renders_captioned_code_blocks(tmp_path: Path) -> None:
+    listing_list = ListOfListings()
+    listing = CodeBlock(
+        "print('ready')",
+        language="python",
+        caption="Reusable implementation.",
+        line_numbers=True,
+    )
+    plain_block = CodeBlock("print('no caption')", language="python")
+    scoped_list = ListOfListings(scope="chapter", show_page_numbers=False)
+    scoped_listing = CodeBlock(
+        "return 'scoped'",
+        language="python",
+        caption="Scoped implementation.",
+    )
+    document = Document(
+        "Listing Index",
+        listing_list,
+        listing,
+        plain_block,
+        Chapter("Details", scoped_list, scoped_listing),
+    )
+    render_index = build_render_index(document)
+
+    assert [entry.number for entry in render_index.scoped_listings(listing_list)] == [
+        1,
+        3,
+    ]
+    assert [entry.number for entry in render_index.scoped_listings(scoped_list)] == [3]
+    assert any(
+        issue.code == "html-listing-list-page-numbers"
+        for issue in document.validate().warnings
+    )
+
+    docx_path = tmp_path / "list-of-listings.docx"
+    pdf_path = tmp_path / "list-of-listings.pdf"
+    html_path = tmp_path / "list-of-listings.html"
+    document.save_docx(docx_path)
+    document.save_pdf(pdf_path)
+    document.save_html(html_path)
+
+    word_text = "\n".join(paragraph.text for paragraph in WordDocument(docx_path).paragraphs)
+    pdf_text = "\n".join(page.extract_text() or "" for page in PdfReader(BytesIO(pdf_path.read_bytes())).pages)
+    html_text = html_path.read_text(encoding="utf-8")
+    normalized_html_text = _normalized_html_text(html_path)
+
+    for rendered_text in (word_text, pdf_text, normalized_html_text):
+        assert "List of Listings" in rendered_text
+        assert rendered_text.count("Code block 1. Reusable implementation.") >= 2
+        assert "Code block 3. Scoped implementation." in rendered_text
+        assert "Code block 2." not in rendered_text
+    assert 'class="oodocs-generated-page oodocs-listing-list"' in html_text
+    assert 'href="#code_' in html_text
 
 
 def test_code_block_validation_reports_unrenderable_options() -> None:

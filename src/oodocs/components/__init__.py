@@ -42,6 +42,7 @@ _EXPORTS = {
     "Figure": "oodocs.components.media",
     "ListOfAlgorithms": "oodocs.components.generated",
     "ListOfFigures": "oodocs.components.generated",
+    "ListOfListings": "oodocs.components.generated",
     "Footnote": "oodocs.components.inline",
     "ListOfFootnotes": "oodocs.components.generated",
     "Glossary": "oodocs.components.glossary",

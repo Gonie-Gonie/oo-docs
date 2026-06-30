@@ -76,6 +76,14 @@ COMPATIBILITY_NOTES: dict[str, CompatibilityNote] = {
         ),
         formats=("html",),
     ),
+    "html-listing-list-page-numbers": CompatibilityNote(
+        code="html-listing-list-page-numbers",
+        message=(
+            "HTML output does not have stable rendered page numbers, "
+            "so the list of listings is link-only there."
+        ),
+        formats=("html",),
+    ),
     "box-shadow-html-only": CompatibilityNote(
         code="box-shadow-html-only",
         message=(

@@ -55,6 +55,7 @@ from oodocs.components.generated import (
     ListOfAlgorithms,
     ListOfFigures,
     ListOfFootnotes,
+    ListOfListings,
     ListOfReferences,
     ListOfTables,
     TableOfContents,
@@ -908,6 +909,31 @@ class DocxRenderer:
             text_width=context.settings.text_width_in_inches(),
         )
 
+    def render_list_of_listings(
+        self,
+        block: ListOfListings,
+        context: DocxRenderContext,
+    ) -> None:
+        """Render the generated list of listings into the DOCX document.
+
+        Args:
+            block: Generated listing-list block.
+            context: Current DOCX render context.
+        """
+
+        self._render_caption_list(
+            context.word_document,
+            block.title,
+            context.render_index.scoped_listings(block),
+            context.theme,
+            context.render_index,
+            context.theme.resolve_generated_page_title("list_of_listings"),
+            "Code block",
+            show_page_numbers=block.show_page_numbers,
+            leader=block.leader,
+            text_width=context.settings.text_width_in_inches(),
+        )
+
     def render_table(
         self,
         container: object,
@@ -1339,7 +1365,17 @@ class DocxRenderer:
         return 3
 
     def _is_paginated_generated_page(self, block: object) -> bool:
-        return isinstance(block, (ListOfGlossaryTerms, ListOfTables, ListOfFigures, ListOfAlgorithms, TableOfContents))
+        return isinstance(
+            block,
+            (
+                ListOfGlossaryTerms,
+                ListOfTables,
+                ListOfFigures,
+                ListOfAlgorithms,
+                ListOfListings,
+                TableOfContents,
+            ),
+        )
 
     def _should_auto_render_footnote_list(
         self,
@@ -1550,6 +1586,7 @@ class DocxRenderer:
                 ListOfTables,
                 ListOfFigures,
                 ListOfAlgorithms,
+                ListOfListings,
                 Part,
             ),
         ):

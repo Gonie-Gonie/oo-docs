@@ -74,6 +74,7 @@ from oodocs.components.generated import (
     ListOfAlgorithms,
     ListOfFigures,
     ListOfFootnotes,
+    ListOfListings,
     ListOfReferences,
     ListOfTables,
     TableOfContents,
@@ -1786,6 +1787,33 @@ class PdfRenderer:
             context.theme.resolve_generated_page_title("list_of_algorithms"),
         )
 
+    def render_list_of_listings(
+        self,
+        block: ListOfListings,
+        context: PdfRenderContext,
+    ) -> list[object]:
+        """Render the generated list of listings into PDF flowables.
+
+        Args:
+            block: Generated listing-list block.
+            context: Current PDF render context.
+
+        Returns:
+            Flowables representing the generated list of listings.
+        """
+
+        return self._render_caption_list(
+            block,
+            block.title,
+            context.render_index.scoped_listings(block),
+            context.theme,
+            context.styles,
+            context.render_index,
+            context.theme.resolve_generated_page_title("list_of_listings"),
+            "Code block",
+            notify_kind="ListingListEntry",
+        )
+
     def render_comment_list(
         self,
         block: ListOfComments,
@@ -2188,7 +2216,17 @@ class PdfRenderer:
         )
 
     def _is_paginated_generated_page(self, block: object) -> bool:
-        return isinstance(block, (ListOfGlossaryTerms, ListOfTables, ListOfFigures, ListOfAlgorithms, TableOfContents))
+        return isinstance(
+            block,
+            (
+                ListOfGlossaryTerms,
+                ListOfTables,
+                ListOfFigures,
+                ListOfAlgorithms,
+                ListOfListings,
+                TableOfContents,
+            ),
+        )
 
     def _should_auto_render_footnote_list(
         self,
@@ -2407,6 +2445,7 @@ class PdfRenderer:
                 ListOfTables,
                 ListOfFigures,
                 ListOfAlgorithms,
+                ListOfListings,
                 Part,
             ),
         ):
@@ -3043,18 +3082,27 @@ class PdfRenderer:
                 spaceBefore=4,
                 spaceAfter=0,
             )
-            elements.append(
-                RLParagraph(
-                    self._inline_markup(
-                        self._caption_fragments("Code block", render_index.code_block_number(block), block.caption),
-                        theme,
-                        render_index,
-                        base_font_name=caption_style.fontName,
-                        base_size=caption_style.fontSize,
-                    ),
-                    caption_style,
-                )
+            caption_fragments = self._caption_fragments(
+                "Code block",
+                render_index.code_block_number(block),
+                block.caption,
             )
+            caption_paragraph = RLParagraph(
+                self._inline_markup(
+                    caption_fragments,
+                    theme,
+                    render_index,
+                    base_font_name=caption_style.fontName,
+                    base_size=caption_style.fontSize,
+                ),
+                caption_style,
+            )
+            caption_paragraph._oodocs_caption_list_entry = (  # type: ignore[attr-defined]
+                "ListingListEntry",
+                self._flatten_fragments(caption_fragments, theme, render_index),
+                render_index.block_anchor(block),
+            )
+            elements.append(caption_paragraph)
         elements.append(Spacer(1, block_style.space_after or 0))
         return [KeepTogether(elements)]
 

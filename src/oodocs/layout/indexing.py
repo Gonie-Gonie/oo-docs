@@ -26,6 +26,7 @@ from oodocs.components.generated import (
     ListOfAlgorithms,
     ListOfFigures,
     ListOfFootnotes,
+    ListOfListings,
     ListOfReferences,
     ListOfTables,
     TableOfContents,
@@ -244,6 +245,23 @@ class CountableEntry:
 
 
 @dataclass(slots=True)
+class CodeBlockEntry:
+    """A captioned code listing entry.
+
+    Attributes:
+        number: Assigned code block number.
+        block: Captioned code block.
+        anchor: Anchor used by renderers for links.
+        scope: Ancestor scope used by generated lists.
+    """
+
+    number: int
+    block: CodeBlock
+    anchor: str
+    scope: EntryScope = field(default_factory=EntryScope)
+
+
+@dataclass(slots=True)
 class ResolvedBlockReference:
     """Resolved label, number text, and anchor for an object reference.
 
@@ -315,6 +333,7 @@ class RenderIndex:
         paragraph_numbers: Paragraph numbers keyed by paragraph identity.
         equation_numbers: Equation numbers keyed by equation identity.
         code_block_numbers: Code-block numbers keyed by code block identity.
+        code_blocks: Captioned code block entries.
         box_numbers: Box numbers keyed by box identity.
         countables: Indexed theorem-like countable blocks.
         countable_numbers: Countable block numbers keyed by block identity.
@@ -357,6 +376,7 @@ class RenderIndex:
     paragraph_numbers: dict[int, int] = field(default_factory=dict)
     equation_numbers: dict[int, int] = field(default_factory=dict)
     code_block_numbers: dict[int, int] = field(default_factory=dict)
+    code_blocks: list[CodeBlockEntry] = field(default_factory=list)
     box_numbers: dict[int, int] = field(default_factory=dict)
     countables: list[CountableEntry] = field(default_factory=list)
     countable_numbers: dict[int, int] = field(default_factory=dict)
@@ -428,6 +448,22 @@ class RenderIndex:
             for entry in self.countables
             if entry.counter == "algorithm"
             and self._entry_in_scope(entry.scope, block.scope, self.generated_scope(block))
+        ]
+
+    def scoped_listings(self, block: ListOfListings) -> list[CodeBlockEntry]:
+        """Return listing entries visible to ``block`` after scope filtering.
+
+        Args:
+            block: List of listings block requesting scoped entries.
+
+        Returns:
+            Captioned code block entries visible to the block.
+        """
+
+        return [
+            entry
+            for entry in self.code_blocks
+            if self._entry_in_scope(entry.scope, block.scope, self.generated_scope(block))
         ]
 
     def reference_entries(
@@ -1305,8 +1341,16 @@ def _index_blocks(
         if isinstance(block, CodeBlock):
             if id(block) not in render_index.code_block_numbers:
                 render_index.code_block_numbers[id(block)] = len(render_index.code_block_numbers) + 1
-            _register_block_anchor(render_index, block, "code")
+            anchor = _register_block_anchor(render_index, block, "code")
             if block.caption is not None:
+                render_index.code_blocks.append(
+                    CodeBlockEntry(
+                        number=render_index.code_block_numbers[id(block)],
+                        block=block,
+                        anchor=anchor,
+                        scope=scope,
+                    )
+                )
                 _index_inlines(block.caption.content, render_index, citations)
             continue
         if isinstance(block, Equation):
@@ -1480,6 +1524,7 @@ def _index_blocks(
                 ListOfTables,
                 ListOfFigures,
                 ListOfAlgorithms,
+                ListOfListings,
                 ListOfReferences,
                 ListOfComments,
                 ListOfFootnotes,

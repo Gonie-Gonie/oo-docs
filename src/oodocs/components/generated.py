@@ -300,6 +300,79 @@ class ListOfAlgorithms(Block):
 
 
 @dataclass(slots=True, init=False)
+class ListOfListings(Block):
+    """Generated list of captioned code listings.
+
+    Args:
+        title: Optional page title. Renderers use their default title when
+            omitted.
+        scope: Document region to include: ``"document"``, ``"part"``,
+            ``"chapter"``, or ``"section"``.
+        show_page_numbers: Whether fixed-page renderers should display page
+            numbers.
+        leader: Leader character between listing text and page number.
+
+    Examples:
+        ```python
+        from oodocs import CodeBlock, Document
+        from oodocs.generated import ListOfListings
+
+        doc = Document(
+            "Examples",
+            ListOfListings(),
+            CodeBlock("print('ok')", caption="Smoke test"),
+        )
+        ```
+    """
+
+    title: list[Text] | None
+    scope: GeneratedListScope
+    show_page_numbers: bool
+    leader: str
+
+    def __init__(
+        self,
+        title: InlineInput | None = None,
+        *,
+        scope: GeneratedListScope | str = "document",
+        show_page_numbers: bool = True,
+        leader: str = ".",
+    ) -> None:
+        self.title = coerce_inlines((title,)) if title is not None else None
+        self.scope = normalize_generated_list_scope(scope)
+        self.show_page_numbers = show_page_numbers
+        self.leader = leader
+
+    def _render_to_docx(
+        self,
+        renderer: object,
+        container: object,
+        context: DocxRenderContext,
+    ) -> None:
+        """Render this listing list into a DOCX container."""
+
+        renderer.render_list_of_listings(self, context)
+
+    def _render_to_pdf(
+        self,
+        renderer: object,
+        context: PdfRenderContext,
+    ) -> list[object]:
+        """Render this listing list into PDF flowables."""
+
+        return renderer.render_list_of_listings(self, context)
+
+    def _render_to_html(
+        self,
+        renderer: object,
+        context: HtmlRenderContext,
+    ) -> str:
+        """Render this listing list into HTML markup."""
+
+        return renderer.render_list_of_listings(self, context)
+
+
+@dataclass(slots=True, init=False)
 class ListOfReferences(Block):
     """Generated reference list for bibliography entries.
 
@@ -779,6 +852,7 @@ __all__ = [
     "ListOfAlgorithms",
     "ListOfFigures",
     "ListOfFootnotes",
+    "ListOfListings",
     "ListOfReferences",
     "ListOfTables",
     "TableOfContents",

@@ -30,6 +30,7 @@ from oodocs.components.generated import (
     ListOfAlgorithms,
     ListOfFigures,
     ListOfFootnotes,
+    ListOfListings,
     ListOfReferences,
     ListOfTables,
     TableOfContents,
@@ -1260,6 +1261,30 @@ class HtmlRenderer:
             default_title=context.theme.resolve_generated_page_title("list_of_algorithms"),
             context=context,
             section_class="oodocs-generated-page oodocs-algorithm-list",
+        )
+
+    def render_list_of_listings(
+        self,
+        block: ListOfListings,
+        context: HtmlRenderContext,
+    ) -> str:
+        """Render the generated list of listings into HTML.
+
+        Args:
+            block: Generated listing-list block.
+            context: Current HTML render context.
+
+        Returns:
+            HTML fragment for the generated list of listings.
+        """
+
+        return self._render_caption_list(
+            title=block.title,
+            entries=context.render_index.scoped_listings(block),
+            default_title=context.theme.resolve_generated_page_title("list_of_listings"),
+            label="Code block",
+            context=context,
+            section_class="oodocs-generated-page oodocs-listing-list",
         )
 
     def render_comment_list(
@@ -2838,6 +2863,7 @@ class HtmlRenderer:
             ListOfTables,
             ListOfFigures,
             ListOfAlgorithms,
+            ListOfListings,
             Part,
         )
         for child in children:
