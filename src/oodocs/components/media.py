@@ -2343,7 +2343,11 @@ class PdfPages(Block):
         self.title = _normalize_optional_text(title, name="title")
 
     def page_label(self) -> str:
-        """Return a compact label describing the selected pages."""
+        """Return a compact label describing the selected pages.
+
+        Returns:
+            Human-readable selected-page label.
+        """
 
         if self.pages is None:
             return "all pages"
@@ -2351,6 +2355,9 @@ class PdfPages(Block):
 
     def selected_page_indexes(self) -> list[int]:
         """Return selected external PDF page indexes in zero-based form.
+
+        Returns:
+            Zero-based page indexes selected from the external PDF.
 
         Raises:
             FileNotFoundError: If ``source`` does not exist.
