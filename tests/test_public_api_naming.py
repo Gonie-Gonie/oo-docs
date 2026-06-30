@@ -789,71 +789,48 @@ def test_api_renderer_note_uses_output_format_field_name() -> None:
     assert "output_format" in field_names
 
 
-def test_result_objects_use_format_text_names() -> None:
+def test_result_objects_share_resultlike_api_names() -> None:
     assert "ResultLike" in oodocs.__all__
-    assert "format_table" not in _public_members(oodocs.ValidationResult)
-    assert "format_issues" not in _public_members(oodocs.ImportResult)
-    assert "format_text" in _public_members(oodocs.ValidationResult)
-    assert "format_text" in _public_members(oodocs.ImportResult)
+    required_members = {
+        "ok",
+        "errors",
+        "warnings",
+        "infos",
+        "to_dict",
+        "from_dict",
+        "to_json",
+        "from_json",
+        "save_json",
+        "load_json",
+        "to_table",
+        "format_text",
+    }
+    forbidden_members = {
+        "write_json",
+        "read_json",
+        "write_csv",
+        "format_table",
+        "format_issues",
+    }
 
-    validation_result_members = _public_members(oodocs.ValidationResult)
-    assert {
-        "ok",
-        "errors",
-        "warnings",
-        "infos",
-        "to_dict",
-        "from_dict",
-        "to_json",
-        "from_json",
-        "save_json",
-        "load_json",
-        "to_table",
-    } <= validation_result_members
-    import_result_members = _public_members(oodocs.ImportResult)
-    assert {
-        "ok",
-        "errors",
-        "warnings",
-        "infos",
-        "to_dict",
-        "from_dict",
-        "to_json",
-        "from_json",
-        "save_json",
-        "load_json",
-        "to_table",
-    } <= import_result_members
-    coverage_result_members = _public_members(apidoc.ApiCoverageResult)
-    assert {
-        "ok",
-        "errors",
-        "warnings",
-        "infos",
-        "to_dict",
-        "from_dict",
-        "to_json",
-        "from_json",
-        "save_json",
-        "load_json",
-        "to_table",
-        "format_text",
-    } <= coverage_result_members
-    diff_result_members = _public_members(apidoc.ApiDiffResult)
-    assert {
-        "ok",
-        "errors",
-        "warnings",
-        "infos",
-        "to_dict",
-        "from_dict",
-        "to_json",
-        "from_json",
-        "save_json",
-        "load_json",
-        "to_table",
-        "format_text",
-    } <= diff_result_members
+    for result_type in (
+        oodocs.ValidationResult,
+        oodocs.ImportResult,
+        apidoc.ApiCoverageResult,
+        apidoc.ApiDiffResult,
+    ):
+        members = _public_members(result_type)
+        row_helpers = {
+            name
+            for name in members
+            if name == "to_row"
+            or (name.startswith("to_") and name.endswith("_row"))
+            or (name.startswith("as_") and name.endswith("_row"))
+        }
+
+        assert required_members <= members, result_type.__name__
+        assert forbidden_members.isdisjoint(members), result_type.__name__
+        assert not row_helpers, result_type.__name__
 
 
 def test_import_issue_uses_line_number_field_name() -> None:
@@ -988,8 +965,10 @@ def test_block_renderer_hooks_are_private() -> None:
         assert expected_private <= all_members, cls.__name__
 
 
-def test_apidoc_raw_value_helpers_use_as_prefix() -> None:
+def test_raw_value_helpers_use_as_prefix() -> None:
     forbidden_by_class = {
+        oodocs.ValidationIssue: {"to_row", "to_issue_row"},
+        oodocs.ImportIssue: {"to_row", "to_issue_row"},
         apidoc.ApiParameter: {"to_row", "to_table_cell_values"},
         apidoc.ApiReturn: {"to_row"},
         apidoc.ApiException: {"to_row"},
@@ -1006,6 +985,8 @@ def test_apidoc_raw_value_helpers_use_as_prefix() -> None:
     }
 
     expected_by_class = {
+        oodocs.ValidationIssue: {"as_issue_row"},
+        oodocs.ImportIssue: {"as_issue_row"},
         apidoc.ApiParameter: {"as_table_cells", "as_parameter_row"},
         apidoc.ApiReturn: {"as_return_row"},
         apidoc.ApiException: {"as_exception_row"},
