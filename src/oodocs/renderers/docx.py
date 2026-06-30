@@ -50,11 +50,11 @@ from oodocs.components.blocks import (
     VerticalSpace,
 )
 from oodocs.components.generated import (
-    CommentList,
+    ListOfComments,
     GlossaryList,
     ListOfAlgorithms,
     ListOfFigures,
-    FootnoteList,
+    ListOfFootnotes,
     ListOfReferences,
     ListOfTables,
     TableOfContents,
@@ -268,7 +268,7 @@ class DocxRenderer:
             self._render_top_level_children(word_document, main_children, context)
 
         if self._should_auto_render_footnote_list(document, render_index):
-            self.render_footnote_list(FootnoteList(), context)
+            self.render_footnote_list(ListOfFootnotes(), context)
 
         if settings.theme.uses_header_footer():
             self._configure_header_footer_sections(
@@ -754,7 +754,7 @@ class DocxRenderer:
 
     def render_comment_list(
         self,
-        block: CommentList,
+        block: ListOfComments,
         context: DocxRenderContext,
     ) -> None:
         """Render the generated comments page into the DOCX document.
@@ -773,7 +773,7 @@ class DocxRenderer:
 
     def render_footnote_list(
         self,
-        block: FootnoteList,
+        block: ListOfFootnotes,
         context: DocxRenderContext,
     ) -> None:
         """Render the generated footnotes page into the DOCX document.
@@ -1336,7 +1336,7 @@ class DocxRenderer:
             not self._native_footnotes_enabled
             and document.settings.theme.blocks.auto_footnotes_page
             and bool(render_index.footnotes)
-            and not any(isinstance(child, FootnoteList) for child in document.body.children)
+            and not any(isinstance(child, ListOfFootnotes) for child in document.body.children)
         )
 
     def _should_use_native_footnotes(
@@ -1528,8 +1528,8 @@ class DocxRenderer:
         if isinstance(
             child,
             (
-                CommentList,
-                FootnoteList,
+                ListOfComments,
+                ListOfFootnotes,
                 GlossaryList,
                 ListOfReferences,
                 TableOfContents,
@@ -3760,7 +3760,7 @@ class DocxRenderer:
         render_index: RenderIndex,
     ) -> None:
         word_document.add_page_break()
-        self._add_heading(word_document, title or [Text(theme.resolve_generated_page_title("comment_list"))], level=theme.generated_content.generated_heading_level, theme=theme, number_label=None)
+        self._add_heading(word_document, title or [Text(theme.resolve_generated_page_title("list_of_comments"))], level=theme.generated_content.generated_heading_level, theme=theme, number_label=None)
         for entry in render_index.comments:
             paragraph = word_document.add_paragraph()
             paragraph.paragraph_format.left_indent = Inches(0.3)
@@ -3836,7 +3836,7 @@ class DocxRenderer:
         render_index: RenderIndex,
     ) -> None:
         word_document.add_page_break()
-        self._add_heading(word_document, title or [Text(theme.resolve_generated_page_title("footnote_list"))], level=theme.generated_content.generated_heading_level, theme=theme, number_label=None)
+        self._add_heading(word_document, title or [Text(theme.resolve_generated_page_title("list_of_footnotes"))], level=theme.generated_content.generated_heading_level, theme=theme, number_label=None)
         for entry in render_index.footnotes:
             paragraph = word_document.add_paragraph()
             paragraph.paragraph_format.left_indent = Inches(0.3)

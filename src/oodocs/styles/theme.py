@@ -434,8 +434,8 @@ class GeneratedContentDefaults:
         list_of_tables_title: Default title for generated table lists.
         list_of_figures_title: Default title for generated figure lists.
         list_of_algorithms_title: Default title for generated algorithm lists.
-        comment_list_title: Default title for generated comment lists.
-        footnote_list_title: Default title for generated footnote lists.
+        list_of_comments_title: Default title for generated comment lists.
+        list_of_footnotes_title: Default title for generated footnote lists.
         list_of_references_title: Default title for generated reference lists.
         glossary_list_title: Default title for generated glossary lists.
         table_of_contents_title: Default title for generated tables of contents.
@@ -455,8 +455,8 @@ class GeneratedContentDefaults:
     list_of_tables_title: str = "List of Tables"
     list_of_figures_title: str = "List of Figures"
     list_of_algorithms_title: str = "List of Algorithms"
-    comment_list_title: str = "Comments"
-    footnote_list_title: str = "Footnotes"
+    list_of_comments_title: str = "Comments"
+    list_of_footnotes_title: str = "Footnotes"
     list_of_references_title: str = "References"
     glossary_list_title: str = "Glossary"
     table_of_contents_title: str = "Contents"
@@ -575,8 +575,8 @@ class LocaleDefaults:
                     list_of_tables_title="표 목록",
                     list_of_figures_title="그림 목록",
                     list_of_algorithms_title="알고리즘 목록",
-                    comment_list_title="주석",
-                    footnote_list_title="각주",
+                    list_of_comments_title="주석",
+                    list_of_footnotes_title="각주",
                     list_of_references_title="참고문헌",
                     glossary_list_title="용어집",
                     table_of_contents_title="목차",
@@ -1370,8 +1370,8 @@ class Theme:
             "list_of_tables",
             "list_of_figures",
             "list_of_algorithms",
-            "comment_list",
-            "footnote_list",
+            "list_of_comments",
+            "list_of_footnotes",
             "list_of_references",
             "glossary_list",
             "table_of_contents",
@@ -1383,7 +1383,7 @@ class Theme:
             kind: Generated content kind. Supported values are
                 ``"list_of_tables"``, ``"list_of_figures"``,
                 ``"list_of_algorithms"``,
-                ``"comment_list"``, ``"footnote_list"``,
+                ``"list_of_comments"``, ``"list_of_footnotes"``,
                 ``"list_of_references"``, ``"glossary_list"``, and
                 ``"table_of_contents"``.
 
@@ -1408,8 +1408,8 @@ class Theme:
             "list_of_tables": self.generated_content.list_of_tables_title,
             "list_of_figures": self.generated_content.list_of_figures_title,
             "list_of_algorithms": self.generated_content.list_of_algorithms_title,
-            "comment_list": self.generated_content.comment_list_title,
-            "footnote_list": self.generated_content.footnote_list_title,
+            "list_of_comments": self.generated_content.list_of_comments_title,
+            "list_of_footnotes": self.generated_content.list_of_footnotes_title,
             "list_of_references": self.generated_content.list_of_references_title,
             "glossary_list": self.generated_content.glossary_list_title,
             "table_of_contents": self.generated_content.table_of_contents_title,

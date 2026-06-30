@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from oodocs.components.generated import (
-    CommentList,
-    FootnoteList,
+    ListOfComments,
+    ListOfFootnotes,
     GlossaryList,
     ListOfAlgorithms,
     ListOfFigures,
@@ -15,8 +15,8 @@ from oodocs.components.generated import (
 )
 
 __all__ = [
-    "CommentList",
-    "FootnoteList",
+    "ListOfComments",
+    "ListOfFootnotes",
     "GlossaryList",
     "ListOfAlgorithms",
     "ListOfFigures",

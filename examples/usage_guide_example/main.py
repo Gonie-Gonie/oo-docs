@@ -83,7 +83,7 @@ from oodocs.engineering import (
     ReactionEquation,
     chemical_formula,
 )
-from oodocs.generated import CommentList, ListOfAlgorithms, TocLevelStyle
+from oodocs.generated import ListOfComments, ListOfAlgorithms, TocLevelStyle
 from oodocs.media import ColumnSpec, CropBox, PdfPages, SubTable, SubTableGroup
 from oodocs.positioning import ImageBox, PageItemScope, Shape, TextBox
 from oodocs.structure import (
@@ -1033,7 +1033,7 @@ def build_usage_guide_document() -> Document:
         rows=[
             ["TableOfContents()", "Creates a navigable outline from authored headings.", "Place the block where the contents page should appear."],
             ["ListOfTables() / ListOfFigures() / ListOfAlgorithms()", "Collects numbered captions or algorithms in a stable order with page labels in DOCX and PDF.", "Use numbered tables, figures, or algorithms earlier in the document; pass show_page_numbers=False for a link-only list."],
-            ["CommentList()", "Exports reviewer comments without disturbing reading flow.", Comment.annotated("Place review remarks inline", "CommentList() collects these review notes onto a dedicated generated page.")],
+            ["ListOfComments()", "Exports reviewer comments without disturbing reading flow.", Comment.annotated("Place review remarks inline", "ListOfComments() collects these review notes onto a dedicated generated page.")],
             ["ListOfReferences()", "Renders cited bibliography entries by default.", "Cite items from CitationLibrary or CitationSource; pass include_uncited=True to include the whole library."],
             ["GlossaryList(glossary)", "Renders registered terms and acronyms as a generated table.", "Use glossary.term(...), glossary.acronym(...), and glossary.use(...) while authoring the body."],
         ],
@@ -2229,7 +2229,7 @@ def build_usage_guide_document() -> Document:
                 ),
             ),
         ),
-        CommentList(),
+        ListOfComments(),
         ListOfReferences(),
         settings=DocumentSettings(
             metadata=DocumentMetadata(

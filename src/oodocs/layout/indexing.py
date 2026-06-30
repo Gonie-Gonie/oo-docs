@@ -21,11 +21,11 @@ from oodocs.components.blocks import (
     Section,
 )
 from oodocs.components.generated import (
-    CommentList,
+    ListOfComments,
     GeneratedListScope,
     ListOfAlgorithms,
     ListOfFigures,
-    FootnoteList,
+    ListOfFootnotes,
     ListOfReferences,
     ListOfTables,
     TableOfContents,
@@ -1356,8 +1356,8 @@ def _index_blocks(
                 ListOfFigures,
                 ListOfAlgorithms,
                 ListOfReferences,
-                CommentList,
-                FootnoteList,
+                ListOfComments,
+                ListOfFootnotes,
                 TableOfContents,
             ),
         ):

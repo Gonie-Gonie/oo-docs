@@ -555,7 +555,7 @@ class GlossaryList(Block):
 
 
 @dataclass(slots=True, init=False)
-class CommentList(Block):
+class ListOfComments(Block):
     """Generated list of numbered inline comments.
 
     Args:
@@ -565,9 +565,9 @@ class CommentList(Block):
     Examples:
         ```python
         from oodocs import Document
-        from oodocs.generated import CommentList
+        from oodocs.generated import ListOfComments
 
-        doc = Document("Review", CommentList("Reviewer Notes"))
+        doc = Document("Review", ListOfComments("Reviewer Notes"))
         ```
     """
 
@@ -620,7 +620,7 @@ class CommentList(Block):
 
 
 @dataclass(slots=True, init=False)
-class FootnoteList(Block):
+class ListOfFootnotes(Block):
     """Generated list of numbered portable footnotes.
 
     Args:
@@ -630,9 +630,9 @@ class FootnoteList(Block):
     Examples:
         ```python
         from oodocs import Document
-        from oodocs.generated import FootnoteList
+        from oodocs.generated import ListOfFootnotes
 
-        doc = Document("Report", FootnoteList())
+        doc = Document("Report", ListOfFootnotes())
         ```
     """
 
@@ -815,11 +815,11 @@ class TableOfContents(Block):
 
 
 __all__ = [
-    "CommentList",
+    "ListOfComments",
     "GlossaryList",
     "ListOfAlgorithms",
     "ListOfFigures",
-    "FootnoteList",
+    "ListOfFootnotes",
     "ListOfReferences",
     "ListOfTables",
     "TableOfContents",

@@ -44,7 +44,7 @@ from oodocs.engineering import (
     ReactionEquation,
     chemical_formula,
 )
-from oodocs.generated import CommentList, FootnoteList, ListOfAlgorithms, TocLevelStyle
+from oodocs.generated import ListOfComments, ListOfFootnotes, ListOfAlgorithms, TocLevelStyle
 from oodocs.glossary import Acronym, Glossary, GlossaryList, GlossaryTerm
 from oodocs.media import ColumnSpec, CropBox, PdfPages, SubTable, SubTableGroup
 from oodocs.positioning import ImageBox, PageItemScope, Shape, TextBox
@@ -2086,15 +2086,15 @@ def test_public_api_prefers_classes_for_structural_nodes() -> None:
     assert not hasattr(oodocs, "TocLevelStyle")
     assert hasattr(generated_components, "TocLevelStyle")
     assert hasattr(oodocs, "Comment")
-    assert not hasattr(oodocs, "CommentList")
-    assert hasattr(generated_components, "CommentList")
+    assert not hasattr(oodocs, "ListOfComments")
+    assert hasattr(generated_components, "ListOfComments")
     assert not hasattr(oodocs, "Todo")
     assert not hasattr(oodocs, "MarginNote")
     assert hasattr(review_components, "Todo")
     assert hasattr(review_components, "MarginNote")
     assert hasattr(oodocs, "Footnote")
-    assert not hasattr(oodocs, "FootnoteList")
-    assert hasattr(generated_components, "FootnoteList")
+    assert not hasattr(oodocs, "ListOfFootnotes")
+    assert hasattr(generated_components, "ListOfFootnotes")
     assert hasattr(oodocs, "Equation")
     assert not hasattr(oodocs, "Algorithm")
     assert not hasattr(oodocs, "AlignedEquation")
@@ -2135,7 +2135,7 @@ def test_public_api_prefers_classes_for_structural_nodes() -> None:
     assert hasattr(glossary_components, "Glossary")
     assert hasattr(glossary_components, "GlossaryList")
     assert hasattr(glossary_components, "GlossaryTerm")
-    assert hasattr(generated_components, "FootnoteList")
+    assert hasattr(generated_components, "ListOfFootnotes")
     assert not hasattr(oodocs, "ListBlock")
     assert not hasattr(oodocs, "Citation")
     assert not hasattr(oodocs, "TableReference")
@@ -5160,7 +5160,7 @@ def test_document_renders_to_docx_and_pdf(tmp_path: Path) -> None:
         ),
         ListOfTables(),
         ListOfFigures(),
-        CommentList(),
+        ListOfComments(),
         ListOfReferences(),
         settings=DocumentSettings(
             metadata_author="pytest",

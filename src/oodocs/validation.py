@@ -38,11 +38,11 @@ from oodocs.components.blocks import (
     VerticalSpace,
 )
 from oodocs.components.generated import (
-    CommentList,
+    ListOfComments,
     GlossaryList,
     ListOfAlgorithms,
     ListOfFigures,
-    FootnoteList,
+    ListOfFootnotes,
     ListOfReferences,
     ListOfTables,
     TableOfContents,
@@ -937,8 +937,8 @@ class _ValidationContext:
                 ListOfAlgorithms,
                 GlossaryList,
                 ListOfReferences,
-                CommentList,
-                FootnoteList,
+                ListOfComments,
+                ListOfFootnotes,
                 TableOfContents,
             ),
         ):
@@ -1756,19 +1756,19 @@ class _ValidationContext:
                     path,
                 )
                 continue
-            if isinstance(page, CommentList) and not render_index.comments:
+            if isinstance(page, ListOfComments) and not render_index.comments:
                 self._add(
                     "warning",
                     "empty-comments-page",
-                    "CommentList has no comments to display.",
+                    "ListOfComments has no comments to display.",
                     path,
                 )
                 continue
-            if isinstance(page, FootnoteList) and not render_index.footnotes:
+            if isinstance(page, ListOfFootnotes) and not render_index.footnotes:
                 self._add(
                     "warning",
                     "empty-footnotes-page",
-                    "FootnoteList has no footnotes to display.",
+                    "ListOfFootnotes has no footnotes to display.",
                     path,
                 )
 

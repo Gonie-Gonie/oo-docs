@@ -69,11 +69,11 @@ from oodocs.components.blocks import (
     VerticalSpace,
 )
 from oodocs.components.generated import (
-    CommentList,
+    ListOfComments,
     GlossaryList,
     ListOfAlgorithms,
     ListOfFigures,
-    FootnoteList,
+    ListOfFootnotes,
     ListOfReferences,
     ListOfTables,
     TableOfContents,
@@ -821,10 +821,10 @@ class PdfRenderer:
             )
 
         if self._should_auto_render_comment_list(document, render_index):
-            story.extend(self.render_comment_list(CommentList(), context))
+            story.extend(self.render_comment_list(ListOfComments(), context))
 
         if self._should_auto_render_footnote_list(document, render_index):
-            story.extend(self.render_footnote_list(FootnoteList(), context))
+            story.extend(self.render_footnote_list(ListOfFootnotes(), context))
 
         page_callback = self._page_callback(
             document,
@@ -1757,7 +1757,7 @@ class PdfRenderer:
 
     def render_comment_list(
         self,
-        block: CommentList,
+        block: ListOfComments,
         context: PdfRenderContext,
     ) -> list[object]:
         """Render the generated comments page into PDF flowables.
@@ -1779,7 +1779,7 @@ class PdfRenderer:
 
     def render_footnote_list(
         self,
-        block: FootnoteList,
+        block: ListOfFootnotes,
         context: PdfRenderContext,
     ) -> list[object]:
         """Render the generated footnotes page into PDF flowables.
@@ -2166,7 +2166,7 @@ class PdfRenderer:
         return (
             document.settings.theme.blocks.auto_footnotes_page
             and bool(render_index.footnotes)
-            and not any(isinstance(child, FootnoteList) for child in document.body.children)
+            and not any(isinstance(child, ListOfFootnotes) for child in document.body.children)
         )
 
     def _should_auto_render_comment_list(
@@ -2179,7 +2179,7 @@ class PdfRenderer:
                 isinstance(entry.comment, (Todo, MarginNote))
                 for entry in render_index.comments
             )
-            and not any(isinstance(child, CommentList) for child in document.body.children)
+            and not any(isinstance(child, ListOfComments) for child in document.body.children)
         )
 
     def _story_has_indexing_flowable(self, story: list[object]) -> bool:
@@ -2367,8 +2367,8 @@ class PdfRenderer:
         if isinstance(
             child,
             (
-                CommentList,
-                FootnoteList,
+                ListOfComments,
+                ListOfFootnotes,
                 GlossaryList,
                 ListOfReferences,
                 TableOfContents,
@@ -4096,7 +4096,7 @@ class PdfRenderer:
         level = theme.generated_content.generated_heading_level
         bold, italic = theme.resolve_heading_emphasis(level)
         title_style = RLParagraphStyle(
-            "CommentListTitle",
+            "ListOfCommentsTitle",
             parent=styles["Heading1"],
             fontName=self._resolve_font(theme.resolve_body_font(), bold, italic),
             fontSize=theme.resolve_heading_size(level),
@@ -4121,7 +4121,7 @@ class PdfRenderer:
             RLPageBreak(),
             RLParagraph(
                 self._inline_markup(
-                    title or [Text(theme.resolve_generated_page_title("comment_list"))],
+                    title or [Text(theme.resolve_generated_page_title("list_of_comments"))],
                     theme,
                     render_index,
                     base_font_name=title_style.fontName,
@@ -4157,7 +4157,7 @@ class PdfRenderer:
         level = theme.generated_content.generated_heading_level
         bold, italic = theme.resolve_heading_emphasis(level)
         title_style = RLParagraphStyle(
-            "FootnoteListTitle",
+            "ListOfFootnotesTitle",
             parent=styles["Heading1"],
             fontName=self._resolve_font(theme.resolve_body_font(), bold, italic),
             fontSize=theme.resolve_heading_size(level),
@@ -4182,7 +4182,7 @@ class PdfRenderer:
             RLPageBreak(),
             RLParagraph(
                 self._inline_markup(
-                    title or [Text(theme.resolve_generated_page_title("footnote_list"))],
+                    title or [Text(theme.resolve_generated_page_title("list_of_footnotes"))],
                     theme,
                     render_index,
                     base_font_name=title_style.fontName,

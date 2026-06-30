@@ -212,7 +212,7 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
         footnotes_xml = archive.read("word/footnotes.xml").decode("utf-8")
     assert "DOCX uses page footnotes by default." in footnotes_xml
     assert "Portable footnotes are authored inline" in footnotes_xml
-    assert all("CommentList() collects these review notes onto a dedicated generated page." in "\n".join(p.text for p in comment.paragraphs) or "This note will show up again on the generated comments page." in "\n".join(p.text for p in comment.paragraphs) for comment in word_document.comments)
+    assert all("ListOfComments() collects these review notes onto a dedicated generated page." in "\n".join(p.text for p in comment.paragraphs) or "This note will show up again on the generated comments page." in "\n".join(p.text for p in comment.paragraphs) for comment in word_document.comments)
 
     assert "OODocs User Guide" in pdf_text
     assert "Contents" in pdf_text
@@ -344,7 +344,7 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert ("'tbp'" in normalized_html_text) or ('placement="tbp"' in normalized_html_text)
     assert "TableOfContents" in normalized_html_text
     assert "TocLevelStyle" in normalized_html_text
-    assert "CommentList() collects these review notes onto a dedicated generated page." in normalized_html_text
+    assert "ListOfComments() collects these review notes onto a dedicated generated page." in normalized_html_text
     assert "Example catalog" in normalized_html_text
     assert "api_objects_example" in normalized_html_text
     assert "style_cleanup_smoke" in normalized_html_text
