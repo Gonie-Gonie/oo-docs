@@ -230,6 +230,20 @@ def test_readme_latex_translations_include_multirow_multicolumn_policy() -> None
     assert "`Table.grouped_headers(...)`" in translations
 
 
+def test_readme_latex_translations_include_graphicx_policy() -> None:
+    readme = _readme()
+    translations = readme.split("Common translations:", 1)[1].split(
+        "The main payoff",
+        1,
+    )[0]
+
+    assert "LaTeX `\\includegraphics`" in translations
+    assert "`Figure(path_or_matplotlib_figure, caption=...)`" in translations
+    assert "`CropBox(...)`" in translations
+    assert "`rotation=...`" in translations
+    assert "`alt_text=...`" in translations
+
+
 def test_public_api_policy_doc_defines_tiers_and_guards() -> None:
     policy = Path("docs/reference/public-api-policy.md").read_text(encoding="utf-8")
 

@@ -110,6 +110,7 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "oodocs.ListOfFigures" in all_titles
     assert "oodocs.structure.Appendix" in all_titles
     assert "oodocs.media.ColumnSpec" in all_titles
+    assert "oodocs.media.CropBox" in all_titles
     assert "oodocs.media.TableOverflowPolicy" in all_titles
     assert "oodocs.compatibility.OUTPUT_FORMATS" in all_titles
     assert "oodocs.components.blocks.MIN_SECTION_LEVEL" in all_titles
@@ -154,6 +155,11 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "Table.grouped_headers" in text
     assert "colspan" in text
     assert "rowspan" in text
+    assert "Figure.from_bytes" in text
+    assert "Figure.from_buffer" in text
+    assert "crop" in text
+    assert "rotation" in text
+    assert "alt_text" in text
 
 
 def test_help_book_renders_uncategorized_api_appendix_from_category_gate() -> None:
