@@ -10,6 +10,7 @@ import oodocs
 import oodocs.adapters as adapters
 import oodocs.apidoc as apidoc
 import oodocs.apidoc.config as apidoc_config
+import oodocs.apidoc.help as apidoc_help
 import oodocs.apidoc.profiles as apidoc_profiles
 import oodocs.apidoc.render as apidoc_render
 import oodocs.chemistry as chemistry
@@ -577,6 +578,18 @@ def test_apidoc_render_module_keeps_only_composable_chapter_helper() -> None:
 
     assert set(apidoc_render.__all__) == {"api_objects_to_chapter"}
     assert not any(hasattr(apidoc_render, name) for name in stale_helpers)
+
+
+def test_apidoc_help_module_keeps_object_method_helpers_private() -> None:
+    stale_helpers = {
+        "api_object_to_help_section",
+        "api_package_to_help_book",
+    }
+
+    assert set(apidoc_help.__all__) == {"api_category_to_chapter"}
+    assert not any(hasattr(apidoc_help, name) for name in stale_helpers)
+    assert hasattr(apidoc_help, "_api_object_to_help_section")
+    assert hasattr(apidoc_help, "_api_package_to_help_book")
 
 
 def test_text_style_uses_canonical_field_names() -> None:

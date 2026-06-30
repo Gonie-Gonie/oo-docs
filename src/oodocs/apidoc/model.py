@@ -2095,9 +2095,9 @@ class ApiObject:
             ```
         """
 
-        from oodocs.apidoc.help import api_object_to_help_section
+        from oodocs.apidoc.help import _api_object_to_help_section
 
-        return api_object_to_help_section(
+        return _api_object_to_help_section(
             self,
             level=level,
             presentation=presentation,
@@ -3726,9 +3726,9 @@ class ApiPackage:
             ```
         """
 
-        from oodocs.apidoc.help import api_package_to_help_book
+        from oodocs.apidoc.help import _api_package_to_help_book
 
-        return api_package_to_help_book(
+        return _api_package_to_help_book(
             self,
             title=title,
             categories=categories,  # type: ignore[arg-type]

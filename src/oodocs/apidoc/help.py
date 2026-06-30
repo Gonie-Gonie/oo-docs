@@ -17,7 +17,7 @@ from oodocs.components.media import Table
 from oodocs.document import Document
 
 
-def api_object_to_help_section(
+def _api_object_to_help_section(
     obj: ApiObject,
     *,
     level: int = 2,
@@ -375,7 +375,7 @@ def api_category_to_chapter(
     if constants := _constants_table(objects):
         blocks.extend([Paragraph(bold("Constants")), constants])
     blocks.extend(
-        api_object_to_help_section(
+        _api_object_to_help_section(
             obj,
             level=2,
             presentation=presentation,
@@ -387,7 +387,7 @@ def api_category_to_chapter(
     return Chapter(category.title, *blocks)
 
 
-def api_package_to_help_book(
+def _api_package_to_help_book(
     api: ApiPackage,
     *,
     title: str | None = None,
@@ -542,7 +542,7 @@ def _uncategorized_chapter(
     ]
     if max_heading_level is None or max_heading_level >= 2:
         blocks.extend(
-            api_object_to_help_section(
+            _api_object_to_help_section(
                 obj,
                 level=2,
                 presentation=presentation,
