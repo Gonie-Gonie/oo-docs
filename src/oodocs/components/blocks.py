@@ -920,7 +920,8 @@ class AlignedEquation(Equation):
 
     Examples:
         ```python
-        from oodocs import AlignedEquation, Document
+        from oodocs import Document
+        from oodocs.engineering import AlignedEquation
 
         derivation = AlignedEquation(r"a &= b + c", r"  &= d")
         document = Document("Derivation", derivation)
@@ -992,7 +993,7 @@ class CasesEquation(Equation):
 
     Examples:
         ```python
-        from oodocs import CasesEquation
+        from oodocs.engineering import CasesEquation
 
         piecewise = CasesEquation(("0", "x < 0"), ("x^2", "x >= 0"), left="f(x)")
         ```
@@ -1075,7 +1076,8 @@ class ReactionEquation(Equation):
 
     Examples:
         ```python
-        from oodocs import Document, Paragraph, ReactionEquation
+        from oodocs import Document, Paragraph
+        from oodocs.engineering import ReactionEquation
 
         combustion = ReactionEquation("CH4 + 2O2 -> CO2 + 2H2O")
         document = Document("Combustion", Paragraph("See ", combustion.reference(), "."), combustion)
@@ -2333,7 +2335,8 @@ class Algorithm(CountableBlock):
 
     Examples:
         ```python
-        from oodocs import Algorithm, Document, Paragraph
+        from oodocs import Document, Paragraph
+        from oodocs.engineering import Algorithm
 
         algorithm = Algorithm(
             "Coverage aggregation",

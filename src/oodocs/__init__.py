@@ -5,14 +5,11 @@ from importlib.metadata import PackageNotFoundError, version as package_version
 from oodocs.core import OODocsError
 from oodocs.compatibility import OUTPUT_FORMATS, OutputFormat
 from oodocs.components.blocks import (
-    Algorithm,
-    AlignedEquation,
     Assumption,
     Appendix,
     Axiom,
     Box,
     BulletList,
-    CasesEquation,
     Chapter,
     Claim,
     CodeBlock,
@@ -34,7 +31,6 @@ from oodocs.components.blocks import (
     Part,
     Proof,
     Proposition,
-    ReactionEquation,
     Remark,
     Section,
     Subsection,
@@ -46,7 +42,6 @@ from oodocs.components.blocks import (
     shift_heading_level,
     shift_heading_levels,
 )
-from oodocs.components.chemistry import ChemicalFormula, chemical_formula
 from oodocs.components.generated import (
     CommentList,
     FootnoteList,
@@ -203,8 +198,6 @@ __version__ = _resolve_version()
 __all__ = [
     "Affiliation",
     "Acronym",
-    "Algorithm",
-    "AlignedEquation",
     "Assumption",
     "Appendix",
     "Author",
@@ -215,9 +208,7 @@ __all__ = [
     "Box",
     "BoxStyle",
     "BulletList",
-    "CasesEquation",
     "CaptionDefaults",
-    "ChemicalFormula",
     "CitationDefaults",
     "CounterStyle",
     "CitationLibrary",
@@ -288,7 +279,6 @@ __all__ = [
     "Proof",
     "Proposition",
     "ParagraphStyle",
-    "ReactionEquation",
     "ReferenceFormat",
     "RunInTitleStyle",
     "ReferenceList",
@@ -327,7 +317,6 @@ __all__ = [
     "badge",
     "bold",
     "build_source_outputs",
-    "chemical_formula",
     "cite",
     "comment",
     "create_countable_block_type",

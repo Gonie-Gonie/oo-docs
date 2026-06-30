@@ -54,7 +54,8 @@ class ChemicalFormula(Math):
 
     Examples:
         ```python
-        from oodocs import ChemicalFormula, Document, Paragraph
+        from oodocs import Document, Paragraph
+        from oodocs.engineering import ChemicalFormula
 
         paragraph = Paragraph("Water is ", ChemicalFormula("H2O"), ".")
         document = Document("Chemistry Note", paragraph)
@@ -115,6 +116,8 @@ def chemical_formula(
 
     Examples:
         ```python
+        from oodocs.engineering import chemical_formula
+
         fragment = chemical_formula("CO2")
         ```
     """

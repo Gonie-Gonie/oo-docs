@@ -13,8 +13,6 @@ from pathlib import Path
 from typing import Sequence
 
 from oodocs import (
-    Algorithm,
-    AlignedEquation,
     Assumption,
     Author,
     AuthorLayout,
@@ -22,10 +20,8 @@ from oodocs import (
     BorderStyle,
     Box,
     BulletList,
-    CasesEquation,
     CaptionDefaults,
     Chapter,
-    ChemicalFormula,
     CitationLibrary,
     CitationSource,
     Comment,
@@ -58,7 +54,6 @@ from oodocs import (
     Paragraph,
     Part,
     Proof,
-    ReactionEquation,
     ReferenceList,
     Remark,
     Section,
@@ -84,7 +79,6 @@ from oodocs import (
     VerticalSpace,
     badge,
     bold,
-    chemical_formula,
     inline_code,
     text_color,
     create_countable_block_type,
@@ -98,6 +92,14 @@ from oodocs import (
     subscript,
     superscript,
     tag,
+)
+from oodocs.engineering import (
+    Algorithm,
+    AlignedEquation,
+    CasesEquation,
+    ChemicalFormula,
+    ReactionEquation,
+    chemical_formula,
 )
 from oodocs.presets.components import CalloutBox, KeyValueTable, Nomenclature
 from oodocs.presets.templates import JournalArticleTemplate, ManuscriptSection

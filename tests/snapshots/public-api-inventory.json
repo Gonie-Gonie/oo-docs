@@ -22,20 +22,6 @@
           "category": "block",
           "kind": "class",
           "module": "oodocs.components.blocks",
-          "name": "Algorithm",
-          "qualname": "oodocs.components.blocks.Algorithm"
-        },
-        {
-          "category": "block",
-          "kind": "class",
-          "module": "oodocs.components.blocks",
-          "name": "AlignedEquation",
-          "qualname": "oodocs.components.blocks.AlignedEquation"
-        },
-        {
-          "category": "block",
-          "kind": "class",
-          "module": "oodocs.components.blocks",
           "name": "Assumption",
           "qualname": "oodocs.components.blocks.Assumption"
         },
@@ -103,25 +89,11 @@
           "qualname": "oodocs.components.blocks.BulletList"
         },
         {
-          "category": "block",
-          "kind": "class",
-          "module": "oodocs.components.blocks",
-          "name": "CasesEquation",
-          "qualname": "oodocs.components.blocks.CasesEquation"
-        },
-        {
           "category": "theme",
           "kind": "class",
           "module": "oodocs.styles.theme",
           "name": "CaptionDefaults",
           "qualname": "oodocs.styles.theme.CaptionDefaults"
-        },
-        {
-          "category": "inline",
-          "kind": "class",
-          "module": "oodocs.components.chemistry",
-          "name": "ChemicalFormula",
-          "qualname": "oodocs.components.chemistry.ChemicalFormula"
         },
         {
           "category": "theme",
@@ -614,13 +586,6 @@
           "qualname": "oodocs.styles.blocks.ParagraphStyle"
         },
         {
-          "category": "block",
-          "kind": "class",
-          "module": "oodocs.components.blocks",
-          "name": "ReactionEquation",
-          "qualname": "oodocs.components.blocks.ReactionEquation"
-        },
-        {
           "category": "inline",
           "kind": "class",
           "module": "oodocs.components.inline",
@@ -885,13 +850,6 @@
           "module": "oodocs.workflows",
           "name": "build_source_outputs",
           "qualname": "oodocs.workflows.build_source_outputs"
-        },
-        {
-          "category": "inline",
-          "kind": "function",
-          "module": "oodocs.components.chemistry",
-          "name": "chemical_formula",
-          "qualname": "oodocs.components.chemistry.chemical_formula"
         },
         {
           "category": "inline",

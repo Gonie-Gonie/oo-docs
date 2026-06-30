@@ -19,18 +19,25 @@ import pytest
 
 import oodocs.components.generated as generated_components
 import oodocs.components.inline as inline_components
+import oodocs.engineering as engineering_components
 import oodocs.review as review_components
 from oodocs.components.equations import BASELINE, SUBSCRIPT, SUPERSCRIPT, parse_latex_segments
 from oodocs.components.media import build_table_layout
 from oodocs.core import length_to_inches
 from oodocs.layout.indexing import build_render_index
 from oodocs.renderers.pdf import PdfRenderer
+from oodocs.engineering import (
+    Algorithm,
+    AlignedEquation,
+    CasesEquation,
+    ChemicalFormula,
+    ReactionEquation,
+    chemical_formula,
+)
 from oodocs.review import MarginNote, Todo, margin_note, todo
 from oodocs import (
     Affiliation,
     Acronym,
-    Algorithm,
-    AlignedEquation,
     Assumption,
     Author,
     AuthorLayout,
@@ -41,9 +48,7 @@ from oodocs import (
     Box,
     BoxStyle,
     BulletList,
-    CasesEquation,
     CaptionDefaults,
-    ChemicalFormula,
     CitationDefaults,
     CitationLibrary,
     CitationSource,
@@ -106,7 +111,6 @@ from oodocs import (
     Part,
     Proof,
     Proposition,
-    ReactionEquation,
     ReferenceList,
     ReferenceFormat,
     Remark,
@@ -138,7 +142,6 @@ from oodocs import (
     VerticalSpace,
     badge,
     bold,
-    chemical_formula,
     inline_code,
     text_color,
     cite,
@@ -2073,8 +2076,16 @@ def test_public_api_prefers_classes_for_structural_nodes() -> None:
     assert hasattr(oodocs, "Footnote")
     assert hasattr(oodocs, "FootnoteList")
     assert hasattr(oodocs, "Equation")
-    assert hasattr(oodocs, "ChemicalFormula")
-    assert hasattr(oodocs, "ReactionEquation")
+    assert not hasattr(oodocs, "Algorithm")
+    assert not hasattr(oodocs, "AlignedEquation")
+    assert not hasattr(oodocs, "CasesEquation")
+    assert not hasattr(oodocs, "ChemicalFormula")
+    assert not hasattr(oodocs, "ReactionEquation")
+    assert hasattr(engineering_components, "Algorithm")
+    assert hasattr(engineering_components, "AlignedEquation")
+    assert hasattr(engineering_components, "CasesEquation")
+    assert hasattr(engineering_components, "ChemicalFormula")
+    assert hasattr(engineering_components, "ReactionEquation")
     assert hasattr(oodocs, "Math")
     assert hasattr(oodocs, "InlineChip")
     assert hasattr(oodocs, "InlineChipStyle")
@@ -2115,7 +2126,8 @@ def test_public_api_prefers_classes_for_structural_nodes() -> None:
     assert hasattr(oodocs, "from_markdown_file")
     assert not hasattr(oodocs, "from_ipynb")
     assert hasattr(oodocs, "math")
-    assert hasattr(oodocs, "chemical_formula")
+    assert not hasattr(oodocs, "chemical_formula")
+    assert hasattr(engineering_components, "chemical_formula")
     assert hasattr(oodocs, "prescript")
     assert hasattr(oodocs, "reference")
     assert hasattr(oodocs, "bold")

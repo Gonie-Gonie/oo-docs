@@ -282,7 +282,9 @@ class ListOfAlgorithms(Block):
 
     Examples:
         ```python
-        from oodocs import Algorithm, Document, ListOfAlgorithms
+        from oodocs import Document
+        from oodocs.engineering import Algorithm
+        from oodocs.generated import ListOfAlgorithms
 
         doc = Document("Methods", ListOfAlgorithms(), Algorithm("Coverage", steps=["Load"]))
         ```

@@ -103,6 +103,11 @@ def test_tier_two_namespaces_export_domain_symbols() -> None:
 
 def test_top_level_public_api_uses_completed_canonical_names() -> None:
     forbidden = {
+        "Algorithm",
+        "AlignedEquation",
+        "CasesEquation",
+        "ChemicalFormula",
+        "chemical_formula",
         "strike",
         "code",
         "color",
@@ -121,6 +126,7 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "load_python_document",
         "margin_note",
         "ReferencesPage",
+        "ReactionEquation",
         "render_document",
         "Subsubsection",
         "TableList",
@@ -144,8 +150,6 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "parse_notebook",
         "OutputBundle",
         "build_source_outputs",
-        "ChemicalFormula",
-        "chemical_formula",
         "CommentList",
         "ColumnSpec",
         "create_countable_block_type",
@@ -167,7 +171,6 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "PageNumberDefaults",
         "RunInTitleStyle",
         "ReferenceList",
-        "ReactionEquation",
         "ResultLike",
         "SubSubsection",
         "TitleMatterDefaults",

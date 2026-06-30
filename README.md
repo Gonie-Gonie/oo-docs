@@ -150,7 +150,7 @@ Common translations:
 - LaTeX subtables -> `SubTable(Table(...), caption=...)` children inside a captioned `SubTableGroup(...)`
 - LaTeX `pdfpages` -> `PdfPages("appendix.pdf", pages=[1, 3])` for PDF-page insertion, with DOCX/HTML placeholder fallbacks
 - LaTeX `listings` / `minted` -> `CodeBlock(..., caption=..., line_numbers=True, highlight_lines={...})` or `CodeBlock.from_file(...)`
-- LaTeX `algorithm` / `algorithmicx` -> `Algorithm(..., inputs=..., outputs=..., steps=...)` with automatic numbering and references
+- LaTeX `algorithm` / `algorithmicx` -> `Algorithm(..., inputs=..., outputs=..., steps=...)` from `oodocs.engineering` with automatic numbering and references
 - LaTeX `tabular` or copied tables -> `Table(...)` or `Table.from_dataframe(...)`
 - LaTeX `booktabs` -> `Table(..., style="booktabs")` or `TableStyle.booktabs()`
 - LaTeX `tabularx` / `array` column specs -> `ColumnSpec(width=...)`, `ColumnSpec(flex=...)`, and `Table.excerpt(...)` plus a CSV sidecar for very wide matrices
@@ -197,8 +197,8 @@ The default behavior is intentionally conventional:
 - Use `link(target, label)` for named external links and `url(target, breakable=True)` when the visible text is the URL itself. Long raw URL labels emit a validation warning because DOCX, PDF, and HTML wrap them differently.
 - Use `Theme(blocks=BlockDefaults(paragraph_text_alignment=...))` for the document-wide paragraph default, and direct paragraph kwargs such as `text_alignment=...` when one paragraph should override it.
 - Use `Paragraph(left_indent=..., right_indent=..., first_line_indent=..., unit=...)` when you need Word-like first-line or hanging indents. If `unit` is omitted, indent values follow `DocumentSettings(unit=...)`.
-- Use `subscript(...)`, `superscript(...)`, and `prescript(...)` for ordinary prose. Use `Math(...)`, `Equation(...)`, `AlignedEquation(...)`, or `CasesEquation(...)` for lightweight LaTeX-style math, including ordinary `x^2` / `x_0` scripts, aligned derivations, piecewise cases, and front scripts such as `\prescript{14}{6}{C}`. Pass `numbered=False` when a displayed equation should not consume an equation number.
-- Use `chemical_formula("H2O")` or `ChemicalFormula("SO4^2-")` for mhchem-style inline chemistry, and `ReactionEquation("2H2 + O2 -> 2H2O")` for displayed reactions with automatic references.
+- Use `subscript(...)`, `superscript(...)`, and `prescript(...)` for ordinary prose. Import `AlignedEquation(...)` and `CasesEquation(...)` from `oodocs.engineering` for lightweight LaTeX-style aligned derivations and piecewise cases. Use `Math(...)` or `Equation(...)` for simpler expressions, including ordinary `x^2` / `x_0` scripts and front scripts such as `\prescript{14}{6}{C}`. Pass `numbered=False` when a displayed equation should not consume an equation number.
+- Import `chemical_formula(...)`, `ChemicalFormula(...)`, and `ReactionEquation(...)` from `oodocs.engineering` for mhchem-style inline chemistry and displayed reactions with automatic references.
 - Use `Part(...)` for book-like divisions above chapters; each part gets a separator page, while chapter numbers continue across parts by default.
 - Use `Appendix(Chapter(...), ...)` for appendix material; child chapters are numbered `A`, `B`, `C`, nested headings become `A.1`, `A.2`, and the appendix separator can appear in the table of contents.
 - Use `Chapter(...)`, `Section(...)`, `Subsection(...)`, and `SubSubsection(...)` for the visible outline. Their nesting in Python should match how you expect the final document to read.
@@ -218,7 +218,7 @@ The default behavior is intentionally conventional:
 - Use `SubFigureGroup(SubFigure(...), SubFigure(...), caption=...)` when related images should share one figure number and expose `(a)`, `(b)`, and similar subfigure references.
 - Use `SubTableGroup(SubTable(Table(...), caption=...), ...)` when related tables should share one table number and expose references such as `Table 1(a)`.
 - Use `CodeBlock(..., caption=..., line_numbers=True, highlight_lines={...})` for numbered listings, and `CodeBlock.from_file("example.py", caption=...)` when the code should be included from a source file.
-- Use `Algorithm(..., inputs=..., outputs=..., steps=...)` for numbered pseudocode blocks. Pass `code=...` or `body_style="code"` when the algorithm should render more like a code listing.
+- Import `Algorithm(...)` from `oodocs.engineering` for numbered pseudocode blocks. Pass `code=...` or `body_style="code"` when the algorithm should render more like a code listing.
 - Use `Theme(captions=CaptionDefaults(table_caption_label=..., table_reference_label=..., figure_caption_label=..., figure_reference_label=...))` when captions and in-text references should use different labels such as `Figure`, `Fig.`, or localized terms.
 - Use `Theme.from_locale("ko-KR")` or `Theme(locale=LocaleDefaults.from_locale("ko-KR"))` for a bundled document language: localized captions, generated page titles, glossary labels, reference-list title, date formatting with `theme.format_date(...)`, HTML `lang`, and PDF font guidance via `theme.pdf_font_fallback_guide()`.
 - Use `CitationLibrary.from_bibtex_file("refs.bib")` for BibTeX input, and `Theme(citations=CitationDefaults(citation_style="apa", reference_style="apa", reference_sort="author"))` when inline citations and the generated references page should follow an author-year style. Numeric citation output and citation-order references remain the default; pass `ReferenceList(include_uncited=True)` when the generated bibliography should include uncited library entries.
