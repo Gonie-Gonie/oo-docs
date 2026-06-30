@@ -1242,6 +1242,15 @@ def test_workflow_api_uses_formats_parameter_name() -> None:
         assert "outputs" not in parameters
 
 
+def test_output_bundle_uses_dict_like_format_lookup() -> None:
+    members = _public_members(workflows.OutputBundle)
+    all_members = {name for name, _ in inspect.getmembers(workflows.OutputBundle)}
+
+    assert "__getitem__" in all_members
+    assert {"keys", "values", "items"} <= members
+    assert "by_format" not in members
+
+
 def test_block_renderer_hooks_are_private() -> None:
     forbidden = {"render_to_docx", "render_to_pdf", "render_to_html"}
     expected_private = {"_render_to_docx", "_render_to_pdf", "_render_to_html"}

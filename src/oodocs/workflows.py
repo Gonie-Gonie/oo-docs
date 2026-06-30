@@ -139,18 +139,6 @@ class OutputBundle:
 
         return tuple(self.outputs.items())
 
-    def by_format(self, output_format: str) -> Path:
-        """Return the rendered path for an output format.
-
-        Args:
-            output_format: Output format name or extension.
-
-        Returns:
-            The path rendered for that format.
-        """
-
-        return self[output_format]
-
 
 def load_source_document(
     source: str | Path,
