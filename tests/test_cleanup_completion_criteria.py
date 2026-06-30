@@ -134,6 +134,8 @@ def test_public_api_policy_doc_defines_tiers_and_guards() -> None:
         "Tier 1 core",
         "Tier 2 domain",
         "Tier 3 internal",
+        "`oodocs.presets.components`",
+        "`oodocs.presets.templates`",
         "TOP_LEVEL_EXPORT_LIMIT",
         "TOP_LEVEL_SYMBOL_TIERS",
         "`coerce`",
@@ -142,8 +144,13 @@ def test_public_api_policy_doc_defines_tiers_and_guards() -> None:
         "`reference`",
         "`Ref`",
         "`math`",
+        "`CalloutBox`",
+        "`JournalArticleTemplate`",
+        "top-level `oodocs` must not export preset names.",
         "README Quick Start examples use Tier 1 imports only.",
         "Advanced examples import their domain namespace explicitly.",
+        "Template preset docs describe reusable document skeletons",
+        "ordinary examples describe runnable direct-composition workflows",
     ):
         assert phrase in policy
 
