@@ -23,6 +23,17 @@ STALE_API_REFERENCE_MARKERS = (
     "TextBox.align",
     "ImageData.format",
 )
+STALE_RENDERED_API_REFERENCE_MARKERS = (
+    *STALE_API_REFERENCE_MARKERS,
+    "coerce_author_layout",
+    "coerce_authors",
+    "coerce_cell",
+    "coerce_citation_library",
+    "coerce_list_item",
+    "normalize_citation_style",
+    "normalize_reference_sort",
+    "normalize_reference_style",
+)
 
 
 def _assert_no_local_absolute_paths(text: str) -> None:
@@ -33,9 +44,18 @@ def _assert_no_stale_api_reference_markers(text: str) -> None:
     assert not any(marker in text for marker in STALE_API_REFERENCE_MARKERS)
 
 
+def _assert_no_stale_rendered_api_reference_markers(text: str) -> None:
+    assert not any(marker in text for marker in STALE_RENDERED_API_REFERENCE_MARKERS)
+
+
 def _assert_clean_api_reference_text(text: str) -> None:
     _assert_no_local_absolute_paths(text)
     _assert_no_stale_api_reference_markers(text)
+
+
+def _assert_clean_rendered_api_reference_text(text: str) -> None:
+    _assert_no_local_absolute_paths(text)
+    _assert_no_stale_rendered_api_reference_markers(text)
 
 
 def _docx_text(path) -> str:
@@ -108,9 +128,9 @@ def test_apidoc_renders_oodocs_public_api_reference_bundle(tmp_path) -> None:
     html = outputs["html"].read_text(encoding="utf-8")
     assert "Uncategorized API" not in html
     assert "Renderer Extension API" not in html
-    _assert_clean_api_reference_text(_docx_text(outputs["docx"]))
-    _assert_clean_api_reference_text(_pdf_text(outputs["pdf"]))
-    _assert_clean_api_reference_text(html)
+    _assert_clean_rendered_api_reference_text(_docx_text(outputs["docx"]))
+    _assert_clean_rendered_api_reference_text(_pdf_text(outputs["pdf"]))
+    _assert_clean_rendered_api_reference_text(html)
     _assert_clean_api_reference_text(api_path.read_text(encoding="utf-8"))
     _assert_clean_api_reference_text(coverage_json_path.read_text(encoding="utf-8"))
     _assert_clean_api_reference_text(coverage_csv_path.read_text(encoding="utf-8"))

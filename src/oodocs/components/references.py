@@ -804,10 +804,6 @@ def _clean_bibtex_value(value: str) -> str:
 __all__ = [
     "CitationLibrary",
     "CitationSource",
-    "coerce_citation_library",
     "format_citation_label",
-    "normalize_citation_style",
-    "normalize_reference_style",
-    "normalize_reference_sort",
     "reference_entry_marker",
 ]

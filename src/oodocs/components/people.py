@@ -369,6 +369,4 @@ __all__ = [
     "AuthorInput",
     "AuthorLayout",
     "AuthorTitleLine",
-    "coerce_author_layout",
-    "coerce_authors",
 ]

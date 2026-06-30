@@ -16,6 +16,7 @@ import oodocs.components.blocks as block_components
 import oodocs.components.inline as inline_components
 import oodocs.components.markup as markup_components
 import oodocs.components.media as media_components
+import oodocs.components.people as people_components
 import oodocs.components.positioning as positioning_components
 import oodocs.components.references as references
 import oodocs.engineering as engineering
@@ -145,6 +146,10 @@ def test_recommended_user_import_experience_keeps_domains_explicit() -> None:
 def test_leaf_component_modules_hide_internal_helpers_from_all() -> None:
     forbidden_by_module = {
         base_components: {"coerce_blocks"},
+        block_components: {
+            "coerce_cell",
+            "coerce_list_item",
+        },
         inline_components: {
             "coerce_inlines",
             "MarginNote",
@@ -169,6 +174,16 @@ def test_leaf_component_modules_hide_internal_helpers_from_all() -> None:
             "coerce_page_item_scope",
             "coerce_positioned_items",
             "resolve_positioned_boxes",
+        },
+        people_components: {
+            "coerce_author_layout",
+            "coerce_authors",
+        },
+        references: {
+            "coerce_citation_library",
+            "normalize_citation_style",
+            "normalize_reference_style",
+            "normalize_reference_sort",
         },
     }
 
@@ -532,9 +547,9 @@ def test_citation_defaults_use_style_field_names() -> None:
     assert "citations" in theme_fields
     assert "normalize_citation_format" not in references.__all__
     assert "normalize_reference_format" not in references.__all__
-    assert "normalize_citation_style" in references.__all__
-    assert "normalize_reference_style" in references.__all__
-    assert "normalize_reference_sort" in references.__all__
+    assert "normalize_citation_style" not in references.__all__
+    assert "normalize_reference_style" not in references.__all__
+    assert "normalize_reference_sort" not in references.__all__
 
 
 def test_list_style_uses_counter_style_marker_field() -> None:

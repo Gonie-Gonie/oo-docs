@@ -3266,8 +3266,6 @@ __all__ = [
     "Corollary",
     "Theorem",
     "Proposition",
-    "coerce_cell",
-    "coerce_list_item",
     "create_countable_block_type",
     "section_for_level",
     "shift_heading_level",
