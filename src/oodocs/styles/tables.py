@@ -1,4 +1,8 @@
-"""Table style objects."""
+"""Table style objects.
+
+Attributes:
+    TableCellStyleInput: Accepted inputs for table-cell style coercion.
+"""
 
 from __future__ import annotations
 

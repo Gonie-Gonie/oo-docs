@@ -1,4 +1,8 @@
-"""Named visual style registry used by themes and renderers."""
+"""Named visual style registry used by themes and renderers.
+
+Attributes:
+    StyleCategory: Literal category names accepted by ``StyleSheet`` registries.
+"""
 
 from __future__ import annotations
 

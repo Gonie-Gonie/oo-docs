@@ -1,4 +1,8 @@
-"""Theme configuration and grouped renderer defaults."""
+"""Theme configuration and grouped renderer defaults.
+
+Attributes:
+    DEFAULT_FOOTNOTE_SYMBOLS: Default cycle for symbolic footnote markers.
+"""
 
 from __future__ import annotations
 
