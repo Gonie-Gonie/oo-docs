@@ -2,7 +2,39 @@ from __future__ import annotations
 
 import ast
 import re
+import subprocess
 from pathlib import Path
+
+
+LOCAL_ABSOLUTE_PATH_PATTERN = re.compile(
+    r"(?:\b[A-Za-z]:[\\/]+Users[\\/]|/home/|/Users/)"
+)
+TRACKED_USER_FACING_PATHS = (
+    "README.md",
+    "README-PYPI.md",
+    "docs",
+    "examples",
+    "src",
+    "artifacts",
+    ".github",
+    "pyproject.toml",
+)
+TEXT_FILE_SUFFIXES = {
+    ".cfg",
+    ".css",
+    ".csv",
+    ".html",
+    ".ini",
+    ".js",
+    ".json",
+    ".md",
+    ".py",
+    ".rst",
+    ".toml",
+    ".txt",
+    ".yaml",
+    ".yml",
+}
 
 
 def _readme() -> str:
@@ -20,6 +52,21 @@ def _documentation_text_files() -> list[Path]:
         paths.extend(root.rglob("*.md"))
         paths.extend(root.rglob("*.py"))
     return sorted({path for path in paths if path.exists()})
+
+
+def _tracked_user_facing_text_files() -> list[Path]:
+    result = subprocess.run(
+        ["git", "ls-files", "--", *TRACKED_USER_FACING_PATHS],
+        check=True,
+        capture_output=True,
+        encoding="utf-8",
+    )
+    paths = [Path(line) for line in result.stdout.splitlines() if line.strip()]
+    return sorted(
+        path
+        for path in paths
+        if path.suffix.lower() in TEXT_FILE_SUFFIXES and path.exists()
+    )
 
 
 def test_readme_quick_start_uses_small_top_level_import_surface() -> None:
@@ -96,6 +143,17 @@ def test_link_examples_use_target_first_argument_order() -> None:
     for path in _documentation_text_files():
         text = path.read_text(encoding="utf-8")
         for match in reversed_external_link.finditer(text):
+            line_number = text.count("\n", 0, match.start()) + 1
+            violations.append(f"{path}:{line_number}")
+
+    assert violations == []
+
+
+def test_tracked_user_facing_text_has_no_local_absolute_paths() -> None:
+    violations = []
+    for path in _tracked_user_facing_text_files():
+        text = path.read_text(encoding="utf-8")
+        for match in LOCAL_ABSOLUTE_PATH_PATTERN.finditer(text):
             line_number = text.count("\n", 0, match.start()) + 1
             violations.append(f"{path}:{line_number}")
 
