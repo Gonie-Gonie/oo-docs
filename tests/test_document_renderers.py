@@ -3613,7 +3613,10 @@ def test_pdf_pages_inserts_external_pdf_pages_with_fallbacks(tmp_path: Path) -> 
     )
     validation = document.validate()
     assert validation.ok_for(("pdf",))
-    assert any(issue.code == "pdf-pages-fallback" for issue in validation.warnings_for(("docx", "html")))
+    assert any(
+        issue.code == "pdf-pages-non-pdf-output"
+        for issue in validation.warnings_for(("docx", "html"))
+    )
 
     pdf_path = tmp_path / "merged.pdf"
     docx_path = tmp_path / "merged.docx"

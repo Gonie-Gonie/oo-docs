@@ -1472,7 +1472,7 @@ class _ValidationContext:
             )
         self._add(
             "warning",
-            "pdf-pages-fallback",
+            "pdf-pages-non-pdf-output",
             "PdfPages inserts actual pages in PDF output. DOCX and HTML output "
             "render a link-style placeholder instead.",
             path,
