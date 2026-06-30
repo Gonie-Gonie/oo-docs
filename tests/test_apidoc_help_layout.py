@@ -74,16 +74,19 @@ def test_help_book_starts_with_category_contents_not_coverage() -> None:
     )
 
     titles = _chapter_titles(document)
+    text = _all_plain_text(document.body)
 
     assert titles[0] == "API Contents"
     assert "API Documentation Coverage" == titles[-1]
     assert titles.index("Core Document Model") < titles.index("API Documentation Coverage")
+    assert "Coverage evidence appears after the API chapters." in text
 
 
 def test_help_book_places_common_symbols_in_category_chapters() -> None:
     api = collect_api("oodocs", collector="auto", public_policy="__all__")
     document = api.to_help_book(include_coverage=False, max_heading_level=2)
     titles = _chapter_titles(document)
+    text = _all_plain_text(document.body)
     all_titles = [
         title
         for chapter in document.body.children
@@ -117,6 +120,8 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "oodocs.presets.JournalArticleTemplate" not in all_titles
     assert check_api_help_categories(api) == ()
     assert "API Documentation Coverage" not in titles
+    assert "Coverage evidence stays in sidecars unless explicitly requested." in text
+    assert "Coverage evidence is appended at the end." not in text
     assert "Uncategorized API" not in titles
     assert "Renderer Extension API" not in titles
 

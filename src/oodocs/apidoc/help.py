@@ -459,7 +459,12 @@ def _api_package_to_help_book(
     rendered_uncategorized = uncategorized if include_uncategorized_appendix else ()
     children: list[object] = [
         TableOfContents(title="API Contents", max_level=max_heading_level),
-        _contents_chapter(api, visible_categories, rendered_uncategorized),
+        _contents_chapter(
+            api,
+            visible_categories,
+            rendered_uncategorized,
+            include_coverage=include_coverage,
+        ),
     ]
     children.extend(
         api_category_to_chapter(
@@ -492,6 +497,8 @@ def _contents_chapter(
     api: ApiPackage,
     categories: Sequence[ApiCategory],
     uncategorized: Sequence[ApiObject] = (),
+    *,
+    include_coverage: bool = False,
 ) -> Chapter:
     rows = []
     for category in categories:
@@ -511,9 +518,14 @@ def _contents_chapter(
                 str(len(uncategorized)),
             ]
         )
+    coverage_note = (
+        " Coverage evidence appears after the API chapters."
+        if include_coverage
+        else " Coverage evidence stays in sidecars unless explicitly requested."
+    )
     return Chapter(
         "API Contents",
-        Paragraph("Find public symbols by category. Coverage evidence is appended at the end."),
+        Paragraph(f"Find public symbols by category.{coverage_note}"),
         Table(
             ["Category", "Purpose", "Symbols"],
             rows,

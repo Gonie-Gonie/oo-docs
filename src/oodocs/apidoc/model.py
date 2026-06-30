@@ -2816,7 +2816,7 @@ class ApiPackage:
 
             payload = json.loads(Path("build/api-package.json").read_text())
             api = ApiPackage.from_dict(payload)
-            doc = api.to_help_book("API Reference", include_coverage=True)
+            doc = api.to_help_book("API Reference")
             ```
         """
 
