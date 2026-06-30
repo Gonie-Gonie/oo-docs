@@ -86,7 +86,7 @@ OODocs_API_CATEGORIES: tuple[ApiCategory, ...] = (
             "oodocs.review.todo",
             "oodocs.review.margin_note",
             "oodocs.footnote",
-            "oodocs.math",
+            "oodocs.inline_math",
             "oodocs.line_break",
             "oodocs.superscript",
             "oodocs.subscript",

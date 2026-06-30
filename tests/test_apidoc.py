@@ -798,7 +798,7 @@ def test_api_doc_profiles_wrap_long_signature_blocks() -> None:
 
 
 def test_api_examples_escape_xml_incompatible_control_chars(tmp_path: Path) -> None:
-    example = ApiExample('fragment = math(r"\x07lpha + \x08eta")')
+    example = ApiExample('fragment = inline_math(r"\x07lpha + \x08eta")')
     block = example.to_code_block()
 
     assert "\\x07" in block.code

@@ -214,6 +214,7 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "load_python_document",
         "load_source_document",
         "margin_note",
+        "math",
         "markup",
         "MAX_SECTION_LEVEL",
         "MIN_SECTION_LEVEL",
@@ -264,6 +265,7 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
     expected = {
         "strikethrough",
         "inline_code",
+        "inline_math",
         "text_color",
         "OutputBundle",
         "FootnoteDefaults",

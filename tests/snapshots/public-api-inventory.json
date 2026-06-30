@@ -617,6 +617,13 @@
           "category": "inline",
           "kind": "function",
           "module": "oodocs.components.inline",
+          "name": "inline_math",
+          "qualname": "oodocs.components.inline.inline_math"
+        },
+        {
+          "category": "inline",
+          "kind": "function",
+          "module": "oodocs.components.inline",
           "name": "inline_code",
           "qualname": "oodocs.components.inline.inline_code"
         },
@@ -647,13 +654,6 @@
           "module": "oodocs.components.inline",
           "name": "line_break",
           "qualname": "oodocs.components.inline.line_break"
-        },
-        {
-          "category": "inline",
-          "kind": "function",
-          "module": "oodocs.components.inline",
-          "name": "math",
-          "qualname": "oodocs.components.inline.math"
         },
         {
           "category": "inline",

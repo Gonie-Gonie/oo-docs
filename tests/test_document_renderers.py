@@ -149,11 +149,11 @@ from oodocs import (
     comment,
     footnote,
     highlight,
+    inline_math,
     italic,
     keyboard,
     link,
     line_break,
-    math,
     prescript,
     ref_range,
     refs,
@@ -416,7 +416,7 @@ def test_comment_and_math_helpers_create_renderable_fragments() -> None:
     inline_todo = todo("Verify units.", owner="QA", status="review")
     inline_margin_note = margin_note("Keep near the source paragraph.", side="left")
     inline_footnote = footnote("term", "Portable footnote note")
-    inline_math = math(r"\alpha^2 + \beta^2")
+    inline_math_fragment = inline_math(r"\alpha^2 + \beta^2")
     equation = Equation(r"\frac{1}{2}")
 
     assert isinstance(inline_comment, oodocs.Comment)
@@ -432,8 +432,8 @@ def test_comment_and_math_helpers_create_renderable_fragments() -> None:
     assert inline_margin_note.plain_text() == "[?]"
     assert isinstance(inline_footnote, Footnote)
     assert inline_footnote.plain_text() == "term[?]"
-    assert isinstance(inline_math, Math)
-    assert inline_math.plain_text() == "alpha2 + beta2"
+    assert isinstance(inline_math_fragment, Math)
+    assert inline_math_fragment.plain_text() == "alpha2 + beta2"
     assert equation.plain_text() == "(1)/(2)"
 
 
@@ -2193,7 +2193,8 @@ def test_public_api_prefers_classes_for_structural_nodes() -> None:
     assert hasattr(workflow_components, "save_document_outputs")
     assert hasattr(workflow_components, "validate_source_document")
     assert not hasattr(oodocs, "from_ipynb")
-    assert hasattr(oodocs, "math")
+    assert not hasattr(oodocs, "math")
+    assert hasattr(oodocs, "inline_math")
     assert not hasattr(oodocs, "chemical_formula")
     assert hasattr(engineering_components, "chemical_formula")
     assert hasattr(oodocs, "prescript")
@@ -5115,7 +5116,7 @@ def test_document_renders_to_docx_and_pdf(tmp_path: Path) -> None:
                 Paragraph(
                     markup("Inline helpers also support **bold** and *italic* markup."),
                     " Inline math such as ",
-                    math(r"\alpha^2 + \beta^2 = \gamma^2"),
+                    inline_math(r"\alpha^2 + \beta^2 = \gamma^2"),
                     " is supported as well.",
                 ),
                 Paragraph(

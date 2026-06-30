@@ -1353,9 +1353,9 @@ class Math(Text):
 
     Examples:
         ```python
-        from oodocs import Document, Paragraph, math
+        from oodocs import Document, Paragraph, inline_math
 
-        paragraph = Paragraph("Energy is ", math(r"E = mc^2"), ".")
+        paragraph = Paragraph("Energy is ", inline_math(r"E = mc^2"), ".")
         document = Document("Physics Note", paragraph)
         ```
     """
@@ -1387,7 +1387,7 @@ class Math(Text):
         return cls(value, style=style)
 
 
-def math(value: str, *, style: TextStyle | None = None) -> Math:
+def inline_math(value: str, *, style: TextStyle | None = None) -> Math:
     """Create an inline math fragment.
 
     Args:
@@ -1399,11 +1399,29 @@ def math(value: str, *, style: TextStyle | None = None) -> Math:
 
     Examples:
         ```python
-        fragment = math(r"\alpha + \beta")
+        fragment = inline_math(r"\alpha + \beta")
         ```
     """
 
     return Math.inline(value, style=style)
+
+
+def math(value: str, *, style: TextStyle | None = None) -> Math:
+    """Create an inline math fragment.
+
+    Args:
+        value: LaTeX-like math source.
+        style: Optional inline style.
+
+    Returns:
+        Inline math fragment.
+
+    Notes:
+        Prefer top-level ``inline_math(...)`` to avoid shadowing Python's
+        standard ``math`` module name.
+    """
+
+    return inline_math(value, style=style)
 
 
 def styled(value: str, **style_values: object) -> Text:
@@ -2004,6 +2022,7 @@ __all__ = [
     "comment",
     "footnote",
     "highlight",
+    "inline_math",
     "italic",
     "keyboard",
     "link",
