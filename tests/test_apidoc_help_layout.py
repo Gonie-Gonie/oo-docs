@@ -111,6 +111,10 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "oodocs.Figure" in all_titles
     assert "oodocs.equations.AlignedEquation" in all_titles
     assert "oodocs.equations.CasesEquation" in all_titles
+    assert "oodocs.chemistry.ChemicalFormula" in all_titles
+    assert "oodocs.chemistry.ReactionEquation" in all_titles
+    assert "oodocs.chemistry.chemical_formula" in all_titles
+    assert "oodocs.chemistry.ce" in all_titles
     assert "oodocs.engineering.Algorithm" in all_titles
     assert "oodocs.SubFigure" in all_titles
     assert "oodocs.SubFigureGroup" in all_titles
@@ -198,6 +202,10 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "Equation.cases" in text
     assert "Equation.from_sympy" in text
     assert "numbered" in text
+    assert "ChemicalFormula" in text
+    assert "ReactionEquation" in text
+    assert "chemical_formula" in text
+    assert "ce(" in text
 
 
 def test_help_book_renders_uncategorized_api_appendix_from_category_gate() -> None:

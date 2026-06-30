@@ -340,6 +340,40 @@ def test_math_support_reference_documents_amsmath_policy() -> None:
         assert phrase in reference
 
 
+def test_readme_latex_translations_include_mhchem_policy() -> None:
+    readme = _readme()
+    translations = readme.split("Common translations:", 1)[1].split(
+        "The main payoff",
+        1,
+    )[0]
+
+    assert "LaTeX `mhchem` chemistry notation" in translations
+    assert "`chemical_formula(...)`" in translations
+    assert "`ce(...)`" in translations
+    assert "`ReactionEquation(...)`" in translations
+    assert "`oodocs.chemistry`" in translations
+    assert "formula subscripts, charge superscripts, Unicode script input" in translations
+    assert "reaction references" in translations
+
+
+def test_chemistry_support_reference_documents_mhchem_policy() -> None:
+    reference = Path("docs/reference/chemistry-support.md").read_text(encoding="utf-8")
+
+    for phrase in (
+        "OODocs provides mhchem-inspired helpers",
+        "`oodocs.chemistry` namespace",
+        "`chemical_formula(...)` or `ChemicalFormula(...)`",
+        "`ce(...)`",
+        "`ReactionEquation(...)`",
+        "Renders numeric suffixes as subscripts and charges as superscripts.",
+        "Unicode subscript digits normalize to ordinary subscript runs.",
+        "Unicode superscript digits and signs normalize to superscript runs.",
+        "Reaction arrows such as `->`",
+        "full mhchem grammar",
+    ):
+        assert phrase in reference
+
+
 def test_public_api_policy_doc_defines_tiers_and_guards() -> None:
     policy = Path("docs/reference/public-api-policy.md").read_text(encoding="utf-8")
 
