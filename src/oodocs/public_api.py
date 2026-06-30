@@ -1,4 +1,14 @@
-"""Public API tier policy for the top-level :mod:`oodocs` namespace."""
+"""Public API tier policy for the top-level :mod:`oodocs` namespace.
+
+Attributes:
+    PublicApiTier: Stability tier assigned to a top-level public symbol.
+    TOP_LEVEL_EXPORT_LIMIT: Maximum allowed number of top-level exports.
+    CORE_TOP_LEVEL_EXPORTS: User-facing symbols expected at the top level.
+    DOMAIN_TOP_LEVEL_EXPORTS: Domain-specific symbols allowed at the top level.
+    INTERNAL_TOP_LEVEL_EXPORTS: Internal symbols intentionally exposed at the top level.
+    FORBIDDEN_TOP_LEVEL_NAME_PATTERNS: Name fragments blocked from top-level export.
+    TOP_LEVEL_SYMBOL_TIERS: Mapping from top-level public symbol name to tier.
+"""
 
 from __future__ import annotations
 
