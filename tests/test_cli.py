@@ -3,8 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from oodocs import build_source_outputs, validate_source_document
 from oodocs.cli import main
+from oodocs.workflows import build_source_outputs, validate_source_document
 
 
 def test_cli_build_markdown_outputs_selected_formats(

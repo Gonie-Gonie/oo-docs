@@ -67,8 +67,10 @@ class Document:
 
     See Also:
         ``DocumentSettings`` for metadata and layout configuration,
-        ``save_document_outputs`` for workflow-oriented rendering, and
-        ``from_markdown`` for importing Markdown into a document.
+        ``Document.save_all`` for ordinary rendering,
+        ``oodocs.workflows.save_document_outputs`` for workflow-oriented
+        rendering, and ``Document.from_markdown`` for importing Markdown into a
+        document.
     """
 
     title: str

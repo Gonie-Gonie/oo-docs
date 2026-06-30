@@ -19,6 +19,7 @@ import oodocs.public_api as public_api
 import oodocs.references as reference_helpers
 import oodocs.review as review
 import oodocs.structure as structure
+import oodocs.workflows as workflows
 from oodocs.apidoc.cli import _build_parser as _build_apidoc_parser
 from oodocs.cli import _build_parser as _build_oodocs_parser
 from oodocs.importers.results import normalize_import_policy
@@ -100,6 +101,16 @@ def test_tier_two_namespaces_export_domain_symbols() -> None:
             "reference",
             "refs",
         },
+        workflows: {
+            "OutputBundle",
+            "PYTHON_DOCUMENT_NAMES",
+            "PYTHON_FACTORY_NAMES",
+            "build_source_outputs",
+            "load_document_from_python",
+            "load_source_document",
+            "save_document_outputs",
+            "validate_source_document",
+        },
         structure: {
             "Appendix",
             "Assumption",
@@ -179,6 +190,7 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "parse_markdown_file",
         "parse_notebook",
         "RenderedOutputs",
+        "build_source_outputs",
         "build_python_document",
         "CommentsPage",
         "convert_source",
@@ -194,7 +206,9 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "MarginNote",
         "Lemma",
         "load_document",
+        "load_document_from_python",
         "load_python_document",
+        "load_source_document",
         "margin_note",
         "NotebookImportOptions",
         "ReferencesPage",
@@ -223,26 +237,25 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "Remark",
         "SubTable",
         "SubTableGroup",
+        "save_document_outputs",
         "TitleMatterOptions",
         "TextBox",
         "Theorem",
         "TypographyOptions",
         "validate_source",
+        "validate_source_document",
     }
     expected = {
         "strikethrough",
         "inline_code",
         "text_color",
         "OutputBundle",
-        "build_source_outputs",
         "CommentList",
         "FootnoteList",
         "FootnoteDefaults",
         "FootnoteStyle",
         "ListOfFigures",
         "ListOfTables",
-        "load_document_from_python",
-        "load_source_document",
         "BlockDefaults",
         "CaptionDefaults",
         "CitationDefaults",
@@ -256,8 +269,6 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "SubSubsection",
         "TitleMatterDefaults",
         "TypographyDefaults",
-        "save_document_outputs",
-        "validate_source_document",
     }
 
     assert forbidden.isdisjoint(oodocs.__all__)

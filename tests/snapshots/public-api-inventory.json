@@ -635,13 +635,6 @@
           "qualname": "oodocs.components.inline.bold"
         },
         {
-          "category": "workflow",
-          "kind": "function",
-          "module": "oodocs.workflows",
-          "name": "build_source_outputs",
-          "qualname": "oodocs.workflows.build_source_outputs"
-        },
-        {
           "category": "inline",
           "kind": "function",
           "module": "oodocs.components.inline",
@@ -705,20 +698,6 @@
           "qualname": "oodocs.components.inline.line_break"
         },
         {
-          "category": "workflow",
-          "kind": "function",
-          "module": "oodocs.workflows",
-          "name": "load_source_document",
-          "qualname": "oodocs.workflows.load_source_document"
-        },
-        {
-          "category": "workflow",
-          "kind": "function",
-          "module": "oodocs.workflows",
-          "name": "load_document_from_python",
-          "qualname": "oodocs.workflows.load_document_from_python"
-        },
-        {
           "category": "inline",
           "kind": "function",
           "module": "oodocs.components.inline",
@@ -752,13 +731,6 @@
           "module": "oodocs.components.inline",
           "name": "refs",
           "qualname": "oodocs.components.inline.refs"
-        },
-        {
-          "category": "workflow",
-          "kind": "function",
-          "module": "oodocs.workflows",
-          "name": "save_document_outputs",
-          "qualname": "oodocs.workflows.save_document_outputs"
         },
         {
           "category": "inline",
@@ -843,13 +815,6 @@
           "module": "oodocs.components.inline",
           "name": "url",
           "qualname": "oodocs.components.inline.url"
-        },
-        {
-          "category": "workflow",
-          "kind": "function",
-          "module": "oodocs.workflows",
-          "name": "validate_source_document",
-          "qualname": "oodocs.workflows.validate_source_document"
         }
       ]
     },

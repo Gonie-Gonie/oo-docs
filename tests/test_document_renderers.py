@@ -27,6 +27,7 @@ import oodocs.positioning as positioning_components
 import oodocs.references as reference_components
 import oodocs.review as review_components
 import oodocs.structure as structure_components
+import oodocs.workflows as workflow_components
 from oodocs.components.equations import BASELINE, SUBSCRIPT, SUPERSCRIPT, parse_latex_segments
 from oodocs.components.media import build_table_layout
 from oodocs.core import length_to_inches
@@ -2163,6 +2164,17 @@ def test_public_api_prefers_classes_for_structural_nodes() -> None:
     assert hasattr(importer_components, "from_notebook")
     assert hasattr(importer_components, "from_markdown")
     assert hasattr(importer_components, "from_markdown_file")
+    assert hasattr(oodocs, "OutputBundle")
+    assert not hasattr(oodocs, "build_source_outputs")
+    assert not hasattr(oodocs, "load_document_from_python")
+    assert not hasattr(oodocs, "load_source_document")
+    assert not hasattr(oodocs, "save_document_outputs")
+    assert not hasattr(oodocs, "validate_source_document")
+    assert hasattr(workflow_components, "build_source_outputs")
+    assert hasattr(workflow_components, "load_document_from_python")
+    assert hasattr(workflow_components, "load_source_document")
+    assert hasattr(workflow_components, "save_document_outputs")
+    assert hasattr(workflow_components, "validate_source_document")
     assert not hasattr(oodocs, "from_ipynb")
     assert hasattr(oodocs, "math")
     assert not hasattr(oodocs, "chemical_formula")
