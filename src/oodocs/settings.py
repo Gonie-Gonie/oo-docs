@@ -611,7 +611,11 @@ class TitleMatter:
         self.cover_page = cover_page
 
     def resolved_author(self) -> str | None:
-        """Return structured authors as a metadata author string."""
+        """Return structured authors as a metadata author string.
+
+        Returns:
+            Semicolon-separated author names, or ``None`` when no authors are set.
+        """
 
         if not self.authors:
             return None
