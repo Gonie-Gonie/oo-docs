@@ -368,7 +368,14 @@ class ReferenceFormat:
         self.page = bool(page)
 
     def merged(self, **overrides: object) -> ReferenceFormat:
-        """Return a copy with selected fields overridden."""
+        """Return a copy with selected fields overridden.
+
+        Args:
+            **overrides: Reference format field values to override.
+
+        Returns:
+            New reference format with applied overrides.
+        """
 
         values = {
             "label": self.label,
@@ -538,7 +545,11 @@ class ReferenceGroup(Text):
         self.range_reference = range_reference
 
     def plain_text(self) -> str:
-        """Return placeholder reference text before numbering is resolved."""
+        """Return placeholder reference text before numbering is resolved.
+
+        Returns:
+            Automatic placeholder text for unresolved references.
+        """
 
         if self.range_reference:
             return f"{_reference_label_prefix(self.targets[0])} ?{self.reference_format.range_separator}?"
@@ -636,7 +647,16 @@ def paren_ref(
     style: TextStyle | None = None,
     reference_format: ReferenceFormat | None = None,
 ) -> BlockReference:
-    """Create a parenthesized inline object reference."""
+    """Create a parenthesized inline object reference.
+
+    Args:
+        target: Document object to reference.
+        style: Optional inline style.
+        reference_format: Optional automatic reference formatting rules.
+
+    Returns:
+        Parenthesized inline reference fragment.
+    """
 
     base = reference_format or ReferenceFormat()
     return ref(
@@ -656,6 +676,14 @@ def page_ref(
 
     Renderers currently degrade this to an ordinary reference and validation
     reports a warning so authors can decide whether that is acceptable.
+
+    Args:
+        target: Document object to reference.
+        style: Optional inline style.
+        reference_format: Optional automatic reference formatting rules.
+
+    Returns:
+        Page-aware inline reference fragment.
     """
 
     base = reference_format or ReferenceFormat()
