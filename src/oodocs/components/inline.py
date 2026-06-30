@@ -65,145 +65,6 @@ class Text:
         return cls(value=value, style=TextStyle(**style_values))
 
     @classmethod
-    def bold(cls, value: str, style: TextStyle | None = None) -> Bold:
-        """Create a bold text fragment.
-
-        Args:
-            value: Literal text content.
-            style: Additional style values to merge.
-
-        Returns:
-            Bold text fragment.
-        """
-
-        return Bold(value, style=style)
-
-    @classmethod
-    def italic(cls, value: str, style: TextStyle | None = None) -> Italic:
-        """Create an italic text fragment.
-
-        Args:
-            value: Literal text content.
-            style: Additional style values to merge.
-
-        Returns:
-            Italic text fragment.
-        """
-
-        return Italic(value, style=style)
-
-    @classmethod
-    def inline_code(cls, value: str, style: TextStyle | None = None) -> InlineCode:
-        """Create a monospace text fragment.
-
-        Args:
-            value: Literal text content.
-            style: Additional style values to merge.
-
-        Returns:
-            InlineCode text fragment.
-        """
-
-        return InlineCode(value, style=style)
-
-    @classmethod
-    def text_color(
-        cls,
-        value: str,
-        text_color: str,
-        style: TextStyle | None = None,
-    ) -> Text:
-        """Create a colored text fragment.
-
-        Args:
-            value: Literal text content.
-            text_color: Text color as a hex string.
-            style: Additional style values to merge.
-
-        Returns:
-            Text fragment with the requested color.
-        """
-
-        return cls(
-            value=value,
-            style=TextStyle(text_color=text_color).merged(style),
-        )
-
-    @classmethod
-    def highlight(
-        cls,
-        value: str,
-        highlight_color: str = "FFFF00",
-        style: TextStyle | None = None,
-    ) -> Highlight:
-        """Create a highlighted text fragment.
-
-        Args:
-            value: Literal text content.
-            highlight_color: Highlight color as a hex string.
-            style: Additional style values to merge.
-
-        Returns:
-            Highlighted text fragment.
-        """
-
-        return Highlight(value, highlight_color=highlight_color, style=style)
-
-    @classmethod
-    def strikethrough(
-        cls,
-        value: str,
-        style: TextStyle | None = None,
-    ) -> Strikethrough:
-        """Create a strikethrough text fragment.
-
-        Args:
-            value: Literal text content.
-            style: Additional style values to merge.
-
-        Returns:
-            Strikethrough text fragment.
-        """
-
-        return Strikethrough(value, style=style)
-
-    @classmethod
-    def superscript(
-        cls,
-        value: object,
-        style: TextStyle | None = None,
-    ) -> Text:
-        """Create superscript inline text.
-
-        Args:
-            value: Value converted to text.
-            style: Additional style values to merge.
-
-        Returns:
-            Superscript text fragment.
-        """
-
-        return cls(value=str(value), style=TextStyle(superscript=True).merged(style))
-
-    @classmethod
-    def subscript(
-        cls,
-        value: object,
-        style: TextStyle | None = None,
-    ) -> Text:
-        """Create subscript inline text.
-
-        Args:
-            value: Value converted to text.
-            style: Additional style values to merge.
-
-        Returns:
-            Subscript text fragment.
-        """
-
-        return cls(value=str(value), style=TextStyle(subscript=True).merged(style))
-
-    @classmethod
     def from_markup(
         cls,
         source: str,
@@ -1459,7 +1320,7 @@ def bold(value: str, *, style: TextStyle | None = None) -> Bold:
         ```
     """
 
-    return Text.bold(value, style=style)
+    return Bold(value, style=style)
 
 
 def italic(value: str, *, style: TextStyle | None = None) -> Italic:
@@ -1478,7 +1339,7 @@ def italic(value: str, *, style: TextStyle | None = None) -> Italic:
         ```
     """
 
-    return Text.italic(value, style=style)
+    return Italic(value, style=style)
 
 
 def inline_code(value: str, *, style: TextStyle | None = None) -> InlineCode:
@@ -1497,7 +1358,7 @@ def inline_code(value: str, *, style: TextStyle | None = None) -> InlineCode:
         ```
     """
 
-    return Text.inline_code(value, style=style)
+    return InlineCode(value, style=style)
 
 
 def superscript(value: object, *, style: TextStyle | None = None) -> Text:
@@ -1516,7 +1377,7 @@ def superscript(value: object, *, style: TextStyle | None = None) -> Text:
         ```
     """
 
-    return Text.superscript(value, style=style)
+    return Text(value=str(value), style=TextStyle(superscript=True).merged(style))
 
 
 def subscript(value: object, *, style: TextStyle | None = None) -> Text:
@@ -1535,7 +1396,7 @@ def subscript(value: object, *, style: TextStyle | None = None) -> Text:
         ```
     """
 
-    return Text.subscript(value, style=style)
+    return Text(value=str(value), style=TextStyle(subscript=True).merged(style))
 
 
 def prescript(
@@ -1772,7 +1633,7 @@ def text_color(
         ```
     """
 
-    return Text.text_color(value, text_color, style=style)
+    return Text(value=value, style=TextStyle(text_color=text_color).merged(style))
 
 
 def highlight(
@@ -1797,7 +1658,7 @@ def highlight(
         ```
     """
 
-    return Text.highlight(value, highlight_color=highlight_color, style=style)
+    return Highlight(value, highlight_color=highlight_color, style=style)
 
 
 def strikethrough(value: str, *, style: TextStyle | None = None) -> Strikethrough:
@@ -1816,7 +1677,7 @@ def strikethrough(value: str, *, style: TextStyle | None = None) -> Strikethroug
         ```
     """
 
-    return Text.strikethrough(value, style=style)
+    return Strikethrough(value, style=style)
 
 
 def line_break() -> LineBreak:

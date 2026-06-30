@@ -597,14 +597,7 @@ def test_method_style_inline_actions_create_renderable_fragments() -> None:
     source = CitationSource("Usage Guide", key="guide", year="2026")
     library = CitationLibrary([source])
 
-    assert Text.bold("important").style.bold is True
-    assert Text.italic("note").style.italic is True
-    assert Text.inline_code("x = 1").style.font_name == "Courier New"
-    assert Text.text_color("accent", "#0066AA").style.text_color == "0066AA"
-    assert Text.highlight("marked", highlight_color="#FFF2CC").style.highlight_color == "FFF2CC"
-    assert Text.strikethrough("old").style.strikethrough is True
-    assert Text.superscript("2").style.superscript is True
-    assert Text.subscript("0").style.subscript is True
+    assert Text.styled("accent", text_color="#0066AA").style.text_color == "0066AA"
     assert [fragment.value for fragment in Text.from_markup("plain **bold**")] == [
         "plain ",
         "bold",

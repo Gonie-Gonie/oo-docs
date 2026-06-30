@@ -330,13 +330,29 @@ def test_text_style_uses_canonical_field_names() -> None:
 def test_highlight_helpers_use_highlight_color_parameter_name() -> None:
     for callable_obj in (
         inline_components.Highlight,
-        oodocs.Text.highlight,
         oodocs.highlight,
     ):
         parameters = set(inspect.signature(callable_obj).parameters)
 
         assert "color" not in parameters
         assert "highlight_color" in parameters
+
+
+def test_text_class_keeps_only_canonical_classmethod_helpers() -> None:
+    members = _public_members(oodocs.Text)
+    forbidden = {
+        "bold",
+        "italic",
+        "inline_code",
+        "text_color",
+        "highlight",
+        "strikethrough",
+        "superscript",
+        "subscript",
+    }
+
+    assert forbidden.isdisjoint(members)
+    assert {"styled", "from_markup"} <= members
 
 
 def test_citation_defaults_use_style_field_names() -> None:
