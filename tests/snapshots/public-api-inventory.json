@@ -12,13 +12,6 @@
           "qualname": "oodocs.components.people.Affiliation"
         },
         {
-          "category": "document-core",
-          "kind": "class",
-          "module": "oodocs.components.glossary",
-          "name": "Acronym",
-          "qualname": "oodocs.components.glossary.Acronym"
-        },
-        {
           "category": "block",
           "kind": "class",
           "module": "oodocs.components.blocks",
@@ -311,27 +304,6 @@
           "module": "oodocs.styles.theme",
           "name": "HeaderFooterDefaults",
           "qualname": "oodocs.styles.theme.HeaderFooterDefaults"
-        },
-        {
-          "category": "document-core",
-          "kind": "class",
-          "module": "oodocs.components.glossary",
-          "name": "Glossary",
-          "qualname": "oodocs.components.glossary.Glossary"
-        },
-        {
-          "category": "generated-page",
-          "kind": "class",
-          "module": "oodocs.components.generated",
-          "name": "GlossaryList",
-          "qualname": "oodocs.components.generated.GlossaryList"
-        },
-        {
-          "category": "document-core",
-          "kind": "class",
-          "module": "oodocs.components.glossary",
-          "name": "GlossaryTerm",
-          "qualname": "oodocs.components.glossary.GlossaryTerm"
         },
         {
           "category": "style",

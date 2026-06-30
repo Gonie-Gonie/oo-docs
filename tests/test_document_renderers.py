@@ -20,6 +20,7 @@ import pytest
 import oodocs.components.generated as generated_components
 import oodocs.components.inline as inline_components
 import oodocs.engineering as engineering_components
+import oodocs.glossary as glossary_components
 import oodocs.positioning as positioning_components
 import oodocs.review as review_components
 from oodocs.components.equations import BASELINE, SUBSCRIPT, SUPERSCRIPT, parse_latex_segments
@@ -36,11 +37,11 @@ from oodocs.engineering import (
     chemical_formula,
 )
 from oodocs.generated import ListOfAlgorithms
+from oodocs.glossary import Acronym, Glossary, GlossaryList, GlossaryTerm
 from oodocs.positioning import ImageBox, PageItemScope, Shape, TextBox
 from oodocs.review import MarginNote, Todo, margin_note, todo
 from oodocs import (
     Affiliation,
-    Acronym,
     Assumption,
     Author,
     AuthorLayout,
@@ -81,9 +82,6 @@ from oodocs import (
     FootnoteDefaults,
     FootnoteStyle,
     GeneratedContentDefaults,
-    Glossary,
-    GlossaryList,
-    GlossaryTerm,
     HeaderFooterDefaults,
     HeadingStyle,
     HeadingNumbering,
@@ -2109,6 +2107,14 @@ def test_public_api_prefers_classes_for_structural_nodes() -> None:
     assert hasattr(inline_components, "Hyperlink")
     assert hasattr(inline_components, "Italic")
     assert hasattr(inline_components, "InlineCode")
+    assert not hasattr(oodocs, "Acronym")
+    assert not hasattr(oodocs, "Glossary")
+    assert not hasattr(oodocs, "GlossaryList")
+    assert not hasattr(oodocs, "GlossaryTerm")
+    assert hasattr(glossary_components, "Acronym")
+    assert hasattr(glossary_components, "Glossary")
+    assert hasattr(glossary_components, "GlossaryList")
+    assert hasattr(glossary_components, "GlossaryTerm")
     assert hasattr(generated_components, "FootnoteList")
     assert not hasattr(oodocs, "ListBlock")
     assert not hasattr(oodocs, "Citation")

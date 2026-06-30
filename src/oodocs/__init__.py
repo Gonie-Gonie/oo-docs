@@ -45,14 +45,12 @@ from oodocs.components.blocks import (
 from oodocs.components.generated import (
     CommentList,
     FootnoteList,
-    GlossaryList,
     ListOfFigures,
     ReferenceList,
     ListOfTables,
     TableOfContents,
     TocLevelStyle,
 )
-from oodocs.components.glossary import Acronym, Glossary, GlossaryTerm
 from oodocs.components.media import (
     ColumnSpec,
     CropBox,
@@ -195,7 +193,6 @@ __version__ = _resolve_version()
 
 __all__ = [
     "Affiliation",
-    "Acronym",
     "Assumption",
     "Appendix",
     "Author",
@@ -238,9 +235,6 @@ __all__ = [
     "FootnoteStyle",
     "GeneratedContentDefaults",
     "HeaderFooterDefaults",
-    "Glossary",
-    "GlossaryList",
-    "GlossaryTerm",
     "HeadingStyle",
     "HeadingNumbering",
     "ImageData",

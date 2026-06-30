@@ -11,6 +11,7 @@ import oodocs.apidoc as apidoc
 import oodocs.components.references as references
 import oodocs.engineering as engineering
 import oodocs.generated as generated
+import oodocs.glossary as glossary
 import oodocs.positioning as positioning
 import oodocs.public_api as public_api
 import oodocs.review as review
@@ -70,6 +71,7 @@ def test_top_level_public_api_excludes_internal_helper_patterns() -> None:
 def test_tier_two_namespaces_export_domain_symbols() -> None:
     expected_exports = {
         review: {"MarginNote", "Todo", "margin_note", "todo"},
+        glossary: {"Acronym", "Glossary", "GlossaryList", "GlossaryTerm"},
         positioning: {"ImageBox", "PageItemScope", "Shape", "TextBox"},
         generated: {
             "CommentList",
@@ -121,6 +123,10 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "FigureList",
         "FootnotesPage",
         "GeneratedPageDefaults",
+        "Acronym",
+        "Glossary",
+        "GlossaryList",
+        "GlossaryTerm",
         "ImageBox",
         "ListOfAlgorithms",
         "MarginNote",

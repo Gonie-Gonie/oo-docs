@@ -116,7 +116,8 @@ class Glossary:
 
     Examples:
         ```python
-        from oodocs import Glossary, GlossaryList, Paragraph
+        from oodocs import Paragraph
+        from oodocs.glossary import Glossary, GlossaryList
 
         glossary = Glossary()
         glossary.acronym("HVAC", "Heating, ventilation, and air conditioning")
