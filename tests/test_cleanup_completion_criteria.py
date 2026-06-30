@@ -297,6 +297,18 @@ def test_readme_latex_translations_include_algorithmicx_policy() -> None:
     assert "automatic numbering and references" in translations
 
 
+def test_readme_latex_translations_include_tcolorbox_policy() -> None:
+    readme = _readme()
+    translations = readme.split("Common translations:", 1)[1].split(
+        "The main payoff",
+        1,
+    )[0]
+
+    assert "LaTeX `tcolorbox` / `mdframed` report panels" in translations
+    assert "`Box(..., icon=..., title_position=\"side\")`" in translations
+    assert "`CalloutBox(..., variant=\"danger\", icon=\"!\")`" in translations
+
+
 def test_public_api_policy_doc_defines_tiers_and_guards() -> None:
     policy = Path("docs/reference/public-api-policy.md").read_text(encoding="utf-8")
 

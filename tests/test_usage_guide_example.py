@@ -178,6 +178,9 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "heading_styles" in table_text
     assert "heading_style" in table_text
     assert any("Component presets wrap ordinary blocks" in text for text in paragraph_texts)
+    assert any("tcolorbox-like panels" in text for text in paragraph_texts)
+    assert any("CalloutBox" in text for text in paragraph_texts)
+    assert any("title_position" in text for text in paragraph_texts)
     assert any("Template presets build full Document objects" in text for text in paragraph_texts)
     assert any("oodocs.presets.components" in text for text in paragraph_texts)
     assert any("oodocs.presets.templates" in text for text in paragraph_texts)
@@ -322,6 +325,9 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "heading_styles" in pdf_text
     assert "heading_style" in pdf_text
     assert "Component presets wrap ordinary blocks" in pdf_text
+    assert "tcolorbox-like panels" in pdf_text
+    assert "CalloutBox" in pdf_text
+    assert "title_position" in pdf_text
     assert "Template presets build full Document objects" in pdf_text
     assert "oodocs.presets.components" in pdf_text
     assert "oodocs.presets.templates" in pdf_text
@@ -451,6 +457,9 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "heading_styles" in normalized_html_text
     assert "heading_style" in normalized_html_text
     assert "Component presets wrap ordinary blocks" in normalized_html_text
+    assert "tcolorbox-like panels" in normalized_html_text
+    assert "CalloutBox" in normalized_html_text
+    assert "title_position" in normalized_html_text
     assert "Template presets build full Document objects" in normalized_html_text
     assert "oodocs.presets.components" in normalized_html_text
     assert "oodocs.presets.templates" in normalized_html_text
