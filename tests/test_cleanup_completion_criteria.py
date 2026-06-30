@@ -13,6 +13,15 @@ def _python_blocks(markdown: str) -> list[str]:
     return re.findall(r"```python\n(.*?)\n```", markdown, flags=re.DOTALL)
 
 
+def _documentation_text_files() -> list[Path]:
+    paths = [Path("README.md"), Path("README-PYPI.md")]
+    for root_name in ("docs", "examples", "src/oodocs"):
+        root = Path(root_name)
+        paths.extend(root.rglob("*.md"))
+        paths.extend(root.rglob("*.py"))
+    return sorted({path for path in paths if path.exists()})
+
+
 def test_readme_quick_start_uses_small_top_level_import_surface() -> None:
     readme = _readme()
     quick_start = readme.split("## Quick Start", 1)[1].split("## Command Line", 1)[0]
@@ -75,3 +84,19 @@ def test_public_api_policy_doc_defines_tiers_and_guards() -> None:
         "Advanced examples import their domain namespace explicitly.",
     ):
         assert phrase in policy
+
+
+def test_link_examples_use_target_first_argument_order() -> None:
+    reversed_external_link = re.compile(
+        r"link\(\s*(['\"])(?!(?:https?://|mailto:))[^'\"]+\1\s*,\s*"
+        r"(['\"])(?:https?://|mailto:)[^'\"]+\2"
+    )
+
+    violations = []
+    for path in _documentation_text_files():
+        text = path.read_text(encoding="utf-8")
+        for match in reversed_external_link.finditer(text):
+            line_number = text.count("\n", 0, match.start()) + 1
+            violations.append(f"{path}:{line_number}")
+
+    assert violations == []

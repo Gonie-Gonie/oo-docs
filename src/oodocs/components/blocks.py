@@ -107,7 +107,7 @@ class Paragraph(Block):
 
         paragraph = Paragraph(
             "Read the ",
-            link("release notes", "https://example.com/releases"),
+            link("https://example.com/releases", "release notes"),
             " before approving ",
             bold("production"),
             ".",
