@@ -786,7 +786,7 @@ def api_member_summary_table(
         and resolved.include_member_sections
         and _can_render_child_sections(level, _normalize_max_heading_level(max_heading_level))
     )
-    return api_objects_to_summary_table(
+    return _api_objects_to_summary_table(
         obj.members,
         caption=None,
         presentation=resolved,
@@ -955,7 +955,7 @@ def api_object_to_box(
     return Box(*blocks, title=obj.heading_text())
 
 
-def api_objects_to_summary_table(
+def _api_objects_to_summary_table(
     objects: Sequence[ApiObject],
     *,
     presentation: str | ApiPresentationProfile = "compact",
@@ -986,10 +986,9 @@ def api_objects_to_summary_table(
         ```python
         from oodocs import Chapter, Document
         from oodocs.apidoc import collect_api
-        from oodocs.apidoc.blocks import api_objects_to_summary_table
 
         api = collect_api(".")
-        table = api_objects_to_summary_table(
+        table = api.to_summary_table(
             api.select_functions(),
             presentation="compact",
             caption="Public functions",
@@ -1073,7 +1072,7 @@ def api_module_to_blocks(
     render_member_sections = max_heading_level is None or level <= max_heading_level
     if module.members:
         blocks.append(
-            api_objects_to_summary_table(
+            _api_objects_to_summary_table(
                 module.members,
                 caption="Module API",
                 presentation=resolved,
@@ -1362,7 +1361,6 @@ __all__ = [
     "api_object_to_box",
     "api_object_to_section",
     "api_objects_to_chapter",
-    "api_objects_to_summary_table",
     "api_package_to_chapters",
     "api_parameter_table",
     "api_exceptions_table",

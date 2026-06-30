@@ -9,6 +9,7 @@ import pytest
 import oodocs
 import oodocs.adapters as adapters
 import oodocs.apidoc as apidoc
+import oodocs.apidoc.blocks as apidoc_blocks
 import oodocs.apidoc.config as apidoc_config
 import oodocs.apidoc.help as apidoc_help
 import oodocs.apidoc.profiles as apidoc_profiles
@@ -590,6 +591,12 @@ def test_apidoc_help_module_keeps_object_method_helpers_private() -> None:
     assert not any(hasattr(apidoc_help, name) for name in stale_helpers)
     assert hasattr(apidoc_help, "_api_object_to_help_section")
     assert hasattr(apidoc_help, "_api_package_to_help_book")
+
+
+def test_apidoc_blocks_module_keeps_summary_table_helper_private() -> None:
+    assert "api_objects_to_summary_table" not in apidoc_blocks.__all__
+    assert not hasattr(apidoc_blocks, "api_objects_to_summary_table")
+    assert hasattr(apidoc_blocks, "_api_objects_to_summary_table")
 
 
 def test_text_style_uses_canonical_field_names() -> None:

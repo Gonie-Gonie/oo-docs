@@ -2571,8 +2571,8 @@ class ApiModule:
         Args:
             objects: Optional objects to summarize. Defaults to all recursive
                 objects in this module.
-            **kwargs: Additional options forwarded to
-                ``api_objects_to_summary_table``.
+            **kwargs: Additional summary table options such as
+                ``presentation`` or ``caption``.
 
         Returns:
             OODocs table summarizing the selected module objects.
@@ -2594,9 +2594,9 @@ class ApiModule:
             ```
         """
 
-        from oodocs.apidoc.blocks import api_objects_to_summary_table
+        from oodocs.apidoc.blocks import _api_objects_to_summary_table
 
-        return api_objects_to_summary_table(objects or list(self.iter_objects()), **kwargs)
+        return _api_objects_to_summary_table(objects or list(self.iter_objects()), **kwargs)
 
     def to_sections(
         self,
@@ -3433,9 +3433,8 @@ class ApiPackage:
         Args:
             objects: Optional objects to include. Defaults to all public
                 objects.
-            **kwargs: Additional options forwarded to
-                ``api_objects_to_summary_table``, such as ``presentation`` or
-                ``caption``.
+            **kwargs: Additional summary table options such as
+                ``presentation`` or ``caption``.
 
         Returns:
             OODocs table summarizing selected API objects.
@@ -3459,9 +3458,9 @@ class ApiPackage:
             ```
         """
 
-        from oodocs.apidoc.blocks import api_objects_to_summary_table
+        from oodocs.apidoc.blocks import _api_objects_to_summary_table
 
-        return api_objects_to_summary_table(objects or self.select_public_objects(), **kwargs)
+        return _api_objects_to_summary_table(objects or self.select_public_objects(), **kwargs)
 
     def to_modules_table(self, *, caption: str | None = None):
         """Return a table summarizing collected modules.

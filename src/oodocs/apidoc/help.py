@@ -526,7 +526,7 @@ def _uncategorized_chapter(
     presentation: str | ApiPresentationProfile = "help",
     max_heading_level: int | None = None,
 ) -> Chapter:
-    from oodocs.apidoc.blocks import api_objects_to_summary_table
+    from oodocs.apidoc.blocks import _api_objects_to_summary_table
 
     blocks: list[object] = [
         Paragraph(
@@ -534,7 +534,7 @@ def _uncategorized_chapter(
             "Move these objects into explicit categories before treating the "
             "help book as complete."
         ),
-        api_objects_to_summary_table(
+        _api_objects_to_summary_table(
             objects,
             caption=None,
             presentation=presentation,
