@@ -189,7 +189,13 @@ def test_tier_two_namespaces_export_domain_symbols() -> None:
             "parse_markdown_file",
             "parse_notebook",
         },
-        media: {"ColumnSpec", "CropBox", "SubTable", "SubTableGroup"},
+        media: {
+            "ColumnSpec",
+            "CropBox",
+            "SubTable",
+            "SubTableGroup",
+            "TableOverflowPolicy",
+        },
         pdf: {"PdfPages"},
         positioning: {"ImageBox", "PageItemScope", "Shape", "TextBox"},
         reference_helpers: {
@@ -381,6 +387,7 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "Remark",
         "SubTable",
         "SubTableGroup",
+        "TableOverflowPolicy",
         "save_document_outputs",
         "section_for_level",
         "styled",

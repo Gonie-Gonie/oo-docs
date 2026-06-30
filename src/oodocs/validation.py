@@ -1370,7 +1370,7 @@ class _ValidationContext:
             self._validate_table_width(table, path)
         elif table.columns is not None:
             self._validate_table_width(table, path)
-        elif layout.column_count >= 8:
+        elif layout.column_count >= 8 and table.overflow_policy.action == "warn":
             self._add(
                 "warning",
                 "many-table-columns",
@@ -1965,6 +1965,8 @@ class _ValidationContext:
         table_width = sum(column_widths)
         text_width = self.document.settings.text_width_in_inches()
         if table_width <= text_width:
+            return
+        if table.overflow_policy.action == "allow":
             return
         self._add(
             "warning",

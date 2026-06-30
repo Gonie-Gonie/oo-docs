@@ -55,7 +55,13 @@ from oodocs.chemistry import (
 )
 from oodocs.generated import ListOfComments, ListOfFootnotes, ListOfAlgorithms
 from oodocs.glossary import Acronym, Glossary, ListOfGlossaryTerms, GlossaryTerm
-from oodocs.media import ColumnSpec, CropBox, SubTable, SubTableGroup
+from oodocs.media import (
+    ColumnSpec,
+    CropBox,
+    SubTable,
+    SubTableGroup,
+    TableOverflowPolicy,
+)
 from oodocs.pdf import PdfPages
 from oodocs.positioning import ImageBox, PageItemScope, Shape, TextBox
 from oodocs.styles.generated import TableOfContentsLevelStyle
@@ -1324,6 +1330,44 @@ def test_document_validate_reports_preflight_warnings(tmp_path: Path) -> None:
     assert any("save_csv" in issue.message for issue in wide_table_warnings)
 
 
+def test_table_overflow_policy_allows_intentional_wide_tables() -> None:
+    settings = DocumentSettings(
+        unit="in",
+        page_layout=PageLayout(
+            PageSize.letter(),
+            PageMargins.all(1.0, unit="in"),
+        ),
+    )
+    explicit_overflow = Table(
+        headers=["A", "B"],
+        rows=[["wide", "table"]],
+        column_widths=[4.0, 4.0],
+        unit="in",
+        overflow_policy=TableOverflowPolicy(action="allow"),
+    )
+    many_columns = Table(
+        headers=[f"C{index}" for index in range(8)],
+        rows=[[str(index) for index in range(8)]],
+        overflow_policy="allow",
+    )
+
+    result = Document(
+        "Intentional Overflow",
+        explicit_overflow,
+        many_columns,
+        settings=settings,
+    ).validate()
+    warning_codes = {issue.code for issue in result.warnings}
+
+    assert explicit_overflow.overflow_policy.action == "allow"
+    assert many_columns.overflow_policy.action == "allow"
+    assert "wide-table" not in warning_codes
+    assert "many-table-columns" not in warning_codes
+
+    with pytest.raises(ValueError, match="TableOverflowPolicy.action"):
+        TableOverflowPolicy(action="clip")  # type: ignore[arg-type]
+
+
 def test_document_validate_treats_subfigure_group_caption_as_reference_target(
     tmp_path: Path,
 ) -> None:
@@ -2080,8 +2124,10 @@ def test_public_api_prefers_classes_for_structural_nodes() -> None:
     assert not hasattr(oodocs, "PdfPages")
     assert not hasattr(oodocs, "SubTable")
     assert not hasattr(oodocs, "SubTableGroup")
+    assert not hasattr(oodocs, "TableOverflowPolicy")
     assert hasattr(media_components, "ColumnSpec")
     assert hasattr(media_components, "CropBox")
+    assert hasattr(media_components, "TableOverflowPolicy")
     assert "PdfPages" not in media_components.__all__
     assert hasattr(pdf_components, "PdfPages")
     assert hasattr(media_components, "SubTable")

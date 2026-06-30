@@ -3,6 +3,8 @@
 Attributes:
     MediaPlacement: Supported figure/table placement hints.
     TableSplit: Table splitting policy accepted by table rendering options.
+    TableOverflowPolicy: Validation policy for tables wider than the text area.
+    TableOverflowPolicyInput: Accepted input for table overflow policy.
     DEFAULT_LONG_TABLE_ROW_THRESHOLD: Row count where tables are treated as
         long tables by default.
     PdfPagesInput: Accepted input for external PDF page selection.
@@ -55,8 +57,61 @@ if TYPE_CHECKING:
 
 MediaPlacement = Literal["auto", "here", "float", "top", "bottom", "page"]
 TableSplit = bool | Literal["auto"]
+TableOverflowAction = Literal["warn", "allow"]
 DEFAULT_LONG_TABLE_ROW_THRESHOLD = 12
 PdfPagesInput = Sequence[int] | range | None
+
+
+@dataclass(frozen=True, slots=True)
+class TableOverflowPolicy:
+    """Policy for validating tables wider than the available text area.
+
+    Args:
+        action: ``"warn"`` reports a validation warning for wide tables.
+            ``"allow"`` treats overflow as intentional and suppresses the
+            wide-table validation warning.
+
+    Examples:
+        ```python
+        from oodocs import Table
+        from oodocs.media import TableOverflowPolicy
+
+        table = Table(
+            ["Trace", "Payload"],
+            [["request-001", "..."]],
+            overflow_policy=TableOverflowPolicy(action="allow"),
+        )
+        ```
+    """
+
+    action: TableOverflowAction = "warn"
+
+    def __post_init__(self) -> None:
+        action = str(self.action).strip().lower()
+        if action not in {"warn", "allow"}:
+            raise ValueError("TableOverflowPolicy.action must be 'warn' or 'allow'")
+        object.__setattr__(self, "action", action)
+
+
+TableOverflowPolicyInput = TableOverflowPolicy | Mapping[str, object] | str | None
+
+
+def coerce_table_overflow_policy(
+    value: TableOverflowPolicyInput = None,
+) -> TableOverflowPolicy:
+    """Return a normalized table overflow policy."""
+
+    if value is None:
+        return TableOverflowPolicy()
+    if isinstance(value, TableOverflowPolicy):
+        return value
+    if isinstance(value, str):
+        return TableOverflowPolicy(action=value)
+    if isinstance(value, Mapping):
+        return TableOverflowPolicy(**dict(value))  # type: ignore[arg-type]
+    raise TypeError(
+        "Table.overflow_policy must be TableOverflowPolicy, a mapping, 'warn', or 'allow'"
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -1199,6 +1254,7 @@ class Table(Block):
             captions. It receives ``caption`` and ``continuation_label``.
         include_index: Whether dataframe-like input includes index columns.
         split: Whether renderers may split the table across pages.
+        overflow_policy: Policy for validation of intentionally wide tables.
         placement: Optional placement policy.
         long_table_threshold: Row-count threshold for automatic splitting.
         row_styles: Optional body-row styles keyed by zero-based row index.
@@ -1217,6 +1273,7 @@ class Table(Block):
         style: Resolved table style after overrides are merged.
         include_index: Whether dataframe-like input includes index columns.
         split: Effective split policy.
+        overflow_policy: Effective wide-table validation policy.
         placement: Effective media placement policy.
         long_table_threshold: Optional row-count threshold for splitting.
         row_styles: Resolved body-row style mapping.
@@ -1279,6 +1336,7 @@ class Table(Block):
     style: TableStyle | str
     include_index: bool
     split: TableSplit
+    overflow_policy: TableOverflowPolicy
     placement: MediaPlacement
     long_table_threshold: int | None
     continuation_label: str | None
@@ -1316,6 +1374,7 @@ class Table(Block):
         continued_caption_template: str = "{caption} ({continuation_label})",
         include_index: bool = False,
         split: TableSplit = False,
+        overflow_policy: TableOverflowPolicyInput = None,
         placement: str | None = None,
         long_table_threshold: int | None = None,
         row_styles: Mapping[int, TableCellStyleInput] | None = None,
@@ -1377,6 +1436,7 @@ class Table(Block):
         )
         self.include_index = include_index
         self.split = normalize_table_split(split)
+        self.overflow_policy = coerce_table_overflow_policy(overflow_policy)
         self.placement = normalize_media_placement(placement)
         if long_table_threshold is not None and long_table_threshold < 1:
             raise ValueError("long_table_threshold must be >= 1")
@@ -1485,6 +1545,7 @@ class Table(Block):
             unit=self.unit,
             style=self.style,
             split=self.split,
+            overflow_policy=self.overflow_policy,
             placement=self.placement,
             long_table_threshold=self.long_table_threshold,
         )
@@ -1755,6 +1816,7 @@ class Table(Block):
         continued_caption_template: str = "{caption} ({continuation_label})",
         include_index: bool = False,
         split: TableSplit = False,
+        overflow_policy: TableOverflowPolicyInput = None,
         placement: str | None = None,
         long_table_threshold: int | None = None,
         row_styles: Mapping[int, TableCellStyleInput] | None = None,
@@ -1792,6 +1854,8 @@ class Table(Block):
                 captions. It receives ``caption`` and ``continuation_label``.
             include_index: Whether to include dataframe index columns.
             split: Whether renderers may split the table across pages.
+            overflow_policy: Policy for validation of intentionally wide
+                tables.
             placement: Optional placement policy.
             long_table_threshold: Row-count threshold for automatic splitting.
             row_styles: Optional body-row styles.
@@ -1835,6 +1899,7 @@ class Table(Block):
             continued_caption_template=continued_caption_template,
             include_index=include_index,
             split=split,
+            overflow_policy=overflow_policy,
             placement=placement,
             long_table_threshold=long_table_threshold,
             row_styles=row_styles,
@@ -3021,6 +3086,8 @@ __all__ = [
     "Table",
     "TableCell",
     "TableCellInput",
+    "TableOverflowPolicy",
+    "TableOverflowPolicyInput",
     "TableSplit",
     "coerce_column_spec",
     "coerce_crop_box",

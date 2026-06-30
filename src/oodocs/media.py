@@ -8,6 +8,7 @@ from oodocs.components.media import (
     PdfPages,
     SubTable,
     SubTableGroup,
+    TableOverflowPolicy,
 )
 
 __all__ = [
@@ -15,4 +16,5 @@ __all__ = [
     "CropBox",
     "SubTable",
     "SubTableGroup",
+    "TableOverflowPolicy",
 ]

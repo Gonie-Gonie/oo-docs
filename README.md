@@ -153,7 +153,7 @@ Common translations:
 - LaTeX `algorithm` / `algorithmicx` -> `Algorithm(..., inputs=..., outputs=..., steps=...)` from `oodocs.engineering` with automatic numbering and references
 - LaTeX `tabular` or copied tables -> `Table(...)` or `Table.from_dataframe(...)`
 - LaTeX `booktabs` -> `Table(..., style="booktabs")` or `TableStyle.booktabs()`
-- LaTeX `tabularx` / `array` column specs -> `ColumnSpec(width=...)` and `ColumnSpec(flex=...)` from `oodocs.media`, plus `Table.excerpt(...)` and a CSV sidecar for very wide matrices
+- LaTeX `tabularx` / `array` column specs -> `ColumnSpec(width=...)` and `ColumnSpec(flex=...)` from `oodocs.media`, plus `Table.excerpt(...)`, `TableOverflowPolicy(action="allow")`, and a CSV sidecar for very wide matrices
 - LaTeX `multirow` / `multicolumn` -> `TableCell(rowspan=...)`, `TableCell(colspan=...)`, or `Table.grouped_headers(...)`
 - LaTeX `\label` / `\ref` -> use `ref(obj)` or `obj.ref()` inside `Paragraph(...)`
 - LaTeX `\url{...}` / `\href{...}{...}` -> use `url(...)` for visible URLs and `link(...)` for named links
@@ -211,6 +211,7 @@ The default behavior is intentionally conventional:
 - Use named table styles such as `Table(..., style="plain")`, `Table(..., style="compact")`, `Table(..., style="evidence")`, or `Table(..., style="booktabs")` when several tables should share a preset without repeating style kwargs. Use `StyleSheet.register_table(...)`, `register_box(...)`, `register_chip(...)`, and `register_paragraph(...)` for custom stylesheet entries; the category-string `register(...)` method remains available for dynamic or advanced tooling.
 - Import `ColumnSpec(...)` from `oodocs.media` for fixed columns and `tabularx`-style flex columns. In `Table.from_records(...)`, `ColumnSpec(key=..., header=..., visible=False)` can also choose, rename, or hide record fields.
 - Use `TableCell(text_alignment=..., vertical_alignment=...)` or table-wide `Table(..., cell_text_alignment=..., cell_vertical_alignment=...)` when a table needs Word-like cell alignment. Use dictionaries in `row_styles`, `header_row_styles`, or `column_styles` when rows or columns need background color, text color, bold, or italic formatting.
+- Use `TableOverflowPolicy(action="allow")` from `oodocs.media` only when a wide table is intentionally allowed to overflow the fixed-page text area. Otherwise validation keeps the `wide-table` warning and points to `ColumnSpec(flex=...)`, `Table.excerpt(...)`, or `Table.save_csv(...)`.
 - Use `TableCell(colspan=...)` and `TableCell(rowspan=...)` for one-off merged cells. Use `Table.grouped_headers(groups=[("Geometry", 2), ...], columns=[...], rows=[...])` when a table needs a common grouped header row without manually building every spanning cell.
 - Use `Table(split=True, continuation_label="continued")` when a table should render in source order and may break across pages. Leave `split=False` when the table should stay together when possible; very long tables are automatically rendered as split repeated-header tables.
 - Use `Figure(...)` for image files or `savefig()`-compatible Python figure objects. Use `Figure.from_bytes(...)` or `Figure.from_buffer(...)` when image bytes are already in memory. Add `crop=CropBox(...)` from `oodocs.media`, `rotation=...`, and `alt_text=...` for LaTeX `graphicx`-style image transforms and accessible output text.
