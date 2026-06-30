@@ -251,7 +251,15 @@ class ValidationPolicy:
         )
 
     def blocks(self, issue: ValidationIssue) -> bool:
-        """Return whether this policy blocks a warning issue."""
+        """Return whether this policy blocks a warning issue.
+
+        Args:
+            issue: Validation issue to evaluate.
+
+        Returns:
+            ``True`` when the issue is a warning that should block under this
+            policy.
+        """
 
         if issue.severity != "warning":
             return False
@@ -262,7 +270,11 @@ class ValidationPolicy:
         return self.fail_on_unlisted_warnings
 
     def to_dict(self) -> dict[str, object]:
-        """Return a JSON-serializable policy mapping."""
+        """Return a JSON-serializable policy mapping.
+
+        Returns:
+            JSON-serializable policy payload.
+        """
 
         return {
             "allow_warnings": sorted(self.allow_warnings),
@@ -272,7 +284,14 @@ class ValidationPolicy:
 
     @classmethod
     def from_dict(cls, data: dict[str, object]) -> ValidationPolicy:
-        """Reconstruct a validation policy from serialized data."""
+        """Reconstruct a validation policy from serialized data.
+
+        Args:
+            data: Payload previously returned by ``to_dict``.
+
+        Returns:
+            Reconstructed validation policy.
+        """
 
         return cls(
             allow_warnings=frozenset(_object_string_list(data.get("allow_warnings"))),
@@ -283,18 +302,40 @@ class ValidationPolicy:
         )
 
     def to_json(self, *, indent: int | None = 2) -> str:
-        """Serialize this policy to JSON text."""
+        """Serialize this policy to JSON text.
+
+        Args:
+            indent: JSON indentation level. ``None`` writes compact JSON.
+
+        Returns:
+            JSON text for this validation policy.
+        """
 
         return json.dumps(self.to_dict(), ensure_ascii=False, indent=indent)
 
     @classmethod
     def from_json(cls, text: str) -> ValidationPolicy:
-        """Deserialize a validation policy from JSON text."""
+        """Deserialize a validation policy from JSON text.
+
+        Args:
+            text: JSON text previously returned by ``to_json``.
+
+        Returns:
+            Reconstructed validation policy.
+        """
 
         return cls.from_dict(json.loads(text))
 
     def save_json(self, path: PathLike, *, indent: int | None = 2) -> Path:
-        """Write this policy to a JSON sidecar."""
+        """Write this policy to a JSON sidecar.
+
+        Args:
+            path: Output JSON sidecar path.
+            indent: JSON indentation level. ``None`` writes compact JSON.
+
+        Returns:
+            Path that was written.
+        """
 
         output_path = Path(path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -303,7 +344,14 @@ class ValidationPolicy:
 
     @classmethod
     def load_json(cls, path: PathLike) -> ValidationPolicy:
-        """Read a validation policy JSON sidecar."""
+        """Read a validation policy JSON sidecar.
+
+        Args:
+            path: JSON sidecar path.
+
+        Returns:
+            Reconstructed validation policy.
+        """
 
         return cls.from_json(Path(path).read_text(encoding="utf-8"))
 
