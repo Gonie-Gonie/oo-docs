@@ -166,7 +166,6 @@ def test_leaf_component_modules_hide_internal_helpers_from_all() -> None:
             "Todo",
             "_BlockReference",
             "margin_note",
-            "math",
             "todo",
         },
         media_components: {
@@ -209,6 +208,7 @@ def test_component_namespace_uses_inline_math_name() -> None:
     assert "inline_math" in components.__all__
     assert "math" not in components.__all__
     assert components.inline_math is inline_components.inline_math
+    assert not hasattr(inline_components, "math")
     assert not hasattr(components, "math")
 
 

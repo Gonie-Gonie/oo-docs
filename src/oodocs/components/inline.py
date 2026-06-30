@@ -1293,24 +1293,6 @@ def inline_math(value: str, *, style: TextStyle | None = None) -> Math:
     return Math.inline(value, style=style)
 
 
-def math(value: str, *, style: TextStyle | None = None) -> Math:
-    """Create an inline math fragment.
-
-    Args:
-        value: LaTeX-like math source.
-        style: Optional inline style.
-
-    Returns:
-        Inline math fragment.
-
-    Notes:
-        Prefer top-level ``inline_math(...)`` to avoid shadowing Python's
-        standard ``math`` module name.
-    """
-
-    return inline_math(value, style=style)
-
-
 def styled(value: str, **style_values: object) -> Text:
     """Create a plain text fragment with inline style values.
 
