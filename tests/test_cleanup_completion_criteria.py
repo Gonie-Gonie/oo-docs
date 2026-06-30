@@ -53,3 +53,25 @@ def test_readme_recommended_advanced_imports_use_domain_namespaces() -> None:
 
     for line in expected_lines:
         assert line in readme
+
+
+def test_public_api_policy_doc_defines_tiers_and_guards() -> None:
+    policy = Path("docs/reference/public-api-policy.md").read_text(encoding="utf-8")
+
+    for phrase in (
+        "src/oodocs/public_api.py",
+        "Tier 1 core",
+        "Tier 2 domain",
+        "Tier 3 internal",
+        "TOP_LEVEL_EXPORT_LIMIT",
+        "TOP_LEVEL_SYMBOL_TIERS",
+        "`coerce`",
+        "`normalize`",
+        "`render_to_`",
+        "`reference`",
+        "`Ref`",
+        "`math`",
+        "README Quick Start examples use Tier 1 imports only.",
+        "Advanced examples import their domain namespace explicitly.",
+    ):
+        assert phrase in policy
