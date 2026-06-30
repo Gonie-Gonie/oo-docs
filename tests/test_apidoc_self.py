@@ -159,6 +159,8 @@ def test_apidoc_pyproject_config_hides_compatibility_adapters() -> None:
     assert api.find_object("oodocs.ImageData") is not None
     assert api.find_object("oodocs.ImageData.savefig") is None
     assert api.find_object("oodocs.components.media.ImageData.savefig") is None
+    assert api.find_object("oodocs.components.math") is None
+    assert api.find_object("oodocs.components.inline.math") is None
     assert api.find_object("oodocs.apidoc.OODocs_API_CATEGORIES") is None
     assert api.find_object("oodocs.apidoc.builtin_categories.OODocs_API_CATEGORIES") is None
     assert api.find_object("oodocs.presets.components.CalloutBox") is not None

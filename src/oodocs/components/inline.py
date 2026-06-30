@@ -1852,7 +1852,6 @@ __all__ = [
     "keyboard",
     "link",
     "line_break",
-    "math",
     "prescript",
     "ref",
     "ref_range",

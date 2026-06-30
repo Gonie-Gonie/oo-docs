@@ -164,6 +164,7 @@ def test_leaf_component_modules_hide_internal_helpers_from_all() -> None:
             "MarginNote",
             "Todo",
             "margin_note",
+            "math",
             "todo",
         },
         media_components: {
@@ -200,6 +201,13 @@ def test_leaf_component_modules_hide_internal_helpers_from_all() -> None:
         assert forbidden_names.isdisjoint(module.__all__), module.__name__
         for name in forbidden_names:
             assert hasattr(module, name), f"{module.__name__}.{name}"
+
+
+def test_component_namespace_uses_inline_math_name() -> None:
+    assert "inline_math" in components.__all__
+    assert "math" not in components.__all__
+    assert components.inline_math is inline_components.inline_math
+    assert not hasattr(components, "math")
 
 
 def test_styles_namespace_hides_table_cell_coercion_helper() -> None:
