@@ -885,7 +885,19 @@ def resolve_block_reference(
     theme: Theme,
     render_index: RenderIndex,
 ) -> ResolvedBlockReference:
-    """Resolve a document object reference into label, value, and anchor."""
+    """Resolve a document object reference into label, value, and anchor.
+
+    Args:
+        target: Document object to reference.
+        theme: Theme used to resolve table and figure reference labels.
+        render_index: Render index containing assigned numbers and anchors.
+
+    Returns:
+        Resolved reference label, value, and anchor.
+
+    Raises:
+        OODocsError: If the target is unsupported or has not been indexed.
+    """
 
     if isinstance(target, (Table, SubTable, SubTableGroup)):
         number = render_index.table_number(target)
@@ -996,7 +1008,18 @@ def reference_text_pieces(
     *,
     range_reference: bool = False,
 ) -> list[ReferenceTextPiece]:
-    """Return text/link pieces for one or more object references."""
+    """Return text/link pieces for one or more object references.
+
+    Args:
+        targets: Document objects to reference.
+        reference_format: Formatting options for labels and separators.
+        theme: Theme used to resolve reference labels.
+        render_index: Render index containing assigned numbers and anchors.
+        range_reference: Whether to render the first and last target as a range.
+
+    Returns:
+        Text and link pieces for renderer-specific reference output.
+    """
 
     resolved = [
         resolve_block_reference(target, theme, render_index)
