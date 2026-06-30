@@ -401,6 +401,7 @@ class BlockReference(Text):
         target: Document object to reference.
         *label: Optional inline label override.
         style: Optional inline style.
+        reference_format: Optional automatic reference formatting rules.
 
     Examples:
         ```python
@@ -476,6 +477,7 @@ def ref(
         target: Document object to reference.
         *label: Optional inline label override.
         style: Optional inline style.
+        reference_format: Optional automatic reference formatting rules.
 
     Returns:
         Inline reference fragment.
@@ -555,7 +557,20 @@ def refs(
     separator: str | None = None,
     last_separator: str | None = None,
 ) -> ReferenceGroup:
-    """Create an inline reference list for several document objects."""
+    """Create an inline reference list for several document objects.
+
+    Args:
+        targets: Document objects to reference.
+        style: Optional inline style.
+        reference_format: Optional automatic reference formatting rules.
+        label: Singular label override.
+        plural_label: Plural label override.
+        separator: Separator between non-final reference values.
+        last_separator: Separator before the final reference value.
+
+    Returns:
+        Inline reference group fragment.
+    """
 
     base = reference_format or ReferenceFormat()
     overrides: dict[str, object] = {}
@@ -584,7 +599,20 @@ def ref_range(
     plural_label: str | None = None,
     range_separator: str | None = None,
 ) -> ReferenceGroup:
-    """Create an inline reference range from two document objects."""
+    """Create an inline reference range from two document objects.
+
+    Args:
+        start: First document object in the range.
+        end: Last document object in the range.
+        style: Optional inline style.
+        reference_format: Optional automatic reference formatting rules.
+        label: Singular label override.
+        plural_label: Plural label override.
+        range_separator: Separator between the start and end reference values.
+
+    Returns:
+        Inline reference group fragment.
+    """
 
     base = reference_format or ReferenceFormat()
     overrides: dict[str, object] = {}
