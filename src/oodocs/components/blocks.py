@@ -1889,7 +1889,8 @@ class Appendix(Part):
 
     Examples:
         ```python
-        from oodocs import Appendix, Chapter, Document, Paragraph
+        from oodocs import Chapter, Document, Paragraph
+        from oodocs.structure import Appendix
 
         appendix = Appendix(
             Chapter("Input Data Schema", Paragraph("Field definitions.")),
@@ -2137,7 +2138,8 @@ class CountableBlock(Block):
 
     Examples:
         ```python
-        from oodocs import CountableBlock, Document, Paragraph
+        from oodocs import Document, Paragraph
+        from oodocs.structure import CountableBlock
 
         theorem = CountableBlock(
             "Theorem",
@@ -2498,7 +2500,8 @@ def create_countable_block_type(
 
     Examples:
         ```python
-        from oodocs import Paragraph, create_countable_block_type
+        from oodocs import Paragraph
+        from oodocs.structure import create_countable_block_type
 
         Requirement = create_countable_block_type("Requirement", counter="requirement")
         item = Requirement(Paragraph("The API must render to HTML."))

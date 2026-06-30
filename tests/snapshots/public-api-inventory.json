@@ -12,20 +12,6 @@
           "qualname": "oodocs.components.people.Affiliation"
         },
         {
-          "category": "block",
-          "kind": "class",
-          "module": "oodocs.components.blocks",
-          "name": "Assumption",
-          "qualname": "oodocs.components.blocks.Assumption"
-        },
-        {
-          "category": "block",
-          "kind": "class",
-          "module": "oodocs.components.blocks",
-          "name": "Appendix",
-          "qualname": "oodocs.components.blocks.Appendix"
-        },
-        {
           "category": "settings",
           "kind": "class",
           "module": "oodocs.components.people",
@@ -38,13 +24,6 @@
           "module": "oodocs.components.people",
           "name": "AuthorLayout",
           "qualname": "oodocs.components.people.AuthorLayout"
-        },
-        {
-          "category": "block",
-          "kind": "class",
-          "module": "oodocs.components.blocks",
-          "name": "Axiom",
-          "qualname": "oodocs.components.blocks.Axiom"
         },
         {
           "category": "theme",
@@ -124,13 +103,6 @@
           "qualname": "oodocs.components.blocks.Chapter"
         },
         {
-          "category": "block",
-          "kind": "class",
-          "module": "oodocs.components.blocks",
-          "name": "Claim",
-          "qualname": "oodocs.components.blocks.Claim"
-        },
-        {
           "category": "inline",
           "kind": "class",
           "module": "oodocs.components.inline",
@@ -166,39 +138,11 @@
           "qualname": "oodocs.components.media.ColumnSpec"
         },
         {
-          "category": "block",
-          "kind": "class",
-          "module": "oodocs.components.blocks",
-          "name": "Conjecture",
-          "qualname": "oodocs.components.blocks.Conjecture"
-        },
-        {
-          "category": "block",
-          "kind": "class",
-          "module": "oodocs.components.blocks",
-          "name": "CountableBlock",
-          "qualname": "oodocs.components.blocks.CountableBlock"
-        },
-        {
-          "category": "block",
-          "kind": "class",
-          "module": "oodocs.components.blocks",
-          "name": "Corollary",
-          "qualname": "oodocs.components.blocks.Corollary"
-        },
-        {
           "category": "media",
           "kind": "class",
           "module": "oodocs.components.media",
           "name": "CropBox",
           "qualname": "oodocs.components.media.CropBox"
-        },
-        {
-          "category": "block",
-          "kind": "class",
-          "module": "oodocs.components.blocks",
-          "name": "Definition",
-          "qualname": "oodocs.components.blocks.Definition"
         },
         {
           "category": "document-core",
@@ -241,13 +185,6 @@
           "module": "oodocs.components.blocks",
           "name": "Equation",
           "qualname": "oodocs.components.blocks.Equation"
-        },
-        {
-          "category": "block",
-          "kind": "class",
-          "module": "oodocs.components.blocks",
-          "name": "Example",
-          "qualname": "oodocs.components.blocks.Example"
         },
         {
           "category": "media",
@@ -390,13 +327,6 @@
           "qualname": "oodocs.styles.counter.ListStyle"
         },
         {
-          "category": "block",
-          "kind": "class",
-          "module": "oodocs.components.blocks",
-          "name": "Lemma",
-          "qualname": "oodocs.components.blocks.Lemma"
-        },
-        {
           "category": "inline",
           "kind": "class",
           "module": "oodocs.components.inline",
@@ -516,20 +446,6 @@
           "qualname": "oodocs.components.blocks.Part"
         },
         {
-          "category": "block",
-          "kind": "class",
-          "module": "oodocs.components.blocks",
-          "name": "Proof",
-          "qualname": "oodocs.components.blocks.Proof"
-        },
-        {
-          "category": "block",
-          "kind": "class",
-          "module": "oodocs.components.blocks",
-          "name": "Proposition",
-          "qualname": "oodocs.components.blocks.Proposition"
-        },
-        {
           "category": "style",
           "kind": "class",
           "module": "oodocs.styles.blocks",
@@ -570,13 +486,6 @@
           "module": "oodocs.workflows",
           "name": "OutputBundle",
           "qualname": "oodocs.workflows.OutputBundle"
-        },
-        {
-          "category": "block",
-          "kind": "class",
-          "module": "oodocs.components.blocks",
-          "name": "Remark",
-          "qualname": "oodocs.components.blocks.Remark"
         },
         {
           "category": "block",
@@ -698,13 +607,6 @@
           "qualname": "oodocs.styles.text.TextStyle"
         },
         {
-          "category": "block",
-          "kind": "class",
-          "module": "oodocs.components.blocks",
-          "name": "Theorem",
-          "qualname": "oodocs.components.blocks.Theorem"
-        },
-        {
           "category": "theme",
           "kind": "class",
           "module": "oodocs.styles.theme",
@@ -801,13 +703,6 @@
           "module": "oodocs.components.inline",
           "name": "comment",
           "qualname": "oodocs.components.inline.comment"
-        },
-        {
-          "category": "block",
-          "kind": "function",
-          "module": "oodocs.components.blocks",
-          "name": "create_countable_block_type",
-          "qualname": "oodocs.components.blocks.create_countable_block_type"
         },
         {
           "category": "inline",

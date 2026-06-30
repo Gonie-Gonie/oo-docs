@@ -15,6 +15,7 @@ import oodocs.glossary as glossary
 import oodocs.positioning as positioning
 import oodocs.public_api as public_api
 import oodocs.review as review
+import oodocs.structure as structure
 from oodocs.apidoc.cli import _build_parser as _build_apidoc_parser
 from oodocs.cli import _build_parser as _build_oodocs_parser
 from oodocs.importers.results import normalize_import_policy
@@ -73,6 +74,23 @@ def test_tier_two_namespaces_export_domain_symbols() -> None:
         review: {"MarginNote", "Todo", "margin_note", "todo"},
         glossary: {"Acronym", "Glossary", "GlossaryList", "GlossaryTerm"},
         positioning: {"ImageBox", "PageItemScope", "Shape", "TextBox"},
+        structure: {
+            "Appendix",
+            "Assumption",
+            "Axiom",
+            "Claim",
+            "Conjecture",
+            "CountableBlock",
+            "Corollary",
+            "Definition",
+            "Example",
+            "Lemma",
+            "Proof",
+            "Proposition",
+            "Remark",
+            "Theorem",
+            "create_countable_block_type",
+        },
         generated: {
             "CommentList",
             "FootnoteList",
@@ -107,9 +125,19 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
     forbidden = {
         "Algorithm",
         "AlignedEquation",
+        "Appendix",
+        "Assumption",
+        "Axiom",
         "CasesEquation",
         "ChemicalFormula",
         "chemical_formula",
+        "Claim",
+        "Conjecture",
+        "CountableBlock",
+        "Corollary",
+        "create_countable_block_type",
+        "Definition",
+        "Example",
         "strike",
         "code",
         "color",
@@ -130,6 +158,7 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "ImageBox",
         "ListOfAlgorithms",
         "MarginNote",
+        "Lemma",
         "load_document",
         "load_python_document",
         "margin_note",
@@ -147,9 +176,13 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "PageNumberOptions",
         "PageItemScope",
         "ParagraphTitleStyle",
+        "Proof",
+        "Proposition",
         "Shape",
+        "Remark",
         "TitleMatterOptions",
         "TextBox",
+        "Theorem",
         "TypographyOptions",
         "validate_source",
     }
@@ -163,7 +196,6 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "build_source_outputs",
         "CommentList",
         "ColumnSpec",
-        "create_countable_block_type",
         "FootnoteList",
         "FootnoteDefaults",
         "FootnoteStyle",

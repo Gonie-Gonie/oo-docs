@@ -13,7 +13,6 @@ from pathlib import Path
 from typing import Sequence
 
 from oodocs import (
-    Assumption,
     Author,
     AuthorLayout,
     BlockDefaults,
@@ -27,19 +26,16 @@ from oodocs import (
     Comment,
     CommentList,
     CodeBlock,
-    Definition,
     Divider,
     Document,
     DocumentMetadata,
     DocumentSettings,
     Equation,
-    Example,
     Figure,
     ListOfFigures,
     Footnote,
     GeneratedContentDefaults,
     HeaderFooterDefaults,
-    Lemma,
     LocaleDefaults,
     NumberedList,
     OutputBundle,
@@ -51,9 +47,7 @@ from oodocs import (
     PdfPages,
     Paragraph,
     Part,
-    Proof,
     ReferenceList,
-    Remark,
     Section,
     StrokeStyle,
     SubFigure,
@@ -68,7 +62,6 @@ from oodocs import (
     TableOfContents,
     Text,
     Theme,
-    Theorem,
     TitleMatterDefaults,
     TocLevelStyle,
     TypographyDefaults,
@@ -77,7 +70,6 @@ from oodocs import (
     bold,
     inline_code,
     text_color,
-    create_countable_block_type,
     highlight,
     link,
     line_break,
@@ -99,6 +91,17 @@ from oodocs.engineering import (
 )
 from oodocs.generated import ListOfAlgorithms
 from oodocs.positioning import ImageBox, PageItemScope, Shape, TextBox
+from oodocs.structure import (
+    Appendix,
+    Assumption,
+    Definition,
+    Example,
+    Lemma,
+    Proof,
+    Remark,
+    Theorem,
+    create_countable_block_type,
+)
 from oodocs.presets.components import CalloutBox, KeyValueTable, Nomenclature
 from oodocs.presets.templates import JournalArticleTemplate, ManuscriptSection
 
@@ -275,7 +278,8 @@ same_pattern = Paragraph(
 )
 """
 
-APPENDIX_STRUCTURE_SNIPPET = """from oodocs import Appendix, Chapter, Document, Paragraph, Section
+APPENDIX_STRUCTURE_SNIPPET = """from oodocs import Chapter, Document, Paragraph, Section
+from oodocs.structure import Appendix
 
 schema = Chapter(
     "Input Data Schema",
@@ -470,7 +474,8 @@ table = Table(
 )
 """
 
-COUNTABLE_BLOCK_SNIPPET = """from oodocs import Definition, Lemma, Paragraph, Proof, Theorem, create_countable_block_type
+COUNTABLE_BLOCK_SNIPPET = """from oodocs import Paragraph
+from oodocs.structure import Definition, Lemma, Proof, Theorem, create_countable_block_type
 
 Exercise = create_countable_block_type("Exercise", counter="exercise")
 
@@ -1088,7 +1093,7 @@ def build_usage_guide_document() -> Document:
         headers=["Concern", "Default", "Customization path"],
         rows=[
             ["Part entries", "Shown above chapters when authored.", "Use Part(...) for book-like divisions; set level_styles={0: TocLevelStyle(...)} to tune the part line."],
-            ["Appendix entries", "Shown as an unnumbered separator followed by A/B/C child chapters.", "Use Appendix(Chapter(...), ...) when end matter needs appendix numbering and contents entries."],
+            ["Appendix entries", "Shown as an unnumbered separator followed by A/B/C child chapters.", "Import Appendix from oodocs.structure when end matter needs appendix numbering and contents entries."],
             ["Page numbers", "Shown by default for contents, table lists, and figure lists in paginated DOCX and PDF output.", "HTML keeps clean link-only generated lists because browsers do not provide stable page labels."],
             ["Leader dots", "Dotted leaders connect the heading text to the page number in paginated output.", "Set leader='' for no leader or another short string for a different visual cue."],
             ["Scoped lists", "Generated lists cover the whole document.", "Set scope='part', scope='chapter', or scope='section' for local mini contents, table lists, or figure lists."],
@@ -1138,7 +1143,7 @@ def build_usage_guide_document() -> Document:
             ["Paragraph, CodeBlock, Equation, ReactionEquation", "text_alignment, space_before, space_after, leading, left_indent, right_indent, first_line_indent, keep_together, keep_with_next, page_break_before, widow_control, unit; CodeBlock also accepts caption, identifier, line_numbers, highlight_lines; Equation and ReactionEquation also accept numbered and reference_label", "Use ParagraphStyle only for shared paragraph rhythm."],
             ["Algorithm", "inputs, outputs, steps, code, language, caption, body_style, line_numbers, numbered", "Use prose steps for method summaries and code-style bodies for pseudocode listings."],
             ["Section, Chapter, Subsection", "level, numbered, toc, anchor, run_in_title_style, heading_style", "Use HeadingStyle for per-level theme defaults or one-off heading overrides."],
-            ["Part, Appendix", "title, toc; Part also accepts numbered", "Use Appendix when child chapters should switch to A/B/C numbering."],
+            ["Part, oodocs.structure.Appendix", "title, toc; Part also accepts numbered", "Use Appendix when child chapters should switch to A/B/C numbering."],
             ["BulletList, NumberedList", "marker=CounterStyle(...), indent, marker_gap, item_spacing, block_spacing, start, resume_from", "Use ListStyle only for repeated list conventions; child lists inherit spacing unless they define their own style."],
             ["oodocs.glossary", "Glossary.term(...), acronym(...), use(...), and GlossaryList(sort=...)", "Use Nomenclature for symbol/unit tables and GlossaryList for collected terms."],
             ["Box", "icon, title_position, shadow, border, background_color, title colors, padding, space_after, width, unit, block_alignment", "Use BoxStyle only for named callout or report-panel designs."],

@@ -7,7 +7,7 @@ from typing import Literal
 
 PublicApiTier = Literal["core", "domain", "internal"]
 
-TOP_LEVEL_EXPORT_LIMIT = 153
+TOP_LEVEL_EXPORT_LIMIT = 138
 
 CORE_TOP_LEVEL_EXPORTS = frozenset(
     {
@@ -109,7 +109,6 @@ CORE_TOP_LEVEL_EXPORTS = frozenset(
 
 DOMAIN_TOP_LEVEL_EXPORTS = frozenset(
     {
-        "Appendix",
         "ColumnSpec",
         "CommentList",
         "CropBox",
@@ -154,23 +153,9 @@ DOMAIN_TOP_LEVEL_EXPORTS = frozenset(
 
 INTERNAL_TOP_LEVEL_EXPORTS = frozenset(
     {
-        "Assumption",
-        "Axiom",
-        "Claim",
-        "Conjecture",
-        "CountableBlock",
-        "Corollary",
-        "Definition",
-        "Example",
-        "Lemma",
         "MAX_SECTION_LEVEL",
         "MIN_SECTION_LEVEL",
-        "Proof",
-        "Proposition",
         "Ref",
-        "Remark",
-        "Theorem",
-        "create_countable_block_type",
         "section_for_level",
         "shift_heading_level",
         "shift_heading_levels",

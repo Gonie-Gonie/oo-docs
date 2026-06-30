@@ -214,7 +214,7 @@ class CountableEntry:
 
     Examples:
         ```python
-        from oodocs import Theorem
+        from oodocs.structure import Theorem
         from oodocs.layout.indexing import CountableEntry
 
         theorem = Theorem("Every release has an audit trail.")

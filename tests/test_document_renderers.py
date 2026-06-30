@@ -23,6 +23,7 @@ import oodocs.engineering as engineering_components
 import oodocs.glossary as glossary_components
 import oodocs.positioning as positioning_components
 import oodocs.review as review_components
+import oodocs.structure as structure_components
 from oodocs.components.equations import BASELINE, SUBSCRIPT, SUPERSCRIPT, parse_latex_segments
 from oodocs.components.media import build_table_layout
 from oodocs.core import length_to_inches
@@ -40,13 +41,27 @@ from oodocs.generated import ListOfAlgorithms
 from oodocs.glossary import Acronym, Glossary, GlossaryList, GlossaryTerm
 from oodocs.positioning import ImageBox, PageItemScope, Shape, TextBox
 from oodocs.review import MarginNote, Todo, margin_note, todo
+from oodocs.structure import (
+    Appendix,
+    Assumption,
+    Axiom,
+    Claim,
+    Conjecture,
+    CountableBlock,
+    Corollary,
+    Definition,
+    Example,
+    Lemma,
+    Proof,
+    Proposition,
+    Remark,
+    Theorem,
+    create_countable_block_type,
+)
 from oodocs import (
     Affiliation,
-    Assumption,
     Author,
     AuthorLayout,
-    Appendix,
-    Axiom,
     BlockDefaults,
     BorderStyle,
     Box,
@@ -57,25 +72,19 @@ from oodocs import (
     CitationLibrary,
     CitationSource,
     Chapter,
-    Claim,
     Comment,
     CommentList,
     CodeBlock,
     ColumnSpan,
     ColumnSpec,
-    Conjecture,
-    CountableBlock,
-    Corollary,
     CounterStyle,
     CropBox,
-    Definition,
     Document,
     DocumentMetadata,
     DocumentSettings,
     DocumentValidationError,
     Divider,
     Equation,
-    Example,
     Figure,
     ListOfFigures,
     Footnote,
@@ -88,7 +97,6 @@ from oodocs import (
     ImageData,
     InlineChip,
     InlineChipStyle,
-    Lemma,
     LinkDefaults,
     ListStyle,
     Math,
@@ -107,11 +115,8 @@ from oodocs import (
     ParagraphStyle,
     RunInTitleStyle,
     Part,
-    Proof,
-    Proposition,
     ReferenceList,
     ReferenceFormat,
-    Remark,
     Section,
     StrokeStyle,
     StyleSheet,
@@ -129,7 +134,6 @@ from oodocs import (
     ListOfTables,
     Text,
     TextStyle,
-    Theorem,
     Theme,
     TitleMatterDefaults,
     TocLevelStyle,
@@ -142,7 +146,6 @@ from oodocs import (
     text_color,
     cite,
     comment,
-    create_countable_block_type,
     footnote,
     highlight,
     italic,
@@ -2021,27 +2024,42 @@ def test_public_api_prefers_classes_for_structural_nodes() -> None:
     assert hasattr(oodocs, "Chapter")
     assert hasattr(oodocs, "AuthorLayout")
     assert hasattr(oodocs, "Section")
-    assert not hasattr(oodocs, "Shape")
-    assert hasattr(positioning_components, "Shape")
     assert hasattr(oodocs, "Paragraph")
     assert hasattr(oodocs, "Part")
-    assert hasattr(oodocs, "Appendix")
     assert hasattr(oodocs, "BulletList")
     assert hasattr(oodocs, "ColumnSpan")
-    assert hasattr(oodocs, "CountableBlock")
-    assert hasattr(oodocs, "Definition")
-    assert hasattr(oodocs, "Lemma")
-    assert hasattr(oodocs, "Proposition")
-    assert hasattr(oodocs, "Theorem")
-    assert hasattr(oodocs, "Corollary")
-    assert hasattr(oodocs, "Proof")
-    assert hasattr(oodocs, "Example")
-    assert hasattr(oodocs, "Remark")
-    assert hasattr(oodocs, "Assumption")
-    assert hasattr(oodocs, "Axiom")
-    assert hasattr(oodocs, "Claim")
-    assert hasattr(oodocs, "Conjecture")
-    assert hasattr(oodocs, "create_countable_block_type")
+    assert not hasattr(oodocs, "Appendix")
+    assert not hasattr(oodocs, "CountableBlock")
+    assert not hasattr(oodocs, "Definition")
+    assert not hasattr(oodocs, "Lemma")
+    assert not hasattr(oodocs, "Proposition")
+    assert not hasattr(oodocs, "Theorem")
+    assert not hasattr(oodocs, "Corollary")
+    assert not hasattr(oodocs, "Proof")
+    assert not hasattr(oodocs, "Example")
+    assert not hasattr(oodocs, "Remark")
+    assert not hasattr(oodocs, "Assumption")
+    assert not hasattr(oodocs, "Axiom")
+    assert not hasattr(oodocs, "Claim")
+    assert not hasattr(oodocs, "Conjecture")
+    assert not hasattr(oodocs, "create_countable_block_type")
+    assert hasattr(structure_components, "Appendix")
+    assert hasattr(structure_components, "CountableBlock")
+    assert hasattr(structure_components, "Definition")
+    assert hasattr(structure_components, "Lemma")
+    assert hasattr(structure_components, "Proposition")
+    assert hasattr(structure_components, "Theorem")
+    assert hasattr(structure_components, "Corollary")
+    assert hasattr(structure_components, "Proof")
+    assert hasattr(structure_components, "Example")
+    assert hasattr(structure_components, "Remark")
+    assert hasattr(structure_components, "Assumption")
+    assert hasattr(structure_components, "Axiom")
+    assert hasattr(structure_components, "Claim")
+    assert hasattr(structure_components, "Conjecture")
+    assert hasattr(structure_components, "create_countable_block_type")
+    assert not hasattr(oodocs, "Shape")
+    assert hasattr(positioning_components, "Shape")
     assert hasattr(oodocs, "MultiColumn")
     assert hasattr(oodocs, "NumberedList")
     assert hasattr(oodocs, "PageBreak")
