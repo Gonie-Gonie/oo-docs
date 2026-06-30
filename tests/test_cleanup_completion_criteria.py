@@ -323,6 +323,22 @@ def test_readme_latex_translations_include_locale_policy() -> None:
     assert "PDF font guidance" in translations
 
 
+def test_readme_latex_translations_include_header_footer_policy() -> None:
+    readme = _readme()
+    translations = readme.split("Common translations:", 1)[1].split(
+        "The main payoff",
+        1,
+    )[0]
+
+    assert "LaTeX `fancyhdr` / `scrlayer-scrpage` running headers and footers" in translations
+    assert "`Theme(header_footer=HeaderFooterDefaults(...))`" in translations
+    assert "`{page}`" in translations
+    assert "`{title}`" in translations
+    assert "`{chapter}`" in translations
+    assert "`{section}`" in translations
+    assert "first-page, and even-page templates" in translations
+
+
 def test_readme_latex_translations_include_graphicx_policy() -> None:
     readme = _readme()
     translations = readme.split("Common translations:", 1)[1].split(
@@ -465,6 +481,29 @@ def test_chemistry_support_reference_documents_mhchem_policy() -> None:
         "full mhchem grammar",
     ):
         assert phrase in reference
+
+
+def test_header_footer_support_reference_documents_fancyhdr_policy() -> None:
+    reference = Path("docs/reference/header-footer-support.md").read_text(encoding="utf-8")
+    normalized = " ".join(reference.split())
+
+    for phrase in (
+        "common `fancyhdr` and `scrlayer-scrpage` running header and footer needs",
+        "`Theme(header_footer=HeaderFooterDefaults(...))`",
+        "`HeaderFooterDefaults(...)`",
+        "`{page}` token",
+        "`PageNumberDefaults(show_page_numbers=True)`",
+        "`{title}`",
+        "`{chapter}` and `{section}`",
+        "`different_first_page=True`",
+        "`different_odd_even_pages=True`",
+        "DOCX uses section header/footer parts",
+        "PDF draws header and footer text in the page callback",
+        "HTML emits a sticky/fixed header-footer layer with print CSS",
+        "`theme.resolve_header_footer_template(...)`",
+        "`theme.format_header_footer_text(...)`",
+    ):
+        assert phrase in normalized
 
 
 def test_locale_support_reference_documents_babel_policy() -> None:

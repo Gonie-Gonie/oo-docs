@@ -136,6 +136,8 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "oodocs.CaptionDefaults" in all_titles
     assert "oodocs.GeneratedContentDefaults" in all_titles
     assert "oodocs.LocaleDefaults" in all_titles
+    assert "oodocs.HeaderFooterDefaults" in all_titles
+    assert "oodocs.PageNumberDefaults" in all_titles
     assert "oodocs.refs" in all_titles
     assert "oodocs.ref_range" in all_titles
     assert "oodocs.references.ReferenceFormat" in all_titles
@@ -260,6 +262,13 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "format_date" in text
     assert "pdf_font_fallback_guide" in text
     assert "ko-KR" in text
+    assert "HeaderFooterDefaults" in text
+    assert "header_left" in text
+    assert "footer_center" in text
+    assert "different_first_page" in text
+    assert "different_odd_even_pages" in text
+    assert "resolve_header_footer_template" in text
+    assert "format_header_footer_text" in text
     assert "ReferenceFormat" in text
     assert "plural_label" in text
     assert "capitalized" in text
