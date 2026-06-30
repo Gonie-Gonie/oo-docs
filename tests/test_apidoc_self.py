@@ -28,6 +28,8 @@ STALE_API_REFERENCE_MARKERS = (
     "TextStyle.color",
     "TextBox.align",
     "ImageData.format",
+    "OutputBundle.by_format",
+    "oodocs.components.inline.math",
     "build_table_layout",
     "coerce_blocks",
     "coerce_image_source",
