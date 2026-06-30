@@ -17,7 +17,7 @@ target repository. The command temporarily adds the repository root and `src/`
 directory while it builds the config:
 
 ```powershell
-python -m oodocs apidoc init C:\work\mypkg --docstring-parser-module docs_parsers --docstring-style brief --outputs html
+python -m oodocs apidoc init ../mypkg --docstring-parser-module docs_parsers --docstring-style brief --outputs html
 ```
 
 Render from that config in Python:

@@ -268,8 +268,8 @@ profiles or repository-local automation:
 ```python
 from oodocs.apidoc import ApiHelpBookConfig
 
-repo = r"C:\work\mypkg"
-ApiHelpBookConfig.load_file(r"C:\work\mypkg\apidoc-build.json", target=repo).save_all(repo)
+repo = "../mypkg"
+ApiHelpBookConfig.load_file("../mypkg/apidoc-build.json", target=repo).save_all(repo)
 ```
 
 When the config is loaded from a repository path, OODocs temporarily adds the
@@ -288,8 +288,8 @@ first:
 ```python
 from oodocs.apidoc import ApiHelpBookConfig
 
-repo = r"C:\work\mypkg"
-ApiHelpBookConfig.load_file(r"C:\work\mypkg\pyproject.toml", target=repo).save_all(repo)
+repo = "../mypkg"
+ApiHelpBookConfig.load_file("../mypkg/pyproject.toml", target=repo).save_all(repo)
 ```
 
 The Python API uses the same target-local import path policy when
@@ -299,7 +299,7 @@ The Python API uses the same target-local import path policy when
 from oodocs.apidoc import collect_api
 
 api = collect_api(
-    r"C:\work\mypkg",
+    "../mypkg",
     docstring_parser_modules=("docs_parsers",),
     docstring_style="brief",
 )
@@ -313,9 +313,9 @@ validating parser modules:
 ```python
 from oodocs.apidoc import ApiHelpBookConfig
 
-repo = r"C:\work\mypkg"
-build = ApiHelpBookConfig.load_file(r"C:\configs\mypkg-apidoc.json", target=repo)
-outputs = build.save_all(repo, output_dir=r"C:\work\mypkg\artifacts\api")
+repo = "../mypkg"
+build = ApiHelpBookConfig.load_file("../configs/mypkg-apidoc.json", target=repo)
+outputs = build.save_all(repo, output_dir="../mypkg/artifacts/api")
 assert outputs["docx"].exists()
 assert outputs["pdf"].exists()
 assert outputs["html"].exists()
@@ -329,7 +329,7 @@ parser modules are importable while the config validates:
 ```python
 from oodocs.apidoc import ApiCollectConfig, collect_api, docstring_parser_import_paths
 
-repo = r"C:\work\mypkg"
+repo = "../mypkg"
 with docstring_parser_import_paths(repo):
     config = ApiCollectConfig(
         docstring_parser_modules=("docs_parsers",),

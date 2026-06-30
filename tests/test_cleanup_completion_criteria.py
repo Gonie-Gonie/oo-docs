@@ -9,6 +9,13 @@ from pathlib import Path
 LOCAL_ABSOLUTE_PATH_PATTERN = re.compile(
     r"(?:\b[A-Za-z]:[\\/]+Users[\\/]|/home/|/Users/)"
 )
+WINDOWS_DRIVE_PATH_PATTERN = re.compile(r"\b[A-Za-z]:[\\/]")
+TRACKED_DOCUMENTATION_PATHS = (
+    "README.md",
+    "README-PYPI.md",
+    "docs",
+    "examples",
+)
 TRACKED_USER_FACING_PATHS = (
     "README.md",
     "README-PYPI.md",
@@ -55,8 +62,16 @@ def _documentation_text_files() -> list[Path]:
 
 
 def _tracked_user_facing_text_files() -> list[Path]:
+    return _tracked_text_files(*TRACKED_USER_FACING_PATHS)
+
+
+def _tracked_documentation_text_files() -> list[Path]:
+    return _tracked_text_files(*TRACKED_DOCUMENTATION_PATHS)
+
+
+def _tracked_text_files(*pathspecs: str) -> list[Path]:
     result = subprocess.run(
-        ["git", "ls-files", "--", *TRACKED_USER_FACING_PATHS],
+        ["git", "ls-files", "--", *pathspecs],
         check=True,
         capture_output=True,
         encoding="utf-8",
@@ -154,6 +169,17 @@ def test_tracked_user_facing_text_has_no_local_absolute_paths() -> None:
     for path in _tracked_user_facing_text_files():
         text = path.read_text(encoding="utf-8")
         for match in LOCAL_ABSOLUTE_PATH_PATTERN.finditer(text):
+            line_number = text.count("\n", 0, match.start()) + 1
+            violations.append(f"{path}:{line_number}")
+
+    assert violations == []
+
+
+def test_documentation_examples_do_not_use_windows_drive_paths() -> None:
+    violations = []
+    for path in _tracked_documentation_text_files():
+        text = path.read_text(encoding="utf-8")
+        for match in WINDOWS_DRIVE_PATH_PATTERN.finditer(text):
             line_number = text.count("\n", 0, match.start()) + 1
             violations.append(f"{path}:{line_number}")
 

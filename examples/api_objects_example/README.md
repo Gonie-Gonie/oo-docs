@@ -41,7 +41,7 @@ python examples/api_objects_example/main.py oodocs --collector auto
 For a quick HTML-only check while developing another package:
 
 ```powershell
-python examples/api_objects_example/main.py C:\path\to\repo --collector inspect --public-policy underscore --outputs html
+python examples/api_objects_example/main.py ../other-repo --collector inspect --public-policy underscore --outputs html
 ```
 
 Composable object-selection pattern:
