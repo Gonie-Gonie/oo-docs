@@ -124,6 +124,12 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "oodocs.url" in all_titles
     assert "oodocs.LinkDefaults" in all_titles
     assert "oodocs.components.inline.Hyperlink" in all_titles
+    assert "oodocs.refs" in all_titles
+    assert "oodocs.ref_range" in all_titles
+    assert "oodocs.references.ReferenceFormat" in all_titles
+    assert "oodocs.references.bracket_ref" in all_titles
+    assert "oodocs.references.paren_ref" in all_titles
+    assert "oodocs.references.page_ref" in all_titles
     assert "oodocs.engineering.Algorithm" in all_titles
     assert "oodocs.SubFigure" in all_titles
     assert "oodocs.SubFigureGroup" in all_titles
@@ -225,6 +231,14 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "Hyperlink.internal_anchor" in text
     assert "url(" in text
     assert "link(" in text
+    assert "ReferenceFormat" in text
+    assert "plural_label" in text
+    assert "capitalized" in text
+    assert "range_separator" in text
+    assert "last_separator" in text
+    assert "bracket_ref" in text
+    assert "paren_ref" in text
+    assert "page_ref" in text
 
 
 def test_help_book_renders_uncategorized_api_appendix_from_category_gate() -> None:

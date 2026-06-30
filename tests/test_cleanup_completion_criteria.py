@@ -245,6 +245,23 @@ def test_readme_latex_translations_include_hyperref_policy() -> None:
     assert "`Theme(links=LinkDefaults(...))`" in translations
 
 
+def test_readme_latex_translations_include_cleveref_policy() -> None:
+    readme = _readme()
+    translations = readme.split("Common translations:", 1)[1].split(
+        "The main payoff",
+        1,
+    )[0]
+
+    assert "LaTeX `cleveref` / `varioref` typed references" in translations
+    assert "`refs([...])`" in translations
+    assert "`ref_range(a, b)`" in translations
+    assert "`ReferenceFormat(...)`" in translations
+    assert "`bracket_ref(...)`" in translations
+    assert "`paren_ref(...)`" in translations
+    assert "`page_ref(...)`" in translations
+    assert "`oodocs.references`" in translations
+
+
 def test_readme_latex_translations_include_graphicx_policy() -> None:
     readme = _readme()
     translations = readme.split("Common translations:", 1)[1].split(
@@ -385,6 +402,26 @@ def test_chemistry_support_reference_documents_mhchem_policy() -> None:
         "Unicode superscript digits and signs normalize to superscript runs.",
         "Reaction arrows such as `->`",
         "full mhchem grammar",
+    ):
+        assert phrase in reference
+
+
+def test_reference_support_reference_documents_cleveref_policy() -> None:
+    reference = Path("docs/reference/reference-support.md").read_text(encoding="utf-8")
+
+    for phrase in (
+        "common `cleveref` and `varioref` authoring needs",
+        "`ref(obj)` or `obj.ref()`",
+        "`refs([a, b])`",
+        "`ref_range(a, b)`",
+        "`ReferenceFormat(...)`",
+        "`bracket_ref(obj)` or `paren_ref(obj)`",
+        "`page_ref(obj)`",
+        "`page-aware-reference-degrades`",
+        "`plural_label=...`",
+        "`range_separator`",
+        "`reference_label` settings",
+        "Page-aware references are intentionally treated as a degrade path",
     ):
         assert phrase in reference
 
