@@ -19,6 +19,7 @@ OODocs_API_CATEGORIES: tuple[ApiCategory, ...] = (
             "oodocs.ResultLike",
             "oodocs.ValidationResult",
             "oodocs.ValidationIssue",
+            "oodocs.ValidationPolicy",
             "oodocs.DocumentValidationError",
             "oodocs.document.*",
             "oodocs.core.*",

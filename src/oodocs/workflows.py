@@ -18,7 +18,7 @@ from typing import Iterable, Iterator
 
 from oodocs.compatibility import OutputFormat, normalize_output_formats
 from oodocs.document import Document
-from oodocs.validation import ValidationResult
+from oodocs.validation import ValidationPolicy, ValidationResult
 
 
 PYTHON_DOCUMENT_NAMES = ("document", "doc", "report")
@@ -380,6 +380,7 @@ def validate_source_document(
     title: str | None = None,
     document_factory: str | None = None,
     formats: Iterable[str] | None = None,
+    policy: ValidationPolicy | None = None,
     chdir: bool = True,
 ) -> ValidationResult:
     """Load a source document and return its validation result.
@@ -391,6 +392,8 @@ def validate_source_document(
         title: Optional title override for imported Markdown or notebooks.
         document_factory: Optional factory name for Python document sources.
         formats: Output formats to validate for. Defaults to all formats.
+        policy: Optional warning policy for callers that treat some warnings
+            as release-gate blockers.
         chdir: Whether Python sources should execute with their directory as
             the current working directory.
 
@@ -418,7 +421,7 @@ def validate_source_document(
                 document_factory=document_factory,
                 chdir=False,
             )
-            return document.validate(formats=formats)
+            return document.validate(formats=formats, policy=policy)
 
     document = load_source_document(
         source_path,
@@ -427,7 +430,7 @@ def validate_source_document(
         document_factory=None,
         chdir=chdir,
     )
-    return document.validate(formats=formats)
+    return document.validate(formats=formats, policy=policy)
 
 
 def _resolve_source_type(source_path: Path, source_type: str | None) -> str:

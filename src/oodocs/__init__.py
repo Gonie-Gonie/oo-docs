@@ -111,6 +111,7 @@ from oodocs.validation import (
     DocumentValidationError,
     ResultLike,
     ValidationIssue,
+    ValidationPolicy,
     ValidationResult,
 )
 from oodocs.workflows import OutputBundle
@@ -216,6 +217,7 @@ __all__ = [
     "TypographyDefaults",
     "DocumentValidationError",
     "ValidationIssue",
+    "ValidationPolicy",
     "ValidationResult",
     "VerticalSpace",
     "__version__",

@@ -15,6 +15,7 @@ from oodocs.settings import DocumentSettings
 
 if TYPE_CHECKING:
     from oodocs.importers.notebook import NotebookImportOptions
+    from oodocs.validation import ValidationPolicy
     from oodocs.validation import ValidationResult
     from oodocs.workflows import OutputBundle
 
@@ -336,6 +337,7 @@ class Document:
         *,
         raise_on_error: bool = False,
         formats: Iterable[str] | None = None,
+        policy: ValidationPolicy | None = None,
     ) -> ValidationResult:
         """Validate the document tree.
 
@@ -343,6 +345,8 @@ class Document:
             raise_on_error: Whether to raise ``DocumentValidationError`` when
                 blocking errors are present.
             formats: Output formats to validate for. Defaults to all formats.
+            policy: Optional warning policy that can make warnings blocking
+                when ``raise_on_error`` is true.
 
         Returns:
             A structured validation result.
@@ -365,6 +369,7 @@ class Document:
             self,
             raise_on_error=raise_on_error,
             formats=formats,
+            policy=policy,
         )
 
     def _ensure_valid(self, formats: Iterable[str]) -> None:

@@ -554,6 +554,13 @@
           "category": "validation",
           "kind": "class",
           "module": "oodocs.validation",
+          "name": "ValidationPolicy",
+          "qualname": "oodocs.validation.ValidationPolicy"
+        },
+        {
+          "category": "validation",
+          "kind": "class",
+          "module": "oodocs.validation",
           "name": "ValidationResult",
           "qualname": "oodocs.validation.ValidationResult"
         },
@@ -1657,6 +1664,13 @@
           "module": "oodocs.validation",
           "name": "ValidationIssue",
           "qualname": "oodocs.validation.ValidationIssue"
+        },
+        {
+          "category": "validation",
+          "kind": "class",
+          "module": "oodocs.validation",
+          "name": "ValidationPolicy",
+          "qualname": "oodocs.validation.ValidationPolicy"
         },
         {
           "category": "validation",

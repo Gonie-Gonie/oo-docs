@@ -17,13 +17,17 @@ from oodocs import (
     TableOfContents,
     inline_code,
 )
-from oodocs.validation import ValidationResult
+from oodocs.validation import ValidationPolicy, ValidationResult
 
 
 OUTPUT_DIR = Path("artifacts") / "validation-gate-report"
 OUTPUT_STEM = "validation-gate-report"
 VALIDATION_JSON = "validation-result.json"
 ALLOWED_WARNINGS = ("html-toc-page-numbers", "wide-table")
+VALIDATION_POLICY = ValidationPolicy(
+    allow_warnings=frozenset(ALLOWED_WARNINGS),
+    fail_on_unlisted_warnings=True,
+)
 
 
 class ValidationGateBundle:
@@ -86,32 +90,29 @@ def build_candidate_document() -> Document:
 def evaluate_gate(
     result: ValidationResult,
     *,
-    allowed_warning_codes: Sequence[str] = ALLOWED_WARNINGS,
+    policy: ValidationPolicy = VALIDATION_POLICY,
 ) -> tuple[bool, tuple[str, ...]]:
     """Return whether validation issues pass the configured release gate."""
 
-    allowed = set(allowed_warning_codes)
-    denied = tuple(
-        issue.code
-        for issue in result.warnings
-        if issue.code not in allowed
-    )
+    denied = tuple(issue.code for issue in result.blocking_warnings(policy))
     return not result.errors and not denied, denied
 
 
 def build_document(
     validation_result: ValidationResult | None = None,
     *,
-    allowed_warning_codes: Sequence[str] = ALLOWED_WARNINGS,
+    policy: ValidationPolicy = VALIDATION_POLICY,
 ) -> Document:
     """Build the validation gate report document."""
 
     result = validation_result or build_candidate_document().validate()
-    passed, denied = evaluate_gate(result, allowed_warning_codes=allowed_warning_codes)
+    passed, denied = evaluate_gate(result, policy=policy)
     policy_table = Table(
         ["Policy item", "Decision"],
         [
-            ["Allowed warnings", ", ".join(allowed_warning_codes)],
+            ["Allowed warnings", ", ".join(sorted(policy.allow_warnings))],
+            ["Denied warnings", ", ".join(sorted(policy.deny_warnings)) or "(none)"],
+            ["Fail on unlisted warnings", str(policy.fail_on_unlisted_warnings)],
             ["Denied warning codes", ", ".join(denied) if denied else "(none)"],
             ["Blocking errors", str(len(result.errors))],
             ["Gate decision", "pass" if passed else "fail"],
@@ -176,8 +177,11 @@ def build(
     output_path = Path(output_dir)
     candidate = build_candidate_document()
     validation_result = candidate.validate()
-    validation_json = validation_result.save_json(output_path / VALIDATION_JSON)
-    report = build_document(validation_result)
+    validation_json = validation_result.save_json(
+        output_path / VALIDATION_JSON,
+        policy=VALIDATION_POLICY,
+    )
+    report = build_document(validation_result, policy=VALIDATION_POLICY)
     report.validate(raise_on_error=True)
     rendered = report.save_all(
         output_path,

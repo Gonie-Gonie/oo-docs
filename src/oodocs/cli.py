@@ -11,7 +11,7 @@ from typing import Sequence
 from oodocs.compatibility import normalize_output_formats
 from oodocs.core import OODocsError
 from oodocs.importers.results import ImportResult
-from oodocs.validation import DocumentValidationError
+from oodocs.validation import DocumentValidationError, ValidationPolicy
 from oodocs.workflows import build_source_outputs, validate_source_document
 
 
@@ -116,6 +116,10 @@ def _build_parser() -> argparse.ArgumentParser:
         "--fail-on-warning",
         action="store_true",
         help="Return a non-zero exit code when warnings are present.",
+    )
+    validate.add_argument(
+        "--warning-policy",
+        help="JSON validation policy that decides which warnings block.",
     )
     validate.add_argument(
         "--report-format",
@@ -223,19 +227,23 @@ def _run_build(args: argparse.Namespace) -> int:
 
 def _run_validate(args: argparse.Namespace) -> int:
     formats = _parse_outputs(args.outputs)
+    policy = _load_warning_policy(args.warning_policy)
     result = validate_source_document(
         args.source,
         source_type=args.source_type,
         title=args.title,
         document_factory=args.document_factory,
         formats=formats,
+        policy=policy,
         chdir=not args.no_chdir,
     )
     if args.report_format == "json":
-        print(result.to_json(formats=formats))
+        print(result.to_json(formats=formats, policy=policy))
     else:
-        print(result.format_text(formats=formats))
+        print(result.format_text(formats=formats, policy=policy))
     if result.errors_for(formats):
+        return 1
+    if policy is not None and result.blocking_warnings(policy, formats=formats):
         return 1
     if args.fail_on_warning and result.warnings_for(formats):
         return 1
@@ -320,6 +328,12 @@ def _parse_outputs(value: str) -> tuple[str, ...]:
     if not pieces:
         raise ValueError("--outputs must include at least one output format")
     return normalize_output_formats(pieces)
+
+
+def _load_warning_policy(path: str | None) -> ValidationPolicy | None:
+    if not path:
+        return None
+    return ValidationPolicy.load_json(path)
 
 
 def _print_outputs(outputs: dict[object, Path]) -> None:

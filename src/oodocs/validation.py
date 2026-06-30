@@ -136,6 +136,107 @@ class ResultLike(Protocol):
 
 
 @dataclass(frozen=True, slots=True)
+class ValidationPolicy:
+    """Policy that decides which validation warnings block release gates.
+
+    Attributes:
+        allow_warnings: Warning codes accepted by the gate.
+        deny_warnings: Warning codes that always block the gate.
+        fail_on_unlisted_warnings: Whether warnings outside the allow list
+            should block.
+
+    Examples:
+        ```python
+        from oodocs.validation import ValidationPolicy
+
+        policy = ValidationPolicy(
+            allow_warnings={"html-toc-page-numbers"},
+            deny_warnings={"wide-table"},
+            fail_on_unlisted_warnings=True,
+        )
+        ```
+    """
+
+    allow_warnings: frozenset[str] = frozenset()
+    deny_warnings: frozenset[str] = frozenset()
+    fail_on_unlisted_warnings: bool = False
+
+    def __post_init__(self) -> None:
+        allow = _normalize_warning_codes(self.allow_warnings)
+        deny = _normalize_warning_codes(self.deny_warnings)
+        overlap = allow & deny
+        if overlap:
+            raise ValueError(
+                "warning codes cannot be both allowed and denied: "
+                + ", ".join(sorted(overlap))
+            )
+        object.__setattr__(self, "allow_warnings", frozenset(allow))
+        object.__setattr__(self, "deny_warnings", frozenset(deny))
+        object.__setattr__(
+            self,
+            "fail_on_unlisted_warnings",
+            bool(self.fail_on_unlisted_warnings),
+        )
+
+    def blocks(self, issue: ValidationIssue) -> bool:
+        """Return whether this policy blocks a warning issue."""
+
+        if issue.severity != "warning":
+            return False
+        if issue.code in self.deny_warnings:
+            return True
+        if issue.code in self.allow_warnings:
+            return False
+        return self.fail_on_unlisted_warnings
+
+    def to_dict(self) -> dict[str, object]:
+        """Return a JSON-serializable policy mapping."""
+
+        return {
+            "allow_warnings": sorted(self.allow_warnings),
+            "deny_warnings": sorted(self.deny_warnings),
+            "fail_on_unlisted_warnings": self.fail_on_unlisted_warnings,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, object]) -> ValidationPolicy:
+        """Reconstruct a validation policy from serialized data."""
+
+        return cls(
+            allow_warnings=frozenset(_object_string_list(data.get("allow_warnings"))),
+            deny_warnings=frozenset(_object_string_list(data.get("deny_warnings"))),
+            fail_on_unlisted_warnings=bool(
+                data.get("fail_on_unlisted_warnings", False)
+            ),
+        )
+
+    def to_json(self, *, indent: int | None = 2) -> str:
+        """Serialize this policy to JSON text."""
+
+        return json.dumps(self.to_dict(), ensure_ascii=False, indent=indent)
+
+    @classmethod
+    def from_json(cls, text: str) -> ValidationPolicy:
+        """Deserialize a validation policy from JSON text."""
+
+        return cls.from_dict(json.loads(text))
+
+    def save_json(self, path: PathLike, *, indent: int | None = 2) -> Path:
+        """Write this policy to a JSON sidecar."""
+
+        output_path = Path(path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(self.to_json(indent=indent) + "\n", encoding="utf-8")
+        return output_path
+
+    @classmethod
+    def load_json(cls, path: PathLike) -> ValidationPolicy:
+        """Read a validation policy JSON sidecar."""
+
+        return cls.from_json(Path(path).read_text(encoding="utf-8"))
+
+
+@dataclass(frozen=True, slots=True)
 class ValidationIssue:
     """One authoring issue found in a document tree.
 
@@ -368,6 +469,28 @@ class ValidationResult:
             if _issue_matches_formats(issue, requested_formats)
         )
 
+    def blocking_warnings(
+        self,
+        policy: ValidationPolicy,
+        *,
+        formats: Iterable[str] | None = None,
+    ) -> tuple[ValidationIssue, ...]:
+        """Return warning-level issues that block under a policy.
+
+        Args:
+            policy: Warning gate policy.
+            formats: Output formats to filter for. Defaults to all formats.
+
+        Returns:
+            Warning issues that should block a release or CI gate.
+        """
+
+        return tuple(
+            issue
+            for issue in self.warnings_for(formats)
+            if policy.blocks(issue)
+        )
+
     def issues_for(
         self,
         formats: Iterable[str] | None = None,
@@ -412,24 +535,35 @@ class ValidationResult:
 
         return ValidationResult(self.issues_for(formats))
 
-    def to_dict(self, *, formats: Iterable[str] | None = None) -> dict[str, object]:
+    def to_dict(
+        self,
+        *,
+        formats: Iterable[str] | None = None,
+        policy: ValidationPolicy | None = None,
+    ) -> dict[str, object]:
         """Return a JSON-serializable validation summary.
 
         Args:
             formats: Output formats to include. Defaults to all formats.
+            policy: Optional warning policy used to report blocking warnings.
 
         Returns:
             Dictionary with status counts and issue dictionaries.
         """
 
         result = self.for_formats(formats)
-        return {
+        payload: dict[str, object] = {
             "ok": result.ok,
             "errors": len(result.errors),
             "warnings": len(result.warnings),
             "infos": len(result.infos),
             "issues": [issue.to_dict() for issue in result.issues],
         }
+        if policy is not None:
+            blocking = result.blocking_warnings(policy)
+            payload["blocking_warnings"] = len(blocking)
+            payload["warning_policy"] = policy.to_dict()
+        return payload
 
     @classmethod
     def from_dict(cls, data: dict[str, object]) -> ValidationResult:
@@ -453,12 +587,14 @@ class ValidationResult:
         self,
         *,
         formats: Iterable[str] | None = None,
+        policy: ValidationPolicy | None = None,
         indent: int | None = 2,
     ) -> str:
         """Serialize this validation summary to JSON.
 
         Args:
             formats: Output formats to include. Defaults to all formats.
+            policy: Optional warning policy used to report blocking warnings.
             indent: Indentation passed to ``json.dumps``.
 
         Returns:
@@ -466,7 +602,7 @@ class ValidationResult:
         """
 
         return json.dumps(
-            self.to_dict(formats=formats),
+            self.to_dict(formats=formats, policy=policy),
             ensure_ascii=False,
             indent=indent,
         )
@@ -489,6 +625,7 @@ class ValidationResult:
         path: PathLike,
         *,
         formats: Iterable[str] | None = None,
+        policy: ValidationPolicy | None = None,
         indent: int | None = 2,
     ) -> Path:
         """Write this validation result to a JSON sidecar.
@@ -496,6 +633,7 @@ class ValidationResult:
         Args:
             path: Output JSON path.
             formats: Output formats to include. Defaults to all formats.
+            policy: Optional warning policy used to report blocking warnings.
             indent: Indentation passed to ``json.dumps``.
 
         Returns:
@@ -505,7 +643,7 @@ class ValidationResult:
         output_path = Path(path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(
-            self.to_json(formats=formats, indent=indent) + "\n",
+            self.to_json(formats=formats, policy=policy, indent=indent) + "\n",
             encoding="utf-8",
         )
         return output_path
@@ -548,11 +686,17 @@ class ValidationResult:
             split=True,
         )
 
-    def format_text(self, *, formats: Iterable[str] | None = None) -> str:
+    def format_text(
+        self,
+        *,
+        formats: Iterable[str] | None = None,
+        policy: ValidationPolicy | None = None,
+    ) -> str:
         """Format validation issues as human-readable console text.
 
         Args:
             formats: Output formats to include. Defaults to all formats.
+            policy: Optional warning policy used to mark blocking warnings.
 
         Returns:
             A human-readable text table, or a single status line when no
@@ -562,18 +706,28 @@ class ValidationResult:
         issues = self.issues_for(formats)
         errors = tuple(issue for issue in issues if issue.severity == "error")
         warnings = tuple(issue for issue in issues if issue.severity == "warning")
+        blocking = (
+            tuple(issue for issue in warnings if policy.blocks(issue))
+            if policy is not None
+            else ()
+        )
         scope = format_output_formats(normalize_output_formats(formats))
-        status = "ok" if not errors else "failed"
+        status = "ok" if not errors and not blocking else "failed"
         heading = (
             f"OODocs validation {status} for {scope}: "
             f"{len(errors)} error(s), {len(warnings)} warning(s)"
         )
+        if policy is not None:
+            heading += f", {len(blocking)} blocking warning(s)"
         if not issues:
             return heading
 
+        blocking_ids = {id(issue) for issue in blocking}
         rows = [
             (
-                str(issue.severity).upper(),
+                "BLOCKING WARNING"
+                if id(issue) in blocking_ids
+                else str(issue.severity).upper(),
                 format_output_formats(issue.formats),
                 issue.code,
                 issue.source or "",
@@ -614,6 +768,7 @@ class DocumentValidationError(OODocsError):
         result: ValidationResult | Sequence[ValidationIssue],
         *,
         formats: Iterable[str] | None = None,
+        policy: ValidationPolicy | None = None,
     ) -> None:
         self.result = (
             result
@@ -621,7 +776,8 @@ class DocumentValidationError(OODocsError):
             else ValidationResult(tuple(result))
         )
         self.formats = normalize_output_formats(formats)
-        super().__init__(self.result.format_text(formats=self.formats))
+        self.policy = policy
+        super().__init__(self.result.format_text(formats=self.formats, policy=policy))
 
     @property
     def issues(self) -> tuple[ValidationIssue, ...]:
@@ -653,12 +809,21 @@ class DocumentValidationError(OODocsError):
 
         return self.result.warnings_for(self.formats)
 
+    @property
+    def blocking_warnings(self) -> tuple[ValidationIssue, ...]:
+        """Return policy-blocked warnings associated with the blocked formats."""
+
+        if self.policy is None:
+            return ()
+        return self.result.blocking_warnings(self.policy, formats=self.formats)
+
 
 def validate_document(
     document: Document,
     *,
     raise_on_error: bool = False,
     formats: Iterable[str] | None = None,
+    policy: ValidationPolicy | None = None,
 ) -> ValidationResult:
     """Validate a document tree.
 
@@ -666,6 +831,8 @@ def validate_document(
         document: Document to validate.
         raise_on_error: Whether to raise when blocking errors are present.
         formats: Output formats to validate for. Defaults to all formats.
+        policy: Optional warning policy that can make warnings blocking when
+            ``raise_on_error`` is true.
 
     Returns:
         A structured validation result.
@@ -684,8 +851,11 @@ def validate_document(
     """
 
     result = ValidationResult(tuple(_ValidationContext(document).validate()))
-    if raise_on_error and not result.ok_for(formats):
-        raise DocumentValidationError(result, formats=formats)
+    if raise_on_error and (
+        not result.ok_for(formats)
+        or (policy is not None and result.blocking_warnings(policy, formats=formats))
+    ):
+        raise DocumentValidationError(result, formats=formats, policy=policy)
     return result
 
 
@@ -1915,6 +2085,20 @@ def _optional_int(value: object) -> int | None:
     return int(value) if value is not None else None
 
 
+def _normalize_warning_codes(values: Iterable[object]) -> set[str]:
+    return {str(value).strip() for value in values if str(value).strip()}
+
+
+def _object_string_list(value: object) -> list[str]:
+    if value is None:
+        return []
+    if isinstance(value, str):
+        return [value]
+    if isinstance(value, Iterable):
+        return [str(item) for item in value]
+    raise TypeError("warning code lists must be strings or iterables")
+
+
 def _issue_matches_formats(
     issue: ValidationIssue,
     requested_formats: set[OutputFormat],
@@ -1924,7 +2108,7 @@ def _issue_matches_formats(
 
 def _format_issue_table(rows: Sequence[tuple[str, str, str, str, str, str, str]]) -> str:
     headers = ("Severity", "Formats", "Code", "Source", "Path", "Line", "Message")
-    max_widths = (8, 14, 30, 24, 38, 8, 72)
+    max_widths = (16, 14, 30, 24, 38, 8, 72)
     widths = [
         min(
             max(len(headers[index]), *(len(row[index]) for row in rows)),
@@ -1979,6 +2163,7 @@ __all__ = [
     "DocumentValidationError",
     "ResultLike",
     "ValidationIssue",
+    "ValidationPolicy",
     "ValidationResult",
     "ValidationSeverity",
     "validate_document",

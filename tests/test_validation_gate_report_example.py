@@ -58,6 +58,12 @@ def test_validation_gate_report_example_builds_outputs(tmp_path: Path) -> None:
     sidecar = json.loads(outputs.validation_json.read_text(encoding="utf-8"))
     codes = {issue["code"] for issue in sidecar["issues"]}
     assert {"html-toc-page-numbers", "wide-table"} <= codes
+    assert sidecar["blocking_warnings"] == 0
+    assert sidecar["warning_policy"]["allow_warnings"] == [
+        "html-toc-page-numbers",
+        "wide-table",
+    ]
+    assert sidecar["warning_policy"]["fail_on_unlisted_warnings"] is True
 
     word_document = WordDocument(outputs["docx"])
     paragraph_texts = [paragraph.text for paragraph in word_document.paragraphs]
