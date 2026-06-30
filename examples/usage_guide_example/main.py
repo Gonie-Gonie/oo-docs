@@ -255,7 +255,8 @@ paragraph = Paragraph(
 )
 """
 
-TODO_MARGIN_NOTE_SNIPPET = """from oodocs import MarginNote, Paragraph, Todo, margin_note, todo
+TODO_MARGIN_NOTE_SNIPPET = """from oodocs import Paragraph
+from oodocs.review import MarginNote, Todo, margin_note, todo
 
 paragraph = Paragraph(
     "Assumption ",
@@ -360,7 +361,8 @@ document = Document(
 )
 """
 
-POSITIONED_DRAWING_SNIPPET = """from oodocs import Document, DocumentSettings, ImageBox, PageItemScope, Paragraph, Shape, StrokeStyle, TextBox
+POSITIONED_DRAWING_SNIPPET = """from oodocs import Document, DocumentSettings, Paragraph, StrokeStyle
+from oodocs.positioning import ImageBox, PageItemScope, Shape, TextBox
 
 frame = Shape.rect(
     name="approval-frame",
@@ -481,7 +483,8 @@ paragraph = Paragraph("Use ", main.reference(), " before the proof.")
 proof = Proof("Proofs are unnumbered by default, so reference them with a custom label.")
 """
 
-ALGORITHM_SNIPPET = """from oodocs import Algorithm, Paragraph
+ALGORITHM_SNIPPET = """from oodocs import Paragraph
+from oodocs.engineering import Algorithm
 
 algorithm = Algorithm(
     "Coverage aggregation",
@@ -646,7 +649,8 @@ Paragraph(
 )
 """
 
-MATH_BLOCKS_SNIPPET = """from oodocs import AlignedEquation, CasesEquation, Equation, Paragraph
+MATH_BLOCKS_SNIPPET = """from oodocs import Equation, Paragraph
+from oodocs.engineering import AlignedEquation, CasesEquation
 
 derivation = AlignedEquation(
     r"a &= b + c",
@@ -664,7 +668,8 @@ local_definition = Equation(r"\\operatorname{loss}(x)", numbered=False)
 paragraph = Paragraph("See ", derivation.reference(), " and ", local_definition.reference("the loss definition"), ".")
 """
 
-CHEMISTRY_SNIPPET = """from oodocs import Paragraph, ReactionEquation, chemical_formula
+CHEMISTRY_SNIPPET = """from oodocs import Paragraph
+from oodocs.engineering import ReactionEquation, chemical_formula
 
 water = chemical_formula("H2O")
 sulfate = chemical_formula("SO4^2-")

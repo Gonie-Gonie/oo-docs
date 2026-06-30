@@ -9,7 +9,11 @@ import oodocs
 import oodocs.adapters as adapters
 import oodocs.apidoc as apidoc
 import oodocs.components.references as references
+import oodocs.engineering as engineering
+import oodocs.generated as generated
+import oodocs.positioning as positioning
 import oodocs.public_api as public_api
+import oodocs.review as review
 from oodocs.apidoc.cli import _build_parser as _build_apidoc_parser
 from oodocs.cli import _build_parser as _build_oodocs_parser
 from oodocs.importers.results import normalize_import_policy
@@ -61,6 +65,40 @@ def test_top_level_public_api_excludes_internal_helper_patterns() -> None:
     }
 
     assert leaked_names == set()
+
+
+def test_tier_two_namespaces_export_domain_symbols() -> None:
+    expected_exports = {
+        review: {"MarginNote", "Todo", "margin_note", "todo"},
+        positioning: {"ImageBox", "PageItemScope", "Shape", "TextBox"},
+        generated: {
+            "CommentList",
+            "FootnoteList",
+            "GlossaryList",
+            "ListOfAlgorithms",
+            "ListOfFigures",
+            "ListOfTables",
+            "ReferenceList",
+            "TableOfContents",
+            "TocLevelStyle",
+        },
+        engineering: {
+            "Algorithm",
+            "AlignedEquation",
+            "CasesEquation",
+            "ChemicalFormula",
+            "ReactionEquation",
+            "ce",
+            "chemical_formula",
+        },
+    }
+
+    for module, names in expected_exports.items():
+        assert names == set(module.__all__)
+        for name in names:
+            assert hasattr(module, name)
+            if hasattr(oodocs, name):
+                assert getattr(module, name) is getattr(oodocs, name)
 
 
 def test_top_level_public_api_uses_completed_canonical_names() -> None:
