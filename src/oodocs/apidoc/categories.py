@@ -218,10 +218,30 @@ def _is_category_match(
     exact_names: set[str],
     prefixes: Sequence[str],
 ) -> bool:
+    if _category_name_matches(obj.qualname, obj.name, exact_names=exact_names, prefixes=prefixes):
+        return True
+    reexported_from = obj.metadata.get("reexported_from")
+    if isinstance(reexported_from, str):
+        return _category_name_matches(
+            reexported_from,
+            reexported_from.rsplit(".", 1)[-1],
+            exact_names=exact_names,
+            prefixes=prefixes,
+        )
+    return False
+
+
+def _category_name_matches(
+    qualname: str,
+    name: str,
+    *,
+    exact_names: set[str],
+    prefixes: Sequence[str],
+) -> bool:
     return (
-        obj.qualname in exact_names
-        or obj.name in exact_names
-        or any(obj.qualname.startswith(prefix) for prefix in prefixes)
+        qualname in exact_names
+        or name in exact_names
+        or any(qualname.startswith(prefix) for prefix in prefixes)
     )
 
 

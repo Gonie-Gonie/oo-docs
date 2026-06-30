@@ -87,7 +87,27 @@ collector = "griffe"
 public-policy = "__all__"
 docstring-style = "auto"
 module-exclude-patterns = ["oodocs.public_api"]
-object-exclude-patterns = ["render_to_docx", "render_to_pdf", "render_to_html", "*.ImageData.savefig"]
+object-exclude-patterns = [
+    "render_to_docx",
+    "render_to_pdf",
+    "render_to_html",
+    "*.ImageData.savefig",
+    "oodocs.presets.BookTemplate",
+    "oodocs.presets.CalloutBox",
+    "oodocs.presets.CompactTable",
+    "oodocs.presets.CoverPagePreset",
+    "oodocs.presets.info_box",
+    "oodocs.presets.JournalArticleTemplate",
+    "oodocs.presets.KeyValueTable",
+    "oodocs.presets.ManuscriptSection",
+    "oodocs.presets.Nomenclature",
+    "oodocs.presets.note_box",
+    "oodocs.presets.option_table",
+    "oodocs.presets.SoftwareManualTemplate",
+    "oodocs.presets.success_box",
+    "oodocs.presets.TechnicalReportTemplate",
+    "oodocs.presets.warning_box",
+]
 presentation = "help"
 output-formats = ["docx", "pdf", "html"]
 output-dir = "artifacts/api"

@@ -101,6 +101,10 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "oodocs.components.blocks.MIN_SECTION_LEVEL" in all_titles
     assert "oodocs.Theme" in all_titles
     assert "oodocs.ValidationResult" in all_titles
+    assert "oodocs.presets.components.CompactTable" in all_titles
+    assert "oodocs.presets.templates.JournalArticleTemplate" in all_titles
+    assert "oodocs.presets.CompactTable" not in all_titles
+    assert "oodocs.presets.JournalArticleTemplate" not in all_titles
     assert check_api_help_categories(api) == ()
     assert "API Documentation Coverage" not in titles
     assert "Uncategorized API" not in titles

@@ -61,6 +61,23 @@ STALE_RENDERED_API_REFERENCE_MARKERS = (
     "normalize_text_alignment",
     "normalize_vertical_alignment",
 )
+PRESET_REEXPORT_API_DOC_EXCLUDES = (
+    "oodocs.presets.BookTemplate",
+    "oodocs.presets.CalloutBox",
+    "oodocs.presets.CompactTable",
+    "oodocs.presets.CoverPagePreset",
+    "oodocs.presets.info_box",
+    "oodocs.presets.JournalArticleTemplate",
+    "oodocs.presets.KeyValueTable",
+    "oodocs.presets.ManuscriptSection",
+    "oodocs.presets.Nomenclature",
+    "oodocs.presets.note_box",
+    "oodocs.presets.option_table",
+    "oodocs.presets.SoftwareManualTemplate",
+    "oodocs.presets.success_box",
+    "oodocs.presets.TechnicalReportTemplate",
+    "oodocs.presets.warning_box",
+)
 
 
 def _assert_no_local_absolute_paths(text: str) -> None:
@@ -114,10 +131,15 @@ def test_apidoc_pyproject_config_hides_compatibility_adapters() -> None:
 
     assert "oodocs.public_api" in config.module_exclude_patterns
     assert "*.ImageData.savefig" in config.object_exclude_patterns
+    assert set(PRESET_REEXPORT_API_DOC_EXCLUDES) <= set(config.object_exclude_patterns)
     assert api.find_module("oodocs.public_api") is None
     assert api.find_object("oodocs.ImageData") is not None
     assert api.find_object("oodocs.ImageData.savefig") is None
     assert api.find_object("oodocs.components.media.ImageData.savefig") is None
+    assert api.find_object("oodocs.presets.components.CalloutBox") is not None
+    assert api.find_object("oodocs.presets.templates.JournalArticleTemplate") is not None
+    for qualname in PRESET_REEXPORT_API_DOC_EXCLUDES:
+        assert api.find_object(qualname) is None, qualname
 
 
 def test_apidoc_renders_oodocs_public_api_reference_bundle(tmp_path) -> None:

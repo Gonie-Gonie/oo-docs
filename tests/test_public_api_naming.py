@@ -360,6 +360,24 @@ def test_preset_namespaces_keep_component_and_template_boundaries() -> None:
     for name in template_preset_names:
         assert getattr(presets, name) is getattr(preset_templates, name)
 
+    presets_category = next(
+        category
+        for category in apidoc.OODocs_API_CATEGORIES
+        if category.id == "presets-adapters"
+    )
+    category_includes = set(presets_category.include)
+
+    assert "oodocs.presets.*" not in category_includes
+    assert "oodocs.presets.components.*" in category_includes
+    assert "oodocs.presets.templates.*" in category_includes
+    assert not any(
+        name.startswith("oodocs.presets.")
+        and not name.startswith(
+            ("oodocs.presets.components.", "oodocs.presets.templates.")
+        )
+        for name in category_includes
+    )
+
     cover = preset_templates.CoverPagePreset.eplus_simple()
     settings_parameters = set(inspect.signature(cover.settings).parameters)
 
