@@ -1,4 +1,8 @@
-"""Glossary and acronym authoring helpers."""
+"""Glossary and acronym authoring helpers.
+
+Attributes:
+    GlossaryTermKind: Supported glossary entry kind names.
+"""
 
 from __future__ import annotations
 
@@ -114,6 +118,12 @@ class Acronym(GlossaryTerm):
 class Glossary:
     """Registry for glossary terms and acronym use.
 
+    Args:
+        entries: Optional initial glossary entries.
+
+    Attributes:
+        entries: Registered glossary and acronym entries.
+
     Examples:
         ```python
         from oodocs import Paragraph
@@ -137,7 +147,16 @@ class Glossary:
         *,
         term: str | None = None,
     ) -> GlossaryTerm:
-        """Add a glossary term and return it."""
+        """Add a glossary term and return it.
+
+        Args:
+            key: Stable lookup key.
+            definition: Definition shown in generated glossary lists.
+            term: Optional display label. Defaults to ``key``.
+
+        Returns:
+            Registered glossary term.
+        """
 
         entry = GlossaryTerm(
             key=key,
@@ -155,7 +174,18 @@ class Glossary:
         short: str | None = None,
         definition: str | None = None,
     ) -> Acronym:
-        """Add an acronym and return it."""
+        """Add an acronym and return it.
+
+        Args:
+            key: Stable lookup key.
+            long: Expanded acronym text.
+            short: Optional visible short form. Defaults to ``key``.
+            definition: Optional generated-list definition. Defaults to
+                ``long``.
+
+        Returns:
+            Registered acronym entry.
+        """
 
         entry = Acronym(key, long, short=short, definition=definition)
         self.entries.append(entry)
@@ -173,6 +203,14 @@ class Glossary:
         Acronyms expand on the first call for a key, then use the short form on
         later calls. Pass ``first_use=True`` or ``False`` to override that
         policy at a specific call site.
+
+        Args:
+            key: Stable lookup key.
+            first_use: Optional first-use expansion override.
+            style: Optional inline text style.
+
+        Returns:
+            Inline text fragment for the glossary entry.
         """
 
         entry = self.get(key)
@@ -181,7 +219,17 @@ class Glossary:
         return Text(entry.display_text(first_use=first), style=TextStyle().merged(style))
 
     def get(self, key: str) -> GlossaryTerm:
-        """Return the first entry matching ``key``."""
+        """Return the first entry matching ``key``.
+
+        Args:
+            key: Stable lookup key.
+
+        Returns:
+            Matching glossary entry.
+
+        Raises:
+            KeyError: If no entry exists for ``key``.
+        """
 
         normalized = _normalize_glossary_text(key, "key")
         for entry in self.entries:
@@ -190,7 +238,17 @@ class Glossary:
         raise KeyError(f"Glossary key not found: {normalized!r}")
 
     def sorted_entries(self, sort: str = "insertion") -> list[GlossaryTerm]:
-        """Return entries in insertion, key, or term order."""
+        """Return entries in insertion, key, or term order.
+
+        Args:
+            sort: Sort order: ``"insertion"``, ``"key"``, or ``"term"``.
+
+        Returns:
+            Glossary entries in the requested order.
+
+        Raises:
+            ValueError: If ``sort`` is unsupported.
+        """
 
         normalized = str(sort).lower()
         if normalized == "insertion":
@@ -202,7 +260,11 @@ class Glossary:
         raise ValueError("Glossary sort must be 'insertion', 'key', or 'term'")
 
     def duplicate_keys(self) -> set[str]:
-        """Return duplicated entry keys."""
+        """Return duplicated entry keys.
+
+        Returns:
+            Keys registered more than once.
+        """
 
         seen: set[str] = set()
         duplicates: set[str] = set()
