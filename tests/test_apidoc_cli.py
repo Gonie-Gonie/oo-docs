@@ -82,9 +82,8 @@ def test_apidoc_build_config_auto_collector_saves_full_bundle_for_general_repo(
             "2 Public API",
             "2.2 samplepkg.Widget",
             "2.3 samplepkg.make_widget",
-            "3 API Documentation Coverage",
         ),
-        min_tables=4,
+        min_tables=3,
     )
     assert_pdf_text_and_pages(
         pdf_path,
@@ -103,6 +102,7 @@ def test_apidoc_build_config_auto_collector_saves_full_bundle_for_general_repo(
             "samplepkg.make_widget",
         ),
     )
+    assert "API Documentation Coverage" not in html_path.read_text(encoding="utf-8")
 
     api = ApiPackage.load_json(api_path)
     coverage = ApiCoverageResult.load_json(coverage_path)
@@ -157,9 +157,8 @@ def test_apidoc_build_config_saves_help_book_bundle_from_json_config(tmp_path) -
             "2.1 samplepkg.CONSTANT",
             "2.2 samplepkg.Widget",
             "2.3 samplepkg.make_widget",
-            "3 API Documentation Coverage",
         ),
-        min_tables=4,
+        min_tables=3,
     )
     assert_pdf_text_and_pages(
         pdf_path,
@@ -178,6 +177,7 @@ def test_apidoc_build_config_saves_help_book_bundle_from_json_config(tmp_path) -
             "samplepkg.make_widget",
         ),
     )
+    assert "API Documentation Coverage" not in html_path.read_text(encoding="utf-8")
 
     api = ApiPackage.load_json(api_path)
     coverage = ApiCoverageResult.load_json(coverage_json_path)

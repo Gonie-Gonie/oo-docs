@@ -68,6 +68,8 @@ def test_apidoc_config_roundtrip_supports_general_repo_policy(tmp_path) -> None:
     assert readback.max_heading_level == 3
     assert readback.include_coverage is False
     assert readback.include_uncategorized_appendix is False
+    assert ApiHelpBookConfig().include_coverage is False
+    assert ApiHelpBookConfig.from_dict({}).include_coverage is False
     assert ApiHelpBookConfig.from_dict({"max-heading-level": 2}).max_heading_level == 2
     with pytest.raises(TypeError, match="Unsupported apidoc config key"):
         ApiHelpBookConfig.from_dict({"max-level": 2})

@@ -767,7 +767,8 @@ class ApiHelpBookConfig:
         stem: Optional output file stem.
         max_heading_level: Optional deepest nested API heading level.
         include_coverage: Whether rendered help books include coverage
-            evidence as the final appendix.
+            evidence as the final appendix. Defaults to ``False`` so coverage
+            evidence stays in sidecars unless explicitly requested.
         include_uncategorized_appendix: Whether rendered help books include
             public API objects not assigned to curated categories.
         sidecars: Whether ``save_all(...)`` writes API and coverage sidecars.
@@ -792,7 +793,7 @@ class ApiHelpBookConfig:
     output_formats: tuple[str, ...] = ("docx", "pdf", "html")
     stem: str | None = None
     max_heading_level: int | None = None
-    include_coverage: bool = True
+    include_coverage: bool = False
     include_uncategorized_appendix: bool = True
     sidecars: bool = False
     output_dir: str | None = None
@@ -858,7 +859,7 @@ class ApiHelpBookConfig:
             output_formats=_format_tuple(output_formats),
             stem=_optional_str(normalized.get("stem")),
             max_heading_level=_optional_int(normalized.get("max_heading_level")),
-            include_coverage=bool(normalized.get("include_coverage", True)),
+            include_coverage=bool(normalized.get("include_coverage", False)),
             include_uncategorized_appendix=bool(
                 normalized.get("include_uncategorized_appendix", True)
             ),

@@ -3681,7 +3681,7 @@ class ApiPackage:
         categories: Sequence[object] | None = None,
         settings: object | None = None,
         citations: object | None = None,
-        include_coverage: bool = True,
+        include_coverage: bool = False,
         include_uncategorized_appendix: bool = True,
         max_heading_level: int | None = None,
     ):
@@ -3697,6 +3697,8 @@ class ApiPackage:
             settings: Optional ``DocumentSettings`` passed to ``Document``.
             citations: Optional citation library passed to ``Document``.
             include_coverage: Whether to append coverage evidence at the end.
+                Defaults to ``False`` so user-facing API references keep
+                quality evidence in sidecars unless explicitly requested.
             include_uncategorized_appendix: Whether to append public API
                 objects not assigned to a category before coverage evidence.
             max_heading_level: Optional deepest heading level for the table of

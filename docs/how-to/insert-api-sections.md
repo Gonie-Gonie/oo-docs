@@ -67,6 +67,9 @@ a standalone API reference. The returned value is a normal `Document`, so the
 same `save_all(...)` call can produce DOCX, PDF, and HTML through the usual
 OODocs renderer path. Keep the collected API and coverage result beside those
 files as deterministic JSON/CSV sidecars when release review needs evidence.
+By default, `to_help_book(...)` does not append coverage evidence to the
+user-facing reference; pass `include_coverage=True` only for review or evidence
+appendices.
 
 ```python
 from oodocs.apidoc import ApiDocstringParser, check_api_docs, collect_api
@@ -224,7 +227,8 @@ doc = Document(
 
 Use `check_api_docs(...)` on the same `ApiPackage` before rendering when the
 document should include docstring coverage or when CI should keep sidecars for
-review.
+review. If the full reference itself should carry the coverage appendix, build
+it with `api.to_help_book(..., include_coverage=True)`.
 
 ```python
 from oodocs import Chapter, Document

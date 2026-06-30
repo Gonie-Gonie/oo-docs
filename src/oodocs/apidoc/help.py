@@ -395,7 +395,7 @@ def api_package_to_help_book(
     presentation: str | ApiPresentationProfile = "help",
     settings: object | None = None,
     citations: object | None = None,
-    include_coverage: bool = True,
+    include_coverage: bool = False,
     include_uncategorized_appendix: bool = True,
     max_heading_level: int | None = None,
 ) -> Document:
@@ -413,7 +413,9 @@ def api_package_to_help_book(
         settings: Optional document settings passed to ``Document``.
         citations: Optional citation library passed to ``Document``.
         include_coverage: Whether to append API documentation coverage evidence
-            after category pages.
+            after category pages. Defaults to ``False`` so user-facing API
+            references keep coverage evidence in sidecars unless explicitly
+            requested.
         include_uncategorized_appendix: Whether to append public API objects
             not assigned to a category before coverage evidence.
         max_heading_level: Optional deepest heading level for the table of contents and
@@ -474,7 +476,7 @@ def api_package_to_help_book(
             )
         )
     if include_coverage:
-        children.append(check_api_docs(api).to_section())
+        children.append(check_api_docs(api).to_chapter())
     return Document(
         title or f"{api.name} API Reference",
         *children,

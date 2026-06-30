@@ -129,9 +129,8 @@ def test_griffe_collector_uses_auto_parser_object_on_mixed_repo(tmp_path) -> Non
             "2 Public API",
             "2.1 mixedpkg.Client",
             "2.4 mixedpkg.core.Client",
-            "3 API Documentation Coverage",
         ),
-        min_tables=6,
+        min_tables=5,
     )
     assert_pdf_text_and_pages(
         outputs["pdf"],
@@ -146,6 +145,7 @@ def test_griffe_collector_uses_auto_parser_object_on_mixed_repo(tmp_path) -> Non
         outputs["html"],
         required_text=("mixedpkg.core.Client", "Base endpoint URL."),
     )
+    assert "API Documentation Coverage" not in outputs["html"].read_text(encoding="utf-8")
 
 
 def test_griffe_collector_uses_repo_local_custom_docstring_parser(tmp_path) -> None:

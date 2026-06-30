@@ -558,9 +558,8 @@ def test_general_repo_auto_parser_object_survives_build_config_json_roundtrip(
             "mixedpkg API Reference",
             "1 API Contents",
             "2 Public API",
-            "3 API Documentation Coverage",
         ),
-        min_tables=6,
+        min_tables=5,
     )
     assert_pdf_text_and_pages(
         outputs["pdf"],
@@ -572,6 +571,7 @@ def test_general_repo_auto_parser_object_survives_build_config_json_roundtrip(
         min_pages=1,
     )
     assert_html_internal_links_resolve(outputs["html"], required_text=("mixedpkg.Client",))
+    assert "API Documentation Coverage" not in outputs["html"].read_text(encoding="utf-8")
 
 
 def test_general_repo_facades_select_module_and_object_from_target_path(
@@ -762,15 +762,13 @@ def test_general_repo_package_help_book_helper_builds_complete_reference(tmp_pat
             "2 Public API",
             "2.1 mixedpkg.Client",
             "2.2 mixedpkg.connect",
-            "3 API Documentation Coverage",
         ),
-        min_tables=6,
+        min_tables=5,
     )
     assert_pdf_text_and_pages(
         outputs["pdf"],
         required_text=(
             "mixedpkg API Reference",
-            "API Documentation Coverage",
             "mixedpkg.Client",
             "mixedpkg.connect",
         ),
@@ -778,7 +776,7 @@ def test_general_repo_package_help_book_helper_builds_complete_reference(tmp_pat
     )
     assert "mixedpkg API Reference" in html
     assert "API Contents" in html
-    assert "API Documentation Coverage" in html
+    assert "API Documentation Coverage" not in html
     assert "mixedpkg.Client" in html
     assert "mixedpkg.connect" in html
     assert_html_internal_links_resolve(outputs["html"])
@@ -1043,15 +1041,13 @@ def test_general_python_file_module_targets_build_reference_and_example(
             "2 Public API",
             "2.1 singlemod.Client",
             "2.2 singlemod.connect",
-            "3 API Documentation Coverage",
         ),
-        min_tables=6,
+        min_tables=5,
     )
     assert_pdf_text_and_pages(
         cli_pdf,
         required_text=(
             "singlemod API Reference",
-            "API Documentation Coverage",
             "singlemod.Client",
             "singlemod.connect",
         ),
@@ -1060,6 +1056,7 @@ def test_general_python_file_module_targets_build_reference_and_example(
     assert cli_html.exists()
     assert cli_api_object_tree_json.exists()
     assert cli_api_coverage_json.exists()
+    assert "API Documentation Coverage" not in cli_html.read_text(encoding="utf-8")
     assert_html_internal_links_resolve(cli_html)
     assert (
         ApiPackage.load_json(cli_api_object_tree_json).find_object("singlemod.Client.connect")
@@ -1441,20 +1438,19 @@ def test_general_packaging_variants_build_complete_cli_reference(
             f"{expected_package} API Reference",
             "1 API Contents",
             "2 Public API",
-            "3 API Documentation Coverage",
         ),
-        min_tables=2,
+        min_tables=1,
     )
     assert_pdf_text_and_pages(
         pdf_path,
         required_text=(
             f"{expected_package} API Reference",
-            "API Documentation Coverage",
             *expected_qualnames,
         ),
         min_pages=1,
     )
     html = html_path.read_text(encoding="utf-8")
+    assert "API Documentation Coverage" not in html
     for qualname in expected_qualnames:
         assert qualname in html
     for text in forbidden_html:
@@ -1673,15 +1669,13 @@ def test_build_config_save_all_targets_repo_with_parser_modules(
             "2 Public API",
             "2.1 briefpkg.Runner",
             "2.2 briefpkg.run",
-            "3 API Documentation Coverage",
         ),
-        min_tables=2,
+        min_tables=1,
     )
     assert_pdf_text_and_pages(
         outputs["pdf"],
         required_text=(
             "briefpkg API Reference",
-            "API Documentation Coverage",
             "brief:Runner class.",
             "brief:Run custom command.",
         ),
@@ -1691,6 +1685,7 @@ def test_build_config_save_all_targets_repo_with_parser_modules(
         outputs["html"],
         required_text=("brief:Run custom command.",),
     )
+    assert "API Documentation Coverage" not in outputs["html"].read_text(encoding="utf-8")
     saved_api = ApiPackage.load_json(outputs["api_object_tree_json"])
     saved_run = saved_api.find_object("briefpkg.run")
     assert saved_run is not None
