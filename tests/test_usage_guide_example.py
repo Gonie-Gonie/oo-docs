@@ -136,6 +136,8 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert any("TableCell(rowspan=...)" in text for text in paragraph_texts)
     assert any("rowspan=2" in text for text in paragraph_texts)
     assert any('style="booktabs"' in text for text in paragraph_texts)
+    assert "top_rule, header_rule, bottom_rule" in table_text
+    assert "publication-style horizontal rules without vertical grid lines" in table_text
     assert any("ColumnSpec(key=" in text for text in paragraph_texts)
     assert any("full_matrix.save_csv" in text for text in paragraph_texts)
     assert any("'tbp'" in text or 'placement="tbp"' in text for text in paragraph_texts)
@@ -257,6 +259,8 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "TableCell(rowspan=...)" in pdf_text
     assert "rowspan=2" in pdf_text
     assert 'style="booktabs"' in pdf_text
+    assert "top_rule" in pdf_text
+    assert "vertical grid" in pdf_text
     assert "ColumnSpec(key=" in pdf_text
     assert "full_matrix.save_csv" in pdf_text
     assert ("'tbp'" in pdf_text) or ('placement="tbp"' in pdf_text)
@@ -361,6 +365,8 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "grouped_headers" in normalized_html_text
     assert "rowspan" in normalized_html_text
     assert 'style="booktabs"' in normalized_html_text
+    assert "top_rule, header_rule, bottom_rule" in normalized_html_text
+    assert "publication-style horizontal rules without vertical grid lines" in normalized_html_text
     assert "ColumnSpec" in normalized_html_text
     assert "save_csv" in normalized_html_text
     assert ("'tbp'" in normalized_html_text) or ('placement="tbp"' in normalized_html_text)

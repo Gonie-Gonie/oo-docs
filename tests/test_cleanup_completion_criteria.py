@@ -175,6 +175,20 @@ def test_readme_latex_translations_include_appendix_policy() -> None:
     assert "table and figure counters stay document-wide" in translations
 
 
+def test_readme_latex_translations_include_booktabs_policy() -> None:
+    readme = _readme()
+    translations = readme.split("Common translations:", 1)[1].split(
+        "The main payoff",
+        1,
+    )[0]
+
+    assert "LaTeX `booktabs`" in translations
+    assert "`Table(..., style=\"booktabs\")`" in translations
+    assert "`TableStyle.booktabs()`" in translations
+    assert "`top_rule`, `header_rule`, and `bottom_rule`" in translations
+    assert "horizontal rules without vertical grid lines" in translations
+
+
 def test_public_api_policy_doc_defines_tiers_and_guards() -> None:
     policy = Path("docs/reference/public-api-policy.md").read_text(encoding="utf-8")
 

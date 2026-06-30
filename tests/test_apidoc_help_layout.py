@@ -136,6 +136,10 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "toc = TableOfContents(" in text
     assert "scope=\"document\"" in text
     assert "level_styles={1: TableOfContentsLevelStyle(bold=True)}" in text
+    assert "TableStyle.booktabs" in text
+    assert "top_rule" in text
+    assert "header_rule" in text
+    assert "bottom_rule" in text
 
 
 def test_help_book_renders_uncategorized_api_appendix_from_category_gate() -> None:
