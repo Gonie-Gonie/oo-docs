@@ -26,7 +26,7 @@ from oodocs.components.generated import (
     ListOfAlgorithms,
     ListOfFigures,
     FootnoteList,
-    ReferenceList,
+    ListOfReferences,
     ListOfTables,
     TableOfContents,
 )
@@ -370,7 +370,7 @@ class RenderIndex:
 
     def reference_entries(
         self,
-        block: ReferenceList,
+        block: ListOfReferences,
         *,
         reference_sort: str = "citation",
     ) -> list[CitationReferenceEntry]:
@@ -1355,7 +1355,7 @@ def _index_blocks(
                 ListOfTables,
                 ListOfFigures,
                 ListOfAlgorithms,
-                ReferenceList,
+                ListOfReferences,
                 CommentList,
                 FootnoteList,
                 TableOfContents,

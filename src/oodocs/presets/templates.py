@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 
 from oodocs.components.base import Block, BlockInput, coerce_blocks
 from oodocs.components.blocks import Appendix, Chapter, Paragraph, Part, Section
-from oodocs.components.generated import ReferenceList, TableOfContents
+from oodocs.components.generated import ListOfReferences, TableOfContents
 from oodocs.components.inline import InlineInput, Text, bold
 from oodocs.components.people import AuthorInput, AuthorLayout
 from oodocs.components.positioning import PositionedItem, Shape, TextBox
@@ -264,7 +264,7 @@ class JournalArticleTemplate:
         if data_availability is not None:
             children.append(self._statement_section("Data Availability", data_availability))
         if include_references_value:
-            children.append(ReferenceList())
+            children.append(ListOfReferences())
 
         settings = DocumentSettings(
             authors=authors,
@@ -757,7 +757,7 @@ class TechnicalReportTemplate:
             children.append(Appendix(*_coerce_chapters(appendices)))
         children.extend(_template_content_blocks(back_matter))
         if include_references_value:
-            children.append(ReferenceList())
+            children.append(ListOfReferences())
 
         settings = DocumentSettings(
             authors=authors,
@@ -859,7 +859,7 @@ class SoftwareManualTemplate:
             children.append(Appendix(*_coerce_chapters(appendices)))
         children.extend(_template_content_blocks(back_matter))
         if include_references_value:
-            children.append(ReferenceList())
+            children.append(ListOfReferences())
 
         settings = DocumentSettings(
             authors=authors,
@@ -960,7 +960,7 @@ class BookTemplate:
             children.append(Appendix(*_coerce_chapters(appendices)))
         children.extend(_template_content_blocks(back_matter))
         if include_references_value:
-            children.append(ReferenceList())
+            children.append(ListOfReferences())
 
         settings = DocumentSettings(
             authors=authors,

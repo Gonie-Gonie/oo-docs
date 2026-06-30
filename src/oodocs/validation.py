@@ -43,7 +43,7 @@ from oodocs.components.generated import (
     ListOfAlgorithms,
     ListOfFigures,
     FootnoteList,
-    ReferenceList,
+    ListOfReferences,
     ListOfTables,
     TableOfContents,
 )
@@ -936,7 +936,7 @@ class _ValidationContext:
                 ListOfFigures,
                 ListOfAlgorithms,
                 GlossaryList,
-                ReferenceList,
+                ListOfReferences,
                 CommentList,
                 FootnoteList,
                 TableOfContents,
@@ -1743,7 +1743,7 @@ class _ValidationContext:
                     )
                 continue
             if (
-                isinstance(page, ReferenceList)
+                isinstance(page, ListOfReferences)
                 and not render_index.reference_entries(
                     page,
                     reference_sort=self.document.settings.theme.citations.reference_sort,
@@ -1752,7 +1752,7 @@ class _ValidationContext:
                 self._add(
                     "warning",
                     "empty-references-page",
-                    "ReferenceList has no sources to display.",
+                    "ListOfReferences has no sources to display.",
                     path,
                 )
                 continue

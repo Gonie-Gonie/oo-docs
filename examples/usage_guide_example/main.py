@@ -45,7 +45,7 @@ from oodocs import (
     Padding,
     Paragraph,
     Part,
-    ReferenceList,
+    ListOfReferences,
     Section,
     StrokeStyle,
     SubFigure,
@@ -1012,7 +1012,7 @@ def build_usage_guide_document() -> Document:
             ["enumitem", "NumberedList(start=...), NumberedList(resume_from=...), or ListStyle(...)", "List spacing, marker formatting, and resumed numbering are explicit Python options instead of package-level state."],
             ["glossaries, acronym, or nomencl", "Glossary() and GlossaryList(glossary) from oodocs.glossary, or Nomenclature(...)", "Terms and acronyms live in a Python registry; symbol tables can still use the boxed Nomenclature preset."],
             ["tcolorbox", "Box(..., icon=..., title_position='side') or CalloutBox(variant='danger')", "Report panels remain editable in Word while keeping a similar grouped visual shape in PDF and HTML."],
-            ["BibTeX plus \\cite", "CitationLibrary.from_bibtex_file(...), CitationSource.cite(...), and ReferenceList()", "Citations are authored inline, BibTeX files can seed the library, and ReferenceList can stay cited-only or include uncited entries."],
+            ["BibTeX plus \\cite", "CitationLibrary.from_bibtex_file(...), CitationSource.cite(...), and ListOfReferences()", "Citations are authored inline, BibTeX files can seed the library, and ListOfReferences can stay cited-only or include uncited entries."],
         ],
         caption="LaTeX habits translated into oodocs's Python-first authoring model.",
         column_widths=[1.9, 2.1, 2.8],
@@ -1034,7 +1034,7 @@ def build_usage_guide_document() -> Document:
             ["TableOfContents()", "Creates a navigable outline from authored headings.", "Place the block where the contents page should appear."],
             ["ListOfTables() / ListOfFigures() / ListOfAlgorithms()", "Collects numbered captions or algorithms in a stable order with page labels in DOCX and PDF.", "Use numbered tables, figures, or algorithms earlier in the document; pass show_page_numbers=False for a link-only list."],
             ["CommentList()", "Exports reviewer comments without disturbing reading flow.", Comment.annotated("Place review remarks inline", "CommentList() collects these review notes onto a dedicated generated page.")],
-            ["ReferenceList()", "Renders cited bibliography entries by default.", "Cite items from CitationLibrary or CitationSource; pass include_uncited=True to include the whole library."],
+            ["ListOfReferences()", "Renders cited bibliography entries by default.", "Cite items from CitationLibrary or CitationSource; pass include_uncited=True to include the whole library."],
             ["GlossaryList(glossary)", "Renders registered terms and acronyms as a generated table.", "Use glossary.term(...), glossary.acronym(...), and glossary.use(...) while authoring the body."],
         ],
         caption="Generated pages that help a long document stay navigable.",
@@ -1885,7 +1885,7 @@ def build_usage_guide_document() -> Document:
                 ),
                 Paragraph(
                     "Only cited sources are rendered on the final references page by default. Pass ",
-                    inline_code("ReferenceList(include_uncited=True)"),
+                    inline_code("ListOfReferences(include_uncited=True)"),
                     " when a document should include the whole citation library."
                 ),
                 Paragraph(
@@ -2230,7 +2230,7 @@ def build_usage_guide_document() -> Document:
             ),
         ),
         CommentList(),
-        ReferenceList(),
+        ListOfReferences(),
         settings=DocumentSettings(
             metadata=DocumentMetadata(
                 author="OODocs Contributors",

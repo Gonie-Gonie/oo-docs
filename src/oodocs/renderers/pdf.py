@@ -74,7 +74,7 @@ from oodocs.components.generated import (
     ListOfAlgorithms,
     ListOfFigures,
     FootnoteList,
-    ReferenceList,
+    ListOfReferences,
     ListOfTables,
     TableOfContents,
     TocLevelStyle,
@@ -1801,7 +1801,7 @@ class PdfRenderer:
 
     def render_reference_list(
         self,
-        block: ReferenceList,
+        block: ListOfReferences,
         context: PdfRenderContext,
     ) -> list[object]:
         """Render the generated references page into PDF flowables.
@@ -2370,7 +2370,7 @@ class PdfRenderer:
                 CommentList,
                 FootnoteList,
                 GlossaryList,
-                ReferenceList,
+                ListOfReferences,
                 TableOfContents,
                 ListOfTables,
                 ListOfFigures,
@@ -4211,7 +4211,7 @@ class PdfRenderer:
 
     def _render_reference_list(
         self,
-        block: ReferenceList,
+        block: ListOfReferences,
         theme: Theme,
         styles: object,
         render_index: RenderIndex,
@@ -4219,7 +4219,7 @@ class PdfRenderer:
         level = theme.generated_content.generated_heading_level
         bold, italic = theme.resolve_heading_emphasis(level)
         title_style = RLParagraphStyle(
-            "ReferenceListTitle",
+            "ListOfReferencesTitle",
             parent=styles["Heading1"],
             fontName=self._resolve_font(theme.resolve_body_font(), bold, italic),
             fontSize=theme.resolve_heading_size(level),
@@ -4244,7 +4244,7 @@ class PdfRenderer:
             RLPageBreak(),
             RLParagraph(
                 self._inline_markup(
-                    block.title or [Text(theme.resolve_generated_page_title("reference_list"))],
+                    block.title or [Text(theme.resolve_generated_page_title("list_of_references"))],
                     theme,
                     render_index,
                     base_font_name=title_style.fontName,

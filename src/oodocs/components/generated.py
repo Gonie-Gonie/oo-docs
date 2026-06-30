@@ -353,7 +353,7 @@ class ListOfAlgorithms(Block):
 
 
 @dataclass(slots=True, init=False)
-class ReferenceList(Block):
+class ListOfReferences(Block):
     """Generated reference list for bibliography entries.
 
     Args:
@@ -372,9 +372,9 @@ class ReferenceList(Block):
 
     Examples:
         ```python
-        from oodocs import Document, ReferenceList
+        from oodocs import Document, ListOfReferences
 
-        doc = Document("Paper", ReferenceList("Bibliography"))
+        doc = Document("Paper", ListOfReferences("Bibliography"))
         ```
     """
 
@@ -820,7 +820,7 @@ __all__ = [
     "ListOfAlgorithms",
     "ListOfFigures",
     "FootnoteList",
-    "ReferenceList",
+    "ListOfReferences",
     "ListOfTables",
     "TableOfContents",
     "TocLevelStyleInput",

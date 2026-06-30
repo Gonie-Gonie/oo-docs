@@ -30,7 +30,7 @@ from oodocs.components.generated import (
     ListOfAlgorithms,
     ListOfFigures,
     FootnoteList,
-    ReferenceList,
+    ListOfReferences,
     ListOfTables,
     TableOfContents,
     TocLevelStyle,
@@ -1326,7 +1326,7 @@ class HtmlRenderer:
 
     def render_reference_list(
         self,
-        block: ReferenceList,
+        block: ListOfReferences,
         context: HtmlRenderContext,
     ) -> str:
         """Render the generated references page into HTML.
@@ -1364,7 +1364,7 @@ class HtmlRenderer:
             )
         )
         return self._generated_page_html(
-            title=block.title or [Text(context.theme.resolve_generated_page_title("reference_list"))],
+            title=block.title or [Text(context.theme.resolve_generated_page_title("list_of_references"))],
             body=entries,
             context=context,
             section_class="oodocs-generated-page oodocs-references-page",
@@ -2823,7 +2823,7 @@ class HtmlRenderer:
             CommentList,
             FootnoteList,
             GlossaryList,
-            ReferenceList,
+            ListOfReferences,
             TableOfContents,
             ListOfTables,
             ListOfFigures,

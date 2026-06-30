@@ -393,8 +393,8 @@
           "category": "generated-page",
           "kind": "class",
           "module": "oodocs.components.generated",
-          "name": "ReferenceList",
-          "qualname": "oodocs.components.generated.ReferenceList"
+          "name": "ListOfReferences",
+          "qualname": "oodocs.components.generated.ListOfReferences"
         },
         {
           "category": "validation",

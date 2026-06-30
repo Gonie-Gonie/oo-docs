@@ -436,7 +436,7 @@ class GeneratedContentDefaults:
         list_of_algorithms_title: Default title for generated algorithm lists.
         comment_list_title: Default title for generated comment lists.
         footnote_list_title: Default title for generated footnote lists.
-        reference_list_title: Default title for generated reference lists.
+        list_of_references_title: Default title for generated reference lists.
         glossary_list_title: Default title for generated glossary lists.
         table_of_contents_title: Default title for generated tables of contents.
         generated_heading_level: Heading level used by generated content.
@@ -445,10 +445,10 @@ class GeneratedContentDefaults:
 
     Examples:
         ```python
-        from oodocs import Document, DocumentSettings, GeneratedContentDefaults, ReferenceList, Theme
+        from oodocs import Document, DocumentSettings, GeneratedContentDefaults, ListOfReferences, Theme
 
-        theme = Theme(generated_content=GeneratedContentDefaults(reference_list_title="Bibliography"))
-        document = Document("Paper", ReferenceList(), settings=DocumentSettings(theme=theme))
+        theme = Theme(generated_content=GeneratedContentDefaults(list_of_references_title="Bibliography"))
+        document = Document("Paper", ListOfReferences(), settings=DocumentSettings(theme=theme))
         ```
     """
 
@@ -457,7 +457,7 @@ class GeneratedContentDefaults:
     list_of_algorithms_title: str = "List of Algorithms"
     comment_list_title: str = "Comments"
     footnote_list_title: str = "Footnotes"
-    reference_list_title: str = "References"
+    list_of_references_title: str = "References"
     glossary_list_title: str = "Glossary"
     table_of_contents_title: str = "Contents"
     generated_heading_level: int = 2
@@ -577,7 +577,7 @@ class LocaleDefaults:
                     list_of_algorithms_title="알고리즘 목록",
                     comment_list_title="주석",
                     footnote_list_title="각주",
-                    reference_list_title="참고문헌",
+                    list_of_references_title="참고문헌",
                     glossary_list_title="용어집",
                     table_of_contents_title="목차",
                 ),
@@ -1004,13 +1004,13 @@ class Theme:
         Customize generated content titles and page numbers together:
 
         ```python
-        from oodocs import Document, DocumentSettings, GeneratedContentDefaults, PageNumberDefaults, ReferenceList, Theme
+        from oodocs import Document, DocumentSettings, GeneratedContentDefaults, PageNumberDefaults, ListOfReferences, Theme
 
         theme = Theme(
-            generated_content=GeneratedContentDefaults(reference_list_title="Bibliography"),
+            generated_content=GeneratedContentDefaults(list_of_references_title="Bibliography"),
             page_numbers=PageNumberDefaults(show_page_numbers=True, page_number_template="Page {page}"),
         )
-        document = Document("Paper", ReferenceList(), settings=DocumentSettings(theme=theme))
+        document = Document("Paper", ListOfReferences(), settings=DocumentSettings(theme=theme))
         ```
 
     Notes:
@@ -1372,7 +1372,7 @@ class Theme:
             "list_of_algorithms",
             "comment_list",
             "footnote_list",
-            "reference_list",
+            "list_of_references",
             "glossary_list",
             "table_of_contents",
         ],
@@ -1384,7 +1384,7 @@ class Theme:
                 ``"list_of_tables"``, ``"list_of_figures"``,
                 ``"list_of_algorithms"``,
                 ``"comment_list"``, ``"footnote_list"``,
-                ``"reference_list"``, ``"glossary_list"``, and
+                ``"list_of_references"``, ``"glossary_list"``, and
                 ``"table_of_contents"``.
 
         Returns:
@@ -1398,9 +1398,9 @@ class Theme:
             from oodocs import GeneratedContentDefaults, Theme
 
             theme = Theme(
-                generated_content=GeneratedContentDefaults(reference_list_title="Bibliography")
+                generated_content=GeneratedContentDefaults(list_of_references_title="Bibliography")
             )
-            assert theme.resolve_generated_page_title("reference_list") == "Bibliography"
+            assert theme.resolve_generated_page_title("list_of_references") == "Bibliography"
             ```
         """
 
@@ -1410,7 +1410,7 @@ class Theme:
             "list_of_algorithms": self.generated_content.list_of_algorithms_title,
             "comment_list": self.generated_content.comment_list_title,
             "footnote_list": self.generated_content.footnote_list_title,
-            "reference_list": self.generated_content.reference_list_title,
+            "list_of_references": self.generated_content.list_of_references_title,
             "glossary_list": self.generated_content.glossary_list_title,
             "table_of_contents": self.generated_content.table_of_contents_title,
         }

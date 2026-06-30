@@ -244,12 +244,12 @@ def test_theme_resolves_generated_page_titles() -> None:
     theme = Theme(
         generated_content=GeneratedContentDefaults(
             list_of_tables_title="Tables",
-            reference_list_title="Bibliography",
+            list_of_references_title="Bibliography",
         )
     )
 
     assert theme.resolve_generated_page_title("list_of_tables") == "Tables"
-    assert theme.resolve_generated_page_title("reference_list") == "Bibliography"
+    assert theme.resolve_generated_page_title("list_of_references") == "Bibliography"
 
     with pytest.raises(ValueError, match="unsupported generated content kind"):
         theme.resolve_generated_page_title("appendix")
@@ -264,7 +264,7 @@ def test_theme_from_locale_resolves_korean_labels_dates_and_font_guidance() -> N
     assert theme.resolve_caption_label("table", "caption") == "표"
     assert theme.resolve_caption_label("figure", "reference") == "그림"
     assert theme.resolve_generated_page_title("table_of_contents") == "목차"
-    assert theme.resolve_generated_page_title("reference_list") == "참고문헌"
+    assert theme.resolve_generated_page_title("list_of_references") == "참고문헌"
     assert theme.resolve_generated_page_title("glossary_list") == "용어집"
     assert theme.resolve_glossary_headers() == ("용어", "정의")
     assert theme.format_date(date(2026, 6, 29)) == "2026. 6. 29."

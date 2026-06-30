@@ -59,7 +59,7 @@ CORE_TOP_LEVEL_EXPORTS = frozenset(
         "Paragraph",
         "ParagraphStyle",
         "Part",
-        "ReferenceList",
+        "ListOfReferences",
         "Section",
         "StrokeStyle",
         "StyleSheet",

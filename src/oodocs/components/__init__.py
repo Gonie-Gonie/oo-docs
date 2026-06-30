@@ -68,7 +68,7 @@ _EXPORTS = {
     "ReactionEquation": "oodocs.components.blocks",
     "ReferenceFormat": "oodocs.components.inline",
     "ReferenceGroup": "oodocs.components.inline",
-    "ReferenceList": "oodocs.components.generated",
+    "ListOfReferences": "oodocs.components.generated",
     "Remark": "oodocs.components.blocks",
     "Section": "oodocs.components.blocks",
     "Shape": "oodocs.components.positioning",

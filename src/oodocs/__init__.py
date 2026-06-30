@@ -23,7 +23,7 @@ from oodocs.components.blocks import (
 )
 from oodocs.components.generated import (
     ListOfFigures,
-    ReferenceList,
+    ListOfReferences,
     ListOfTables,
     TableOfContents,
 )
@@ -193,7 +193,7 @@ __all__ = [
     "Part",
     "ParagraphStyle",
     "RunInTitleStyle",
-    "ReferenceList",
+    "ListOfReferences",
     "ResultLike",
     "OutputBundle",
     "Section",

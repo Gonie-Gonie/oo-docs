@@ -51,7 +51,7 @@ OODocs_API_CATEGORIES: tuple[ApiCategory, ...] = (
             "oodocs.ListOfTables",
             "oodocs.ListOfFigures",
             "oodocs.glossary.*",
-            "oodocs.ReferenceList",
+            "oodocs.ListOfReferences",
             "oodocs.engineering.Algorithm",
             "oodocs.structure.*",
             "oodocs.components.blocks.*",

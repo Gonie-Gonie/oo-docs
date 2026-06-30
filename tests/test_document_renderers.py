@@ -120,7 +120,7 @@ from oodocs import (
     ParagraphStyle,
     RunInTitleStyle,
     Part,
-    ReferenceList,
+    ListOfReferences,
     Section,
     StrokeStyle,
     StyleSheet,
@@ -707,9 +707,9 @@ def test_theme_accepts_grouped_defaults_objects() -> None:
     keyword_group = Theme(typography=TypographyDefaults(body_font_name="Aptos"))
     assert keyword_group.typography.body_font_name == "Aptos"
     generated_keyword_group = Theme(
-        generated_content=GeneratedContentDefaults(reference_list_title="Bibliography")
+        generated_content=GeneratedContentDefaults(list_of_references_title="Bibliography")
     )
-    assert generated_keyword_group.generated_content.reference_list_title == "Bibliography"
+    assert generated_keyword_group.generated_content.list_of_references_title == "Bibliography"
     try:
         Theme(typography=object())  # type: ignore[arg-type]
     except TypeError as exc:
@@ -1492,7 +1492,7 @@ def test_locale_theme_localizes_html_language_and_generated_labels(tmp_path: Pat
         table,
         ListOfTables(),
         GlossaryList(glossary),
-        ReferenceList(),
+        ListOfReferences(),
         settings=DocumentSettings(theme=Theme.from_locale("ko-KR")),
         citations=[source],
     )
@@ -3273,7 +3273,7 @@ def test_component_and_template_presets_build_renderable_documents(tmp_path: Pat
     )
     assert report_main_matter[0].plain_title() == "Findings"
     assert any(isinstance(child, Appendix) for child in report_main_matter)
-    assert not any(isinstance(child, ReferenceList) for child in report_document.body.children)
+    assert not any(isinstance(child, ListOfReferences) for child in report_document.body.children)
 
     manual_document = SoftwareManualTemplate().build(
         "Command Manual",
@@ -3289,7 +3289,7 @@ def test_component_and_template_presets_build_renderable_documents(tmp_path: Pat
     ]
     assert "Overview" in manual_titles
     assert "Install" in manual_titles
-    assert not any(isinstance(child, ReferenceList) for child in manual_document.body.children)
+    assert not any(isinstance(child, ListOfReferences) for child in manual_document.body.children)
 
     book_document = BookTemplate(include_references=True).build(
         "Engineering Handbook",
@@ -3319,7 +3319,7 @@ def test_component_and_template_presets_build_renderable_documents(tmp_path: Pat
         for child in book_main_matter
     )
     assert any(isinstance(child, Appendix) for child in book_main_matter)
-    assert any(isinstance(child, ReferenceList) for child in book_document.body.children)
+    assert any(isinstance(child, ListOfReferences) for child in book_document.body.children)
 
     cover_preset = CoverPagePreset.eplus_simple(footer_label="Internal Review")
     cover_settings = cover_preset.settings(
@@ -4355,7 +4355,7 @@ def test_citation_and_reference_styles_can_be_configured(tmp_path: Path) -> None
     document = Document(
         "Citation Style Test",
         Paragraph("Prior work ", cite("knuth"), " remains relevant."),
-        ReferenceList(),
+        ListOfReferences(),
         settings=DocumentSettings(
             theme=Theme(citations=CitationDefaults(citation_style="apa", reference_style="apa")),
         ),
@@ -4412,7 +4412,7 @@ def test_reference_list_can_include_uncited_entries_and_sort(tmp_path: Path) -> 
     document = Document(
         "Reference Policy",
         Paragraph("Cited work ", cite("beta"), "."),
-        ReferenceList(include_uncited=True),
+        ListOfReferences(include_uncited=True),
         settings=DocumentSettings(
             theme=Theme(
                 citations=CitationDefaults(
@@ -5161,7 +5161,7 @@ def test_document_renders_to_docx_and_pdf(tmp_path: Path) -> None:
         ListOfTables(),
         ListOfFigures(),
         CommentList(),
-        ReferenceList(),
+        ListOfReferences(),
         settings=DocumentSettings(
             metadata_author="pytest",
             summary="Renderer integration test",

@@ -27,7 +27,7 @@ from oodocs import (
     OutputBundle,
     PageNumberDefaults,
     Paragraph,
-    ReferenceList,
+    ListOfReferences,
     Section,
     SubFigure,
     SubFigureGroup,
@@ -463,7 +463,7 @@ def build_journal_paper_document(inputs: ManuscriptInputs | None = None) -> Docu
             level=2,
             numbered=False,
         ),
-        ReferenceList(include_uncited=True),
+        ListOfReferences(include_uncited=True),
         settings=DocumentSettings(
             summary="Journal-style development philosophy paper",
             authors=[

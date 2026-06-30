@@ -55,7 +55,7 @@ from oodocs.components.generated import (
     ListOfAlgorithms,
     ListOfFigures,
     FootnoteList,
-    ReferenceList,
+    ListOfReferences,
     ListOfTables,
     TableOfContents,
     TocLevelStyle,
@@ -792,7 +792,7 @@ class DocxRenderer:
 
     def render_reference_list(
         self,
-        block: ReferenceList,
+        block: ListOfReferences,
         context: DocxRenderContext,
     ) -> None:
         """Render the generated references page into the DOCX document.
@@ -1531,7 +1531,7 @@ class DocxRenderer:
                 CommentList,
                 FootnoteList,
                 GlossaryList,
-                ReferenceList,
+                ListOfReferences,
                 TableOfContents,
                 ListOfTables,
                 ListOfFigures,
@@ -3854,12 +3854,12 @@ class DocxRenderer:
     def _render_reference_list(
         self,
         word_document: WordDocument,
-        block: ReferenceList,
+        block: ListOfReferences,
         theme: Theme,
         render_index: RenderIndex,
     ) -> None:
         word_document.add_page_break()
-        self._add_heading(word_document, block.title or [Text(theme.resolve_generated_page_title("reference_list"))], level=theme.generated_content.generated_heading_level, theme=theme, number_label=None)
+        self._add_heading(word_document, block.title or [Text(theme.resolve_generated_page_title("list_of_references"))], level=theme.generated_content.generated_heading_level, theme=theme, number_label=None)
         for entry in render_index.reference_entries(block, reference_sort=theme.citations.reference_sort):
             paragraph = word_document.add_paragraph()
             paragraph.paragraph_format.left_indent = Inches(0.3)

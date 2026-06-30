@@ -8,7 +8,7 @@ from oodocs.components.generated import (
     GlossaryList,
     ListOfAlgorithms,
     ListOfFigures,
-    ReferenceList,
+    ListOfReferences,
     ListOfTables,
     TableOfContents,
     TocLevelStyle,
@@ -21,7 +21,7 @@ __all__ = [
     "ListOfAlgorithms",
     "ListOfFigures",
     "ListOfTables",
-    "ReferenceList",
+    "ListOfReferences",
     "TableOfContents",
     "TocLevelStyle",
 ]
