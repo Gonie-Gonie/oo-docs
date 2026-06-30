@@ -295,6 +295,14 @@ def test_preset_namespaces_keep_component_and_template_boundaries() -> None:
     for name in template_preset_names:
         assert getattr(presets, name) is getattr(preset_templates, name)
 
+    cover = preset_templates.CoverPagePreset.eplus_simple()
+    settings_parameters = set(inspect.signature(cover.settings).parameters)
+
+    assert "overlays" in settings_parameters
+    assert "page_items" not in settings_parameters
+    assert hasattr(cover, "overlays")
+    assert not hasattr(cover, "page_items")
+
 
 def test_top_level_public_api_uses_completed_canonical_names() -> None:
     forbidden = {

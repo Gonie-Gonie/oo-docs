@@ -579,11 +579,11 @@ class CoverPagePreset:
             theme=theme or _default_cover_theme(),
         )
 
-    def page_items(self) -> tuple[PositionedItem, ...]:
+    def overlays(self) -> tuple[PositionedItem, ...]:
         """Return cover-scoped page decorations for this preset.
 
         Returns:
-            Page-positioned items scoped to the cover page.
+            Page-positioned overlays scoped to the cover page.
         """
 
         page_width = self.page_layout.page_width_in_inches("in")
@@ -637,7 +637,6 @@ class CoverPagePreset:
         subtitle: InlineInput | None = None,
         authors: Sequence[AuthorInput] | None = None,
         overlays: Sequence[PositionedItem] | None = None,
-        page_items: Sequence[PositionedItem] | None = None,
         theme: Theme | None = None,
     ) -> DocumentSettings:
         """Return ``DocumentSettings`` configured for this cover preset.
@@ -647,16 +646,11 @@ class CoverPagePreset:
             subtitle: Optional visible subtitle.
             authors: Optional structured authors.
             overlays: Additional overlays appended after preset items.
-            page_items: Compatibility alias for ``overlays``.
             theme: Optional theme override for the returned settings.
 
         Returns:
             Document settings with cover page enabled.
         """
-
-        if overlays is not None and page_items is not None:
-            raise ValueError("overlays cannot be combined with page_items")
-        extra_items = overlays if overlays is not None else page_items
 
         return DocumentSettings(
             metadata=metadata,
@@ -667,7 +661,7 @@ class CoverPagePreset:
                 cover_page=True,
             ),
             page_layout=self.page_layout,
-            overlays=(*self.page_items(), *(extra_items or ())),
+            overlays=(*self.overlays(), *(overlays or ())),
             theme=theme or self.theme,
         )
 
