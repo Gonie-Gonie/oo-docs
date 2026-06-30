@@ -154,7 +154,10 @@ def test_leaf_component_modules_hide_internal_helpers_from_all() -> None:
         },
         media_components: {
             "build_table_layout",
+            "coerce_column_spec",
+            "coerce_crop_box",
             "coerce_image_source",
+            "coerce_table_cell",
             "image_source_to_buffer",
             "image_source_to_bytes",
             "normalize_media_placement",

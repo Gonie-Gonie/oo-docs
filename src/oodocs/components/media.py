@@ -3089,7 +3089,4 @@ __all__ = [
     "TableOverflowPolicy",
     "TableOverflowPolicyInput",
     "TableSplit",
-    "coerce_column_spec",
-    "coerce_crop_box",
-    "coerce_table_cell",
 ]
