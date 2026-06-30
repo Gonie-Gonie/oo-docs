@@ -129,6 +129,89 @@ class Block:
 BlockInput = Block | str | Sequence["BlockInput"] | None
 
 
+class Component(Block):
+    """Composable block extension base class.
+
+    Custom components can describe themselves with ordinary OODocs blocks by
+    overriding ``compose``. Renderers, validation, and document indexing then
+    operate on those composed blocks instead of requiring renderer hook
+    implementations.
+
+    Examples:
+        ```python
+        from oodocs import Paragraph, Table
+        from oodocs.components import Component
+
+        class EvidenceSummary(Component):
+            def compose(self):
+                table = Table(["Metric", "Value"], [["status", "pass"]])
+                return [Paragraph("Validation summary."), table]
+        ```
+    """
+
+    _composed_blocks_cache: tuple[Block, ...] | None = None
+
+    def compose(self) -> Iterable[BlockInput]:
+        """Return the ordinary blocks that implement this component.
+
+        Returns:
+            Block inputs accepted by normal document containers.
+
+        Raises:
+            NotImplementedError: Always raised by the base implementation.
+        """
+
+        raise NotImplementedError
+
+    def composed_blocks(self) -> tuple[Block, ...]:
+        """Return cached composed blocks for rendering and validation.
+
+        Returns:
+            Normalized block tuple produced by ``compose``.
+        """
+
+        if self._composed_blocks_cache is None:
+            self._composed_blocks_cache = tuple(coerce_blocks(self.compose()))
+        return self._composed_blocks_cache
+
+    def reset_composed_blocks(self) -> None:
+        """Clear cached composed blocks after mutating component state."""
+
+        self._composed_blocks_cache = None
+
+    def _render_to_docx(
+        self,
+        renderer: object,
+        container: object,
+        context: DocxRenderContext,
+    ) -> None:
+        """Render composed blocks into a DOCX container."""
+
+        for child in self.composed_blocks():
+            child._render_to_docx(renderer, container, context)
+
+    def _render_to_pdf(
+        self,
+        renderer: object,
+        context: PdfRenderContext,
+    ) -> list[object]:
+        """Render composed blocks into PDF flowables."""
+
+        story: list[object] = []
+        for child in self.composed_blocks():
+            story.extend(child._render_to_pdf(renderer, context))
+        return story
+
+    def _render_to_html(
+        self,
+        renderer: object,
+        context: HtmlRenderContext,
+    ) -> str:
+        """Render composed blocks into HTML markup."""
+
+        return "".join(child._render_to_html(renderer, context) for child in self.composed_blocks())
+
+
 def coerce_blocks(values: Iterable[BlockInput]) -> list[Block]:
     """Normalize supported block inputs into block objects.
 
@@ -282,4 +365,4 @@ class Body(Block):
         return "".join(child._render_to_html(renderer, context) for child in self.children)
 
 
-__all__ = ["Block", "BlockInput", "Body"]
+__all__ = ["Block", "BlockInput", "Body", "Component"]

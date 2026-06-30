@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Sequence
 
-from oodocs.components.base import Block
+from oodocs.components.base import Block, Component
 from oodocs.components.blocks import (
     Appendix,
     Box,
@@ -1265,6 +1265,18 @@ def _index_blocks(
     appendix: bool,
 ) -> None:
     for block in blocks:
+        if isinstance(block, Component):
+            _index_blocks(
+                block.composed_blocks(),
+                render_index,
+                citations,
+                theme,
+                heading_counters=heading_counters,
+                part_counter=part_counter,
+                scope=scope,
+                appendix=appendix,
+            )
+            continue
         if isinstance(block, Paragraph):
             if id(block) not in render_index.paragraph_numbers:
                 render_index.paragraph_numbers[id(block)] = len(render_index.paragraph_numbers) + 1

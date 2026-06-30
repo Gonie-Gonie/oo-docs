@@ -29,6 +29,7 @@ _EXPORTS = {
     "ColumnSpan": "oodocs.components.blocks",
     "ColumnSpec": "oodocs.components.media",
     "Comment": "oodocs.components.inline",
+    "Component": "oodocs.components.base",
     "Conjecture": "oodocs.components.blocks",
     "ListOfComments": "oodocs.components.generated",
     "Corollary": "oodocs.components.blocks",

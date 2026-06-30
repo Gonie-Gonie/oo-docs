@@ -19,7 +19,7 @@ from oodocs.compatibility import (
     format_output_formats,
     normalize_output_formats,
 )
-from oodocs.components.base import Block
+from oodocs.components.base import Block, Component
 from oodocs.components.blocks import (
     Appendix,
     Box,
@@ -1071,6 +1071,14 @@ class _ValidationContext:
         parent_level: int | None,
     ) -> None:
         self._register_block(block, path)
+
+        if isinstance(block, Component):
+            self._collect_blocks(
+                block.composed_blocks(),
+                f"{path}.composed_blocks",
+                parent_level=parent_level,
+            )
+            return
 
         if isinstance(block, Paragraph):
             self._register_referenceable(block, path)

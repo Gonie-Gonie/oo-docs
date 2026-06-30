@@ -1,7 +1,9 @@
 from __future__ import annotations
 
-from oodocs import Chapter, Document, Paragraph, Section, Table
-from oodocs.components.base import Body
+from pathlib import Path
+
+from oodocs import Chapter, Document, ListOfTables, Paragraph, Section, Table
+from oodocs.components.base import Body, Component
 from oodocs.layout.indexing import build_render_index
 
 
@@ -58,3 +60,43 @@ def test_builder_api_preserves_validation_paths() -> None:
         and issue.path == "document.body.children[0].children[0].caption"
         for issue in result.warnings
     )
+
+
+def test_component_compose_drives_validation_indexing_and_rendering(tmp_path: Path) -> None:
+    class EvidenceSummary(Component):
+        def __init__(self) -> None:
+            self.compose_calls = 0
+            self.table = Table(
+                ["Metric", "Value"],
+                [["status", "pass"]],
+                caption="Composed evidence table.",
+            )
+
+        def compose(self):
+            self.compose_calls += 1
+            return [
+                Paragraph("Composed summary."),
+                self.table,
+                Paragraph("See ", self.table.ref(), "."),
+            ]
+
+    summary = EvidenceSummary()
+    document = Document("Component Extension", summary, ListOfTables())
+
+    assert document.validate(formats=("docx", "pdf", "html")).ok
+    index = build_render_index(document)
+    assert index.table_number(summary.table) == 1
+    assert summary.compose_calls == 1
+
+    outputs = document.save_all(
+        tmp_path,
+        stem="component-extension",
+        formats=("docx", "pdf", "html"),
+    )
+
+    assert set(outputs.keys()) == {"docx", "pdf", "html"}
+    assert all(path.exists() and path.stat().st_size > 0 for path in outputs.values())
+    html = outputs["html"].read_text(encoding="utf-8")
+    assert "Composed summary." in html
+    assert "Composed evidence table." in html
+    assert summary.compose_calls == 1

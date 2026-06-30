@@ -139,8 +139,10 @@ def test_recommended_user_import_experience_keeps_domains_explicit() -> None:
 
     assert document.validate().ok
     assert not hasattr(oodocs, "Algorithm")
+    assert not hasattr(oodocs, "Component")
     assert not hasattr(oodocs, "Shape")
     assert not hasattr(oodocs, "Todo")
+    assert components.Component is base_components.Component
     assert engineering.Algorithm.__name__ == "Algorithm"
     assert positioning.Shape.__name__ == "Shape"
     assert positioning.TextBox.__name__ == "TextBox"
@@ -460,6 +462,7 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "ReferencesPage",
         "ReactionEquation",
         "CommentList",
+        "Component",
         "FootnoteList",
         "ReferenceList",
         "ReferenceFormat",
@@ -1260,6 +1263,7 @@ def test_block_renderer_hooks_are_private() -> None:
     for cls in (
         base_components.Block,
         base_components.Body,
+        base_components.Component,
         oodocs.Paragraph,
         oodocs.Table,
         oodocs.Figure,
