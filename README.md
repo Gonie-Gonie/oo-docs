@@ -162,7 +162,7 @@ Common translations:
 - LaTeX `cleveref` / `varioref` typed references -> `refs([...])`, `ref_range(a, b)`, `ReferenceFormat(...)`, `bracket_ref(...)`, `paren_ref(...)`, and `page_ref(...)` from `oodocs.references`
 - LaTeX `hyperref`, `\url{...}`, and `\href{...}{...}` -> `url(...)`, `link(...)`, `ref(obj)`, `DocumentSettings(metadata=DocumentMetadata(...))`, and `Theme(links=LinkDefaults(...))`
 - LaTeX `url` / `xurl` / `breakurl` long URL labels -> `url(target, label=..., breakable=True)` with soft breaks, exact link targets, and `overly-long-url` validation
-- LaTeX `enumitem` list options -> use `BulletList(...)`, `NumberedList(start=...)`, `NumberedList(resume_from=...)`, and `ListStyle(...)`
+- LaTeX `enumitem` list options -> `BulletList(...)`, `NumberedList(start=...)`, `NumberedList(resume_from=...)`, `CounterStyle(...)`, and `ListStyle(...)` for markers, spacing, indent, and nested item children
 - LaTeX `glossaries` / `acronym` / `nomencl` -> use `Glossary` and `ListOfGlossaryTerms` from `oodocs.glossary`, plus `Nomenclature`
 - LaTeX `tcolorbox` / `mdframed` report panels -> editable `Box(..., icon=..., title_position="side")` or `CalloutBox(..., variant="danger", icon="!")`
 - LaTeX `amsmath` / `mathtools` display math -> `Equation(...)`, `Equation.aligned(...)`, `Equation.cases(...)`, or `Equation.from_sympy(...)`, with numbering, references, and parser limits covered in `docs/reference/math-support.md`
@@ -190,7 +190,7 @@ The default behavior is intentionally conventional:
 - parts render on their own separator pages and do not reset chapter numbering
 - appendices render on a separator page, switch child chapter numbering to `A`, `B`, `C`, and validate that top-level main matter does not continue after them
 - headings are numbered as `1`, `1.1`, `1.1.1`, and so on
-- ordered and bullet lists can be customized with direct kwargs such as `indent=...`, `marker=CounterStyle(...)`, `marker_gap=...`, `item_spacing=...`, `block_spacing=...`, `start=...`, and `resume_from=...`
+- ordered and bullet lists can be customized with direct kwargs such as `indent=...`, `marker=CounterStyle(...)`, `marker_gap=...`, `item_spacing=...`, `block_spacing=...`, `start=...`, and `resume_from=...`; see [docs/reference/list-support.md](docs/reference/list-support.md)
 - heading numbering can be customized with `HeadingNumbering(...)`
 - heading typography, spacing, alignment, and per-level counter formats can be customized with `HeadingStyle(...)`
 - article-style front matter can be left unnumbered with `Section(..., numbered=False)`

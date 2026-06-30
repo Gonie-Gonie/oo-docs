@@ -276,6 +276,22 @@ def test_readme_latex_translations_include_url_break_policy() -> None:
     assert "`overly-long-url` validation" in translations
 
 
+def test_readme_latex_translations_include_enumitem_policy() -> None:
+    readme = _readme()
+    translations = readme.split("Common translations:", 1)[1].split(
+        "The main payoff",
+        1,
+    )[0]
+
+    assert "LaTeX `enumitem` list options" in translations
+    assert "`BulletList(...)`" in translations
+    assert "`NumberedList(start=...)`" in translations
+    assert "`NumberedList(resume_from=...)`" in translations
+    assert "`CounterStyle(...)`" in translations
+    assert "`ListStyle(...)`" in translations
+    assert "nested item children" in translations
+
+
 def test_readme_latex_translations_include_graphicx_policy() -> None:
     readme = _readme()
     translations = readme.split("Common translations:", 1)[1].split(
@@ -416,6 +432,24 @@ def test_chemistry_support_reference_documents_mhchem_policy() -> None:
         "Unicode superscript digits and signs normalize to superscript runs.",
         "Reaction arrows such as `->`",
         "full mhchem grammar",
+    ):
+        assert phrase in reference
+
+
+def test_list_support_reference_documents_enumitem_policy() -> None:
+    reference = Path("docs/reference/list-support.md").read_text(encoding="utf-8")
+
+    for phrase in (
+        "common `enumitem` list authoring needs",
+        "`BulletList(...)`",
+        "`NumberedList(...)`",
+        "`NumberedList(..., resume_from=previous)`",
+        "`start` and `resume_from` are mutually exclusive.",
+        "`CounterStyle(counter_format=..., prefix=..., suffix=..., bullet=...)`",
+        "`ListStyle(indent=..., marker_gap=..., item_spacing=..., block_spacing=...)`",
+        "`StyleSheet.register_list(name, ListStyle(...))`",
+        "`item_children=[[BulletList(...), NumberedList(...)]]`",
+        "Nested lists inherit the surrounding renderer context",
     ):
         assert phrase in reference
 

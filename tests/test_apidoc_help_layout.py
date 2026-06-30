@@ -124,6 +124,10 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "oodocs.url" in all_titles
     assert "oodocs.LinkDefaults" in all_titles
     assert "oodocs.components.inline.Hyperlink" in all_titles
+    assert "oodocs.BulletList" in all_titles
+    assert "oodocs.NumberedList" in all_titles
+    assert "oodocs.CounterStyle" in all_titles
+    assert "oodocs.ListStyle" in all_titles
     assert "oodocs.refs" in all_titles
     assert "oodocs.ref_range" in all_titles
     assert "oodocs.references.ReferenceFormat" in all_titles
@@ -233,6 +237,11 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "link(" in text
     assert "breakable" in text
     assert "zero-width" in text
+    assert "resume_from" in text
+    assert "marker_gap" in text
+    assert "item_spacing" in text
+    assert "block_spacing" in text
+    assert "item_children" in text
     assert "ReferenceFormat" in text
     assert "plural_label" in text
     assert "capitalized" in text
