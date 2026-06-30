@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 import importlib.util
 import sys
 from pathlib import Path
@@ -17,6 +18,17 @@ def _load_main_module(example_dir: Path):
     finally:
         sys.path.remove(str(example_dir))
     return module
+
+
+def _imported_modules(path: Path) -> set[str]:
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    modules: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom) and node.module:
+            modules.add(node.module)
+        elif isinstance(node, ast.Import):
+            modules.update(alias.name for alias in node.names)
+    return modules
 
 
 def test_examples_expose_common_entry_points() -> None:
@@ -52,3 +64,20 @@ def test_examples_expose_common_entry_points() -> None:
         assert callable(getattr(module, "build_document", None)), example_dir.name
         assert callable(getattr(module, "build", None)), example_dir.name
         assert callable(getattr(module, "main", None)), example_dir.name
+
+
+def test_focused_examples_keep_specialized_domains_separate() -> None:
+    examples_dir = Path(__file__).resolve().parents[1] / "examples"
+    required_domain_by_example = {
+        "api_objects_example": "oodocs.apidoc",
+        "engineering_report_example": "oodocs.engineering",
+        "page_overlay_example": "oodocs.positioning",
+        "review_notes_example": "oodocs.review",
+    }
+    specialized_domains = set(required_domain_by_example.values())
+
+    for example_name, required_domain in required_domain_by_example.items():
+        imports = _imported_modules(examples_dir / example_name / "main.py")
+
+        assert required_domain in imports
+        assert imports.isdisjoint(specialized_domains - {required_domain}), example_name
