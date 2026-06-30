@@ -259,6 +259,19 @@ def test_readme_latex_translations_include_subcaption_subfig_policy() -> None:
     assert "`SubTableGroup(...)`" in translations
 
 
+def test_readme_latex_translations_include_pdfpages_policy() -> None:
+    readme = _readme()
+    translations = readme.split("Common translations:", 1)[1].split(
+        "The main payoff",
+        1,
+    )[0]
+
+    assert "LaTeX `pdfpages`" in translations
+    assert "`PdfPages(\"appendix.pdf\", pages=[1, 3])`" in translations
+    assert "PDF-page insertion" in translations
+    assert "DOCX/HTML placeholder fallbacks" in translations
+
+
 def test_public_api_policy_doc_defines_tiers_and_guards() -> None:
     policy = Path("docs/reference/public-api-policy.md").read_text(encoding="utf-8")
 

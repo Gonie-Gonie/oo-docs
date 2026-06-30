@@ -192,6 +192,8 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert any("SubTable" in text for text in paragraph_texts)
     assert any("SubTableGroup" in text for text in paragraph_texts)
     assert any("Table 1(a)" in text for text in paragraph_texts)
+    assert any("PdfPages" in text for text in paragraph_texts)
+    assert any("link-style placeholder" in text for text in paragraph_texts)
     assert any("Renderer-specific behavior for notes, review workflows, and cross-reference stability." in text for text in paragraph_texts)
     assert any("Numbered statements, proofs, and custom counters" in text for text in paragraph_texts)
     assert any("CountableBlock" in text for text in paragraph_texts)
@@ -328,6 +330,8 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "SubTable" in pdf_text
     assert "SubTableGroup" in pdf_text
     assert "Table 1(a)" in pdf_text
+    assert "PdfPages" in pdf_text
+    assert "link-style placeholder" in pdf_text
     assert "OODocs Contributor Certificate" in pdf_text
     assert "Renderer-specific behavior for notes, review workflows, and cross-reference stability." in pdf_text
     assert "Numbered statements, proofs, and custom counters" in pdf_text
@@ -448,6 +452,8 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "SubTable" in normalized_html_text
     assert "SubTableGroup" in normalized_html_text
     assert "Table 1(a)" in normalized_html_text
+    assert "PdfPages" in normalized_html_text
+    assert "link-style placeholder" in normalized_html_text
     assert "OODocs Contributor Certificate" in normalized_html_text
     assert "Numbered statements, proofs, and custom counters" in normalized_html_text
     assert "CountableBlock" in normalized_html_text
