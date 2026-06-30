@@ -712,7 +712,11 @@ def test_adapter_public_api_uses_canonical_missing_input_policy_names() -> None:
         parameters = set(inspect.signature(method).parameters)
 
         assert "strict" not in parameters, method.__name__
-        assert "fail_on_missing_input" in parameters, method.__name__
+        assert "fail_on_missing_input" not in parameters, method.__name__
+        assert "missing_input_policy" in parameters, method.__name__
+
+    for method_name in ("create_skeleton", "ensure_inputs"):
+        assert hasattr(adapters.ReleaseEvidence, method_name)
 
 
 def test_table_cell_alignment_fields_use_text_alignment_names() -> None:

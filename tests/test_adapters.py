@@ -75,7 +75,37 @@ def test_github_actions_adapter_uses_optional_yaml(tmp_path: Path) -> None:
     assert table.rows[0][0].content.plain_text() == "build"
 
 
-def test_release_evidence_save_bundle_creates_machine_and_document_files(
+def test_release_evidence_save_bundle_default_requires_existing_inputs(
+    tmp_path: Path,
+) -> None:
+    pyproject_path = tmp_path / "pyproject.toml"
+    pyproject_path.write_text(
+        "\n".join(
+            [
+                "[build-system]",
+                'build-backend = "setuptools.build_meta"',
+                "[project]",
+                'name = "oodocs-test"',
+                'requires-python = ">=3.11"',
+                'description = "Test project"',
+            ]
+        ),
+        encoding="utf-8",
+    )
+    evidence_dir = tmp_path / "evidence"
+
+    with pytest.raises(FileNotFoundError, match="Missing release evidence"):
+        ReleaseEvidence.from_directory(
+            evidence_dir,
+            pyproject=pyproject_path,
+            workflow=None,
+        ).save_bundle()
+
+    assert not (evidence_dir / "feature-coverage.csv").exists()
+    assert not (evidence_dir / MANIFEST_NAME).exists()
+
+
+def test_release_evidence_ensure_inputs_then_save_bundle_renders_existing_inputs(
     tmp_path: Path,
 ) -> None:
     pyproject_path = tmp_path / "pyproject.toml"
@@ -93,14 +123,13 @@ def test_release_evidence_save_bundle_creates_machine_and_document_files(
         encoding="utf-8",
     )
     workflow_path = tmp_path / "missing-release.yml"
-
-    bundle = ReleaseEvidence.from_directory(
+    evidence = ReleaseEvidence.from_directory(
         tmp_path / "evidence",
         pyproject=pyproject_path,
         workflow=workflow_path,
-    ).save_bundle(
-        fail_on_missing_input=False,
     )
+    input_files = evidence.ensure_inputs()
+    bundle = evidence.save_bundle(missing_input_policy="warn")
 
     assert (bundle.output_dir / "feature-coverage.csv").exists()
     assert (bundle.output_dir / MANIFEST_NAME).exists()
@@ -109,10 +138,29 @@ def test_release_evidence_save_bundle_creates_machine_and_document_files(
     assert bundle.outputs["docx"].exists()
     assert bundle.outputs["pdf"].exists()
     assert "oodocs-evidence-report.html" in bundle.outputs["html"].name
+    assert any(path.name == CHECKSUM_NAME for path in input_files)
     assert any(path.name == MANIFEST_NAME for path in bundle.data_files)
 
 
-def test_release_evidence_to_document_fail_on_missing_input_requires_inputs(
+def test_release_evidence_save_bundle_skeleton_policy_creates_machine_inputs(
+    tmp_path: Path,
+) -> None:
+    pyproject_path = tmp_path / "pyproject.toml"
+    pyproject_path.write_text("[project]\nname = \"oodocs-test\"\n", encoding="utf-8")
+
+    bundle = ReleaseEvidence.from_directory(
+        tmp_path / "evidence",
+        pyproject=pyproject_path,
+        workflow=None,
+    ).save_bundle(missing_input_policy="skeleton")
+
+    assert (bundle.output_dir / "feature-coverage.csv").exists()
+    assert (bundle.output_dir / MANIFEST_NAME).exists()
+    assert (bundle.output_dir / CHECKSUM_NAME).exists()
+    assert bundle.outputs["html"].exists()
+
+
+def test_release_evidence_to_document_missing_input_policy_error_requires_inputs(
     tmp_path: Path,
 ) -> None:
     pyproject_path = tmp_path / "pyproject.toml"
@@ -123,4 +171,4 @@ def test_release_evidence_to_document_fail_on_missing_input_requires_inputs(
             tmp_path / "empty",
             pyproject=pyproject_path,
             workflow=None,
-        ).to_document(fail_on_missing_input=True)
+        ).to_document(missing_input_policy="error")

@@ -30,10 +30,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         help="GitHub Actions workflow YAML path.",
     )
     build.add_argument(
-        "--fail-on-missing-input",
-        dest="fail_on_missing_input",
-        action="store_true",
-        help="Fail if optional evidence inputs are missing.",
+        "--missing-input-policy",
+        choices=("error", "warn", "skeleton"),
+        default="error",
+        help="How missing evidence inputs are handled.",
     )
     build.set_defaults(func=_run_build)
     args = parser.parse_args(argv)
@@ -46,7 +46,7 @@ def _run_build(args: argparse.Namespace) -> int:
         pyproject=args.pyproject,
         workflow=args.workflow,
     ).save_bundle(
-        fail_on_missing_input=args.fail_on_missing_input,
+        missing_input_policy=args.missing_input_policy,
     )
     print(f"Wrote evidence bundle: {bundle.output_dir}")
     for output_format, path in bundle.outputs.items():

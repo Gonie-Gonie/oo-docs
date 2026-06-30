@@ -16,7 +16,7 @@ from pathlib import Path
 import platform
 import subprocess
 import sys
-from typing import Iterable
+from typing import Iterable, Literal
 
 from oodocs.components.blocks import Chapter, CodeBlock, Paragraph, Section
 from oodocs.components.generated import TableOfContents
@@ -40,6 +40,7 @@ DEFAULT_CSV_FILES = (
 )
 MANIFEST_NAME = "reproducibility-manifest.json"
 CHECKSUM_NAME = "artifact-checksums.sha256"
+MissingInputPolicy = Literal["error", "warn", "skeleton"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -85,14 +86,17 @@ class ReleaseEvidence:
         from oodocs.adapters import ReleaseEvidence
 
         evidence = ReleaseEvidence.from_directory("artifacts/evidence")
-        document = evidence.to_document(fail_on_missing_input=False)
+        document = evidence.to_document(missing_input_policy="warn")
         document.save_html("artifacts/evidence/report.html")
         ```
 
-        Generate missing machine-readable files and render all document outputs:
+        Generate missing machine-readable files explicitly before rendering all
+        document outputs:
 
         ```python
-        bundle = ReleaseEvidence.from_directory("artifacts/evidence").save_bundle()
+        evidence = ReleaseEvidence.from_directory("artifacts/evidence")
+        evidence.ensure_inputs()
+        bundle = evidence.save_bundle()
         print(bundle.outputs["html"])
         ```
     """
@@ -132,12 +136,18 @@ class ReleaseEvidence:
             workflow=None if workflow is None else Path(workflow),
         )
 
-    def to_document(self, *, fail_on_missing_input: bool = True) -> Document:
+    def to_document(
+        self,
+        *,
+        missing_input_policy: MissingInputPolicy = "error",
+    ) -> Document:
         """Build a human-readable release evidence document.
 
         Args:
-            fail_on_missing_input: Whether missing optional evidence inputs
-                should raise an exception.
+            missing_input_policy: How missing inputs are handled. ``"error"``
+                raises, ``"warn"`` inserts warning sections, and
+                ``"skeleton"`` first creates missing machine-readable
+                skeleton inputs.
 
         Returns:
             Document summarizing release metadata, workflow metadata, evidence
@@ -145,10 +155,14 @@ class ReleaseEvidence:
 
         Raises:
             FileNotFoundError: If evidence files are missing and
-                ``fail_on_missing_input`` is true.
+                ``missing_input_policy`` is ``"error"``.
             ImportError: If workflow parsing needs PyYAML and it is unavailable
-                in fail-on-missing-input mode.
+                in error mode.
         """
+
+        policy = _normalize_missing_input_policy(missing_input_policy)
+        if policy == "skeleton":
+            self.ensure_inputs()
 
         sections: list[Section] = [
             ProjectMetadata.from_pyproject(self.pyproject).to_section()
@@ -159,7 +173,7 @@ class ReleaseEvidence:
                     GithubWorkflowSummary.from_file(self.workflow).to_section()
                 )
             except (FileNotFoundError, ImportError) as exc:
-                if fail_on_missing_input:
+                if policy == "error":
                     raise
                 sections.append(_warning_section("GitHub Actions workflow", str(exc)))
 
@@ -187,7 +201,7 @@ class ReleaseEvidence:
             missing.append(CHECKSUM_NAME)
 
         if missing:
-            if fail_on_missing_input:
+            if policy == "error":
                 raise FileNotFoundError(
                     "Missing release evidence file(s): " + ", ".join(missing)
                 )
@@ -224,48 +238,87 @@ class ReleaseEvidence:
             ),
         )
 
+    def create_skeleton(self, output_dir: PathLike | None = None) -> tuple[Path, ...]:
+        """Create missing machine-readable evidence skeleton files.
+
+        Args:
+            output_dir: Directory where skeleton files should be written.
+                Defaults to ``evidence_dir``.
+
+        Returns:
+            Paths for CSV and manifest skeleton files. Existing files are left
+            unchanged.
+        """
+
+        output_path = Path(output_dir) if output_dir is not None else self.evidence_dir
+        output_path.mkdir(parents=True, exist_ok=True)
+        return tuple(
+            _write_machine_readable_skeleton(
+                output_path,
+                pyproject=self.pyproject,
+            )
+        )
+
+    def ensure_inputs(self, output_dir: PathLike | None = None) -> tuple[Path, ...]:
+        """Ensure machine-readable evidence inputs exist.
+
+        Args:
+            output_dir: Directory where evidence inputs should exist. Defaults
+                to ``evidence_dir``.
+
+        Returns:
+            Paths for CSV, manifest, and checksum inputs. Existing files are
+            left unchanged except the checksum file, which is regenerated from
+            current input files.
+        """
+
+        output_path = Path(output_dir) if output_dir is not None else self.evidence_dir
+        data_files = self.create_skeleton(output_path)
+        checksum_file = _write_checksums(output_path)
+        return (*data_files, checksum_file)
+
     def save_bundle(
         self,
         output_dir: PathLike | None = None,
         *,
-        fail_on_missing_input: bool = False,
+        missing_input_policy: MissingInputPolicy = "error",
     ) -> ReleaseEvidenceBundle:
-        """Create evidence data files and render the evidence document.
+        """Render an evidence document from existing evidence inputs.
 
         Args:
             output_dir: Directory where evidence artifacts and rendered
                 documents should be written. Defaults to ``evidence_dir``.
-            fail_on_missing_input: Whether missing optional inputs should raise
-                an exception while building the document.
+            missing_input_policy: How missing inputs are handled. ``"error"``
+                raises, ``"warn"`` renders warning sections without creating
+                evidence inputs, and ``"skeleton"`` creates missing
+                machine-readable skeleton inputs before rendering.
 
         Returns:
             Bundle metadata containing written document, evidence, and checksum
             paths.
 
         Raises:
-            FileNotFoundError: If fail-on-missing-input mode rejects missing
-                evidence inputs.
+            FileNotFoundError: If error mode rejects missing evidence inputs.
             ImportError: If workflow parsing needs PyYAML and it is unavailable
-                in fail-on-missing-input mode.
+                in error mode.
         """
 
+        policy = _normalize_missing_input_policy(missing_input_policy)
         output_path = Path(output_dir) if output_dir is not None else self.evidence_dir
         output_path.mkdir(parents=True, exist_ok=True)
-        data_files = _ensure_machine_readable_evidence(
-            output_path,
-            pyproject=self.pyproject,
-        )
-        _write_checksums(output_path)
         evidence = ReleaseEvidence.from_directory(
             output_path,
             pyproject=self.pyproject,
             workflow=self.workflow,
         )
+        if policy == "skeleton":
+            evidence.ensure_inputs()
         document = evidence.to_document(
-            fail_on_missing_input=fail_on_missing_input,
+            missing_input_policy=policy,
         )
         outputs = document.save_all(output_path, stem="oodocs-evidence-report")
         checksum_file = _write_checksums(output_path)
+        data_files = _existing_machine_readable_evidence(output_path)
         return ReleaseEvidenceBundle(
             output_dir=output_path,
             outputs=outputs,
@@ -274,7 +327,13 @@ class ReleaseEvidence:
         )
 
 
-def _ensure_machine_readable_evidence(
+def _normalize_missing_input_policy(policy: str) -> MissingInputPolicy:
+    if policy not in {"error", "warn", "skeleton"}:
+        raise ValueError("missing_input_policy must be 'error', 'warn', or 'skeleton'")
+    return policy  # type: ignore[return-value]
+
+
+def _write_machine_readable_skeleton(
     output_dir: Path,
     *,
     pyproject: PathLike,
@@ -321,6 +380,14 @@ def _ensure_machine_readable_evidence(
         )
     files.append(manifest_path)
     return files
+
+
+def _existing_machine_readable_evidence(output_dir: Path) -> tuple[Path, ...]:
+    return tuple(
+        path
+        for path in [*(output_dir / name for name in DEFAULT_CSV_FILES), output_dir / MANIFEST_NAME]
+        if path.exists()
+    )
 
 
 def _manifest_payload(output_dir: Path, *, pyproject: PathLike) -> dict[str, object]:
