@@ -1176,7 +1176,7 @@
         }
       ]
     },
-    "oodocs.chem": {
+    "oodocs.chemistry": {
       "exports": [
         {
           "category": "inline",
@@ -1195,9 +1195,9 @@
         {
           "category": "inline",
           "kind": "function",
-          "module": "oodocs.chem",
+          "module": "oodocs.chemistry",
           "name": "ce",
-          "qualname": "oodocs.chem.ce"
+          "qualname": "oodocs.chemistry.ce"
         },
         {
           "category": "inline",

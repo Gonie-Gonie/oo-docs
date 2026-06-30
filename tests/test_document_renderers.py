@@ -11,6 +11,7 @@ import zlib
 import zipfile
 
 import oodocs
+import oodocs.chemistry as chemistry_components
 import oodocs.compatibility as compatibility_components
 from docx import Document as WordDocument
 from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -40,8 +41,11 @@ from oodocs.engineering import (
     Algorithm,
     AlignedEquation,
     CasesEquation,
+)
+from oodocs.chemistry import (
     ChemicalFormula,
     ReactionEquation,
+    ce,
     chemical_formula,
 )
 from oodocs.generated import ListOfComments, ListOfFootnotes, ListOfAlgorithms, TocLevelStyle
@@ -545,8 +549,6 @@ def test_amsmath_equation_blocks_number_reference_and_validate(tmp_path: Path) -
 
 
 def test_mhchem_formula_and_reaction_render_to_all_outputs(tmp_path: Path) -> None:
-    from oodocs.chem import ce
-
     water = chemical_formula("H2O")
     sulfate = ChemicalFormula("SO4^2-")
     ammonium = ce("NH4+")
@@ -2106,8 +2108,10 @@ def test_public_api_prefers_classes_for_structural_nodes() -> None:
     assert hasattr(engineering_components, "Algorithm")
     assert hasattr(engineering_components, "AlignedEquation")
     assert hasattr(engineering_components, "CasesEquation")
-    assert hasattr(engineering_components, "ChemicalFormula")
-    assert hasattr(engineering_components, "ReactionEquation")
+    assert not hasattr(engineering_components, "ChemicalFormula")
+    assert not hasattr(engineering_components, "ReactionEquation")
+    assert hasattr(chemistry_components, "ChemicalFormula")
+    assert hasattr(chemistry_components, "ReactionEquation")
     assert hasattr(oodocs, "Math")
     assert hasattr(oodocs, "InlineChip")
     assert hasattr(oodocs, "InlineChipStyle")
@@ -2191,7 +2195,9 @@ def test_public_api_prefers_classes_for_structural_nodes() -> None:
     assert not hasattr(oodocs, "math")
     assert hasattr(oodocs, "inline_math")
     assert not hasattr(oodocs, "chemical_formula")
-    assert hasattr(engineering_components, "chemical_formula")
+    assert not hasattr(engineering_components, "chemical_formula")
+    assert hasattr(chemistry_components, "chemical_formula")
+    assert hasattr(chemistry_components, "ce")
     assert hasattr(oodocs, "prescript")
     assert not hasattr(oodocs, "ReferenceFormat")
     assert not hasattr(oodocs, "Ref")

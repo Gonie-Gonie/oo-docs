@@ -75,8 +75,8 @@ from oodocs import (
     superscript,
     tag,
 )
-from oodocs.engineering import (
-    Algorithm,
+from oodocs.engineering import Algorithm
+from oodocs.chemistry import (
     ChemicalFormula,
     ReactionEquation,
     chemical_formula,
@@ -672,7 +672,7 @@ paragraph = Paragraph("See ", derivation.reference(), " and ", local_definition.
 """
 
 CHEMISTRY_SNIPPET = """from oodocs import Paragraph
-from oodocs.engineering import ReactionEquation, chemical_formula
+from oodocs.chemistry import ReactionEquation, chemical_formula
 
 water = chemical_formula("H2O")
 sulfate = chemical_formula("SO4^2-")

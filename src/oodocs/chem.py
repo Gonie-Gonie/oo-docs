@@ -1,44 +1,10 @@
-"""Chemistry convenience API.
+"""Compatibility namespace for chemistry helpers.
 
-Attributes:
-    ChemicalFormula: Inline chemical formula rendered with numeric
-        subscripts.
-    ReactionEquation: Displayed chemical reaction equation.
-    ce: Short helper mirroring mhchem's ``\\ce{...}`` command.
-    chemical_formula: Helper for creating inline chemical formulas.
+Use ``oodocs.chemistry`` for the canonical chemistry API.
 """
 
 from __future__ import annotations
 
-from oodocs.components.chemistry import ChemicalFormula, chemical_formula
-from oodocs.components.blocks import ReactionEquation
-from oodocs.styles import TextStyle
+from oodocs.chemistry import ChemicalFormula, ReactionEquation, ce, chemical_formula
 
-
-def ce(source: str, *, style: TextStyle | None = None) -> ChemicalFormula:
-    """Create an inline chemical formula.
-
-    Args:
-        source: Formula source such as ``"H2O"`` or ``"SO4^2-"``.
-        style: Optional inline style.
-
-    Returns:
-        Inline chemical formula fragment.
-
-    Examples:
-        ```python
-        from oodocs.chem import ce
-
-        water = ce("H2O")
-        ```
-    """
-
-    return chemical_formula(source, style=style)
-
-
-__all__ = [
-    "ChemicalFormula",
-    "ReactionEquation",
-    "ce",
-    "chemical_formula",
-]
+__all__: list[str] = []

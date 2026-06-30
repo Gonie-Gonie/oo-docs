@@ -8,6 +8,7 @@ import pytest
 import oodocs
 import oodocs.adapters as adapters
 import oodocs.apidoc as apidoc
+import oodocs.chemistry as chemistry
 import oodocs.components.base as base_components
 import oodocs.components.blocks as block_components
 import oodocs.components.inline as inline_components
@@ -79,6 +80,12 @@ def test_top_level_public_api_excludes_internal_helper_patterns() -> None:
 
 def test_tier_two_namespaces_export_domain_symbols() -> None:
     expected_exports = {
+        chemistry: {
+            "ChemicalFormula",
+            "ReactionEquation",
+            "ce",
+            "chemical_formula",
+        },
         review: {"MarginNote", "Todo", "margin_note", "todo"},
         glossary: {"Acronym", "Glossary", "ListOfGlossaryTerms", "GlossaryTerm"},
         importers: {
@@ -147,10 +154,6 @@ def test_tier_two_namespaces_export_domain_symbols() -> None:
             "Algorithm",
             "AlignedEquation",
             "CasesEquation",
-            "ChemicalFormula",
-            "ReactionEquation",
-            "ce",
-            "chemical_formula",
         },
     }
 

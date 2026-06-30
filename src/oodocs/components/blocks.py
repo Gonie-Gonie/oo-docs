@@ -1216,7 +1216,7 @@ class ReactionEquation(Equation):
     Examples:
         ```python
         from oodocs import Document, Paragraph
-        from oodocs.engineering import ReactionEquation
+        from oodocs.chemistry import ReactionEquation
 
         combustion = ReactionEquation("CH4 + 2O2 -> CO2 + 2H2O")
         document = Document("Combustion", Paragraph("See ", combustion.reference(), "."), combustion)
