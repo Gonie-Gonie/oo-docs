@@ -9,7 +9,13 @@ from example_regression import (
     assert_pdf_text_and_pages,
     assert_rendered_bundle,
 )
-from oodocs.apidoc import ApiCoverageResult, ApiPackage, check_api_docs, collect_api
+from oodocs.apidoc import (
+    ApiCollectConfig,
+    ApiCoverageResult,
+    ApiPackage,
+    check_api_docs,
+    collect_api,
+)
 from pypdf import PdfReader
 
 
@@ -25,6 +31,7 @@ STALE_API_REFERENCE_MARKERS = (
 )
 STALE_RENDERED_API_REFERENCE_MARKERS = (
     *STALE_API_REFERENCE_MARKERS,
+    "ImageData.savefig",
     "coerce_author_layout",
     "coerce_authors",
     "coerce_cell",
@@ -91,8 +98,19 @@ def test_apidoc_collects_oodocs_public_api_for_self_reference() -> None:
     assert api.select_public_objects()
 
 
+def test_apidoc_pyproject_config_hides_compatibility_adapters() -> None:
+    config = ApiCollectConfig.from_pyproject(".")
+    api = collect_api(".", config=config)
+
+    assert "*.ImageData.savefig" in config.object_exclude_patterns
+    assert api.find_object("oodocs.ImageData") is not None
+    assert api.find_object("oodocs.ImageData.savefig") is None
+    assert api.find_object("oodocs.components.media.ImageData.savefig") is None
+
+
 def test_apidoc_renders_oodocs_public_api_reference_bundle(tmp_path) -> None:
-    api = collect_api("oodocs", collector="auto", public_policy="__all__")
+    config = ApiCollectConfig.from_pyproject(".")
+    api = collect_api(".", config=config)
     coverage = check_api_docs(api)
     document = api.to_help_book(
         presentation="compact",
