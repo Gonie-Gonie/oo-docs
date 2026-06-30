@@ -11,6 +11,7 @@ import oodocs.adapters as adapters
 import oodocs.apidoc as apidoc
 import oodocs.apidoc.config as apidoc_config
 import oodocs.apidoc.profiles as apidoc_profiles
+import oodocs.apidoc.render as apidoc_render
 import oodocs.chemistry as chemistry
 import oodocs.compatibility as compatibility
 import oodocs.components as components
@@ -565,6 +566,17 @@ def test_apidoc_namespace_uses_canonical_exports() -> None:
     assert forbidden.isdisjoint(apidoc.__all__)
     assert not any(hasattr(apidoc, name) for name in forbidden)
     assert expected <= set(apidoc.__all__)
+
+
+def test_apidoc_render_module_keeps_only_composable_chapter_helper() -> None:
+    stale_helpers = {
+        "api_coverage_to_chapter",
+        "api_diff_to_chapter",
+        "api_objects_to_summary_table",
+    }
+
+    assert set(apidoc_render.__all__) == {"api_objects_to_chapter"}
+    assert not any(hasattr(apidoc_render, name) for name in stale_helpers)
 
 
 def test_text_style_uses_canonical_field_names() -> None:
