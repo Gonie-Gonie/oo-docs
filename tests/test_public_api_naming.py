@@ -599,11 +599,40 @@ def test_image_components_use_image_format_field_name() -> None:
         assert "image_format" in field_names, cls.__name__
 
 
+def test_image_public_signatures_use_image_format_parameter_name() -> None:
+    for callable_obj in (
+        oodocs.ImageData,
+        oodocs.ImageData.savefig,
+        oodocs.Figure,
+        oodocs.Figure.from_bytes,
+        oodocs.Figure.from_buffer,
+        oodocs.SubFigure,
+        positioning.ImageBox,
+    ):
+        parameters = set(inspect.signature(callable_obj).parameters)
+
+        assert "format" not in parameters, callable_obj
+        if callable_obj is not oodocs.ImageData.savefig:
+            assert "image_format" in parameters, callable_obj
+
+
 def test_image_components_use_image_dpi_field_name() -> None:
     for cls in (oodocs.Figure, oodocs.SubFigure, positioning.ImageBox):
         field_names = {field.name for field in fields(cls)}
         assert "dpi" not in field_names, cls.__name__
         assert "image_dpi" in field_names, cls.__name__
+
+
+def test_image_public_signatures_use_image_dpi_parameter_name() -> None:
+    for callable_obj in (
+        oodocs.Figure,
+        oodocs.SubFigure,
+        positioning.ImageBox,
+    ):
+        parameters = set(inspect.signature(callable_obj).parameters)
+
+        assert "dpi" not in parameters, callable_obj
+        assert "image_dpi" in parameters, callable_obj
 
 
 def test_table_public_api_hides_renderer_helper_methods() -> None:
