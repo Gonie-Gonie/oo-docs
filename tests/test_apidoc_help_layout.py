@@ -124,6 +124,8 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "oodocs.url" in all_titles
     assert "oodocs.LinkDefaults" in all_titles
     assert "oodocs.components.inline.Hyperlink" in all_titles
+    assert "oodocs.footnote" in all_titles
+    assert "oodocs.Footnote" in all_titles
     assert "oodocs.BulletList" in all_titles
     assert "oodocs.NumberedList" in all_titles
     assert "oodocs.CounterStyle" in all_titles
@@ -138,6 +140,8 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "oodocs.LocaleDefaults" in all_titles
     assert "oodocs.HeaderFooterDefaults" in all_titles
     assert "oodocs.PageNumberDefaults" in all_titles
+    assert "oodocs.FootnoteDefaults" in all_titles
+    assert "oodocs.FootnoteStyle" in all_titles
     assert "oodocs.positioning.PageItemScope" in all_titles
     assert "oodocs.positioning.Shape" in all_titles
     assert "oodocs.positioning.TextBox" in all_titles
@@ -160,6 +164,7 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "oodocs.TableOfContents" in all_titles
     assert "oodocs.ListOfTables" in all_titles
     assert "oodocs.ListOfFigures" in all_titles
+    assert "oodocs.generated.ListOfFootnotes" in all_titles
     assert "oodocs.structure.Appendix" in all_titles
     assert "oodocs.media.ColumnSpec" in all_titles
     assert "oodocs.media.CropBox" in all_titles
@@ -278,6 +283,10 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "overlays" in text
     assert "placement" in text
     assert "inline" in text
+    assert "Footnote.annotated" in text
+    assert "FootnoteDefaults" in text
+    assert "FootnoteStyle.symbol" in text
+    assert "stream_styles" in text
     assert "anchor" in text
     assert "ReferenceFormat" in text
     assert "plural_label" in text

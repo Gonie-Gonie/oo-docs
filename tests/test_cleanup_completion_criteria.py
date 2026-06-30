@@ -354,6 +354,22 @@ def test_readme_latex_translations_include_page_overlay_policy() -> None:
     assert "`DocumentSettings(overlays=[...])`" in translations
 
 
+def test_readme_latex_translations_include_footnote_policy() -> None:
+    readme = _readme()
+    translations = readme.split("Common translations:", 1)[1].split(
+        "The main payoff",
+        1,
+    )[0]
+
+    assert "LaTeX `footmisc` / `manyfoot` notes" in translations
+    assert "`footnote(...)`" in translations
+    assert "`Footnote.annotated(...)`" in translations
+    assert "`FootnoteDefaults(...)`" in translations
+    assert "`FootnoteStyle.symbol(...)`" in translations
+    assert "stream names" in translations
+    assert "`ListOfFootnotes(...)` from `oodocs.generated`" in translations
+
+
 def test_readme_latex_translations_include_graphicx_policy() -> None:
     readme = _readme()
     translations = readme.split("Common translations:", 1)[1].split(
@@ -538,6 +554,30 @@ def test_page_overlay_support_reference_documents_background_policy() -> None:
         "PDF applies page scopes to physical pages.",
         "`page-item-scope-static-output`",
         "cover-only overlays",
+    ):
+        assert phrase in normalized
+
+
+def test_footnote_support_reference_documents_footmisc_policy() -> None:
+    reference = Path("docs/reference/footnote-support.md").read_text(encoding="utf-8")
+    normalized = " ".join(reference.split())
+
+    for phrase in (
+        "common `footmisc` and `manyfoot` authoring needs",
+        "`footnote(\"term\", \"note\")`",
+        "`Footnote.annotated(\"term\", \"note\")`",
+        "`footnote(\"term\", \"note\", stream=\"symbols\")`",
+        "`Theme(footnotes=FootnoteDefaults(...))`",
+        "`FootnoteStyle.symbol()`",
+        "`FootnoteStyle(CounterStyle(prefix=\"R\"))`",
+        "`ListOfFootnotes()` from `oodocs.generated`",
+        "`Theme(blocks=BlockDefaults(footnote_placement=\"document\"))`",
+        "Custom streams such as `symbols` or `review` have independent counters.",
+        "`FootnoteDefaults(stream_styles={...})`",
+        "`FootnoteStyle.symbol((\"*\", \"#\"))`",
+        "native page-bottom Word footnotes only for the default stream",
+        "`docx-footnote-stream-generated-list`",
+        "Page-bottom placement remains renderer-dependent",
     ):
         assert phrase in normalized
 
