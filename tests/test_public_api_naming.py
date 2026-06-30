@@ -112,6 +112,35 @@ def test_top_level_public_api_excludes_internal_helper_patterns() -> None:
     assert leaked_names == set()
 
 
+def test_recommended_user_import_experience_keeps_domains_explicit() -> None:
+    table = oodocs.Table.from_records(
+        [
+            {"case": "A", "status": "pass"},
+            {"case": "B", "status": "fail"},
+        ],
+        caption="Validation cases.",
+    )
+    document = oodocs.Document(
+        "Validation Report",
+        oodocs.Chapter(
+            "Results",
+            oodocs.Paragraph("Summary is shown in ", oodocs.ref(table), "."),
+            table,
+        ),
+    )
+
+    assert document.validate().ok
+    assert not hasattr(oodocs, "Algorithm")
+    assert not hasattr(oodocs, "Shape")
+    assert not hasattr(oodocs, "Todo")
+    assert engineering.Algorithm.__name__ == "Algorithm"
+    assert positioning.Shape.__name__ == "Shape"
+    assert positioning.TextBox.__name__ == "TextBox"
+    assert review.MarginNote.__name__ == "MarginNote"
+    assert review.Todo.__name__ == "Todo"
+    assert callable(apidoc.collect_api)
+
+
 def test_leaf_component_modules_hide_internal_helpers_from_all() -> None:
     forbidden_by_module = {
         base_components: {"coerce_blocks"},
