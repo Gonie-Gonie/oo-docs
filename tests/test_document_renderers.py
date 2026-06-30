@@ -4793,6 +4793,39 @@ def test_document_metadata_maps_to_renderer_outputs(tmp_path: Path) -> None:
     assert 'name="keywords" content="alpha, beta"' in html_text
 
 
+def test_pdf_headings_create_outline_entries(tmp_path: Path) -> None:
+    document = Document(
+        "PDF Outline",
+        Chapter(
+            "Intro",
+            Section(
+                "Scope",
+                Paragraph("Body."),
+                Subsection("Detail", Paragraph("More.")),
+            ),
+            Section("Hidden", Paragraph("No outline entry."), toc=False),
+        ),
+    )
+    pdf_path = tmp_path / "outline.pdf"
+
+    document.save_pdf(pdf_path)
+
+    def outline_titles(items: list[object]) -> list[str]:
+        titles: list[str] = []
+        for item in items:
+            if isinstance(item, list):
+                titles.extend(outline_titles(item))
+                continue
+            title = item.get("/Title") if isinstance(item, dict) else getattr(item, "title", None)
+            if title:
+                titles.append(str(title))
+        return titles
+
+    titles = outline_titles(PdfReader(str(pdf_path)).outline)
+
+    assert titles == ["1 Intro", "1.1 Scope", "1.1.1 Detail"]
+
+
 def test_theme_link_style_controls_html_link_defaults(tmp_path: Path) -> None:
     document = Document(
         "Styled Links",
