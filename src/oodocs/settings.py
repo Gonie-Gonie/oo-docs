@@ -465,7 +465,15 @@ class PageLayout:
         page_size: PageSize | None = None,
         page_margins: PageMargins | None = None,
     ) -> PageLayout:
-        """Create a portrait page layout."""
+        """Create a portrait page layout.
+
+        Args:
+            page_size: Optional physical page size. Defaults to A4.
+            page_margins: Optional physical page margins.
+
+        Returns:
+            Page layout with portrait orientation applied.
+        """
 
         return cls(page_size, page_margins, orientation="portrait")
 
@@ -475,22 +483,51 @@ class PageLayout:
         page_size: PageSize | None = None,
         page_margins: PageMargins | None = None,
     ) -> PageLayout:
-        """Create a landscape page layout."""
+        """Create a landscape page layout.
+
+        Args:
+            page_size: Optional physical page size. Defaults to A4.
+            page_margins: Optional physical page margins.
+
+        Returns:
+            Page layout with landscape orientation applied.
+        """
 
         return cls(page_size, page_margins, orientation="landscape")
 
     def page_width_in_inches(self, default_unit: str) -> float:
-        """Return the resolved page width in inches."""
+        """Return the resolved page width in inches.
+
+        Args:
+            default_unit: Unit to use when page size has ``unit=None``.
+
+        Returns:
+            Page width in inches.
+        """
 
         return self.page_size.width_in_inches(default_unit)
 
     def page_height_in_inches(self, default_unit: str) -> float:
-        """Return the resolved page height in inches."""
+        """Return the resolved page height in inches.
+
+        Args:
+            default_unit: Unit to use when page size has ``unit=None``.
+
+        Returns:
+            Page height in inches.
+        """
 
         return self.page_size.height_in_inches(default_unit)
 
     def page_margin_inches(self, default_unit: str) -> tuple[float, float, float, float]:
-        """Return resolved page margins as ``(top, right, bottom, left)``."""
+        """Return resolved page margins as ``(top, right, bottom, left)``.
+
+        Args:
+            default_unit: Unit to use when page margins have ``unit=None``.
+
+        Returns:
+            Page margins in inches as ``(top, right, bottom, left)``.
+        """
 
         return (
             self.page_margins.top_in_inches(default_unit),
@@ -500,13 +537,29 @@ class PageLayout:
         )
 
     def text_width_in_inches(self, default_unit: str) -> float:
-        """Return writable page width after horizontal margins."""
+        """Return writable page width after horizontal margins.
+
+        Args:
+            default_unit: Unit to use for page size or margins with
+                ``unit=None``.
+
+        Returns:
+            Writable text area width in inches.
+        """
 
         _, right, _, left = self.page_margin_inches(default_unit)
         return max(self.page_width_in_inches(default_unit) - left - right, 0)
 
     def text_height_in_inches(self, default_unit: str) -> float:
-        """Return writable page height after vertical margins."""
+        """Return writable page height after vertical margins.
+
+        Args:
+            default_unit: Unit to use for page size or margins with
+                ``unit=None``.
+
+        Returns:
+            Writable text area height in inches.
+        """
 
         top, _, bottom, _ = self.page_margin_inches(default_unit)
         return max(self.page_height_in_inches(default_unit) - top - bottom, 0)
