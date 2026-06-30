@@ -132,12 +132,26 @@ class EntryScope:
     heading_path: tuple[int, ...] = ()
 
     def with_part(self, part: Part) -> EntryScope:
-        """Return a scope for descendants of ``part``."""
+        """Return a scope for descendants of ``part``.
+
+        Args:
+            part: Part whose descendants should inherit the new scope.
+
+        Returns:
+            Entry scope rooted at the part.
+        """
 
         return EntryScope(part_id=id(part))
 
     def with_section(self, section: Section) -> EntryScope:
-        """Return a scope for descendants of ``section``."""
+        """Return a scope for descendants of ``section``.
+
+        Args:
+            section: Section whose descendants should inherit the new scope.
+
+        Returns:
+            Entry scope extended with the section.
+        """
 
         section_id = id(section)
         chapter_id = section_id if section.level == 1 else self.chapter_id
@@ -231,21 +245,39 @@ class CountableEntry:
 
 @dataclass(slots=True)
 class ResolvedBlockReference:
-    """Resolved label, number text, and anchor for an object reference."""
+    """Resolved label, number text, and anchor for an object reference.
+
+    Attributes:
+        label: Effective reference label.
+        value: Rendered reference number or value.
+        anchor: Optional internal link anchor.
+    """
 
     label: str
     value: str
     anchor: str | None
 
     def text(self, reference_format: ReferenceFormat | None = None) -> str:
-        """Return the formatted reference text."""
+        """Return the formatted reference text.
+
+        Args:
+            reference_format: Optional formatting overrides.
+
+        Returns:
+            Formatted reference text.
+        """
 
         return _format_reference_text(self, reference_format or ReferenceFormat())
 
 
 @dataclass(slots=True)
 class ReferenceTextPiece:
-    """Text plus optional internal anchor for formatted references."""
+    """Text plus optional internal anchor for formatted references.
+
+    Attributes:
+        text: Text content for this reference segment.
+        anchor: Optional internal link anchor.
+    """
 
     text: str
     anchor: str | None = None
