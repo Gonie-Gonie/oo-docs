@@ -138,6 +138,10 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "oodocs.LocaleDefaults" in all_titles
     assert "oodocs.HeaderFooterDefaults" in all_titles
     assert "oodocs.PageNumberDefaults" in all_titles
+    assert "oodocs.positioning.PageItemScope" in all_titles
+    assert "oodocs.positioning.Shape" in all_titles
+    assert "oodocs.positioning.TextBox" in all_titles
+    assert "oodocs.positioning.ImageBox" in all_titles
     assert "oodocs.refs" in all_titles
     assert "oodocs.ref_range" in all_titles
     assert "oodocs.references.ReferenceFormat" in all_titles
@@ -269,6 +273,12 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "different_odd_even_pages" in text
     assert "resolve_header_footer_template" in text
     assert "format_header_footer_text" in text
+    assert "PageItemScope" in text
+    assert "page-range" in text
+    assert "overlays" in text
+    assert "placement" in text
+    assert "inline" in text
+    assert "anchor" in text
     assert "ReferenceFormat" in text
     assert "plural_label" in text
     assert "capitalized" in text

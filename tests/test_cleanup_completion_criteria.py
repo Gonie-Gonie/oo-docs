@@ -339,6 +339,21 @@ def test_readme_latex_translations_include_header_footer_policy() -> None:
     assert "first-page, and even-page templates" in translations
 
 
+def test_readme_latex_translations_include_page_overlay_policy() -> None:
+    readme = _readme()
+    translations = readme.split("Common translations:", 1)[1].split(
+        "The main payoff",
+        1,
+    )[0]
+
+    assert "LaTeX `eso-pic` / `background` / `wallpaper` page overlays" in translations
+    assert "`Shape.rect(...)`" in translations
+    assert "`TextBox(...)`" in translations
+    assert "`ImageBox(...)`" in translations
+    assert "`PageItemScope`" in translations
+    assert "`DocumentSettings(overlays=[...])`" in translations
+
+
 def test_readme_latex_translations_include_graphicx_policy() -> None:
     readme = _readme()
     translations = readme.split("Common translations:", 1)[1].split(
@@ -502,6 +517,27 @@ def test_header_footer_support_reference_documents_fancyhdr_policy() -> None:
         "HTML emits a sticky/fixed header-footer layer with print CSS",
         "`theme.resolve_header_footer_template(...)`",
         "`theme.format_header_footer_text(...)`",
+    ):
+        assert phrase in normalized
+
+
+def test_page_overlay_support_reference_documents_background_policy() -> None:
+    reference = Path("docs/reference/page-overlay-support.md").read_text(encoding="utf-8")
+    normalized = " ".join(reference.split())
+
+    for phrase in (
+        "common `eso-pic`, `background`, and `wallpaper` page decoration needs",
+        "`Shape.rect(...)`, `Shape.ellipse(...)`, or `Shape.line(...)`",
+        "`TextBox(...)`",
+        "`ImageBox(...)`",
+        "`DocumentSettings(overlays=[...])`",
+        "`PageItemScope.all()`, `.cover()`, `.front()`, `.main()`, or `.pages(...)`",
+        "`anchor=\"page\"`, `anchor=\"margin\"`, or a named item",
+        "`z_index=...`",
+        "`placement=\"inline\"`",
+        "PDF applies page scopes to physical pages.",
+        "`page-item-scope-static-output`",
+        "cover-only overlays",
     ):
         assert phrase in normalized
 
