@@ -26,6 +26,20 @@ document objects rather than raw LaTeX commands.
 | Link color and underline | Inline run styling | Inline text styling | Inline CSS from `LinkDefaults` |
 | Broken internal link validation | Preflight error | Preflight error | Preflight error |
 
+## URL Line-Break Policy
+
+`url(target, label=None, breakable=True)` preserves the external link target
+exactly while making the visible label safer for fixed-page renderers. When no
+label is provided and `breakable=True`, OODocs inserts zero-width soft break
+points into the visible URL text. DOCX, PDF, and HTML keep the original target
+URL in their hyperlink relationship, URI action, or `href` attribute.
+
+Use `label=...` when the visible text should be a short human-readable name
+such as a project site or release page. Validation emits an `overly-long-url`
+warning when a long external URL is displayed as an unbreakable raw URL label;
+use `url(..., breakable=True)` or a shorter label to avoid renderer-dependent
+wrapping.
+
 ## Policies
 
 - `DocumentMetadata.title` overrides the visible document title for file/browser

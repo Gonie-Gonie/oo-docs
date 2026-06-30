@@ -262,6 +262,20 @@ def test_readme_latex_translations_include_cleveref_policy() -> None:
     assert "`oodocs.references`" in translations
 
 
+def test_readme_latex_translations_include_url_break_policy() -> None:
+    readme = _readme()
+    translations = readme.split("Common translations:", 1)[1].split(
+        "The main payoff",
+        1,
+    )[0]
+
+    assert "LaTeX `url` / `xurl` / `breakurl` long URL labels" in translations
+    assert "`url(target, label=..., breakable=True)`" in translations
+    assert "soft breaks" in translations
+    assert "exact link targets" in translations
+    assert "`overly-long-url` validation" in translations
+
+
 def test_readme_latex_translations_include_graphicx_policy() -> None:
     readme = _readme()
     translations = readme.split("Common translations:", 1)[1].split(
@@ -445,6 +459,25 @@ def test_hyperref_support_reference_documents_metadata_policy() -> None:
         "Preflight error",
     ):
         assert phrase in reference
+
+
+def test_hyperref_support_reference_documents_url_break_policy() -> None:
+    reference = Path("docs/reference/hyperref-support.md").read_text(encoding="utf-8")
+    normalized = " ".join(reference.split())
+
+    for phrase in (
+        "## URL Line-Break Policy",
+        "`url(target, label=None, breakable=True)`",
+        "preserves the external link target",
+        "exactly while making the visible label safer",
+        "zero-width soft break points",
+        "DOCX, PDF, and HTML keep the original target",
+        "`href` attribute",
+        "`label=...`",
+        "`overly-long-url`",
+        "`url(..., breakable=True)` or a shorter label",
+    ):
+        assert phrase in normalized
 
 
 def test_readme_latex_translations_include_citation_policy() -> None:

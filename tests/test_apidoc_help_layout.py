@@ -231,6 +231,8 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "Hyperlink.internal_anchor" in text
     assert "url(" in text
     assert "link(" in text
+    assert "breakable" in text
+    assert "zero-width" in text
     assert "ReferenceFormat" in text
     assert "plural_label" in text
     assert "capitalized" in text

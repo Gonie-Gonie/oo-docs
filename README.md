@@ -161,6 +161,7 @@ Common translations:
 - LaTeX `\label` / `\ref` -> use `ref(obj)` or `obj.ref()` inside `Paragraph(...)`
 - LaTeX `cleveref` / `varioref` typed references -> `refs([...])`, `ref_range(a, b)`, `ReferenceFormat(...)`, `bracket_ref(...)`, `paren_ref(...)`, and `page_ref(...)` from `oodocs.references`
 - LaTeX `hyperref`, `\url{...}`, and `\href{...}{...}` -> `url(...)`, `link(...)`, `ref(obj)`, `DocumentSettings(metadata=DocumentMetadata(...))`, and `Theme(links=LinkDefaults(...))`
+- LaTeX `url` / `xurl` / `breakurl` long URL labels -> `url(target, label=..., breakable=True)` with soft breaks, exact link targets, and `overly-long-url` validation
 - LaTeX `enumitem` list options -> use `BulletList(...)`, `NumberedList(start=...)`, `NumberedList(resume_from=...)`, and `ListStyle(...)`
 - LaTeX `glossaries` / `acronym` / `nomencl` -> use `Glossary` and `ListOfGlossaryTerms` from `oodocs.glossary`, plus `Nomenclature`
 - LaTeX `tcolorbox` / `mdframed` report panels -> editable `Box(..., icon=..., title_position="side")` or `CalloutBox(..., variant="danger", icon="!")`
