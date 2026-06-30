@@ -8,6 +8,7 @@ OODocs documents as ``Section``, ``Table``, ``Paragraph``, ``CodeBlock``, and
 Attributes:
     ApiCollectorName: Literal collector backend names.
     ApiFallbackCollectorName: Literal collector fallback policy names.
+    OODocs_API_CATEGORIES: Built-in help-book categories for the OODocs API.
 """
 
 from oodocs.apidoc.collect import collect_api, collect_module_api, collect_object_api

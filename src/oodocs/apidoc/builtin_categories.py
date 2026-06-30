@@ -1,4 +1,8 @@
-"""Built-in help-book categories for the OODocs public API."""
+"""Built-in help-book categories for the OODocs public API.
+
+Attributes:
+    OODocs_API_CATEGORIES: Built-in help-book categories for the OODocs API.
+"""
 
 from __future__ import annotations
 
