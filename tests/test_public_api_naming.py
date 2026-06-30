@@ -8,6 +8,7 @@ import pytest
 import oodocs
 import oodocs.adapters as adapters
 import oodocs.apidoc as apidoc
+import oodocs.components.base as base_components
 import oodocs.components.blocks as block_components
 import oodocs.components.inline as inline_components
 import oodocs.components.markup as markup_components
@@ -870,6 +871,25 @@ def test_workflow_api_uses_formats_parameter_name() -> None:
 
         assert "formats" in parameters
         assert "outputs" not in parameters
+
+
+def test_block_renderer_hooks_are_private() -> None:
+    forbidden = {"render_to_docx", "render_to_pdf", "render_to_html"}
+    expected_private = {"_render_to_docx", "_render_to_pdf", "_render_to_html"}
+
+    for cls in (
+        base_components.Block,
+        base_components.Body,
+        oodocs.Paragraph,
+        oodocs.Table,
+        oodocs.Figure,
+        oodocs.TableOfContents,
+    ):
+        public_members = _public_members(cls)
+        all_members = {name for name, _ in inspect.getmembers(cls)}
+
+        assert forbidden.isdisjoint(public_members), cls.__name__
+        assert expected_private <= all_members, cls.__name__
 
 
 def test_apidoc_raw_value_helpers_use_as_prefix() -> None:

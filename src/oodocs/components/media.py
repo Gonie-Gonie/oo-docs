@@ -2100,7 +2100,7 @@ class Table(Block):
             **table_kwargs,
         )
 
-    def render_to_docx(
+    def _render_to_docx(
         self,
         renderer: object,
         container: object,
@@ -2116,7 +2116,7 @@ class Table(Block):
 
         renderer.render_table(container, self, context)
 
-    def render_to_pdf(
+    def _render_to_pdf(
         self,
         renderer: object,
         context: PdfRenderContext,
@@ -2129,7 +2129,7 @@ class Table(Block):
 
         return renderer.render_table(self, context)
 
-    def render_to_html(
+    def _render_to_html(
         self,
         renderer: object,
         context: HtmlRenderContext,
@@ -2209,7 +2209,7 @@ class PdfPages(Block):
             indexes.append(page - 1)
         return indexes
 
-    def render_to_docx(
+    def _render_to_docx(
         self,
         renderer: object,
         container: object,
@@ -2219,7 +2219,7 @@ class PdfPages(Block):
 
         renderer.render_pdf_pages(container, self, context)
 
-    def render_to_pdf(
+    def _render_to_pdf(
         self,
         renderer: object,
         context: PdfRenderContext,
@@ -2228,7 +2228,7 @@ class PdfPages(Block):
 
         return renderer.render_pdf_pages(self, context)
 
-    def render_to_html(
+    def _render_to_html(
         self,
         renderer: object,
         context: HtmlRenderContext,
@@ -2439,7 +2439,7 @@ class Figure(Block):
             return "float"
         return self.placement
 
-    def render_to_docx(
+    def _render_to_docx(
         self,
         renderer: object,
         container: object,
@@ -2455,7 +2455,7 @@ class Figure(Block):
 
         renderer.render_figure(container, self, context)
 
-    def render_to_pdf(
+    def _render_to_pdf(
         self,
         renderer: object,
         context: PdfRenderContext,
@@ -2468,7 +2468,7 @@ class Figure(Block):
 
         return renderer.render_figure(self, context)
 
-    def render_to_html(
+    def _render_to_html(
         self,
         renderer: object,
         context: HtmlRenderContext,
@@ -2734,7 +2734,7 @@ class SubFigureGroup(Block):
             return "float"
         return self.placement
 
-    def render_to_docx(
+    def _render_to_docx(
         self,
         renderer: object,
         container: object,
@@ -2750,7 +2750,7 @@ class SubFigureGroup(Block):
 
         renderer.render_subfigure_group(container, self, context)
 
-    def render_to_pdf(
+    def _render_to_pdf(
         self,
         renderer: object,
         context: PdfRenderContext,
@@ -2763,7 +2763,7 @@ class SubFigureGroup(Block):
 
         return renderer.render_subfigure_group(self, context)
 
-    def render_to_html(
+    def _render_to_html(
         self,
         renderer: object,
         context: HtmlRenderContext,
@@ -2975,7 +2975,7 @@ class SubTableGroup(Block):
 
         return reference(self, *label, style=style, reference_format=reference_format)
 
-    def render_to_docx(
+    def _render_to_docx(
         self,
         renderer: object,
         container: object,
@@ -2985,7 +2985,7 @@ class SubTableGroup(Block):
 
         renderer.render_subtable_group(container, self, context)
 
-    def render_to_pdf(
+    def _render_to_pdf(
         self,
         renderer: object,
         context: PdfRenderContext,
@@ -2994,7 +2994,7 @@ class SubTableGroup(Block):
 
         return renderer.render_subtable_group(self, context)
 
-    def render_to_html(
+    def _render_to_html(
         self,
         renderer: object,
         context: HtmlRenderContext,

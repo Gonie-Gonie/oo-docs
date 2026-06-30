@@ -135,7 +135,7 @@ def collect_api(
             ".",
             public_policy="__all__",
             module_exclude_patterns=("mypkg.tests*",),
-            object_exclude_patterns=("render_to_pdf", "render_to_html"),
+            object_exclude_patterns=("*.experimental",),
         )
         classes = api.select_objects(kind="class", module_prefix="mypkg")
 

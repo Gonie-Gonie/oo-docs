@@ -582,7 +582,7 @@ class HtmlRenderer:
                 + "</div>"
             )
         children_html = "".join(
-            child.render_to_html(
+            child._render_to_html(
                 self,
                 HtmlRenderContext(
                     theme=context.theme,
@@ -714,11 +714,11 @@ class HtmlRenderer:
             ):
                 flush_group()
                 if isinstance(child, ColumnSpan):
-                    parts.append(child.render_to_html(self, context))
+                    parts.append(child._render_to_html(self, context))
                 else:
                     parts.append(
                         '<div class="oodocs-column-span">'
-                        + child.render_to_html(self, context)
+                        + child._render_to_html(self, context)
                         + "</div>"
                     )
                 continue
@@ -811,7 +811,7 @@ class HtmlRenderer:
             else section_context
         )
         children_html = "".join(
-            child.render_to_html(self, child_context)
+            child._render_to_html(self, child_context)
             for child in block.children
         )
         heading_html = (
@@ -1432,7 +1432,7 @@ class HtmlRenderer:
         children: list[object],
         context: HtmlRenderContext,
     ) -> str:
-        return "".join(child.render_to_html(self, context) for child in children)
+        return "".join(child._render_to_html(self, context) for child in children)
 
     def _multi_column_group_html(
         self,

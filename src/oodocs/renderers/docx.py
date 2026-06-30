@@ -669,7 +669,7 @@ class DocxRenderer:
                 unit=context.unit,
             )
         for child in block.children:
-            child.render_to_docx(self, container, context)
+            child._render_to_docx(self, container, context)
 
     def render_column_span(
         self,
@@ -686,7 +686,7 @@ class DocxRenderer:
         """
 
         for child in block.children:
-            child.render_to_docx(self, container, context)
+            child._render_to_docx(self, container, context)
 
     def render_multi_column(
         self,
@@ -1107,7 +1107,7 @@ class DocxRenderer:
     ) -> None:
         """Delegate block rendering back to the block instance itself."""
 
-        block.render_to_docx(self, container, context)
+        block._render_to_docx(self, container, context)
 
     def _configure_section_page_box(self, section: object, settings: object) -> None:
         top, right, bottom, left = settings.page_margin_inches()
@@ -1164,7 +1164,7 @@ class DocxRenderer:
                 active_context,
                 target_layout,
             )
-            child.render_to_docx(self, container, active_context)
+            child._render_to_docx(self, container, active_context)
         if restore_at_end and active_context.settings.page_layout != context.settings.page_layout:
             active_context = self._ensure_docx_page_layout(
                 container,
@@ -1199,11 +1199,11 @@ class DocxRenderer:
             if self._is_paginated_generated_page(child) and context.theme.generated_content.generated_content_page_breaks:
                 if word_document.paragraphs and not self._ends_with_page_break(word_document):
                     self._ensure_page_break(word_document)
-                child.render_to_docx(self, word_document, active_context)
+                child._render_to_docx(self, word_document, active_context)
                 if index < len(children) - 1:
                     self._ensure_page_break(word_document)
                 continue
-            child.render_to_docx(self, word_document, active_context)
+            child._render_to_docx(self, word_document, active_context)
             if isinstance(child, Part) and not child.children and index < len(children) - 1:
                 self._ensure_page_break(word_document)
 
@@ -2535,7 +2535,7 @@ class DocxRenderer:
     ) -> None:
         if block.columns == 1:
             for child in block.children:
-                child.render_to_docx(self, container, context)
+                child._render_to_docx(self, container, context)
             return
 
         if not self._is_cell_container(container) and hasattr(container, "add_section"):
@@ -2558,7 +2558,7 @@ class DocxRenderer:
             if not current_group:
                 return
             for group_child in current_group:
-                group_child.render_to_docx(self, word_document, context)
+                group_child._render_to_docx(self, word_document, context)
             current_group.clear()
 
         for child in block.children:
@@ -2569,7 +2569,7 @@ class DocxRenderer:
             ):
                 flush_group()
                 self._start_column_section(word_document, 1, block, context)
-                child.render_to_docx(self, word_document, context)
+                child._render_to_docx(self, word_document, context)
                 self._start_column_section(word_document, block.columns, block, context)
                 continue
             current_group.append(child)
@@ -2609,7 +2609,7 @@ class DocxRenderer:
                 default_unit=context.unit,
             ):
                 flush_group()
-                child.render_to_docx(self, container, context)
+                child._render_to_docx(self, container, context)
                 continue
             current_group.append(child)
         flush_group()
@@ -2658,7 +2658,7 @@ class DocxRenderer:
             start = column_index * chunk_size
             end = start + chunk_size
             for child in children[start:end]:
-                child.render_to_docx(self, cell, context)
+                child._render_to_docx(self, cell, context)
             if not cell.paragraphs:
                 cell.add_paragraph()
 

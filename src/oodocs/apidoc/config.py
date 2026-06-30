@@ -346,7 +346,7 @@ class ApiCollectConfig:
         config = ApiCollectConfig(
             public_policy="__all__",
             docstring_style="auto",
-            object_exclude_patterns=("render_to_pdf", "render_to_html"),
+            object_exclude_patterns=("*.experimental",),
         )
         api = collect_api("oodocs", config=config)
         ```

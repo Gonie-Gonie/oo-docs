@@ -364,7 +364,7 @@ class TextBox(Block):
 
         return "".join(fragment.plain_text() for fragment in self.content)
 
-    def render_to_docx(
+    def _render_to_docx(
         self,
         renderer: object,
         container: object,
@@ -380,7 +380,7 @@ class TextBox(Block):
 
         renderer.render_text_box(container, self, context)
 
-    def render_to_pdf(
+    def _render_to_pdf(
         self,
         renderer: object,
         context: PdfRenderContext,
@@ -393,7 +393,7 @@ class TextBox(Block):
 
         return renderer.render_text_box(self, context)
 
-    def render_to_html(
+    def _render_to_html(
         self,
         renderer: object,
         context: HtmlRenderContext,
@@ -564,7 +564,7 @@ class Shape(Block):
 
         return cls("line", width=width, height=height, **kwargs)
 
-    def render_to_docx(
+    def _render_to_docx(
         self,
         renderer: object,
         container: object,
@@ -580,7 +580,7 @@ class Shape(Block):
 
         renderer.render_shape(container, self, context)
 
-    def render_to_pdf(
+    def _render_to_pdf(
         self,
         renderer: object,
         context: PdfRenderContext,
@@ -593,7 +593,7 @@ class Shape(Block):
 
         return renderer.render_shape(self, context)
 
-    def render_to_html(
+    def _render_to_html(
         self,
         renderer: object,
         context: HtmlRenderContext,
@@ -704,7 +704,7 @@ class ImageBox(Block):
         self.z_index = z_index
         self.scope = coerce_page_item_scope(scope)
 
-    def render_to_docx(
+    def _render_to_docx(
         self,
         renderer: object,
         container: object,
@@ -720,7 +720,7 @@ class ImageBox(Block):
 
         renderer.render_image_box(container, self, context)
 
-    def render_to_pdf(
+    def _render_to_pdf(
         self,
         renderer: object,
         context: PdfRenderContext,
@@ -733,7 +733,7 @@ class ImageBox(Block):
 
         return renderer.render_image_box(self, context)
 
-    def render_to_html(
+    def _render_to_html(
         self,
         renderer: object,
         context: HtmlRenderContext,

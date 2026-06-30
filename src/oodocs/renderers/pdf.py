@@ -1495,7 +1495,7 @@ class PdfRenderer:
                 default_unit=context.unit,
             ):
                 flush_group()
-                story.extend(self._unmark_float_story(child.render_to_pdf(self, context)))
+                story.extend(self._unmark_float_story(child._render_to_pdf(self, context)))
                 continue
             current_group.append(child)
         flush_group()
@@ -1848,7 +1848,7 @@ class PdfRenderer:
     ) -> list[object]:
         """Delegate block rendering back to the block instance itself."""
 
-        return block.render_to_pdf(self, context)
+        return block._render_to_pdf(self, context)
 
     def _render_top_level_children(
         self,
@@ -1871,7 +1871,7 @@ class PdfRenderer:
                     story.append(RLPageBreak())
                 elif not story and follows_existing_content:
                     story.append(RLPageBreak())
-                story.extend(child.render_to_pdf(self, active_context))
+                story.extend(child._render_to_pdf(self, active_context))
                 if index < len(children) - 1:
                     story.append(RLPageBreak())
                 continue
@@ -1881,7 +1881,7 @@ class PdfRenderer:
                     story.append(RLPageBreak())
                 elif not story and follows_existing_content:
                     story.append(RLPageBreak())
-                story.extend(child.render_to_pdf(self, active_context))
+                story.extend(child._render_to_pdf(self, active_context))
                 if not child.children and index < len(children) - 1:
                     story.append(RLPageBreak())
                 continue
@@ -1889,12 +1889,12 @@ class PdfRenderer:
                 story.extend(self._pop_pending_float_flowables())
                 if story and not isinstance(story[-1], RLPageBreak):
                     story.append(RLPageBreak())
-                story.extend(child.render_to_pdf(self, active_context))
+                story.extend(child._render_to_pdf(self, active_context))
                 if index < len(children) - 1:
                     story.append(RLPageBreak())
                 continue
             pending_before_child = bool(self._pending_float_flowables)
-            child_story = child.render_to_pdf(self, active_context)
+            child_story = child._render_to_pdf(self, active_context)
             if self._is_float_story(child_story):
                 self._pending_float_flowables.extend(child_story)
                 continue
@@ -1924,12 +1924,12 @@ class PdfRenderer:
                 story.extend(self._pop_pending_float_flowables())
                 if story and not isinstance(story[-1], RLPageBreak):
                     story.append(RLPageBreak())
-                story.extend(child.render_to_pdf(self, active_context))
+                story.extend(child._render_to_pdf(self, active_context))
                 if index < len(children) - 1:
                     story.append(RLPageBreak())
                 continue
             pending_before_child = bool(self._pending_float_flowables)
-            child_story = child.render_to_pdf(self, active_context)
+            child_story = child._render_to_pdf(self, active_context)
             if self._is_float_story(child_story):
                 self._pending_float_flowables.extend(child_story)
                 continue

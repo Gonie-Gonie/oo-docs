@@ -66,7 +66,7 @@ class Block:
 
         return reference(self, *label, style=style, reference_format=reference_format)
 
-    def render_to_docx(
+    def _render_to_docx(
         self,
         renderer: object,
         container: object,
@@ -85,7 +85,7 @@ class Block:
 
         raise NotImplementedError
 
-    def render_to_pdf(
+    def _render_to_pdf(
         self,
         renderer: object,
         context: PdfRenderContext,
@@ -105,7 +105,7 @@ class Block:
 
         raise NotImplementedError
 
-    def render_to_html(
+    def _render_to_html(
         self,
         renderer: object,
         context: HtmlRenderContext,
@@ -226,7 +226,7 @@ class Body(Block):
         self.children.extend(coerce_blocks(children))
         return self
 
-    def render_to_docx(
+    def _render_to_docx(
         self,
         renderer: object,
         container: object,
@@ -241,9 +241,9 @@ class Body(Block):
         """
 
         for child in self.children:
-            child.render_to_docx(renderer, container, context)
+            child._render_to_docx(renderer, container, context)
 
-    def render_to_pdf(
+    def _render_to_pdf(
         self,
         renderer: object,
         context: PdfRenderContext,
@@ -260,10 +260,10 @@ class Body(Block):
 
         story: list[object] = []
         for child in self.children:
-            story.extend(child.render_to_pdf(renderer, context))
+            story.extend(child._render_to_pdf(renderer, context))
         return story
 
-    def render_to_html(
+    def _render_to_html(
         self,
         renderer: object,
         context: HtmlRenderContext,
@@ -278,7 +278,7 @@ class Body(Block):
             Concatenated child HTML.
         """
 
-        return "".join(child.render_to_html(renderer, context) for child in self.children)
+        return "".join(child._render_to_html(renderer, context) for child in self.children)
 
 
 __all__ = ["Block", "BlockInput", "Body", "coerce_blocks"]

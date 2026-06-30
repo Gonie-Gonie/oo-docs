@@ -289,7 +289,7 @@ public-policy = "__all__"
 docstring-style = "auto"
 class-signature-from-init = true
 module-exclude-patterns = ["mypkg.tests*"]
-object-exclude-patterns = ["render_to_docx", "render_to_pdf", "render_to_html"]
+object-exclude-patterns = ["*.experimental"]
 presentation = "website"
 output-formats = ["html"]
 sidecars = true
@@ -354,7 +354,7 @@ object names.
 api = collect_api(
     ".",
     collector="griffe",
-    object_exclude_patterns=("render_to_pdf", "render_to_html"),
+    object_exclude_patterns=("*.experimental",),
 )
 ```
 

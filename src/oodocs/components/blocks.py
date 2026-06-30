@@ -197,7 +197,7 @@ class Paragraph(Block):
             titled.append(Text(title_style.separator))
         return [*titled, *self.content]
 
-    def render_to_docx(
+    def _render_to_docx(
         self,
         renderer: object,
         container: object,
@@ -213,7 +213,7 @@ class Paragraph(Block):
 
         renderer.render_paragraph(container, self, context)
 
-    def render_to_pdf(
+    def _render_to_pdf(
         self,
         renderer: object,
         context: PdfRenderContext,
@@ -230,7 +230,7 @@ class Paragraph(Block):
 
         return renderer.render_paragraph(self, context)
 
-    def render_to_html(
+    def _render_to_html(
         self,
         renderer: object,
         context: HtmlRenderContext,
@@ -357,7 +357,7 @@ class ListBlock(Block):
             start = 1
         return start + len(self.items)
 
-    def render_to_docx(
+    def _render_to_docx(
         self,
         renderer: object,
         container: object,
@@ -373,7 +373,7 @@ class ListBlock(Block):
 
         renderer.render_list(container, self, context)
 
-    def render_to_pdf(
+    def _render_to_pdf(
         self,
         renderer: object,
         context: PdfRenderContext,
@@ -390,7 +390,7 @@ class ListBlock(Block):
 
         return renderer.render_list(self, context)
 
-    def render_to_html(
+    def _render_to_html(
         self,
         renderer: object,
         context: HtmlRenderContext,
@@ -695,7 +695,7 @@ class CodeBlock(Block):
 
         return f"{self.line_prefix(line_number)}{text}"
 
-    def render_to_docx(
+    def _render_to_docx(
         self,
         renderer: object,
         container: object,
@@ -711,7 +711,7 @@ class CodeBlock(Block):
 
         renderer.render_code_block(container, self, context)
 
-    def render_to_pdf(
+    def _render_to_pdf(
         self,
         renderer: object,
         context: PdfRenderContext,
@@ -724,7 +724,7 @@ class CodeBlock(Block):
 
         return renderer.render_code_block(self, context)
 
-    def render_to_html(
+    def _render_to_html(
         self,
         renderer: object,
         context: HtmlRenderContext,
@@ -861,7 +861,7 @@ class Equation(Block):
 
         return (self.expression,)
 
-    def render_to_docx(
+    def _render_to_docx(
         self,
         renderer: object,
         container: object,
@@ -877,7 +877,7 @@ class Equation(Block):
 
         renderer.render_equation(container, self, context)
 
-    def render_to_pdf(
+    def _render_to_pdf(
         self,
         renderer: object,
         context: PdfRenderContext,
@@ -890,7 +890,7 @@ class Equation(Block):
 
         return renderer.render_equation(self, context)
 
-    def render_to_html(
+    def _render_to_html(
         self,
         renderer: object,
         context: HtmlRenderContext,
@@ -1198,7 +1198,7 @@ class PageBreak(Block):
         ```
     """
 
-    def render_to_docx(
+    def _render_to_docx(
         self,
         renderer: object,
         container: object,
@@ -1214,7 +1214,7 @@ class PageBreak(Block):
 
         renderer.render_page_break(container, self, context)
 
-    def render_to_pdf(
+    def _render_to_pdf(
         self,
         renderer: object,
         context: PdfRenderContext,
@@ -1227,7 +1227,7 @@ class PageBreak(Block):
 
         return renderer.render_page_break(self, context)
 
-    def render_to_html(
+    def _render_to_html(
         self,
         renderer: object,
         context: HtmlRenderContext,
@@ -1283,7 +1283,7 @@ class VerticalSpace(Block):
 
         return length_to_inches(self.height, self.unit) * 72.0
 
-    def render_to_docx(
+    def _render_to_docx(
         self,
         renderer: object,
         container: object,
@@ -1299,7 +1299,7 @@ class VerticalSpace(Block):
 
         renderer.render_vertical_space(container, self, context)
 
-    def render_to_pdf(
+    def _render_to_pdf(
         self,
         renderer: object,
         context: PdfRenderContext,
@@ -1312,7 +1312,7 @@ class VerticalSpace(Block):
 
         return renderer.render_vertical_space(self, context)
 
-    def render_to_html(
+    def _render_to_html(
         self,
         renderer: object,
         context: HtmlRenderContext,
@@ -1407,7 +1407,7 @@ class Divider(Block):
             return None
         return length_to_inches(self.width, self.unit or default_unit)
 
-    def render_to_docx(
+    def _render_to_docx(
         self,
         renderer: object,
         container: object,
@@ -1423,7 +1423,7 @@ class Divider(Block):
 
         renderer.render_divider(container, self, context)
 
-    def render_to_pdf(
+    def _render_to_pdf(
         self,
         renderer: object,
         context: PdfRenderContext,
@@ -1436,7 +1436,7 @@ class Divider(Block):
 
         return renderer.render_divider(self, context)
 
-    def render_to_html(
+    def _render_to_html(
         self,
         renderer: object,
         context: HtmlRenderContext,
@@ -1502,7 +1502,7 @@ class ColumnSpan(Block):
         self.children.extend(coerce_blocks(children))
         return self
 
-    def render_to_docx(
+    def _render_to_docx(
         self,
         renderer: object,
         container: object,
@@ -1518,7 +1518,7 @@ class ColumnSpan(Block):
 
         renderer.render_column_span(container, self, context)
 
-    def render_to_pdf(
+    def _render_to_pdf(
         self,
         renderer: object,
         context: PdfRenderContext,
@@ -1531,7 +1531,7 @@ class ColumnSpan(Block):
 
         return renderer.render_column_span(self, context)
 
-    def render_to_html(
+    def _render_to_html(
         self,
         renderer: object,
         context: HtmlRenderContext,
@@ -1712,7 +1712,7 @@ class MultiColumn(Block):
             return group_width > column_width
         return False
 
-    def render_to_docx(
+    def _render_to_docx(
         self,
         renderer: object,
         container: object,
@@ -1728,7 +1728,7 @@ class MultiColumn(Block):
 
         renderer.render_multi_column(container, self, context)
 
-    def render_to_pdf(
+    def _render_to_pdf(
         self,
         renderer: object,
         context: PdfRenderContext,
@@ -1741,7 +1741,7 @@ class MultiColumn(Block):
 
         return renderer.render_multi_column(self, context)
 
-    def render_to_html(
+    def _render_to_html(
         self,
         renderer: object,
         context: HtmlRenderContext,
@@ -1832,7 +1832,7 @@ class Part(Block):
 
         return "".join(fragment.plain_text() for fragment in self.title)
 
-    def render_to_docx(
+    def _render_to_docx(
         self,
         renderer: object,
         container: object,
@@ -1848,7 +1848,7 @@ class Part(Block):
 
         renderer.render_part(container, self, context)
 
-    def render_to_pdf(
+    def _render_to_pdf(
         self,
         renderer: object,
         context: PdfRenderContext,
@@ -1861,7 +1861,7 @@ class Part(Block):
 
         return renderer.render_part(self, context)
 
-    def render_to_html(
+    def _render_to_html(
         self,
         renderer: object,
         context: HtmlRenderContext,
@@ -2073,7 +2073,7 @@ class Box(Block):
         self.children.extend(coerce_blocks(children))
         return self
 
-    def render_to_docx(
+    def _render_to_docx(
         self,
         renderer: object,
         container: object,
@@ -2089,7 +2089,7 @@ class Box(Block):
 
         renderer.render_box(container, self, context)
 
-    def render_to_pdf(
+    def _render_to_pdf(
         self,
         renderer: object,
         context: PdfRenderContext,
@@ -2102,7 +2102,7 @@ class Box(Block):
 
         return renderer.render_box(self, context)
 
-    def render_to_html(
+    def _render_to_html(
         self,
         renderer: object,
         context: HtmlRenderContext,
@@ -2264,7 +2264,7 @@ class CountableBlock(Block):
             fragments.extend(self.title)
         return fragments
 
-    def render_to_docx(
+    def _render_to_docx(
         self,
         renderer: object,
         container: object,
@@ -2280,7 +2280,7 @@ class CountableBlock(Block):
 
         renderer.render_countable_block(container, self, context)
 
-    def render_to_pdf(
+    def _render_to_pdf(
         self,
         renderer: object,
         context: PdfRenderContext,
@@ -2293,7 +2293,7 @@ class CountableBlock(Block):
 
         return renderer.render_countable_block(self, context)
 
-    def render_to_html(
+    def _render_to_html(
         self,
         renderer: object,
         context: HtmlRenderContext,
@@ -2678,7 +2678,7 @@ class Section(Block):
 
         return "".join(fragment.plain_text() for fragment in self.title)
 
-    def render_to_docx(
+    def _render_to_docx(
         self,
         renderer: object,
         container: object,
@@ -2694,7 +2694,7 @@ class Section(Block):
 
         renderer.render_section(container, self, context)
 
-    def render_to_pdf(
+    def _render_to_pdf(
         self,
         renderer: object,
         context: PdfRenderContext,
@@ -2707,7 +2707,7 @@ class Section(Block):
 
         return renderer.render_section(self, context)
 
-    def render_to_html(
+    def _render_to_html(
         self,
         renderer: object,
         context: HtmlRenderContext,

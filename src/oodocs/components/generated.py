@@ -143,7 +143,7 @@ class ListOfTables(Block):
         self.show_page_numbers = show_page_numbers
         self.leader = leader
 
-    def render_to_docx(
+    def _render_to_docx(
         self,
         renderer: object,
         container: object,
@@ -159,7 +159,7 @@ class ListOfTables(Block):
 
         renderer.render_list_of_tables(self, context)
 
-    def render_to_pdf(
+    def _render_to_pdf(
         self,
         renderer: object,
         context: PdfRenderContext,
@@ -172,7 +172,7 @@ class ListOfTables(Block):
 
         return renderer.render_list_of_tables(self, context)
 
-    def render_to_html(
+    def _render_to_html(
         self,
         renderer: object,
         context: HtmlRenderContext,
@@ -225,7 +225,7 @@ class ListOfFigures(Block):
         self.show_page_numbers = show_page_numbers
         self.leader = leader
 
-    def render_to_docx(
+    def _render_to_docx(
         self,
         renderer: object,
         container: object,
@@ -241,7 +241,7 @@ class ListOfFigures(Block):
 
         renderer.render_list_of_figures(self, context)
 
-    def render_to_pdf(
+    def _render_to_pdf(
         self,
         renderer: object,
         context: PdfRenderContext,
@@ -254,7 +254,7 @@ class ListOfFigures(Block):
 
         return renderer.render_list_of_figures(self, context)
 
-    def render_to_html(
+    def _render_to_html(
         self,
         renderer: object,
         context: HtmlRenderContext,
@@ -309,7 +309,7 @@ class ListOfAlgorithms(Block):
         self.show_page_numbers = show_page_numbers
         self.leader = leader
 
-    def render_to_docx(
+    def _render_to_docx(
         self,
         renderer: object,
         container: object,
@@ -325,7 +325,7 @@ class ListOfAlgorithms(Block):
 
         renderer.render_list_of_algorithms(self, context)
 
-    def render_to_pdf(
+    def _render_to_pdf(
         self,
         renderer: object,
         context: PdfRenderContext,
@@ -338,7 +338,7 @@ class ListOfAlgorithms(Block):
 
         return renderer.render_list_of_algorithms(self, context)
 
-    def render_to_html(
+    def _render_to_html(
         self,
         renderer: object,
         context: HtmlRenderContext,
@@ -405,7 +405,7 @@ class ReferenceList(Block):
 
         return self.sort or normalize_reference_sort(default)
 
-    def render_to_docx(
+    def _render_to_docx(
         self,
         renderer: object,
         container: object,
@@ -421,7 +421,7 @@ class ReferenceList(Block):
 
         renderer.render_reference_list(self, context)
 
-    def render_to_pdf(
+    def _render_to_pdf(
         self,
         renderer: object,
         context: PdfRenderContext,
@@ -434,7 +434,7 @@ class ReferenceList(Block):
 
         return renderer.render_reference_list(self, context)
 
-    def render_to_html(
+    def _render_to_html(
         self,
         renderer: object,
         context: HtmlRenderContext,
@@ -516,7 +516,7 @@ class GlossaryList(Block):
             toc=False,
         )
 
-    def render_to_docx(
+    def _render_to_docx(
         self,
         renderer: object,
         container: object,
@@ -527,9 +527,9 @@ class GlossaryList(Block):
         self._section(
             default_title=context.theme.resolve_generated_page_title("glossary_list"),
             default_headers=context.theme.resolve_glossary_headers(),
-        ).render_to_docx(renderer, container, context)
+        )._render_to_docx(renderer, container, context)
 
-    def render_to_pdf(
+    def _render_to_pdf(
         self,
         renderer: object,
         context: PdfRenderContext,
@@ -539,9 +539,9 @@ class GlossaryList(Block):
         return self._section(
             default_title=context.theme.resolve_generated_page_title("glossary_list"),
             default_headers=context.theme.resolve_glossary_headers(),
-        ).render_to_pdf(renderer, context)
+        )._render_to_pdf(renderer, context)
 
-    def render_to_html(
+    def _render_to_html(
         self,
         renderer: object,
         context: HtmlRenderContext,
@@ -551,7 +551,7 @@ class GlossaryList(Block):
         return self._section(
             default_title=context.theme.resolve_generated_page_title("glossary_list"),
             default_headers=context.theme.resolve_glossary_headers(),
-        ).render_to_html(renderer, context)
+        )._render_to_html(renderer, context)
 
 
 @dataclass(slots=True, init=False)
@@ -576,7 +576,7 @@ class CommentList(Block):
     def __init__(self, title: InlineInput | None = None) -> None:
         self.title = coerce_inlines((title,)) if title is not None else None
 
-    def render_to_docx(
+    def _render_to_docx(
         self,
         renderer: object,
         container: object,
@@ -592,7 +592,7 @@ class CommentList(Block):
 
         renderer.render_comment_list(self, context)
 
-    def render_to_pdf(
+    def _render_to_pdf(
         self,
         renderer: object,
         context: PdfRenderContext,
@@ -605,7 +605,7 @@ class CommentList(Block):
 
         return renderer.render_comment_list(self, context)
 
-    def render_to_html(
+    def _render_to_html(
         self,
         renderer: object,
         context: HtmlRenderContext,
@@ -641,7 +641,7 @@ class FootnoteList(Block):
     def __init__(self, title: InlineInput | None = None) -> None:
         self.title = coerce_inlines((title,)) if title is not None else None
 
-    def render_to_docx(
+    def _render_to_docx(
         self,
         renderer: object,
         container: object,
@@ -657,7 +657,7 @@ class FootnoteList(Block):
 
         renderer.render_footnote_list(self, context)
 
-    def render_to_pdf(
+    def _render_to_pdf(
         self,
         renderer: object,
         context: PdfRenderContext,
@@ -670,7 +670,7 @@ class FootnoteList(Block):
 
         return renderer.render_footnote_list(self, context)
 
-    def render_to_html(
+    def _render_to_html(
         self,
         renderer: object,
         context: HtmlRenderContext,
@@ -771,7 +771,7 @@ class TableOfContents(Block):
 
         return self.level_styles.get(level, TocLevelStyle())
 
-    def render_to_docx(
+    def _render_to_docx(
         self,
         renderer: object,
         container: object,
@@ -787,7 +787,7 @@ class TableOfContents(Block):
 
         renderer.render_table_of_contents(self, context)
 
-    def render_to_pdf(
+    def _render_to_pdf(
         self,
         renderer: object,
         context: PdfRenderContext,
@@ -800,7 +800,7 @@ class TableOfContents(Block):
 
         return renderer.render_table_of_contents(self, context)
 
-    def render_to_html(
+    def _render_to_html(
         self,
         renderer: object,
         context: HtmlRenderContext,
