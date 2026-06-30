@@ -327,6 +327,18 @@ def test_text_style_uses_canonical_field_names() -> None:
     assert {"text_color", "uppercase"} <= field_names
 
 
+def test_highlight_helpers_use_highlight_color_parameter_name() -> None:
+    for callable_obj in (
+        inline_components.Highlight,
+        oodocs.Text.highlight,
+        oodocs.highlight,
+    ):
+        parameters = set(inspect.signature(callable_obj).parameters)
+
+        assert "color" not in parameters
+        assert "highlight_color" in parameters
+
+
 def test_citation_defaults_use_style_field_names() -> None:
     citation_fields = {field.name for field in fields(oodocs.CitationDefaults)}
     theme_fields = {field.name for field in fields(oodocs.Theme)}

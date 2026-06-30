@@ -601,7 +601,7 @@ def test_method_style_inline_actions_create_renderable_fragments() -> None:
     assert Text.italic("note").style.italic is True
     assert Text.inline_code("x = 1").style.font_name == "Courier New"
     assert Text.text_color("accent", "#0066AA").style.text_color == "0066AA"
-    assert Text.highlight("marked", "#FFF2CC").style.highlight_color == "FFF2CC"
+    assert Text.highlight("marked", highlight_color="#FFF2CC").style.highlight_color == "FFF2CC"
     assert Text.strikethrough("old").style.strikethrough is True
     assert Text.superscript("2").style.superscript is True
     assert Text.subscript("0").style.subscript is True
@@ -613,7 +613,7 @@ def test_method_style_inline_actions_create_renderable_fragments() -> None:
     assert italic("note").style.italic is True
     assert inline_code("x = 1").style.font_name == "Courier New"
     assert text_color("accent", "#0066AA").style.text_color == "0066AA"
-    assert highlight("marked", "#FFF2CC").style.highlight_color == "FFF2CC"
+    assert highlight("marked", highlight_color="#FFF2CC").style.highlight_color == "FFF2CC"
     assert strikethrough("old").style.strikethrough is True
     assert superscript("2").style.superscript is True
     assert subscript("0").style.subscript is True
@@ -2744,7 +2744,7 @@ def test_inline_highlight_strike_and_line_break_render_to_all_outputs(tmp_path: 
         "Inline Word Features",
         Paragraph(
             "Keep ",
-            highlight("review focus", "#FFF2CC"),
+            highlight("review focus", highlight_color="#FFF2CC"),
             ", remove ",
             strikethrough("old value"),
             line_break(),

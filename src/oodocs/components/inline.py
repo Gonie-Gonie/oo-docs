@@ -133,21 +133,21 @@ class Text:
     def highlight(
         cls,
         value: str,
-        color: str = "FFFF00",
+        highlight_color: str = "FFFF00",
         style: TextStyle | None = None,
     ) -> Highlight:
         """Create a highlighted text fragment.
 
         Args:
             value: Literal text content.
-            color: Highlight color as a hex string.
+            highlight_color: Highlight color as a hex string.
             style: Additional style values to merge.
 
         Returns:
             Highlighted text fragment.
         """
 
-        return Highlight(value, color=color, style=style)
+        return Highlight(value, highlight_color=highlight_color, style=style)
 
     @classmethod
     def strikethrough(
@@ -360,7 +360,7 @@ class Highlight(Text):
 
     Args:
         value: Literal text content.
-        color: Highlight color as a hex string.
+        highlight_color: Highlight color as a hex string.
         style: Additional style values to merge.
 
     Examples:
@@ -368,7 +368,7 @@ class Highlight(Text):
         from oodocs import Document, Paragraph
         from oodocs.components.inline import Highlight
 
-        document = Document("Diff", Paragraph("Field ", Highlight("changed", color="FFF3B0")))
+        document = Document("Diff", Paragraph("Field ", Highlight("changed", highlight_color="FFF3B0")))
         ```
     """
 
@@ -376,12 +376,12 @@ class Highlight(Text):
         self,
         value: str,
         *,
-        color: str = "FFFF00",
+        highlight_color: str = "FFFF00",
         style: TextStyle | None = None,
     ) -> None:
         super().__init__(
             value=value,
-            style=TextStyle(highlight_color=color).merged(style),
+            style=TextStyle(highlight_color=highlight_color).merged(style),
         )
 
 
@@ -1777,7 +1777,7 @@ def text_color(
 
 def highlight(
     value: str,
-    color: str = "FFFF00",
+    highlight_color: str = "FFFF00",
     *,
     style: TextStyle | None = None,
 ) -> Highlight:
@@ -1785,7 +1785,7 @@ def highlight(
 
     Args:
         value: Literal text content.
-        color: Highlight color as a hex string.
+        highlight_color: Highlight color as a hex string.
         style: Additional style values to merge.
 
     Returns:
@@ -1797,7 +1797,7 @@ def highlight(
         ```
     """
 
-    return Text.highlight(value, color=color, style=style)
+    return Text.highlight(value, highlight_color=highlight_color, style=style)
 
 
 def strikethrough(value: str, *, style: TextStyle | None = None) -> Strikethrough:

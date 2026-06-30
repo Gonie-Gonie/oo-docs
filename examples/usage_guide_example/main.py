@@ -634,7 +634,7 @@ INLINE_WORD_FEATURES_SNIPPET = """from oodocs import Paragraph, Text, highlight,
 
 Paragraph(
     "Keep ",
-    highlight("review focus", "#FFF2CC"),
+    highlight("review focus", highlight_color="#FFF2CC"),
     ", remove ",
     strikethrough("old value"),
     line_break(),
