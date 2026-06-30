@@ -202,6 +202,9 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert any("Numbered statements, proofs, and custom counters" in text for text in paragraph_texts)
     assert any("CountableBlock" in text for text in paragraph_texts)
     assert any("Theorem 3. Stable references" in text for text in paragraph_texts)
+    assert any("Algorithms use the same countable-block reference path" in text for text in paragraph_texts)
+    assert any("body_style='code'" in text for text in paragraph_texts)
+    assert "ListOfAlgorithms" in table_text
     assert any("Exercise 1." in text for text in paragraph_texts)
     assert any("Build and validate from the CLI" in text for text in paragraph_texts)
     assert any("oodocs build report.py --out artifacts" in text for text in paragraph_texts)
@@ -345,6 +348,9 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "Numbered statements, proofs, and custom counters" in pdf_text
     assert "CountableBlock" in pdf_text
     assert "Theorem 3. Stable references" in pdf_text
+    assert "Algorithms use the same countable-block reference path" in pdf_text
+    assert "body_style='code'" in pdf_text
+    assert "ListOfAlgorithms" in pdf_text
     assert "Exercise 1." in pdf_text
     assert "Build and validate from the CLI" in pdf_text
     assert "oodocs build report.py --out artifacts" in pdf_text
@@ -470,6 +476,9 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "Numbered statements, proofs, and custom counters" in normalized_html_text
     assert "CountableBlock" in normalized_html_text
     assert "Theorem 3. Stable references" in normalized_html_text
+    assert "Algorithms use the same countable-block reference path" in normalized_html_text
+    assert "body_style='code'" in normalized_html_text
+    assert "ListOfAlgorithms" in normalized_html_text
     assert "Exercise 1." in normalized_html_text
     assert "Build and validate from the CLI" in normalized_html_text
     assert "oodocs build report.py --out artifacts" in normalized_html_text

@@ -284,6 +284,19 @@ def test_readme_latex_translations_include_listings_minted_policy() -> None:
     assert "`CodeBlock.from_file(...)`" in translations
 
 
+def test_readme_latex_translations_include_algorithmicx_policy() -> None:
+    readme = _readme()
+    translations = readme.split("Common translations:", 1)[1].split(
+        "The main payoff",
+        1,
+    )[0]
+
+    assert "LaTeX `algorithm` / `algorithmicx`" in translations
+    assert "`Algorithm(..., inputs=..., outputs=..., steps=...)`" in translations
+    assert "`oodocs.engineering`" in translations
+    assert "automatic numbering and references" in translations
+
+
 def test_public_api_policy_doc_defines_tiers_and_guards() -> None:
     policy = Path("docs/reference/public-api-policy.md").read_text(encoding="utf-8")
 

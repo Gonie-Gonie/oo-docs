@@ -106,11 +106,13 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "oodocs.TableCellStyle" in all_titles
     assert "oodocs.CodeBlock" in all_titles
     assert "oodocs.Figure" in all_titles
+    assert "oodocs.engineering.Algorithm" in all_titles
     assert "oodocs.SubFigure" in all_titles
     assert "oodocs.SubFigureGroup" in all_titles
     assert "oodocs.media.SubTable" in all_titles
     assert "oodocs.media.SubTableGroup" in all_titles
     assert "oodocs.pdf.PdfPages" in all_titles
+    assert "oodocs.generated.ListOfAlgorithms" in all_titles
     assert "oodocs.generated.ListOfListings" in all_titles
     assert "oodocs.TableOfContents" in all_titles
     assert "oodocs.ListOfTables" in all_titles
@@ -178,6 +180,10 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "line_numbers" in text
     assert "highlight_lines" in text
     assert "identifier" in text
+    assert "inputs" in text
+    assert "outputs" in text
+    assert "body_style" in text
+    assert "reference_label" in text
 
 
 def test_help_book_renders_uncategorized_api_appendix_from_category_gate() -> None:

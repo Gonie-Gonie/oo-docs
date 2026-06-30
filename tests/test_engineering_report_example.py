@@ -64,6 +64,8 @@ def test_engineering_report_example_builds_outputs(tmp_path: Path) -> None:
     assert "1 Signal Processing Method" in paragraph_texts
     assert any("Quality Gate Algorithm" in text for text in paragraph_texts)
     assert "Algorithm 1" in "\n".join(paragraph_texts)
+    assert any("Input:" in text for text in paragraph_texts)
+    assert any("Output:" in text for text in paragraph_texts)
     assert "R-01" in table_text
     assert "Drift correction" in table_text
     assert "Signal quality gate" in pdf_text
