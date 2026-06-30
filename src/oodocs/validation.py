@@ -869,6 +869,7 @@ class DocumentValidationError(OODocsError):
     Args:
         result: Validation result or raw validation issues.
         formats: Output formats whose errors should block rendering.
+        policy: Optional warning policy that made warnings blocking.
 
     Examples:
         ```python
@@ -931,7 +932,11 @@ class DocumentValidationError(OODocsError):
 
     @property
     def blocking_warnings(self) -> tuple[ValidationIssue, ...]:
-        """Return policy-blocked warnings associated with the blocked formats."""
+        """Return policy-blocked warnings associated with the blocked formats.
+
+        Returns:
+            Warning issues blocked by this error's validation policy.
+        """
 
         if self.policy is None:
             return ()
