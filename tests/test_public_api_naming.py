@@ -25,6 +25,9 @@ import oodocs.importers as importers
 import oodocs.media as media
 import oodocs.pdf as pdf
 import oodocs.positioning as positioning
+import oodocs.presets as presets
+import oodocs.presets.components as preset_components
+import oodocs.presets.templates as preset_templates
 import oodocs.public_api as public_api
 import oodocs.references as reference_helpers
 import oodocs.review as review
@@ -223,6 +226,39 @@ def test_tier_two_namespaces_export_domain_symbols() -> None:
             assert hasattr(module, name)
             if hasattr(oodocs, name):
                 assert getattr(module, name) is getattr(oodocs, name)
+
+
+def test_preset_namespaces_keep_component_and_template_boundaries() -> None:
+    component_preset_names = {
+        "CalloutBox",
+        "CompactTable",
+        "info_box",
+        "KeyValueTable",
+        "Nomenclature",
+        "note_box",
+        "option_table",
+        "success_box",
+        "warning_box",
+    }
+    template_preset_names = {
+        "BookTemplate",
+        "CoverPagePreset",
+        "JournalArticleTemplate",
+        "ManuscriptSection",
+        "SoftwareManualTemplate",
+        "TechnicalReportTemplate",
+    }
+    all_preset_names = component_preset_names | template_preset_names
+
+    assert set(preset_components.__all__) == component_preset_names
+    assert set(preset_templates.__all__) == template_preset_names
+    assert set(presets.__all__) == all_preset_names
+    assert all_preset_names.isdisjoint(oodocs.__all__)
+
+    for name in component_preset_names:
+        assert getattr(presets, name) is getattr(preset_components, name)
+    for name in template_preset_names:
+        assert getattr(presets, name) is getattr(preset_templates, name)
 
 
 def test_top_level_public_api_uses_completed_canonical_names() -> None:

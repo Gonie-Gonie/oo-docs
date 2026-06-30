@@ -7,6 +7,13 @@ styling, while callers provide manuscript content and metadata.
 Use it when you want to start from a complete document shape instead of
 assembling every chapter, generated list, and declaration block by hand.
 
+Canonical preset APIs live under `oodocs.presets.templates` for document
+builders and `oodocs.presets.components` for reusable component presets.
+`oodocs.presets` re-exports both groups for convenience, while top-level
+`oodocs` stays focused on core document primitives. The files in this directory
+are runnable examples that demonstrate those preset APIs; they are not an
+additional public template namespace.
+
 Render every template example:
 
 ```powershell
