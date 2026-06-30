@@ -107,6 +107,8 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "oodocs.ListOfTables" in all_titles
     assert "oodocs.ListOfFigures" in all_titles
     assert "oodocs.structure.Appendix" in all_titles
+    assert "oodocs.media.ColumnSpec" in all_titles
+    assert "oodocs.media.TableOverflowPolicy" in all_titles
     assert "oodocs.compatibility.OUTPUT_FORMATS" in all_titles
     assert "oodocs.components.blocks.MIN_SECTION_LEVEL" in all_titles
     assert "oodocs.Theme" in all_titles
@@ -144,6 +146,9 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "continued_caption_template" in text
     assert "repeat_header_rows" in text
     assert "long_table_threshold" in text
+    assert "Table.excerpt" in text
+    assert "save_csv" in text
+    assert "visible" in text
 
 
 def test_help_book_renders_uncategorized_api_appendix_from_category_gate() -> None:

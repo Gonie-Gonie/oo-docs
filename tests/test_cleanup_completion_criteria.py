@@ -202,6 +202,21 @@ def test_readme_latex_translations_include_longtable_policy() -> None:
     assert "HTML plain-flow headers via `display: table-header-group`" in translations
 
 
+def test_readme_latex_translations_include_tabularx_array_policy() -> None:
+    readme = _readme()
+    translations = readme.split("Common translations:", 1)[1].split(
+        "The main payoff",
+        1,
+    )[0]
+
+    assert "LaTeX `tabularx` / `array` column specs" in translations
+    assert "`ColumnSpec(width=...)`" in translations
+    assert "`ColumnSpec(flex=...)`" in translations
+    assert "`Table.excerpt(...)`" in translations
+    assert "`TableOverflowPolicy(action=\"allow\")`" in translations
+    assert "CSV sidecar for very wide matrices" in translations
+
+
 def test_public_api_policy_doc_defines_tiers_and_guards() -> None:
     policy = Path("docs/reference/public-api-policy.md").read_text(encoding="utf-8")
 
