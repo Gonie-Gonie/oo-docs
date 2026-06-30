@@ -17,6 +17,7 @@ from oodocs import (
     Section,
     Table,
     TableOfContents,
+    TitleMatter,
     inline_code,
 )
 
@@ -207,7 +208,9 @@ def build_document(reference: ConfigReference | None = None) -> Document:
                 author="OODocs Contributors",
                 description="Configuration reference generated from example config files",
             ),
-            subtitle="TOML config and JSON schema as a field reference",
+            title_matter=TitleMatter(
+                subtitle="TOML config and JSON schema as a field reference",
+            ),
         ),
     )
 

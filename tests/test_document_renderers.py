@@ -148,6 +148,7 @@ from oodocs import (
     Text,
     TextStyle,
     Theme,
+    TitleMatter,
     TitleMatterDefaults,
     TypographyDefaults,
     ValidationResult,
@@ -2464,7 +2465,7 @@ def test_page_item_scopes_filter_pdf_and_warn_for_static_outputs(tmp_path: Path)
         Chapter("Main Matter", Paragraph("Main body text.")),
         settings=DocumentSettings(
             page_layout=PageLayout(PageSize.letter()),
-            cover_page=True,
+            title_matter=TitleMatter(cover_page=True),
             overlays=[
                 TextBox("ALL SCOPE", x=0.3, y=0.2, width=1.8, height=0.25, font_size=8),
                 TextBox(
@@ -3289,7 +3290,7 @@ def test_component_and_template_presets_build_renderable_documents(tmp_path: Pat
         back_matter=Paragraph("Distribution list."),
     )
     assert report_document.validate().ok
-    assert report_document.settings.cover_page is True
+    assert report_document.settings.title_matter.cover_page is True
     report_front_matter, report_main_matter = report_document.split_top_level_children()
     assert any(isinstance(child, TableOfContents) for child in report_front_matter)
     assert any(
@@ -3352,8 +3353,8 @@ def test_component_and_template_presets_build_renderable_documents(tmp_path: Pat
         subtitle="Release gate evidence",
         authors=[Author("QA Lead", affiliations=["Example Lab"])],
     )
-    assert cover_settings.cover_page is True
-    assert cover_settings.author_layout.mode == "stacked"
+    assert cover_settings.title_matter.cover_page is True
+    assert cover_settings.title_matter.author_layout.mode == "stacked"
     assert len(cover_settings.overlays) == 3
     assert cover_settings.page_items == cover_settings.overlays
     assert all(item.scope.kind == "cover" for item in cover_settings.overlays)
@@ -4469,15 +4470,17 @@ def test_document_accepts_document_settings() -> None:
             subject="Settings test",
             keywords="settings, metadata",
         ),
-        subtitle="Grouped metadata",
-        authors=[
-            Author(
-                "Example Author",
-                affiliations=[Affiliation(organization="Example Lab")],
-            )
-        ],
-        author_layout=AuthorLayout(mode="stacked"),
-        cover_page=True,
+        title_matter=TitleMatter(
+            subtitle="Grouped metadata",
+            authors=[
+                Author(
+                    "Example Author",
+                    affiliations=[Affiliation(organization="Example Lab")],
+                )
+            ],
+            author_layout=AuthorLayout(mode="stacked"),
+            cover_page=True,
+        ),
         unit="cm",
         theme=Theme(page_numbers=PageNumberDefaults(show_page_numbers=True)),
     )
@@ -4488,12 +4491,13 @@ def test_document_accepts_document_settings() -> None:
     assert document.settings.resolved_metadata_title(document.title) == "Configured"
     assert document.settings.resolved_metadata_subject() == "Settings test"
     assert document.settings.resolved_metadata_keywords() == ("settings", "metadata")
-    assert document.settings.subtitle is not None
-    assert document.settings.subtitle[0].plain_text() == "Grouped metadata"
-    assert document.settings.authors[0].name == "Example Author"
-    assert document.settings.authors[0].affiliations[0].formatted() == "Example Lab"
-    assert document.settings.author_layout.mode == "stacked"
-    assert document.settings.cover_page is True
+    title_matter = document.settings.title_matter
+    assert title_matter.subtitle is not None
+    assert title_matter.subtitle[0].plain_text() == "Grouped metadata"
+    assert title_matter.authors[0].name == "Example Author"
+    assert title_matter.authors[0].affiliations[0].formatted() == "Example Lab"
+    assert title_matter.author_layout.mode == "stacked"
+    assert title_matter.cover_page is True
     assert document.settings.unit == "cm"
     assert round(document.settings.get_text_width(), 2) == 15.92
     assert document.settings.theme.page_numbers.show_page_numbers is True

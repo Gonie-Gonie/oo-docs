@@ -34,6 +34,7 @@ from oodocs import (
     SubFigureGroup,
     Table,
     Theme,
+    TitleMatter,
     inline_code,
     italic,
 )
@@ -467,29 +468,31 @@ def build_journal_paper_document(inputs: ManuscriptInputs | None = None) -> Docu
         ListOfReferences(include_uncited=True),
         settings=DocumentSettings(
             metadata=DocumentMetadata(description="Journal-style development philosophy paper"),
-            authors=[
-                Author(
-                    "Hyeong-Gon Jo",
-                    affiliations=[
-                        Affiliation(
-                            department="Building Simulation LAB",
-                            organization="Seoul National University",
-                            city="Seoul",
-                            country="Republic of Korea",
-                        )
-                    ],
-                    corresponding=True,
-                    email="gonie@example.org",
-                    orcid="0009-0004-8821-275X",
-                    note="GitHub: @Gonie-Gonie",
-                ),
-                Author(
-                    "Codex",
-                    affiliations=[Affiliation(organization="OpenAI")],
-                    position="Coding Agent",
-                    note="GitHub: openai/codex",
-                ),
-            ],
+            title_matter=TitleMatter(
+                authors=[
+                    Author(
+                        "Hyeong-Gon Jo",
+                        affiliations=[
+                            Affiliation(
+                                department="Building Simulation LAB",
+                                organization="Seoul National University",
+                                city="Seoul",
+                                country="Republic of Korea",
+                            )
+                        ],
+                        corresponding=True,
+                        email="gonie@example.org",
+                        orcid="0009-0004-8821-275X",
+                        note="GitHub: @Gonie-Gonie",
+                    ),
+                    Author(
+                        "Codex",
+                        affiliations=[Affiliation(organization="OpenAI")],
+                        position="Coding Agent",
+                        note="GitHub: openai/codex",
+                    ),
+                ]
+            ),
             theme=Theme(
                 page_numbers=PageNumberDefaults(show_page_numbers=True, page_number_template="{page}"),
                 citations=CitationDefaults(citation_style="apa", reference_style="apa", reference_sort="author"),

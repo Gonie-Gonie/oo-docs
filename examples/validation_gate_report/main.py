@@ -16,6 +16,7 @@ from oodocs import (
     Section,
     Table,
     TableOfContents,
+    TitleMatter,
     inline_code,
 )
 from oodocs.validation import ValidationPolicy, ValidationResult
@@ -164,7 +165,7 @@ def build_document(
                 author="OODocs Contributors",
                 description="Validation gate report with JSON diagnostics sidecar",
             ),
-            subtitle="Document.validate() as a release gate",
+            title_matter=TitleMatter(subtitle="Document.validate() as a release gate"),
         ),
     )
 

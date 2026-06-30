@@ -26,6 +26,7 @@ from oodocs import (
     ListOfTables,
     TableOfContents,
     Theme,
+    TitleMatter,
     bold,
     inline_code,
 )
@@ -401,7 +402,9 @@ def build_benchmark_document(
                 author="OODocs Contributors",
                 description="Example report generated from native Python benchmark data",
             ),
-            subtitle="Documenting measured Python work without leaving Python",
+            title_matter=TitleMatter(
+                subtitle="Documenting measured Python work without leaving Python",
+            ),
             theme=Theme(
                 page_numbers=PageNumberDefaults(
                     show_page_numbers=True,

@@ -128,10 +128,11 @@ class HtmlRenderer:
             unit=settings.unit,
         )
         front_children, main_children = document.split_top_level_children()
-        has_front_matter = settings.cover_page or bool(front_children)
+        title_matter = settings.title_matter
+        has_front_matter = title_matter.cover_page or bool(front_children)
         page_item_phase = (
             "cover"
-            if settings.cover_page
+            if title_matter.cover_page
             else "front" if has_front_matter else "main"
         )
 
@@ -148,7 +149,7 @@ class HtmlRenderer:
             self._render_title_matter(
                 document,
                 context,
-                page_break_after=settings.cover_page and (bool(front_children) or bool(main_children)),
+                page_break_after=title_matter.cover_page and (bool(front_children) or bool(main_children)),
             ),
         ]
 
@@ -1482,8 +1483,9 @@ class HtmlRenderer:
         page_break_after: bool,
     ) -> str:
         settings = document.settings
+        title_matter = settings.title_matter
         classes = ["oodocs-title-matter"]
-        if settings.cover_page:
+        if title_matter.cover_page:
             classes.append("oodocs-cover-page")
         if page_break_after:
             classes.append("oodocs-page-break-after")
@@ -1498,10 +1500,10 @@ class HtmlRenderer:
                 theme=context.theme,
             )
         ]
-        if settings.subtitle is not None:
+        if title_matter.subtitle is not None:
             lines.append(
                 self._title_line_html(
-                    settings.subtitle,
+                    title_matter.subtitle,
                     font_size=max(context.theme.typography.body_font_size + 1, 12),
                     alignment=context.theme.title_matter.subtitle_text_alignment,
                     italic=True,
@@ -1510,7 +1512,7 @@ class HtmlRenderer:
                     space_after=10,
                 )
             )
-        author_lines = list(document.settings.iter_author_title_lines())
+        author_lines = list(title_matter.iter_author_title_lines())
         for index, (line, _is_last_for_author) in enumerate(author_lines):
             lines.append(
                 self._title_line_html(

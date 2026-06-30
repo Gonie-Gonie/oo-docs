@@ -240,7 +240,8 @@ class DocxRenderer:
             word_document=word_document,
         )
         front_children, main_children = document.split_top_level_children()
-        has_front_matter = settings.cover_page or bool(front_children)
+        title_matter = settings.title_matter
+        has_front_matter = title_matter.cover_page or bool(front_children)
         self._render_page_items(
             word_document,
             document,
@@ -254,7 +255,7 @@ class DocxRenderer:
             context,
         )
 
-        if settings.cover_page and front_children:
+        if title_matter.cover_page and front_children:
             self._ensure_page_break(word_document)
 
         if has_front_matter:
@@ -1221,16 +1222,17 @@ class DocxRenderer:
             bold=True,
             space_after=12,
         )
-        if document.settings.subtitle is not None:
+        title_matter = document.settings.title_matter
+        if title_matter.subtitle is not None:
             self._add_title_line(
                 word_document,
-                document.settings.subtitle,
+                title_matter.subtitle,
                 font_size=max(context.theme.typography.body_font_size + 1, 12),
                 alignment=context.theme.title_matter.subtitle_text_alignment,
                 italic=True,
                 space_after=10,
             )
-        author_lines = list(document.settings.iter_author_title_lines())
+        author_lines = list(title_matter.iter_author_title_lines())
         for index, (line, _is_last_for_author) in enumerate(author_lines):
             self._add_title_line(
                 word_document,
@@ -2673,7 +2675,7 @@ class DocxRenderer:
         if not document.settings.overlays:
             return
         section = word_document.sections[0]
-        if document.settings.cover_page:
+        if document.settings.title_matter.cover_page:
             section.different_first_page_header_footer = True
             self._render_section_page_items(
                 section.first_page_header,

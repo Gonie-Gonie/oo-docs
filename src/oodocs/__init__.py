@@ -76,6 +76,7 @@ from oodocs.settings import (
     PageLayout,
     PageMargins,
     PageSize,
+    TitleMatter,
 )
 from oodocs.styles import (
     BlockDefaults,
@@ -212,6 +213,7 @@ __all__ = [
     "ListOfTables",
     "Text",
     "TextStyle",
+    "TitleMatter",
     "TitleMatterDefaults",
     "Theme",
     "TypographyDefaults",

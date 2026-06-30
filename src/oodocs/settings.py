@@ -61,7 +61,7 @@ class DocumentMetadata:
     Args:
         title: Optional metadata title. Defaults to the visible document title.
         author: Optional file metadata author. Defaults to structured
-            ``authors`` from ``DocumentSettings``.
+            ``authors`` from ``DocumentSettings.title_matter``.
         subject: Optional subject written to DOCX/PDF metadata and HTML meta.
         keywords: Optional keyword list or comma-separated keyword string.
         description: Optional HTML description and DOCX comments text.
@@ -513,17 +513,177 @@ class PageLayout:
 
 
 @dataclass(slots=True, init=False)
+class TitleMatter:
+    """Visible title-matter options rendered near the document title.
+
+    Args:
+        subtitle: Optional subtitle rendered below the document title.
+        authors: Optional author data rendered as journal or stacked title
+            matter lines.
+        author_layout: Layout rules for author title matter.
+        cover_page: Whether renderers should place title matter on a separate
+            cover page when supported.
+
+    Examples:
+        ```python
+        from oodocs import Author, Document, DocumentSettings, Paragraph, TitleMatter
+
+        settings = DocumentSettings(
+            title_matter=TitleMatter(
+                subtitle="Study results",
+                authors=[Author("Jane Doe", email="jane@example.edu")],
+                cover_page=True,
+            )
+        )
+        document = Document("Study Report", Paragraph("Findings."), settings=settings)
+        ```
+    """
+
+    subtitle: list[Text] | None
+    authors: tuple[Author, ...]
+    author_layout: AuthorLayout
+    cover_page: bool
+
+    def __init__(
+        self,
+        *,
+        subtitle: InlineInput | None = None,
+        authors: Sequence[AuthorInput] | None = None,
+        author_layout: AuthorLayout | None = None,
+        cover_page: bool = False,
+    ) -> None:
+        self.subtitle = coerce_inlines((subtitle,)) if subtitle is not None else None
+        self.authors = coerce_authors(authors)
+        self.author_layout = coerce_author_layout(author_layout)
+        self.cover_page = cover_page
+
+    def resolved_author(self) -> str | None:
+        """Return structured authors as a metadata author string."""
+
+        if not self.authors:
+            return None
+        return "; ".join(author.name for author in self.authors)
+
+    def iter_author_title_lines(self) -> Iterable[tuple[AuthorTitleLine, bool]]:
+        """Yield title matter lines with author-boundary markers.
+
+        Yields:
+            Tuples of ``(line, is_author_boundary)`` for renderer title matter.
+
+        Examples:
+            ```python
+            title_matter = TitleMatter(authors=["Jane Doe"])
+            lines = list(title_matter.iter_author_title_lines())
+            ```
+        """
+
+        if self.author_layout.mode == "stacked":
+            yield from self._iter_stacked_author_title_lines()
+            return
+        yield from self._iter_journal_author_title_lines()
+
+    def _iter_stacked_author_title_lines(self) -> Iterable[tuple[AuthorTitleLine, bool]]:
+        for author in self.authors:
+            lines = author.title_lines(
+                corresponding_marker=self.author_layout.corresponding_marker,
+                show_affiliations=self.author_layout.show_affiliations,
+                show_details=self.author_layout.show_details,
+            )
+            for index, line in enumerate(lines):
+                yield line, index == len(lines) - 1
+
+    def _iter_journal_author_title_lines(self) -> Iterable[tuple[AuthorTitleLine, bool]]:
+        if not self.authors:
+            return
+
+        # Journal title matter de-duplicates affiliation labels before building
+        # the author line so repeated institutions share the same marker.
+        affiliation_numbers: dict[str, int] = {}
+        ordered_affiliations: list[str] = []
+        for author in self.authors:
+            for affiliation in author.affiliations:
+                label = affiliation.formatted()
+                if label not in affiliation_numbers:
+                    affiliation_numbers[label] = len(ordered_affiliations) + 1
+                    ordered_affiliations.append(label)
+
+        name_fragments: list[Text] = []
+        for index, author in enumerate(self.authors):
+            if index:
+                name_fragments.append(Text(self.author_layout.name_separator))
+            markers = [
+                str(affiliation_numbers[affiliation.formatted()])
+                for affiliation in author.affiliations
+            ]
+            suffix = ""
+            if markers:
+                suffix += " " + self.author_layout.affiliation_label_format.format(
+                    label=",".join(markers)
+                )
+            if author.corresponding and self.author_layout.corresponding_marker:
+                suffix += self.author_layout.corresponding_marker
+            name_fragments.append(Text(f"{author.name}{suffix}"))
+        lines: list[AuthorTitleLine] = [
+            AuthorTitleLine("name", tuple(name_fragments))
+        ]
+
+        if self.author_layout.show_affiliations:
+            for affiliation in ordered_affiliations:
+                label = affiliation_numbers[affiliation]
+                lines.append(
+                    AuthorTitleLine(
+                        "affiliation",
+                        (
+                            Text(
+                                f"{self.author_layout.affiliation_label_format.format(label=label)} {affiliation}"
+                            ),
+                        ),
+                    )
+                )
+
+        if self.author_layout.show_details:
+            for author in self.authors:
+                detail_fragments = author.detail_fragments()
+                if detail_fragments is None:
+                    continue
+                lines.append(
+                    AuthorTitleLine(
+                        "detail",
+                        (Text(f"{author.name}: "), *detail_fragments),
+                    )
+                )
+
+        if (
+            self.author_layout.corresponding_marker
+            and any(author.corresponding for author in self.authors)
+        ):
+            corresponding_names = ", ".join(
+                author.name for author in self.authors if author.corresponding
+            )
+            lines.insert(
+                1 + len(ordered_affiliations) if self.author_layout.show_affiliations else 1,
+                AuthorTitleLine(
+                    "detail",
+                    (
+                        Text(
+                            f"{self.author_layout.corresponding_marker} Corresponding author: {corresponding_names}"
+                        ),
+                    ),
+                ),
+            )
+
+        for index, line in enumerate(lines):
+            yield line, index == len(lines) - 1
+
+
+@dataclass(slots=True, init=False)
 class DocumentSettings:
     """Document-level metadata and rendering configuration.
 
     Args:
         metadata: Optional structured metadata for DOCX/PDF properties and
             HTML head tags.
-        subtitle: Optional subtitle rendered with title matter.
-        authors: Optional author metadata used for title matter.
-        author_layout: Layout rules for author title matter.
-        cover_page: Whether renderers should place title matter on a separate
-            cover page when supported.
+        title_matter: Optional visible title-matter configuration.
         unit: Default length unit for values that do not carry an explicit unit.
         page_layout: Grouped page geometry.
         overlays: Absolute-positioned page decorations or overlays. Pass
@@ -536,15 +696,17 @@ class DocumentSettings:
         Configure page metadata and geometry:
 
         ```python
-        from oodocs import Author, Document, DocumentSettings, PageLayout, PageMargins, PageSize, Paragraph
+        from oodocs import Author, Document, DocumentSettings, PageLayout, PageMargins, PageSize, Paragraph, TitleMatter
 
         settings = DocumentSettings(
-            authors=[Author("Jane Doe", email="jane@example.edu")],
+            title_matter=TitleMatter(
+                authors=[Author("Jane Doe", email="jane@example.edu")],
+                cover_page=True,
+            ),
             page_layout=PageLayout(
                 PageSize.letter(),
                 PageMargins.symmetric(vertical=1.0, horizontal=0.8, unit="in"),
             ),
-            cover_page=True,
         )
         document = Document("Study Report", Paragraph("Findings."), settings=settings)
         ```
@@ -577,14 +739,11 @@ class DocumentSettings:
 
     See Also:
         ``PageSize`` and ``PageMargins`` for page geometry, ``Theme`` for
-        renderer defaults, and ``Author``/``AuthorLayout`` for title matter.
+        renderer defaults, and ``TitleMatter``/``AuthorLayout`` for title matter.
     """
 
     metadata: DocumentMetadata
-    subtitle: list[Text] | None
-    authors: tuple[Author, ...]
-    author_layout: AuthorLayout
-    cover_page: bool
+    title_matter: TitleMatter
     unit: str
     page_layout: PageLayout
     overlays: tuple[PositionedItem, ...]
@@ -595,10 +754,7 @@ class DocumentSettings:
         self,
         *,
         metadata: DocumentMetadata | None = None,
-        subtitle: InlineInput | None = None,
-        authors: Sequence[AuthorInput] | None = None,
-        author_layout: AuthorLayout | None = None,
-        cover_page: bool = False,
+        title_matter: TitleMatter | None = None,
         unit: str = "in",
         page_layout: PageLayout | None = None,
         overlays: Sequence[PositionedItem] | None = None,
@@ -607,11 +763,10 @@ class DocumentSettings:
     ) -> None:
         if metadata is not None and not isinstance(metadata, DocumentMetadata):
             raise TypeError("metadata must be a DocumentMetadata instance")
+        if title_matter is not None and not isinstance(title_matter, TitleMatter):
+            raise TypeError("title_matter must be a TitleMatter instance")
         self.metadata = metadata or DocumentMetadata()
-        self.subtitle = coerce_inlines((subtitle,)) if subtitle is not None else None
-        self.authors = coerce_authors(authors)
-        self.author_layout = coerce_author_layout(author_layout)
-        self.cover_page = cover_page
+        self.title_matter = title_matter or TitleMatter()
         self.unit = normalize_length_unit(unit)
         self.page_layout = page_layout or PageLayout()
         if overlays is not None and page_items is not None:
@@ -810,16 +965,14 @@ class DocumentSettings:
 
         Examples:
             ```python
-            settings = DocumentSettings(authors=["Jane Doe", "John Smith"])
+            settings = DocumentSettings(title_matter=TitleMatter(authors=["Jane Doe", "John Smith"]))
             assert settings.resolved_author() == "Jane Doe; John Smith"
             ```
         """
 
         if self.metadata.author is not None:
             return self.metadata.author
-        if not self.authors:
-            return None
-        return "; ".join(author.name for author in self.authors)
+        return self.title_matter.resolved_author()
 
     def resolved_metadata_title(self, document_title: object) -> str:
         """Return the title written to renderer metadata.
@@ -868,117 +1021,6 @@ class DocumentSettings:
 
         return self.metadata.keywords_text(separator)
 
-    def iter_author_title_lines(self) -> Iterable[tuple[AuthorTitleLine, bool]]:
-        """Yield title matter lines with author-boundary markers.
-
-        Yields:
-            Tuples of ``(line, is_author_boundary)`` for renderer title matter.
-
-        Examples:
-            ```python
-            settings = DocumentSettings(authors=["Jane Doe"])
-            lines = list(settings.iter_author_title_lines())
-            ```
-        """
-
-        if self.author_layout.mode == "stacked":
-            yield from self._iter_stacked_author_title_lines()
-            return
-        yield from self._iter_journal_author_title_lines()
-
-    def _iter_stacked_author_title_lines(self) -> Iterable[tuple[AuthorTitleLine, bool]]:
-        for author in self.authors:
-            lines = author.title_lines(
-                corresponding_marker=self.author_layout.corresponding_marker,
-                show_affiliations=self.author_layout.show_affiliations,
-                show_details=self.author_layout.show_details,
-            )
-            for index, line in enumerate(lines):
-                yield line, index == len(lines) - 1
-
-    def _iter_journal_author_title_lines(self) -> Iterable[tuple[AuthorTitleLine, bool]]:
-        if not self.authors:
-            return
-
-        # Journal title matter de-duplicates affiliation labels before building
-        # the author line so repeated institutions share the same marker.
-        affiliation_numbers: dict[str, int] = {}
-        ordered_affiliations: list[str] = []
-        for author in self.authors:
-            for affiliation in author.affiliations:
-                label = affiliation.formatted()
-                if label not in affiliation_numbers:
-                    affiliation_numbers[label] = len(ordered_affiliations) + 1
-                    ordered_affiliations.append(label)
-
-        name_fragments: list[Text] = []
-        for index, author in enumerate(self.authors):
-            if index:
-                name_fragments.append(Text(self.author_layout.name_separator))
-            markers = [
-                str(affiliation_numbers[affiliation.formatted()])
-                for affiliation in author.affiliations
-            ]
-            suffix = ""
-            if markers:
-                suffix += " " + self.author_layout.affiliation_label_format.format(
-                    label=",".join(markers)
-                )
-            if author.corresponding and self.author_layout.corresponding_marker:
-                suffix += self.author_layout.corresponding_marker
-            name_fragments.append(Text(f"{author.name}{suffix}"))
-        lines: list[AuthorTitleLine] = [
-            AuthorTitleLine("name", tuple(name_fragments))
-        ]
-
-        if self.author_layout.show_affiliations:
-            for affiliation in ordered_affiliations:
-                label = affiliation_numbers[affiliation]
-                lines.append(
-                    AuthorTitleLine(
-                        "affiliation",
-                        (
-                            Text(
-                                f"{self.author_layout.affiliation_label_format.format(label=label)} {affiliation}"
-                            ),
-                        ),
-                    )
-                )
-
-        if self.author_layout.show_details:
-            for author in self.authors:
-                detail_fragments = author.detail_fragments()
-                if detail_fragments is None:
-                    continue
-                lines.append(
-                    AuthorTitleLine(
-                        "detail",
-                        (Text(f"{author.name}: "), *detail_fragments),
-                    )
-                )
-
-        if (
-            self.author_layout.corresponding_marker
-            and any(author.corresponding for author in self.authors)
-        ):
-            corresponding_names = ", ".join(
-                author.name for author in self.authors if author.corresponding
-            )
-            lines.insert(
-                1 + len(ordered_affiliations) if self.author_layout.show_affiliations else 1,
-                AuthorTitleLine(
-                    "detail",
-                    (
-                        Text(
-                            f"{self.author_layout.corresponding_marker} Corresponding author: {corresponding_names}"
-                        ),
-                    ),
-                ),
-            )
-
-        for index, line in enumerate(lines):
-            yield line, index == len(lines) - 1
-
 
 __all__ = [
     "Affiliation",
@@ -989,4 +1031,5 @@ __all__ = [
     "PageLayout",
     "PageMargins",
     "PageSize",
+    "TitleMatter",
 ]

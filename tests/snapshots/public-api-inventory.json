@@ -516,6 +516,13 @@
           "qualname": "oodocs.styles.text.TextStyle"
         },
         {
+          "category": "settings",
+          "kind": "class",
+          "module": "oodocs.settings",
+          "name": "TitleMatter",
+          "qualname": "oodocs.settings.TitleMatter"
+        },
+        {
           "category": "theme",
           "kind": "class",
           "module": "oodocs.styles.theme",

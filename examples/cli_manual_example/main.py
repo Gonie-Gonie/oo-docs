@@ -18,6 +18,7 @@ from oodocs import (
     Section,
     Table,
     TableOfContents,
+    TitleMatter,
     inline_code,
 )
 
@@ -169,7 +170,9 @@ def build_document(parser: argparse.ArgumentParser | None = None) -> Document:
                 author="OODocs Contributors",
                 description="CLI manual generated from a sample argparse parser",
             ),
-            subtitle="argparse command reference generated as DOCX, PDF, and HTML",
+            title_matter=TitleMatter(
+                subtitle="argparse command reference generated as DOCX, PDF, and HTML",
+            ),
         ),
     )
 

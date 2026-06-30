@@ -14,6 +14,7 @@ OODocs_API_CATEGORIES: tuple[ApiCategory, ...] = (
             "oodocs.Document",
             "oodocs.DocumentMetadata",
             "oodocs.DocumentSettings",
+            "oodocs.TitleMatter",
             "oodocs.OODocsError",
             "oodocs.OutputBundle",
             "oodocs.ResultLike",

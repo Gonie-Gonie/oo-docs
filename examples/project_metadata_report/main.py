@@ -17,6 +17,7 @@ from oodocs import (
     Paragraph,
     Table,
     TableOfContents,
+    TitleMatter,
     inline_code,
 )
 from oodocs.adapters import GithubWorkflowSummary, ProjectMetadata
@@ -209,7 +210,9 @@ def build_document(
                 author="OODocs Contributors",
                 description="Project metadata report generated from repository configuration files",
             ),
-            subtitle="pyproject.toml and GitHub Actions workflow as document inputs",
+            title_matter=TitleMatter(
+                subtitle="pyproject.toml and GitHub Actions workflow as document inputs",
+            ),
         ),
     )
 

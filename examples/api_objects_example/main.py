@@ -15,6 +15,7 @@ from oodocs import (
     DocumentSettings,
     Figure,
     Paragraph,
+    TitleMatter,
 )
 from oodocs.apidoc import (
     ApiHelpBookConfig,
@@ -53,12 +54,14 @@ def _official_example_settings(subtitle: str) -> DocumentSettings:
 
     return DocumentSettings(
         metadata=DocumentMetadata(author="OODocs Contributors"),
-        subtitle=subtitle,
-        authors=[Author("OODocs Contributors")],
-        author_layout=AuthorLayout(
-            mode="stacked",
-            show_affiliations=False,
-            show_details=False,
+        title_matter=TitleMatter(
+            subtitle=subtitle,
+            authors=[Author("OODocs Contributors")],
+            author_layout=AuthorLayout(
+                mode="stacked",
+                show_affiliations=False,
+                show_details=False,
+            ),
         ),
     )
 

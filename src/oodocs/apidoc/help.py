@@ -431,13 +431,13 @@ def api_package_to_help_book(
     Examples:
         ```python
         from pathlib import Path
-        from oodocs import DocumentSettings
+        from oodocs import DocumentSettings, TitleMatter
         from oodocs.apidoc import collect_api
 
         api = collect_api("oodocs", public_policy="__all__")
         reference = api.to_help_book(
             title="OODocs API Reference",
-            settings=DocumentSettings(cover_page=True),
+            settings=DocumentSettings(title_matter=TitleMatter(cover_page=True)),
         )
         reference.save(Path("build/oodocs-api-reference.html"))
         ```

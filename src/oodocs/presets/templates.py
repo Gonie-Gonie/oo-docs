@@ -24,7 +24,14 @@ from oodocs.styles import (
     TypographyDefaults,
     Theme,
 )
-from oodocs.settings import DocumentMetadata, DocumentSettings, PageLayout, PageMargins, PageSize
+from oodocs.settings import (
+    DocumentMetadata,
+    DocumentSettings,
+    PageLayout,
+    PageMargins,
+    PageSize,
+    TitleMatter,
+)
 
 
 SectionContentInput = str | Block | Sequence[BlockInput]
@@ -268,10 +275,12 @@ class JournalArticleTemplate:
 
         settings = DocumentSettings(
             metadata=DocumentMetadata(description=summary or title),
-            authors=authors,
-            author_layout=self.author_layout,
-            subtitle=subtitle,
-            cover_page=self.cover_page if cover_page is None else cover_page,
+            title_matter=TitleMatter(
+                subtitle=subtitle,
+                authors=authors,
+                author_layout=self.author_layout,
+                cover_page=self.cover_page if cover_page is None else cover_page,
+            ),
             page_layout=PageLayout(self.page_size, self.page_margins),
             theme=self.theme,
         )
@@ -651,10 +660,12 @@ class CoverPagePreset:
 
         return DocumentSettings(
             metadata=metadata,
-            subtitle=subtitle,
-            authors=authors,
-            author_layout=self.author_layout,
-            cover_page=True,
+            title_matter=TitleMatter(
+                subtitle=subtitle,
+                authors=authors,
+                author_layout=self.author_layout,
+                cover_page=True,
+            ),
             page_layout=self.page_layout,
             overlays=(*self.page_items(), *(extra_items or ())),
             theme=theme or self.theme,
@@ -760,10 +771,12 @@ class TechnicalReportTemplate:
 
         settings = DocumentSettings(
             metadata=DocumentMetadata(description=summary or title),
-            authors=authors,
-            author_layout=self.author_layout,
-            subtitle=subtitle,
-            cover_page=self.cover_page if cover_page is None else cover_page,
+            title_matter=TitleMatter(
+                subtitle=subtitle,
+                authors=authors,
+                author_layout=self.author_layout,
+                cover_page=self.cover_page if cover_page is None else cover_page,
+            ),
             page_layout=PageLayout(self.page_size, self.page_margins),
             theme=self.theme,
         )
@@ -861,10 +874,12 @@ class SoftwareManualTemplate:
 
         settings = DocumentSettings(
             metadata=DocumentMetadata(description=summary or title),
-            authors=authors,
-            author_layout=self.author_layout,
-            subtitle=subtitle,
-            cover_page=self.cover_page if cover_page is None else cover_page,
+            title_matter=TitleMatter(
+                subtitle=subtitle,
+                authors=authors,
+                author_layout=self.author_layout,
+                cover_page=self.cover_page if cover_page is None else cover_page,
+            ),
             page_layout=PageLayout(self.page_size, self.page_margins),
             theme=self.theme,
         )
@@ -961,10 +976,12 @@ class BookTemplate:
 
         settings = DocumentSettings(
             metadata=DocumentMetadata(description=summary or title),
-            authors=authors,
-            author_layout=self.author_layout,
-            subtitle=subtitle,
-            cover_page=self.cover_page if cover_page is None else cover_page,
+            title_matter=TitleMatter(
+                subtitle=subtitle,
+                authors=authors,
+                author_layout=self.author_layout,
+                cover_page=self.cover_page if cover_page is None else cover_page,
+            ),
             page_layout=PageLayout(self.page_size, self.page_margins),
             theme=self.theme,
         )

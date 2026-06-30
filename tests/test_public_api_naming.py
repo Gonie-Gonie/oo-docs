@@ -630,19 +630,47 @@ def test_theme_constructor_uses_grouped_defaults_only() -> None:
 def test_document_settings_use_overlays_for_page_positioned_items() -> None:
     parameters = set(inspect.signature(oodocs.DocumentSettings).parameters)
     overlay = positioning.TextBox("DRAFT", width=1.0, height=0.2)
-    forbidden = {"metadata_author", "summary", "page_size", "page_margins"}
+    forbidden = {
+        "metadata_author",
+        "summary",
+        "page_size",
+        "page_margins",
+        "subtitle",
+        "authors",
+        "author_layout",
+        "cover_page",
+    }
 
     assert forbidden.isdisjoint(parameters)
-    assert {"metadata", "page_layout"} <= parameters
+    assert {"metadata", "title_matter", "page_layout"} <= parameters
     assert "overlays" in parameters
     assert "page_items" in parameters
     settings = oodocs.DocumentSettings(overlays=[overlay])
     for name in forbidden:
         assert not hasattr(settings, name)
+    assert isinstance(settings.title_matter, oodocs.TitleMatter)
     assert settings.overlays == (overlay,)
     assert settings.page_items == settings.overlays
     with pytest.raises(ValueError, match="overlays"):
         oodocs.DocumentSettings(overlays=[], page_items=[])
+
+
+def test_title_matter_owns_visible_title_fields() -> None:
+    parameters = set(inspect.signature(oodocs.TitleMatter).parameters)
+    field_names = {field.name for field in fields(oodocs.TitleMatter)}
+    expected = {"subtitle", "authors", "author_layout", "cover_page"}
+
+    assert expected <= parameters
+    assert expected == field_names
+    title_matter = oodocs.TitleMatter(
+        subtitle="Visible subtitle",
+        authors=[oodocs.Author("Jane Doe")],
+        cover_page=True,
+    )
+    assert title_matter.subtitle is not None
+    assert title_matter.subtitle[0].plain_text() == "Visible subtitle"
+    assert title_matter.authors[0].name == "Jane Doe"
+    assert title_matter.cover_page is True
 
 
 def test_theme_resolver_methods_use_explicit_resolve_names() -> None:

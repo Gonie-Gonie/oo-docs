@@ -30,7 +30,7 @@ class Affiliation:
 
     Examples:
         ```python
-        from oodocs import Author, Document, DocumentSettings, Paragraph
+        from oodocs import Author, Document, DocumentSettings, Paragraph, TitleMatter
 
         affiliation = Affiliation(
             department="AI Lab",
@@ -38,7 +38,11 @@ class Affiliation:
             country="KR",
         )
         author = Author("Jane Doe", affiliations=[affiliation])
-        document = Document("Research Note", Paragraph("Summary."), settings=DocumentSettings(authors=[author]))
+        document = Document(
+            "Research Note",
+            Paragraph("Summary."),
+            settings=DocumentSettings(title_matter=TitleMatter(authors=[author])),
+        )
         ```
     """
 
@@ -101,10 +105,15 @@ class AuthorLayout:
 
     Examples:
         ```python
-        from oodocs import Author, Document, DocumentSettings, Paragraph
+        from oodocs import Author, Document, DocumentSettings, Paragraph, TitleMatter
 
         layout = AuthorLayout(mode="journal", corresponding_marker="*")
-        settings = DocumentSettings(authors=[Author("Jane Doe", corresponding=True)], author_layout=layout)
+        settings = DocumentSettings(
+            title_matter=TitleMatter(
+                authors=[Author("Jane Doe", corresponding=True)],
+                author_layout=layout,
+            )
+        )
         document = Document("Research Note", Paragraph("Summary."), settings=settings)
         ```
     """
@@ -171,7 +180,7 @@ class Author:
 
     Examples:
         ```python
-        from oodocs import Author, Document, DocumentSettings, Paragraph
+        from oodocs import Author, Document, DocumentSettings, Paragraph, TitleMatter
 
         author = Author(
             "Jane Doe",
@@ -179,7 +188,7 @@ class Author:
             email="jane@example.edu",
             corresponding=True,
         )
-        settings = DocumentSettings(authors=[author])
+        settings = DocumentSettings(title_matter=TitleMatter(authors=[author]))
         doc = Document("Research Note", Paragraph("Summary."), settings=settings)
         ```
     """

@@ -19,6 +19,7 @@ from oodocs import (
     Section,
     Table,
     TableOfContents,
+    TitleMatter,
     inline_code,
 )
 
@@ -174,7 +175,7 @@ def build_document(records: Sequence[dict[str, str]] | None = None) -> Document:
                 author="OODocs Contributors",
                 description="Conformance matrix report with wide evidence sidecar",
             ),
-            subtitle="PDF excerpt plus full matrix sidecar",
+            title_matter=TitleMatter(subtitle="PDF excerpt plus full matrix sidecar"),
         ),
     )
 

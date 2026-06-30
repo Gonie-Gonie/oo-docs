@@ -25,6 +25,7 @@ from oodocs import (
     Table,
     TableOfContents,
     Theme,
+    TitleMatter,
     inline_code,
 )
 from oodocs.importers.markdown import parse_markdown
@@ -394,12 +395,14 @@ def build_release_notes_document(
                 author="OODocs Contributors",
                 description="Release-note digest generated from repository Markdown files",
             ),
-            subtitle="Markdown import, semantic sorting, and release workflow documentation",
-            authors=[Author("OODocs Contributors")],
-            author_layout=AuthorLayout(
-                mode="stacked",
-                show_affiliations=False,
-                show_details=False,
+            title_matter=TitleMatter(
+                subtitle="Markdown import, semantic sorting, and release workflow documentation",
+                authors=[Author("OODocs Contributors")],
+                author_layout=AuthorLayout(
+                    mode="stacked",
+                    show_affiliations=False,
+                    show_details=False,
+                ),
             ),
             theme=Theme(
                 page_numbers=PageNumberDefaults(

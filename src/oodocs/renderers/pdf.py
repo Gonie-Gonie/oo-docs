@@ -788,17 +788,18 @@ class PdfRenderer:
         )
 
         front_children, main_children = document.split_top_level_children()
-        has_front_matter = settings.cover_page or bool(front_children)
+        title_matter = settings.title_matter
+        has_front_matter = title_matter.cover_page or bool(front_children)
 
         story.extend(self._render_title_matter(document, context))
-        if settings.cover_page and front_children:
+        if title_matter.cover_page and front_children:
             story.append(RLPageBreak())
 
         story.extend(
             self._render_top_level_children(
                 front_children,
                 context,
-                follows_existing_content=not settings.cover_page,
+                follows_existing_content=not title_matter.cover_page,
             )
         )
         if has_front_matter and main_children:
@@ -2024,10 +2025,11 @@ class PdfRenderer:
                 space_after=18,
             )
         ]
-        if document.settings.subtitle is not None:
+        title_matter = document.settings.title_matter
+        if title_matter.subtitle is not None:
             story.append(
                 self._title_paragraph(
-                    document.settings.subtitle,
+                    title_matter.subtitle,
                     theme,
                     styles,
                     style_name="OODocsSubtitle",
@@ -2037,7 +2039,7 @@ class PdfRenderer:
                     space_after=12,
                 )
             )
-        author_lines = list(document.settings.iter_author_title_lines())
+        author_lines = list(title_matter.iter_author_title_lines())
         for index, (line, _is_last_for_author) in enumerate(author_lines):
             story.append(
                 self._title_paragraph(
@@ -4483,7 +4485,7 @@ class PdfRenderer:
         current_page: int,
         main_start_page: int | None,
     ) -> str:
-        if document.settings.cover_page and current_page == 1:
+        if document.settings.title_matter.cover_page and current_page == 1:
             return "cover"
         if has_front_matter and (
             main_start_page is None or current_page < main_start_page

@@ -57,6 +57,7 @@ from oodocs import (
     TableOfContents,
     Text,
     Theme,
+    TitleMatter,
     TitleMatterDefaults,
     TypographyDefaults,
     VerticalSpace,
@@ -192,23 +193,25 @@ handbook = Document(
 )
 """
 
-AUTHOR_LAYOUT_SNIPPET = """from oodocs import Affiliation, Author, AuthorLayout, DocumentSettings
+AUTHOR_LAYOUT_SNIPPET = """from oodocs import Affiliation, Author, AuthorLayout, DocumentSettings, TitleMatter
 
 settings = DocumentSettings(
-    authors=[
-        Author(
-            "Research Lead",
-            affiliations=[Affiliation(organization="Example Lab")],
-            corresponding=True,
-            email="lead@example.org",
-        ),
-        Author(
-            "Implementation Partner",
-            affiliations=[Affiliation(organization="Open Source Team")],
-            note="GitHub: @example",
-        ),
-    ],
-    author_layout=AuthorLayout(mode="stacked"),
+    title_matter=TitleMatter(
+        authors=[
+            Author(
+                "Research Lead",
+                affiliations=[Affiliation(organization="Example Lab")],
+                corresponding=True,
+                email="lead@example.org",
+            ),
+            Author(
+                "Implementation Partner",
+                affiliations=[Affiliation(organization="Open Source Team")],
+                note="GitHub: @example",
+            ),
+        ],
+        author_layout=AuthorLayout(mode="stacked"),
+    ),
 )
 """
 
@@ -1022,8 +1025,8 @@ def build_usage_guide_document() -> Document:
     author_options_table = Table(
         headers=["Approach", "When it fits best", "Configuration pattern"],
         rows=[
-            ["Structured journal default", "Manuscripts and technical reports with compact title matter.", "DocumentSettings(authors=[...])"],
-            ["Structured stacked profiles", "Guides, internal reports, and project documentation.", "DocumentSettings(authors=[...], author_layout=AuthorLayout(mode='stacked'))"],
+            ["Structured journal default", "Manuscripts and technical reports with compact title matter.", "DocumentSettings(title_matter=TitleMatter(authors=[...]))"],
+            ["Structured stacked profiles", "Guides, internal reports, and project documentation.", "DocumentSettings(title_matter=TitleMatter(authors=[...], author_layout=AuthorLayout(mode='stacked')))"],
             ["Structured file metadata", "Short exports where file properties matter more than visible title blocks.", "DocumentSettings(metadata=DocumentMetadata(author='Team Name'))"],
             ["Manual front matter section", "Branded covers or institution-specific title pages.", "Keep metadata simple and author the visible cover with unnumbered sections."],
         ],
@@ -2240,15 +2243,17 @@ def build_usage_guide_document() -> Document:
                 keywords=["OODocs", "documentation", "examples"],
                 description="Detailed usage guide and API walkthrough",
             ),
-            subtitle="Reference-style guide for structured Python document authoring",
-            authors=[
-                Author("OODocs Contributors"),
-                Author("Hyeong-Gon Jo"),
-            ],
-            author_layout=AuthorLayout(
-                mode="stacked",
-                show_affiliations=False,
-                show_details=False,
+            title_matter=TitleMatter(
+                subtitle="Reference-style guide for structured Python document authoring",
+                authors=[
+                    Author("OODocs Contributors"),
+                    Author("Hyeong-Gon Jo"),
+                ],
+                author_layout=AuthorLayout(
+                    mode="stacked",
+                    show_affiliations=False,
+                    show_details=False,
+                ),
             ),
             page_layout=PageLayout(
                 page_margins=PageMargins.symmetric(vertical=2.0, horizontal=2.2, unit="cm")

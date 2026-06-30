@@ -18,6 +18,7 @@ from oodocs import (
     Paragraph,
     Section,
     Table,
+    TitleMatter,
     comment,
     footnote,
     inline_code,
@@ -158,7 +159,9 @@ def build_document() -> Document:
                 author="OODocs Contributors",
                 description="Review notes workflow with comments, TODOs, margin notes, and footnotes.",
             ),
-            subtitle="comments, TODOs, margin notes, and generated review pages",
+            title_matter=TitleMatter(
+                subtitle="comments, TODOs, margin notes, and generated review pages",
+            ),
         ),
     )
 

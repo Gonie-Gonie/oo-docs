@@ -16,6 +16,7 @@ from oodocs import (
     Section,
     Table,
     TableOfContents,
+    TitleMatter,
     inline_code,
 )
 from oodocs.engineering import Algorithm
@@ -107,7 +108,9 @@ def build_document() -> Document:
                 author="OODocs Contributors",
                 description="Engineering method report with a numbered algorithm and verification evidence.",
             ),
-            subtitle="numbered pseudocode, requirements, and verification tables",
+            title_matter=TitleMatter(
+                subtitle="numbered pseudocode, requirements, and verification tables",
+            ),
         ),
     )
 
