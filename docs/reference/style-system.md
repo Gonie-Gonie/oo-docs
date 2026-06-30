@@ -63,6 +63,7 @@ fails unless `warning` is registered as a table style.
 | `Padding` and `BorderStyle` primitives | Yes | Yes | Yes |
 | `BoxStyle.title_position="side"` | Yes | Yes | Yes |
 | `BoxStyle.shadow` | Degrades to a normal box | Degrades to a normal box | Renders `box-shadow` |
+| Box and callout page splitting | Word table flow | Splits between top-title rows; side-title boxes stay grouped | Browser print flow |
 | `CounterStyle` for lists/headings/page numbers | Yes | Yes | Yes |
 
 Use direct block keyword arguments for local changes, concrete style objects for
@@ -70,3 +71,10 @@ one-off reusable values, and `StyleSheet` entries when a style name should be
 shared across a document or organization.
 Built-in box style names include `note`, `info`, `warning`, `danger`, and
 `success`, which are also the default `CalloutBox(variant=...)` values.
+`CalloutBox(variant=...)` may also point at any registered box style name,
+including category-prefixed names such as `box.review.focus`; the default title
+uses built-in labels when available and otherwise title-cases the style name.
+
+`Box` and `CalloutBox` preserve editable grouped content, but they are not a
+full LaTeX `tcolorbox` `breakable` implementation. Split long panels manually
+when exact page breaks matter, especially for PDF side-title boxes.

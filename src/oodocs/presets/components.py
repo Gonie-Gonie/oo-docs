@@ -29,9 +29,9 @@ class CalloutBox(Box):
     Args:
         *children: Box content.
         title: Optional callout title. Defaults to a title derived from the
-            variant or named style when possible.
-        variant: Built-in callout variant. Used as the named box style when
-            ``style`` is omitted.
+            built-in variant or title-cased named style when possible.
+        variant: Built-in or registered callout variant. Used as the named box
+            style when ``style`` is omitted.
         icon: Optional inline icon rendered before the callout title.
         style: Named box style or concrete box style.
         **box_options: Additional arguments forwarded to ``Box``.
@@ -398,7 +398,12 @@ def _callout_title(style: BoxStyle | str | None) -> str:
     if not isinstance(style, str):
         return "Callout"
     normalized = style.strip().lower().removeprefix("box.")
-    return _CALLOUT_TITLES.get(normalized, "Callout")
+    if not normalized:
+        return "Callout"
+    if normalized in _CALLOUT_TITLES:
+        return _CALLOUT_TITLES[normalized]
+    words = normalized.replace(".", " ").replace("-", " ").replace("_", " ").split()
+    return " ".join(word.capitalize() for word in words) if words else "Callout"
 
 
 __all__ = [

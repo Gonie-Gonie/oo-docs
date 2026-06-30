@@ -2838,6 +2838,53 @@ def test_box_style_supports_tcolorbox_like_layout_controls(tmp_path: Path) -> No
     assert "Stop the release until the reviewer resolves this item." in normalized_pdf_text
 
 
+def test_callout_box_variant_uses_registered_box_style(tmp_path: Path) -> None:
+    styles = StyleSheet.default()
+    styles.register_box(
+        "review.focus",
+        BoxStyle(
+            border=BorderStyle.solid("#4338CA", width=0.5),
+            background_color="#EEF2FF",
+            title_background_color="#4338CA",
+            title_text_color="#FFFFFF",
+            title_position="side",
+            css_class="review-focus",
+        ),
+    )
+    document = Document(
+        "Custom Callout",
+        CalloutBox(
+            Paragraph("Confirm the reviewer-owned action before release."),
+            variant="box.review.focus",
+            icon="?",
+        ),
+        settings=DocumentSettings(theme=Theme(stylesheet=styles)),
+    )
+
+    docx_path = tmp_path / "custom-callout.docx"
+    pdf_path = tmp_path / "custom-callout.pdf"
+    html_path = tmp_path / "custom-callout.html"
+
+    document.save_docx(docx_path)
+    document.save_pdf(pdf_path)
+    document.save_html(html_path)
+
+    docx_xml = _docx_document_xml(docx_path)
+    html_text = html_path.read_text(encoding="utf-8")
+    pdf_text = "\n".join(page.extract_text() or "" for page in PdfReader(BytesIO(pdf_path.read_bytes())).pages)
+    normalized_pdf_text = " ".join(pdf_text.split())
+
+    assert "Review Focus" in docx_xml
+    assert "Confirm the reviewer-owned action before release." in docx_xml
+    assert 'w:fill="4338CA"' in docx_xml
+    assert 'class="oodocs-box review-focus"' in html_text
+    assert "Review Focus" in html_text
+    assert "background: #EEF2FF" in html_text
+    assert "grid-template-columns: max-content minmax(0, 1fr)" in html_text
+    assert "Review Focus" in normalized_pdf_text
+    assert "Confirm the reviewer-owned action before release." in normalized_pdf_text
+
+
 def test_explicit_page_break_renders_to_all_outputs(tmp_path: Path) -> None:
     document = Document(
         "Break Test",
