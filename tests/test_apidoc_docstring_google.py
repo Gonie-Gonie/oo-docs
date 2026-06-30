@@ -3,7 +3,8 @@ from __future__ import annotations
 import inspect
 
 import oodocs.apidoc.docstring as docstring_module
-from oodocs.apidoc import parse_docstring
+from oodocs import Paragraph, Table
+from oodocs.apidoc import ApiObject, parse_docstring
 from tests.fixtures.apidoc_docstrings import google as fixture
 
 
@@ -34,6 +35,37 @@ def test_google_docstring_fixture_extracts_shared_fields() -> None:
     assert method.parameters[0].name == "path"
     assert property_doc.returns is not None
     assert dataclass_doc.attributes[0].name == "identifier"
+
+
+def test_google_docstring_fixture_renders_see_also_notes_as_paragraphs() -> None:
+    parsed = parse_docstring(inspect.getdoc(fixture.load_widget), style="google")
+    obj = ApiObject(
+        "function",
+        "load_widget",
+        "fixture.load_widget",
+        "fixture",
+        see_also=parsed.see_also,
+        see_also_notes=parsed.see_also_notes,
+    )
+
+    blocks = obj.to_see_also_blocks(presentation="reference")
+    text_blocks = [block.plain_text() for block in blocks if hasattr(block, "plain_text")]
+
+    assert [item.label for item in parsed.see_also] == [
+        "Widget.render",
+        "WidgetRecord",
+        "Widget.title",
+    ]
+    assert parsed.see_also_notes == [
+        "DocumentSettings for metadata and layout configuration."
+    ]
+    assert all(not isinstance(block, Table) for block in blocks)
+    assert all(isinstance(block, Paragraph) for block in blocks)
+    assert text_blocks[0] == "See also"
+    assert "DocumentSettings for metadata and layout configuration." in text_blocks
+    assert any("Widget.render" in text for text in text_blocks)
+    assert any("WidgetRecord" in text for text in text_blocks)
+    assert any("Widget.title" in text for text in text_blocks)
 
 
 def test_google_docstring_parses_keyword_args() -> None:
