@@ -160,9 +160,11 @@ def test_leaf_component_modules_hide_internal_helpers_from_all() -> None:
             "normalize_generated_list_scope",
         },
         inline_components: {
+            "BlockReference",
             "coerce_inlines",
             "MarginNote",
             "Todo",
+            "_BlockReference",
             "margin_note",
             "math",
             "todo",

@@ -1899,7 +1899,6 @@ __all__ = [
     "ReferenceGroup",
     "Strikethrough",
     "Text",
-    "_BlockReference",
     "badge",
     "bold",
     "cite",

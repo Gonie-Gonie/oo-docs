@@ -30,6 +30,7 @@ STALE_API_REFERENCE_MARKERS = (
     "ImageData.format",
     "OutputBundle.by_format",
     "oodocs.components.inline.math",
+    "oodocs.components.inline._BlockReference",
     "build_table_layout",
     "coerce_blocks",
     "coerce_image_source",
