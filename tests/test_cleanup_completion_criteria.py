@@ -374,6 +374,43 @@ def test_chemistry_support_reference_documents_mhchem_policy() -> None:
         assert phrase in reference
 
 
+def test_readme_latex_translations_include_citation_policy() -> None:
+    readme = _readme()
+    translations = readme.split("Common translations:", 1)[1].split(
+        "The main payoff",
+        1,
+    )[0]
+
+    assert "LaTeX `natbib` / `biblatex` / BibTeX citations" in translations
+    assert "`CitationLibrary.from_bibtex_file(...)`" in translations
+    assert "`cite(...)`" in translations
+    assert "`CitationSource.cite()`" in translations
+    assert "`CitationDefaults(...)`" in translations
+    assert "`ListOfReferences(...)`" in translations
+
+
+def test_citation_support_reference_documents_bibtex_policy() -> None:
+    reference = Path("docs/reference/citation-support.md").read_text(encoding="utf-8")
+
+    for phrase in (
+        "common `natbib`, `biblatex`, and BibTeX authoring needs",
+        "`CitationLibrary(...)`",
+        "Requires unique non-empty keys and raises on duplicates.",
+        "`cite(\"key\")`, `CitationSource.cite()`, or `CitationLibrary.cite(\"key\")`",
+        "`ListOfReferences()`",
+        "`ReferenceList` and `ReferencesPage` are not separate public aliases.",
+        "`CitationLibrary.from_bibtex(...)` or `.from_bibtex_file(...)`",
+        "Duplicate citation keys",
+        "BibLaTeX-only fields",
+        "CSL-level compatibility is intentionally outside",
+        "`CitationDefaults(citation_style=...)`",
+        "`CitationDefaults(reference_style=...)`",
+        "`CitationDefaults(reference_sort=...)` or `ListOfReferences(sort=...)`",
+        "`ListOfReferences(include_uncited=True)`",
+    ):
+        assert phrase in reference
+
+
 def test_public_api_policy_doc_defines_tiers_and_guards() -> None:
     policy = Path("docs/reference/public-api-policy.md").read_text(encoding="utf-8")
 
