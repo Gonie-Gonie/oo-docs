@@ -1061,12 +1061,23 @@ class DocumentSettings:
         )
 
     def resolved_metadata_keywords(self) -> tuple[str, ...]:
-        """Return metadata keywords as a tuple."""
+        """Return metadata keywords as a tuple.
+
+        Returns:
+            Normalized metadata keywords.
+        """
 
         return self.metadata.keywords
 
     def resolved_metadata_keywords_text(self, separator: str = ", ") -> str | None:
-        """Return metadata keywords as a joined string."""
+        """Return metadata keywords as a joined string.
+
+        Args:
+            separator: Separator used between keywords.
+
+        Returns:
+            Joined keyword metadata, or ``None`` when no keywords are set.
+        """
 
         return self.metadata.keywords_text(separator)
 
