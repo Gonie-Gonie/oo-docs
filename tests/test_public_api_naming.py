@@ -1344,6 +1344,19 @@ def test_workflow_api_uses_formats_parameter_name() -> None:
         assert "outputs" not in parameters
 
 
+def test_source_workflow_api_uses_document_factory_parameter_name() -> None:
+    for callable_obj in (
+        workflows.load_source_document,
+        workflows.load_document_from_python,
+        workflows.build_source_outputs,
+        workflows.validate_source_document,
+    ):
+        parameters = inspect.signature(callable_obj).parameters
+
+        assert "document_factory" in parameters
+        assert "factory" not in parameters
+
+
 def test_output_bundle_uses_dict_like_format_lookup() -> None:
     members = _public_members(workflows.OutputBundle)
     all_members = {name for name, _ in inspect.getmembers(workflows.OutputBundle)}
