@@ -5,7 +5,8 @@ from io import BytesIO
 
 import pytest
 
-from oodocs import ColumnSpec, Figure, ImageData, Table, TableStyle
+from oodocs import Figure, ImageData, Table, TableStyle
+from oodocs.media import ColumnSpec
 
 _TINY_PNG = (
     b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01"

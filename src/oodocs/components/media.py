@@ -73,7 +73,8 @@ class CropBox:
 
     Examples:
         ```python
-        from oodocs import CropBox, Figure
+        from oodocs import Figure
+        from oodocs.media import CropBox
 
         figure = Figure(
             "diagram.png",
@@ -639,7 +640,8 @@ class ColumnSpec:
 
     Examples:
         ```python
-        from oodocs import ColumnSpec, Table
+        from oodocs import Table
+        from oodocs.media import ColumnSpec
 
         table = Table(
             ["Metric", "Description"],
@@ -2154,7 +2156,8 @@ class PdfPages(Block):
 
     Examples:
         ```python
-        from oodocs import Document, PdfPages
+        from oodocs import Document
+        from oodocs.media import PdfPages
 
         appendix = PdfPages("appendix/material-safety-data.pdf", pages=[1, 3])
         document = Document("Report", appendix)
@@ -2787,7 +2790,8 @@ class SubTable:
 
     Examples:
         ```python
-        from oodocs import SubTable, SubTableGroup, Table
+        from oodocs import Table
+        from oodocs.media import SubTable, SubTableGroup
 
         baseline = SubTable(Table(["Metric"], [["AUC"]]), caption="Baseline")
         tuned = SubTable(Table(["Metric"], [["AUC"]]), caption="Tuned")
@@ -2877,7 +2881,8 @@ class SubTableGroup(Block):
 
     Examples:
         ```python
-        from oodocs import SubTable, SubTableGroup, Table
+        from oodocs import Table
+        from oodocs.media import SubTable, SubTableGroup
 
         group = SubTableGroup(
             SubTable(Table(["Case", "Value"], [["A", "0.91"]]), caption="Baseline"),

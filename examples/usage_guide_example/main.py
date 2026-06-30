@@ -44,7 +44,6 @@ from oodocs import (
     PageMargins,
     PageSize,
     Padding,
-    PdfPages,
     Paragraph,
     Part,
     ReferenceList,
@@ -52,11 +51,8 @@ from oodocs import (
     StrokeStyle,
     SubFigure,
     SubFigureGroup,
-    SubTable,
-    SubTableGroup,
     Subsection,
     SubSubsection,
-    ColumnSpec,
     Table,
     ListOfTables,
     TableOfContents,
@@ -90,6 +86,7 @@ from oodocs.engineering import (
     chemical_formula,
 )
 from oodocs.generated import ListOfAlgorithms
+from oodocs.media import ColumnSpec, CropBox, PdfPages, SubTable, SubTableGroup
 from oodocs.positioning import ImageBox, PageItemScope, Shape, TextBox
 from oodocs.structure import (
     Appendix,
@@ -309,7 +306,8 @@ figure = Figure(
 )
 """
 
-FIGURE_TRANSFORM_SNIPPET = """from oodocs import CropBox, Figure
+FIGURE_TRANSFORM_SNIPPET = """from oodocs import Figure
+from oodocs.media import CropBox
 
 figure = Figure(
     "assets/system-diagram.png",
@@ -335,7 +333,8 @@ comparison = SubFigureGroup(
 Paragraph("The post-calibration case is shown in ", after.reference(), ".")
 """
 
-SUBTABLE_SNIPPET = """from oodocs import Paragraph, SubTable, SubTableGroup, Table
+SUBTABLE_SNIPPET = """from oodocs import Paragraph, Table
+from oodocs.media import SubTable, SubTableGroup
 
 baseline = SubTable(
     Table(["Metric", "Value"], [["AUC", "0.91"], ["F1", "0.84"]]),
@@ -356,7 +355,8 @@ sensitivity = SubTableGroup(
 Paragraph("The tuned table is shown in ", tuned.reference(), ".")
 """
 
-PDFPAGES_SNIPPET = """from oodocs import Document, Paragraph, PdfPages
+PDFPAGES_SNIPPET = """from oodocs import Document, Paragraph
+from oodocs.media import PdfPages
 
 document = Document(
     "Appendix bundle",
@@ -812,7 +812,8 @@ Table(
 )
 """
 
-TABLE_COLUMN_SPEC_SNIPPET = """from oodocs import ColumnSpec, Table
+TABLE_COLUMN_SPEC_SNIPPET = """from oodocs import Table
+from oodocs.media import ColumnSpec
 
 full_matrix = Table.from_records(
     records,

@@ -12,6 +12,7 @@ import oodocs.components.references as references
 import oodocs.engineering as engineering
 import oodocs.generated as generated
 import oodocs.glossary as glossary
+import oodocs.media as media
 import oodocs.positioning as positioning
 import oodocs.public_api as public_api
 import oodocs.review as review
@@ -73,6 +74,7 @@ def test_tier_two_namespaces_export_domain_symbols() -> None:
     expected_exports = {
         review: {"MarginNote", "Todo", "margin_note", "todo"},
         glossary: {"Acronym", "Glossary", "GlossaryList", "GlossaryTerm"},
+        media: {"ColumnSpec", "CropBox", "PdfPages", "SubTable", "SubTableGroup"},
         positioning: {"ImageBox", "PageItemScope", "Shape", "TextBox"},
         structure: {
             "Appendix",
@@ -132,10 +134,12 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "ChemicalFormula",
         "chemical_formula",
         "Claim",
+        "ColumnSpec",
         "Conjecture",
         "CountableBlock",
         "Corollary",
         "create_countable_block_type",
+        "CropBox",
         "Definition",
         "Example",
         "strike",
@@ -175,11 +179,14 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "GeneratedPageOptions",
         "PageNumberOptions",
         "PageItemScope",
+        "PdfPages",
         "ParagraphTitleStyle",
         "Proof",
         "Proposition",
         "Shape",
         "Remark",
+        "SubTable",
+        "SubTableGroup",
         "TitleMatterOptions",
         "TextBox",
         "Theorem",
@@ -195,7 +202,6 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "OutputBundle",
         "build_source_outputs",
         "CommentList",
-        "ColumnSpec",
         "FootnoteList",
         "FootnoteDefaults",
         "FootnoteStyle",
@@ -209,7 +215,6 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "GeneratedContentDefaults",
         "HeaderFooterDefaults",
         "LocaleDefaults",
-        "CropBox",
         "PageNumberDefaults",
         "RunInTitleStyle",
         "ReferenceList",

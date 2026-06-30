@@ -20,6 +20,7 @@ import pytest
 import oodocs.components.generated as generated_components
 import oodocs.components.inline as inline_components
 import oodocs.engineering as engineering_components
+import oodocs.media as media_components
 import oodocs.glossary as glossary_components
 import oodocs.positioning as positioning_components
 import oodocs.review as review_components
@@ -39,6 +40,7 @@ from oodocs.engineering import (
 )
 from oodocs.generated import ListOfAlgorithms
 from oodocs.glossary import Acronym, Glossary, GlossaryList, GlossaryTerm
+from oodocs.media import ColumnSpec, CropBox, PdfPages, SubTable, SubTableGroup
 from oodocs.positioning import ImageBox, PageItemScope, Shape, TextBox
 from oodocs.review import MarginNote, Todo, margin_note, todo
 from oodocs.structure import (
@@ -76,9 +78,7 @@ from oodocs import (
     CommentList,
     CodeBlock,
     ColumnSpan,
-    ColumnSpec,
     CounterStyle,
-    CropBox,
     Document,
     DocumentMetadata,
     DocumentSettings,
@@ -110,7 +110,6 @@ from oodocs import (
     PageSize,
     PageBreak,
     Padding,
-    PdfPages,
     Paragraph,
     ParagraphStyle,
     RunInTitleStyle,
@@ -122,8 +121,6 @@ from oodocs import (
     StyleSheet,
     SubFigure,
     SubFigureGroup,
-    SubTable,
-    SubTableGroup,
     Subsection,
     SubSubsection,
     Table,
@@ -2068,6 +2065,16 @@ def test_public_api_prefers_classes_for_structural_nodes() -> None:
     assert hasattr(oodocs, "ListOfTables")
     assert hasattr(oodocs, "ListOfFigures")
     assert hasattr(oodocs, "cite")
+    assert not hasattr(oodocs, "ColumnSpec")
+    assert not hasattr(oodocs, "CropBox")
+    assert not hasattr(oodocs, "PdfPages")
+    assert not hasattr(oodocs, "SubTable")
+    assert not hasattr(oodocs, "SubTableGroup")
+    assert hasattr(media_components, "ColumnSpec")
+    assert hasattr(media_components, "CropBox")
+    assert hasattr(media_components, "PdfPages")
+    assert hasattr(media_components, "SubTable")
+    assert hasattr(media_components, "SubTableGroup")
     assert hasattr(oodocs, "Box")
     assert hasattr(oodocs, "BoxStyle")
     assert hasattr(oodocs, "CitationDefaults")
