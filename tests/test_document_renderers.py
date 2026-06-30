@@ -3404,7 +3404,6 @@ def test_component_and_template_presets_build_renderable_documents(tmp_path: Pat
     assert cover_settings.title_matter.cover_page is True
     assert cover_settings.title_matter.author_layout.mode == "stacked"
     assert len(cover_settings.overlays) == 3
-    assert cover_settings.page_items == cover_settings.overlays
     assert all(item.scope.kind == "cover" for item in cover_settings.overlays)
     cover_document = Document(
         "Cover Preset",

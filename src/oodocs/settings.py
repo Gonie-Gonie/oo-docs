@@ -689,7 +689,6 @@ class DocumentSettings:
         overlays: Absolute-positioned page decorations or overlays. Pass
             ``scope=...`` on each item for all, cover, front, main, or physical
             page-range selection.
-        page_items: Compatibility alias for ``overlays``.
         theme: Rendering theme.
 
     Examples:
@@ -747,7 +746,6 @@ class DocumentSettings:
     unit: str
     page_layout: PageLayout
     overlays: tuple[PositionedItem, ...]
-    page_items: tuple[PositionedItem, ...]
     theme: Theme
 
     def __init__(
@@ -758,7 +756,6 @@ class DocumentSettings:
         unit: str = "in",
         page_layout: PageLayout | None = None,
         overlays: Sequence[PositionedItem] | None = None,
-        page_items: Sequence[PositionedItem] | None = None,
         theme: Theme | None = None,
     ) -> None:
         if metadata is not None and not isinstance(metadata, DocumentMetadata):
@@ -769,13 +766,8 @@ class DocumentSettings:
         self.title_matter = title_matter or TitleMatter()
         self.unit = normalize_length_unit(unit)
         self.page_layout = page_layout or PageLayout()
-        if overlays is not None and page_items is not None:
-            raise ValueError("overlays cannot be combined with page_items")
-        positioned_items = coerce_positioned_items(
-            overlays if overlays is not None else page_items
-        )
+        positioned_items = coerce_positioned_items(overlays)
         self.overlays = positioned_items
-        self.page_items = positioned_items
         self.theme = theme or Theme()
 
     def page_width_in_inches(self) -> float:

@@ -783,9 +783,9 @@ def coerce_positioned_items(values: Iterable[PositionedItem] | None) -> tuple[Po
     items = tuple(values)
     for item in items:
         if not isinstance(item, (TextBox, Shape, ImageBox)):
-            raise TypeError(f"Unsupported page item: {type(item)!r}")
+            raise TypeError(f"Unsupported overlay item: {type(item)!r}")
         if item.placement != "absolute":
-            raise ValueError("Document page_items require placement='absolute'")
+            raise ValueError("Document overlays require placement='absolute'")
     _validate_shape_anchors(items)
     return items
 

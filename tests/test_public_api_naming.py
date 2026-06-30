@@ -651,15 +651,13 @@ def test_document_settings_use_overlays_for_page_positioned_items() -> None:
     assert forbidden.isdisjoint(parameters)
     assert {"metadata", "title_matter", "page_layout"} <= parameters
     assert "overlays" in parameters
-    assert "page_items" in parameters
+    assert "page_items" not in parameters
     settings = oodocs.DocumentSettings(overlays=[overlay])
     for name in forbidden:
         assert not hasattr(settings, name)
     assert isinstance(settings.title_matter, oodocs.TitleMatter)
     assert settings.overlays == (overlay,)
-    assert settings.page_items == settings.overlays
-    with pytest.raises(ValueError, match="overlays"):
-        oodocs.DocumentSettings(overlays=[], page_items=[])
+    assert not hasattr(settings, "page_items")
 
 
 def test_title_matter_owns_visible_title_fields() -> None:
