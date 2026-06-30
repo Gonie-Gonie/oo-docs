@@ -187,6 +187,11 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert any("alt_text" in text for text in paragraph_texts)
     assert any("Coordinate-based drawings can be page overlays or inline flow objects." in text for text in paragraph_texts)
     assert any("Advanced table and figure placement controls." in text for text in paragraph_texts)
+    assert any("SubFigure" in text for text in paragraph_texts)
+    assert any("SubFigureGroup" in text for text in paragraph_texts)
+    assert any("SubTable" in text for text in paragraph_texts)
+    assert any("SubTableGroup" in text for text in paragraph_texts)
+    assert any("Table 1(a)" in text for text in paragraph_texts)
     assert any("Renderer-specific behavior for notes, review workflows, and cross-reference stability." in text for text in paragraph_texts)
     assert any("Numbered statements, proofs, and custom counters" in text for text in paragraph_texts)
     assert any("CountableBlock" in text for text in paragraph_texts)
@@ -318,6 +323,11 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "alt_text" in pdf_text
     assert "Coordinate-based drawings can be page overlays or inline flow objects." in pdf_text
     assert "Advanced table and figure placement controls." in pdf_text
+    assert "SubFigure" in pdf_text
+    assert "SubFigureGroup" in pdf_text
+    assert "SubTable" in pdf_text
+    assert "SubTableGroup" in pdf_text
+    assert "Table 1(a)" in pdf_text
     assert "OODocs Contributor Certificate" in pdf_text
     assert "Renderer-specific behavior for notes, review workflows, and cross-reference stability." in pdf_text
     assert "Numbered statements, proofs, and custom counters" in pdf_text
@@ -433,6 +443,11 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "alt_text" in normalized_html_text
     assert "Coordinate-based drawings can be page overlays or inline flow objects." in normalized_html_text
     assert "Advanced table and figure placement controls." in normalized_html_text
+    assert "SubFigure" in normalized_html_text
+    assert "SubFigureGroup" in normalized_html_text
+    assert "SubTable" in normalized_html_text
+    assert "SubTableGroup" in normalized_html_text
+    assert "Table 1(a)" in normalized_html_text
     assert "OODocs Contributor Certificate" in normalized_html_text
     assert "Numbered statements, proofs, and custom counters" in normalized_html_text
     assert "CountableBlock" in normalized_html_text

@@ -244,6 +244,21 @@ def test_readme_latex_translations_include_graphicx_policy() -> None:
     assert "`alt_text=...`" in translations
 
 
+def test_readme_latex_translations_include_subcaption_subfig_policy() -> None:
+    readme = _readme()
+    translations = readme.split("Common translations:", 1)[1].split(
+        "The main payoff",
+        1,
+    )[0]
+
+    assert "LaTeX subfigures" in translations
+    assert "`SubFigure(...)`" in translations
+    assert "`SubFigureGroup(...)`" in translations
+    assert "LaTeX subtables" in translations
+    assert "`SubTable(Table(...), caption=...)`" in translations
+    assert "`SubTableGroup(...)`" in translations
+
+
 def test_public_api_policy_doc_defines_tiers_and_guards() -> None:
     policy = Path("docs/reference/public-api-policy.md").read_text(encoding="utf-8")
 
