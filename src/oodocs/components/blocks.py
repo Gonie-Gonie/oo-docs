@@ -2895,7 +2895,8 @@ def section_for_level(
 
     Examples:
         ```python
-        from oodocs import Paragraph, section_for_level
+        from oodocs import Paragraph
+        from oodocs.components.blocks import section_for_level
 
         heading = section_for_level("Details", Paragraph("More context."), level=3)
         ```
@@ -2971,7 +2972,8 @@ def shift_heading_levels(
 
     Examples:
         ```python
-        from oodocs import Chapter, shift_heading_levels
+        from oodocs import Chapter
+        from oodocs.components.blocks import shift_heading_levels
 
         shifted = shift_heading_levels([Chapter("Imported")], delta=1)
         ```
@@ -3012,7 +3014,8 @@ def shift_heading_level(
 
     Examples:
         ```python
-        from oodocs import Section, shift_heading_level
+        from oodocs import Section
+        from oodocs.components.blocks import shift_heading_level
 
         subsection = shift_heading_level(Section("Imported", level=2), delta=1)
         ```

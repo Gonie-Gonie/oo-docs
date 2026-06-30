@@ -14,8 +14,8 @@ from oodocs import (
     SubSubsection,
     Table,
     TableOfContents,
-    shift_heading_levels,
 )
+from oodocs.components.blocks import shift_heading_levels
 from oodocs.components.inline import Hyperlink
 from oodocs.components.markup import markup
 from oodocs.importers import (

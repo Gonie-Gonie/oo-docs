@@ -20,9 +20,6 @@ from oodocs.components.blocks import (
     Subsection,
     SubSubsection,
     VerticalSpace,
-    section_for_level,
-    shift_heading_level,
-    shift_heading_levels,
 )
 from oodocs.components.generated import (
     CommentList,
@@ -250,9 +247,6 @@ __all__ = [
     "strikethrough",
     "markup",
     "styled",
-    "section_for_level",
-    "shift_heading_level",
-    "shift_heading_levels",
     "subscript",
     "superscript",
     "tag",

@@ -7,7 +7,7 @@ from typing import Literal
 
 PublicApiTier = Literal["core", "domain", "internal"]
 
-TOP_LEVEL_EXPORT_LIMIT = 112
+TOP_LEVEL_EXPORT_LIMIT = 109
 
 CORE_TOP_LEVEL_EXPORTS = frozenset(
     {
@@ -128,13 +128,7 @@ DOMAIN_TOP_LEVEL_EXPORTS = frozenset(
     }
 )
 
-INTERNAL_TOP_LEVEL_EXPORTS = frozenset(
-    {
-        "section_for_level",
-        "shift_heading_level",
-        "shift_heading_levels",
-    }
-)
+INTERNAL_TOP_LEVEL_EXPORTS = frozenset()
 
 FORBIDDEN_TOP_LEVEL_NAME_PATTERNS = (
     "coerce",

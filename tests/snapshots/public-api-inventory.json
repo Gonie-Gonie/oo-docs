@@ -733,27 +733,6 @@
           "qualname": "oodocs.components.inline.styled"
         },
         {
-          "category": "block",
-          "kind": "function",
-          "module": "oodocs.components.blocks",
-          "name": "section_for_level",
-          "qualname": "oodocs.components.blocks.section_for_level"
-        },
-        {
-          "category": "block",
-          "kind": "function",
-          "module": "oodocs.components.blocks",
-          "name": "shift_heading_level",
-          "qualname": "oodocs.components.blocks.shift_heading_level"
-        },
-        {
-          "category": "block",
-          "kind": "function",
-          "module": "oodocs.components.blocks",
-          "name": "shift_heading_levels",
-          "qualname": "oodocs.components.blocks.shift_heading_levels"
-        },
-        {
           "category": "inline",
           "kind": "function",
           "module": "oodocs.components.inline",

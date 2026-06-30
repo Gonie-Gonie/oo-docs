@@ -8,6 +8,7 @@ import pytest
 import oodocs
 import oodocs.adapters as adapters
 import oodocs.apidoc as apidoc
+import oodocs.components.blocks as block_components
 import oodocs.components.references as references
 import oodocs.engineering as engineering
 import oodocs.generated as generated
@@ -46,7 +47,7 @@ def test_top_level_public_api_has_tier_policy_and_export_cap() -> None:
     assert set(public_api.TOP_LEVEL_SYMBOL_TIERS.values()) <= allowed_tiers
     assert public_api.CORE_TOP_LEVEL_EXPORTS
     assert public_api.DOMAIN_TOP_LEVEL_EXPORTS
-    assert public_api.INTERNAL_TOP_LEVEL_EXPORTS
+    assert not public_api.INTERNAL_TOP_LEVEL_EXPORTS
     assert (
         public_api.CORE_TOP_LEVEL_EXPORTS
         | public_api.DOMAIN_TOP_LEVEL_EXPORTS
@@ -242,10 +243,13 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "SubTable",
         "SubTableGroup",
         "save_document_outputs",
+        "section_for_level",
         "TitleMatterOptions",
         "TextBox",
         "Theorem",
         "TypographyOptions",
+        "shift_heading_level",
+        "shift_heading_levels",
         "validate_source",
         "validate_source_document",
     }
@@ -278,6 +282,9 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
     assert forbidden.isdisjoint(oodocs.__all__)
     assert not any(hasattr(oodocs, name) for name in forbidden)
     assert expected <= set(oodocs.__all__)
+    assert hasattr(block_components, "section_for_level")
+    assert hasattr(block_components, "shift_heading_level")
+    assert hasattr(block_components, "shift_heading_levels")
 
 
 def test_apidoc_namespace_uses_canonical_exports() -> None:
