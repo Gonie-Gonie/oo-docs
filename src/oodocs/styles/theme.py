@@ -1444,17 +1444,32 @@ class Theme:
             raise ValueError(f"unsupported generated content kind: {kind!r}") from exc
 
     def resolve_glossary_headers(self) -> tuple[str, str]:
-        """Return default glossary table headers for the active locale."""
+        """Return default glossary table headers for the active locale.
+
+        Returns:
+            ``(term_header, definition_header)`` labels.
+        """
 
         return self.locale.glossary_headers
 
     def format_date(self, value: date_type | datetime | str) -> str:
-        """Format a date using the active locale defaults."""
+        """Format a date using the active locale defaults.
+
+        Args:
+            value: Date, datetime, or ISO date string to format.
+
+        Returns:
+            Localized date text.
+        """
 
         return self.locale.format_date(value)
 
     def pdf_font_fallback_guide(self) -> str:
-        """Return a concise PDF font fallback guide for the active locale."""
+        """Return a concise PDF font fallback guide for the active locale.
+
+        Returns:
+            Human-readable PDF font fallback guidance.
+        """
 
         if not self.locale.pdf_font_fallbacks:
             return (
@@ -1468,7 +1483,11 @@ class Theme:
         )
 
     def effective_header_footer(self) -> HeaderFooterDefaults:
-        """Return configured header/footer templates, including legacy page numbers."""
+        """Return configured header/footer templates, including legacy page numbers.
+
+        Returns:
+            Effective header/footer defaults for renderers.
+        """
 
         if self.header_footer.has_content():
             return self.header_footer
@@ -1485,12 +1504,20 @@ class Theme:
         )
 
     def uses_header_footer(self) -> bool:
-        """Return whether renderers should emit a header/footer layer."""
+        """Return whether renderers should emit a header/footer layer.
+
+        Returns:
+            ``True`` when any effective header or footer template is configured.
+        """
 
         return self.effective_header_footer().has_content()
 
     def resolve_header_footer_font_size(self) -> float:
-        """Return effective header/footer font size in points."""
+        """Return effective header/footer font size in points.
+
+        Returns:
+            Header/footer font size in points.
+        """
 
         return (
             self.effective_header_footer().font_size
@@ -1504,7 +1531,16 @@ class Theme:
         *,
         page_kind: Literal["default", "first", "even"] = "default",
     ) -> str | None:
-        """Return a raw header/footer template for one slot."""
+        """Return a raw header/footer template for one slot.
+
+        Args:
+            region: Header/footer region to resolve.
+            position: Horizontal slot within the region.
+            page_kind: Page variant to resolve.
+
+        Returns:
+            Raw template for the requested slot, or ``None`` when unset.
+        """
 
         return self.effective_header_footer().content_for(
             region,
@@ -1522,7 +1558,19 @@ class Theme:
         chapter: str = "",
         section: str = "",
     ) -> str:
-        """Resolve a header/footer template to plain text."""
+        """Resolve a header/footer template to plain text.
+
+        Args:
+            template: Header/footer template to resolve.
+            page_number: One-based logical page number.
+            front_matter: Whether to use front-matter numbering.
+            title: Current document title.
+            chapter: Current chapter title.
+            section: Current section title.
+
+        Returns:
+            Plain text header/footer content.
+        """
 
         if not template:
             return ""
