@@ -98,8 +98,8 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "oodocs.Paragraph" in all_titles
     assert "oodocs.Table" in all_titles
     assert "oodocs.Figure" in all_titles
-    assert "oodocs.OUTPUT_FORMATS" in all_titles
-    assert "oodocs.MIN_SECTION_LEVEL" in all_titles
+    assert "oodocs.compatibility.OUTPUT_FORMATS" in all_titles
+    assert "oodocs.components.blocks.MIN_SECTION_LEVEL" in all_titles
     assert "oodocs.Theme" in all_titles
     assert "oodocs.ValidationResult" in all_titles
     assert check_api_help_categories(api) == ()

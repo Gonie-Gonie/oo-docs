@@ -3,7 +3,6 @@
 from importlib.metadata import PackageNotFoundError, version as package_version
 
 from oodocs.core import OODocsError
-from oodocs.compatibility import OUTPUT_FORMATS, OutputFormat
 from oodocs.components.blocks import (
     Box,
     BulletList,
@@ -12,8 +11,6 @@ from oodocs.components.blocks import (
     ColumnSpan,
     Divider,
     Equation,
-    MAX_SECTION_LEVEL,
-    MIN_SECTION_LEVEL,
     MultiColumn,
     NumberedList,
     PageBreak,
@@ -194,12 +191,8 @@ __all__ = [
     "LocaleDefaults",
     "ListStyle",
     "Math",
-    "MAX_SECTION_LEVEL",
-    "MIN_SECTION_LEVEL",
     "MultiColumn",
     "NumberedList",
-    "OUTPUT_FORMATS",
-    "OutputFormat",
     "PageNumberDefaults",
     "Padding",
     "PageLayout",

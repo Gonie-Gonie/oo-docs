@@ -11,6 +11,7 @@ import zlib
 import zipfile
 
 import oodocs
+import oodocs.compatibility as compatibility_components
 from docx import Document as WordDocument
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.shared import RGBColor
@@ -19,6 +20,7 @@ import pytest
 
 import oodocs.components.generated as generated_components
 import oodocs.components.inline as inline_components
+import oodocs.components.blocks as block_components
 import oodocs.engineering as engineering_components
 import oodocs.importers as importer_components
 import oodocs.media as media_components
@@ -2165,6 +2167,14 @@ def test_public_api_prefers_classes_for_structural_nodes() -> None:
     assert hasattr(importer_components, "from_markdown")
     assert hasattr(importer_components, "from_markdown_file")
     assert hasattr(oodocs, "OutputBundle")
+    assert not hasattr(oodocs, "OUTPUT_FORMATS")
+    assert not hasattr(oodocs, "OutputFormat")
+    assert hasattr(compatibility_components, "OUTPUT_FORMATS")
+    assert hasattr(compatibility_components, "OutputFormat")
+    assert not hasattr(oodocs, "MAX_SECTION_LEVEL")
+    assert not hasattr(oodocs, "MIN_SECTION_LEVEL")
+    assert hasattr(block_components, "MAX_SECTION_LEVEL")
+    assert hasattr(block_components, "MIN_SECTION_LEVEL")
     assert not hasattr(oodocs, "build_source_outputs")
     assert not hasattr(oodocs, "load_document_from_python")
     assert not hasattr(oodocs, "load_source_document")

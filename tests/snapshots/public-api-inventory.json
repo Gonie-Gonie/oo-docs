@@ -320,20 +320,6 @@
           "qualname": "oodocs.components.inline.Math"
         },
         {
-          "category": "constant",
-          "kind": "constant",
-          "module": null,
-          "name": "MAX_SECTION_LEVEL",
-          "qualname": "MAX_SECTION_LEVEL"
-        },
-        {
-          "category": "constant",
-          "kind": "constant",
-          "module": null,
-          "name": "MIN_SECTION_LEVEL",
-          "qualname": "MIN_SECTION_LEVEL"
-        },
-        {
           "category": "block",
           "kind": "class",
           "module": "oodocs.components.blocks",
@@ -346,20 +332,6 @@
           "module": "oodocs.components.blocks",
           "name": "NumberedList",
           "qualname": "oodocs.components.blocks.NumberedList"
-        },
-        {
-          "category": "compatibility",
-          "kind": "constant",
-          "module": null,
-          "name": "OUTPUT_FORMATS",
-          "qualname": "OUTPUT_FORMATS"
-        },
-        {
-          "category": "compatibility",
-          "kind": "type-alias",
-          "module": "typing",
-          "name": "OutputFormat",
-          "qualname": "OutputFormat"
         },
         {
           "category": "theme",
