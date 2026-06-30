@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date
+from typing import Literal, get_args, get_origin, get_type_hints
 
 import pytest
 
@@ -31,6 +32,7 @@ from oodocs import (
     Theme,
     TypographyDefaults,
 )
+from oodocs.styles import StyleCategory
 
 
 def test_text_style_normalizes_text_color() -> None:
@@ -304,9 +306,9 @@ def test_header_footer_defaults_resolve_templates_and_legacy_page_numbers() -> N
 
 def test_stylesheet_resolves_prefixed_names_and_roundtrips() -> None:
     styles = StyleSheet.default()
-    styles.register("paragraph", "lead", ParagraphStyle(space_after=10))
-    styles.register("box", "callout", BoxStyle(padding=Padding.all(8)))
-    styles.register("chip", "state.ok", InlineChipStyle(uppercase=True))
+    styles.register_paragraph("lead", ParagraphStyle(space_after=10))
+    styles.register_box("callout", BoxStyle(padding=Padding.all(8)))
+    styles.register_chip("state.ok", InlineChipStyle(uppercase=True))
 
     assert isinstance(styles.resolve("table", "table.compact"), TableStyle)
     assert isinstance(styles.resolve("table", "nomenclature.inner"), TableStyle)
@@ -320,6 +322,48 @@ def test_stylesheet_resolves_prefixed_names_and_roundtrips() -> None:
     assert restored.resolve("chip", "status.success").uppercase is True
 
 
+def test_stylesheet_register_helpers_cover_style_categories() -> None:
+    styles = StyleSheet()
+
+    styles.register_text("strong", TextStyle(bold=True))
+    styles.register_paragraph("lead", ParagraphStyle(space_after=10))
+    styles.register_run_in_title("term", RunInTitleStyle(separator=": "))
+    styles.register_list(
+        "alpha",
+        ListStyle(marker=CounterStyle(counter_format="lower-alpha")),
+    )
+    styles.register_box("callout", BoxStyle(padding=Padding.all(8)))
+    styles.register_table("schema", TableStyle.compact())
+    styles.register_table_cell("numeric", TableCellStyle(text_alignment="right"))
+    styles.register_chip("state.ok", InlineChipStyle(uppercase=True))
+
+    assert styles.resolve("text", "strong").bold is True
+    assert styles.resolve("paragraph", "lead").space_after == 10
+    assert styles.resolve("run_in_title", "term").separator == ": "
+    assert styles.resolve("list", "alpha").marker.counter_format == "lower-alpha"
+    assert isinstance(styles.resolve("box", "callout"), BoxStyle)
+    assert isinstance(styles.resolve("table", "schema"), TableStyle)
+    assert styles.resolve("table_cell", "numeric").text_alignment == "right"
+    assert styles.resolve("chip", "state.ok").uppercase is True
+
+
+def test_stylesheet_register_category_is_literal_typed() -> None:
+    category_hint = get_type_hints(StyleSheet.register)["category"]
+
+    assert get_origin(StyleCategory) is Literal
+    assert get_origin(category_hint) is Literal
+    assert set(get_args(category_hint)) == {
+        "text",
+        "paragraph",
+        "run_in_title",
+        "list",
+        "box",
+        "table",
+        "table_cell",
+        "chip",
+    }
+
+
 def test_stylesheet_rejects_unknown_or_wrong_category_styles() -> None:
     styles = StyleSheet.default()
 
@@ -328,6 +372,9 @@ def test_stylesheet_rejects_unknown_or_wrong_category_styles() -> None:
 
     with pytest.raises(TypeError, match="BoxStyle"):
         styles.register("box", "not-a-box", TableStyle())
+
+    with pytest.raises(TypeError, match="TableStyle"):
+        styles.register_table("not-a-table", BoxStyle())  # type: ignore[arg-type]
 
 
 def test_style_css_class_normalization() -> None:

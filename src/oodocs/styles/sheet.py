@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field, is_dataclass
-from typing import Any
+from typing import Any, Literal, TypeAlias, cast, overload
 
 from oodocs.styles.blocks import BoxStyle, ParagraphStyle, RunInTitleStyle
 from oodocs.styles.border import BorderStyle
@@ -14,7 +14,18 @@ from oodocs.styles.tables import TableCellStyle, TableStyle
 from oodocs.styles.text import TextStyle
 
 
-_STYLE_TYPES = {
+StyleCategory: TypeAlias = Literal[
+    "text",
+    "paragraph",
+    "run_in_title",
+    "list",
+    "box",
+    "table",
+    "table_cell",
+    "chip",
+]
+
+_STYLE_TYPES: dict[StyleCategory, type[object]] = {
     "text": TextStyle,
     "paragraph": ParagraphStyle,
     "run_in_title": RunInTitleStyle,
@@ -48,8 +59,8 @@ class StyleSheet:
         from oodocs.styles import BoxStyle, Padding, TableStyle
 
         styles = StyleSheet.default()
-        styles.register("box", "scope", BoxStyle(padding=Padding.all(8)))
-        styles.register("table", "schema", TableStyle.compact())
+        styles.register_box("scope", BoxStyle(padding=Padding.all(8)))
+        styles.register_table("schema", TableStyle.compact())
 
         document = Document(
             "Named Styles",
@@ -84,14 +95,13 @@ class StyleSheet:
         """
 
         sheet = cls()
-        sheet.register("paragraph", "body", ParagraphStyle())
-        sheet.register("paragraph", "body.compact", ParagraphStyle(space_after=6.0))
-        sheet.register("table", "plain", TableStyle.plain())
-        sheet.register("table", "compact", TableStyle.compact())
-        sheet.register("table", "evidence", TableStyle.evidence())
-        sheet.register("table", "booktabs", TableStyle.booktabs())
-        sheet.register(
-            "table",
+        sheet.register_paragraph("body", ParagraphStyle())
+        sheet.register_paragraph("body.compact", ParagraphStyle(space_after=6.0))
+        sheet.register_table("plain", TableStyle.plain())
+        sheet.register_table("compact", TableStyle.compact())
+        sheet.register_table("evidence", TableStyle.evidence())
+        sheet.register_table("booktabs", TableStyle.booktabs())
+        sheet.register_table(
             "nomenclature.inner",
             TableStyle(
                 header_background_color="FFFFFF",
@@ -100,22 +110,22 @@ class StyleSheet:
                 repeat_header_rows=True,
             ),
         )
-        sheet.register("table_cell", "emphasis", TableCellStyle(bold=True))
-        sheet.register("table_cell", "muted", TableCellStyle(text_color="64748B"))
-        sheet.register("table_cell", "numeric", TableCellStyle(text_alignment="right"))
-        sheet.register("box", "note", _box_style("64748B", "F8FAFC", "E2E8F0", "0F172A"))
-        sheet.register("box", "info", _box_style("3B82F6", "EFF6FF", "DBEAFE", "1E3A8A"))
-        sheet.register("box", "warning", _box_style("D97706", "FFFBEB", "FEF3C7", "78350F"))
-        sheet.register("box", "danger", _box_style("DC2626", "FEF2F2", "FEE2E2", "7F1D1D"))
-        sheet.register("box", "success", _box_style("16A34A", "F0FDF4", "DCFCE7", "14532D"))
-        sheet.register("chip", "tag", InlineChipStyle())
-        sheet.register("chip", "badge", InlineChipStyle(
+        sheet.register_table_cell("emphasis", TableCellStyle(bold=True))
+        sheet.register_table_cell("muted", TableCellStyle(text_color="64748B"))
+        sheet.register_table_cell("numeric", TableCellStyle(text_alignment="right"))
+        sheet.register_box("note", _box_style("64748B", "F8FAFC", "E2E8F0", "0F172A"))
+        sheet.register_box("info", _box_style("3B82F6", "EFF6FF", "DBEAFE", "1E3A8A"))
+        sheet.register_box("warning", _box_style("D97706", "FFFBEB", "FEF3C7", "78350F"))
+        sheet.register_box("danger", _box_style("DC2626", "FEF2F2", "FEE2E2", "7F1D1D"))
+        sheet.register_box("success", _box_style("16A34A", "F0FDF4", "DCFCE7", "14532D"))
+        sheet.register_chip("tag", InlineChipStyle())
+        sheet.register_chip("badge", InlineChipStyle(
             background_color="F3F4F6",
             text_color="1F2937",
             border=BorderStyle.solid("D1D5DB", width=0.5, radius=0.5, radius_unit="em"),
             padding=Padding.symmetric(vertical=0.12, horizontal=0.32, unit="em"),
         ))
-        sheet.register("chip", "keyboard", InlineChipStyle(
+        sheet.register_chip("keyboard", InlineChipStyle(
             background_color="F8FAFC",
             text_color="111827",
             border=BorderStyle.solid("CBD5E1", width=0.75, radius=0.22, radius_unit="em"),
@@ -125,11 +135,62 @@ class StyleSheet:
             bold=False,
         ))
         for name, style in _status_chip_styles().items():
-            sheet.register("chip", f"status.{name}", style)
+            sheet.register_chip(f"status.{name}", style)
         return sheet
 
-    def register(self, category: str, name: str, style: object) -> None:
-        """Register a named style.
+    @overload
+    def register(self, category: Literal["text"], name: str, style: TextStyle) -> None:
+        ...
+
+    @overload
+    def register(
+        self,
+        category: Literal["paragraph"],
+        name: str,
+        style: ParagraphStyle,
+    ) -> None:
+        ...
+
+    @overload
+    def register(
+        self,
+        category: Literal["run_in_title"],
+        name: str,
+        style: RunInTitleStyle,
+    ) -> None:
+        ...
+
+    @overload
+    def register(self, category: Literal["list"], name: str, style: ListStyle) -> None:
+        ...
+
+    @overload
+    def register(self, category: Literal["box"], name: str, style: BoxStyle) -> None:
+        ...
+
+    @overload
+    def register(self, category: Literal["table"], name: str, style: TableStyle) -> None:
+        ...
+
+    @overload
+    def register(
+        self,
+        category: Literal["table_cell"],
+        name: str,
+        style: TableCellStyle,
+    ) -> None:
+        ...
+
+    @overload
+    def register(self, category: Literal["chip"], name: str, style: InlineChipStyle) -> None:
+        ...
+
+    def register(self, category: StyleCategory, name: str, style: object) -> None:
+        """Register a named style using an explicit category.
+
+        Prefer typed helpers such as ``register_table(...)`` and
+        ``register_box(...)`` in ordinary authoring code. This method remains
+        useful for dynamic tooling that already stores the category name.
 
         Args:
             category: Style category such as ``"table"`` or ``"box"``.
@@ -156,9 +217,119 @@ class StyleSheet:
             )
         getattr(self, normalized_category)[normalized_name] = style
 
+    def register_text(self, name: str, style: TextStyle) -> None:
+        """Register a named inline text style.
+
+        Args:
+            name: Name used by inline text fragments.
+            style: Text style object.
+
+        Examples:
+            ```python
+            styles = StyleSheet()
+            styles.register_text("link.emphasis", TextStyle(bold=True))
+            ```
+        """
+
+        self.register("text", name, style)
+
+    def register_paragraph(self, name: str, style: ParagraphStyle) -> None:
+        """Register a named paragraph style.
+
+        Args:
+            name: Name used by paragraph-like blocks.
+            style: Paragraph style object.
+
+        Examples:
+            ```python
+            styles = StyleSheet()
+            styles.register_paragraph("body.compact", ParagraphStyle(space_after=6))
+            ```
+        """
+
+        self.register("paragraph", name, style)
+
+    def register_run_in_title(self, name: str, style: RunInTitleStyle) -> None:
+        """Register a named run-in title style.
+
+        Args:
+            name: Name used by run-in titled blocks.
+            style: Run-in title style object.
+        """
+
+        self.register("run_in_title", name, style)
+
+    def register_list(self, name: str, style: ListStyle) -> None:
+        """Register a named list marker style.
+
+        Args:
+            name: Name used by list blocks.
+            style: List style object.
+        """
+
+        self.register("list", name, style)
+
+    def register_box(self, name: str, style: BoxStyle) -> None:
+        """Register a named box style.
+
+        Args:
+            name: Name used by boxes and callouts.
+            style: Box style object.
+
+        Examples:
+            ```python
+            styles = StyleSheet()
+            styles.register_box("warning", BoxStyle(background_color="FFFBEB"))
+            ```
+        """
+
+        self.register("box", name, style)
+
+    def register_table(self, name: str, style: TableStyle) -> None:
+        """Register a named table style.
+
+        Args:
+            name: Name used by tables.
+            style: Table style object.
+
+        Examples:
+            ```python
+            styles = StyleSheet()
+            styles.register_table("schema", TableStyle.compact())
+            ```
+        """
+
+        self.register("table", name, style)
+
+    def register_table_cell(self, name: str, style: TableCellStyle) -> None:
+        """Register a named table cell style.
+
+        Args:
+            name: Name used by table cells.
+            style: Table cell style object.
+        """
+
+        self.register("table_cell", name, style)
+
+    def register_chip(self, name: str, style: InlineChipStyle) -> None:
+        """Register a named inline chip style.
+
+        Args:
+            name: Name used by chip helpers.
+            style: Inline chip style object.
+
+        Examples:
+            ```python
+            styles = StyleSheet()
+            styles.register_chip("status.ready", InlineChipStyle(uppercase=True))
+            ```
+        """
+
+        self.register("chip", name, style)
+
     def resolve(
         self,
-        category: str,
+        category: StyleCategory,
         value: str | object | None,
         default: object | None = None,
     ) -> object:
@@ -255,12 +426,12 @@ class StyleSheet:
         return sheet
 
 
-def _normalize_category(category: str) -> str:
+def _normalize_category(category: str) -> StyleCategory:
     normalized = category.strip().lower().replace("-", "_")
     if normalized not in _STYLE_TYPES:
         supported = ", ".join(sorted(_STYLE_TYPES))
         raise ValueError(f"Unsupported style category {category!r}. Use one of: {supported}")
-    return normalized
+    return cast(StyleCategory, normalized)
 
 
 def _normalize_name(name: str) -> str:
@@ -342,4 +513,4 @@ def _style_from_payload(style_type: type, payload: dict[str, Any]) -> object:
     return style_type(**values)
 
 
-__all__ = ["StyleSheet"]
+__all__ = ["StyleCategory", "StyleSheet"]

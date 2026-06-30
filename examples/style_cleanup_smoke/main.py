@@ -74,13 +74,11 @@ def create_stylesheet() -> StyleSheet:
     """
 
     styles = StyleSheet.default()
-    styles.register(
-        "paragraph",
+    styles.register_paragraph(
         "body.compact",
         ParagraphStyle(text_alignment="left", space_after=6),
     )
-    styles.register(
-        "table",
+    styles.register_table(
         "schema",
         TableStyle(
             header_background_color="E7EEF7",
@@ -89,13 +87,11 @@ def create_stylesheet() -> StyleSheet:
             repeat_header_rows=True,
         ),
     )
-    styles.register(
-        "box",
+    styles.register_box(
         "scope",
         BoxStyle(background_color="F4F8FB", padding=Padding.all(8)),
     )
-    styles.register(
-        "chip",
+    styles.register_chip(
         "req.required",
         InlineChipStyle(background_color="2563EB", text_color="FFFFFF"),
     )

@@ -25,7 +25,9 @@ python examples/style_cleanup_smoke/main.py --outputs pdf --outputs html
 
 Programmatic entry points:
 
-- `create_stylesheet()` builds the reusable `StyleSheet`.
+- `create_stylesheet()` builds the reusable `StyleSheet` with typed
+  `register_paragraph(...)`, `register_table(...)`, `register_box(...)`, and
+  `register_chip(...)` helpers.
 - `write_stylesheet_sidecar(...)` and `load_stylesheet_sidecar(...)` demonstrate
   exporting a stylesheet to JSON and loading it back before rendering.
 - `category_mismatch_validation_codes()` demonstrates that validation catches a

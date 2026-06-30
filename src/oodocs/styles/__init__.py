@@ -15,7 +15,7 @@ from oodocs.styles.counter import (
     ListStyle,
     list_style_with_overrides,
 )
-from oodocs.styles.sheet import StyleSheet
+from oodocs.styles.sheet import StyleCategory, StyleSheet
 from oodocs.styles.tables import (
     TableCellStyle,
     TableCellStyleInput,
@@ -65,6 +65,7 @@ __all__ = [
     "RunInTitleStyle",
     "StrokeStyle",
     "StyleSheet",
+    "StyleCategory",
     "TableCellStyle",
     "TableCellStyleInput",
     "TableStyle",

@@ -1568,6 +1568,13 @@
         },
         {
           "category": "style",
+          "kind": "type-alias",
+          "module": "typing",
+          "name": "StyleCategory",
+          "qualname": "StyleCategory"
+        },
+        {
+          "category": "style",
           "kind": "class",
           "module": "oodocs.styles.tables",
           "name": "TableCellStyle",
