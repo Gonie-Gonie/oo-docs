@@ -1053,6 +1053,19 @@ class AlignedEquation(Equation):
         numbered: Whether the block participates in equation numbering.
         reference_label: Label prefix used by automatic inline references.
         style: Base paragraph style.
+        text_alignment: Optional text alignment override.
+        space_before: Optional spacing before the equation.
+        space_after: Optional spacing after the equation.
+        leading: Optional line spacing.
+        left_indent: Optional left indent.
+        right_indent: Optional right indent.
+        first_line_indent: Optional first-line indent.
+        keep_together: Whether renderers should keep the equation on one page.
+        keep_with_next: Whether renderers should keep this equation with the
+            following block.
+        page_break_before: Whether renderers should start a new page first.
+        widow_control: Whether renderers should avoid widowed lines.
+        unit: Unit for length overrides.
 
     Raises:
         ValueError: If no non-empty equation rows are provided.
@@ -1110,7 +1123,11 @@ class AlignedEquation(Equation):
         )
 
     def math_sources(self) -> tuple[str, ...]:
-        """Return the aligned equation rows used for validation."""
+        """Return the aligned equation rows used for validation.
+
+        Returns:
+            Source strings that validation should inspect.
+        """
 
         return self.lines
 
@@ -1125,6 +1142,19 @@ class CasesEquation(Equation):
         numbered: Whether the block participates in equation numbering.
         reference_label: Label prefix used by automatic inline references.
         style: Base paragraph style.
+        text_alignment: Optional text alignment override.
+        space_before: Optional spacing before the equation.
+        space_after: Optional spacing after the equation.
+        leading: Optional line spacing.
+        left_indent: Optional left indent.
+        right_indent: Optional right indent.
+        first_line_indent: Optional first-line indent.
+        keep_together: Whether renderers should keep the equation on one page.
+        keep_with_next: Whether renderers should keep this equation with the
+            following block.
+        page_break_before: Whether renderers should start a new page first.
+        widow_control: Whether renderers should avoid widowed lines.
+        unit: Unit for length overrides.
 
     Raises:
         ValueError: If no cases are provided.
