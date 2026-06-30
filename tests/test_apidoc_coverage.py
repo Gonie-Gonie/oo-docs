@@ -15,6 +15,7 @@ from oodocs.apidoc import (
     collect_api,
 )
 from oodocs.apidoc.coverage import ApiCoverageResult, check_api_docs
+from oodocs.components.blocks import Chapter
 from oodocs.components.media import Table
 
 
@@ -32,6 +33,8 @@ def test_apidoc_coverage_detects_missing_docs_and_serializes(tmp_path) -> None:
     assert ApiCoverageResult.from_json(coverage.to_json()).package == "undocpkg"
     assert "undocpkg:" in coverage.format_text()
     assert isinstance(coverage.to_table(), Table)
+    assert isinstance(coverage.to_chapter(), Chapter)
+    assert isinstance(coverage.to_section(), Chapter)
 
 
 def test_apidoc_coverage_uses_dataclass_attribute_docs_for_constructor_parameters(

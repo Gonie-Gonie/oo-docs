@@ -9,7 +9,7 @@ from oodocs.apidoc.coverage import ApiCoverageResult
 from oodocs.apidoc.diff import ApiDiffResult
 from oodocs.apidoc.model import ApiObject
 from oodocs.apidoc.profiles import ApiPresentationProfile
-from oodocs.components.blocks import Chapter, Paragraph
+from oodocs.components.blocks import Chapter
 
 
 def api_objects_to_summary_table(
@@ -65,17 +65,17 @@ def api_coverage_to_chapter(coverage: object) -> Chapter:
 
         ```python
         from oodocs import Document
-        from oodocs.apidoc import check_api_docs, collect_api, api_coverage_to_chapter
+        from oodocs.apidoc import check_api_docs, collect_api
 
         api = collect_api("mypkg")
         coverage = check_api_docs(api, fail_under=0.90)
-        report = Document("Release Evidence", api_coverage_to_chapter(coverage))
+        report = Document("Release Evidence", coverage.to_chapter())
         report.save_docx("artifacts/release-evidence.docx")
         ```
     """
 
     if isinstance(coverage, ApiCoverageResult):
-        return coverage.to_section()
+        return coverage.to_chapter()
     return Chapter("API Documentation Coverage", coverage)
 
 
@@ -93,27 +93,20 @@ def api_diff_to_chapter(diff: ApiDiffResult) -> Chapter:
 
         ```python
         from oodocs import Document
-        from oodocs.apidoc import ApiSnapshot, api_diff_to_chapter, diff_api
+        from oodocs.apidoc import ApiSnapshot, diff_api
 
         base = ApiSnapshot.load_json("artifacts/api-base.json")
         head = ApiSnapshot.load_json("artifacts/api-head.json")
         diff = diff_api(base, head)
-        Document("Public API Changes", api_diff_to_chapter(diff)).save_all(
+        Document("Public API Changes", diff.to_chapter()).save_all(
             "artifacts/api-diff"
         )
         ```
     """
 
-    return Chapter(
-        "API Diff",
-        Paragraph(f"{diff.base_name} -> {diff.head_name}"),
-        diff.to_summary_table(),
-        *diff.to_sections(),
-    )
+    return diff.to_chapter()
 
 
 __all__ = [
-    "api_coverage_to_chapter",
-    "api_diff_to_chapter",
     "api_objects_to_chapter",
 ]

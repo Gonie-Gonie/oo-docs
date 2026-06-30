@@ -35,7 +35,6 @@ from oodocs.apidoc import (
     ApiDocstringParser,
     ApiPackage,
     ApiSnapshot,
-    api_coverage_to_chapter,
     api_objects_to_chapter,
     check_api_docs,
     collect_api,
@@ -695,7 +694,7 @@ def test_general_repo_render_helpers_compose_selected_api(tmp_path) -> None:
                 caption="Mixed package functions.",
             ),
         ),
-        api_coverage_to_chapter(coverage),
+        coverage.to_chapter(),
     )
 
     outputs = document.save_all(

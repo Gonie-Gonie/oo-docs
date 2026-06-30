@@ -297,7 +297,7 @@ class ApiCoverageResult:
         ]
         return Table(["Metric", "Value"], rows, caption=caption, split=True)
 
-    def to_section(self) -> Chapter:
+    def to_chapter(self) -> Chapter:
         """Return coverage metrics and issue rows as an OODocs chapter.
 
         Returns:
@@ -314,7 +314,7 @@ class ApiCoverageResult:
 
             api = collect_api(".", collector="griffe")
             coverage = check_api_docs(api, fail_under=0.90)
-            Document("API Evidence", coverage.to_section()).save_all("artifacts/api-evidence")
+            Document("API Evidence", coverage.to_chapter()).save_all("artifacts/api-evidence")
             ```
         """
 
@@ -331,6 +331,16 @@ class ApiCoverageResult:
         else:
             blocks.append(Paragraph("No API documentation issues were found."))
         return Chapter("API Documentation Coverage", *blocks)
+
+    def to_section(self) -> Chapter:
+        """Return coverage metrics and issue rows as an OODocs chapter.
+
+        Returns:
+            Same chapter as ``to_chapter()``. Kept for compatibility with older
+            result rendering code.
+        """
+
+        return self.to_chapter()
 
     def format_text(self) -> str:
         """Format coverage as human-readable console text.

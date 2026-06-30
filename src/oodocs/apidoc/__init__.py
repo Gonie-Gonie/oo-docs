@@ -61,11 +61,7 @@ from oodocs.apidoc.model import (
     ApiSeeAlso,
     ApiVisibility,
 )
-from oodocs.apidoc.render import (
-    api_coverage_to_chapter,
-    api_diff_to_chapter,
-    api_objects_to_chapter,
-)
+from oodocs.apidoc.render import api_objects_to_chapter
 from oodocs.apidoc.help import (
     api_category_to_chapter,
 )
@@ -108,8 +104,6 @@ __all__ = [
     "GuideLink",
     "OODocs_API_CATEGORIES",
     "ParsedDocstring",
-    "api_coverage_to_chapter",
-    "api_diff_to_chapter",
     "api_objects_to_chapter",
     "api_category_to_chapter",
     "check_api_docs",

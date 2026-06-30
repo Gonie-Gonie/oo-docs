@@ -988,20 +988,6 @@
         {
           "category": "apidoc-composition",
           "kind": "function",
-          "module": "oodocs.apidoc.render",
-          "name": "api_coverage_to_chapter",
-          "qualname": "oodocs.apidoc.render.api_coverage_to_chapter"
-        },
-        {
-          "category": "apidoc-composition",
-          "kind": "function",
-          "module": "oodocs.apidoc.render",
-          "name": "api_diff_to_chapter",
-          "qualname": "oodocs.apidoc.render.api_diff_to_chapter"
-        },
-        {
-          "category": "apidoc-composition",
-          "kind": "function",
           "module": "oodocs.apidoc.blocks",
           "name": "api_objects_to_chapter",
           "qualname": "oodocs.apidoc.blocks.api_objects_to_chapter"

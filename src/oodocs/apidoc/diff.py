@@ -426,6 +426,39 @@ class ApiDiffResult:
             sections.append(Chapter("Changed Docstrings", _pairs_table(self.changed_docstrings, "Summary")))
         return sections
 
+    def to_chapter(self, *, title: str = "API Diff") -> Chapter:
+        """Return this diff as an OODocs chapter.
+
+        Args:
+            title: Chapter title.
+
+        Returns:
+            Chapter containing the diff summary table and detailed change
+            sections.
+
+        Examples:
+            Insert a rendered API diff into a release review document:
+
+            ```python
+            from oodocs import Document
+            from oodocs.apidoc import ApiSnapshot, diff_api
+
+            base = ApiSnapshot.load_json("artifacts/api-base.json")
+            head = ApiSnapshot.load_json("artifacts/api-head.json")
+            diff = diff_api(base, head)
+            Document("Release Review", diff.to_chapter()).save_all(
+                "artifacts/release-review"
+            )
+            ```
+        """
+
+        return Chapter(
+            title,
+            Paragraph(f"{self.base_name} -> {self.head_name}"),
+            self.to_summary_table(),
+            *self.to_sections(),
+        )
+
     def to_document(self, *, title: str | None = None) -> Document:
         """Return this diff as an OODocs document.
 

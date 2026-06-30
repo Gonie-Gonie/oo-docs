@@ -10,6 +10,7 @@ from example_regression import (
     assert_rendered_bundle,
 )
 from oodocs.apidoc import ApiDiffResult, ApiDocstringParser, ApiSnapshot, collect_api, diff_api
+from oodocs.components.blocks import Chapter
 from oodocs.components.media import Table
 
 
@@ -47,6 +48,7 @@ def test_apidoc_diff_detects_added_and_changed_api(tmp_path) -> None:
     assert "breaking" in diff.format_text()
     assert isinstance(diff.to_table(), Table)
     assert isinstance(diff.to_summary_table(), Table)
+    assert isinstance(diff.to_chapter(), Chapter)
 
 
 def test_apidoc_diff_renders_mixed_repo_auto_parser_evidence(tmp_path) -> None:

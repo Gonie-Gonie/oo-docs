@@ -317,6 +317,8 @@ def test_apidoc_namespace_uses_canonical_exports() -> None:
         "ApiDocProfile",
         "ApiRaises",
         "api_package_to_document",
+        "api_coverage_to_chapter",
+        "api_diff_to_chapter",
         "api_objects_to_summary_table",
         "api_object_to_help_section",
         "profile_names",
