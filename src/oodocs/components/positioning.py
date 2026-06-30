@@ -940,6 +940,4 @@ __all__ = [
     "ShapeKind",
     "TextBox",
     "coerce_page_item_scope",
-    "coerce_positioned_items",
-    "resolve_positioned_boxes",
 ]

@@ -1878,7 +1878,6 @@ __all__ = [
     "_BlockReference",
     "badge",
     "bold",
-    "coerce_inlines",
     "cite",
     "comment",
     "footnote",

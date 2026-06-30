@@ -3024,13 +3024,7 @@ __all__ = [
     "TableLayout",
     "TablePlacement",
     "TableSplit",
-    "build_table_layout",
     "coerce_column_spec",
     "coerce_crop_box",
-    "coerce_image_source",
     "coerce_table_cell",
-    "image_source_to_buffer",
-    "image_source_to_bytes",
-    "normalize_media_placement",
-    "normalize_table_split",
 ]

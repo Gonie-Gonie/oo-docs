@@ -14,6 +14,8 @@ import oodocs.components.base as base_components
 import oodocs.components.blocks as block_components
 import oodocs.components.inline as inline_components
 import oodocs.components.markup as markup_components
+import oodocs.components.media as media_components
+import oodocs.components.positioning as positioning_components
 import oodocs.components.references as references
 import oodocs.engineering as engineering
 import oodocs.equations as equations
@@ -105,6 +107,30 @@ def test_top_level_public_api_excludes_internal_helper_patterns() -> None:
     }
 
     assert leaked_names == set()
+
+
+def test_leaf_component_modules_hide_internal_helpers_from_all() -> None:
+    forbidden_by_module = {
+        base_components: {"coerce_blocks"},
+        inline_components: {"coerce_inlines"},
+        media_components: {
+            "build_table_layout",
+            "coerce_image_source",
+            "image_source_to_buffer",
+            "image_source_to_bytes",
+            "normalize_media_placement",
+            "normalize_table_split",
+        },
+        positioning_components: {
+            "coerce_positioned_items",
+            "resolve_positioned_boxes",
+        },
+    }
+
+    for module, forbidden_names in forbidden_by_module.items():
+        assert forbidden_names.isdisjoint(module.__all__), module.__name__
+        for name in forbidden_names:
+            assert hasattr(module, name), f"{module.__name__}.{name}"
 
 
 def test_tier_two_namespaces_export_domain_symbols() -> None:

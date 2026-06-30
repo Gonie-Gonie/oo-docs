@@ -281,4 +281,4 @@ class Body(Block):
         return "".join(child._render_to_html(renderer, context) for child in self.children)
 
 
-__all__ = ["Block", "BlockInput", "Body", "coerce_blocks"]
+__all__ = ["Block", "BlockInput", "Body"]
