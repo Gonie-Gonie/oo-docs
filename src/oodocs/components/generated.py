@@ -60,7 +60,8 @@ class TocLevelStyle:
 
     Examples:
         ```python
-        from oodocs import Document, Section, TableOfContents, TocLevelStyle
+        from oodocs import Document, Section, TableOfContents
+        from oodocs.generated import TocLevelStyle
 
         toc = TableOfContents(level_styles={1: TocLevelStyle(indent=0.25, bold=True)})
         document = Document("Report", toc, Section("Summary"))
@@ -563,7 +564,8 @@ class CommentList(Block):
 
     Examples:
         ```python
-        from oodocs import CommentList, Document
+        from oodocs import Document
+        from oodocs.generated import CommentList
 
         doc = Document("Review", CommentList("Reviewer Notes"))
         ```
@@ -627,7 +629,8 @@ class FootnoteList(Block):
 
     Examples:
         ```python
-        from oodocs import Document, FootnoteList
+        from oodocs import Document
+        from oodocs.generated import FootnoteList
 
         doc = Document("Report", FootnoteList())
         ```
@@ -702,7 +705,8 @@ class TableOfContents(Block):
 
     Examples:
         ```python
-        from oodocs import Document, TableOfContents, TocLevelStyle
+        from oodocs import Document, TableOfContents
+        from oodocs.generated import TocLevelStyle
 
         toc = TableOfContents(
             "Contents",

@@ -110,13 +110,6 @@
           "qualname": "oodocs.components.inline.Comment"
         },
         {
-          "category": "generated-page",
-          "kind": "class",
-          "module": "oodocs.components.generated",
-          "name": "CommentList",
-          "qualname": "oodocs.components.generated.CommentList"
-        },
-        {
           "category": "block",
           "kind": "class",
           "module": "oodocs.components.blocks",
@@ -199,13 +192,6 @@
           "module": "oodocs.styles.theme",
           "name": "FootnoteDefaults",
           "qualname": "oodocs.styles.theme.FootnoteDefaults"
-        },
-        {
-          "category": "generated-page",
-          "kind": "class",
-          "module": "oodocs.components.generated",
-          "name": "FootnoteList",
-          "qualname": "oodocs.components.generated.FootnoteList"
         },
         {
           "category": "style",
@@ -542,13 +528,6 @@
           "module": "oodocs.styles.theme",
           "name": "Theme",
           "qualname": "oodocs.styles.theme.Theme"
-        },
-        {
-          "category": "generated-page",
-          "kind": "class",
-          "module": "oodocs.components.generated",
-          "name": "TocLevelStyle",
-          "qualname": "oodocs.components.generated.TocLevelStyle"
         },
         {
           "category": "theme",

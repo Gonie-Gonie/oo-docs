@@ -22,13 +22,10 @@ from oodocs.components.blocks import (
     VerticalSpace,
 )
 from oodocs.components.generated import (
-    CommentList,
-    FootnoteList,
     ListOfFigures,
     ReferenceList,
     ListOfTables,
     TableOfContents,
-    TocLevelStyle,
 )
 from oodocs.components.media import (
     Figure,
@@ -156,7 +153,6 @@ __all__ = [
     "CitationSource",
     "Chapter",
     "Comment",
-    "CommentList",
     "CodeBlock",
     "ColumnSpan",
     "Document",
@@ -169,7 +165,6 @@ __all__ = [
     "ListOfFigures",
     "Footnote",
     "FootnoteDefaults",
-    "FootnoteList",
     "FootnoteStyle",
     "GeneratedContentDefaults",
     "HeaderFooterDefaults",
@@ -218,7 +213,6 @@ __all__ = [
     "TextStyle",
     "TitleMatterDefaults",
     "Theme",
-    "TocLevelStyle",
     "TypographyDefaults",
     "DocumentValidationError",
     "ValidationIssue",

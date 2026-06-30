@@ -24,7 +24,6 @@ from oodocs import (
     CitationLibrary,
     CitationSource,
     Comment,
-    CommentList,
     CodeBlock,
     Divider,
     Document,
@@ -59,7 +58,6 @@ from oodocs import (
     Text,
     Theme,
     TitleMatterDefaults,
-    TocLevelStyle,
     TypographyDefaults,
     VerticalSpace,
     badge,
@@ -85,7 +83,7 @@ from oodocs.engineering import (
     ReactionEquation,
     chemical_formula,
 )
-from oodocs.generated import ListOfAlgorithms
+from oodocs.generated import CommentList, ListOfAlgorithms, TocLevelStyle
 from oodocs.media import ColumnSpec, CropBox, PdfPages, SubTable, SubTableGroup
 from oodocs.positioning import ImageBox, PageItemScope, Shape, TextBox
 from oodocs.structure import (
@@ -421,7 +419,8 @@ panel = Box(
 )
 """
 
-CONTENTS_CONTROL_SNIPPET = """from oodocs import TableOfContents, TocLevelStyle
+CONTENTS_CONTROL_SNIPPET = """from oodocs import TableOfContents
+from oodocs.generated import TocLevelStyle
 
 contents = TableOfContents(
     scope="document",
