@@ -117,6 +117,27 @@ def _pdf_text(path) -> str:
     return "\n".join(page.extract_text() or "" for page in reader.pages)
 
 
+def _assert_repo_relative_source_paths(api: ApiPackage) -> None:
+    source_paths = [
+        path
+        for path in (
+            *(module.source_path for module in api.modules),
+            *(obj.source_path for obj in api.iter_objects()),
+        )
+        if path
+    ]
+    document = api.find_object("oodocs.Document")
+
+    assert source_paths
+    assert document is not None
+    assert document.source_path == "src/oodocs/document.py"
+    for source_path in source_paths:
+        assert source_path.startswith("src/oodocs/"), source_path
+        assert "\\" not in source_path
+        assert not source_path.startswith(("/", "./", "../"))
+        assert ":" not in source_path.split("/", maxsplit=1)[0]
+
+
 def test_apidoc_collects_oodocs_public_api_for_self_reference() -> None:
     api = collect_api("oodocs", collector="auto", public_policy="__all__")
 
@@ -202,5 +223,7 @@ def test_apidoc_renders_oodocs_public_api_reference_bundle(tmp_path) -> None:
     _assert_clean_api_reference_text(coverage_csv_path.read_text(encoding="utf-8"))
     assert not ("<th>Label</th>" in html and "See Also" in html)
     assert html.find("API Contents") < html.find("API Documentation Coverage")
-    assert ApiPackage.load_json(api_path).find_object("oodocs.Document") is not None
+    readback_api = ApiPackage.load_json(api_path)
+    assert readback_api.find_object("oodocs.Document") is not None
+    _assert_repo_relative_source_paths(readback_api)
     assert ApiCoverageResult.load_json(coverage_json_path).public_object_count > 0
