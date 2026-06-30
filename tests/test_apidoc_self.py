@@ -28,6 +28,16 @@ STALE_API_REFERENCE_MARKERS = (
     "TextStyle.color",
     "TextBox.align",
     "ImageData.format",
+    "build_table_layout",
+    "coerce_blocks",
+    "coerce_image_source",
+    "coerce_inlines",
+    "coerce_positioned_items",
+    "image_source_to_buffer",
+    "image_source_to_bytes",
+    "normalize_media_placement",
+    "normalize_table_split",
+    "resolve_positioned_boxes",
 )
 STALE_RENDERED_API_REFERENCE_MARKERS = (
     *STALE_API_REFERENCE_MARKERS,
@@ -102,7 +112,9 @@ def test_apidoc_pyproject_config_hides_compatibility_adapters() -> None:
     config = ApiCollectConfig.from_pyproject(".")
     api = collect_api(".", config=config)
 
+    assert "oodocs.public_api" in config.module_exclude_patterns
     assert "*.ImageData.savefig" in config.object_exclude_patterns
+    assert api.find_module("oodocs.public_api") is None
     assert api.find_object("oodocs.ImageData") is not None
     assert api.find_object("oodocs.ImageData.savefig") is None
     assert api.find_object("oodocs.components.media.ImageData.savefig") is None

@@ -634,6 +634,9 @@ def test_collect_api_builds_queryable_object_tree_and_blocks(tmp_path: Path) -> 
     label = classes[0].find_member("label")
     assert label is not None
     assert label.summary == "User-facing label shown in summaries."
+    name_member = classes[0].find_member("name")
+    assert name_member is not None
+    assert "default" not in name_member.metadata
     assert isinstance(classes[0].to_section(level=2, presentation="compact"), Section)
     review_blocks = classes[0].to_blocks(presentation="review")
     review_notes = [

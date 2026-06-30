@@ -563,6 +563,13 @@ def _attribute_from_griffe(
     annotation = _display_expr(getattr(obj, "annotation", None))
     default = _display_expr(getattr(obj, "value", None))
     kind = "property" if "property" in labels else ("attribute" if parent_class else "data")
+    metadata: dict[str, object] = {
+        "docstring_style": parsed.style,
+        "griffe_labels": sorted(labels),
+        "issues": [issue.to_dict() for issue in parsed.issues],
+    }
+    if "instance-attribute" not in labels or "class-attribute" in labels:
+        metadata["default"] = default
     return ApiObject(
         kind=kind,  # type: ignore[arg-type]
         name=local_name,
@@ -588,12 +595,7 @@ def _attribute_from_griffe(
         end_line_number=getattr(obj, "endlineno", None),
         deprecated=parsed.deprecated,
         deprecation_message=parsed.deprecation_message,
-        metadata={
-            "default": default,
-            "docstring_style": parsed.style,
-            "griffe_labels": sorted(labels),
-            "issues": [issue.to_dict() for issue in parsed.issues],
-        },
+        metadata=metadata,
     )
 
 

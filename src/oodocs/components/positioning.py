@@ -194,12 +194,10 @@ class PositionedBox:
 
     Examples:
         ```python
-        from oodocs import DocumentSettings
-        from oodocs.positioning import TextBox
-        from oodocs.components.positioning import resolve_positioned_boxes
+        from oodocs.positioning import PositionedBox, TextBox
 
-        settings = DocumentSettings()
-        boxes = resolve_positioned_boxes([TextBox("DRAFT", width=2, height=0.5)], settings, settings.unit)
+        watermark = TextBox("DRAFT", width=2, height=0.5)
+        box = PositionedBox(watermark, x=1, y=1, width=2, height=0.5)
         ```
     """
 

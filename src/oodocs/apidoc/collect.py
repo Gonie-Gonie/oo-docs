@@ -950,12 +950,10 @@ def _class_object(
                     )
     if config.include_attributes and init_node is not None:
         existing_names = {member.name for member in members}
-        for name, annotation, default, line_number, end_line_number in _instance_attribute_targets(init_node):
+        for name, annotation, _default, line_number, end_line_number in _instance_attribute_targets(init_node):
             if name in existing_names or not _class_member_is_public(name, config, f"{qualname}.{name}"):
                 continue
             metadata: dict[str, object] = {"instance_attribute": True}
-            if default is not None:
-                metadata["default"] = default
             members.append(
                 ApiObject(
                     kind="attribute",

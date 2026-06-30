@@ -172,7 +172,8 @@ class Body(Block):
     """Top-level block container used by ``Document``.
 
     Args:
-        *children: Initial block content using ``coerce_blocks`` rules.
+        *children: Initial block content, accepting blocks, strings, nested
+            sequences, or ``None``.
 
     Examples:
         ```python
