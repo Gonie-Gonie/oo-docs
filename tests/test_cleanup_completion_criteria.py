@@ -177,6 +177,17 @@ def test_custom_style_guide_prefers_typed_stylesheet_register_helpers() -> None:
     assert "dynamic or advanced tooling" in guide
 
 
+def test_api_sections_guide_prefers_apipackage_render_methods() -> None:
+    guide = Path("docs/how-to/insert-api-sections.md").read_text(encoding="utf-8")
+    first_block = _python_blocks(guide)[0]
+
+    assert "api_objects_to_chapter" not in first_block
+    assert "api.subset(" in first_block
+    assert "selected_api.to_sections(" in first_block
+    assert "ApiPackage.subset(...).to_sections(...)" in guide
+    assert "lower-level render helpers" in guide
+
+
 def test_tracked_user_facing_text_has_no_local_absolute_paths() -> None:
     violations = []
     for path in _tracked_user_facing_text_files():

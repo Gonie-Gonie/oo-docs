@@ -4,10 +4,14 @@ Use this workflow when an ordinary Python development repository should provide
 API sections for a larger authored document. The collector reads a package or
 repository checkout, normalizes docstrings into `ApiObject` instances, and lets
 you insert only the selected objects as normal OODocs blocks.
+Prefer object methods such as `ApiPackage.subset(...).to_sections(...)`,
+`ApiModule.to_chapter(...)`, and `ApiObject.to_section(...)` for authored
+documents; lower-level render helpers are reserved for specialized composition
+adapters.
 
 ```python
-from oodocs import Document
-from oodocs.apidoc import ApiDocstringParser, api_objects_to_chapter, collect_api
+from oodocs import Chapter, Document
+from oodocs.apidoc import ApiDocstringParser, collect_api
 
 parser = ApiDocstringParser.auto()
 api = collect_api(
@@ -17,15 +21,17 @@ api = collect_api(
     docstring_style=parser,
 )
 
-classes = api.select_objects(kind="class", module_prefix="mypkg")
+selected_api = api.subset(kind="class", module_prefix="mypkg")
 
 doc = Document(
     "Developer Notes",
-    api_objects_to_chapter(
+    Chapter(
         "Selected API",
-        classes[:5],
-        presentation="manual",
-        max_heading_level=3,
+        *selected_api.to_sections(
+            level=2,
+            presentation="manual",
+            max_heading_level=3,
+        ),
     ),
 )
 ```
