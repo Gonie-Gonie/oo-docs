@@ -45,6 +45,11 @@ STALE_API_REFERENCE_MARKERS = (
 STALE_RENDERED_API_REFERENCE_MARKERS = (
     *STALE_API_REFERENCE_MARKERS,
     "ImageData.savefig",
+    "api_coverage_to_chapter",
+    "api_diff_to_chapter",
+    "api_object_to_help_section",
+    "api_objects_to_summary_table",
+    "api_package_to_help_book",
     "coerce_author_layout",
     "coerce_authors",
     "coerce_cell",
