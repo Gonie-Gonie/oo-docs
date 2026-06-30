@@ -140,6 +140,10 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "top_rule" in text
     assert "header_rule" in text
     assert "bottom_rule" in text
+    assert "continuation_label" in text
+    assert "continued_caption_template" in text
+    assert "repeat_header_rows" in text
+    assert "long_table_threshold" in text
 
 
 def test_help_book_renders_uncategorized_api_appendix_from_category_gate() -> None:

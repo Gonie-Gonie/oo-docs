@@ -131,6 +131,9 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert any("Table(split=False)" in text for text in paragraph_texts)
     assert any("Table(split=True)" in text for text in paragraph_texts)
     assert any("continuation_label" in text for text in paragraph_texts)
+    assert any("continued_caption_template" in text for text in paragraph_texts)
+    assert any("DOCX and PDF use repeated header rows" in text for text in paragraph_texts)
+    assert any("HTML keeps a plain flow policy" in text for text in paragraph_texts)
     assert any("display: table-header-group" in text for text in paragraph_texts)
     assert any("CompactTable.grouped_headers" in text for text in paragraph_texts)
     assert any("TableCell(rowspan=...)" in text for text in paragraph_texts)
@@ -254,6 +257,9 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "Table(split=False)" in pdf_text
     assert "Table(split=True)" in pdf_text
     assert "continuation_label" in pdf_text
+    assert "continued_caption_template" in pdf_text
+    assert "DOCX and PDF use repeated header rows" in pdf_text
+    assert "plain flow policy" in pdf_text
     assert "display: table-header-group" in pdf_text
     assert "CompactTable.grouped_headers" in pdf_text
     assert "TableCell(rowspan=...)" in pdf_text
@@ -360,6 +366,9 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "Table(split=False)" in normalized_html_text
     assert "Table(split=True)" in normalized_html_text
     assert "continuation_label" in normalized_html_text
+    assert "continued_caption_template" in normalized_html_text
+    assert "DOCX and PDF use repeated header rows" in normalized_html_text
+    assert "plain flow policy" in normalized_html_text
     assert "display: table-header-group" in normalized_html_text
     assert "CompactTable" in normalized_html_text
     assert "grouped_headers" in normalized_html_text

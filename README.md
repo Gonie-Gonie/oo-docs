@@ -155,6 +155,7 @@ Common translations:
 - LaTeX `algorithm` / `algorithmicx` -> `Algorithm(..., inputs=..., outputs=..., steps=...)` from `oodocs.engineering` with automatic numbering and references
 - LaTeX `tabular` or copied tables -> `Table(...)` or `Table.from_dataframe(...)`
 - LaTeX `booktabs` -> `Table(..., style="booktabs")` or `TableStyle.booktabs()` for `top_rule`, `header_rule`, and `bottom_rule` horizontal rules without vertical grid lines
+- LaTeX `longtable` -> `Table(..., split=True, continuation_label=..., continued_caption_template=...)` with repeated header rows in DOCX/PDF and HTML plain-flow headers via `display: table-header-group`
 - LaTeX `tabularx` / `array` column specs -> `ColumnSpec(width=...)` and `ColumnSpec(flex=...)` from `oodocs.media`, plus `Table.excerpt(...)`, `TableOverflowPolicy(action="allow")`, and a CSV sidecar for very wide matrices
 - LaTeX `multirow` / `multicolumn` -> `TableCell(rowspan=...)`, `TableCell(colspan=...)`, or `Table.grouped_headers(...)`
 - LaTeX `\label` / `\ref` -> use `ref(obj)` or `obj.ref()` inside `Paragraph(...)`
