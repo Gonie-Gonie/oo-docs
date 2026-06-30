@@ -164,6 +164,19 @@ def test_link_examples_use_target_first_argument_order() -> None:
     assert violations == []
 
 
+def test_custom_style_guide_prefers_typed_stylesheet_register_helpers() -> None:
+    guide = Path("docs/how-to/create-custom-styles.md").read_text(encoding="utf-8")
+    first_block = _python_blocks(guide)[0]
+
+    assert "styles.register_paragraph(" in first_block
+    assert "styles.register_table(" in first_block
+    assert "styles.register_box(" in first_block
+    assert "styles.register_chip(" in first_block
+    assert "styles.register(" not in first_block
+    assert "category-string `register(category, name, style)`" in guide
+    assert "dynamic or advanced tooling" in guide
+
+
 def test_tracked_user_facing_text_has_no_local_absolute_paths() -> None:
     violations = []
     for path in _tracked_user_facing_text_files():
