@@ -26,6 +26,7 @@ import oodocs.public_api as public_api
 import oodocs.references as reference_helpers
 import oodocs.review as review
 import oodocs.structure as structure
+import oodocs.styles.generated as generated_styles
 import oodocs.workflows as workflows
 from oodocs.apidoc.cli import _build_parser as _build_apidoc_parser
 from oodocs.cli import _build_parser as _build_oodocs_parser
@@ -151,7 +152,9 @@ def test_tier_two_namespaces_export_domain_symbols() -> None:
             "ListOfTables",
             "ListOfReferences",
             "TableOfContents",
-            "TocLevelStyle",
+        },
+        generated_styles: {
+            "TableOfContentsLevelStyle",
         },
         engineering: {
             "Algorithm",
@@ -267,7 +270,7 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "TitleMatterOptions",
         "TextBox",
         "Theorem",
-        "TocLevelStyle",
+        "TableOfContentsLevelStyle",
         "TypographyOptions",
         "shift_heading_level",
         "shift_heading_levels",

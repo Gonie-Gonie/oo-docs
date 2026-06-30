@@ -20,6 +20,7 @@ from pypdf import PdfReader
 import pytest
 
 import oodocs.components.generated as generated_components
+import oodocs.styles.generated as generated_style_components
 import oodocs.components.inline as inline_components
 import oodocs.components.blocks as block_components
 import oodocs.components.markup as markup_components
@@ -52,11 +53,12 @@ from oodocs.chemistry import (
     ce,
     chemical_formula,
 )
-from oodocs.generated import ListOfComments, ListOfFootnotes, ListOfAlgorithms, TocLevelStyle
+from oodocs.generated import ListOfComments, ListOfFootnotes, ListOfAlgorithms
 from oodocs.glossary import Acronym, Glossary, ListOfGlossaryTerms, GlossaryTerm
 from oodocs.media import ColumnSpec, CropBox, SubTable, SubTableGroup
 from oodocs.pdf import PdfPages
 from oodocs.positioning import ImageBox, PageItemScope, Shape, TextBox
+from oodocs.styles.generated import TableOfContentsLevelStyle
 from oodocs.references import Ref, ReferenceFormat, page_ref, paren_ref, reference
 from oodocs.review import MarginNote, Todo, margin_note, todo
 from oodocs.structure import (
@@ -2093,8 +2095,9 @@ def test_public_api_prefers_classes_for_structural_nodes() -> None:
     assert hasattr(oodocs, "TableOfContents")
     assert not hasattr(oodocs, "ListOfAlgorithms")
     assert hasattr(generated_components, "ListOfAlgorithms")
-    assert not hasattr(oodocs, "TocLevelStyle")
-    assert hasattr(generated_components, "TocLevelStyle")
+    assert not hasattr(oodocs, "TableOfContentsLevelStyle")
+    assert "TableOfContentsLevelStyle" not in generated_components.__all__
+    assert hasattr(generated_style_components, "TableOfContentsLevelStyle")
     assert hasattr(oodocs, "Comment")
     assert not hasattr(oodocs, "ListOfComments")
     assert hasattr(generated_components, "ListOfComments")
@@ -4131,7 +4134,7 @@ def test_table_of_contents_options_can_hide_pages_and_limit_depth(tmp_path: Path
         TableOfContents(
             show_page_numbers=False,
             max_level=1,
-            level_styles={1: TocLevelStyle(bold=False, space_after=1)},
+            level_styles={1: TableOfContentsLevelStyle(bold=False, space_after=1)},
         ),
         Chapter("One", Section("Two", Paragraph("Body"))),
     )

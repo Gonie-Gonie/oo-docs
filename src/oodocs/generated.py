@@ -11,7 +11,6 @@ from oodocs.components.generated import (
     ListOfReferences,
     ListOfTables,
     TableOfContents,
-    TocLevelStyle,
 )
 
 __all__ = [
@@ -23,5 +22,4 @@ __all__ = [
     "ListOfTables",
     "ListOfReferences",
     "TableOfContents",
-    "TocLevelStyle",
 ]

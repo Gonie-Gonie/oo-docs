@@ -81,10 +81,11 @@ from oodocs.chemistry import (
     ReactionEquation,
     chemical_formula,
 )
-from oodocs.generated import ListOfComments, ListOfAlgorithms, TocLevelStyle
+from oodocs.generated import ListOfComments, ListOfAlgorithms
 from oodocs.media import ColumnSpec, CropBox, SubTable, SubTableGroup
 from oodocs.pdf import PdfPages
 from oodocs.positioning import ImageBox, PageItemScope, Shape, TextBox
+from oodocs.styles.generated import TableOfContentsLevelStyle
 from oodocs.structure import (
     Appendix,
     Assumption,
@@ -419,7 +420,7 @@ panel = Box(
 """
 
 CONTENTS_CONTROL_SNIPPET = """from oodocs import TableOfContents
-from oodocs.generated import TocLevelStyle
+from oodocs.styles.generated import TableOfContentsLevelStyle
 
 contents = TableOfContents(
     scope="document",
@@ -427,9 +428,9 @@ contents = TableOfContents(
     leader=".",
     max_level=3,
     level_styles={
-        1: TocLevelStyle(bold=True, space_before=12, space_after=7),
-        2: TocLevelStyle(bold=False, space_before=3, space_after=3),
-        3: TocLevelStyle(indent=0.48, font_size_delta=-0.2),
+        1: TableOfContentsLevelStyle(bold=True, space_before=12, space_after=7),
+        2: TableOfContentsLevelStyle(bold=False, space_before=3, space_after=3),
+        3: TableOfContentsLevelStyle(indent=0.48, font_size_delta=-0.2),
     },
 )
 """
@@ -1092,13 +1093,13 @@ def build_usage_guide_document() -> Document:
     contents_style_table = Table(
         headers=["Concern", "Default", "Customization path"],
         rows=[
-            ["Part entries", "Shown above chapters when authored.", "Use Part(...) for book-like divisions; set level_styles={0: TocLevelStyle(...)} to tune the part line."],
+            ["Part entries", "Shown above chapters when authored.", "Use Part(...) for book-like divisions; set level_styles={0: TableOfContentsLevelStyle(...)} to tune the part line."],
             ["Appendix entries", "Shown as an unnumbered separator followed by A/B/C child chapters.", "Import Appendix from oodocs.structure when end matter needs appendix numbering and contents entries."],
             ["Page numbers", "Shown by default for contents, table lists, and figure lists in paginated DOCX and PDF output.", "HTML keeps clean link-only generated lists because browsers do not provide stable page labels."],
             ["Leader dots", "Dotted leaders connect the heading text to the page number in paginated output.", "Set leader='' for no leader or another short string for a different visual cue."],
             ["Scoped lists", "Generated lists cover the whole document.", "Set scope='part', scope='chapter', or scope='section' for local mini contents, table lists, or figure lists."],
             ["Heading depth", "All numbered headings are included.", "Set max_level=2 or max_level=3 for shorter contents pages."],
-            ["Hierarchy styling", "Top-level entries are bold; lower levels use normal weight by default.", "Pass level_styles={level: TocLevelStyle(...)} for per-level spacing, indentation, and emphasis."],
+            ["Hierarchy styling", "Top-level entries are bold; lower levels use normal weight by default.", "Pass level_styles={level: TableOfContentsLevelStyle(...)} for per-level spacing, indentation, and emphasis."],
         ],
         caption="Table-of-contents defaults and customization options.",
         column_widths=[1.6, 2.7, 2.7],

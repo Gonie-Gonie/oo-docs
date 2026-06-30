@@ -1,8 +1,8 @@
 """Generated page blocks and document summaries.
 
 Attributes:
-    TocLevelStyleInput: Accepted input for table-of-contents level style
-        overrides.
+    TableOfContentsLevelStyleInput: Accepted input for table-of-contents
+        level style overrides.
 """
 
 from __future__ import annotations
@@ -16,6 +16,11 @@ from oodocs.components.glossary import Glossary
 from oodocs.components.inline import InlineInput, Text, coerce_inlines
 from oodocs.components.media import Table
 from oodocs.components.references import normalize_reference_sort
+from oodocs.styles.generated import (
+    TableOfContentsLevelStyle,
+    TableOfContentsLevelStyleInput,
+    coerce_table_of_contents_level_style,
+)
 
 if TYPE_CHECKING:
     from oodocs.renderers.context import DocxRenderContext, HtmlRenderContext, PdfRenderContext
@@ -44,64 +49,6 @@ def normalize_generated_list_scope(scope: GeneratedListScope | str) -> Generated
             "generated list scope must be 'document', 'part', 'chapter', or 'section'"
         )
     return normalized  # type: ignore[return-value]
-
-
-@dataclass(slots=True)
-class TocLevelStyle:
-    """Optional display overrides for a table-of-contents level.
-
-    Attributes:
-        indent: Optional level indent.
-        space_before: Optional spacing before entries at this level.
-        space_after: Optional spacing after entries at this level.
-        font_size_delta: Optional font-size delta from the base TOC style.
-        bold: Optional bold override.
-        italic: Optional italic override.
-
-    Examples:
-        ```python
-        from oodocs import Document, Section, TableOfContents
-        from oodocs.generated import TocLevelStyle
-
-        toc = TableOfContents(level_styles={1: TocLevelStyle(indent=0.25, bold=True)})
-        document = Document("Report", toc, Section("Summary"))
-        ```
-    """
-
-    indent: float | None = None
-    space_before: float | None = None
-    space_after: float | None = None
-    font_size_delta: float | None = None
-    bold: bool | None = None
-    italic: bool | None = None
-
-
-TocLevelStyleInput = TocLevelStyle | Mapping[str, object]
-
-
-def coerce_toc_level_style(value: TocLevelStyleInput) -> TocLevelStyle:
-    """Normalize a table-of-contents level style.
-
-    Args:
-        value: Existing style or mapping of ``TocLevelStyle`` fields.
-
-    Returns:
-        A table-of-contents level style.
-
-    Raises:
-        TypeError: If ``value`` cannot be converted.
-
-    Examples:
-        ```python
-        style = coerce_toc_level_style({"indent": 0.25, "bold": True})
-        ```
-    """
-
-    if isinstance(value, TocLevelStyle):
-        return value
-    if isinstance(value, Mapping):
-        return TocLevelStyle(**dict(value))
-    raise TypeError(f"Unsupported TOC level style: {type(value)!r}")
 
 
 @dataclass(slots=True, init=False)
@@ -706,13 +653,13 @@ class TableOfContents(Block):
     Examples:
         ```python
         from oodocs import Document, TableOfContents
-        from oodocs.generated import TocLevelStyle
+        from oodocs.styles.generated import TableOfContentsLevelStyle
 
         toc = TableOfContents(
             "Contents",
             scope="document",
             max_level=2,
-            level_styles={1: TocLevelStyle(bold=True)},
+            level_styles={1: TableOfContentsLevelStyle(bold=True)},
         )
         doc = Document("Report", toc)
         ```
@@ -723,7 +670,7 @@ class TableOfContents(Block):
     show_page_numbers: bool
     leader: str
     max_level: int | None
-    level_styles: dict[int, TocLevelStyle]
+    level_styles: dict[int, TableOfContentsLevelStyle]
 
     def __init__(
         self,
@@ -733,7 +680,7 @@ class TableOfContents(Block):
         show_page_numbers: bool = True,
         leader: str = ".",
         max_level: int | None = None,
-        level_styles: Mapping[int, TocLevelStyleInput] | None = None,
+        level_styles: Mapping[int, TableOfContentsLevelStyleInput] | None = None,
     ) -> None:
         if max_level is not None and max_level < 0:
             raise ValueError("TableOfContents.max_level must be >= 0")
@@ -743,7 +690,7 @@ class TableOfContents(Block):
         self.leader = leader
         self.max_level = max_level
         self.level_styles = {
-            int(level): coerce_toc_level_style(style)
+            int(level): coerce_table_of_contents_level_style(style)
             for level, style in (level_styles or {}).items()
         }
 
@@ -759,7 +706,7 @@ class TableOfContents(Block):
 
         return self.max_level is None or level <= self.max_level
 
-    def style_for_level(self, level: int) -> TocLevelStyle:
+    def style_for_level(self, level: int) -> TableOfContentsLevelStyle:
         """Return display overrides for a heading level.
 
         Args:
@@ -769,7 +716,7 @@ class TableOfContents(Block):
             Configured style or a default empty style.
         """
 
-        return self.level_styles.get(level, TocLevelStyle())
+        return self.level_styles.get(level, TableOfContentsLevelStyle())
 
     def _render_to_docx(
         self,
@@ -823,8 +770,5 @@ __all__ = [
     "ListOfReferences",
     "ListOfTables",
     "TableOfContents",
-    "TocLevelStyleInput",
-    "TocLevelStyle",
-    "coerce_toc_level_style",
     "normalize_generated_list_scope",
 ]

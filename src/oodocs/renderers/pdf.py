@@ -77,7 +77,6 @@ from oodocs.components.generated import (
     ListOfReferences,
     ListOfTables,
     TableOfContents,
-    TocLevelStyle,
 )
 from oodocs.components.inline import (
     _BlockReference,
@@ -118,6 +117,7 @@ from oodocs.components.references import format_citation_label, reference_entry_
 from oodocs.document import Document
 from oodocs.components.equations import SUBSCRIPT, SUPERSCRIPT, parse_latex_segments
 from oodocs.core import OODocsError, PathLike, length_to_inches
+from oodocs.styles.generated import TableOfContentsLevelStyle
 from oodocs.layout.indexing import (
     ReferenceTextPiece,
     RenderIndex,
@@ -4374,9 +4374,9 @@ class PdfRenderer:
             textColor=colors.black,
         )
 
-    def _toc_level_style(self, block: TableOfContents, level: int) -> TocLevelStyle:
+    def _toc_level_style(self, block: TableOfContents, level: int) -> TableOfContentsLevelStyle:
         if level == 0:
-            defaults = TocLevelStyle(
+            defaults = TableOfContentsLevelStyle(
                 indent=0,
                 space_before=16,
                 space_after=8,
@@ -4385,7 +4385,7 @@ class PdfRenderer:
                 italic=False,
             )
             override = block.style_for_level(level)
-            return TocLevelStyle(
+            return TableOfContentsLevelStyle(
                 indent=defaults.indent if override.indent is None else override.indent,
                 space_before=defaults.space_before if override.space_before is None else override.space_before,
                 space_after=defaults.space_after if override.space_after is None else override.space_after,
@@ -4393,7 +4393,7 @@ class PdfRenderer:
                 bold=defaults.bold if override.bold is None else override.bold,
                 italic=defaults.italic if override.italic is None else override.italic,
             )
-        defaults = TocLevelStyle(
+        defaults = TableOfContentsLevelStyle(
             indent=0.24 * max(level - 1, 0),
             space_before=12 if level == 1 else (3 if level == 2 else 0),
             space_after=7 if level == 1 else (3 if level == 2 else 2),
@@ -4402,7 +4402,7 @@ class PdfRenderer:
             italic=False,
         )
         override = block.style_for_level(level)
-        return TocLevelStyle(
+        return TableOfContentsLevelStyle(
             indent=defaults.indent if override.indent is None else override.indent,
             space_before=defaults.space_before if override.space_before is None else override.space_before,
             space_after=defaults.space_after if override.space_after is None else override.space_after,

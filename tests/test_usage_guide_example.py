@@ -140,7 +140,7 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert any("full_matrix.save_csv" in text for text in paragraph_texts)
     assert any("'tbp'" in text or 'placement="tbp"' in text for text in paragraph_texts)
     assert any("TableOfContents" in text for text in paragraph_texts)
-    assert any("TocLevelStyle" in text for text in paragraph_texts)
+    assert any("TableOfContentsLevelStyle" in text for text in paragraph_texts)
     assert any("A reading map for the guide." in text for text in paragraph_texts)
     assert any("Example catalog" in text for text in paragraph_texts)
     assert any("Purpose-based entry points for the bundled examples." in text for text in paragraph_texts)
@@ -249,7 +249,7 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "full_matrix.save_csv" in pdf_text
     assert ("'tbp'" in pdf_text) or ('placement="tbp"' in pdf_text)
     assert "TableOfContents" in pdf_text
-    assert "TocLevelStyle" in pdf_text
+    assert "TableOfContentsLevelStyle" in pdf_text
     assert "A reading map for the guide." in pdf_text
     assert "Example catalog" in pdf_text
     assert "api_objects_example" in pdf_text
@@ -343,7 +343,7 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "save_csv" in normalized_html_text
     assert ("'tbp'" in normalized_html_text) or ('placement="tbp"' in normalized_html_text)
     assert "TableOfContents" in normalized_html_text
-    assert "TocLevelStyle" in normalized_html_text
+    assert "TableOfContentsLevelStyle" in normalized_html_text
     assert "ListOfComments() collects these review notes onto a dedicated generated page." in normalized_html_text
     assert "Example catalog" in normalized_html_text
     assert "api_objects_example" in normalized_html_text

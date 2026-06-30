@@ -22,6 +22,7 @@ INVENTORY_MODULES = (
     "oodocs.importers.notebook",
     "oodocs.pdf",
     "oodocs.styles",
+    "oodocs.styles.generated",
     "oodocs.validation",
     "oodocs.workflows",
     "oodocs.presets",

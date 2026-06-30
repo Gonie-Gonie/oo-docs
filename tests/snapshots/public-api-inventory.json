@@ -1659,6 +1659,17 @@
         }
       ]
     },
+    "oodocs.styles.generated": {
+      "exports": [
+        {
+          "category": "style",
+          "kind": "class",
+          "module": "oodocs.styles.generated",
+          "name": "TableOfContentsLevelStyle",
+          "qualname": "oodocs.styles.generated.TableOfContentsLevelStyle"
+        }
+      ]
+    },
     "oodocs.validation": {
       "exports": [
         {
