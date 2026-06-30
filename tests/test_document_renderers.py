@@ -478,18 +478,20 @@ def test_math_prescript_renders_to_all_outputs(tmp_path: Path) -> None:
 
 
 def test_amsmath_equation_blocks_number_reference_and_validate(tmp_path: Path) -> None:
-    aligned = AlignedEquation(
+    aligned = Equation.aligned(
         r"a &= b + c",
         r"  &= d",
         reference_label="Eq.",
     )
-    cases = CasesEquation(
+    cases = Equation.cases(
         ("0", "x < 0"),
         (r"x^2", r"x \geq 0"),
         left="f(x)",
     )
     unnumbered = Equation(r"\operatorname{loss}(x)", numbered=False)
     unsupported = Equation(r"\foo{x} + 1", numbered=False)
+    assert isinstance(aligned, AlignedEquation)
+    assert isinstance(cases, CasesEquation)
     document = Document(
         "AMSMath Blocks",
         Paragraph("See ", aligned.reference(), " and ", unnumbered.reference("the loss definition"), "."),

@@ -783,7 +783,12 @@ class Equation(Block):
         from oodocs import Document, Equation, Section
 
         energy = Equation(r"E = mc^2")
-        document = Document("Physics Note", Section("Energy", energy))
+        derivation = Equation.aligned(r"a &= b + c", r"  &= d")
+        piecewise = Equation.cases(("0", "x < 0"), ("x^2", "x >= 0"), left="f(x)")
+        document = Document(
+            "Physics Note",
+            Section("Energy", energy, derivation, piecewise),
+        )
         ```
     """
 
@@ -817,6 +822,140 @@ class Equation(Block):
         self.reference_label = _normalize_reference_label(reference_label, "Equation")
         self.style = paragraph_style_with_overrides(
             style or ParagraphStyle(text_alignment="center", space_after=12.0),
+            text_alignment=text_alignment,
+            space_before=space_before,
+            space_after=space_after,
+            leading=leading,
+            left_indent=left_indent,
+            right_indent=right_indent,
+            first_line_indent=first_line_indent,
+            keep_together=keep_together,
+            keep_with_next=keep_with_next,
+            page_break_before=page_break_before,
+            widow_control=widow_control,
+            unit=unit,
+        )
+
+    @classmethod
+    def aligned(
+        cls,
+        *lines: str,
+        numbered: bool = True,
+        reference_label: str = "Equation",
+        style: ParagraphStyle | str | None = None,
+        text_alignment: str | None = None,
+        space_before: float | None = None,
+        space_after: float | None = None,
+        leading: float | None = None,
+        left_indent: float | None = None,
+        right_indent: float | None = None,
+        first_line_indent: float | None = None,
+        keep_together: bool | None = None,
+        keep_with_next: bool | None = None,
+        page_break_before: bool | None = None,
+        widow_control: bool | None = None,
+        unit: str | None = None,
+    ) -> AlignedEquation:
+        """Return a multi-line aligned equation block.
+
+        Args:
+            *lines: LaTeX-like equation rows. Alignment markers ``&`` are
+                accepted and omitted from rendered text.
+            numbered: Whether the block participates in equation numbering.
+            reference_label: Label prefix used by automatic inline references.
+            style: Base paragraph style.
+            text_alignment: Optional text alignment override.
+            space_before: Optional spacing before the equation.
+            space_after: Optional spacing after the equation.
+            leading: Optional line spacing.
+            left_indent: Optional left indent.
+            right_indent: Optional right indent.
+            first_line_indent: Optional first-line indent.
+            keep_together: Whether renderers should keep the equation on one
+                page.
+            keep_with_next: Whether renderers should keep this equation with
+                the following block.
+            page_break_before: Whether renderers should start a new page first.
+            widow_control: Whether renderers should avoid widowed lines.
+            unit: Unit for length overrides.
+
+        Returns:
+            Aligned equation block.
+        """
+
+        return AlignedEquation(
+            *lines,
+            numbered=numbered,
+            reference_label=reference_label,
+            style=style,
+            text_alignment=text_alignment,
+            space_before=space_before,
+            space_after=space_after,
+            leading=leading,
+            left_indent=left_indent,
+            right_indent=right_indent,
+            first_line_indent=first_line_indent,
+            keep_together=keep_together,
+            keep_with_next=keep_with_next,
+            page_break_before=page_break_before,
+            widow_control=widow_control,
+            unit=unit,
+        )
+
+    @classmethod
+    def cases(
+        cls,
+        *cases: tuple[str, str],
+        left: str | None = None,
+        numbered: bool = True,
+        reference_label: str = "Equation",
+        style: ParagraphStyle | str | None = None,
+        text_alignment: str | None = None,
+        space_before: float | None = None,
+        space_after: float | None = None,
+        leading: float | None = None,
+        left_indent: float | None = None,
+        right_indent: float | None = None,
+        first_line_indent: float | None = None,
+        keep_together: bool | None = None,
+        keep_with_next: bool | None = None,
+        page_break_before: bool | None = None,
+        widow_control: bool | None = None,
+        unit: str | None = None,
+    ) -> CasesEquation:
+        """Return a piecewise equation block.
+
+        Args:
+            *cases: ``(expression, condition)`` rows.
+            left: Optional expression rendered before the left brace.
+            numbered: Whether the block participates in equation numbering.
+            reference_label: Label prefix used by automatic inline references.
+            style: Base paragraph style.
+            text_alignment: Optional text alignment override.
+            space_before: Optional spacing before the equation.
+            space_after: Optional spacing after the equation.
+            leading: Optional line spacing.
+            left_indent: Optional left indent.
+            right_indent: Optional right indent.
+            first_line_indent: Optional first-line indent.
+            keep_together: Whether renderers should keep the equation on one
+                page.
+            keep_with_next: Whether renderers should keep this equation with
+                the following block.
+            page_break_before: Whether renderers should start a new page first.
+            widow_control: Whether renderers should avoid widowed lines.
+            unit: Unit for length overrides.
+
+        Returns:
+            Piecewise cases equation block.
+        """
+
+        return CasesEquation(
+            *cases,
+            left=left,
+            numbered=numbered,
+            reference_label=reference_label,
+            style=style,
             text_alignment=text_alignment,
             space_before=space_before,
             space_after=space_after,

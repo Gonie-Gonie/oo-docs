@@ -77,8 +77,6 @@ from oodocs import (
 )
 from oodocs.engineering import (
     Algorithm,
-    AlignedEquation,
-    CasesEquation,
     ChemicalFormula,
     ReactionEquation,
     chemical_formula,
@@ -656,15 +654,14 @@ Paragraph(
 """
 
 MATH_BLOCKS_SNIPPET = """from oodocs import Equation, Paragraph
-from oodocs.engineering import AlignedEquation, CasesEquation
 
-derivation = AlignedEquation(
+derivation = Equation.aligned(
     r"a &= b + c",
     r"  &= d",
     reference_label="Eq.",
 )
 
-piecewise = CasesEquation(
+piecewise = Equation.cases(
     ("0", "x < 0"),
     (r"x^2", r"x \\geq 0"),
     left="f(x)",
@@ -1265,12 +1262,12 @@ def build_usage_guide_document() -> Document:
         ],
         caption="Coverage aggregation algorithm.",
     )
-    math_derivation = AlignedEquation(
+    math_derivation = Equation.aligned(
         r"a &= b + c",
         r"  &= d",
         reference_label="Eq.",
     )
-    math_piecewise = CasesEquation(
+    math_piecewise = Equation.cases(
         ("0", "x < 0"),
         (r"x^2", r"x \geq 0"),
         left="f(x)",
@@ -1606,9 +1603,9 @@ def build_usage_guide_document() -> Document:
                 CodeBlock(INLINE_WORD_FEATURES_SNIPPET, language="python"),
                 Paragraph(
                     "Displayed math uses lightweight LaTeX-like source. Use ",
-                    inline_code("AlignedEquation"),
+                    inline_code("Equation.aligned"),
                     " for multi-line derivations, ",
-                    inline_code("CasesEquation"),
+                    inline_code("Equation.cases"),
                     " for piecewise definitions, and ",
                     inline_code("numbered=False"),
                     " when a local display should not consume an equation number. For example, see ",
