@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from io import BytesIO
+
+from docx import Document as WordDocument
 from example_regression import (
     assert_docx_structure,
     assert_html_internal_links_resolve,
@@ -7,13 +10,47 @@ from example_regression import (
     assert_rendered_bundle,
 )
 from oodocs.apidoc import ApiCoverageResult, ApiPackage, check_api_docs, collect_api
+from pypdf import PdfReader
 
 
 LOCAL_ABSOLUTE_PATH_MARKERS = ("C:\\Users", "/home/", "/Users/")
+STALE_API_REFERENCE_MARKERS = (
+    "RenderedOutputs",
+    "ParagraphTitleStyle",
+    "from_ipynb",
+    "parse_ipynb",
+    "TextStyle.color",
+    "TextBox.align",
+    "ImageData.format",
+)
 
 
 def _assert_no_local_absolute_paths(text: str) -> None:
     assert not any(marker in text for marker in LOCAL_ABSOLUTE_PATH_MARKERS)
+
+
+def _assert_no_stale_api_reference_markers(text: str) -> None:
+    assert not any(marker in text for marker in STALE_API_REFERENCE_MARKERS)
+
+
+def _assert_clean_api_reference_text(text: str) -> None:
+    _assert_no_local_absolute_paths(text)
+    _assert_no_stale_api_reference_markers(text)
+
+
+def _docx_text(path) -> str:
+    document = WordDocument(path)
+    pieces = [paragraph.text for paragraph in document.paragraphs]
+    for table in document.tables:
+        for row in table.rows:
+            for cell in row.cells:
+                pieces.extend(paragraph.text for paragraph in cell.paragraphs)
+    return "\n".join(pieces)
+
+
+def _pdf_text(path) -> str:
+    reader = PdfReader(BytesIO(path.read_bytes()))
+    return "\n".join(page.extract_text() or "" for page in reader.pages)
 
 
 def test_apidoc_collects_oodocs_public_api_for_self_reference() -> None:
@@ -71,10 +108,12 @@ def test_apidoc_renders_oodocs_public_api_reference_bundle(tmp_path) -> None:
     html = outputs["html"].read_text(encoding="utf-8")
     assert "Uncategorized API" not in html
     assert "Renderer Extension API" not in html
-    _assert_no_local_absolute_paths(html)
-    _assert_no_local_absolute_paths(api_path.read_text(encoding="utf-8"))
-    _assert_no_local_absolute_paths(coverage_json_path.read_text(encoding="utf-8"))
-    _assert_no_local_absolute_paths(coverage_csv_path.read_text(encoding="utf-8"))
+    _assert_clean_api_reference_text(_docx_text(outputs["docx"]))
+    _assert_clean_api_reference_text(_pdf_text(outputs["pdf"]))
+    _assert_clean_api_reference_text(html)
+    _assert_clean_api_reference_text(api_path.read_text(encoding="utf-8"))
+    _assert_clean_api_reference_text(coverage_json_path.read_text(encoding="utf-8"))
+    _assert_clean_api_reference_text(coverage_csv_path.read_text(encoding="utf-8"))
     assert not ("<th>Label</th>" in html and "See Also" in html)
     assert html.find("API Contents") < html.find("API Documentation Coverage")
     assert ApiPackage.load_json(api_path).find_object("oodocs.Document") is not None
