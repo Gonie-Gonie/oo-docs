@@ -99,7 +99,7 @@ class ParsedDocstring:
             Persist parser output before deciding how to render it:
 
             ```python
-            from oodocs.apidoc import parse_docstring
+            from oodocs.apidoc.docstring import parse_docstring
 
             parsed = parse_docstring("Summary.\\n\\nArgs:\\n    path: Input.")
             payload = parsed.to_dict()
@@ -139,7 +139,7 @@ class ParsedDocstring:
             Rehydrate parser output from a custom cache:
 
             ```python
-            from oodocs.apidoc import ParsedDocstring
+            from oodocs.apidoc.docstring import ParsedDocstring
 
             parsed = ParsedDocstring.from_dict(saved_payload)
             ```
@@ -201,7 +201,8 @@ class ApiDocstringParser:
         Reuse one parser while collecting or parsing several objects:
 
         ```python
-        from oodocs.apidoc import ApiDocstringParser, collect_api
+        from oodocs.apidoc import collect_api
+        from oodocs.apidoc.docstring import ApiDocstringParser
 
         parser = ApiDocstringParser.auto()
         api = collect_api(".", collector="griffe", docstring_style=parser)
@@ -228,7 +229,8 @@ class ApiDocstringParser:
             Reuse auto detection across a repository collection:
 
             ```python
-            from oodocs.apidoc import ApiDocstringParser, collect_api
+            from oodocs.apidoc import collect_api
+            from oodocs.apidoc.docstring import ApiDocstringParser
 
             parser = ApiDocstringParser.auto()
             api = collect_api(".", docstring_style=parser)
@@ -249,7 +251,8 @@ class ApiDocstringParser:
             for repository collection:
 
             ```python
-            from oodocs.apidoc import ApiDocstringParser, collect_api
+            from oodocs.apidoc import collect_api
+            from oodocs.apidoc.docstring import ApiDocstringParser
 
             parser = ApiDocstringParser.google()
             parsed = parser.parse("Load.\\n\\nArgs:\\n    path: Input path.")
@@ -271,7 +274,8 @@ class ApiDocstringParser:
             Use NumPy-style parsing for a scientific package:
 
             ```python
-            from oodocs.apidoc import ApiDocstringParser, collect_api
+            from oodocs.apidoc import collect_api
+            from oodocs.apidoc.docstring import ApiDocstringParser
 
             parser = ApiDocstringParser.numpy()
             parsed = parser.parse(
@@ -299,7 +303,7 @@ class ApiDocstringParser:
             Parse reST field lists before rendering an API object:
 
             ```python
-            from oodocs.apidoc import ApiDocstringParser
+            from oodocs.apidoc.docstring import ApiDocstringParser
 
             parser = ApiDocstringParser.sphinx()
             parsed = parser.parse(
@@ -322,7 +326,8 @@ class ApiDocstringParser:
             Parse Markdown-section docstrings in a repository-local convention:
 
             ```python
-            from oodocs.apidoc import ApiDocstringParser, collect_api
+            from oodocs.apidoc import collect_api
+            from oodocs.apidoc.docstring import ApiDocstringParser
 
             parser = ApiDocstringParser.markdown()
             parsed = parser.parse(
@@ -347,7 +352,8 @@ class ApiDocstringParser:
             Use plain parsing when a legacy package only has prose docstrings:
 
             ```python
-            from oodocs.apidoc import ApiDocstringParser, collect_api
+            from oodocs.apidoc import collect_api
+            from oodocs.apidoc.docstring import ApiDocstringParser
 
             parser = ApiDocstringParser.plain()
             parsed = parser.parse("Load data.\\n\\nAdditional details.")
@@ -376,7 +382,8 @@ class ApiDocstringParser:
             ``collect_api``:
 
             ```python
-            from oodocs.apidoc import ApiDocstringParser, collect_api
+            from oodocs.apidoc import collect_api
+            from oodocs.apidoc.docstring import ApiDocstringParser
 
             parser = ApiDocstringParser.from_value({"style": "google"})
             api = collect_api(".", docstring_style=parser)
@@ -403,7 +410,7 @@ class ApiDocstringParser:
             Restore a parser policy from an API sidecar or config payload:
 
             ```python
-            from oodocs.apidoc import ApiDocstringParser
+            from oodocs.apidoc.docstring import ApiDocstringParser
 
             parser = ApiDocstringParser.from_dict({"style": "auto"})
             parsed = parser.parse("Summary.\\n\\nArgs:\\n    path: Input path.")
@@ -509,7 +516,7 @@ class ApiDocstringParser:
             Use a parser object as a callable in repository-local tooling:
 
             ```python
-            from oodocs.apidoc import ApiDocstringParser
+            from oodocs.apidoc.docstring import ApiDocstringParser
 
             parser = ApiDocstringParser.google()
             parsed = parser(
@@ -700,8 +707,13 @@ def register_docstring_parser(name: str, parser: DocstringParser) -> None:
         parser object into collection:
 
         ```python
-        from oodocs.apidoc import ApiDocstringParser, ParsedDocstring, collect_api
-        from oodocs.apidoc.docstring import parse_docstring, register_docstring_parser
+        from oodocs.apidoc import collect_api
+        from oodocs.apidoc.docstring import (
+            ApiDocstringParser,
+            ParsedDocstring,
+            parse_docstring,
+            register_docstring_parser,
+        )
 
         def parse_custom(text, qualname, module):
             parsed = parse_docstring(text, style="plain", qualname=qualname, module=module)
@@ -737,7 +749,8 @@ def load_docstring_parser_modules(modules: Iterable[str] | None) -> tuple[str, .
         Load repository-local parser hooks before collecting a package:
 
         ```python
-        from oodocs.apidoc import collect_api, load_docstring_parser_modules
+        from oodocs.apidoc import collect_api
+        from oodocs.apidoc.docstring import load_docstring_parser_modules
 
         load_docstring_parser_modules(["mypkg.docs.parsers"])
         api = collect_api(".", docstring_style="my-custom-style")
@@ -803,7 +816,7 @@ def docstring_parser_names() -> tuple[str, ...]:
         Check whether a plugin module registered the expected parser:
 
         ```python
-        from oodocs.apidoc import docstring_parser_names
+        from oodocs.apidoc.docstring import docstring_parser_names
 
         assert "google" in docstring_parser_names()
         ```
@@ -850,7 +863,10 @@ def is_docstring_style_supported(style: str | ApiDocstringParser) -> bool:
         Validate user configuration before running collection:
 
         ```python
-        from oodocs.apidoc import ApiDocstringParser, is_docstring_style_supported
+        from oodocs.apidoc.docstring import (
+            ApiDocstringParser,
+            is_docstring_style_supported,
+        )
 
         parser = ApiDocstringParser.from_value("google")
         assert is_docstring_style_supported(parser)

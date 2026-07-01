@@ -17,27 +17,22 @@ from typing import Literal
 
 PublicApiTier = Literal["core", "domain", "internal"]
 
-TOP_LEVEL_EXPORT_LIMIT = 106
+TOP_LEVEL_EXPORT_LIMIT = 90
 
 CORE_TOP_LEVEL_EXPORTS = frozenset(
     {
         "Affiliation",
         "Author",
         "AuthorLayout",
-        "BlockDefaults",
-        "BorderStyle",
         "Box",
         "BoxStyle",
         "BulletList",
-        "CaptionDefaults",
-        "CitationDefaults",
         "CitationLibrary",
         "CitationSource",
         "Chapter",
         "CodeBlock",
         "ColumnSpan",
         "Comment",
-        "CounterStyle",
         "Document",
         "DocumentMetadata",
         "DocumentSettings",
@@ -51,7 +46,6 @@ CORE_TOP_LEVEL_EXPORTS = frozenset(
         "ImportPolicyError",
         "ImportResult",
         "InlineChip",
-        "InlineChipStyle",
         "LineBreak",
         "ListOfFigures",
         "ListOfTables",
@@ -64,14 +58,12 @@ CORE_TOP_LEVEL_EXPORTS = frozenset(
         "PageBreak",
         "PageLayout",
         "PageMargins",
-        "PageNumberDefaults",
         "PageSize",
         "Paragraph",
         "ParagraphStyle",
         "Part",
         "ListOfReferences",
         "Section",
-        "StrokeStyle",
         "StyleSheet",
         "SubFigure",
         "SubFigureGroup",
@@ -86,8 +78,6 @@ CORE_TOP_LEVEL_EXPORTS = frozenset(
         "TextStyle",
         "TitleMatter",
         "Theme",
-        "TitleMatterDefaults",
-        "TypographyDefaults",
         "ValidationIssue",
         "ValidationPolicy",
         "ValidationResult",
@@ -121,17 +111,7 @@ CORE_TOP_LEVEL_EXPORTS = frozenset(
 
 DOMAIN_TOP_LEVEL_EXPORTS = frozenset(
     {
-        "FootnoteDefaults",
-        "FootnoteStyle",
-        "GeneratedContentDefaults",
-        "HeaderFooterDefaults",
-        "HeadingNumbering",
-        "HeadingStyle",
-        "LinkDefaults",
-        "ListStyle",
-        "LocaleDefaults",
         "ResultLike",
-        "RunInTitleStyle",
     }
 )
 

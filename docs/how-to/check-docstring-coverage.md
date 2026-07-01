@@ -63,13 +63,15 @@ The JSON sidecar stores the complete coverage result for later rendering. The
 CSV sidecar stores the coverage issue rows for CI artifacts and spreadsheet
 review.
 
-When a repository needs a rendered API reference and coverage evidence, render
-from the same config with sidecars:
+When a repository needs both a user-facing API reference and coverage evidence,
+render the reference from the base config and the evidence output from the
+profile-specific subtable:
 
 ```python
 from oodocs.apidoc import ApiHelpBookConfig
 
 ApiHelpBookConfig.from_pyproject(".").save_all(".")
+ApiHelpBookConfig.from_pyproject(".", profile="evidence").save_all(".")
 ```
 
 For larger repositories, gate only the API area currently under review:

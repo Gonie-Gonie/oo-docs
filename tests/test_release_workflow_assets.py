@@ -24,9 +24,10 @@ def test_release_workflow_uploads_curated_assets_only() -> None:
 
     assert "python -m oodocs apidoc check ." in workflow
     assert "--config pyproject.toml" in workflow
+    assert "check_api_help_categories" in workflow
     assert "python examples/usage_guide_example/main.py --outputs pdf" in workflow
     assert "output_formats=(\"pdf\",)" in workflow
-    assert "include_coverage=True" in workflow
+    assert "include_coverage=True" not in workflow
     assert "sidecars=False" in workflow
     assert "artifacts/api/oodocs-api.pdf" in workflow
 

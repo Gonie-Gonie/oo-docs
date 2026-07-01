@@ -11,7 +11,8 @@ adapters.
 
 ```python
 from oodocs import Chapter, Document
-from oodocs.apidoc import ApiDocstringParser, collect_api
+from oodocs.apidoc import collect_api
+from oodocs.apidoc.docstring import ApiDocstringParser
 
 parser = ApiDocstringParser.auto()
 api = collect_api(
@@ -55,7 +56,8 @@ For a standalone module, pass the `.py` file path directly. The file stem is
 used as the module name for lookup and anchors:
 
 ```python
-from oodocs.apidoc import ApiDocstringParser, collect_api
+from oodocs.apidoc import collect_api
+from oodocs.apidoc.docstring import ApiDocstringParser
 
 api = collect_api(
     "scripts/reporting.py",
@@ -73,12 +75,14 @@ a standalone API reference. The returned value is a normal `Document`, so the
 same `save_all(...)` call can produce DOCX, PDF, and HTML through the usual
 OODocs renderer path. Keep the collected API and coverage result beside those
 files as deterministic JSON/CSV sidecars when release review needs evidence.
-By default, `to_help_book(...)` does not append coverage evidence to the
-user-facing reference; pass `include_coverage=True` only for review or evidence
-appendices.
+By default, `to_help_book(...)` does not append coverage evidence or
+uncategorized API inventory to the user-facing reference; pass
+`include_coverage=True` or `include_uncategorized_appendix=True` only for review
+or evidence appendices.
 
 ```python
-from oodocs.apidoc import ApiDocstringParser, check_api_docs, collect_api
+from oodocs.apidoc import check_api_docs, collect_api
+from oodocs.apidoc.docstring import ApiDocstringParser
 
 api = collect_api(
     ".",
@@ -110,7 +114,8 @@ reference chapter.
 
 ```python
 from oodocs import Chapter, Document, Paragraph
-from oodocs.apidoc import ApiDocstringParser, collect_api
+from oodocs.apidoc import collect_api
+from oodocs.apidoc.docstring import ApiDocstringParser
 
 api = collect_api(".", collector="griffe", docstring_style=ApiDocstringParser.auto())
 client = api.find_object("mypkg.Client")
@@ -265,6 +270,16 @@ docstring-style = "auto"
 module-prefix = "mypkg"
 presentation = "manual"
 output-formats = ["docx", "pdf", "html"]
+include-source = false
+include-coverage = false
+include-uncategorized-appendix = false
+sidecars = true
+
+[tool.oodocs.apidoc.evidence]
+presentation = "evidence"
+include-source = true
+include-coverage = true
+include-uncategorized-appendix = true
 sidecars = true
 ```
 
@@ -280,6 +295,10 @@ from oodocs.apidoc import ApiHelpBookConfig
 ApiHelpBookConfig.from_pyproject(".").save_all(".")
 ```
 
+Use `ApiHelpBookConfig.from_pyproject(".", profile="evidence")` when a
+development or CI run should render coverage/inventory evidence instead of the
+user-facing reference.
+
 ## Custom Parser Modules
 
 If a repository uses a house docstring format, register it once and pass the
@@ -287,7 +306,7 @@ parser name through the same collection flow.
 
 ```python
 # docs_parsers.py
-from oodocs.apidoc import ParsedDocstring, register_docstring_parser
+from oodocs.apidoc.docstring import ParsedDocstring, register_docstring_parser
 
 def parse_brief(text, qualname=None, module=None):
     return ParsedDocstring(summary=(text or "").strip(), style="brief")

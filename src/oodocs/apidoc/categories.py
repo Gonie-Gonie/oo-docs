@@ -125,7 +125,8 @@ def select_uncategorized_api_objects(
         category:
 
         ```python
-        from oodocs.apidoc import collect_api, select_uncategorized_api_objects
+        from oodocs.apidoc import collect_api
+        from oodocs.apidoc.categories import select_uncategorized_api_objects
 
         api = collect_api("oodocs", public_policy="__all__")
         uncategorized = select_uncategorized_api_objects(api)

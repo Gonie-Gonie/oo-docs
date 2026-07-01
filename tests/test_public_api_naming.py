@@ -572,34 +572,46 @@ def test_top_level_public_api_uses_completed_canonical_names() -> None:
         "validate_source",
         "validate_source_document",
     }
+    style_exports = {
+        "BlockDefaults",
+        "BorderStyle",
+        "CaptionDefaults",
+        "CitationDefaults",
+        "CounterStyle",
+        "FootnoteDefaults",
+        "FootnoteStyle",
+        "GeneratedContentDefaults",
+        "HeaderFooterDefaults",
+        "HeadingNumbering",
+        "HeadingStyle",
+        "InlineChipStyle",
+        "LinkDefaults",
+        "ListStyle",
+        "LocaleDefaults",
+        "PageNumberDefaults",
+        "RunInTitleStyle",
+        "StrokeStyle",
+        "TitleMatterDefaults",
+        "TypographyDefaults",
+    }
     expected = {
         "strikethrough",
         "inline_code",
         "inline_math",
         "text_color",
         "OutputBundle",
-        "FootnoteDefaults",
-        "FootnoteStyle",
         "ListOfFigures",
         "ListOfTables",
-        "BlockDefaults",
-        "CaptionDefaults",
-        "CitationDefaults",
-        "GeneratedContentDefaults",
-        "HeaderFooterDefaults",
-        "LocaleDefaults",
-        "PageNumberDefaults",
-        "RunInTitleStyle",
         "ListOfReferences",
         "ResultLike",
         "SubSubsection",
-        "TitleMatterDefaults",
-        "TypographyDefaults",
     }
-
     assert forbidden.isdisjoint(oodocs.__all__)
+    assert style_exports.isdisjoint(oodocs.__all__)
     assert not any(hasattr(oodocs, name) for name in forbidden)
     assert expected <= set(oodocs.__all__)
+    assert style_exports <= set(styles.__all__)
+    assert all(hasattr(oodocs, name) for name in style_exports)
     assert hasattr(block_components, "section_for_level")
     assert hasattr(block_components, "shift_heading_level")
     assert hasattr(block_components, "shift_heading_levels")
@@ -620,18 +632,39 @@ def test_apidoc_namespace_uses_canonical_exports() -> None:
         "register_profile",
         "resolve_profile",
         "api_package_to_help_book",
+        "check_doctest_examples",
+        "check_example_syntax",
+        "detect_docstring_style",
+        "docstring_parser_import_paths",
+        "docstring_parser_names",
+        "extract_code_blocks_from_docstring",
+        "is_docstring_style_supported",
+        "load_docstring_parser_modules",
+        "parse_docstring",
+        "presentation_profile_names",
+        "register_docstring_parser",
+        "register_presentation_profile",
+        "resolve_presentation_profile",
     }
     expected = {
         "ApiPresentationProfile",
         "ApiException",
-        "presentation_profile_names",
-        "register_presentation_profile",
-        "resolve_presentation_profile",
+        "ApiHelpBookConfig",
+        "ApiPackage",
+        "ApiModule",
+        "ApiObject",
+        "ApiParameter",
+        "collect_api",
+        "check_api_docs",
+        "check_api_help_categories",
+        "diff_api",
     }
 
     assert forbidden.isdisjoint(apidoc.__all__)
-    assert not any(hasattr(apidoc, name) for name in forbidden)
     assert expected <= set(apidoc.__all__)
+    assert hasattr(apidoc, "parse_docstring")
+    assert hasattr(apidoc, "register_docstring_parser")
+    assert hasattr(apidoc, "check_example_syntax")
 
 
 def test_apidoc_render_module_keeps_only_composable_chapter_helper() -> None:

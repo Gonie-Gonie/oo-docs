@@ -117,12 +117,12 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "oodocs.chemistry.ce" in all_titles
     assert "oodocs.CitationSource" in all_titles
     assert "oodocs.CitationLibrary" in all_titles
-    assert "oodocs.CitationDefaults" in all_titles
+    assert "oodocs.styles.CitationDefaults" in all_titles
     assert "oodocs.ListOfReferences" in all_titles
     assert "oodocs.DocumentMetadata" in all_titles
     assert "oodocs.link" in all_titles
     assert "oodocs.url" in all_titles
-    assert "oodocs.LinkDefaults" in all_titles
+    assert "oodocs.styles.LinkDefaults" in all_titles
     assert "oodocs.components.inline.Hyperlink" in all_titles
     assert "oodocs.footnote" in all_titles
     assert "oodocs.Footnote" in all_titles
@@ -132,20 +132,20 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "oodocs.review.MarginNote" in all_titles
     assert "oodocs.BulletList" in all_titles
     assert "oodocs.NumberedList" in all_titles
-    assert "oodocs.CounterStyle" in all_titles
-    assert "oodocs.ListStyle" in all_titles
+    assert "oodocs.styles.CounterStyle" in all_titles
+    assert "oodocs.styles.ListStyle" in all_titles
     assert "oodocs.glossary.Glossary" in all_titles
     assert "oodocs.glossary.Acronym" in all_titles
     assert "oodocs.glossary.GlossaryTerm" in all_titles
     assert "oodocs.glossary.ListOfGlossaryTerms" in all_titles
     assert "oodocs.presets.components.Nomenclature" in all_titles
-    assert "oodocs.CaptionDefaults" in all_titles
-    assert "oodocs.GeneratedContentDefaults" in all_titles
-    assert "oodocs.LocaleDefaults" in all_titles
-    assert "oodocs.HeaderFooterDefaults" in all_titles
-    assert "oodocs.PageNumberDefaults" in all_titles
-    assert "oodocs.FootnoteDefaults" in all_titles
-    assert "oodocs.FootnoteStyle" in all_titles
+    assert "oodocs.styles.CaptionDefaults" in all_titles
+    assert "oodocs.styles.GeneratedContentDefaults" in all_titles
+    assert "oodocs.styles.LocaleDefaults" in all_titles
+    assert "oodocs.styles.HeaderFooterDefaults" in all_titles
+    assert "oodocs.styles.PageNumberDefaults" in all_titles
+    assert "oodocs.styles.FootnoteDefaults" in all_titles
+    assert "oodocs.styles.FootnoteStyle" in all_titles
     assert "oodocs.positioning.PageItemScope" in all_titles
     assert "oodocs.positioning.Shape" in all_titles
     assert "oodocs.positioning.TextBox" in all_titles
@@ -176,8 +176,8 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "oodocs.compatibility.OUTPUT_FORMATS" in all_titles
     assert "oodocs.components.blocks.MIN_SECTION_LEVEL" in all_titles
     assert "oodocs.Theme" in all_titles
-    assert "oodocs.HeadingStyle" in all_titles
-    assert "oodocs.HeadingNumbering" in all_titles
+    assert "oodocs.styles.HeadingStyle" in all_titles
+    assert "oodocs.styles.HeadingNumbering" in all_titles
     assert "oodocs.ValidationResult" in all_titles
     assert "oodocs.document.Document" not in all_titles
     assert "oodocs.validation.ValidationResult" not in all_titles
@@ -341,6 +341,7 @@ def test_help_book_renders_uncategorized_api_appendix_from_category_gate() -> No
     document = api.to_help_book(
         categories=categories,
         include_coverage=False,
+        include_uncategorized_appendix=True,
         max_heading_level=1,
     )
     without_appendix = api.to_help_book(

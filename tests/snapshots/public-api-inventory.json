@@ -26,20 +26,6 @@
           "qualname": "oodocs.components.people.AuthorLayout"
         },
         {
-          "category": "theme",
-          "kind": "class",
-          "module": "oodocs.styles.theme",
-          "name": "BlockDefaults",
-          "qualname": "oodocs.styles.theme.BlockDefaults"
-        },
-        {
-          "category": "style",
-          "kind": "class",
-          "module": "oodocs.styles.border",
-          "name": "BorderStyle",
-          "qualname": "oodocs.styles.border.BorderStyle"
-        },
-        {
           "category": "block",
           "kind": "class",
           "module": "oodocs.components.blocks",
@@ -59,27 +45,6 @@
           "module": "oodocs.components.blocks",
           "name": "BulletList",
           "qualname": "oodocs.components.blocks.BulletList"
-        },
-        {
-          "category": "theme",
-          "kind": "class",
-          "module": "oodocs.styles.theme",
-          "name": "CaptionDefaults",
-          "qualname": "oodocs.styles.theme.CaptionDefaults"
-        },
-        {
-          "category": "theme",
-          "kind": "class",
-          "module": "oodocs.styles.theme",
-          "name": "CitationDefaults",
-          "qualname": "oodocs.styles.theme.CitationDefaults"
-        },
-        {
-          "category": "style",
-          "kind": "class",
-          "module": "oodocs.styles.counter",
-          "name": "CounterStyle",
-          "qualname": "oodocs.styles.counter.CounterStyle"
         },
         {
           "category": "document-core",
@@ -187,48 +152,6 @@
           "qualname": "oodocs.components.inline.Footnote"
         },
         {
-          "category": "theme",
-          "kind": "class",
-          "module": "oodocs.styles.theme",
-          "name": "FootnoteDefaults",
-          "qualname": "oodocs.styles.theme.FootnoteDefaults"
-        },
-        {
-          "category": "style",
-          "kind": "class",
-          "module": "oodocs.styles.theme",
-          "name": "FootnoteStyle",
-          "qualname": "oodocs.styles.theme.FootnoteStyle"
-        },
-        {
-          "category": "theme",
-          "kind": "class",
-          "module": "oodocs.styles.theme",
-          "name": "GeneratedContentDefaults",
-          "qualname": "oodocs.styles.theme.GeneratedContentDefaults"
-        },
-        {
-          "category": "theme",
-          "kind": "class",
-          "module": "oodocs.styles.theme",
-          "name": "HeaderFooterDefaults",
-          "qualname": "oodocs.styles.theme.HeaderFooterDefaults"
-        },
-        {
-          "category": "style",
-          "kind": "class",
-          "module": "oodocs.styles.theme",
-          "name": "HeadingStyle",
-          "qualname": "oodocs.styles.theme.HeadingStyle"
-        },
-        {
-          "category": "style",
-          "kind": "class",
-          "module": "oodocs.styles.counter",
-          "name": "HeadingNumbering",
-          "qualname": "oodocs.styles.counter.HeadingNumbering"
-        },
-        {
           "category": "media",
           "kind": "class",
           "module": "oodocs.components.media",
@@ -264,39 +187,11 @@
           "qualname": "oodocs.components.inline.InlineChip"
         },
         {
-          "category": "style",
-          "kind": "class",
-          "module": "oodocs.styles.chips",
-          "name": "InlineChipStyle",
-          "qualname": "oodocs.styles.chips.InlineChipStyle"
-        },
-        {
           "category": "inline",
           "kind": "class",
           "module": "oodocs.components.inline",
           "name": "LineBreak",
           "qualname": "oodocs.components.inline.LineBreak"
-        },
-        {
-          "category": "theme",
-          "kind": "class",
-          "module": "oodocs.styles.theme",
-          "name": "LinkDefaults",
-          "qualname": "oodocs.styles.theme.LinkDefaults"
-        },
-        {
-          "category": "theme",
-          "kind": "class",
-          "module": "oodocs.styles.theme",
-          "name": "LocaleDefaults",
-          "qualname": "oodocs.styles.theme.LocaleDefaults"
-        },
-        {
-          "category": "style",
-          "kind": "class",
-          "module": "oodocs.styles.counter",
-          "name": "ListStyle",
-          "qualname": "oodocs.styles.counter.ListStyle"
         },
         {
           "category": "inline",
@@ -318,13 +213,6 @@
           "module": "oodocs.components.blocks",
           "name": "NumberedList",
           "qualname": "oodocs.components.blocks.NumberedList"
-        },
-        {
-          "category": "theme",
-          "kind": "class",
-          "module": "oodocs.styles.theme",
-          "name": "PageNumberDefaults",
-          "qualname": "oodocs.styles.theme.PageNumberDefaults"
         },
         {
           "category": "style",
@@ -383,13 +271,6 @@
           "qualname": "oodocs.styles.blocks.ParagraphStyle"
         },
         {
-          "category": "style",
-          "kind": "class",
-          "module": "oodocs.styles.blocks",
-          "name": "RunInTitleStyle",
-          "qualname": "oodocs.styles.blocks.RunInTitleStyle"
-        },
-        {
           "category": "generated-page",
           "kind": "class",
           "module": "oodocs.components.generated",
@@ -416,13 +297,6 @@
           "module": "oodocs.components.blocks",
           "name": "Section",
           "qualname": "oodocs.components.blocks.Section"
-        },
-        {
-          "category": "style",
-          "kind": "class",
-          "module": "oodocs.styles.border",
-          "name": "StrokeStyle",
-          "qualname": "oodocs.styles.border.StrokeStyle"
         },
         {
           "category": "style",
@@ -526,22 +400,8 @@
           "category": "theme",
           "kind": "class",
           "module": "oodocs.styles.theme",
-          "name": "TitleMatterDefaults",
-          "qualname": "oodocs.styles.theme.TitleMatterDefaults"
-        },
-        {
-          "category": "theme",
-          "kind": "class",
-          "module": "oodocs.styles.theme",
           "name": "Theme",
           "qualname": "oodocs.styles.theme.Theme"
-        },
-        {
-          "category": "theme",
-          "kind": "class",
-          "module": "oodocs.styles.theme",
-          "name": "TypographyDefaults",
-          "qualname": "oodocs.styles.theme.TypographyDefaults"
         },
         {
           "category": "error",
@@ -853,20 +713,6 @@
           "qualname": "oodocs.apidoc.profiles.ApiPresentationProfile"
         },
         {
-          "category": "apidoc-parser",
-          "kind": "class",
-          "module": "oodocs.apidoc.docstring",
-          "name": "ApiDocstringParser",
-          "qualname": "oodocs.apidoc.docstring.ApiDocstringParser"
-        },
-        {
-          "category": "apidoc-parser",
-          "kind": "type-alias",
-          "module": "typing",
-          "name": "ApiDocstringStyleName",
-          "qualname": "ApiDocstringStyleName"
-        },
-        {
           "category": "apidoc-collector",
           "kind": "type-alias",
           "module": "typing",
@@ -980,34 +826,6 @@
         },
         {
           "category": "apidoc-composition",
-          "kind": "class",
-          "module": "oodocs.apidoc.categories",
-          "name": "GuideLink",
-          "qualname": "oodocs.apidoc.categories.GuideLink"
-        },
-        {
-          "category": "apidoc-composition",
-          "kind": "constant",
-          "module": null,
-          "name": "OODocs_API_CATEGORIES",
-          "qualname": "OODocs_API_CATEGORIES"
-        },
-        {
-          "category": "apidoc-parser",
-          "kind": "class",
-          "module": "oodocs.apidoc.docstring",
-          "name": "ParsedDocstring",
-          "qualname": "oodocs.apidoc.docstring.ParsedDocstring"
-        },
-        {
-          "category": "apidoc-composition",
-          "kind": "function",
-          "module": "oodocs.apidoc.blocks",
-          "name": "api_objects_to_chapter",
-          "qualname": "oodocs.apidoc.blocks.api_objects_to_chapter"
-        },
-        {
-          "category": "apidoc-composition",
           "kind": "function",
           "module": "oodocs.apidoc.help",
           "name": "api_category_to_chapter",
@@ -1028,20 +846,6 @@
           "qualname": "oodocs.apidoc.categories.check_api_help_categories"
         },
         {
-          "category": "apidoc-parser",
-          "kind": "function",
-          "module": "oodocs.apidoc.examples",
-          "name": "check_doctest_examples",
-          "qualname": "oodocs.apidoc.examples.check_doctest_examples"
-        },
-        {
-          "category": "apidoc-parser",
-          "kind": "function",
-          "module": "oodocs.apidoc.examples",
-          "name": "check_example_syntax",
-          "qualname": "oodocs.apidoc.examples.check_example_syntax"
-        },
-        {
           "category": "apidoc-collector",
           "kind": "function",
           "module": "oodocs.apidoc.collect",
@@ -1049,109 +853,11 @@
           "qualname": "oodocs.apidoc.collect.collect_api"
         },
         {
-          "category": "apidoc-collector",
-          "kind": "function",
-          "module": "oodocs.apidoc.collect",
-          "name": "collect_module_api",
-          "qualname": "oodocs.apidoc.collect.collect_module_api"
-        },
-        {
-          "category": "apidoc-collector",
-          "kind": "function",
-          "module": "oodocs.apidoc.collect",
-          "name": "collect_object_api",
-          "qualname": "oodocs.apidoc.collect.collect_object_api"
-        },
-        {
-          "category": "apidoc-parser",
-          "kind": "function",
-          "module": "oodocs.apidoc.docstring",
-          "name": "detect_docstring_style",
-          "qualname": "oodocs.apidoc.docstring.detect_docstring_style"
-        },
-        {
           "category": "apidoc-diff",
           "kind": "function",
           "module": "oodocs.apidoc.diff",
           "name": "diff_api",
           "qualname": "oodocs.apidoc.diff.diff_api"
-        },
-        {
-          "category": "apidoc-parser",
-          "kind": "function",
-          "module": "oodocs.apidoc.docstring",
-          "name": "docstring_parser_import_paths",
-          "qualname": "oodocs.apidoc.docstring.docstring_parser_import_paths"
-        },
-        {
-          "category": "apidoc-parser",
-          "kind": "function",
-          "module": "oodocs.apidoc.docstring",
-          "name": "docstring_parser_names",
-          "qualname": "oodocs.apidoc.docstring.docstring_parser_names"
-        },
-        {
-          "category": "apidoc-parser",
-          "kind": "function",
-          "module": "oodocs.apidoc.examples",
-          "name": "extract_code_blocks_from_docstring",
-          "qualname": "oodocs.apidoc.examples.extract_code_blocks_from_docstring"
-        },
-        {
-          "category": "apidoc-parser",
-          "kind": "function",
-          "module": "oodocs.apidoc.docstring",
-          "name": "is_docstring_style_supported",
-          "qualname": "oodocs.apidoc.docstring.is_docstring_style_supported"
-        },
-        {
-          "category": "apidoc-parser",
-          "kind": "function",
-          "module": "oodocs.apidoc.docstring",
-          "name": "load_docstring_parser_modules",
-          "qualname": "oodocs.apidoc.docstring.load_docstring_parser_modules"
-        },
-        {
-          "category": "apidoc-parser",
-          "kind": "function",
-          "module": "oodocs.apidoc.docstring",
-          "name": "parse_docstring",
-          "qualname": "oodocs.apidoc.docstring.parse_docstring"
-        },
-        {
-          "category": "apidoc-composition",
-          "kind": "function",
-          "module": "oodocs.apidoc.profiles",
-          "name": "presentation_profile_names",
-          "qualname": "oodocs.apidoc.profiles.presentation_profile_names"
-        },
-        {
-          "category": "apidoc-parser",
-          "kind": "function",
-          "module": "oodocs.apidoc.docstring",
-          "name": "register_docstring_parser",
-          "qualname": "oodocs.apidoc.docstring.register_docstring_parser"
-        },
-        {
-          "category": "apidoc-composition",
-          "kind": "function",
-          "module": "oodocs.apidoc.profiles",
-          "name": "register_presentation_profile",
-          "qualname": "oodocs.apidoc.profiles.register_presentation_profile"
-        },
-        {
-          "category": "apidoc-composition",
-          "kind": "function",
-          "module": "oodocs.apidoc.profiles",
-          "name": "resolve_presentation_profile",
-          "qualname": "oodocs.apidoc.profiles.resolve_presentation_profile"
-        },
-        {
-          "category": "apidoc-composition",
-          "kind": "function",
-          "module": "oodocs.apidoc.categories",
-          "name": "select_uncategorized_api_objects",
-          "qualname": "oodocs.apidoc.categories.select_uncategorized_api_objects"
         }
       ]
     },

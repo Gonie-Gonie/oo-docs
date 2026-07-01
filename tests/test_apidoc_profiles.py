@@ -27,9 +27,11 @@ def _imported_modules(path: Path) -> set[str]:
 
 
 def test_apidoc_profiles_resolve_all_standard_profiles() -> None:
-    expected = {"reference", "compact", "manual", "evidence", "review", "website"}
+    expected = {"reference", "help", "compact", "manual", "evidence", "review", "website"}
 
     assert expected.issubset(set(presentation_profile_names()))
+    assert resolve_presentation_profile("help").include_source is False
+    assert ApiPresentationProfile.help().with_source().include_source is True
     assert resolve_presentation_profile("compact").max_examples == 1
     assert resolve_presentation_profile(ApiPresentationProfile.review()).include_review_notes
     assert ApiPresentationProfile.from_dict(ApiPresentationProfile.website().to_dict()).name == "website"

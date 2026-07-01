@@ -307,7 +307,7 @@ class ApiCoverageResult:
             success paragraph.
 
         Examples:
-            Add complete coverage evidence to a rendered API reference:
+            Add complete coverage evidence to a separate evidence document:
 
             ```python
             from oodocs import Document

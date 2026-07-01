@@ -399,7 +399,7 @@ def _api_package_to_help_book(
     settings: object | None = None,
     citations: object | None = None,
     include_coverage: bool = False,
-    include_uncategorized_appendix: bool = True,
+    include_uncategorized_appendix: bool = False,
     max_heading_level: int | None = None,
 ) -> Document:
     """Build a category-based API reference help book.
@@ -420,7 +420,9 @@ def _api_package_to_help_book(
             references keep coverage evidence in sidecars unless explicitly
             requested.
         include_uncategorized_appendix: Whether to append public API objects
-            not assigned to a category before coverage evidence.
+            not assigned to a category before coverage evidence. Defaults to
+            ``False`` so user-facing API references do not silently become
+            inventory dumps.
         max_heading_level: Optional deepest heading level for the table of contents and
             generated symbol sections.
 

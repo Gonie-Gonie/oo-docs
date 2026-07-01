@@ -29,7 +29,7 @@ Supported styles:
 - `auto`: style detection.
 
 ```python
-from oodocs.apidoc import parse_docstring
+from oodocs.apidoc.docstring import parse_docstring
 
 parsed = parse_docstring(
     """Load data.
@@ -65,7 +65,7 @@ NumPy `Other Parameters` sections are merged into the same normalized
 same parameter table:
 
 ```python
-from oodocs.apidoc import parse_docstring
+from oodocs.apidoc.docstring import parse_docstring
 
 parsed = parse_docstring(
     """Load data.
@@ -89,7 +89,7 @@ assert [parameter.name for parameter in parsed.parameters] == ["path", "timeout"
 Markdown parameter sections can use tables, bullet lists, or plain lines:
 
 ```python
-from oodocs.apidoc import parse_docstring
+from oodocs.apidoc.docstring import parse_docstring
 
 parsed = parse_docstring(
     """Load data.
@@ -116,7 +116,7 @@ paragraph. Sphinx keyword fields are merged into the same parameter list, so
 keyword-only parameters render in the normal parameter table:
 
 ```python
-from oodocs.apidoc import parse_docstring
+from oodocs.apidoc.docstring import parse_docstring
 
 parsed = parse_docstring(
     """Load data.
@@ -150,7 +150,7 @@ Sphinx varargs names are preserved with their leading stars so they match
 signature parameters during coverage checks:
 
 ```python
-from oodocs.apidoc import parse_docstring
+from oodocs.apidoc.docstring import parse_docstring
 
 parsed = parse_docstring(
     """Call a hook.
@@ -183,7 +183,8 @@ Use `ApiDocstringParser` when the same parser configuration should be reused
 across parsing, collection, coverage, and rendering steps.
 
 ```python
-from oodocs.apidoc import ApiDocstringParser, collect_api
+from oodocs.apidoc import collect_api
+from oodocs.apidoc.docstring import ApiDocstringParser
 
 parser = ApiDocstringParser.auto()
 api = collect_api(".", collector="griffe", docstring_style=parser)
@@ -201,7 +202,8 @@ warnings are available on parsed results and through package issue tables after
 collection:
 
 ```python
-from oodocs.apidoc import collect_api, parse_docstring
+from oodocs.apidoc import collect_api
+from oodocs.apidoc.docstring import parse_docstring
 
 parsed = parse_docstring("Summary.\n\nArgs:\n    path: Input path.", style="numpy")
 assert parsed.issues[0].code == "docstring-style-mismatch"
@@ -214,7 +216,11 @@ Custom styles can be registered and then used by parser objects or
 `collect_api(...)`.
 
 ```python
-from oodocs.apidoc import ApiDocstringParser, ParsedDocstring, register_docstring_parser
+from oodocs.apidoc.docstring import (
+    ApiDocstringParser,
+    ParsedDocstring,
+    register_docstring_parser,
+)
 
 def parse_brief(text, qualname, module):
     return ParsedDocstring(summary=text.strip(), style="brief")
@@ -231,7 +237,7 @@ call `register_docstring_parser(...)` when imported:
 
 ```python
 # docs_parsers.py
-from oodocs.apidoc import ParsedDocstring, register_docstring_parser
+from oodocs.apidoc.docstring import ParsedDocstring, register_docstring_parser
 
 def parse_brief(text, qualname=None, module=None):
     return ParsedDocstring(summary=text.strip(), style="brief")
@@ -327,7 +333,8 @@ file, use `docstring_parser_import_paths` around construction so repo-local
 parser modules are importable while the config validates:
 
 ```python
-from oodocs.apidoc import ApiCollectConfig, collect_api, docstring_parser_import_paths
+from oodocs.apidoc import ApiCollectConfig, collect_api
+from oodocs.apidoc.docstring import docstring_parser_import_paths
 
 repo = "../mypkg"
 with docstring_parser_import_paths(repo):

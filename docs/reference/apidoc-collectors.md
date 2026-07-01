@@ -155,7 +155,8 @@ For a standalone module file, pass the file path directly. The file stem becomes
 the package/module name in generated sidecars and rendered references:
 
 ```python
-from oodocs.apidoc import ApiDocstringParser, collect_api
+from oodocs.apidoc import collect_api
+from oodocs.apidoc.docstring import ApiDocstringParser
 
 api = collect_api(
     "tools/reporting.py",
@@ -406,13 +407,14 @@ api = collect_api(
 ```
 
 Retained source locations are stored relative to the collected repository or
-package root by default, so generated sidecars and rendered references do not
-expose local checkout paths such as home directories. Use `source_root` when a
-custom target needs a different relative base. Use
-`include_source_locations=False` when generated sidecars or rendered references
-should omit source paths and line numbers entirely. Collection still uses source
-positions internally to keep stable object ordering, then strips source paths,
-line numbers, and location-like metadata from the returned API tree.
+package root by default, so generated sidecars and source-enabled rendered
+profiles do not expose local checkout paths such as home directories. Use
+`source_root` when a custom target needs a different relative base. Use
+`include_source_locations=False` when generated sidecars and every rendered
+profile should omit source paths and line numbers entirely. Collection still
+uses source positions internally to keep stable object ordering, then strips
+source paths, line numbers, and location-like metadata from the returned API
+tree.
 
 ```python
 api = collect_api(

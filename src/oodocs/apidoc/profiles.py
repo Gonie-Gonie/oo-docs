@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Sequence
 
 from oodocs.apidoc.model import ApiPresentationProfileName
@@ -141,8 +141,9 @@ class ApiPresentationProfile:
 
         Returns:
             Profile that favors compact MATLAB-style help pages with one
-            runnable example, concise parameter tables, and source metadata as
-            supporting information.
+            runnable example and concise parameter tables. Source metadata is
+            omitted by default because this profile is meant for user-facing
+            reference pages.
 
         Examples:
             ```python
@@ -161,7 +162,7 @@ class ApiPresentationProfile:
             include_notes=False,
             include_warnings=True,
             include_renderer_notes=False,
-            include_source=True,
+            include_source=False,
             include_member_summary=True,
             include_member_sections=False,
             parameter_columns=("name", "type", "default", "description"),
@@ -170,6 +171,27 @@ class ApiPresentationProfile:
             max_signature_width=88,
             max_signature_lines=16,
         )
+
+    def with_source(self, include: bool = True) -> ApiPresentationProfile:
+        """Return a copy with source location rendering enabled or disabled.
+
+        Args:
+            include: Whether rendered API object sections should show source
+                file and line information. Collected paths are normalized by
+                ``ApiCollectConfig.source_root`` and collection policy.
+
+        Returns:
+            Copy of this profile with ``include_source`` set to ``include``.
+
+        Examples:
+            ```python
+            from oodocs.apidoc import ApiPresentationProfile
+
+            profile = ApiPresentationProfile.help().with_source()
+            ```
+        """
+
+        return replace(self, include_source=bool(include))
 
     @classmethod
     def compact(cls) -> ApiPresentationProfile:

@@ -21,6 +21,10 @@ The source of truth is `src/oodocs/public_api.py`, and compatibility tests keep
   `render_to_` must not appear in the top-level namespace.
 - Stale aliases such as `reference`, `Ref`, `math`, top-level importer helpers,
   workflow helpers, and domain-only objects stay out of `oodocs.__all__`.
+- Style/default configuration helpers such as `FootnoteDefaults`,
+  `HeaderFooterDefaults`, `HeadingStyle`, and `ListStyle` are canonical under
+  `oodocs.styles`; top-level attributes may remain for compatibility but do not
+  appear in `oodocs.__all__`.
 - Component presets such as `CalloutBox`, `CompactTable`, `KeyValueTable`,
   `Nomenclature`, `option_table`, and `note_box` are canonical under
   `oodocs.presets.components`.

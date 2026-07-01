@@ -41,6 +41,7 @@ def test_apidoc_config_roundtrip_supports_general_repo_policy(tmp_path) -> None:
         output_formats=("html",),
         output_dir="artifacts/api",
         max_heading_level=3,
+        include_source=False,
         include_coverage=False,
         include_uncategorized_appendix=False,
         sidecars=True,
@@ -68,14 +69,70 @@ def test_apidoc_config_roundtrip_supports_general_repo_policy(tmp_path) -> None:
     )
     assert readback.output_formats == ("html",)
     assert readback.max_heading_level == 3
+    assert readback.include_source is False
     assert readback.include_coverage is False
     assert readback.include_uncategorized_appendix is False
+    assert ApiHelpBookConfig().include_source is None
     assert ApiHelpBookConfig().include_coverage is False
+    assert ApiHelpBookConfig().include_uncategorized_appendix is False
+    assert ApiHelpBookConfig.from_dict({}).include_source is None
     assert ApiHelpBookConfig.from_dict({}).include_coverage is False
+    assert ApiHelpBookConfig.from_dict({}).include_uncategorized_appendix is False
     assert ApiHelpBookConfig.from_dict({"max-heading-level": 2}).max_heading_level == 2
+    assert ApiHelpBookConfig.from_dict({"include-source": True}).include_source is True
     with pytest.raises(TypeError, match="Unsupported apidoc config key"):
         ApiHelpBookConfig.from_dict({"max-level": 2})
+    with pytest.raises(TypeError, match="include_source must be a boolean"):
+        ApiHelpBookConfig.from_dict({"include-source": "false"})
+    with pytest.raises(TypeError, match="include_source must be a boolean"):
+        ApiHelpBookConfig(include_source="false")  # type: ignore[arg-type]
     assert ApiCollectConfig.from_dict({"fallback-parser": "none"}).fallback_collector == "none"
+
+
+def test_apidoc_pyproject_profile_subtable_overrides_base_config() -> None:
+    base = ApiHelpBookConfig.from_pyproject(".")
+    evidence = ApiHelpBookConfig.from_pyproject(".", profile="evidence")
+
+    assert base.presentation == "help"
+    assert base.include_source is False
+    assert base.include_coverage is False
+    assert base.include_uncategorized_appendix is False
+    assert evidence.presentation == "evidence"
+    assert evidence.include_source is True
+    assert evidence.include_coverage is True
+    assert evidence.include_uncategorized_appendix is True
+    assert evidence.collection.collector == base.collection.collector
+    with pytest.raises(KeyError, match=r"\[tool\.oodocs\.apidoc\.missing\]"):
+        ApiHelpBookConfig.from_pyproject(".", profile="missing")
+
+
+def test_apidoc_pyproject_profile_subtable_preserves_known_mapping_keys(tmp_path) -> None:
+    repo = tmp_path / "profile-mapping-config"
+    repo.mkdir()
+    (repo / "pyproject.toml").write_text(
+        "\n".join(
+            [
+                "[tool.oodocs.apidoc]",
+                'public-policy = { name = "explicit", explicit-names = ["samplepkg.run"] }',
+                'docstring-style = { style = "google" }',
+                "",
+                "[tool.oodocs.apidoc.evidence]",
+                "include-coverage = true",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    collect = ApiCollectConfig.from_pyproject(repo)
+    evidence = ApiHelpBookConfig.from_pyproject(repo, profile="evidence")
+
+    assert collect.public_policy == "explicit"
+    assert collect.explicit_names == ("samplepkg.run",)
+    assert collect.docstring_style == "google"
+    assert evidence.collection.public_policy == "explicit"
+    assert evidence.collection.explicit_names == ("samplepkg.run",)
+    assert evidence.include_coverage is True
 
 
 def test_apidoc_build_config_rejects_sequence_module_prefix() -> None:

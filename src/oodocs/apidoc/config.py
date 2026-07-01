@@ -54,6 +54,7 @@ _COLLECT_CONFIG_KEYS = {
 }
 _BUILD_CONFIG_KEYS = {
     "include_coverage",
+    "include_source",
     "include_uncategorized_appendix",
     "kind",
     "max_heading_level",
@@ -540,7 +541,7 @@ class ApiCollectConfig:
         if not isinstance(section, Mapping):
             raise TypeError("[tool.oodocs.apidoc] must be a table")
         with _config_and_target_import_paths(pyproject_path, target):
-            return cls.from_dict(section)
+            return cls.from_dict(_profiled_pyproject_section(section, None))
 
     def validate(self) -> None:
         """Validate config values.
@@ -770,6 +771,9 @@ class ApiHelpBookConfig:
     Attributes:
         collection: Collection settings used before rendering.
         presentation: Presentation profile name.
+        include_source: Optional override for whether the presentation profile
+            renders source file and line metadata. ``None`` keeps the selected
+            profile default.
         output_formats: Output formats passed to ``Document.save_all``.
         stem: Optional output file stem.
         max_heading_level: Optional deepest nested API heading level.
@@ -777,7 +781,10 @@ class ApiHelpBookConfig:
             evidence as the final appendix. Defaults to ``False`` so coverage
             evidence stays in sidecars unless explicitly requested.
         include_uncategorized_appendix: Whether rendered help books include
-            public API objects not assigned to curated categories.
+            public API objects not assigned to curated categories. Defaults to
+            ``False`` for user-facing help books; use a profile-specific
+            evidence config when development output should include the
+            appendix.
         sidecars: Whether ``save_all(...)`` writes API and coverage sidecars.
         output_dir: Optional default output directory.
         kind: Optional object kinds to render after collection.
@@ -797,11 +804,12 @@ class ApiHelpBookConfig:
 
     collection: ApiCollectConfig = field(default_factory=ApiCollectConfig)
     presentation: str = "help"
+    include_source: bool | None = None
     output_formats: tuple[str, ...] = ("docx", "pdf", "html")
     stem: str | None = None
     max_heading_level: int | None = None
     include_coverage: bool = False
-    include_uncategorized_appendix: bool = True
+    include_uncategorized_appendix: bool = False
     sidecars: bool = False
     output_dir: str | None = None
     kind: tuple[str, ...] = field(default_factory=tuple)
@@ -816,6 +824,10 @@ class ApiHelpBookConfig:
             else ApiCollectConfig.from_dict(self.collection),  # type: ignore[arg-type]
         )
         object.__setattr__(self, "presentation", self.presentation.strip().lower())
+        if self.include_source is not None:
+            if not isinstance(self.include_source, bool):
+                raise TypeError("include_source must be a boolean")
+            object.__setattr__(self, "include_source", bool(self.include_source))
         object.__setattr__(self, "output_formats", normalize_output_formats(self.output_formats))
         object.__setattr__(self, "kind", _string_tuple(self.kind))
         if self.module_prefix is not None:
@@ -863,12 +875,16 @@ class ApiHelpBookConfig:
         return cls(
             collection=ApiCollectConfig.from_dict(normalized),
             presentation=str(normalized.get("presentation", "help")),
+            include_source=_optional_config_bool(
+                "include_source",
+                normalized.get("include_source"),
+            ),
             output_formats=_format_tuple(output_formats),
             stem=_optional_str(normalized.get("stem")),
             max_heading_level=_optional_int(normalized.get("max_heading_level")),
             include_coverage=bool(normalized.get("include_coverage", False)),
             include_uncategorized_appendix=bool(
-                normalized.get("include_uncategorized_appendix", True)
+                normalized.get("include_uncategorized_appendix", False)
             ),
             sidecars=bool(normalized.get("sidecars", False)),
             output_dir=_optional_str(output_dir),
@@ -881,12 +897,17 @@ class ApiHelpBookConfig:
         cls,
         path: PathLike = "pyproject.toml",
         *,
+        profile: str | None = None,
         target: object | None = None,
     ) -> ApiHelpBookConfig:
         """Read build config from ``pyproject.toml``.
 
         Args:
             path: Project root directory or ``pyproject.toml`` path.
+            profile: Optional profile-specific subtable under
+                ``[tool.oodocs.apidoc]``. For example, ``profile="evidence"``
+                merges ``[tool.oodocs.apidoc.evidence]`` over the base
+                user-facing config.
             target: Optional target repository, package directory, Python
                 file, or importable name whose local parser modules should be
                 importable while the config validates.
@@ -919,7 +940,7 @@ class ApiHelpBookConfig:
         if not isinstance(section, Mapping):
             raise TypeError("[tool.oodocs.apidoc] must be a table")
         with _config_and_target_import_paths(pyproject_path, target):
-            return cls.from_dict(section)
+            return cls.from_dict(_profiled_pyproject_section(section, profile))
 
     @classmethod
     def load_json(
@@ -1299,6 +1320,7 @@ class ApiHelpBookConfig:
         values.update(
             {
                 "presentation": self.presentation,
+                "include_source": self.include_source,
                 "output_formats": list(self.output_formats),
                 "stem": self.stem,
                 "max_heading_level": self.max_heading_level,
@@ -1430,6 +1452,7 @@ def _help_book_for_build(
     settings: object | None = None,
     citations: object | None = None,
 ) -> Document:
+    presentation = _presentation_for_build(config)
     if _has_build_filters(config.kind or None, config.module_prefix):
         from oodocs.components.blocks import Chapter
         from oodocs.document import Document
@@ -1442,12 +1465,12 @@ def _help_book_for_build(
                 api.to_summary_table(
                     selected,
                     caption="Selected public API objects",
-                    presentation=config.presentation,
+                    presentation=presentation,
                 ),
                 *[
                     obj.to_section(
                         level=2,
-                        presentation=config.presentation,
+                        presentation=presentation,
                         max_heading_level=config.max_heading_level,
                     )
                     for obj in selected
@@ -1458,12 +1481,22 @@ def _help_book_for_build(
         )
     return api.to_help_book(
         title=title,
-        presentation=config.presentation,
+        presentation=presentation,
         settings=settings,
         citations=citations,
         include_coverage=config.include_coverage,
         include_uncategorized_appendix=config.include_uncategorized_appendix,
         max_heading_level=config.max_heading_level,
+    )
+
+
+def _presentation_for_build(config: ApiHelpBookConfig) -> object:
+    if config.include_source is None:
+        return config.presentation
+    from oodocs.apidoc.profiles import resolve_presentation_profile
+
+    return resolve_presentation_profile(config.presentation).with_source(
+        config.include_source
     )
 
 
@@ -1530,6 +1563,32 @@ def _normalize_config_mapping(data: Mapping[str, object]) -> dict[str, object]:
     return normalized
 
 
+def _profiled_pyproject_section(
+    section: Mapping[str, object],
+    profile: str | None,
+) -> dict[str, object]:
+    known_keys = _COLLECT_CONFIG_KEYS | _BUILD_CONFIG_KEYS
+    base = {
+        key: value
+        for key, value in section.items()
+        if str(key).replace("-", "_") in known_keys or not isinstance(value, Mapping)
+    }
+    if profile is None:
+        return base
+    profile_key = profile.strip()
+    if not profile_key:
+        raise ValueError("profile must not be empty")
+    try:
+        overrides = section[profile_key]
+    except KeyError as exc:
+        raise KeyError(
+            f"[tool.oodocs.apidoc.{profile_key}] is not defined"
+        ) from exc
+    if not isinstance(overrides, Mapping):
+        raise TypeError(f"[tool.oodocs.apidoc.{profile_key}] must be a table")
+    return {**base, **dict(overrides)}
+
+
 def _validate_known_config_keys(data: Mapping[str, object]) -> None:
     unknown = sorted(set(data) - _COLLECT_CONFIG_KEYS - _BUILD_CONFIG_KEYS)
     if unknown:
@@ -1563,6 +1622,14 @@ def _optional_config_str(name: str, value: object) -> str | None:
     if _is_sequence_or_mapping(value):
         raise TypeError(f"{name} must be a string")
     return _optional_str(value)
+
+
+def _optional_config_bool(name: str, value: object) -> bool | None:
+    if value is None:
+        return None
+    if not isinstance(value, bool):
+        raise TypeError(f"{name} must be a boolean")
+    return value
 
 
 def _is_sequence_or_mapping(value: object) -> bool:

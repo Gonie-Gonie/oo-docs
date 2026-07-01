@@ -6,6 +6,9 @@ not change collection or parsing.
 - `reference`: full signatures, descriptions, parameter tables, returns,
   raises, notes, warnings, examples, see-also entries, renderer notes, source
   locations, and member summaries.
+- `help`: user-facing help pages with concise signatures, parameters,
+  warnings, examples, and member summaries. Source locations are omitted by
+  default.
 - `compact`: summary-first layout with shorter tables, warning blocks, and
   fewer examples.
 - `manual`: guide-friendly sections that fit into authored documents, including
@@ -41,6 +44,17 @@ usable in fixed-page outputs. This keeps the generated OODocs block tree
 suitable for narrow DOCX/PDF pages before any renderer-specific output is
 created. The `parameter_columns` option controls table width in the same
 renderer-neutral way.
+
+Use `ApiPresentationProfile.evidence()` for review/evidence output that should
+include source locations. If a help-style page needs source metadata for a
+specific internal workflow, opt in explicitly:
+
+```python
+from oodocs.apidoc import ApiPresentationProfile
+
+profile = ApiPresentationProfile.help().with_source()
+document = api.to_help_book(presentation=profile)
+```
 
 Supported parameter columns are `name`, `type`, `default`, `required`,
 `description`, and `source`. Profiles normalize column names when they are

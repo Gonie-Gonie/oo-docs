@@ -409,6 +409,15 @@ from oodocs.apidoc import ApiHelpBookConfig
 ApiHelpBookConfig.from_pyproject(".").save_all(".")
 ```
 
+The default repository config builds the user-facing API Reference without
+source paths, uncategorized appendices, or coverage tables in the document body.
+Use the evidence profile when CI or release review needs the full inventory and
+coverage sidecars:
+
+```python
+ApiHelpBookConfig.from_pyproject(".", profile="evidence").save_all(".")
+```
+
 Direct example scripts print slow major render steps. Imported build functions stay quiet by default; pass `verbose=True` when you want the same progress messages.
 
 What they show:
@@ -541,7 +550,7 @@ Create and push a release tag like this:
 .\scripts\release.ps1 <version>
 ```
 
-That pushes `v<version>`, and the GitHub release workflow runs the test suite, enforces API documentation coverage with `oodocs apidoc check`, builds the wheel/sdist artifacts, renders the user guide and API reference PDFs, attaches the user-facing assets to the matching GitHub Release, and uploads the Python distributions to PyPI.
+That pushes `v<version>`, and the GitHub release workflow runs the test suite, enforces API documentation coverage with `oodocs apidoc check`, checks that user-facing API chapters are categorized, builds the wheel/sdist artifacts, renders the user guide and API reference PDFs, attaches the user-facing assets to the matching GitHub Release, and uploads the Python distributions to PyPI. Coverage and API object inventories remain CI/review evidence sidecars, not API Reference pages.
 
 GitHub Release assets are intentionally limited to:
 

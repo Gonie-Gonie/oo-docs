@@ -13,8 +13,9 @@ API Reference responsibilities:
 - Short runnable examples.
 - Related symbols.
 - Class properties and methods.
-- Source location as supporting metadata.
-- Coverage and evidence as an appendix or sidecar.
+- Source locations only in review/evidence profiles or explicit source-enabled
+  help output.
+- Coverage and inventory evidence as separate sidecars or evidence artifacts.
 
 Overlap prevention rules:
 
@@ -22,4 +23,9 @@ Overlap prevention rules:
 - API Reference examples must be per-symbol and minimal.
 - API Reference must not contain long conceptual chapters.
 - API Reference must not repeat the User Guide reading map.
+- API Reference must not expose local absolute source paths in the default
+  user-facing help profile.
+- API Reference must not append uncategorized API inventory by default.
+- Coverage tables belong in CI/review evidence output, not the default
+  user-facing reference.
 - API Reference may link to the User Guide for workflow-level explanations.

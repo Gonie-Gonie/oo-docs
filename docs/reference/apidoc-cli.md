@@ -29,6 +29,35 @@ build = ApiHelpBookConfig.from_pyproject(".")
 outputs = build.save_all(".")
 ```
 
+The base `[tool.oodocs.apidoc]` table is intended for user-facing reference
+output. Keep coverage and uncategorized inventory out of that document unless a
+review workflow explicitly needs them:
+
+```toml
+[tool.oodocs.apidoc]
+presentation = "help"
+include-source = false
+include-coverage = false
+include-uncategorized-appendix = false
+
+[tool.oodocs.apidoc.evidence]
+presentation = "evidence"
+include-source = true
+include-coverage = true
+include-uncategorized-appendix = true
+sidecars = true
+```
+
+Load the evidence subtable when CI or release review should retain the full API
+inventory and coverage artifacts:
+
+```python
+from oodocs.apidoc import ApiHelpBookConfig
+
+evidence = ApiHelpBookConfig.from_pyproject(".", profile="evidence")
+outputs = evidence.save_all(".")
+```
+
 ## Collect
 
 Collect an API tree:
@@ -95,6 +124,15 @@ documents:
 from oodocs.apidoc import ApiHelpBookConfig
 
 build = ApiHelpBookConfig.from_pyproject(".")
+outputs = build.save_all(".")
+```
+
+For evidence output, load the profile-specific subtable:
+
+```python
+from oodocs.apidoc import ApiHelpBookConfig
+
+build = ApiHelpBookConfig.from_pyproject(".", profile="evidence")
 outputs = build.save_all(".")
 ```
 

@@ -3688,7 +3688,7 @@ class ApiPackage:
         settings: object | None = None,
         citations: object | None = None,
         include_coverage: bool = False,
-        include_uncategorized_appendix: bool = True,
+        include_uncategorized_appendix: bool = False,
         max_heading_level: int | None = None,
     ):
         """Return a category-based API help book document.
@@ -3707,6 +3707,8 @@ class ApiPackage:
                 quality evidence in sidecars unless explicitly requested.
             include_uncategorized_appendix: Whether to append public API
                 objects not assigned to a category before coverage evidence.
+                Defaults to ``False`` so user-facing references do not include
+                uncategorized inventory unless requested.
             max_heading_level: Optional deepest heading level for the table of
                 contents and object sections.
 

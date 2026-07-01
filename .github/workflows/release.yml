@@ -65,6 +65,17 @@ jobs:
             --config pyproject.toml \
             --fail-under 0.90
 
+      - name: Check API help categories
+        run: |
+          python - <<'PY'
+          from oodocs.apidoc import ApiHelpBookConfig, check_api_help_categories
+
+          build = ApiHelpBookConfig.from_pyproject(".")
+          issues = check_api_help_categories(build.collect("."))
+          if issues:
+              raise SystemExit("\n".join(issue.message for issue in issues))
+          PY
+
       - name: Build distributions
         run: python -m build
 
@@ -72,13 +83,9 @@ jobs:
         run: |
           python examples/usage_guide_example/main.py --outputs pdf
           python - <<'PY'
-          from dataclasses import replace
           from oodocs.apidoc import ApiHelpBookConfig
 
-          replace(
-              ApiHelpBookConfig.from_pyproject("."),
-              include_coverage=True,
-          ).save_all(
+          ApiHelpBookConfig.from_pyproject(".").save_all(
               ".",
               output_formats=("pdf",),
               sidecars=False,

@@ -32,7 +32,7 @@ def extract_code_blocks_from_docstring(text: str | None) -> list[ApiExample]:
         Extract fenced Python code for insertion into an API section:
 
         ```python
-        from oodocs.apidoc import extract_code_blocks_from_docstring
+        from oodocs.apidoc.examples import extract_code_blocks_from_docstring
 
         examples = extract_code_blocks_from_docstring("```python\\nprint('ok')\\n```")
         assert examples[0].language == "python"
@@ -75,7 +75,8 @@ def check_example_syntax(example: ApiExample) -> bool:
         Mark parsed examples before writing coverage evidence:
 
         ```python
-        from oodocs.apidoc import ApiExample, check_example_syntax
+        from oodocs.apidoc import ApiExample
+        from oodocs.apidoc.examples import check_example_syntax
 
         example = ApiExample("print('ok')", language="python")
         assert check_example_syntax(example)
@@ -123,7 +124,8 @@ def check_doctest_examples(
         Check doctest snippets already attached to an ``ApiObject``:
 
         ```python
-        from oodocs.apidoc import ApiExample, ApiObject, check_doctest_examples
+        from oodocs.apidoc import ApiExample, ApiObject
+        from oodocs.apidoc.examples import check_doctest_examples
 
         obj = ApiObject(
             kind="function",

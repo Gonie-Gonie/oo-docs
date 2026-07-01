@@ -104,7 +104,7 @@ def collect_target_api(
 
         ```python
         from examples.api_objects_example.main import collect_target_api
-        from oodocs.apidoc import ApiDocstringParser
+        from oodocs.apidoc.docstring import ApiDocstringParser
 
         api = collect_target_api(
             ".",

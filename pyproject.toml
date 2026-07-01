@@ -110,7 +110,17 @@ object-exclude-patterns = [
     "oodocs.presets.warning_box",
 ]
 presentation = "help"
+include-source = false
+include-coverage = false
+include-uncategorized-appendix = false
 output-formats = ["docx", "pdf", "html"]
 output-dir = "artifacts/api"
 stem = "oodocs-api"
+sidecars = true
+
+[tool.oodocs.apidoc.evidence]
+presentation = "evidence"
+include-source = true
+include-coverage = true
+include-uncategorized-appendix = true
 sidecars = true
