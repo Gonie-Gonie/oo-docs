@@ -499,18 +499,22 @@ def test_readme_latex_translations_include_amsmath_policy() -> None:
 
 def test_math_support_reference_documents_amsmath_policy() -> None:
     reference = Path("docs/reference/math-support.md").read_text(encoding="utf-8")
+    normalized = " ".join(reference.split())
 
     for phrase in (
         "`Equation(numbered=True)` is the default",
         "`Equation(numbered=False)` does not consume a number",
+        "`Equation.aligned(...)` and `Equation.cases(...)` are the canonical authoring",
         "`Equation.aligned(...)`",
         "`Equation.cases(...)`",
         "`Equation.from_sympy(...)`",
+        "`AlignedEquation(...)` and `CasesEquation(...)` classes remain available from `oodocs.equations`",
+        "not part of the top-level `oodocs` import surface",
         "`aligned`, `align`, `split`, and `multline` environments",
         "`matrix`, `pmatrix`, `bmatrix`, `array` environments",
         "`unsupported-latex-command` warnings",
     ):
-        assert phrase in reference
+        assert phrase in normalized
 
 
 def test_readme_latex_translations_include_mhchem_policy() -> None:

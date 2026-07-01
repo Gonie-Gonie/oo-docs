@@ -10,14 +10,20 @@ for structure and lightweight LaTeX-like source for expressions.
 |---|---|---|
 | Inline expression in prose | `inline_math(...)` or `Math(...)` | Best for short symbols and formulas inside a paragraph. |
 | Display equation | `Equation(...)` | Numbered by default and referenceable. |
-| Aligned derivation | `Equation.aligned(...)` or `AlignedEquation(...)` | Accepts `&` alignment markers and omits them from rendered text. |
-| Piecewise cases | `Equation.cases(...)` or `CasesEquation(...)` | Use OODocs case rows instead of a raw TeX `cases` environment. |
+| Aligned derivation | `Equation.aligned(...)` | Accepts `&` alignment markers and omits them from rendered text. |
+| Piecewise cases | `Equation.cases(...)` | Use OODocs case rows instead of a raw TeX `cases` environment. |
 | Symbolic expression | `Equation.from_sympy(...)` | Uses `sympy.latex(...)` when SymPy is installed. |
 
 `Equation(numbered=True)` is the default and consumes the document equation
 counter. `Equation(numbered=False)` does not consume a number; references to an
 unnumbered equation require an explicit label such as
 `equation.ref("the loss definition")`.
+
+`Equation.aligned(...)` and `Equation.cases(...)` are the canonical authoring
+entry points for structured display math. The concrete `AlignedEquation(...)`
+and `CasesEquation(...)` classes remain available from `oodocs.equations` for
+advanced code that needs explicit types, but they are not part of the top-level
+`oodocs` import surface.
 
 ## Lightweight Parser Matrix
 
