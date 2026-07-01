@@ -900,7 +900,7 @@ def test_custom_style_guide_prefers_typed_stylesheet_register_helpers() -> None:
 
 
 def test_api_sections_guide_prefers_apipackage_render_methods() -> None:
-    guide = Path("docs/how-to/insert-api-sections.md").read_text(encoding="utf-8")
+    guide = Path("docs/how-to/compose-api-objects.md").read_text(encoding="utf-8")
     first_block = _python_blocks(guide)[0]
 
     assert "api_objects_to_chapter" not in first_block

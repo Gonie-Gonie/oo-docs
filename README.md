@@ -530,6 +530,9 @@ Run tests:
 .\.venv\Scripts\python.exe -m pytest
 ```
 
+For day-to-day development, use the fast marker-filtered loop described in
+[docs/development/testing.md](docs/development/testing.md).
+
 Build distribution artifacts:
 
 ```powershell

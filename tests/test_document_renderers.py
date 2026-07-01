@@ -210,6 +210,10 @@ from oodocs.presets.templates import (
 )
 from oodocs.styles import TextStyle
 
+
+pytestmark = pytest.mark.render
+
+
 class HighlightedParagraph(Paragraph):
     pass
 

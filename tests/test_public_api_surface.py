@@ -5,6 +5,11 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
+
+pytestmark = pytest.mark.contracts
+
 
 def test_public_api_inventory_matches_snapshot(tmp_path: Path) -> None:
     output_path = tmp_path / "public-api-inventory.json"

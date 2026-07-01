@@ -81,6 +81,13 @@ tag_regex = "^v(?P<version>\\d+\\.\\d+\\.\\d+)$"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = [
+    "slow: slow integration tests",
+    "render: DOCX/PDF/HTML rendering tests",
+    "apidoc_full: full self-API collection tests",
+    "examples: example script smoke tests",
+    "contracts: public API and naming contract tests",
+]
 
 [tool.oodocs.apidoc]
 collector = "griffe"

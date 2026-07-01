@@ -44,6 +44,9 @@ from oodocs.apidoc import (
 )
 
 
+pytestmark = pytest.mark.slow
+
+
 def _load_api_objects_example():
     module_path = (
         Path(__file__).resolve().parents[1]

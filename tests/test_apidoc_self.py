@@ -3,6 +3,7 @@ from __future__ import annotations
 from io import BytesIO
 
 from docx import Document as WordDocument
+import pytest
 from example_regression import (
     assert_docx_structure,
     assert_html_internal_links_resolve,
@@ -17,6 +18,9 @@ from oodocs.apidoc import (
     collect_api,
 )
 from pypdf import PdfReader
+
+
+pytestmark = pytest.mark.apidoc_full
 
 
 LOCAL_ABSOLUTE_PATH_MARKERS = ("C:\\Users", "/home/", "/Users/")
