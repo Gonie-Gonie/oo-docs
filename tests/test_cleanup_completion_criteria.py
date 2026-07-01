@@ -445,6 +445,30 @@ def test_readme_latex_translations_include_pdfpages_policy() -> None:
     assert "DOCX/HTML placeholder fallbacks" in translations
 
 
+def test_table_media_support_reference_documents_media_api_policy() -> None:
+    reference = Path("docs/reference/table-media-support.md").read_text(encoding="utf-8")
+    normalized = " ".join(reference.split())
+
+    for phrase in (
+        "advanced column layout, PDF-only page insertion, and table overflow policy",
+        "`Table(headers, rows)`",
+        "`Table.from_records(records, columns=...)`",
+        "`ColumnSpec(key=..., header=..., visible=False)`",
+        "`Table.from_dataframe(data, columns=...)`",
+        "`Table.from_csv(...)` or `Table.from_tsv(...)`",
+        "`ColumnSpec(width=...)` or `ColumnSpec(flex=...)` from `oodocs.media`",
+        "`TableOverflowPolicy(action=\"allow\")` from `oodocs.media`",
+        "`column_widths=...` remains available for simple fixed-width tables",
+        "Do not pass both `columns` and `column_widths`",
+        "`ColumnSpec(flex=...)`, `Table.excerpt(...)`, or `Table.save_csv(...)`",
+        "Use `PdfPages(...)` from `oodocs.pdf`",
+        "`pdf-pages-non-pdf-output`",
+        "use `image_format` and `image_dpi` rather than generic `format` or `dpi`",
+        "`ImageData.savefig(...)` is a compatibility adapter",
+    ):
+        assert phrase in normalized
+
+
 def test_readme_latex_translations_include_listings_minted_policy() -> None:
     readme = _readme()
     translations = readme.split("Common translations:", 1)[1].split(
