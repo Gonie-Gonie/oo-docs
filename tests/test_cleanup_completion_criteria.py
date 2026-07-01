@@ -370,6 +370,23 @@ def test_readme_latex_translations_include_footnote_policy() -> None:
     assert "`ListOfFootnotes(...)` from `oodocs.generated`" in translations
 
 
+def test_readme_latex_translations_include_review_annotation_policy() -> None:
+    readme = _readme()
+    translations = readme.split("Common translations:", 1)[1].split(
+        "The main payoff",
+        1,
+    )[0]
+
+    assert "LaTeX `marginnote` / `todonotes` review annotations" in translations
+    assert "`todo(...)`" in translations
+    assert "`Todo(...)`" in translations
+    assert "`margin_note(...)`" in translations
+    assert "`MarginNote(...)`" in translations
+    assert "`oodocs.review`" in translations
+    assert "HTML side-note output" in translations
+    assert "DOCX/PDF comment fallbacks" in translations
+
+
 def test_readme_latex_translations_include_graphicx_policy() -> None:
     readme = _readme()
     translations = readme.split("Common translations:", 1)[1].split(
@@ -578,6 +595,28 @@ def test_footnote_support_reference_documents_footmisc_policy() -> None:
         "native page-bottom Word footnotes only for the default stream",
         "`docx-footnote-stream-generated-list`",
         "Page-bottom placement remains renderer-dependent",
+    ):
+        assert phrase in normalized
+
+
+def test_review_annotation_support_reference_documents_todonotes_policy() -> None:
+    reference = Path("docs/reference/review-annotation-support.md").read_text(encoding="utf-8")
+    normalized = " ".join(reference.split())
+
+    for phrase in (
+        "common `marginnote` and `todonotes` authoring needs",
+        "helpers in `oodocs.review`",
+        "`todo(\"Verify units.\", owner=\"QA\")`",
+        "`Todo(\"Verify units.\", owner=\"QA\", status=\"open\")`",
+        "`margin_note(\"Keep this beside the claim.\", side=\"left\")`",
+        "`MarginNote(\"Check this assumption.\", side=\"right\")`",
+        "`ListOfComments(\"Collected Review Notes\")`",
+        "`examples/review_notes_example/`",
+        "`oodocs-margin-note-left` or `oodocs-margin-note-right`",
+        "`margin-note-renderer-fallback`",
+        "TODO annotations use the comment workflow across DOCX, PDF, and HTML.",
+        "`owner=...`, `status=...`, `value=...`, `author=...`, and `initials=...`",
+        "Use footnotes when the note is part of the published reading flow.",
     ):
         assert phrase in normalized
 

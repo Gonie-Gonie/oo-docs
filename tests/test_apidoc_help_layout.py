@@ -126,6 +126,10 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "oodocs.components.inline.Hyperlink" in all_titles
     assert "oodocs.footnote" in all_titles
     assert "oodocs.Footnote" in all_titles
+    assert "oodocs.review.todo" in all_titles
+    assert "oodocs.review.margin_note" in all_titles
+    assert "oodocs.review.Todo" in all_titles
+    assert "oodocs.review.MarginNote" in all_titles
     assert "oodocs.BulletList" in all_titles
     assert "oodocs.NumberedList" in all_titles
     assert "oodocs.CounterStyle" in all_titles
@@ -287,6 +291,9 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "FootnoteDefaults" in text
     assert "FootnoteStyle.symbol" in text
     assert "stream_styles" in text
+    assert "owner" in text
+    assert "status" in text
+    assert "side" in text
     assert "anchor" in text
     assert "ReferenceFormat" in text
     assert "plural_label" in text
