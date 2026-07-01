@@ -188,6 +188,10 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "oodocs.workflows.validate_source_document" in all_titles
     assert "oodocs.presets.components.CompactTable" in all_titles
     assert "oodocs.presets.templates.JournalArticleTemplate" in all_titles
+    assert "oodocs.presets.templates.TechnicalReportTemplate" in all_titles
+    assert "oodocs.presets.templates.SoftwareManualTemplate" in all_titles
+    assert "oodocs.presets.templates.BookTemplate" in all_titles
+    assert "oodocs.presets.templates.CoverPagePreset" in all_titles
     assert "oodocs.presets.CompactTable" not in all_titles
     assert "oodocs.presets.JournalArticleTemplate" not in all_titles
     assert check_api_help_categories(api) == ()
@@ -294,6 +298,10 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "owner" in text
     assert "status" in text
     assert "side" in text
+    assert "front_matter" in text
+    assert "back_matter" in text
+    assert "appendices" in text
+    assert "CoverPagePreset.eplus_simple" in text
     assert "anchor" in text
     assert "ReferenceFormat" in text
     assert "plural_label" in text

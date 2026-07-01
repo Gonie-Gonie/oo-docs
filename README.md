@@ -173,6 +173,7 @@ Common translations:
 - LaTeX `eso-pic` / `background` / `wallpaper` page overlays -> `Shape.rect(...)`, `TextBox(...)`, `ImageBox(...)`, and `PageItemScope` in `DocumentSettings(overlays=[...])`
 - LaTeX `footmisc` / `manyfoot` notes -> `footnote(...)`, `Footnote.annotated(...)`, `FootnoteDefaults(...)`, `FootnoteStyle.symbol(...)`, stream names, and `ListOfFootnotes(...)` from `oodocs.generated`
 - LaTeX `marginnote` / `todonotes` review annotations -> `todo(...)`, `Todo(...)`, `margin_note(...)`, and `MarginNote(...)` from `oodocs.review`, with HTML side-note output and DOCX/PDF comment fallbacks
+- LaTeX `article` / `report` / `book` / KOMA-Script classes -> `JournalArticleTemplate`, `TechnicalReportTemplate`, `SoftwareManualTemplate`, `BookTemplate`, `CoverPagePreset.eplus_simple(...)`, and ordinary `Section(...)`, `Chapter(...)`, `Part(...)`, and `Appendix(...)` blocks
 
 The main payoff is fewer manual handoffs: a benchmark CSV can become a table, a matplotlib object can become a figure, and the same authored structure can render to DOCX for review, PDF for release, and HTML for lightweight sharing.
 
@@ -214,6 +215,7 @@ The default behavior is intentionally conventional:
 - Use `Part(...)` for book-like divisions above chapters; each part gets a separator page, while chapter numbers continue across parts by default.
 - Import `Appendix(...)` from `oodocs.structure` for appendix material; child chapters are numbered `A`, `B`, `C`, nested headings become `A.1`, `A.2`, and the appendix separator can appear in the table of contents. Place appendices after the main chapters and parts so validation can keep the document outline conventional.
 - Use `Chapter(...)`, `Section(...)`, `Subsection(...)`, and `SubSubsection(...)` for the visible outline. Their nesting in Python should match how you expect the final document to read.
+- Import `JournalArticleTemplate`, `TechnicalReportTemplate`, `SoftwareManualTemplate`, `BookTemplate`, and `CoverPagePreset` from `oodocs.presets.templates` when LaTeX-class-like defaults should own title matter, generated pages, front matter, appendices, and repeated document shape; see [docs/reference/template-preset-support.md](docs/reference/template-preset-support.md).
 - Use `Theme(blocks=BlockDefaults(heading_styles={level: HeadingStyle(...)}))` for document-wide heading styling, or `Section(..., heading_style=HeadingStyle(...))` when one heading needs a local override.
 - Use `TableOfContents(scope="chapter")`, `ListOfTables(scope="section")`, `ListOfFigures(scope="part")`, `ListOfAlgorithms(scope="chapter")`, or `ListOfListings(scope="chapter")` for mini contents and local generated lists. Import `ListOfAlgorithms` and `ListOfListings` from `oodocs.generated`; the default `scope="document"` preserves whole-document lists.
 - Use `Document.add(...)`, `Section.add(...)`, `Box.add(...)`, and `MultiColumn.add(...)` when a longer report is easier to assemble step by step. Matching `extend(...)` methods accept iterables and use the same coercion rules as constructors.

@@ -387,6 +387,22 @@ def test_readme_latex_translations_include_review_annotation_policy() -> None:
     assert "DOCX/PDF comment fallbacks" in translations
 
 
+def test_readme_latex_translations_include_template_class_policy() -> None:
+    readme = _readme()
+    translations = readme.split("Common translations:", 1)[1].split(
+        "The main payoff",
+        1,
+    )[0]
+
+    assert "LaTeX `article` / `report` / `book` / KOMA-Script classes" in translations
+    assert "`JournalArticleTemplate`" in translations
+    assert "`TechnicalReportTemplate`" in translations
+    assert "`SoftwareManualTemplate`" in translations
+    assert "`BookTemplate`" in translations
+    assert "`CoverPagePreset.eplus_simple(...)`" in translations
+    assert "`Section(...)`, `Chapter(...)`, `Part(...)`, and `Appendix(...)`" in translations
+
+
 def test_readme_latex_translations_include_graphicx_policy() -> None:
     readme = _readme()
     translations = readme.split("Common translations:", 1)[1].split(
@@ -617,6 +633,30 @@ def test_review_annotation_support_reference_documents_todonotes_policy() -> Non
         "TODO annotations use the comment workflow across DOCX, PDF, and HTML.",
         "`owner=...`, `status=...`, `value=...`, `author=...`, and `initials=...`",
         "Use footnotes when the note is part of the published reading flow.",
+    ):
+        assert phrase in normalized
+
+
+def test_template_preset_support_reference_documents_class_policy() -> None:
+    reference = Path("docs/reference/template-preset-support.md").read_text(encoding="utf-8")
+    normalized = " ".join(reference.split())
+
+    for phrase in (
+        "common `article`, `report`, `book`, and KOMA-Script class needs",
+        "The presets create normal `Document` objects",
+        "`JournalArticleTemplate(...)`",
+        "`TechnicalReportTemplate(...)`",
+        "`SoftwareManualTemplate(...)`",
+        "`BookTemplate(...)`",
+        "`front_matter=...`, `parts=...`, `chapters=...`, `appendices=...`, and `back_matter=...`",
+        "`CoverPagePreset.eplus_simple(...)`",
+        "`Section(...)`, `Chapter(...)`, `Part(...)`, and `Appendix(...)`",
+        "`Section(..., numbered=False)`",
+        "`Chapter(...)` and `Part(...)`",
+        "`Appendix(...)`",
+        "document classes as content presets",
+        "`Theme(...)`, `DocumentSettings(title_matter=...)`, and `DocumentSettings(page_layout=...)`",
+        "`examples/template_presets/`",
     ):
         assert phrase in normalized
 
