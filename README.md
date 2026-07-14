@@ -122,11 +122,11 @@ From a repository checkout, run an example directly:
 
 ## Upgrading from 1.x
 
-Version 2.0 removes `oodocs.adapters`, moves external collectors under
+Version 1.3 removes `oodocs.adapters`, moves external collectors under
 `oodocs.integrations.*`, and replaces `Equation.from_sympy(...)` with
 `oodocs.integrations.sympy.equation_from_sympy(...)`. Import schema, CLI,
 engineering, evidence, and suite models from their focused namespaces. See the
-[v2 migration guide](docs/migration-v2.md) for the complete mapping.
+[v1.3 migration guide](docs/migration-v1.3.md) for the complete mapping.
 
 ## Development
 

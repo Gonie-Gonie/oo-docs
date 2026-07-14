@@ -140,11 +140,11 @@ and rendered with `ApiHelpBookConfig.from_pyproject(".").save_all(".")`.
 
 ## Upgrading from 1.x
 
-Version 2.0 removes `oodocs.adapters`; import external collectors from
+Version 1.3 removes `oodocs.adapters`; import external collectors from
 `oodocs.integrations.*`. Replace `Equation.from_sympy(...)` with
 `oodocs.integrations.sympy.equation_from_sympy(...)`, and import schema, CLI,
 engineering, evidence, and suite models from their focused namespaces. See the
-[v2 migration guide](https://github.com/Gonie-Gonie/oo-docs/blob/main/docs/migration-v2.md).
+[v1.3 migration guide](https://github.com/Gonie-Gonie/oo-docs/blob/main/docs/migration-v1.3.md).
 
 ## Links
 

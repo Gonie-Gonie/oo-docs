@@ -5,10 +5,10 @@ manual suite was reviewed only as acceptance input; no application-specific
 class, function, preset, filename, title, footer, or build recipe belongs in
 the library API.
 
-## v2.0.0 cleanup record
+## v1.3.0 cleanup record
 
 The original review covered the renderer, component, settings, indexing,
-workflow, preset, adapter, and evidence surfaces. In v2.0.0 the legacy
+workflow, preset, adapter, and evidence surfaces. In v1.3.0 the legacy
 `src/oodocs/adapters/` package and monolithic `src/oodocs/evidence.py` module
 were replaced and removed.
 

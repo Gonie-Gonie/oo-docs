@@ -121,7 +121,7 @@ from oodocs.validation import (
 from oodocs.workflows import OutputBundle
 
 
-_FALLBACK_VERSION = "2.0.0"
+_FALLBACK_VERSION = "1.3.0"
 
 
 def _resolve_version() -> str:

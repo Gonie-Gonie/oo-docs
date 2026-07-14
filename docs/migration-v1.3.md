@@ -1,12 +1,12 @@
-# Migrating to OODocs 2.x
+# Migrating to OODocs 1.3
 
-OODocs 2.0 requires Python 3.11 or later and narrows the top-level import
+OODocs 1.3 requires Python 3.11 or later and narrows the top-level import
 surface. Core authoring objects remain available from `oodocs`; focused models
 belong to their domain namespaces.
 
 ## Import Changes
 
-| 1.x API | 2.x replacement |
+| 1.2 API | 1.3 replacement |
 |---|---|
 | `oodocs.adapters.*` | The matching collector under `oodocs.integrations.*` |
 | Adapter `ProjectInfo`, `WorkflowSummary`, or `ManifestSummary` | `oodocs.metadata` |
