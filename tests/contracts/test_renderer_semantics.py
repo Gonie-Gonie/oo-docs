@@ -365,7 +365,13 @@ def test_pdf_builtin_cid_fallback_preserves_unicode_without_system_fonts(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(pdf_renderer_module, "SYSTEM_FONT_VARIANTS", {})
-    default_document = Document("Unicode", Paragraph("400 CO₂"))
+    renderer = pdf_renderer_module.PdfRenderer()
+    assert renderer._resolve_font("Times New Roman", False, False) == "Times-Roman"
+
+    default_document = Document(
+        "Unicode",
+        Paragraph("ASCII body. ", "400 CO₂"),
+    )
     korean_document = Document(
         "한국어",
         Paragraph("공용 기술 설명서. See 1장 and 1.1절."),

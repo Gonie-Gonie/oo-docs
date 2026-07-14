@@ -15,6 +15,8 @@ Attributes:
         resolution.
     BUILTIN_CID_FONT_FALLBACKS: ReportLab Unicode CID fonts used when common
         system fonts are unavailable.
+    BUILTIN_TEXT_CID_FONT_FALLBACKS: Unicode CID fonts used only for text that
+        cannot be represented by ReportLab's built-in WinAnsi fonts.
     SYSTEM_FONT_VARIANTS: Optional Windows system font files used when
         registering PDF fonts.
 """
@@ -208,10 +210,24 @@ FONT_FAMILY_ALIASES = {
 }
 
 BUILTIN_CID_FONT_FALLBACKS = {
-    "times new roman": "HYSMyeongJo-Medium",
     "malgun gothic": "HYGothic-Medium",
     "nanumgothic": "HYGothic-Medium",
     "noto sans cjk kr": "HYGothic-Medium",
+}
+
+BUILTIN_TEXT_CID_FONT_FALLBACKS = {
+    "Times-Roman": "HYSMyeongJo-Medium",
+    "Times-Bold": "HYSMyeongJo-Medium",
+    "Times-Italic": "HYSMyeongJo-Medium",
+    "Times-BoldItalic": "HYSMyeongJo-Medium",
+    "Helvetica": "HYGothic-Medium",
+    "Helvetica-Bold": "HYGothic-Medium",
+    "Helvetica-Oblique": "HYGothic-Medium",
+    "Helvetica-BoldOblique": "HYGothic-Medium",
+    "Courier": "HYGothic-Medium",
+    "Courier-Bold": "HYGothic-Medium",
+    "Courier-Oblique": "HYGothic-Medium",
+    "Courier-BoldOblique": "HYGothic-Medium",
 }
 
 SYSTEM_FONT_VARIANTS = {
@@ -4084,12 +4100,14 @@ class PdfRenderer:
         chip_style = theme.stylesheet.resolve("chip", fragment.chip_style, None)
         base_size = fragment.style.font_size or base_size or theme.typography.body_font_size
         size = max(base_size + chip_style.font_size_delta, 6.0)
+        display_text = fragment.display_text(chip_style)
         font_name = self._resolve_font(
             chip_style.font_name or fragment.style.font_name or theme.resolve_body_font(),
             chip_style.bold,
             chip_style.italic,
         )
-        text = escape(fragment.display_text(chip_style)).replace("\n", " ")
+        font_name = self._resolve_text_font(font_name, display_text)
+        text = escape(display_text).replace("\n", " ")
         font_attrs = [
             f'face="{font_name}"',
             f'size="{size}"',
@@ -4127,6 +4145,7 @@ class PdfRenderer:
             )
             else self._resolve_font(style.font_name or theme.resolve_body_font(), bold, italic)
         )
+        font_name = self._resolve_text_font(font_name, rendered_text)
         size = style.font_size or base_size or theme.typography.body_font_size
 
         font_attrs: list[str] = []
@@ -4227,6 +4246,20 @@ class PdfRenderer:
             pdfmetrics.registerFont(UnicodeCIDFont(registered_name))
         self._registered_fonts[key] = registered_name
         return registered_name
+
+    def _resolve_text_font(self, font_name: str, text_value: str) -> str:
+        """Use a Unicode CID fallback only for text outside WinAnsi."""
+
+        try:
+            text_value.encode("cp1252")
+        except UnicodeEncodeError:
+            registered_name = BUILTIN_TEXT_CID_FONT_FALLBACKS.get(font_name)
+            if registered_name is None:
+                return font_name
+            if registered_name not in pdfmetrics.getRegisteredFontNames():
+                pdfmetrics.registerFont(UnicodeCIDFont(registered_name))
+            return registered_name
+        return font_name
 
     def _resolve_fragment_text(self, fragment: Text, theme: Theme, render_index: RenderIndex) -> str:
         if isinstance(fragment, _BlockReference):
