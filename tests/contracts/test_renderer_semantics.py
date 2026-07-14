@@ -17,11 +17,13 @@ from zipfile import ZipFile
 from docx import Document as WordDocument
 from pypdf import PdfReader
 import pytest
+import reportlab
 
 from oodocs import (
     Chapter,
     Document,
     DocumentSettings,
+    ListOfReferences,
     Paragraph,
     Part,
     Section,
@@ -29,12 +31,14 @@ from oodocs import (
     SubFigureGroup,
     Table,
     Theme,
+    inline_code,
 )
 from oodocs.components.blocks import AlignedEquation, Appendix
 from oodocs.components.descriptions import DescriptionList
 from oodocs.components.matter import BackMatter, FrontMatter, MainMatter
 from oodocs.layout.indexing import build_render_index
 from oodocs.renderers import pdf as pdf_renderer_module
+from oodocs.styles import TypographyDefaults
 from tests.fixtures.manual_suite import (
     ASSET_NAMES,
     LONG_TABLE_ROW_COUNT,
@@ -390,3 +394,71 @@ def test_pdf_builtin_cid_fallback_preserves_unicode_without_system_fonts(
     assert "400 CO₂" in default_text
     assert "공용 기술 설명서" in korean_text
     assert "See 1장 and 1.1절." in korean_text
+
+
+@pytest.mark.render
+def test_pdf_registered_ttfont_uses_unicode_fallback_only_for_missing_glyphs(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    vera_path = Path(reportlab.__file__).parent / "fonts" / "Vera.ttf"
+    family_name = "OODocs Test Sans"
+    monkeypatch.setattr(
+        pdf_renderer_module,
+        "SYSTEM_FONT_VARIANTS",
+        {
+            family_name: {
+                (False, False): [str(vera_path)],
+                (True, False): [str(vera_path)],
+                (False, True): [str(vera_path)],
+                (True, True): [str(vera_path)],
+            }
+        },
+    )
+    renderer = pdf_renderer_module.PdfRenderer()
+    registered_name = renderer._resolve_font(family_name, False, False)
+
+    assert vera_path.is_file()
+    assert registered_name == f"{family_name}-0-0"
+    assert renderer._resolve_text_font(registered_name, "ASCII") == registered_name
+    assert (
+        renderer._resolve_text_font(registered_name, "그림")
+        == "HYGothic-Medium"
+    )
+
+    theme = Theme(
+        typography=TypographyDefaults(
+            body_font_name=family_name,
+            monospace_font_name=family_name,
+        )
+    )
+    document = Document(
+        "Unicode glyph coverage",
+        Paragraph("Label ", inline_code("그림"), " / 400 CO₂"),
+        settings=DocumentSettings(theme=theme),
+    )
+
+    path = document.save_pdf(tmp_path / "registered-ttfont-fallback.pdf")
+    extracted = "\n".join(page.extract_text() or "" for page in PdfReader(path).pages)
+
+    assert "Label 그림 / 400 CO₂" in " ".join(extracted.split())
+
+
+@pytest.mark.render
+def test_pdf_back_matter_generated_page_does_not_add_a_blank_page(
+    tmp_path: Path,
+) -> None:
+    document = Document(
+        "Matter page breaks",
+        MainMatter(Chapter("Body", Paragraph("Main matter text."))),
+        BackMatter(ListOfReferences()),
+    )
+
+    path = document.save_pdf(tmp_path / "back-matter-page-break.pdf")
+    reader = PdfReader(path)
+    page_text = [(page.extract_text() or "").strip() for page in reader.pages]
+
+    assert len(reader.pages) == 2
+    assert all(page_text)
+    assert "Body" in page_text[0]
+    assert "References" in page_text[1]

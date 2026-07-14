@@ -936,14 +936,15 @@ class PdfRenderer:
             )
 
         if back_children:
-            story.extend([PageNumberTransition("back"), RLPageBreak()])
-            story.extend(
-                self._render_top_level_children(
-                    back_children,
-                    context,
-                    follows_existing_content=False,
-                )
+            rendered_back = self._render_top_level_children(
+                back_children,
+                context,
+                follows_existing_content=False,
             )
+            story.append(PageNumberTransition("back"))
+            if not rendered_back or not isinstance(rendered_back[0], RLPageBreak):
+                story.append(RLPageBreak())
+            story.extend(rendered_back)
 
         if self._should_auto_render_comment_list(document, render_index):
             story.extend(self.render_comment_list(ListOfComments(), context))
@@ -4253,9 +4254,36 @@ class PdfRenderer:
         try:
             text_value.encode("cp1252")
         except UnicodeEncodeError:
+            try:
+                registered_font = pdfmetrics.getFont(font_name)
+            except KeyError:
+                registered_font = None
+            if isinstance(registered_font, TTFont):
+                glyph_map = registered_font.face.charToGlyph
+                relevant_code_points = {
+                    ord(character)
+                    for character in text_value
+                    if character.isprintable() and not character.isspace()
+                }
+                if all(
+                    glyph_map.get(code_point, 0) != 0
+                    for code_point in relevant_code_points
+                ):
+                    return font_name
+
             registered_name = BUILTIN_TEXT_CID_FONT_FALLBACKS.get(font_name)
             if registered_name is None:
-                return font_name
+                normalized_name = font_name.casefold()
+                uses_serif_fallback = (
+                    "times" in normalized_name
+                    or "cambria" in normalized_name
+                    or ("serif" in normalized_name and "sans" not in normalized_name)
+                )
+                registered_name = (
+                    "HYSMyeongJo-Medium"
+                    if uses_serif_fallback
+                    else "HYGothic-Medium"
+                )
             if registered_name not in pdfmetrics.getRegisteredFontNames():
                 pdfmetrics.registerFont(UnicodeCIDFont(registered_name))
             return registered_name
