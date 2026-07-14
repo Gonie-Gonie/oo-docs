@@ -1,4 +1,4 @@
-"""Build an engineering method report with numbered algorithms."""
+"""Build an engineering report with algorithms, quantities, and equations."""
 
 from __future__ import annotations
 
@@ -19,7 +19,8 @@ from oodocs import (
     TitleMatter,
     inline_code,
 )
-from oodocs.engineering import Algorithm
+from oodocs.engineering import Algorithm, NumberFormat, Quantity
+from oodocs.equations import AlignedEquation, EquationLine
 
 
 OUTPUT_DIR = Path("artifacts") / "engineering-report-example"
@@ -68,6 +69,19 @@ def build_document() -> Document:
     """Build the engineering report example document."""
 
     quality_algorithm = build_quality_algorithm()
+    corrected_drift = EquationLine(
+        r"d_c &= d_r - d_b",
+        identifier="corrected-drift",
+    )
+    normalized_score = EquationLine(
+        r"q &= \frac{d_c}{d_{limit}}",
+        identifier="normalized-quality-score",
+    )
+    derivation = AlignedEquation(
+        corrected_drift,
+        normalized_score,
+        numbering="each",
+    )
     return Document(
         "Engineering Report Example",
         TableOfContents(max_level=2),
@@ -94,6 +108,21 @@ def build_document() -> Document:
                 quality_algorithm,
             ),
             Section(
+                "Threshold Derivation",
+                Paragraph(
+                    "The corrected drift is defined in ",
+                    corrected_drift.ref(),
+                    ". The acceptance limit is ",
+                    Quantity(
+                        0.3,
+                        unit="%",
+                        number_format=NumberFormat(decimals=1),
+                    ),
+                    ".",
+                ),
+                derivation,
+            ),
+            Section(
                 "Verification Summary",
                 Table(
                     ["Check", "Status", "Evidence"],
@@ -105,11 +134,11 @@ def build_document() -> Document:
         ),
         settings=DocumentSettings(
             metadata=DocumentMetadata(
-                author="OODocs Contributors",
-                description="Engineering method report with a numbered algorithm and verification evidence.",
+                author="Example Engineering Group",
+                description="Engineering method report with algorithms, quantities, equations, and verification evidence.",
             ),
             title_matter=TitleMatter(
-                subtitle="numbered pseudocode, requirements, and verification tables",
+                subtitle="pseudocode, quantities, aligned equations, and verification tables",
             ),
         ),
     )

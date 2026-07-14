@@ -399,7 +399,7 @@ def test_readme_latex_translations_include_template_class_policy() -> None:
     assert "`TechnicalReportTemplate`" in translations
     assert "`SoftwareManualTemplate`" in translations
     assert "`BookTemplate`" in translations
-    assert "`CoverPagePreset.eplus_simple(...)`" in translations
+    assert "`CoverPagePreset.accented(...)` or `CoverPagePreset.centered_logo(...)`" in translations
     assert "`Section(...)`, `Chapter(...)`, `Part(...)`, and `Appendix(...)`" in translations
 
 
@@ -677,7 +677,7 @@ def test_template_preset_support_reference_documents_class_policy() -> None:
         "`SoftwareManualTemplate(...)`",
         "`BookTemplate(...)`",
         "`front_matter=...`, `parts=...`, `chapters=...`, `appendices=...`, and `back_matter=...`",
-        "`CoverPagePreset.eplus_simple(...)`",
+        "`CoverPagePreset.accented(...)` or `CoverPagePreset.centered_logo(...)`",
         "`Section(...)`, `Chapter(...)`, `Part(...)`, and `Appendix(...)`",
         "`Section(..., numbered=False)`",
         "`Chapter(...)` and `Part(...)`",

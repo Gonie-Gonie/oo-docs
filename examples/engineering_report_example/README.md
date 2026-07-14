@@ -3,9 +3,10 @@
 This example shows how to keep engineering-method details in a focused report
 instead of folding them into the general user guide.
 
-It uses `oodocs.engineering.Algorithm` for numbered pseudocode, ordinary
-`Table` objects for requirements and verification evidence, and normal
-sections for the surrounding method explanation.
+It uses `oodocs.engineering.Algorithm` for numbered pseudocode,
+`oodocs.engineering.Quantity` for formatted values, and per-line references in
+an `AlignedEquation`. Ordinary `Table` objects hold requirements and
+verification evidence.
 
 Render the example:
 

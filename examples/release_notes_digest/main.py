@@ -392,12 +392,12 @@ def build_release_notes_document(
         ),
         settings=DocumentSettings(
             metadata=DocumentMetadata(
-                author="OODocs Contributors",
+                author="Example Documentation Team",
                 description="Release-note digest generated from repository Markdown files",
             ),
             title_matter=TitleMatter(
                 subtitle="Markdown import, semantic sorting, and release workflow documentation",
-                authors=[Author("OODocs Contributors")],
+                authors=[Author("Example Documentation Team")],
                 author_layout=AuthorLayout(
                     mode="stacked",
                     show_affiliations=False,

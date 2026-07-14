@@ -12,6 +12,7 @@ from oodocs.components.base import BlockInput, Body
 from oodocs.components.references import CitationLibrary, CitationSource, coerce_citation_library
 from oodocs.core import PathLike
 from oodocs.settings import DocumentSettings
+from oodocs.layout.matter import MatterLayout, partition_document_matter
 
 if TYPE_CHECKING:
     from oodocs.importers.notebook import NotebookImportOptions
@@ -327,12 +328,17 @@ class Document:
             different sections.
         """
 
-        for index, child in enumerate(self.body.children):
-            level = getattr(child, "level", None)
-            numbered = getattr(child, "numbered", False)
-            if level in {0, 1} and numbered:
-                return self.body.children[:index], self.body.children[index:]
-        return list(self.body.children), []
+        layout = self.matter_layout()
+        return list(layout.front.children), [*layout.main.children, *layout.back.children]
+
+    def matter_layout(self) -> MatterLayout:
+        """Return the shared explicit-or-inferred document-matter layout.
+
+        Returns:
+            The normalized front-, main-, and back-matter partition.
+        """
+
+        return partition_document_matter(self.body.children)
 
     def validate(
         self,

@@ -7,6 +7,7 @@ from typing import Sequence
 
 from oodocs.components.base import Block, Component
 from oodocs.components.blocks import (
+    AlignedEquation,
     Appendix,
     Box,
     BulletList,
@@ -20,6 +21,7 @@ from oodocs.components.blocks import (
     Part,
     Section,
 )
+from oodocs.components.equations import EquationLine
 from oodocs.components.generated import (
     ListOfComments,
     GeneratedListScope,
@@ -37,14 +39,21 @@ from oodocs.components.inline import (
     Comment,
     Footnote,
     Hyperlink,
+    ObjectLink,
     ReferenceFormat,
     Text,
 )
+from oodocs.components.descriptions import DescriptionList
+from oodocs.components.matter import DocumentMatter
 from oodocs.components.media import Figure, SubFigure, SubFigureGroup, SubTable, SubTableGroup, Table
 from oodocs.components.references import CitationLibrary, CitationSource, normalize_reference_sort
 from oodocs.core import OODocsError
 from oodocs.document import Document
-from oodocs.styles import Theme
+from oodocs.styles import ReferenceTemplate, Theme
+from oodocs.styles.numbering import CounterPolicy, NumberingDefaults
+
+
+CounterNumber = int | str
 
 
 @dataclass(slots=True)
@@ -111,7 +120,7 @@ class FootnoteReferenceEntry:
         ```
     """
 
-    number: int
+    number: CounterNumber
     footnote: Footnote
     stream: str = "default"
     anchor: str = ""
@@ -210,7 +219,7 @@ class CaptionEntry:
         ```
     """
 
-    number: int
+    number: CounterNumber
     block: Table | SubTableGroup | Figure | SubFigureGroup
     anchor: str
     scope: EntryScope = field(default_factory=EntryScope)
@@ -255,7 +264,7 @@ class CodeBlockEntry:
         scope: Ancestor scope used by generated lists.
     """
 
-    number: int
+    number: CounterNumber
     block: CodeBlock
     anchor: str
     scope: EntryScope = field(default_factory=EntryScope)
@@ -274,6 +283,8 @@ class ResolvedBlockReference:
     label: str
     value: str
     anchor: str | None
+    target_kind: str = ""
+    reference_template: ReferenceTemplate | None = None
 
     def text(self, reference_format: ReferenceFormat | None = None) -> str:
         """Return the formatted reference text.
@@ -286,6 +297,11 @@ class ResolvedBlockReference:
         """
 
         return _format_reference_text(self, reference_format or ReferenceFormat())
+
+    def template(self) -> ReferenceTemplate:
+        """Return the resolved template, including compatibility fallback."""
+
+        return self.reference_template or ReferenceTemplate(self.label)
 
 
 @dataclass(slots=True)
@@ -354,8 +370,8 @@ class RenderIndex:
 
     tables: list[CaptionEntry] = field(default_factory=list)
     figures: list[CaptionEntry] = field(default_factory=list)
-    table_numbers: dict[int, int] = field(default_factory=dict)
-    figure_numbers: dict[int, int] = field(default_factory=dict)
+    table_numbers: dict[int, CounterNumber] = field(default_factory=dict)
+    figure_numbers: dict[int, CounterNumber] = field(default_factory=dict)
     subfigure_labels: dict[int, str] = field(default_factory=dict)
     subfigure_reference_labels: dict[int, str] = field(default_factory=dict)
     subtable_labels: dict[int, str] = field(default_factory=dict)
@@ -374,15 +390,19 @@ class RenderIndex:
     heading_numbers: dict[int, str] = field(default_factory=dict)
     heading_anchors: dict[int, str] = field(default_factory=dict)
     paragraph_numbers: dict[int, int] = field(default_factory=dict)
-    equation_numbers: dict[int, int] = field(default_factory=dict)
-    code_block_numbers: dict[int, int] = field(default_factory=dict)
+    equation_numbers: dict[int, CounterNumber] = field(default_factory=dict)
+    code_block_numbers: dict[int, CounterNumber] = field(default_factory=dict)
     code_blocks: list[CodeBlockEntry] = field(default_factory=list)
     box_numbers: dict[int, int] = field(default_factory=dict)
     countables: list[CountableEntry] = field(default_factory=list)
-    countable_numbers: dict[int, int] = field(default_factory=dict)
+    countable_numbers: dict[int, CounterNumber] = field(default_factory=dict)
     countable_counters: dict[str, int] = field(default_factory=dict)
     block_anchors: dict[int, str] = field(default_factory=dict)
     generated_scopes: dict[int, EntryScope] = field(default_factory=dict)
+    _counter_values: dict[tuple[str, str, str, int | None], int] = field(
+        default_factory=dict,
+        repr=False,
+    )
 
     def scoped_headings(self, block: TableOfContents) -> list[HeadingEntry]:
         """Return TOC headings visible to ``block`` after scope filtering.
@@ -543,7 +563,7 @@ class RenderIndex:
             return generated_scope.heading_path[-1] in entry_scope.heading_path
         return False
 
-    def table_number(self, table: Table | SubTable | SubTableGroup) -> int | None:
+    def table_number(self, table: Table | SubTable | SubTableGroup) -> CounterNumber | None:
         """Return the assigned table number for a captioned table.
 
         Args:
@@ -560,7 +580,7 @@ class RenderIndex:
 
         return self.table_numbers.get(id(table))
 
-    def figure_number(self, figure: Figure | SubFigure | SubFigureGroup) -> int | None:
+    def figure_number(self, figure: Figure | SubFigure | SubFigureGroup) -> CounterNumber | None:
         """Return the assigned figure number for a captioned figure.
 
         Args:
@@ -759,12 +779,12 @@ class RenderIndex:
 
         number = self.table_number(table)
         if number is None:
-            return None
+            return self.block_anchor(table)
         if isinstance(table, SubTable):
             label = self.subtable_label(table)
             if label is not None:
-                return f"table_{number}_{label}"
-        return f"table_{number}"
+                return f"table_{_anchor_number_token(number)}_{label}"
+        return f"table_{_anchor_number_token(number)}"
 
     def figure_anchor(self, figure: Figure | SubFigure | SubFigureGroup) -> str | None:
         """Return the bookmark name for a captioned figure.
@@ -778,12 +798,12 @@ class RenderIndex:
 
         number = self.figure_number(figure)
         if number is None:
-            return None
+            return self.block_anchor(figure)
         if isinstance(figure, SubFigure):
             label = self.subfigure_label(figure)
             if label is not None:
-                return f"figure_{number}_{label}"
-        return f"figure_{number}"
+                return f"figure_{_anchor_number_token(number)}_{label}"
+        return f"figure_{_anchor_number_token(number)}"
 
     def citation_anchor(self, target: CitationSource | str) -> str:
         """Return the bookmark name for a cited reference entry.
@@ -829,7 +849,7 @@ class RenderIndex:
 
         return self.paragraph_numbers.get(id(target))
 
-    def equation_number(self, target: Equation) -> int | None:
+    def equation_number(self, target: Equation | EquationLine) -> CounterNumber | None:
         """Return the assigned equation reference number.
 
         Args:
@@ -841,7 +861,7 @@ class RenderIndex:
 
         return self.equation_numbers.get(id(target))
 
-    def code_block_number(self, target: CodeBlock) -> int | None:
+    def code_block_number(self, target: CodeBlock) -> CounterNumber | None:
         """Return the assigned code block reference number.
 
         Args:
@@ -865,7 +885,7 @@ class RenderIndex:
 
         return self.box_numbers.get(id(target))
 
-    def countable_number(self, target: CountableBlock) -> int | None:
+    def countable_number(self, target: CountableBlock) -> CounterNumber | None:
         """Return the assigned number for a theorem-like block.
 
         Args:
@@ -888,6 +908,17 @@ class RenderIndex:
         """
 
         return self.block_anchors.get(id(target))
+
+    def anchor_for(self, target: object) -> str | None:
+        """Return the shared internal anchor for any indexed document object."""
+
+        if isinstance(target, (Table, SubTable, SubTableGroup)):
+            return self.table_anchor(target)
+        if isinstance(target, (Figure, SubFigure, SubFigureGroup)):
+            return self.figure_anchor(target)
+        if isinstance(target, (Part, Section, Appendix)):
+            return self.heading_anchor(target)
+        return self.block_anchor(target)
 
     def anchors(self) -> set[str]:
         """Return all internal anchor names generated for this document.
@@ -948,12 +979,20 @@ def resolve_block_reference(
                 raise OODocsError(
                     "Subtable references require the target subtable to belong to a captioned SubTableGroup"
                 )
-            return ResolvedBlockReference(
-                label,
+            return _resolved_reference(
+                "table",
                 f"{number}{subtable_label}",
-                render_index.table_anchor(target),
+                render_index.anchor_for(target),
+                theme,
+                fallback_label=label,
             )
-        return ResolvedBlockReference(label, str(number), render_index.table_anchor(target))
+        return _resolved_reference(
+            "table",
+            str(number),
+            render_index.anchor_for(target),
+            theme,
+            fallback_label=label,
+        )
 
     if isinstance(target, (Figure, SubFigure, SubFigureGroup)):
         number = render_index.figure_number(target)
@@ -969,56 +1008,91 @@ def resolve_block_reference(
                     "Subfigure references require the target subfigure to belong to a captioned SubFigureGroup"
                 )
             reference_label = render_index.subfigure_reference_label(target)
-            return ResolvedBlockReference(
-                label,
+            return _resolved_reference(
+                "figure",
                 f"{number}{reference_label or f'({subfigure_label})'}",
-                render_index.figure_anchor(target),
+                render_index.anchor_for(target),
+                theme,
+                fallback_label=label,
             )
-        return ResolvedBlockReference(label, str(number), render_index.figure_anchor(target))
+        return _resolved_reference(
+            "figure",
+            str(number),
+            render_index.anchor_for(target),
+            theme,
+            fallback_label=label,
+        )
 
     if isinstance(target, Part):
         number_label = render_index.heading_number(target)
         if number_label is None:
             raise OODocsError("Part references require the target part to be numbered and included in the document")
-        return ResolvedBlockReference("", number_label, render_index.heading_anchor(target))
+        return _resolved_reference(
+            "part",
+            number_label,
+            render_index.anchor_for(target),
+            theme,
+        )
 
     if isinstance(target, Section):
         number_label = render_index.heading_number(target)
         if number_label is None:
             raise OODocsError("Section references require the target section to be numbered and included in the document")
-        label = "Chapter" if target.level == 1 else "Section"
-        return ResolvedBlockReference(label, number_label, render_index.heading_anchor(target))
+        kind = "chapter" if target.level == 1 else "section"
+        return _resolved_reference(
+            kind,
+            number_label,
+            render_index.anchor_for(target),
+            theme,
+        )
 
-    if isinstance(target, Equation):
+    if isinstance(target, (Equation, EquationLine)):
         number = render_index.equation_number(target)
         if number is None:
             raise OODocsError(
-                "Equation references require the target equation to be numbered and included in the document, "
+                "Equation references require the target equation or row to be numbered and included in the document, "
                 "or the reference must provide a custom label"
             )
-        return ResolvedBlockReference(
-            target.reference_label,
+        return _resolved_reference(
+            "equation",
             str(number),
-            render_index.block_anchor(target),
+            render_index.anchor_for(target),
+            theme,
+            fallback_label=target.reference_label,
         )
 
     if isinstance(target, Paragraph):
         number = render_index.paragraph_number(target)
         if number is None:
             raise OODocsError("Paragraph references require the target paragraph to be included in the document")
-        return ResolvedBlockReference("Paragraph", str(number), render_index.block_anchor(target))
+        return _resolved_reference(
+            "paragraph",
+            str(number),
+            render_index.anchor_for(target),
+            theme,
+        )
 
     if isinstance(target, CodeBlock):
         number = render_index.code_block_number(target)
         if number is None:
             raise OODocsError("Code block references require the target code block to be included in the document")
-        return ResolvedBlockReference("Code block", str(number), render_index.block_anchor(target))
+        return _resolved_reference(
+            "code_block",
+            str(number),
+            render_index.anchor_for(target),
+            theme,
+        )
 
     if isinstance(target, Box):
         number = render_index.box_number(target)
         if number is None:
             raise OODocsError("Box references require the target box to be included in the document")
-        return ResolvedBlockReference("Box", str(number), render_index.block_anchor(target))
+        return _resolved_reference(
+            "box",
+            str(number),
+            render_index.anchor_for(target),
+            theme,
+        )
 
     if isinstance(target, CountableBlock):
         number = render_index.countable_number(target)
@@ -1027,13 +1101,33 @@ def resolve_block_reference(
                 "CountableBlock references require the target to be numbered and included in the document, "
                 "or the reference must provide a custom label"
             )
-        return ResolvedBlockReference(
-            target.reference_label,
+        return _resolved_reference(
+            "countable",
             str(number),
-            render_index.block_anchor(target),
+            render_index.anchor_for(target),
+            theme,
+            fallback_label=target.reference_label,
         )
 
     raise OODocsError(f"Unsupported reference target: {type(target)!r}")
+
+
+def _resolved_reference(
+    kind: str,
+    value: str,
+    anchor: str | None,
+    theme: Theme,
+    *,
+    fallback_label: str | None = None,
+) -> ResolvedBlockReference:
+    template = theme.resolve_reference_template(kind, fallback_label)
+    return ResolvedBlockReference(
+        template.singular_label,
+        value,
+        anchor,
+        target_kind=kind,
+        reference_template=template,
+    )
 
 
 def reference_text_pieces(
@@ -1088,12 +1182,20 @@ def _multi_reference_pieces(
         for item in resolved
     }
     if len(labels) == 1 and next(iter(labels)):
-        label = _plural_reference_label(next(iter(labels)), reference_format)
-        pieces = [ReferenceTextPiece(_apply_reference_case(label, reference_format) + " ")]
-        pieces.extend(
-            _join_reference_value_pieces(resolved, reference_format)
+        template = resolved[0].template()
+        label = _plural_reference_label(
+            next(iter(labels)),
+            reference_format,
+            template,
         )
-        return pieces
+        return _templated_reference_value_pieces(
+            resolved,
+            label,
+            reference_format.template
+            or template.plural_template
+            or template.template,
+            reference_format,
+        )
     return _join_reference_text_pieces(resolved, reference_format)
 
 
@@ -1105,13 +1207,21 @@ def _range_reference_pieces(
     start_label = _effective_reference_label(start.label, reference_format)
     end_label = _effective_reference_label(end.label, reference_format)
     if start_label == end_label and start_label:
-        label = _plural_reference_label(start_label, reference_format)
-        return [
-            ReferenceTextPiece(_apply_reference_case(label, reference_format) + " "),
-            ReferenceTextPiece(start.value, start.anchor),
-            ReferenceTextPiece(reference_format.range_separator),
-            ReferenceTextPiece(end.value, end.anchor),
-        ]
+        template = start.template()
+        label = _plural_reference_label(
+            start_label,
+            reference_format,
+            template,
+        )
+        return _templated_reference_value_pieces(
+            (start, end),
+            label,
+            reference_format.template
+            or template.plural_template
+            or template.template,
+            reference_format,
+            range_reference=True,
+        )
     return [
         ReferenceTextPiece(_format_reference_text(start, reference_format), start.anchor),
         ReferenceTextPiece(reference_format.range_separator),
@@ -1128,6 +1238,36 @@ def _join_reference_value_pieces(
         if index:
             pieces.append(ReferenceTextPiece(_reference_separator(index, len(resolved), reference_format)))
         pieces.append(ReferenceTextPiece(item.value, item.anchor))
+    return pieces
+
+
+def _templated_reference_value_pieces(
+    resolved: Sequence[ResolvedBlockReference],
+    label: str,
+    template: str,
+    reference_format: ReferenceFormat,
+    *,
+    range_reference: bool = False,
+) -> list[ReferenceTextPiece]:
+    before_template, after_template = template.split("{value}", 1)
+    effective_label = _apply_reference_case(label, reference_format)
+    before = before_template.format(label=effective_label)
+    after = after_template.format(label=effective_label)
+    pieces: list[ReferenceTextPiece] = []
+    if before:
+        pieces.append(ReferenceTextPiece(before))
+    if range_reference:
+        pieces.extend(
+            [
+                ReferenceTextPiece(resolved[0].value, resolved[0].anchor),
+                ReferenceTextPiece(reference_format.range_separator),
+                ReferenceTextPiece(resolved[-1].value, resolved[-1].anchor),
+            ]
+        )
+    else:
+        pieces.extend(_join_reference_value_pieces(resolved, reference_format))
+    if after:
+        pieces.append(ReferenceTextPiece(after))
     return pieces
 
 
@@ -1166,9 +1306,8 @@ def _format_reference_text(
 ) -> str:
     label = _effective_reference_label(reference.label, reference_format)
     label = _apply_reference_case(label, reference_format)
-    if not label:
-        return reference.value
-    return f"{label} {reference.value}"
+    template = reference_format.template or reference.template().template
+    return template.format(label=label, value=reference.value).strip()
 
 
 def _effective_reference_label(
@@ -1181,9 +1320,12 @@ def _effective_reference_label(
 def _plural_reference_label(
     label: str,
     reference_format: ReferenceFormat,
+    template: ReferenceTemplate,
 ) -> str:
     if reference_format.plural_label is not None:
         return reference_format.plural_label
+    if template.plural_label is not None:
+        return template.plural_label
     if label.endswith(".") or label.endswith("s"):
         return label
     return f"{label}s"
@@ -1226,6 +1368,65 @@ def _reference_entry_sort_key(
         key = source.key or ""
         return (not bool(key), key.lower(), source.title.lower(), entry.number)
     return (entry.number,)
+
+
+def _theme_numbering(theme: Theme) -> NumberingDefaults:
+    numbering = getattr(theme, "numbering", None)
+    return numbering if isinstance(numbering, NumberingDefaults) else NumberingDefaults()
+
+
+def _counter_scope_identity(
+    policy: CounterPolicy,
+    scope: EntryScope,
+) -> int | None:
+    if policy.scope == "document":
+        return None
+    if policy.scope == "part":
+        return scope.part_id
+    if policy.scope == "chapter":
+        return scope.chapter_id
+    return scope.heading_path[-1] if scope.heading_path else None
+
+
+def _counter_parent_number(
+    render_index: RenderIndex,
+    policy: CounterPolicy,
+    scope: EntryScope,
+) -> str | None:
+    parent_id = _counter_scope_identity(policy, scope)
+    if parent_id is None:
+        return None
+    return render_index.heading_numbers.get(parent_id)
+
+
+def _next_scoped_number(
+    render_index: RenderIndex,
+    *,
+    family: str,
+    policy: CounterPolicy,
+    scope: EntryScope,
+    namespace: str = "",
+) -> CounterNumber:
+    scope_id = _counter_scope_identity(policy, scope)
+    key = (family, namespace, policy.scope, scope_id)
+    value = render_index._counter_values.get(key, policy.counter.start - 1) + 1
+    render_index._counter_values[key] = value
+    if policy.preserves_legacy_integer():
+        return value
+    parent = _counter_parent_number(render_index, policy, scope)
+    if policy.include_parent and parent is None:
+        # Validation reports the missing numbered parent. Keep the index
+        # usable so diagnostics and custom-label links can still render.
+        return policy.counter.format_value(value)
+    return policy.format_value(value, parent=parent)
+
+
+def _anchor_number_token(number: CounterNumber) -> str:
+    token = "".join(
+        character if character.isalnum() or character == "_" else "_"
+        for character in str(number)
+    ).strip("_")
+    return token or "number"
 
 
 def build_render_index(document: Document) -> RenderIndex:
@@ -1280,7 +1481,12 @@ def _register_block_anchor(render_index: RenderIndex, block: object, prefix: str
     anchor = render_index.block_anchors.get(id(block))
     if anchor is not None:
         return anchor
-    anchor = f"{prefix}_{len(render_index.block_anchors) + 1}"
+    custom_anchor = getattr(block, "anchor", None)
+    anchor = (
+        str(custom_anchor)
+        if custom_anchor
+        else f"{prefix}_{len(render_index.block_anchors) + 1}"
+    )
     render_index.block_anchors[id(block)] = anchor
     return anchor
 
@@ -1306,10 +1512,23 @@ def _index_blocks(
     scope: EntryScope,
     appendix: bool,
 ) -> None:
+    numbering_defaults = _theme_numbering(theme)
     for block in blocks:
         if isinstance(block, Component):
             _index_blocks(
                 block.composed_blocks(),
+                render_index,
+                citations,
+                theme,
+                heading_counters=heading_counters,
+                part_counter=part_counter,
+                scope=scope,
+                appendix=appendix,
+            )
+            continue
+        if isinstance(block, DocumentMatter):
+            _index_blocks(
+                block.children,
                 render_index,
                 citations,
                 theme,
@@ -1326,6 +1545,20 @@ def _index_blocks(
             if block.title is not None:
                 _index_inlines(block.title, render_index, citations)
             _index_inlines(block.content, render_index, citations)
+            continue
+        if isinstance(block, DescriptionList):
+            for item in block.items:
+                _index_inlines(item.term, render_index, citations)
+                _index_blocks(
+                    item.children,
+                    render_index,
+                    citations,
+                    theme,
+                    heading_counters=heading_counters,
+                    part_counter=part_counter,
+                    scope=scope,
+                    appendix=appendix,
+                )
             continue
         if isinstance(block, (BulletList, NumberedList)):
             for item, child_lists in zip(block.items, block.item_children):
@@ -1346,7 +1579,12 @@ def _index_blocks(
             continue
         if isinstance(block, CodeBlock):
             if id(block) not in render_index.code_block_numbers:
-                render_index.code_block_numbers[id(block)] = len(render_index.code_block_numbers) + 1
+                render_index.code_block_numbers[id(block)] = _next_scoped_number(
+                    render_index,
+                    family="listing",
+                    policy=numbering_defaults.listing,
+                    scope=scope,
+                )
             anchor = _register_block_anchor(render_index, block, "code")
             if block.caption is not None:
                 render_index.code_blocks.append(
@@ -1360,9 +1598,36 @@ def _index_blocks(
                 _index_inlines(block.caption.content, render_index, citations)
             continue
         if isinstance(block, Equation):
-            if block.numbered and id(block) not in render_index.equation_numbers:
-                render_index.equation_numbers[id(block)] = len(render_index.equation_numbers) + 1
             _register_block_anchor(render_index, block, "equation")
+            if isinstance(block, AlignedEquation):
+                if block.numbering == "group" and id(block) not in render_index.equation_numbers:
+                    render_index.equation_numbers[id(block)] = _next_scoped_number(
+                        render_index,
+                        family="equation",
+                        policy=numbering_defaults.equation,
+                        scope=scope,
+                    )
+                for line in block.lines:
+                    _register_block_anchor(render_index, line, "equation_line")
+                    if (
+                        block.numbering == "each"
+                        and line.numbered
+                        and id(line) not in render_index.equation_numbers
+                    ):
+                        render_index.equation_numbers[id(line)] = _next_scoped_number(
+                            render_index,
+                            family="equation",
+                            policy=numbering_defaults.equation,
+                            scope=scope,
+                        )
+                continue
+            if block.numbered and id(block) not in render_index.equation_numbers:
+                render_index.equation_numbers[id(block)] = _next_scoped_number(
+                    render_index,
+                    family="equation",
+                    policy=numbering_defaults.equation,
+                    scope=scope,
+                )
             continue
         if isinstance(block, Box):
             if id(block) not in render_index.box_numbers:
@@ -1388,8 +1653,16 @@ def _index_blocks(
             if block.numbered and block.counter is not None and id(block) not in render_index.countable_numbers:
                 # Countable blocks use named counter namespaces so theorem-like
                 # families can share or separate numbering sequences.
-                number = render_index.countable_counters.get(block.counter, 0) + 1
-                render_index.countable_counters[block.counter] = number
+                render_index.countable_counters[block.counter] = (
+                    render_index.countable_counters.get(block.counter, 0) + 1
+                )
+                number = _next_scoped_number(
+                    render_index,
+                    family="countable",
+                    namespace=block.counter,
+                    policy=numbering_defaults.countable,
+                    scope=scope,
+                )
                 render_index.countable_numbers[id(block)] = number
                 render_index.countables.append(
                     CountableEntry(
@@ -1425,7 +1698,11 @@ def _index_blocks(
             continue
         if isinstance(block, Appendix):
             _index_inlines(block.title, render_index, citations)
-            anchor = _register_heading_anchor(render_index, block) if block.toc else None
+            anchor = (
+                _register_heading_anchor(render_index, block)
+                if (block.numbered or block.toc or block.anchor)
+                else None
+            )
             if block.toc:
                 render_index.headings.append(
                     HeadingEntry(
@@ -1456,7 +1733,7 @@ def _index_blocks(
                 render_index.heading_numbers[id(block)] = number_label
             anchor = (
                 _register_heading_anchor(render_index, block)
-                if (block.numbered or block.toc)
+                if (block.numbered or block.toc or block.anchor)
                 else None
             )
             if block.toc:
@@ -1500,7 +1777,7 @@ def _index_blocks(
                 render_index.heading_numbers[id(block)] = number_label
             anchor = (
                 _register_heading_anchor(render_index, block)
-                if (block.numbered or block.toc)
+                if (block.numbered or block.toc or block.anchor)
                 else None
             )
             if block.toc:
@@ -1542,6 +1819,7 @@ def _index_blocks(
             render_index.generated_scopes[id(block)] = scope
             continue
         if isinstance(block, Table):
+            _register_block_anchor(render_index, block, "table_object")
             for header_row in block.header_rows:
                 for header in header_row:
                     _index_inlines(header.content.content, render_index, citations)
@@ -1550,43 +1828,61 @@ def _index_blocks(
                     _index_inlines(cell.content.content, render_index, citations)
             if block.caption is not None:
                 _index_inlines(block.caption.content, render_index, citations)
-                number = len(render_index.tables) + 1
+                number = _next_scoped_number(
+                    render_index,
+                    family="table",
+                    policy=numbering_defaults.table,
+                    scope=scope,
+                )
                 render_index.tables.append(
                     CaptionEntry(
                         number=number,
                         block=block,
-                        anchor=f"table_{number}",
+                        anchor=f"table_{_anchor_number_token(number)}",
                         scope=scope,
                     )
                 )
                 render_index.table_numbers[id(block)] = number
             continue
         if isinstance(block, Figure):
+            _register_block_anchor(render_index, block, "figure_object")
             if block.caption is not None:
                 _index_inlines(block.caption.content, render_index, citations)
-                number = len(render_index.figures) + 1
+                number = _next_scoped_number(
+                    render_index,
+                    family="figure",
+                    policy=numbering_defaults.figure,
+                    scope=scope,
+                )
                 render_index.figures.append(
                     CaptionEntry(
                         number=number,
                         block=block,
-                        anchor=f"figure_{number}",
+                        anchor=f"figure_{_anchor_number_token(number)}",
                         scope=scope,
                     )
                 )
                 render_index.figure_numbers[id(block)] = number
             continue
         if isinstance(block, SubFigureGroup):
+            _register_block_anchor(render_index, block, "figure_object")
             for subfigure in block.subfigures:
+                _register_block_anchor(render_index, subfigure, "figure_object")
                 if subfigure.caption is not None:
                     _index_inlines(subfigure.caption.content, render_index, citations)
             if block.caption is not None:
                 _index_inlines(block.caption.content, render_index, citations)
-                number = len(render_index.figures) + 1
+                number = _next_scoped_number(
+                    render_index,
+                    family="figure",
+                    policy=numbering_defaults.figure,
+                    scope=scope,
+                )
                 render_index.figures.append(
                     CaptionEntry(
                         number=number,
                         block=block,
-                        anchor=f"figure_{number}",
+                        anchor=f"figure_{_anchor_number_token(number)}",
                         scope=scope,
                     )
                 )
@@ -1600,7 +1896,9 @@ def _index_blocks(
                     )
             continue
         if isinstance(block, SubTableGroup):
+            _register_block_anchor(render_index, block, "table_object")
             for subtable in block.subtables:
+                _register_block_anchor(render_index, subtable, "table_object")
                 table = subtable.table
                 for header_row in table.header_rows:
                     for header in header_row:
@@ -1612,12 +1910,17 @@ def _index_blocks(
                     _index_inlines(subtable.caption.content, render_index, citations)
             if block.caption is not None:
                 _index_inlines(block.caption.content, render_index, citations)
-                number = len(render_index.tables) + 1
+                number = _next_scoped_number(
+                    render_index,
+                    family="table",
+                    policy=numbering_defaults.table,
+                    scope=scope,
+                )
                 render_index.tables.append(
                     CaptionEntry(
                         number=number,
                         block=block,
-                        anchor=f"table_{number}",
+                        anchor=f"table_{_anchor_number_token(number)}",
                         scope=scope,
                     )
                 )
@@ -1637,6 +1940,9 @@ def _index_inlines(
     citations: CitationLibrary,
 ) -> None:
     for fragment in fragments:
+        if isinstance(fragment, ObjectLink):
+            _index_inlines(fragment.label or (), render_index, citations)
+            continue
         if isinstance(fragment, BlockReference):
             if fragment.label is not None:
                 _index_inlines(fragment.label, render_index, citations)

@@ -40,8 +40,18 @@ apidoc = [
   "griffe>=1.0",
   "docstring-parser>=0.16",
 ]
-adapters = [
+integrations = [
   "PyYAML>=6.0.0",
+]
+bibtex = [
+  "bibtexparser>=1.4.0",
+]
+engineering = []
+pint = [
+  "Pint>=0.24.0",
+]
+sympy = [
+  "sympy>=1.13.0",
 ]
 examples = [
   "matplotlib>=3.10.0",
@@ -81,6 +91,7 @@ tag_regex = "^v(?P<version>\\d+\\.\\d+\\.\\d+)$"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = [".", "tests"]
 markers = [
     "slow: slow integration tests",
     "render: DOCX/PDF/HTML rendering tests",

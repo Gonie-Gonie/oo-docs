@@ -40,6 +40,7 @@ import oodocs.structure as structure_components
 import oodocs.workflows as workflow_components
 from oodocs.components.equations import BASELINE, SUBSCRIPT, SUPERSCRIPT, parse_latex_segments
 from oodocs.components.media import build_table_layout
+from oodocs.components.cover import CoverPage
 from oodocs.core import length_to_inches
 from oodocs.layout.indexing import build_render_index
 from oodocs.renderers.pdf import PdfRenderer
@@ -2611,7 +2612,7 @@ def test_page_item_scopes_filter_pdf_and_warn_for_static_outputs(tmp_path: Path)
         Chapter("Main Matter", Paragraph("Main body text.")),
         settings=DocumentSettings(
             page_layout=PageLayout(PageSize.letter()),
-            title_matter=TitleMatter(cover_page=True),
+            title_matter=TitleMatter(cover=CoverPage()),
             overlays=[
                 TextBox("ALL SCOPE", x=0.3, y=0.2, width=1.8, height=0.25, font_size=8),
                 TextBox(
@@ -3483,7 +3484,7 @@ def test_component_and_template_presets_build_renderable_documents(tmp_path: Pat
         back_matter=Paragraph("Distribution list."),
     )
     assert report_document.validate().ok
-    assert report_document.settings.title_matter.cover_page is True
+    assert report_document.settings.title_matter.cover is not None
     report_front_matter, report_main_matter = report_document.split_top_level_children()
     assert any(isinstance(child, TableOfContents) for child in report_front_matter)
     assert any(
@@ -3540,16 +3541,19 @@ def test_component_and_template_presets_build_renderable_documents(tmp_path: Pat
     assert any(isinstance(child, Appendix) for child in book_main_matter)
     assert any(isinstance(child, ListOfReferences) for child in book_document.body.children)
 
-    cover_preset = CoverPagePreset.eplus_simple(footer_label="Internal Review")
+    cover_preset = CoverPagePreset.accented(
+        organization="Example Lab",
+        footer="Internal Review",
+    )
     cover_settings = cover_preset.settings(
         metadata=DocumentMetadata(subject="Cover preset test"),
         subtitle="Release gate evidence",
         authors=[Author("QA Lead", affiliations=["Example Lab"])],
     )
-    assert cover_settings.title_matter.cover_page is True
+    assert cover_settings.title_matter.cover is cover_preset.cover
     assert cover_settings.title_matter.author_layout.mode == "stacked"
-    assert len(cover_settings.overlays) == 3
-    assert all(item.scope.kind == "cover" for item in cover_settings.overlays)
+    assert cover_settings.overlays == ()
+    assert cover_preset.cover.resolved_style().name == "Accented cover"
     cover_document = Document(
         "Cover Preset",
         Paragraph("Body content."),
@@ -4753,7 +4757,7 @@ def test_document_accepts_document_settings() -> None:
                 )
             ],
             author_layout=AuthorLayout(mode="stacked"),
-            cover_page=True,
+            cover=CoverPage(organization="Example Lab"),
         ),
         unit="cm",
         theme=Theme(page_numbers=PageNumberDefaults(show_page_numbers=True)),
@@ -4771,7 +4775,7 @@ def test_document_accepts_document_settings() -> None:
     assert title_matter.authors[0].name == "Example Author"
     assert title_matter.authors[0].affiliations[0].formatted() == "Example Lab"
     assert title_matter.author_layout.mode == "stacked"
-    assert title_matter.cover_page is True
+    assert title_matter.cover is not None
     assert document.settings.unit == "cm"
     assert round(document.settings.get_text_width(), 2) == 15.92
     assert document.settings.theme.page_numbers.show_page_numbers is True

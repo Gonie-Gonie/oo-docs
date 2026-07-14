@@ -76,8 +76,8 @@ def test_project_metadata_report_example_builds_outputs(tmp_path: Path) -> None:
     assert "3 Release Workflow" in paragraph_texts
     assert "pyproject.toml" in table_text
     assert "release.yml" in table_text
-    assert any("Package metadata from pyproject.toml." in text for text in paragraph_texts)
-    assert any("GitHub Actions jobs in the release workflow." in text for text in paragraph_texts)
+    assert any("Project metadata." in text for text in paragraph_texts)
+    assert any("Jobs in Release workflow." in text for text in paragraph_texts)
     assert_docx_structure(
         outputs["docx"],
         required_paragraphs=(
@@ -90,7 +90,7 @@ def test_project_metadata_report_example_builds_outputs(tmp_path: Path) -> None:
     )
     assert "Project Metadata Report" in pdf_text
     assert "Package Metadata" in pdf_text
-    assert "GitHub Actions workflow" in pdf_text
+    assert "Workflow" in pdf_text
     assert_pdf_text_and_pages(
         outputs["pdf"],
         required_text=("Project Metadata Report", "pyproject.toml", "release.yml"),
@@ -98,7 +98,7 @@ def test_project_metadata_report_example_builds_outputs(tmp_path: Path) -> None:
     )
     raw_html = outputs["html"].read_text(encoding="utf-8")
     assert "Project Metadata Report" in html_text
-    assert "ProjectMetadata.from_pyproject(...)" in html_text
+    assert "collect_pyproject_info(...)" in html_text
     assert str(Path.home()).replace("\\", "/") not in raw_html
     assert not re.search(r"\b[A-Za-z]:/", raw_html)
     assert_html_internal_links_resolve(outputs["html"])

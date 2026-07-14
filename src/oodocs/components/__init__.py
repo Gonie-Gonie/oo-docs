@@ -6,6 +6,10 @@ from importlib import import_module
 
 
 _EXPORTS = {
+    "CoverPage": "oodocs.components.cover",
+    "FrontMatter": "oodocs.components.matter",
+    "MainMatter": "oodocs.components.matter",
+    "BackMatter": "oodocs.components.matter",
     "Affiliation": "oodocs.components.people",
     "Acronym": "oodocs.components.glossary",
     "Algorithm": "oodocs.components.blocks",
@@ -36,8 +40,11 @@ _EXPORTS = {
     "CountableBlock": "oodocs.components.blocks",
     "CropBox": "oodocs.components.media",
     "Definition": "oodocs.components.blocks",
+    "DescriptionItem": "oodocs.components.descriptions",
+    "DescriptionList": "oodocs.components.descriptions",
     "Divider": "oodocs.components.blocks",
     "Equation": "oodocs.components.blocks",
+    "EquationLine": "oodocs.components.equations",
     "Example": "oodocs.components.blocks",
     "Figure": "oodocs.components.media",
     "ListOfAlgorithms": "oodocs.components.generated",
@@ -60,6 +67,7 @@ _EXPORTS = {
     "InlineCode": "oodocs.components.inline",
     "MultiColumn": "oodocs.components.blocks",
     "NumberedList": "oodocs.components.blocks",
+    "ObjectLink": "oodocs.components.inline",
     "PageItemScope": "oodocs.components.positioning",
     "Paragraph": "oodocs.components.blocks",
     "Part": "oodocs.components.blocks",

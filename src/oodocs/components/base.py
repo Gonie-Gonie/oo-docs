@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from typing import Iterable, Sequence, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from oodocs.components.inline import BlockReference, InlineInput, ReferenceFormat
+    from oodocs.components.inline import BlockReference, InlineInput, ObjectLink, ReferenceFormat
     from oodocs.renderers.context import DocxRenderContext, HtmlRenderContext, PdfRenderContext
     from oodocs.styles import TextStyle
 
@@ -65,6 +65,21 @@ class Block:
         from oodocs.components.inline import ref
 
         return ref(self, *label, style=style, reference_format=reference_format)
+
+    def link(
+        self,
+        *label: InlineInput,
+        style: TextStyle | None = None,
+    ) -> ObjectLink:
+        """Create an internal hyperlink to this object without a typed number.
+
+        This method is distinct from ``oodocs.link(url, label)``, which creates
+        an external URL hyperlink.
+        """
+
+        from oodocs.components.inline import ObjectLink
+
+        return ObjectLink(self, *label, style=style)
 
     def _render_to_docx(
         self,

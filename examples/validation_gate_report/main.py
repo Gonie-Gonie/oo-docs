@@ -162,7 +162,7 @@ def build_document(
         ),
         settings=DocumentSettings(
             metadata=DocumentMetadata(
-                author="OODocs Contributors",
+                author="Example Documentation Team",
                 description="Validation gate report with JSON diagnostics sidecar",
             ),
             title_matter=TitleMatter(subtitle="Document.validate() as a release gate"),

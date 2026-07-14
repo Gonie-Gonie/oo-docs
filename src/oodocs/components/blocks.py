@@ -39,7 +39,11 @@ from typing import TYPE_CHECKING, Iterable, Literal, Sequence
 
 from oodocs.components.base import Block, BlockInput, coerce_blocks
 from oodocs.components.chemistry import chemical_formula_math_source, chemical_formula_plain_text
-from oodocs.components.equations import equation_plain_text
+from oodocs.components.equations import (
+    EquationLine,
+    EquationNumbering,
+    equation_plain_text,
+)
 from oodocs.components.inline import InlineInput, Text, coerce_inlines
 from oodocs.core import (
     PathLike,
@@ -839,8 +843,9 @@ class Equation(Block):
     @classmethod
     def aligned(
         cls,
-        *lines: str,
-        numbered: bool = True,
+        *lines: str | EquationLine,
+        numbering: EquationNumbering | None = None,
+        numbered: bool | None = None,
         reference_label: str = "Equation",
         style: ParagraphStyle | str | None = None,
         text_alignment: str | None = None,
@@ -861,7 +866,10 @@ class Equation(Block):
         Args:
             *lines: LaTeX-like equation rows. Alignment markers ``&`` are
                 accepted and omitted from rendered text.
-            numbered: Whether the block participates in equation numbering.
+            numbering: ``"group"`` for one number, ``"each"`` for one
+                number per eligible row, or ``"none"`` for no numbers.
+            numbered: Legacy compatibility flag. ``True`` maps to group
+                numbering and ``False`` maps to no numbering.
             reference_label: Label prefix used by automatic inline references.
             style: Base paragraph style.
             text_alignment: Optional text alignment override.
@@ -885,6 +893,7 @@ class Equation(Block):
 
         return AlignedEquation(
             *lines,
+            numbering=numbering,
             numbered=numbered,
             reference_label=reference_label,
             style=style,
@@ -1131,9 +1140,10 @@ class AlignedEquation(Equation):
     """A multi-line aligned equation block.
 
     Args:
-        *lines: LaTeX-like equation rows. Alignment markers ``&`` are accepted
-            and omitted from rendered text.
-        numbered: Whether the block participates in equation numbering.
+        *lines: LaTeX-like equation rows or ``EquationLine`` objects.
+            Alignment markers ``&`` are preserved for renderer layout.
+        numbering: ``"group"``, ``"each"``, or ``"none"``.
+        numbered: Legacy compatibility flag mapping to group/none numbering.
         reference_label: Label prefix used by automatic inline references.
         style: Base paragraph style.
         text_alignment: Optional text alignment override.
@@ -1163,12 +1173,14 @@ class AlignedEquation(Equation):
         ```
     """
 
-    lines: tuple[str, ...]
+    lines: tuple[EquationLine, ...]
+    numbering: EquationNumbering
 
     def __init__(
         self,
-        *lines: str,
-        numbered: bool = True,
+        *lines: str | EquationLine,
+        numbering: EquationNumbering | None = None,
+        numbered: bool | None = None,
         reference_label: str = "Equation",
         style: ParagraphStyle | str | None = None,
         text_alignment: str | None = None,
@@ -1184,11 +1196,15 @@ class AlignedEquation(Equation):
         widow_control: bool | None = None,
         unit: str | None = None,
     ) -> None:
-        self.lines = _normalize_equation_lines(lines, "AlignedEquation")
+        self.numbering = _normalize_aligned_equation_numbering(numbering, numbered)
+        self.lines = _normalize_aligned_equation_lines(
+            lines,
+            reference_label=reference_label,
+        )
         Equation.__init__(
             self,
-            _join_equation_lines(self.lines),
-            numbered=numbered,
+            _join_equation_lines(tuple(line.render_expression() for line in self.lines)),
+            numbered=self.numbering == "group",
             reference_label=reference_label,
             style=style,
             text_alignment=text_alignment,
@@ -1212,7 +1228,14 @@ class AlignedEquation(Equation):
             Source strings that validation should inspect.
         """
 
-        return self.lines
+        return tuple(line.expression for line in self.lines)
+
+    def numbered_lines(self) -> tuple[EquationLine, ...]:
+        """Return rows that participate in ``numbering="each"``."""
+
+        if self.numbering != "each":
+            return ()
+        return tuple(line for line in self.lines if line.numbered)
 
 
 @dataclass(slots=True, init=False)
@@ -1389,16 +1412,39 @@ class ReactionEquation(Equation):
         return self.source
 
 
-def _normalize_equation_lines(lines: Sequence[str], owner: str) -> tuple[str, ...]:
-    normalized: list[str] = []
+def _normalize_aligned_equation_numbering(
+    numbering: EquationNumbering | None,
+    numbered: bool | None,
+) -> EquationNumbering:
+    if numbering is None:
+        return "group" if numbered is None or bool(numbered) else "none"
+    if numbering not in {"group", "each", "none"}:
+        raise ValueError("AlignedEquation.numbering must be 'group', 'each', or 'none'")
+    if numbered is not None:
+        legacy_mode = "group" if bool(numbered) else "none"
+        if numbering != legacy_mode:
+            raise ValueError("AlignedEquation numbered= conflicts with numbering=")
+    return numbering
+
+
+def _normalize_aligned_equation_lines(
+    lines: Sequence[str | EquationLine],
+    *,
+    reference_label: str,
+) -> tuple[EquationLine, ...]:
+    normalized: list[EquationLine] = []
     for line in lines:
+        if isinstance(line, EquationLine):
+            normalized.append(line)
+            continue
         if not isinstance(line, str):
-            raise TypeError(f"{owner} lines must be strings")
-        cleaned = line.replace("&", "").strip()
-        if cleaned:
-            normalized.append(cleaned)
+            raise TypeError("AlignedEquation lines must be strings or EquationLine objects")
+        if line.strip():
+            normalized.append(
+                EquationLine(line, reference_label=reference_label)
+            )
     if not normalized:
-        raise ValueError(f"{owner} requires at least one non-empty line")
+        raise ValueError("AlignedEquation requires at least one non-empty line")
     return tuple(normalized)
 
 

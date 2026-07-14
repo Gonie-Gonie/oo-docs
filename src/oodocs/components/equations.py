@@ -20,6 +20,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import re
+from typing import Literal, Protocol, runtime_checkable, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from oodocs.components.inline import BlockReference, InlineInput, ObjectLink, ReferenceFormat
+    from oodocs.styles import TextStyle
 
 
 BASELINE = "baseline"
@@ -27,6 +32,129 @@ SUPERSCRIPT = "superscript"
 SUBSCRIPT = "subscript"
 
 VERTICAL_ALIGNMENTS = {BASELINE, SUPERSCRIPT, SUBSCRIPT}
+
+EquationNumbering = Literal["group", "each", "none"]
+
+
+@runtime_checkable
+class IndexableReference(Protocol):
+    """Protocol implemented by non-block objects registered in a render index.
+
+    ``EquationLine`` uses this protocol because it is a child row rather than
+    a standalone block, while still supporting the same ``ref()`` and
+    ``link()`` authoring helpers as block objects.
+    """
+
+    reference_label: str
+
+    def ref(
+        self,
+        *label: InlineInput,
+        style: TextStyle | None = None,
+        reference_format: ReferenceFormat | None = None,
+    ) -> BlockReference: ...
+
+    def link(
+        self,
+        *label: InlineInput,
+        style: TextStyle | None = None,
+    ) -> ObjectLink: ...
+
+
+@dataclass(slots=True)
+class EquationLine:
+    """One referenceable row inside an :class:`AlignedEquation`.
+
+    Args:
+        expression: LaTeX-like row source. Unescaped ``&`` characters mark
+            alignment columns and remain available to renderers.
+        numbered: Whether this row receives a number when its parent uses
+            ``numbering="each"``.
+        reference_label: Label prefix used by automatic inline references.
+        identifier: Optional caller-supplied anchor identifier.
+
+    Notes:
+        Equation lines are deliberately not block objects. They are indexed
+        only as children of their containing aligned equation.
+    """
+
+    expression: str
+    numbered: bool = True
+    reference_label: str = "Equation"
+    identifier: str | None = None
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.expression, str):
+            raise TypeError("EquationLine.expression must be a string")
+        self.expression = self.expression.strip()
+        if not self.expression:
+            raise ValueError("EquationLine.expression must not be empty")
+        self.numbered = bool(self.numbered)
+        self.reference_label = str(self.reference_label).strip()
+        if not self.reference_label:
+            raise ValueError("EquationLine.reference_label must not be empty")
+        if self.identifier is not None:
+            self.identifier = str(self.identifier).strip()
+            if not self.identifier:
+                raise ValueError("EquationLine.identifier must not be empty")
+
+    @property
+    def anchor(self) -> str | None:
+        """Return the optional caller-defined render anchor."""
+
+        return self.identifier
+
+    def alignment_parts(self) -> tuple[str, ...]:
+        """Return row fragments split at unescaped alignment markers."""
+
+        return tuple(part.strip() for part in re.split(r"(?<!\\)&", self.expression))
+
+    def render_expression(self) -> str:
+        """Return the row source with alignment markers removed.
+
+        Renderers that do not support alignment columns can use this readable
+        fallback while richer renderers consume :meth:`alignment_parts`.
+        """
+
+        return re.sub(r"(?<!\\)&", "", self.expression).replace(r"\&", "&").strip()
+
+    def plain_text(self) -> str:
+        """Return a readable plain-text form without alignment markers."""
+
+        return equation_plain_text(self.render_expression())
+
+    def reference_text(self, number: int | str) -> str:
+        """Return the default inline reference text for an assigned number."""
+
+        return f"{self.reference_label} {number}"
+
+    def ref(
+        self,
+        *label: InlineInput,
+        style: TextStyle | None = None,
+        reference_format: ReferenceFormat | None = None,
+    ) -> BlockReference:
+        """Create an inline reference targeting this equation row."""
+
+        from oodocs.components.inline import BlockReference
+
+        return BlockReference(
+            self,
+            *label,
+            style=style,
+            reference_format=reference_format,
+        )
+
+    def link(
+        self,
+        *label: InlineInput,
+        style: TextStyle | None = None,
+    ) -> ObjectLink:
+        """Create an internal hyperlink targeting this equation row."""
+
+        from oodocs.components.inline import ObjectLink
+
+        return ObjectLink(self, *label, style=style)
 
 
 LATEX_SYMBOLS = {
@@ -367,8 +495,11 @@ def _merge_adjacent(segments: list[EquationSegment]) -> list[EquationSegment]:
 __all__ = [
     "BASELINE",
     "DELIMITER_COMMANDS",
+    "EquationLine",
+    "EquationNumbering",
     "EquationSegment",
     "GROUP_COMMANDS",
+    "IndexableReference",
     "LATEX_SYMBOLS",
     "SUBSCRIPT",
     "SUPERSCRIPT",

@@ -474,8 +474,7 @@ def build_journal_paper_document(inputs: ManuscriptInputs | None = None) -> Docu
                         "Hyeong-Gon Jo",
                         affiliations=[
                             Affiliation(
-                                department="Building Simulation LAB",
-                                organization="Seoul National University",
+                                department="Example Laboratory",
                                 city="Seoul",
                                 country="Republic of Korea",
                             )

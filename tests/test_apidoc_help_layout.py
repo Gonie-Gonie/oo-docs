@@ -301,7 +301,8 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "front_matter" in text
     assert "back_matter" in text
     assert "appendices" in text
-    assert "CoverPagePreset.eplus_simple" in text
+    assert "CoverPagePreset.accented" in text
+    assert "CoverPagePreset.centered_logo" in text
     assert "anchor" in text
     assert "ReferenceFormat" in text
     assert "plural_label" in text

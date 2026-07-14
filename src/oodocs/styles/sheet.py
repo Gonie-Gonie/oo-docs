@@ -13,6 +13,7 @@ from oodocs.styles.blocks import BoxStyle, ParagraphStyle, RunInTitleStyle
 from oodocs.styles.border import BorderStyle
 from oodocs.styles.chips import InlineChipStyle
 from oodocs.styles.counter import ListStyle
+from oodocs.styles.descriptions import DescriptionListStyle
 from oodocs.styles.spacing import Padding
 from oodocs.styles.tables import TableCellStyle, TableStyle
 from oodocs.styles.text import TextStyle
@@ -27,6 +28,7 @@ StyleCategory: TypeAlias = Literal[
     "table",
     "table_cell",
     "chip",
+    "description_list",
 ]
 
 _STYLE_TYPES: dict[StyleCategory, type[object]] = {
@@ -38,6 +40,7 @@ _STYLE_TYPES: dict[StyleCategory, type[object]] = {
     "table": TableStyle,
     "table_cell": TableCellStyle,
     "chip": InlineChipStyle,
+    "description_list": DescriptionListStyle,
 }
 
 
@@ -54,6 +57,7 @@ class StyleSheet:
         table: Named table styles.
         table_cell: Named table cell styles.
         chip: Named inline chip styles.
+        description_list: Named semantic description-list styles.
 
     Examples:
         Register reusable table and box styles, then attach them to a theme:
@@ -83,6 +87,7 @@ class StyleSheet:
     table: dict[str, TableStyle] = field(default_factory=dict)
     table_cell: dict[str, TableCellStyle] = field(default_factory=dict)
     chip: dict[str, InlineChipStyle] = field(default_factory=dict)
+    description_list: dict[str, DescriptionListStyle] = field(default_factory=dict)
 
     @classmethod
     def default(cls) -> StyleSheet:
@@ -140,6 +145,22 @@ class StyleSheet:
         ))
         for name, style in _status_chip_styles().items():
             sheet.register_chip(f"status.{name}", style)
+        for name, style in _schema_chip_styles().items():
+            sheet.register_chip(name, style)
+        sheet.register_description_list("description.default", DescriptionListStyle())
+        sheet.register_description_list(
+            "description.compact",
+            DescriptionListStyle(term_width=1.25, item_spacing=3.0, term_gap=0.12),
+        )
+        sheet.register_description_list(
+            "description.symbols",
+            DescriptionListStyle(
+                term_width=0.9,
+                term_text_style=TextStyle(bold=True, font_name="Cambria Math"),
+                item_spacing=4.0,
+                term_gap=0.15,
+            ),
+        )
         return sheet
 
     @overload
@@ -187,6 +208,15 @@ class StyleSheet:
 
     @overload
     def register(self, category: Literal["chip"], name: str, style: InlineChipStyle) -> None:
+        ...
+
+    @overload
+    def register(
+        self,
+        category: Literal["description_list"],
+        name: str,
+        style: DescriptionListStyle,
+    ) -> None:
         ...
 
     def register(self, category: StyleCategory, name: str, style: object) -> None:
@@ -330,6 +360,11 @@ class StyleSheet:
         """
 
         self.register("chip", name, style)
+
+    def register_description_list(self, name: str, style: DescriptionListStyle) -> None:
+        """Register a named semantic description-list style."""
+
+        self.register("description_list", name, style)
 
     def resolve(
         self,
@@ -496,6 +531,41 @@ def _status_chip_styles() -> dict[str, InlineChipStyle]:
     }
 
 
+def _schema_chip_styles() -> dict[str, InlineChipStyle]:
+    """Return neutral named styles used by generic schema documentation."""
+
+    def chip(background: str, text: str, border: str) -> InlineChipStyle:
+        return InlineChipStyle(
+            background_color=background,
+            text_color=text,
+            border=BorderStyle.solid(
+                border,
+                width=0.5,
+                radius=0.5,
+                radius_unit="em",
+            ),
+            uppercase=False,
+        )
+
+    return {
+        "schema.requirement.required": chip("FEE2E2", "991B1B", "FECACA"),
+        "schema.requirement.optional": chip("F3F4F6", "374151", "D1D5DB"),
+        "schema.requirement.conditional-required": chip(
+            "FEF3C7", "92400E", "FDE68A"
+        ),
+        "schema.requirement.conditional-optional": chip(
+            "FFF7ED", "9A3412", "FED7AA"
+        ),
+        "schema.type.string": chip("E0F2FE", "075985", "BAE6FD"),
+        "schema.type.float": chip("ECFDF3", "166534", "BBF7D0"),
+        "schema.type.integer": chip("ECFDF3", "166534", "BBF7D0"),
+        "schema.type.enum": chip("F5F3FF", "5B21B6", "DDD6FE"),
+        "schema.type.boolean": chip("FFF7ED", "9A3412", "FED7AA"),
+        "schema.type.array": chip("EEF2FF", "3730A3", "C7D2FE"),
+        "schema.type.object": chip("FDF2F8", "9D174D", "FBCFE8"),
+    }
+
+
 def _style_from_payload(style_type: type, payload: dict[str, Any]) -> object:
     values = dict(payload)
     if style_type in {BoxStyle, TableStyle, InlineChipStyle} and isinstance(values.get("border"), dict):
@@ -512,6 +582,11 @@ def _style_from_payload(style_type: type, payload: dict[str, Any]) -> object:
         values["padding"] = Padding(**values["padding"])
     if style_type is RunInTitleStyle and isinstance(values.get("text_style"), dict):
         values["text_style"] = TextStyle(**values["text_style"])
+    if style_type is DescriptionListStyle:
+        if isinstance(values.get("term_text_style"), dict):
+            values["term_text_style"] = TextStyle(**values["term_text_style"])
+        if isinstance(values.get("definition_style"), dict):
+            values["definition_style"] = ParagraphStyle(**values["definition_style"])
     if not is_dataclass(style_type):
         raise TypeError(f"Unsupported style payload type: {style_type!r}")
     return style_type(**values)

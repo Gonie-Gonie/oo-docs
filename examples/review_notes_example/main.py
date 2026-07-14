@@ -156,7 +156,7 @@ def build_document() -> Document:
         ),
         settings=DocumentSettings(
             metadata=DocumentMetadata(
-                author="OODocs Contributors",
+                author="Example Documentation Team",
                 description="Review notes workflow with comments, TODOs, margin notes, and footnotes.",
             ),
             title_matter=TitleMatter(

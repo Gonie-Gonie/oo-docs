@@ -99,7 +99,7 @@ def test_journal_paper_example_builds_outputs(tmp_path: Path) -> None:
 
     assert "OODocs Development Philosophy" in paragraph_texts
     assert "Hyeong-Gon Jo [1]*, Codex [2]" in paragraph_texts
-    assert "[1] Building Simulation LAB, Seoul National University, Seoul, Republic of Korea" in paragraph_texts
+    assert "[1] Example Laboratory, Seoul, Republic of Korea" in paragraph_texts
     assert "[2] OpenAI" in paragraph_texts
     assert "* Corresponding author: Hyeong-Gon Jo" in paragraph_texts
     assert any("ORCID 0009-0004-8821-275X" in text for text in paragraph_texts)

@@ -88,7 +88,7 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
 
     assert "OODocs User Guide" in paragraph_texts
     assert "Reference-style guide for structured Python document authoring" in paragraph_texts
-    assert "OODocs Contributors" in paragraph_texts
+    assert "Example Documentation Team" in paragraph_texts
     assert "Hyeong-Gon Jo" in paragraph_texts
     assert "Open-source documentation workflow" not in paragraph_texts
     assert any(
@@ -97,7 +97,7 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     )
     assert "Maintainers and release editors" in table_text
     assert "Repository steward" in table_text
-    assert "Building Simulation LAB, Seoul National University" in table_text
+    assert "Example Laboratory" in table_text
     assert "Guide Cover" in paragraph_texts
     assert "Contents" in paragraph_texts
     assert "List of Tables" in paragraph_texts
@@ -231,7 +231,7 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "style_cleanup_smoke" in table_text
     assert "OODocs Contributor Certificate" in table_text
     assert "Footnotes" not in [text for text in paragraph_texts if text == "Footnotes"]
-    assert len(word_document.tables) == 27
+    assert len(word_document.tables) == 28
     assert len(word_document.inline_shapes) == 11
     assert len(word_document.comments) == 2
     assert_docx_structure(
@@ -244,7 +244,7 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
             "Comments",
             "References",
         ),
-        table_count=27,
+        table_count=28,
         inline_shape_count=11,
         comment_count=2,
     )

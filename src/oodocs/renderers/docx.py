@@ -34,6 +34,7 @@ from docx.text.paragraph import Paragraph as DocxParagraph
 from PIL import Image, ImageDraw, ImageFont
 
 from oodocs.components.blocks import (
+    AlignedEquation,
     Box,
     BulletList,
     CodeBlock,
@@ -72,6 +73,7 @@ from oodocs.components.inline import (
     ReferenceGroup,
     Text,
 )
+from oodocs.components.descriptions import DescriptionList
 from oodocs.components.media import (
     Figure,
     PdfPages,
@@ -106,7 +108,7 @@ from oodocs.layout.indexing import (
     resolve_block_reference,
 )
 from oodocs.settings import PageLayout
-from oodocs.styles import BoxStyle, HeadingStyle, ListStyle, ParagraphStyle, TableStyle, TextStyle, Theme
+from oodocs.styles import BoxStyle, DescriptionListStyle, HeadingStyle, ListStyle, ParagraphStyle, TableStyle, TextStyle, Theme
 from oodocs.renderers.context import DocxRenderContext, _settings_with_page_layout
 from oodocs.renderers.syntax import SyntaxToken, _syntax_line_tokens, syntax_tokens
 
@@ -240,9 +242,13 @@ class DocxRenderer:
             unit=settings.unit,
             word_document=word_document,
         )
-        front_children, main_children = document.split_top_level_children()
+        matter = document.matter_layout()
+        front_children = matter.front.children
+        main_children = matter.main.children
+        back_children = matter.back.children
         title_matter = settings.title_matter
-        has_front_matter = title_matter.cover_page or bool(front_children)
+        has_front_matter = title_matter.cover is not None or bool(front_children)
+        matter_sections: dict[str, int] = {"front": 0}
         self._render_page_items(
             word_document,
             document,
@@ -256,18 +262,33 @@ class DocxRenderer:
             context,
         )
 
-        if title_matter.cover_page and front_children:
+        if title_matter.cover is not None and (
+            front_children or matter.front.page_break_before
+        ):
             self._ensure_page_break(word_document)
 
-        if has_front_matter:
+        if front_children:
             self._render_top_level_children(word_document, front_children, context)
-            if main_children:
+        if main_children:
+            if has_front_matter or matter.main.page_break_before:
                 section = word_document.add_section(WD_SECTION.NEW_PAGE)
                 self._configure_section_page_box(section, settings)
                 self._render_main_page_items(section, document, context)
-                self._render_top_level_children(word_document, main_children, context)
-        else:
+                matter_sections["main"] = len(word_document.sections) - 1
+            else:
+                matter_sections["main"] = 0
             self._render_top_level_children(word_document, main_children, context)
+
+        if back_children:
+            section = word_document.add_section(
+                WD_SECTION.NEW_PAGE
+                if matter.back.page_break_before
+                else WD_SECTION.CONTINUOUS
+            )
+            self._configure_section_page_box(section, settings)
+            self._render_main_page_items(section, document, context)
+            matter_sections["back"] = len(word_document.sections) - 1
+            self._render_top_level_children(word_document, back_children, context)
 
         if self._should_auto_render_footnote_list(document, render_index):
             self.render_footnote_list(ListOfFootnotes(), context)
@@ -279,6 +300,8 @@ class DocxRenderer:
                 settings.theme,
                 has_front_matter=has_front_matter,
                 has_main_matter=bool(main_children) or not has_front_matter,
+                has_back_matter=bool(back_children),
+                matter_sections=matter_sections,
             )
 
         word_document.save(path)
@@ -494,6 +517,164 @@ class DocxRenderer:
             context.unit,
             word_document=context.word_document,
         )
+
+    def render_description_list(
+        self,
+        container: object,
+        block: DescriptionList,
+        context: DocxRenderContext,
+    ) -> None:
+        """Render a description list as a stable borderless DOCX table."""
+
+        if not block.items:
+            return
+        style = context.stylesheet.resolve(
+            "description_list",
+            block.style,
+            DescriptionListStyle(),
+        )
+        table = container.add_table(rows=0, cols=2)
+        table.alignment = WD_TABLE_ALIGNMENT.LEFT
+        table.autofit = style.layout != "hanging"
+        available_width = context.settings.text_width_in_inches()
+        term_width = style.term_width_in_inches(context.unit)
+        if term_width is None:
+            term_width = min(max(available_width * 0.25, 0.75), 2.0)
+        term_width = min(term_width, max(available_width * 0.5, 0.25))
+        gap_points = style.term_gap_in_inches(context.unit) * 72.0
+
+        for item in block.items:
+            if style.layout == "stacked":
+                term_row = table.add_row()
+                term_cell = term_row.cells[0].merge(term_row.cells[1])
+                self._prepare_description_cell(
+                    term_cell,
+                    bottom=0.0,
+                    left=0.0,
+                    right=0.0,
+                )
+                self._render_description_term(term_cell, item.term, style, context)
+
+                definition_row = table.add_row()
+                definition_cell = definition_row.cells[0].merge(definition_row.cells[1])
+                self._prepare_description_cell(
+                    definition_cell,
+                    bottom=style.item_spacing,
+                    left=gap_points,
+                    right=0.0,
+                )
+                self._render_description_children(
+                    definition_cell,
+                    item.children,
+                    style.definition_style,
+                    context,
+                )
+                if not definition_cell.paragraphs:
+                    paragraph = self._add_paragraph(definition_cell)
+                    self._apply_paragraph_style(
+                        paragraph,
+                        style.definition_style,
+                        context.theme,
+                        context.unit,
+                    )
+                continue
+
+            row = table.add_row()
+            term_cell, definition_cell = row.cells
+            self._prepare_description_cell(
+                term_cell,
+                bottom=style.item_spacing,
+                left=0.0,
+                right=gap_points,
+            )
+            self._prepare_description_cell(
+                definition_cell,
+                bottom=style.item_spacing,
+                left=0.0,
+                right=0.0,
+            )
+            term_cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.TOP
+            definition_cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.TOP
+            if style.layout == "hanging":
+                table.columns[0].width = Inches(term_width)
+                table.columns[1].width = Inches(max(available_width - term_width, 0.25))
+                self._set_cell_width(term_cell, term_width)
+                self._set_cell_width(
+                    definition_cell,
+                    max(available_width - term_width, 0.25),
+                )
+            self._render_description_term(term_cell, item.term, style, context)
+            self._render_description_children(
+                definition_cell,
+                item.children,
+                style.definition_style,
+                context,
+            )
+            if not definition_cell.paragraphs:
+                paragraph = self._add_paragraph(definition_cell)
+                self._apply_paragraph_style(
+                    paragraph,
+                    style.definition_style,
+                    context.theme,
+                    context.unit,
+                )
+
+    def _prepare_description_cell(
+        self,
+        cell: object,
+        *,
+        bottom: float,
+        left: float,
+        right: float,
+    ) -> None:
+        cell._tc.clear_content()
+        self._initialized_cells.discard(id(cell))
+        self._set_cell_borders_none(cell)
+        self._set_cell_margins(cell, 0.0, right, bottom, left)
+
+    def _render_description_term(
+        self,
+        cell: object,
+        fragments: list[Text],
+        style: object,
+        context: DocxRenderContext,
+    ) -> None:
+        paragraph = self._add_paragraph(cell)
+        paragraph.paragraph_format.space_before = Pt(0)
+        paragraph.paragraph_format.space_after = Pt(0)
+        paragraph.paragraph_format.keep_with_next = True
+        self._append_runs(
+            paragraph,
+            fragments,
+            default_size=context.theme.typography.body_font_size,
+            default_style=style.term_text_style,
+            theme=context.theme,
+            render_index=context.render_index,
+            word_document=context.word_document,
+            unit=context.unit,
+        )
+
+    def _render_description_children(
+        self,
+        container: object,
+        children: list[object],
+        definition_style: ParagraphStyle,
+        context: DocxRenderContext,
+    ) -> None:
+        for child in children:
+            original_style = None
+            if (
+                isinstance(child, Paragraph)
+                and isinstance(child.style, ParagraphStyle)
+                and child.style == ParagraphStyle()
+            ):
+                original_style = child.style
+                child.style = definition_style
+            try:
+                self._render_block(container, child, context)
+            finally:
+                if original_style is not None:
+                    child.style = original_style
 
     def render_code_block(
         self,
@@ -1252,21 +1433,57 @@ class DocxRenderer:
         document: Document,
         context: DocxRenderContext,
     ) -> None:
+        title_matter = document.settings.title_matter
+        cover = title_matter.cover
+        cover_style = cover.resolved_style() if cover is not None else None
+        title_alignment = (
+            cover_style.text_alignment
+            if cover_style is not None
+            else context.theme.title_matter.title_text_alignment
+        )
+        if cover is not None:
+            if cover_style.top_spacing:
+                spacer = self._add_paragraph(word_document)
+                spacer.paragraph_format.space_after = Inches(cover_style.top_spacing)
+            for child in cover.extra_top:
+                child._render_to_docx(self, word_document, context)
+            if cover.eyebrow is not None:
+                self._add_title_line(
+                    word_document,
+                    cover.eyebrow,
+                    font_size=cover_style.eyebrow_style.font_size or 10,
+                    alignment=title_alignment,
+                    default_style=cover_style.eyebrow_style,
+                    space_after=cover_style.section_spacing * 72,
+                )
+            if cover.organization is not None:
+                self._add_title_line(
+                    word_document,
+                    cover.organization,
+                    font_size=cover_style.organization_style.font_size or 11,
+                    alignment=title_alignment,
+                    default_style=cover_style.organization_style,
+                    space_after=cover_style.section_spacing * 72,
+                )
+            logo = cover.logo_figure()
+            if logo is not None:
+                logo._render_to_docx(self, word_document, context)
         self._add_title_line(
             word_document,
             [Text(document.title)],
             font_size=context.theme.typography.title_font_size,
-            alignment=context.theme.title_matter.title_text_alignment,
+            alignment=title_alignment,
             bold=True,
             space_after=12,
         )
-        title_matter = document.settings.title_matter
         if title_matter.subtitle is not None:
             self._add_title_line(
                 word_document,
                 title_matter.subtitle,
                 font_size=max(context.theme.typography.body_font_size + 1, 12),
-                alignment=context.theme.title_matter.subtitle_text_alignment,
+                alignment=title_alignment
+                if cover is not None
+                else context.theme.title_matter.subtitle_text_alignment,
                 italic=True,
                 space_after=10,
             )
@@ -1276,10 +1493,32 @@ class DocxRenderer:
                 word_document,
                 list(line.fragments),
                 font_size=self._title_line_font_size(line, context.theme),
-                alignment=self._title_line_alignment(line, context.theme),
+                alignment=title_alignment
+                if cover is not None
+                else self._title_line_alignment(line, context.theme),
                 italic=line.kind == "affiliation",
                 space_after=self._author_title_line_space_after(author_lines, index, last_space=10),
             )
+        if cover is not None:
+            if cover.date is not None:
+                self._add_title_line(
+                    word_document,
+                    cover.date,
+                    font_size=cover_style.date_style.font_size or 10,
+                    alignment=title_alignment,
+                    default_style=cover_style.date_style,
+                    space_after=cover_style.section_spacing * 72,
+                )
+            for child in (*cover.note, *cover.extra_bottom):
+                child._render_to_docx(self, word_document, context)
+            if cover.footer is not None:
+                self._add_title_line(
+                    word_document,
+                    cover.footer,
+                    font_size=cover_style.footer_style.font_size or 9,
+                    alignment=title_alignment,
+                    default_style=cover_style.footer_style,
+                )
 
     def _add_title_line(
         self,
@@ -1292,11 +1531,14 @@ class DocxRenderer:
         italic: bool = False,
         space_after: float = 0,
         anchor: str | None = None,
+        default_style: TextStyle | None = None,
     ) -> object:
         paragraph = self._add_paragraph(container)
         paragraph.alignment = ALIGNMENTS[alignment]
         paragraph.paragraph_format.space_after = Pt(space_after)
-        base_style = TextStyle(font_size=font_size, bold=bold, italic=italic)
+        base_style = (default_style or TextStyle()).merged(
+            TextStyle(font_size=font_size, bold=bold, italic=italic)
+        )
         for fragment in fragments:
             style = base_style.merged(
                 TextStyle(
@@ -2118,13 +2360,7 @@ class DocxRenderer:
         target: object,
         render_index: RenderIndex,
     ) -> str | None:
-        if isinstance(target, (Table, SubTable, SubTableGroup)):
-            return render_index.table_anchor(target)
-        if isinstance(target, (Figure, SubFigure, SubFigureGroup)):
-            return render_index.figure_anchor(target)
-        if isinstance(target, (Part, Section)):
-            return render_index.heading_anchor(target)
-        return render_index.block_anchor(target)
+        return render_index.anchor_for(target)
 
     def _apply_run_style(self, run: object, style: object, *, default_size: float | None = None) -> None:
         font = run.font
@@ -2446,6 +2682,16 @@ class DocxRenderer:
         render_index: RenderIndex,
         unit: str,
     ) -> None:
+        if isinstance(equation, AlignedEquation):
+            self._render_aligned_equation(
+                container,
+                equation,
+                theme,
+                render_index,
+                unit,
+            )
+            return
+
         paragraph = self._add_paragraph(container)
         equation_style = theme.stylesheet.resolve("paragraph", equation.style, ParagraphStyle())
         self._apply_paragraph_style(paragraph, equation_style, theme, unit)
@@ -2463,6 +2709,85 @@ class DocxRenderer:
         if number is not None:
             run = paragraph.add_run(f" ({number})")
             self._apply_run_style(run, TextStyle(), default_size=theme.typography.body_font_size)
+
+    def _render_aligned_equation(
+        self,
+        container: object,
+        equation: AlignedEquation,
+        theme: Theme,
+        render_index: RenderIndex,
+        unit: str,
+    ) -> None:
+        """Render aligned equation rows in a borderless DOCX table."""
+
+        equation_style = theme.stylesheet.resolve(
+            "paragraph",
+            equation.style,
+            ParagraphStyle(),
+        )
+        maximum_columns = max(len(line.alignment_parts()) for line in equation.lines)
+        table = container.add_table(rows=len(equation.lines), cols=maximum_columns + 1)
+        table.alignment = WD_TABLE_ALIGNMENT.CENTER
+        table.autofit = True
+        table_description = OxmlElement("w:tblDescription")
+        table_description.set(
+            qn("w:val"),
+            " | ".join(" ".join(line.plain_text().split()) for line in equation.lines),
+        )
+        table._tbl.tblPr.append(table_description)
+        group_anchor = render_index.anchor_for(equation)
+        group_number = render_index.equation_number(equation)
+
+        for row_index, line in enumerate(equation.lines):
+            parts = line.alignment_parts()
+            row = table.rows[row_index]
+            for column_index, cell in enumerate(row.cells):
+                cell._tc.clear_content()
+                self._initialized_cells.discard(id(cell))
+                self._set_cell_borders_none(cell)
+                paragraph = self._add_paragraph(cell)
+                self._apply_paragraph_style(paragraph, equation_style, theme, unit)
+                paragraph.paragraph_format.space_before = Pt(0)
+                paragraph.paragraph_format.space_after = Pt(
+                    equation_style.space_after or 0
+                    if row_index == len(equation.lines) - 1
+                    else 0
+                )
+
+                if column_index == 0:
+                    if row_index == 0 and group_anchor is not None:
+                        self._add_bookmark(paragraph, group_anchor)
+                    line_anchor = render_index.anchor_for(line)
+                    if line_anchor is not None:
+                        self._add_bookmark(paragraph, line_anchor)
+
+                if column_index < maximum_columns:
+                    paragraph.alignment = (
+                        WD_ALIGN_PARAGRAPH.RIGHT
+                        if maximum_columns > 1 and column_index % 2 == 0
+                        else WD_ALIGN_PARAGRAPH.LEFT
+                        if maximum_columns > 1
+                        else WD_ALIGN_PARAGRAPH.CENTER
+                    )
+                    if column_index < len(parts) and parts[column_index]:
+                        self._append_math_runs(
+                            paragraph,
+                            Math(parts[column_index]),
+                            default_size=max(theme.typography.body_font_size + 1, 12),
+                        )
+                    continue
+
+                paragraph.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+                number = render_index.equation_number(line)
+                if number is None and row_index == len(equation.lines) - 1:
+                    number = group_number
+                if number is not None:
+                    run = paragraph.add_run(f"({number})")
+                    self._apply_run_style(
+                        run,
+                        TextStyle(),
+                        default_size=theme.typography.body_font_size,
+                    )
 
     def _effective_box_style(self, box: Box, theme: Theme) -> BoxStyle:
         box_style = theme.stylesheet.resolve("box", box.style, None)
@@ -2724,7 +3049,7 @@ class DocxRenderer:
         if not document.settings.overlays:
             return
         section = word_document.sections[0]
-        if document.settings.title_matter.cover_page:
+        if document.settings.title_matter.cover is not None:
             section.different_first_page_header_footer = True
             self._render_section_page_items(
                 section.first_page_header,
@@ -3151,6 +3476,10 @@ class DocxRenderer:
                 table.columns[column_index].width = Inches(width)
 
         table_cells = [row.cells for row in table.rows]
+        if table_block.caption is None and table_cells and table_cells[0]:
+            anchor = render_index.table_anchor(table_block)
+            if anchor is not None:
+                self._add_bookmark(table_cells[0][0].paragraphs[0], anchor)
         for cell_placement in layout.placements:
             start_cell = table_cells[cell_placement.row][cell_placement.column]
             target_cell = start_cell
@@ -3278,6 +3607,10 @@ class DocxRenderer:
         paragraph.alignment = ALIGNMENTS[theme.blocks.figure_block_alignment]
         paragraph.paragraph_format.space_before = Pt(0)
         paragraph.paragraph_format.space_after = Pt(0 if in_box else 12)
+        if figure.caption is None:
+            anchor = render_index.figure_anchor(figure)
+            if anchor is not None:
+                self._add_bookmark(paragraph, anchor)
         if figure.caption is not None and theme.captions.figure_caption_position == "below":
             self._keep_with_next(paragraph)
         run = paragraph.add_run()
@@ -3701,7 +4034,7 @@ class DocxRenderer:
             return fragment.value
         if isinstance(fragment, Math):
             return fragment.plain_text()
-        return fragment.value
+        return fragment.plain_text()
 
     def _resolve_block_reference(
         self,
@@ -4084,6 +4417,8 @@ class DocxRenderer:
         *,
         has_front_matter: bool,
         has_main_matter: bool,
+        has_back_matter: bool,
+        matter_sections: dict[str, int],
     ) -> None:
         sections = list(word_document.sections)
         if not sections:
@@ -4093,45 +4428,68 @@ class DocxRenderer:
             word_document,
             theme.effective_header_footer().different_odd_even_pages,
         )
+        first_section = sections[0]
         if has_front_matter:
+            front_section = sections[matter_sections.get("front", 0)]
             self._set_section_page_counter_format(
-                sections[0],
+                front_section,
                 theme.page_numbers.front_matter_counter.counter_format,
                 start=1,
             )
             self._add_section_header_footer(
-                sections[0],
+                front_section,
                 document,
                 theme,
                 front_matter=True,
+                hide_first=document.settings.title_matter.cover is not None,
             )
-            if has_main_matter and len(sections) > 1:
-                self._unlink_section_header_footer(sections[1])
-                sections[1].footer.is_linked_to_previous = False
+            if has_main_matter and "main" in matter_sections:
+                main_section = sections[matter_sections["main"]]
+                self._unlink_section_header_footer(main_section)
+                main_section.footer.is_linked_to_previous = False
                 self._set_section_page_counter_format(
-                    sections[1],
+                    main_section,
                     theme.page_numbers.main_matter_counter.counter_format,
-                    start=1,
+                    start=1 if theme.page_numbers.restart_main_matter else None,
                 )
                 self._add_section_header_footer(
-                    sections[1],
+                    main_section,
                     document,
                     theme,
                     front_matter=False,
                 )
-            return
+        else:
+            main_section = sections[matter_sections.get("main", 0)]
+            self._set_section_page_counter_format(
+                main_section,
+                theme.page_numbers.main_matter_counter.counter_format,
+                start=1,
+            )
+            self._add_section_header_footer(
+                main_section,
+                document,
+                theme,
+                front_matter=False,
+            )
 
-        self._set_section_page_counter_format(
-            sections[0],
-            theme.page_numbers.main_matter_counter.counter_format,
-            start=1,
-        )
-        self._add_section_header_footer(
-            sections[0],
-            document,
-            theme,
-            front_matter=False,
-        )
+        if has_back_matter and "back" in matter_sections:
+            back_section = sections[matter_sections["back"]]
+            self._unlink_section_header_footer(back_section)
+            counter = (
+                theme.page_numbers.back_matter_counter
+                or theme.page_numbers.main_matter_counter
+            )
+            self._set_section_page_counter_format(
+                back_section,
+                counter.counter_format,
+                start=1 if theme.page_numbers.restart_back_matter else None,
+            )
+            self._add_section_header_footer(
+                back_section,
+                document,
+                theme,
+                front_matter=False,
+            )
 
     def _add_section_header_footer(
         self,
@@ -4140,6 +4498,7 @@ class DocxRenderer:
         theme: Theme,
         *,
         front_matter: bool,
+        hide_first: bool = False,
     ) -> None:
         header_footer = theme.effective_header_footer()
         section.different_first_page_header_footer = (
@@ -4161,6 +4520,8 @@ class DocxRenderer:
         for page_kind, header, footer in page_kinds:
             header.is_linked_to_previous = False
             footer.is_linked_to_previous = False
+            if page_kind == "first" and hide_first:
+                continue
             self._add_header_footer_part(
                 header,
                 document,
@@ -4340,7 +4701,7 @@ class DocxRenderer:
         section: object,
         page_counter_format: str,
         *,
-        start: int = 1,
+        start: int | None = 1,
     ) -> None:
         format_map = {
             "decimal": "decimal",
@@ -4358,7 +4719,10 @@ class DocxRenderer:
             qn("w:fmt"),
             format_map.get(page_counter_format, "decimal"),
         )
-        page_number_type.set(qn("w:start"), str(start))
+        if start is None:
+            page_number_type.attrib.pop(qn("w:start"), None)
+        else:
+            page_number_type.set(qn("w:start"), str(start))
 
     def _append_page_number_field(self, paragraph: object) -> None:
         self._append_field(paragraph, "PAGE", cached_result="1")

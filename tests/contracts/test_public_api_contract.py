@@ -16,6 +16,10 @@ import oodocs.review as review
 import oodocs.structure as structure
 import oodocs.styles as styles
 import oodocs.workflows as workflows
+from oodocs.evidence import EvidenceReport
+from oodocs.integrations.github_actions import collect_github_actions_workflow
+from oodocs.integrations.pyproject import collect_pyproject_info
+from oodocs.metadata import ManifestSummary, ProjectInfo, WorkflowJob
 
 
 pytestmark = pytest.mark.contracts
@@ -160,3 +164,45 @@ def test_style_and_theme_canonical_field_names_are_stable() -> None:
     assert "citations" in theme_fields
     assert {"align", "valign"}.isdisjoint(textbox_parameters)
     assert {"text_alignment", "vertical_alignment"} <= textbox_parameters
+
+
+def test_public_api_naming_conventions_are_explicit_and_complete() -> None:
+    assert public_api.PUBLIC_API_NAMING_CONVENTIONS == {
+        "to_": "return an OODocs document object",
+        "as_": "return a raw Python value or record",
+        "from_": "construct an object from external input",
+        "collect_": "collect metadata from an external parser, program, or runtime",
+        "load_": "restore an already-defined model from a file",
+        "save_": "write a file or output bundle",
+        "validate_": "return structured validation data",
+        "style": "describe visual properties",
+        "profile": "select presented content",
+        "presentation": "select presented content",
+        "integration": "parse or collect an external tool format",
+    }
+
+
+def test_new_generic_apis_follow_the_naming_contract() -> None:
+    names = {
+        ProjectInfo.to_table.__name__,
+        ManifestSummary.as_mapping.__name__,
+        ManifestSummary.from_mapping.__name__,
+        ManifestSummary.load_json.__name__,
+        WorkflowJob.as_record.__name__,
+        EvidenceReport.to_document.__name__,
+        EvidenceReport.save_bundle.__name__,
+        collect_pyproject_info.__name__,
+        collect_github_actions_workflow.__name__,
+    }
+
+    assert names == {
+        "to_table",
+        "as_mapping",
+        "from_mapping",
+        "load_json",
+        "as_record",
+        "to_document",
+        "save_bundle",
+        "collect_pyproject_info",
+        "collect_github_actions_workflow",
+    }

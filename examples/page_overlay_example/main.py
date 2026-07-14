@@ -23,6 +23,7 @@ from oodocs import (
     TitleMatter,
     inline_code,
 )
+from oodocs.components.cover import CoverPage
 from oodocs.positioning import ImageBox, PageItemScope, Shape, TextBox
 from oodocs.styles import StrokeStyle
 
@@ -159,12 +160,12 @@ def build_document() -> Document:
         settings=DocumentSettings(
             page_layout=PageLayout(PageSize.letter()),
             title_matter=TitleMatter(
-                cover_page=True,
+                cover=CoverPage(eyebrow="POSITIONED CONTENT EXAMPLE"),
                 subtitle="page-positioned overlays and inline drawing placement",
             ),
             overlays=build_overlays(),
             metadata=DocumentMetadata(
-                author="OODocs Contributors",
+                author="Example Documentation Team",
                 description="Page overlay example with scoped positioned items.",
             ),
             theme=Theme(page_numbers=PageNumberDefaults(show_page_numbers=True)),

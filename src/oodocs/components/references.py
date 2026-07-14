@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 import re
@@ -11,6 +12,7 @@ from oodocs.core import OODocsError, PathLike
 
 if TYPE_CHECKING:
     from oodocs.components.inline import Citation, Text
+    from oodocs.integrations.bibtex import BibtexParser
     from oodocs.styles import TextStyle
 
 
@@ -211,6 +213,23 @@ def reference_entry_marker(
     return ""
 
 
+@dataclass(frozen=True, slots=True)
+class CitationDiagnostic:
+    """Non-fatal diagnostic retained while citation data is normalized.
+
+    ``raw_value`` and source coordinates make a lossy-looking conversion
+    inspectable without forcing the core model to understand BibTeX syntax.
+    """
+
+    code: str
+    message: str
+    entry_key: str | None = None
+    field: str | None = None
+    raw_value: str | None = None
+    line: int | None = None
+    column: int | None = None
+
+
 @dataclass(slots=True, init=False)
 class CitationSource:
     """Structured bibliography metadata for a single reference entry.
@@ -219,11 +238,14 @@ class CitationSource:
         title: Reference title.
         key: Optional citation key.
         authors: Author names.
+        entry_type: Optional source type such as ``article`` or ``manual``.
         organization: Optional organization author.
-        publisher: Optional publisher, journal, or venue.
+        publisher: Optional publisher.
         year: Optional publication year.
         url: Optional URL.
         note: Optional note.
+        fields: Original citation fields. Parsed BibTeX values are retained
+            here even when a convenience attribute exposes a normalized value.
 
     Examples:
         ```python
@@ -243,11 +265,28 @@ class CitationSource:
     title: str
     key: str | None
     authors: tuple[str, ...] = ()
+    entry_type: str | None = None
     organization: str | None = None
     publisher: str | None = None
     year: str | None = None
     url: str | None = None
     note: str | None = None
+    journal: str | None = None
+    booktitle: str | None = None
+    volume: str | None = None
+    number: str | None = None
+    pages: str | None = None
+    doi: str | None = None
+    institution: str | None = None
+    school: str | None = None
+    edition: str | None = None
+    chapter: str | None = None
+    month: str | None = None
+    address: str | None = None
+    version: str | None = None
+    accessed: str | None = None
+    fields: Mapping[str, str]
+    diagnostics: tuple[CitationDiagnostic, ...]
 
     def __init__(
         self,
@@ -255,20 +294,116 @@ class CitationSource:
         *,
         key: str | None = None,
         authors: Sequence[str] = (),
+        entry_type: str | None = None,
         organization: str | None = None,
         publisher: str | None = None,
         year: str | None = None,
         url: str | None = None,
         note: str | None = None,
+        journal: str | None = None,
+        booktitle: str | None = None,
+        volume: str | None = None,
+        number: str | None = None,
+        pages: str | None = None,
+        doi: str | None = None,
+        institution: str | None = None,
+        school: str | None = None,
+        edition: str | None = None,
+        chapter: str | None = None,
+        month: str | None = None,
+        address: str | None = None,
+        version: str | None = None,
+        accessed: str | None = None,
+        fields: Mapping[str, object] | None = None,
+        diagnostics: Sequence[CitationDiagnostic] = (),
     ) -> None:
-        self.title = title
-        self.key = key
-        self.authors = tuple(authors)
-        self.organization = organization
-        self.publisher = publisher
-        self.year = year
-        self.url = url
-        self.note = note
+        field_entry_type = _mapping_metadata(fields, "entry_type", "entrytype")
+        field_key = _mapping_metadata(fields, "key", "id")
+        raw_fields = _normalize_citation_fields(fields)
+        normalized_authors = tuple(str(author).strip() for author in authors if str(author).strip())
+        if not normalized_authors and raw_fields.get("author"):
+            normalized_authors = tuple(
+                part.strip()
+                for part in re.split(r"\s+and\s+", raw_fields["author"], flags=re.IGNORECASE)
+                if part.strip()
+            )
+
+        self.title = str(title)
+        self.key = _optional_text(key) or field_key
+        self.authors = normalized_authors
+        self.entry_type = _optional_text(entry_type) or field_entry_type
+        self.journal = _field_value(journal, raw_fields, "journal")
+        self.booktitle = _field_value(booktitle, raw_fields, "booktitle")
+        self.institution = _field_value(institution, raw_fields, "institution")
+        self.school = _field_value(school, raw_fields, "school")
+        self.organization = (
+            _field_value(organization, raw_fields, "organization")
+            or self.institution
+        )
+        self.publisher = (
+            _field_value(publisher, raw_fields, "publisher")
+            or self.journal
+            or self.booktitle
+            or _field_value(None, raw_fields, "howpublished")
+        )
+        self.year = _field_value(year, raw_fields, "year")
+        self.url = _field_value(url, raw_fields, "url")
+        self.note = _field_value(note, raw_fields, "note")
+        self.volume = _field_value(volume, raw_fields, "volume")
+        self.number = _field_value(number, raw_fields, "number")
+        self.pages = _field_value(pages, raw_fields, "pages")
+        self.doi = _field_value(doi, raw_fields, "doi")
+        self.edition = _field_value(edition, raw_fields, "edition")
+        self.chapter = _field_value(chapter, raw_fields, "chapter")
+        self.month = _field_value(month, raw_fields, "month")
+        self.address = _field_value(address, raw_fields, "address")
+        self.version = _field_value(version, raw_fields, "version")
+        self.accessed = (
+            _field_value(accessed, raw_fields, "accessed")
+            or _field_value(None, raw_fields, "urldate")
+        )
+
+        _retain_explicit_citation_fields(
+            raw_fields,
+            title=self.title,
+            authors=self.authors,
+            organization=organization,
+            publisher=publisher,
+            year=year,
+            url=url,
+            note=note,
+            journal=journal,
+            booktitle=booktitle,
+            volume=volume,
+            number=number,
+            pages=pages,
+            doi=doi,
+            institution=institution,
+            school=school,
+            edition=edition,
+            chapter=chapter,
+            month=month,
+            address=address,
+            version=version,
+            accessed=accessed,
+        )
+        self.fields = dict(raw_fields)
+        self.diagnostics = tuple(diagnostics)
+
+    def as_bibtex_record(self) -> dict[str, str]:
+        """Return the retained BibTeX-style record as a raw mapping.
+
+        The record uses lowercase ``entry_type`` and ``key`` metadata keys and
+        otherwise returns the original field mapping. Unknown fields and raw
+        LaTeX commands are therefore not discarded.
+        """
+
+        record = dict(self.fields)
+        if self.entry_type is not None:
+            record["entry_type"] = self.entry_type
+        if self.key is not None:
+            record["key"] = self.key
+        return record
 
     def format_reference(self, reference_style: str = "plain") -> str:
         """Format the entry as a plain bibliography string.
@@ -296,17 +431,30 @@ class CitationSource:
         from oodocs.components.inline import Hyperlink, Text
 
         text = self.format_reference(reference_style)
-        if not self.url or self.url not in text:
+        links = _reference_links(self)
+        if not links:
             return [Text(text)]
 
-        before, after = text.split(self.url, 1)
         fragments: list[Text] = []
-        if before:
-            fragments.append(Text(before))
-        fragments.append(Hyperlink.external(self.url, self.url))
-        if after:
-            fragments.append(Text(after))
-        return fragments
+        cursor = 0
+        occurrences = sorted(
+            (
+                (position, visible, target)
+                for visible, target in links
+                if (position := text.find(visible)) >= 0
+            ),
+            key=lambda item: item[0],
+        )
+        for position, visible, target in occurrences:
+            if position < cursor:
+                continue
+            if position > cursor:
+                fragments.append(Text(text[cursor:position]))
+            fragments.append(Hyperlink.external(target, visible))
+            cursor = position + len(visible)
+        if cursor < len(text):
+            fragments.append(Text(text[cursor:]))
+        return fragments or [Text(text)]
 
     def cite(self, *, style: TextStyle | None = None) -> Citation:
         """Create an inline citation that points to this source.
@@ -400,11 +548,18 @@ class CitationLibrary:
         return Citation(key, style=style)
 
     @classmethod
-    def from_bibtex(cls, source: str) -> CitationLibrary:
+    def from_bibtex(
+        cls,
+        source: str,
+        *,
+        parser: BibtexParser | None = None,
+    ) -> CitationLibrary:
         """Parse BibTeX text into a citation library.
 
         Args:
             source: BibTeX source text.
+            parser: Optional parser backend. The built-in dependency-free
+                parser is used when omitted.
 
         Returns:
             Citation library containing parsed entries.
@@ -417,31 +572,10 @@ class CitationLibrary:
             ```
         """
 
-        entries: list[CitationSource] = []
-        for key, fields in _parse_bibtex_entries(source):
-            authors = tuple(
-                part.strip()
-                for part in fields.get("author", "").split(" and ")
-                if part.strip()
-            )
-            entries.append(
-                CitationSource(
-                    title=fields.get("title", key),
-                    key=key,
-                    authors=authors,
-                    organization=fields.get("organization") or fields.get("institution"),
-                    publisher=(
-                        fields.get("publisher")
-                        or fields.get("journal")
-                        or fields.get("booktitle")
-                        or fields.get("howpublished")
-                    ),
-                    year=fields.get("year"),
-                    url=fields.get("url"),
-                    note=fields.get("note"),
-                )
-            )
-        return cls(entries)
+        from oodocs.integrations.bibtex import BuiltinBibtexParser
+
+        backend = parser or BuiltinBibtexParser()
+        return cls(tuple(backend.parse(source)))
 
     @classmethod
     def from_bibtex_file(
@@ -449,12 +583,14 @@ class CitationLibrary:
         path: PathLike,
         *,
         encoding: str = "utf-8",
+        parser: BibtexParser | None = None,
     ) -> CitationLibrary:
         """Load a BibTeX file into a citation library.
 
         Args:
             path: BibTeX file path.
             encoding: Text encoding used to read the file.
+            parser: Optional parser backend.
 
         Returns:
             Citation library containing parsed entries.
@@ -465,7 +601,10 @@ class CitationLibrary:
             ```
         """
 
-        return cls.from_bibtex(Path(path).read_text(encoding=encoding))
+        return cls.from_bibtex(
+            Path(path).read_text(encoding=encoding),
+            parser=parser,
+        )
 
 
 def coerce_citation_library(
@@ -497,6 +636,62 @@ def coerce_citation_library(
     return CitationLibrary(value)
 
 
+def _normalize_citation_fields(fields: Mapping[str, object] | None) -> dict[str, str]:
+    if fields is None:
+        return {}
+    normalized: dict[str, str] = {}
+    for name, value in fields.items():
+        key = str(name).strip().lower()
+        if not key or key in {"entry_type", "entrytype", "key", "id"} or value is None:
+            continue
+        normalized[key] = str(value)
+    return normalized
+
+
+def _mapping_metadata(
+    fields: Mapping[str, object] | None,
+    *names: str,
+) -> str | None:
+    if fields is None:
+        return None
+    accepted = {name.casefold() for name in names}
+    for name, value in fields.items():
+        if str(name).casefold() in accepted:
+            return _optional_text(value)
+    return None
+
+
+def _optional_text(value: object | None) -> str | None:
+    if value is None:
+        return None
+    normalized = str(value).strip()
+    return normalized or None
+
+
+def _field_value(
+    explicit: object | None,
+    fields: Mapping[str, str],
+    name: str,
+) -> str | None:
+    return _optional_text(explicit) or _optional_text(fields.get(name))
+
+
+def _retain_explicit_citation_fields(
+    fields: dict[str, str],
+    *,
+    title: str,
+    authors: Sequence[str],
+    **values: object | None,
+) -> None:
+    fields.setdefault("title", title)
+    if authors:
+        fields.setdefault("author", " and ".join(authors))
+    for name, value in values.items():
+        normalized = _optional_text(value)
+        if normalized is not None:
+            fields.setdefault(name, normalized)
+
+
 def _format_reference_text(source: CitationSource, reference_style: str) -> str:
     resolved_style = normalize_reference_style(reference_style)
     if resolved_style in {"plain", "numbered"}:
@@ -516,9 +711,15 @@ def _format_plain_reference(source: CitationSource) -> str:
     return _join_reference_segments(
         _display_author_text(source),
         source.title,
-        source.publisher,
-        source.year,
+        _container_title(source),
+        _publication_responsibility(source),
+        _edition_chapter(source),
+        _volume_issue_pages(source, style="plain"),
+        _publication_date(source),
+        _version_text(source),
+        _doi_url(source.doi),
         source.url,
+        _accessed_text(source),
         source.note,
     )
 
@@ -526,57 +727,207 @@ def _format_plain_reference(source: CitationSource) -> str:
 def _format_apa_reference(source: CitationSource) -> str:
     return _join_reference_segments(
         _apa_author_text(source),
-        f"({source.year or 'n.d.'})",
+        f"({_publication_date(source) or 'n.d.'})",
         source.title,
-        source.publisher,
+        _apa_publication_text(source),
+        _publication_responsibility(source),
+        _edition_chapter(source),
+        _version_text(source),
+        _doi_url(source.doi),
         source.url,
+        _accessed_text(source),
         source.note,
     )
 
 
 def _format_mla_reference(source: CitationSource) -> str:
     title = _clean_reference_segment(source.title)
-    quoted_title = f'"{title}"' if title else None
+    quoted_title = (
+        f'"{title}"'
+        if title and _entry_uses_article_title(source)
+        else title
+    )
     return _join_reference_segments(
         _mla_author_text(source),
         quoted_title,
-        source.publisher,
-        source.year,
+        _container_title(source),
+        _publication_responsibility(source),
+        _volume_issue_pages(source, style="mla"),
+        _publication_date(source),
+        _edition_chapter(source),
+        _version_text(source),
+        _doi_url(source.doi),
         source.url,
+        _accessed_text(source),
         source.note,
     )
 
 
 def _format_chicago_reference(source: CitationSource) -> str:
-    publication = _join_comma_segments(source.publisher, source.year)
+    publication = _join_comma_segments(
+        _container_title(source),
+        _volume_issue_pages(source, style="chicago"),
+        _publication_responsibility(source),
+        _publication_date(source),
+    )
     return _join_reference_segments(
         _mla_author_text(source),
         source.title,
         publication,
+        _edition_chapter(source),
+        _version_text(source),
+        _doi_url(source.doi),
         source.url,
+        _accessed_text(source),
         source.note,
     )
 
 
 def _format_ieee_reference(source: CitationSource) -> str:
     title = _clean_reference_segment(source.title)
-    quoted_title = f'"{title}"' if title else None
-    publication = _join_comma_segments(source.publisher, source.year)
+    quoted_title = f'"{title}"' if title and _entry_uses_article_title(source) else title
+    publication = _join_comma_segments(
+        _container_title(source),
+        _volume_issue_pages(source, style="ieee"),
+        _publication_responsibility(source),
+        _publication_date(source),
+    )
     return _join_reference_segments(
         _display_author_text(source),
         quoted_title,
         publication,
+        _edition_chapter(source),
+        _version_text(source),
+        _doi_url(source.doi),
         source.url,
+        _accessed_text(source),
         source.note,
     )
 
 
+def _entry_uses_article_title(source: CitationSource) -> bool:
+    return (source.entry_type or "").lower() in {
+        "article",
+        "inbook",
+        "incollection",
+        "inproceedings",
+        "conference",
+    }
+
+
+def _container_title(source: CitationSource) -> str | None:
+    return source.journal or source.booktitle
+
+
+def _publication_responsibility(source: CitationSource) -> str | None:
+    container = _clean_reference_segment(_container_title(source))
+    values = (
+        source.publisher,
+        source.institution,
+        source.school,
+        source.organization,
+        source.address,
+    )
+    unique = tuple(
+        value
+        for value in _unique_text(values)
+        if container is None or value.casefold() != container.casefold()
+    )
+    return _join_comma_segments(*unique)
+
+
+def _publication_date(source: CitationSource) -> str | None:
+    return _join_space_segments(source.month, source.year)
+
+
+def _edition_chapter(source: CitationSource) -> str | None:
+    edition = f"{source.edition} ed." if source.edition else None
+    chapter = f"chap. {source.chapter}" if source.chapter else None
+    return _join_comma_segments(edition, chapter)
+
+
+def _version_text(source: CitationSource) -> str | None:
+    return f"Version {source.version}" if source.version else None
+
+
+def _accessed_text(source: CitationSource) -> str | None:
+    return f"Accessed {source.accessed}" if source.accessed else None
+
+
+def _volume_issue_pages(source: CitationSource, *, style: str) -> str | None:
+    if style == "apa":
+        volume = source.volume
+        if volume and source.number:
+            volume = f"{volume}({source.number})"
+        elif source.number:
+            volume = f"({source.number})"
+        return _join_comma_segments(volume, source.pages)
+
+    volume = f"vol. {source.volume}" if source.volume else None
+    issue = f"no. {source.number}" if source.number else None
+    page_prefix = "pp." if source.pages and ("-" in source.pages or "–" in source.pages) else "p."
+    pages = f"{page_prefix} {source.pages}" if source.pages else None
+    return _join_comma_segments(volume, issue, pages)
+
+
+def _apa_publication_text(source: CitationSource) -> str | None:
+    return _join_comma_segments(
+        _container_title(source),
+        _volume_issue_pages(source, style="apa"),
+    )
+
+
+def _join_space_segments(*segments: str | None) -> str | None:
+    cleaned = [item for segment in segments if (item := _clean_reference_segment(segment))]
+    return " ".join(cleaned) or None
+
+
+def _unique_text(values: Sequence[str | None]) -> tuple[str | None, ...]:
+    seen: set[str] = set()
+    result: list[str | None] = []
+    for value in values:
+        cleaned = _clean_reference_segment(value)
+        if cleaned is None or cleaned.casefold() in seen:
+            continue
+        seen.add(cleaned.casefold())
+        result.append(cleaned)
+    return tuple(result)
+
+
+def _doi_url(doi: str | None) -> str | None:
+    normalized = _optional_text(doi)
+    if normalized is None:
+        return None
+    if normalized.lower().startswith("doi:"):
+        normalized = normalized[4:].strip()
+    if normalized.lower().startswith(("https://doi.org/", "http://doi.org/")):
+        suffix = re.sub(
+            r"^https?://doi\.org/",
+            "",
+            normalized,
+            count=1,
+            flags=re.IGNORECASE,
+        )
+        return f"https://doi.org/{suffix}"
+    return f"https://doi.org/{normalized}"
+
+
+def _reference_links(source: CitationSource) -> tuple[tuple[str, str], ...]:
+    links: list[tuple[str, str]] = []
+    seen: set[str] = set()
+    for visible, target in (
+        (_doi_url(source.doi), _doi_url(source.doi)),
+        (source.url, source.url),
+    ):
+        if visible is None or target is None or visible in seen:
+            continue
+        seen.add(visible)
+        links.append((visible, target))
+    return tuple(links)
+
+
 def _join_reference_segments(*segments: str | None) -> str:
-    cleaned = [
-        cleaned_segment
-        for segment in segments
-        if (cleaned_segment := _clean_reference_segment(segment)) is not None
-    ]
+    cleaned = list(_unique_text(segments))
     if not cleaned:
         return ""
     return ". ".join(cleaned) + "."
@@ -705,116 +1056,8 @@ def _citation_year(source: CitationSource) -> str:
     return source.year or "n.d."
 
 
-def _parse_bibtex_entries(source: str) -> list[tuple[str, dict[str, str]]]:
-    entries: list[tuple[str, dict[str, str]]] = []
-    cursor = 0
-
-    while True:
-        match = re.search(r"@(?P<kind>\w+)\s*(?P<open>[{(])", source[cursor:])
-        if match is None:
-            break
-        entry_type = match.group("kind").lower()
-        opening_delimiter = match.group("open")
-        closing_delimiter = "}" if opening_delimiter == "{" else ")"
-        entry_start = cursor + match.start()
-        body_start = entry_start + match.group(0).rfind(opening_delimiter) + 1
-        depth = 1
-        brace_depth = 0
-        quote: str | None = None
-        position = body_start
-        # Track the entry delimiter separately from braces so both BibTeX
-        # @entry{...} and @entry(...) forms can contain braced field values.
-        while position < len(source) and depth > 0:
-            char = source[position]
-            if quote is not None:
-                if char == quote and source[position - 1] != "\\":
-                    quote = None
-            elif char in {'"', "'"}:
-                quote = char
-            elif char == "{":
-                if opening_delimiter == "{":
-                    depth += 1
-                else:
-                    brace_depth += 1
-            elif char == "}":
-                if opening_delimiter == "{":
-                    depth -= 1
-                else:
-                    brace_depth = max(brace_depth - 1, 0)
-            elif char == opening_delimiter and opening_delimiter == "(" and brace_depth == 0:
-                depth += 1
-            elif char == closing_delimiter and opening_delimiter == "(" and brace_depth == 0:
-                depth -= 1
-            position += 1
-        body = source[body_start : position - 1].strip()
-        cursor = position
-        if entry_type in {"comment", "preamble", "string"}:
-            continue
-        if not body:
-            continue
-
-        key, _, fields_text = body.partition(",")
-        fields = _parse_bibtex_fields(fields_text)
-        entries.append((key.strip(), fields))
-
-    return entries
-
-
-def _parse_bibtex_fields(source: str) -> dict[str, str]:
-    fields: dict[str, str] = {}
-    for part in _split_bibtex_fields(source):
-        if "=" not in part:
-            continue
-        key, value = part.split("=", 1)
-        fields[key.strip().lower()] = _clean_bibtex_value(value)
-    return fields
-
-
-def _split_bibtex_fields(source: str) -> list[str]:
-    parts: list[str] = []
-    depth = 0
-    quote: str | None = None
-    current: list[str] = []
-
-    for char in source:
-        if quote is not None:
-            if char == quote:
-                quote = None
-        elif char in {'"', "'"}:
-            quote = char
-        elif char == "{":
-            depth += 1
-        elif char == "}":
-            depth = max(depth - 1, 0)
-
-        # Top-level commas separate fields; commas inside braced values remain
-        # part of the current field.
-        if char == "," and depth == 0 and quote is None:
-            part = "".join(current).strip()
-            if part:
-                parts.append(part)
-            current = []
-            continue
-        current.append(char)
-
-    tail = "".join(current).strip()
-    if tail:
-        parts.append(tail)
-    return parts
-
-
-def _clean_bibtex_value(value: str) -> str:
-    cleaned = value.strip().rstrip(",").strip()
-    if (
-        len(cleaned) >= 2
-        and ((cleaned[0] == "{" and cleaned[-1] == "}") or (cleaned[0] == cleaned[-1] == '"'))
-    ):
-        cleaned = cleaned[1:-1]
-    cleaned = re.sub(r"\s+", " ", cleaned).strip()
-    return cleaned.replace("{", "").replace("}", "")
-
-
 __all__ = [
+    "CitationDiagnostic",
     "CitationLibrary",
     "CitationSource",
     "format_citation_label",

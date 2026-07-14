@@ -314,6 +314,7 @@ class ReferenceFormat:
         label: Optional singular label override such as ``"Fig."``.
         plural_label: Optional plural label for ``refs(...)`` when all targets
             share the same reference kind.
+        template: Optional ``{label}``/``{value}`` placement override.
         capitalized: Whether to capitalize the rendered label.
         prefix: Text inserted before the rendered reference.
         suffix: Text inserted after the rendered reference.
@@ -336,6 +337,7 @@ class ReferenceFormat:
 
     label: str | None
     plural_label: str | None
+    template: str | None
     capitalized: bool
     prefix: str
     suffix: str
@@ -349,6 +351,7 @@ class ReferenceFormat:
         *,
         label: str | None = None,
         plural_label: str | None = None,
+        template: str | None = None,
         capitalized: bool = False,
         prefix: str = "",
         suffix: str = "",
@@ -359,6 +362,7 @@ class ReferenceFormat:
     ) -> None:
         self.label = _normalize_optional_reference_text(label, "label")
         self.plural_label = _normalize_optional_reference_text(plural_label, "plural_label")
+        self.template = _normalize_optional_reference_template(template)
         self.capitalized = bool(capitalized)
         self.prefix = str(prefix)
         self.suffix = str(suffix)
@@ -380,6 +384,7 @@ class ReferenceFormat:
         values = {
             "label": self.label,
             "plural_label": self.plural_label,
+            "template": self.template,
             "capitalized": self.capitalized,
             "prefix": self.prefix,
             "suffix": self.suffix,
@@ -399,6 +404,21 @@ def _normalize_optional_reference_text(value: str | None, name: str) -> str | No
     if not normalized:
         raise ValueError(f"ReferenceFormat.{name} must not be empty")
     return normalized
+
+
+def _normalize_optional_reference_template(value: str | None) -> str | None:
+    if value is None:
+        return None
+    template = str(value)
+    if "{value}" not in template:
+        raise ValueError("ReferenceFormat.template must contain '{value}'")
+    try:
+        template.format(label="Label", value="1")
+    except (KeyError, ValueError) as exc:
+        raise ValueError(
+            "ReferenceFormat.template supports only '{label}' and '{value}'"
+        ) from exc
+    return template
 
 
 class BlockReference(Text):
@@ -443,6 +463,59 @@ class BlockReference(Text):
         if self.label is not None:
             return "".join(fragment.plain_text() for fragment in self.label)
         return f"{_reference_label_prefix(self.target)} ?"
+
+
+class ObjectLink(BlockReference):
+    """Inline hyperlink to an anchored document object without typed numbering.
+
+    Unlike :class:`BlockReference`, an object link uses only its visible label
+    and never generates a label such as ``Section 2``. Use the module-level
+    :func:`link` helper for external URLs and ``some_block.link(...)`` for
+    document objects.
+    """
+
+    def __init__(
+        self,
+        target: object,
+        *label: InlineInput,
+        style: TextStyle | None = None,
+    ) -> None:
+        resolved_label = (
+            coerce_inlines(label)
+            if label
+            else _default_object_link_label(target)
+        )
+        if not resolved_label:
+            raise TypeError(
+                "ObjectLink without an explicit label requires a target with "
+                "a title, caption, or plain-text representation"
+            )
+        super().__init__(target, *resolved_label, style=style)
+
+    def plain_text(self) -> str:
+        """Return the visible object-link label."""
+
+        return "".join(fragment.plain_text() for fragment in self.label or ())
+
+
+def _default_object_link_label(target: object) -> list[Text]:
+    for attribute in ("title", "caption"):
+        value = getattr(target, attribute, None)
+        if value is None:
+            continue
+        content = getattr(value, "content", value)
+        try:
+            fragments = coerce_inlines((content,))
+        except TypeError:
+            continue
+        if fragments and any(fragment.plain_text().strip() for fragment in fragments):
+            return fragments
+    plain_text = getattr(target, "plain_text", None)
+    if callable(plain_text):
+        value = str(plain_text()).strip()
+        if value:
+            return [Text(value)]
+    return []
 
 
 def _reference_label_prefix(target: object) -> str:
@@ -1833,6 +1906,8 @@ def _is_referenceable(value: object) -> bool:
         return True
     if _as_equation(value) is not None:
         return True
+    if _as_equation_line(value) is not None:
+        return True
     block_name = type(value).__name__
     return block_name in {
         "Box",
@@ -1872,6 +1947,16 @@ def _as_equation(value: object) -> object | None:
     return None
 
 
+def _as_equation_line(value: object) -> object | None:
+    try:
+        from oodocs.components.equations import EquationLine
+    except ImportError:
+        return None
+    if isinstance(value, EquationLine):
+        return value
+    return None
+
+
 def _is_positioned_inline(value: object) -> bool:
     value_type = type(value)
     return (
@@ -1892,6 +1977,7 @@ __all__ = [
     "InlineChip",
     "Italic",
     "LineBreak",
+    "ObjectLink",
     "Math",
     "InlineCode",
     "ReferenceFormat",

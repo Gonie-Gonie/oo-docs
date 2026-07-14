@@ -45,3 +45,7 @@ Programmatic entry points:
 - `build_all.build_all(output_dir=..., output_formats=...)` renders every
   template example and returns a mapping of template names to `OutputBundle`
   values.
+
+Generic covers use `CoverPagePreset.accented(...)` or
+`CoverPagePreset.centered_logo(...)`. Both leave organization, date, footer,
+and other identity content to the caller.

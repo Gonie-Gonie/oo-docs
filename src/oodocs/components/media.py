@@ -902,12 +902,30 @@ def _build_row_header_cells(index_values: list[tuple[str, ...]]) -> list[list[Ta
     return row_headers
 
 
-def _dataframe_body_rows(dataframe: object, *, include_index: bool) -> list[list[TableCell]]:
+def _dataframe_body_rows(
+    dataframe: object,
+    *,
+    include_index: bool,
+    formatters: Mapping[object, RecordFormatter] | None = None,
+) -> list[list[TableCell]]:
     if hasattr(dataframe, "itertuples"):
         data_rows = [tuple(row) for row in dataframe.itertuples(index=False, name=None)]
     else:
         matrix = dataframe.to_numpy().tolist()  # type: ignore[call-arg]
         data_rows = [tuple(row) for row in matrix]
+    column_keys = _axis_labels(dataframe.columns)
+
+    def formatted_cells(row_values: Sequence[object]) -> list[TableCell]:
+        return [
+            TableCell(
+                _format_data_value(
+                    value,
+                    column=column_key,
+                    formatters=formatters,
+                )
+            )
+            for column_key, value in zip(column_keys, row_values)
+        ]
 
     body_rows: list[list[TableCell]] = []
     if include_index:
@@ -916,12 +934,12 @@ def _dataframe_body_rows(dataframe: object, *, include_index: bool) -> list[list
         for row_index, row_values in enumerate(data_rows):
             body_rows.append(
                 row_headers[row_index]
-                + [TableCell("" if value is None else str(value)) for value in row_values]
+                + formatted_cells(row_values)
             )
         return body_rows
 
     for row_values in data_rows:
-        body_rows.append([TableCell("" if value is None else str(value)) for value in row_values])
+        body_rows.append(formatted_cells(row_values))
     return body_rows
 
 
@@ -1069,6 +1087,33 @@ def build_table_layout(
     )
 
 
+def _validate_expanded_header_rows(layout: TableLayout) -> None:
+    """Require every header row to cover the expanded table width."""
+
+    if layout.header_row_count < 1 or layout.column_count < 1:
+        return
+    covered_columns = [set() for _ in range(layout.header_row_count)]
+    for placement in layout.placements:
+        if placement.row >= layout.header_row_count:
+            continue
+        for row_offset in range(placement.cell.rowspan):
+            row_index = placement.row + row_offset
+            if row_index >= layout.header_row_count:
+                break
+            covered_columns[row_index].update(
+                range(placement.column, placement.column + placement.cell.colspan)
+            )
+
+    expected = set(range(layout.column_count))
+    for row_index, covered in enumerate(covered_columns):
+        if covered != expected:
+            raise ValueError(
+                f"header row {row_index} spans {len(covered)} of "
+                f"{layout.column_count} expanded columns; grouped header colspans "
+                "must match the table width"
+            )
+
+
 def _coerce_style_mapping(
     styles: Mapping[int, TableCellStyleInput] | None,
     *,
@@ -1176,11 +1221,34 @@ def _formatter_for(
 ) -> RecordFormatter | None:
     if formatters is None:
         return None
-    if column in formatters:
-        return formatters[column]
-    text_column = str(column)
-    if text_column in formatters:
-        return formatters[text_column]
+
+    candidates: list[object] = [column]
+    if isinstance(column, tuple):
+        labels = tuple(label for label in column if label not in (None, ""))
+        if labels:
+            # A leaf key is more specific than a group key. Full tuple keys
+            # remain the most specific option because ``column`` is first.
+            candidates.append(labels[-1])
+            candidates.extend(
+                labels[:length]
+                for length in range(len(labels) - 1, 0, -1)
+            )
+            candidates.extend(reversed(labels[:-1]))
+
+    checked: set[object] = set()
+    for candidate in candidates:
+        try:
+            if candidate not in checked:
+                checked.add(candidate)
+                if candidate in formatters:
+                    return formatters[candidate]
+        except TypeError:
+            continue
+        text_candidate = str(candidate)
+        if text_candidate not in checked:
+            checked.add(text_candidate)
+            if text_candidate in formatters:
+                return formatters[text_candidate]
     return None
 
 
@@ -1468,6 +1536,7 @@ class Table(Block):
         )
 
         layout = self._layout()
+        _validate_expanded_header_rows(layout)
         if self.column_widths is not None and len(self.column_widths) != layout.column_count:
             raise ValueError("column_widths must match the expanded number of table columns")
         if self.columns is not None and len(self.columns) != layout.column_count:
@@ -1839,6 +1908,7 @@ class Table(Block):
         continuation_label: str | None = None,
         continued_caption_template: str = "{caption} ({continuation_label})",
         include_index: bool = False,
+        formatters: Mapping[object, RecordFormatter] | None = None,
         split: TableSplit = False,
         overflow_policy: TableOverflowPolicyInput = None,
         placement: str | None = None,
@@ -1877,6 +1947,9 @@ class Table(Block):
             continued_caption_template: Template used to describe continuation
                 captions. It receives ``caption`` and ``continuation_label``.
             include_index: Whether to include dataframe index columns.
+            formatters: Optional numeric or value formatters keyed by a full
+                column key, leaf column key, or parent group key. More specific
+                keys take precedence.
             split: Whether renderers may split the table across pages.
             overflow_policy: Policy for validation of intentionally wide
                 tables.
@@ -1898,7 +1971,12 @@ class Table(Block):
         """
 
         return cls(
-            dataframe,
+            _dataframe_header_rows(dataframe, include_index=include_index),
+            _dataframe_body_rows(
+                dataframe,
+                include_index=include_index,
+                formatters=formatters,
+            ),
             caption=caption,
             columns=columns,
             column_widths=column_widths,

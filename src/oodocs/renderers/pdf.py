@@ -38,6 +38,7 @@ from reportlab.platypus import (
     Flowable,
     Frame,
     HRFlowable,
+    Indenter,
     KeepTogether,
     NextPageTemplate,
     PageBreak as RLPageBreak,
@@ -53,6 +54,7 @@ from reportlab.platypus.flowables import BalancedColumns
 from reportlab.platypus.tableofcontents import TableOfContents as RLTableOfContents
 
 from oodocs.components.blocks import (
+    AlignedEquation,
     Box,
     BulletList,
     CodeBlock,
@@ -79,6 +81,7 @@ from oodocs.components.generated import (
     ListOfTables,
     TableOfContents,
 )
+from oodocs.components.descriptions import DescriptionList
 from oodocs.components.inline import (
     _BlockReference,
     Citation,
@@ -127,7 +130,7 @@ from oodocs.layout.indexing import (
     resolve_block_reference,
 )
 from oodocs.settings import PageLayout
-from oodocs.styles import BoxStyle, ListStyle, ParagraphStyle, TableStyle as OODocsTableStyle, TextStyle, Theme
+from oodocs.styles import BoxStyle, DescriptionListStyle, ListStyle, ParagraphStyle, TableStyle as OODocsTableStyle, TextStyle, Theme
 from oodocs.renderers.context import PdfRenderContext, _settings_with_page_layout
 from oodocs.renderers.syntax import SyntaxToken, _syntax_line_tokens, syntax_tokens
 
@@ -567,6 +570,11 @@ class OODocsPdfTemplate(SimpleDocTemplate):
     def __init__(self, *args: object, **kwargs: object) -> None:
         super().__init__(*args, **kwargs)
         self.main_matter_start_page: int | None = None
+        self.back_matter_start_page: int | None = None
+        self.main_matter_start_value: int = 1
+        self.back_matter_start_value: int = 1
+        self.restart_main_matter: bool = True
+        self.restart_back_matter: bool = False
         self._outline_base_level: int | None = None
         self._outline_last_level: int | None = None
         self._oodocs_page_layout_templates: list[
@@ -598,6 +606,9 @@ class OODocsPdfTemplate(SimpleDocTemplate):
         """
 
         self.main_matter_start_page = None
+        self.back_matter_start_page = None
+        self.main_matter_start_value = 1
+        self.back_matter_start_value = 1
         self._outline_base_level = None
         self._outline_last_level = None
 
@@ -669,9 +680,19 @@ class OODocsPdfTemplate(SimpleDocTemplate):
             flowable: Flowable that ReportLab just rendered.
         """
 
-        if isinstance(flowable, PageNumberTransition) and flowable.mode == "main":
-            self.main_matter_start_page = self.page + 1
-            return
+        if isinstance(flowable, PageNumberTransition):
+            if flowable.mode == "main":
+                self.main_matter_start_page = self.page + 1
+                self.main_matter_start_value = (
+                    1 if self.restart_main_matter else self.page + 1
+                )
+                return
+            if flowable.mode == "back":
+                self.back_matter_start_value = (
+                    1 if self.restart_back_matter else self._logical_page(self.page) + 1
+                )
+                self.back_matter_start_page = self.page + 1
+                return
         toc_entry = getattr(flowable, "_oodocs_toc_entry", None)
         if toc_entry is not None:
             level, text, key = toc_entry
@@ -689,11 +710,38 @@ class OODocsPdfTemplate(SimpleDocTemplate):
             self.notify(kind, (0, text, self._logical_page(self.page), key))
 
     def _logical_page(self, physical_page: int) -> int:
-        if self.main_matter_start_page is None:
-            return physical_page
-        if physical_page < self.main_matter_start_page:
-            return physical_page
-        return physical_page - self.main_matter_start_page + 1
+        if (
+            self.back_matter_start_page is not None
+            and physical_page >= self.back_matter_start_page
+        ):
+            return (
+                self.back_matter_start_value
+                + physical_page
+                - self.back_matter_start_page
+            )
+        if (
+            self.main_matter_start_page is not None
+            and physical_page >= self.main_matter_start_page
+        ):
+            return (
+                self.main_matter_start_value
+                + physical_page
+                - self.main_matter_start_page
+            )
+        return physical_page
+
+    def _matter_for_page(self, physical_page: int) -> str:
+        if (
+            self.back_matter_start_page is not None
+            and physical_page >= self.back_matter_start_page
+        ):
+            return "back"
+        if (
+            self.main_matter_start_page is not None
+            and physical_page >= self.main_matter_start_page
+        ):
+            return "main"
+        return "front"
 
     def _outline_level(self, heading_level: object) -> int:
         raw_level = max(int(heading_level) - 1, 0)
@@ -805,6 +853,8 @@ class PdfRenderer:
             topMargin=page_margins.top_in_inches(settings.unit) * inch,
             bottomMargin=page_margins.bottom_in_inches(settings.unit) * inch,
         )
+        pdf.restart_main_matter = settings.theme.page_numbers.restart_main_matter
+        pdf.restart_back_matter = settings.theme.page_numbers.restart_back_matter
         self._register_pdf_page_layout_templates(pdf, document)
         story: list[object] = []
         styles = getSampleStyleSheet()
@@ -817,25 +867,30 @@ class PdfRenderer:
             styles=styles,
         )
 
-        front_children, main_children = document.split_top_level_children()
+        matter = document.matter_layout()
+        front_children = matter.front.children
+        main_children = matter.main.children
+        back_children = matter.back.children
         title_matter = settings.title_matter
-        has_front_matter = title_matter.cover_page or bool(front_children)
+        has_front_matter = title_matter.cover is not None or bool(front_children)
 
         story.extend(self._render_title_matter(document, context))
-        if title_matter.cover_page and front_children:
+        if (
+            (title_matter.cover is not None and front_children)
+            or matter.front.page_break_before
+        ):
             story.append(RLPageBreak())
 
         story.extend(
             self._render_top_level_children(
                 front_children,
                 context,
-                follows_existing_content=not title_matter.cover_page,
+                follows_existing_content=title_matter.cover is None,
             )
         )
         if has_front_matter and main_children:
             story.append(PageNumberTransition("main"))
-            if story and not isinstance(story[-2] if len(story) > 1 else None, RLPageBreak):
-                story.append(RLPageBreak())
+            story.append(RLPageBreak())
             story.extend(
                 self._render_top_level_children(
                     main_children,
@@ -843,12 +898,24 @@ class PdfRenderer:
                     follows_existing_content=False,
                 )
             )
-        elif not has_front_matter:
+        elif not has_front_matter and main_children:
+            if matter.main.page_break_before:
+                story.extend([PageNumberTransition("main"), RLPageBreak()])
             story.extend(
                 self._render_top_level_children(
                     main_children,
                     context,
                     follows_existing_content=True,
+                )
+            )
+
+        if back_children:
+            story.extend([PageNumberTransition("back"), RLPageBreak()])
+            story.extend(
+                self._render_top_level_children(
+                    back_children,
+                    context,
+                    follows_existing_content=False,
                 )
             )
 
@@ -1256,6 +1323,76 @@ class PdfRenderer:
             context.render_index,
             context.unit,
         )
+
+    def render_description_list(
+        self,
+        block: DescriptionList,
+        context: PdfRenderContext,
+    ) -> list[object]:
+        """Render a page-splittable description list with computed indents."""
+
+        style = context.stylesheet.resolve(
+            "description_list",
+            block.style,
+            DescriptionListStyle(),
+        )
+        term_width = style.term_width_in_inches(context.unit)
+        if term_width is None:
+            term_width = 1.25 if style.layout == "hanging" else 0.0
+        gap = style.term_gap_in_inches(context.unit)
+        definition_indent = gap if style.layout == "stacked" else term_width + gap
+        term_paragraph_style = self._paragraph_style(
+            ParagraphStyle(space_after=0.0, keep_with_next=True),
+            context.theme,
+            context.styles["BodyText"],
+            default_unit=context.unit,
+        )
+        definition_paragraph_style = self._paragraph_style(
+            style.definition_style,
+            context.theme,
+            context.styles["BodyText"],
+            default_unit=context.unit,
+        )
+
+        story: list[object] = []
+        for item in block.items:
+            story.append(
+                RLParagraph(
+                    self._inline_markup(
+                        item.term,
+                        context.theme,
+                        context.render_index,
+                        base_font_name=term_paragraph_style.fontName,
+                        base_size=term_paragraph_style.fontSize,
+                        default_style=style.term_text_style,
+                    ),
+                    term_paragraph_style,
+                )
+            )
+            if definition_indent:
+                story.append(Indenter(left=definition_indent * inch))
+            if item.children:
+                for child in item.children:
+                    original_style = None
+                    if (
+                        isinstance(child, Paragraph)
+                        and isinstance(child.style, ParagraphStyle)
+                        and child.style == ParagraphStyle()
+                    ):
+                        original_style = child.style
+                        child.style = style.definition_style
+                    try:
+                        story.extend(self._render_block(child, context))
+                    finally:
+                        if original_style is not None:
+                            child.style = original_style
+            else:
+                story.append(RLParagraph("&nbsp;", definition_paragraph_style))
+            if definition_indent:
+                story.append(Indenter(left=-definition_indent * inch))
+            if style.item_spacing:
+                story.append(Spacer(1, style.item_spacing))
+        return story
 
     def render_code_block(
         self,
@@ -2070,19 +2207,61 @@ class PdfRenderer:
     ) -> list[object]:
         theme = context.theme
         styles = context.styles
-        story: list[object] = [
+        title_matter = document.settings.title_matter
+        cover = title_matter.cover
+        cover_style = cover.resolved_style() if cover is not None else None
+        title_alignment = (
+            cover_style.text_alignment
+            if cover_style is not None
+            else theme.title_matter.title_text_alignment
+        )
+        story: list[object] = []
+        if cover is not None:
+            if cover_style.top_spacing:
+                story.append(Spacer(1, cover_style.top_spacing * inch))
+            for child in cover.extra_top:
+                story.extend(child._render_to_pdf(self, context))
+            if cover.eyebrow is not None:
+                story.append(
+                    self._title_paragraph(
+                        cover.eyebrow,
+                        theme,
+                        styles,
+                        style_name="OODocsCoverEyebrow",
+                        font_size=cover_style.eyebrow_style.font_size or 10,
+                        alignment=title_alignment,
+                        default_style=cover_style.eyebrow_style,
+                        space_after=cover_style.section_spacing * 72,
+                    )
+                )
+            if cover.organization is not None:
+                story.append(
+                    self._title_paragraph(
+                        cover.organization,
+                        theme,
+                        styles,
+                        style_name="OODocsCoverOrganization",
+                        font_size=cover_style.organization_style.font_size or 11,
+                        alignment=title_alignment,
+                        default_style=cover_style.organization_style,
+                        space_after=cover_style.section_spacing * 72,
+                    )
+                )
+            logo = cover.logo_figure()
+            if logo is not None:
+                story.extend(logo._render_to_pdf(self, context))
+        story.append(
             self._title_paragraph(
                 [Text(document.title)],
                 theme,
                 styles,
                 style_name="OODocsTitle",
                 font_size=theme.typography.title_font_size,
-                alignment=theme.title_matter.title_text_alignment,
+                alignment=title_alignment,
                 bold=True,
                 space_after=18,
             )
-        ]
-        title_matter = document.settings.title_matter
+        )
         if title_matter.subtitle is not None:
             story.append(
                 self._title_paragraph(
@@ -2091,7 +2270,9 @@ class PdfRenderer:
                     styles,
                     style_name="OODocsSubtitle",
                     font_size=max(theme.typography.body_font_size + 1, 12),
-                    alignment=theme.title_matter.subtitle_text_alignment,
+                    alignment=title_alignment
+                    if cover is not None
+                    else theme.title_matter.subtitle_text_alignment,
                     italic=True,
                     space_after=12,
                 )
@@ -2105,11 +2286,41 @@ class PdfRenderer:
                     styles,
                     style_name=f"OODocsAuthor{line.kind.title()}",
                     font_size=self._title_line_font_size(line, theme),
-                    alignment=self._title_line_alignment(line, theme),
+                    alignment=title_alignment
+                    if cover is not None
+                    else self._title_line_alignment(line, theme),
                     italic=line.kind == "affiliation",
                     space_after=self._author_title_line_space_after(author_lines, index, last_space=12),
                 )
             )
+        if cover is not None:
+            if cover.date is not None:
+                story.append(
+                    self._title_paragraph(
+                        cover.date,
+                        theme,
+                        styles,
+                        style_name="OODocsCoverDate",
+                        font_size=cover_style.date_style.font_size or 10,
+                        alignment=title_alignment,
+                        default_style=cover_style.date_style,
+                        space_after=cover_style.section_spacing * 72,
+                    )
+                )
+            for child in (*cover.note, *cover.extra_bottom):
+                story.extend(child._render_to_pdf(self, context))
+            if cover.footer is not None:
+                story.append(
+                    self._title_paragraph(
+                        cover.footer,
+                        theme,
+                        styles,
+                        style_name="OODocsCoverFooter",
+                        font_size=cover_style.footer_style.font_size or 9,
+                        alignment=title_alignment,
+                        default_style=cover_style.footer_style,
+                    )
+                )
         return story
 
     def _title_line_alignment(self, line: AuthorTitleLine, theme: Theme) -> str:
@@ -2155,16 +2366,26 @@ class PdfRenderer:
         bold: bool = False,
         italic: bool = False,
         space_after: float = 0,
+        default_style: TextStyle | None = None,
     ) -> RLParagraph:
+        default_style = default_style or TextStyle()
+        resolved_bold = default_style.bold if default_style.bold is not None else bold
+        resolved_italic = (
+            default_style.italic if default_style.italic is not None else italic
+        )
+        resolved_size = default_style.font_size or font_size
+        resolved_font = default_style.font_name or theme.resolve_body_font()
         paragraph_style = RLParagraphStyle(
             style_name,
             parent=styles["BodyText"],
-            fontName=self._resolve_font(theme.resolve_body_font(), bold, italic),
-            fontSize=font_size,
-            leading=font_size * 1.2,
+            fontName=self._resolve_font(resolved_font, resolved_bold, resolved_italic),
+            fontSize=resolved_size,
+            leading=resolved_size * 1.2,
             alignment=ALIGNMENTS[alignment],
             spaceAfter=space_after,
-            textColor=colors.black,
+            textColor=colors.HexColor(f"#{default_style.text_color}")
+            if default_style.text_color
+            else colors.black,
         )
         return RLParagraph(
             self._inline_markup(
@@ -2173,8 +2394,8 @@ class PdfRenderer:
                 RenderIndex(),
                 base_font_name=paragraph_style.fontName,
                 base_size=paragraph_style.fontSize,
-                base_bold=bold,
-                base_italic=italic,
+                base_bold=resolved_bold,
+                base_italic=resolved_italic,
             ),
             paragraph_style,
         )
@@ -2590,6 +2811,10 @@ class PdfRenderer:
         table.setStyle(TableStyle(style_commands))
 
         story: list[object] = []
+        if block.caption is None:
+            anchor = render_index.table_anchor(block)
+            if anchor is not None:
+                story.append(RLParagraph(self._anchor_markup(anchor), body_style))
         if block.caption is not None and theme.captions.table_caption_position == "above":
             caption_style = RLParagraphStyle(
                 "TableCaption",
@@ -3125,6 +3350,14 @@ class PdfRenderer:
         styles: object,
         render_index: RenderIndex,
     ) -> list[object]:
+        if isinstance(block, AlignedEquation):
+            return self._render_aligned_equation(
+                block,
+                theme,
+                styles,
+                render_index,
+            )
+
         block_style = theme.stylesheet.resolve("paragraph", block.style, ParagraphStyle())
         equation_style = RLParagraphStyle(
             "EquationBlock",
@@ -3147,6 +3380,103 @@ class PdfRenderer:
             equation_markup += f" ({number})"
         return [RLParagraph(equation_markup, equation_style)]
 
+    def _render_aligned_equation(
+        self,
+        block: AlignedEquation,
+        theme: Theme,
+        styles: object,
+        render_index: RenderIndex,
+    ) -> list[object]:
+        """Render aligned equation rows in a borderless ReportLab table."""
+
+        block_style = theme.stylesheet.resolve(
+            "paragraph",
+            block.style,
+            ParagraphStyle(),
+        )
+        font_size = max(theme.typography.body_font_size + 1, 12)
+        base_style = RLParagraphStyle(
+            "AlignedEquationBlock",
+            parent=styles["BodyText"],
+            fontName=self._resolve_font(theme.resolve_body_font(), False, False),
+            fontSize=font_size,
+            leading=font_size * 1.3,
+            alignment=ALIGNMENTS[theme.resolve_paragraph_text_alignment(block_style)],
+            spaceAfter=0,
+            textColor=colors.black,
+        )
+        right_style = RLParagraphStyle(
+            "AlignedEquationRight",
+            parent=base_style,
+            alignment=TA_RIGHT,
+        )
+        left_style = RLParagraphStyle(
+            "AlignedEquationLeft",
+            parent=base_style,
+            alignment=TA_LEFT,
+        )
+        center_style = RLParagraphStyle(
+            "AlignedEquationCenter",
+            parent=base_style,
+            alignment=TA_CENTER,
+        )
+        number_style = RLParagraphStyle(
+            "AlignedEquationNumber",
+            parent=base_style,
+            alignment=TA_RIGHT,
+            fontSize=theme.typography.body_font_size,
+        )
+        maximum_columns = max(len(line.alignment_parts()) for line in block.lines)
+        group_anchor = render_index.anchor_for(block)
+        group_number = render_index.equation_number(block)
+        rows: list[list[object]] = []
+        for row_index, line in enumerate(block.lines):
+            parts = line.alignment_parts()
+            cells: list[object] = []
+            for column_index in range(maximum_columns):
+                paragraph_style = (
+                    right_style
+                    if maximum_columns > 1 and column_index % 2 == 0
+                    else left_style
+                    if maximum_columns > 1
+                    else center_style
+                )
+                markup = ""
+                if column_index == 0:
+                    if row_index == 0:
+                        markup += self._anchor_markup(group_anchor)
+                    markup += self._anchor_markup(render_index.anchor_for(line))
+                if column_index < len(parts) and parts[column_index]:
+                    markup += self._math_markup(
+                        Math(parts[column_index]),
+                        theme,
+                        base_font_name=base_style.fontName,
+                        base_size=base_style.fontSize,
+                    )
+                cells.append(RLParagraph(markup, paragraph_style))
+            number = render_index.equation_number(line)
+            if number is None and row_index == len(block.lines) - 1:
+                number = group_number
+            number_markup = "" if number is None else f"({escape(str(number))})"
+            cells.append(RLParagraph(number_markup, number_style))
+            rows.append(cells)
+
+        table = RLTable(rows, hAlign="CENTER")
+        table.setStyle(
+            TableStyle(
+                [
+                    ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 2),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 2),
+                    ("TOPPADDING", (0, 0), (-1, -1), 0),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+                    ("LEFTPADDING", (-1, 0), (-1, -1), 9),
+                ]
+            )
+        )
+        table.spaceAfter = block_style.space_after or 0
+        return [KeepTogether([table])]
+
     def _render_figure(
         self,
         block: Figure,
@@ -3162,6 +3492,10 @@ class PdfRenderer:
 
         body_style = self._paragraph_style(ParagraphStyle(space_after=0), theme, styles["BodyText"])
         elements: list[object] = [image]
+        if block.caption is None:
+            anchor = render_index.figure_anchor(block)
+            if anchor is not None:
+                elements.insert(0, RLParagraph(self._anchor_markup(anchor), body_style))
         if block.caption is not None and theme.captions.figure_caption_position == "above":
             caption_style = RLParagraphStyle(
                 "FigureCaption",
@@ -3900,7 +4234,7 @@ class PdfRenderer:
             return fragment.value
         if isinstance(fragment, Math):
             return fragment.plain_text()
-        return fragment.value
+        return fragment.plain_text()
 
     def _flatten_fragments(
         self,
@@ -3935,13 +4269,7 @@ class PdfRenderer:
         target: object,
         render_index: RenderIndex,
     ) -> str | None:
-        if isinstance(target, (Table, SubTable, SubTableGroup)):
-            return render_index.table_anchor(target)
-        if isinstance(target, (Figure, SubFigure, SubFigureGroup)):
-            return render_index.figure_anchor(target)
-        if isinstance(target, (Part, Section)):
-            return render_index.heading_anchor(target)
-        return render_index.block_anchor(target)
+        return render_index.anchor_for(target)
 
     def _resolve_block_reference(
         self,
@@ -4506,11 +4834,13 @@ class PdfRenderer:
             canvas.saveState()
             current_page = canvas.getPageNumber()
             main_start_page = getattr(doc, "main_matter_start_page", None)
+            back_start_page = getattr(doc, "back_matter_start_page", None)
             page_item_phase = self._page_item_phase(
                 document,
                 has_front_matter=has_front_matter,
                 current_page=current_page,
                 main_start_page=main_start_page,
+                back_start_page=back_start_page,
             )
             if theme.blocks.page_background_color != "FFFFFF":
                 canvas.setFillColor(colors.HexColor(f"#{theme.blocks.page_background_color}"))
@@ -4525,15 +4855,16 @@ class PdfRenderer:
             if not theme.uses_header_footer():
                 canvas.restoreState()
                 return
+            if page_item_phase == "cover":
+                canvas.restoreState()
+                return
             canvas.setFont(font_name, theme.resolve_header_footer_font_size())
-            is_front_matter = has_front_matter and (
-                main_start_page is None or current_page < main_start_page
+            matter_name = (
+                doc._matter_for_page(current_page)
+                if has_front_matter or back_start_page is not None
+                else "main"
             )
-            logical_page = (
-                current_page
-                if is_front_matter or main_start_page is None
-                else current_page - main_start_page + 1
-            )
+            logical_page = doc._logical_page(current_page)
             page_kind = self._header_footer_page_kind(
                 current_page,
                 theme.effective_header_footer().different_first_page,
@@ -4545,7 +4876,7 @@ class PdfRenderer:
                 theme,
                 page_kind=page_kind,
                 page_number=logical_page,
-                front_matter=is_front_matter,
+                matter=matter_name,
                 title=document.title,
                 chapter=running_chapter,
                 section=running_section,
@@ -4561,9 +4892,12 @@ class PdfRenderer:
         has_front_matter: bool,
         current_page: int,
         main_start_page: int | None,
+        back_start_page: int | None,
     ) -> str:
-        if document.settings.title_matter.cover_page and current_page == 1:
+        if document.settings.title_matter.cover is not None and current_page == 1:
             return "cover"
+        if back_start_page is not None and current_page >= back_start_page:
+            return "back"
         if has_front_matter and (
             main_start_page is None or current_page < main_start_page
         ):
@@ -4603,7 +4937,7 @@ class PdfRenderer:
         *,
         page_kind: str,
         page_number: int,
-        front_matter: bool,
+        matter: str,
         title: str,
         chapter: str,
         section: str,
@@ -4628,7 +4962,7 @@ class PdfRenderer:
                 text = theme.format_header_footer_text(
                     template,
                     page_number=page_number,
-                    front_matter=front_matter,
+                    matter=matter,  # type: ignore[arg-type]
                     title=title,
                     chapter=chapter,
                     section=section,

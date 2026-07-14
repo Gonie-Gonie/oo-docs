@@ -19,14 +19,13 @@ Optional extras are available for focused workflows:
 
 ```bash
 pip install "oodocs[examples]"
-pip install "oodocs[adapters]"
+pip install "oodocs[integrations]"
 pip install "oodocs[apidoc]"
 ```
 
 - `examples` installs dependencies used by the bundled example scripts, such as
   matplotlib and pandas.
-- `adapters` installs YAML support for repository and workflow metadata
-  adapters.
+- `integrations` installs YAML support for optional workflow collectors.
 - `apidoc` installs API collection and docstring parsing dependencies.
 
 ## Quick Start
@@ -91,7 +90,8 @@ are imported through the same parser APIs available from Python.
 - Markdown and Jupyter notebook imports that become editable OODocs blocks
 - API reference material from Python packages, modules, source trees, and
   docstrings through `oodocs.apidoc`
-- release and audit documents from repository metadata through `oodocs.adapters`
+- release and audit documents from generic metadata models, explicit
+  `oodocs.integrations`, and caller-configured `oodocs.evidence` reports
 
 ## API Documentation Workflows
 

@@ -13,7 +13,7 @@ the standard APIs.
 | Technical report | `TechnicalReportTemplate(...)` | Builds cover-page title matter, optional table of contents, executive summary, sections, appendices, and references. |
 | Software manual | `SoftwareManualTemplate(...)` | Builds overview, manual sections, appendices, and optional generated pages for documentation workflows. |
 | Book-like document | `BookTemplate(...)` | Accepts `front_matter=...`, `parts=...`, `chapters=...`, `appendices=...`, and `back_matter=...`. |
-| Reusable cover page | `CoverPagePreset.eplus_simple(...)` | Produces `DocumentSettings(...)` with cover-scoped overlays and title-matter defaults. |
+| Reusable cover page | `CoverPagePreset.accented(...)` or `CoverPagePreset.centered_logo(...)` | Produces `DocumentSettings(...)` around a generic, caller-owned `CoverPage`. |
 | Direct assembly | `Section(...)`, `Chapter(...)`, `Part(...)`, and `Appendix(...)` | Use when the document shape is unique and a preset would hide more than it helps. |
 
 ## Matter And Structure Policy
@@ -41,3 +41,30 @@ The runnable catalog in `examples/template_presets/` demonstrates
 `CoverPagePreset`, `JournalArticleTemplate`, `TechnicalReportTemplate`,
 `SoftwareManualTemplate`, and `BookTemplate` alongside direct manuscript
 assembly.
+
+## Generic Cover Presets
+
+`CoverPagePreset.accented(...)` creates a left-accented layout and
+`CoverPagePreset.centered_logo(...)` creates a centered layout sized for a
+caller-provided logo. Neither preset supplies an organization, project name,
+date, version, or footer. Pass those values explicitly, then use `settings()`
+to combine the cover with caller-owned subtitle, authors, metadata, overlays,
+and theme settings.
+
+```python
+from oodocs import Author
+from oodocs.presets import CoverPagePreset
+
+preset = CoverPagePreset.accented(
+    organization="Example Lab",
+    footer="Internal review",
+)
+settings = preset.settings(
+    subtitle="Release evidence",
+    authors=[Author("Review Lead")],
+)
+```
+
+Use `CoverPage` directly when the content shape is unique. See
+[`cover-page.md`](cover-page.md) for content, asset, renderer, and validation
+semantics.

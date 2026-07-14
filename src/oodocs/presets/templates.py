@@ -7,19 +7,19 @@ from dataclasses import dataclass, field
 
 from oodocs.components.base import Block, BlockInput, coerce_blocks
 from oodocs.components.blocks import Appendix, Chapter, Paragraph, Part, Section
+from oodocs.components.cover import CoverPage
 from oodocs.components.generated import ListOfReferences, TableOfContents
 from oodocs.components.inline import InlineInput, Text, bold
 from oodocs.components.people import AuthorInput, AuthorLayout
-from oodocs.components.positioning import PositionedItem, Shape, TextBox
+from oodocs.components.positioning import PositionedItem
 from oodocs.components.references import CitationLibrary, CitationSource
-from oodocs.core import normalize_color
 from oodocs.document import Document
 from oodocs.styles import (
     BlockDefaults,
     CaptionDefaults,
     GeneratedContentDefaults,
     PageNumberDefaults,
-    StrokeStyle,
+    CoverPageStyle,
     TitleMatterDefaults,
     TypographyDefaults,
     Theme,
@@ -283,7 +283,9 @@ class JournalArticleTemplate:
                 subtitle=subtitle,
                 authors=authors,
                 author_layout=self.author_layout,
-                cover_page=self.cover_page if cover_page is None else cover_page,
+                cover=CoverPage()
+                if (self.cover_page if cover_page is None else cover_page)
+                else None,
             ),
             page_layout=self.page_layout,
             theme=self.theme,
@@ -501,38 +503,12 @@ def _coerce_parts(parts: Sequence[BookPartInput]) -> list[Part]:
 
 @dataclass(slots=True)
 class CoverPagePreset:
-    """Reusable cover-page settings for report-style documents.
+    """A named generic cover model plus ordinary document settings."""
 
-    Attributes:
-        name: Preset display name.
-        accent_color: Accent color used by cover-only page decorations.
-        muted_color: Secondary decoration color.
-        footer_label: Optional small footer label on the cover page.
-        page_layout: Page geometry used by generated settings.
-        theme: Theme used by generated settings.
-        author_layout: Structured author layout used by generated settings.
-
-    Examples:
-        ```python
-        from oodocs import Author, Document, Paragraph
-        from oodocs.presets import CoverPagePreset
-
-        cover = CoverPagePreset.eplus_simple(footer_label="Internal review")
-        document = Document(
-            "Validation Report",
-            Paragraph("Findings."),
-            settings=cover.settings(
-                subtitle="Release gate evidence",
-                authors=[Author("QA Team")],
-            ),
-        )
-        ```
-    """
-
-    name: str = "EPlusSimple cover"
-    accent_color: str = "2563EB"
-    muted_color: str = "64748B"
-    footer_label: str | None = "EPlusSimple"
+    name: str = "Accented cover"
+    cover: CoverPage = field(
+        default_factory=lambda: CoverPage(style=CoverPageStyle.accented())
+    )
     page_layout: PageLayout = field(default_factory=_default_cover_page_layout)
     theme: Theme = field(default_factory=_default_cover_theme)
     author_layout: AuthorLayout = field(
@@ -543,8 +519,8 @@ class CoverPagePreset:
     )
 
     def __post_init__(self) -> None:
-        self.accent_color = normalize_color(self.accent_color) or "2563EB"
-        self.muted_color = normalize_color(self.muted_color) or "64748B"
+        if not isinstance(self.cover, CoverPage):
+            raise TypeError("CoverPagePreset.cover must be a CoverPage")
         if not isinstance(self.page_layout, PageLayout):
             raise TypeError("CoverPagePreset.page_layout must be a PageLayout")
         if not isinstance(self.theme, Theme):
@@ -553,86 +529,65 @@ class CoverPagePreset:
             raise TypeError("CoverPagePreset.author_layout must be an AuthorLayout")
 
     @classmethod
-    def eplus_simple(
+    def accented(
         cls,
         *,
+        eyebrow: InlineInput | None = None,
+        organization: InlineInput | None = None,
+        logo: object | None = None,
+        date: InlineInput | None = None,
+        footer: InlineInput | None = None,
+        note: BlockInput | Sequence[BlockInput] | None = None,
         accent_color: str = "2563EB",
-        muted_color: str = "64748B",
-        footer_label: str | None = "EPlusSimple",
         page_layout: PageLayout | None = None,
         theme: Theme | None = None,
     ) -> CoverPagePreset:
-        """Return the EPlusSimple-style cover preset.
-
-        Args:
-            accent_color: Cover accent color.
-            muted_color: Secondary cover decoration color.
-            footer_label: Optional footer label rendered only on the cover page.
-            page_layout: Optional page geometry override.
-            theme: Optional theme override.
-
-        Returns:
-            Configured cover page preset.
-        """
+        """Return a generic accented cover preset."""
 
         return cls(
-            accent_color=accent_color,
-            muted_color=muted_color,
-            footer_label=footer_label,
+            name="Accented cover",
+            cover=CoverPage(
+                eyebrow=eyebrow,
+                organization=organization,
+                logo=logo,
+                date=date,
+                footer=footer,
+                note=note,
+                style=CoverPageStyle.accented(accent_color=accent_color),
+            ),
             page_layout=page_layout or _default_cover_page_layout(),
             theme=theme or _default_cover_theme(),
         )
 
-    def overlays(self) -> tuple[PositionedItem, ...]:
-        """Return cover-scoped page decorations for this preset.
+    @classmethod
+    def centered_logo(
+        cls,
+        logo: object,
+        *,
+        eyebrow: InlineInput | None = None,
+        organization: InlineInput | None = None,
+        date: InlineInput | None = None,
+        footer: InlineInput | None = None,
+        note: BlockInput | Sequence[BlockInput] | None = None,
+        page_layout: PageLayout | None = None,
+        theme: Theme | None = None,
+    ) -> CoverPagePreset:
+        """Return a generic centered-logo cover preset."""
 
-        Returns:
-            Page-positioned overlays scoped to the cover page.
-        """
-
-        page_width = self.page_layout.page_width_in_inches("in")
-        page_height = self.page_layout.page_height_in_inches("in")
-        content_width = max(page_width - 1.45, 0.5)
-        accent_height = max(page_height - 1.1, 0.5)
-        items: list[PositionedItem] = [
-            Shape.rect(
-                x=0.55,
-                y=0.55,
-                width=0.09,
-                height=accent_height,
-                fill_color=self.accent_color,
-                stroke=StrokeStyle.none(),
-                unit="in",
-                z_index=0,
-                scope="cover",
+        return cls(
+            name="Centered logo cover",
+            cover=CoverPage(
+                eyebrow=eyebrow,
+                organization=organization,
+                logo=logo,
+                date=date,
+                footer=footer,
+                note=note,
+                style=CoverPageStyle.centered_logo(),
             ),
-            Shape.rect(
-                x=0.72,
-                y=0.55,
-                width=content_width,
-                height=0.025,
-                fill_color=self.muted_color,
-                stroke=StrokeStyle.none(),
-                unit="in",
-                z_index=0,
-                scope="cover",
-            ),
-        ]
-        if self.footer_label:
-            items.append(
-                TextBox(
-                    self.footer_label,
-                    x=0.72,
-                    y=max(page_height - 0.85, 0.1),
-                    width=content_width,
-                    height=0.3,
-                    font_size=8.0,
-                    unit="in",
-                    z_index=1,
-                    scope="cover",
-                )
-            )
-        return tuple(items)
+            page_layout=page_layout or _default_cover_page_layout(),
+            theme=theme or _default_cover_theme(),
+        )
 
     def settings(
         self,
@@ -653,7 +608,7 @@ class CoverPagePreset:
             theme: Optional theme override for the returned settings.
 
         Returns:
-            Document settings with cover page enabled.
+            Document settings with the generic cover attached.
         """
 
         return DocumentSettings(
@@ -662,10 +617,10 @@ class CoverPagePreset:
                 subtitle=subtitle,
                 authors=authors,
                 author_layout=self.author_layout,
-                cover_page=True,
+                cover=self.cover,
             ),
             page_layout=self.page_layout,
-            overlays=(*self.overlays(), *(overlays or ())),
+            overlays=overlays,
             theme=theme or self.theme,
         )
 
@@ -771,7 +726,9 @@ class TechnicalReportTemplate:
                 subtitle=subtitle,
                 authors=authors,
                 author_layout=self.author_layout,
-                cover_page=self.cover_page if cover_page is None else cover_page,
+                cover=CoverPage()
+                if (self.cover_page if cover_page is None else cover_page)
+                else None,
             ),
             page_layout=self.page_layout,
             theme=self.theme,
@@ -872,7 +829,9 @@ class SoftwareManualTemplate:
                 subtitle=subtitle,
                 authors=authors,
                 author_layout=self.author_layout,
-                cover_page=self.cover_page if cover_page is None else cover_page,
+                cover=CoverPage()
+                if (self.cover_page if cover_page is None else cover_page)
+                else None,
             ),
             page_layout=self.page_layout,
             theme=self.theme,
@@ -972,7 +931,9 @@ class BookTemplate:
                 subtitle=subtitle,
                 authors=authors,
                 author_layout=self.author_layout,
-                cover_page=self.cover_page if cover_page is None else cover_page,
+                cover=CoverPage()
+                if (self.cover_page if cover_page is None else cover_page)
+                else None,
             ),
             page_layout=self.page_layout,
             theme=self.theme,

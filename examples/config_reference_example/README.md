@@ -21,11 +21,12 @@ python examples/config_reference_example/main.py --outputs html --quiet
 
 Programmatic entry points:
 
-- `ConfigField` represents one schema-backed config field.
-- `ConfigReference.to_summary_table()` and `ConfigReference.to_section()`
-  convert config metadata into OODocs blocks.
+- `oodocs.schema.FieldSpec`, `SchemaSpec`, and `SchemaPresentation` represent
+  and render the reference without example-local schema classes.
+- `oodocs.integrations.json_schema.collect_json_schema(...)` performs the
+  external format parsing and preserves source records plus diagnostics.
 - `load_config_reference(...)` reads `sample_config.toml` and
-  `sample_schema.json`.
+  `sample_schema.json`, then attaches current values as generic metadata.
 - `build_document(reference=None)` returns the complete `Document`.
 - `build(output_dir=..., output_formats=..., verbose=False)` writes selected
   outputs and returns an `OutputBundle`.

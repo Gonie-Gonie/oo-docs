@@ -66,11 +66,13 @@ def test_cli_manual_example_builds_outputs(tmp_path: Path) -> None:
     assert "1 Command Overview" in paragraph_texts
     assert "2 Exit Codes" in paragraph_texts
     assert "3 Examples" in paragraph_texts
-    assert any("Top-level command options." in text for text in paragraph_texts)
-    assert any("Subcommands discovered from argparse subparsers." in text for text in paragraph_texts)
+    assert any("Options for docctl." in text for text in paragraph_texts)
+    assert any("Subcommands for docctl." in text for text in paragraph_texts)
     assert "--output-dir" in table_text
     assert "--fail-on-warning" in table_text
+    assert "This sample CLI does not read configuration from environment variables." in table_text
     assert "docctl render report.py --format html" in table_text
+    assert not hasattr(example, "argparse_parser_to_section")
     assert_docx_structure(
         outputs["docx"],
         required_paragraphs=("CLI Manual Example", "1 Command Overview", "2 Exit Codes"),

@@ -364,6 +364,7 @@ def test_stylesheet_register_category_is_literal_typed() -> None:
         "table",
         "table_cell",
         "chip",
+        "description_list",
     }
 
 

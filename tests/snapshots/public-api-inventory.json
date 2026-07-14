@@ -28,6 +28,13 @@
         {
           "category": "block",
           "kind": "class",
+          "module": "oodocs.components.matter",
+          "name": "BackMatter",
+          "qualname": "oodocs.components.matter.BackMatter"
+        },
+        {
+          "category": "block",
+          "kind": "class",
           "module": "oodocs.components.blocks",
           "name": "Box",
           "qualname": "oodocs.components.blocks.Box"
@@ -87,6 +94,27 @@
           "module": "oodocs.components.blocks",
           "name": "ColumnSpan",
           "qualname": "oodocs.components.blocks.ColumnSpan"
+        },
+        {
+          "category": "document-core",
+          "kind": "class",
+          "module": "oodocs.components.cover",
+          "name": "CoverPage",
+          "qualname": "oodocs.components.cover.CoverPage"
+        },
+        {
+          "category": "block",
+          "kind": "class",
+          "module": "oodocs.components.descriptions",
+          "name": "DescriptionItem",
+          "qualname": "oodocs.components.descriptions.DescriptionItem"
+        },
+        {
+          "category": "block",
+          "kind": "class",
+          "module": "oodocs.components.descriptions",
+          "name": "DescriptionList",
+          "qualname": "oodocs.components.descriptions.DescriptionList"
         },
         {
           "category": "document-core",
@@ -152,6 +180,13 @@
           "qualname": "oodocs.components.inline.Footnote"
         },
         {
+          "category": "block",
+          "kind": "class",
+          "module": "oodocs.components.matter",
+          "name": "FrontMatter",
+          "qualname": "oodocs.components.matter.FrontMatter"
+        },
+        {
           "category": "media",
           "kind": "class",
           "module": "oodocs.components.media",
@@ -199,6 +234,13 @@
           "module": "oodocs.components.inline",
           "name": "Math",
           "qualname": "oodocs.components.inline.Math"
+        },
+        {
+          "category": "block",
+          "kind": "class",
+          "module": "oodocs.components.matter",
+          "name": "MainMatter",
+          "qualname": "oodocs.components.matter.MainMatter"
         },
         {
           "category": "block",
@@ -608,45 +650,6 @@
         }
       ]
     },
-    "oodocs.adapters": {
-      "exports": [
-        {
-          "category": "adapter",
-          "kind": "class",
-          "module": "oodocs.adapters.github_actions",
-          "name": "GithubWorkflowSummary",
-          "qualname": "oodocs.adapters.github_actions.GithubWorkflowSummary"
-        },
-        {
-          "category": "adapter",
-          "kind": "class",
-          "module": "oodocs.adapters.pyproject",
-          "name": "ProjectMetadata",
-          "qualname": "oodocs.adapters.pyproject.ProjectMetadata"
-        },
-        {
-          "category": "adapter",
-          "kind": "class",
-          "module": "oodocs.adapters.evidence",
-          "name": "ReleaseEvidence",
-          "qualname": "oodocs.adapters.evidence.ReleaseEvidence"
-        },
-        {
-          "category": "adapter",
-          "kind": "class",
-          "module": "oodocs.adapters.evidence",
-          "name": "ReleaseEvidenceBundle",
-          "qualname": "oodocs.adapters.evidence.ReleaseEvidenceBundle"
-        },
-        {
-          "category": "adapter",
-          "kind": "class",
-          "module": "oodocs.adapters.manifest",
-          "name": "ReleaseManifestSummary",
-          "qualname": "oodocs.adapters.manifest.ReleaseManifestSummary"
-        }
-      ]
-    },
     "oodocs.apidoc": {
       "exports": [
         {
@@ -908,6 +911,52 @@
           "module": "oodocs.components.blocks",
           "name": "CasesEquation",
           "qualname": "oodocs.components.blocks.CasesEquation"
+        },
+        {
+          "category": "block",
+          "kind": "class",
+          "module": "oodocs.components.equations",
+          "name": "EquationLine",
+          "qualname": "oodocs.components.equations.EquationLine"
+        },
+        {
+          "category": "block",
+          "kind": "type-alias",
+          "module": "typing",
+          "name": "EquationNumbering",
+          "qualname": "EquationNumbering"
+        },
+        {
+          "category": "block",
+          "kind": "class",
+          "module": "oodocs.components.equations",
+          "name": "IndexableReference",
+          "qualname": "oodocs.components.equations.IndexableReference"
+        }
+      ]
+    },
+    "oodocs.evidence": {
+      "exports": [
+        {
+          "category": "workflow",
+          "kind": "class",
+          "module": "oodocs.evidence.model",
+          "name": "EvidenceBundle",
+          "qualname": "oodocs.evidence.model.EvidenceBundle"
+        },
+        {
+          "category": "workflow",
+          "kind": "class",
+          "module": "oodocs.evidence.model",
+          "name": "EvidenceItem",
+          "qualname": "oodocs.evidence.model.EvidenceItem"
+        },
+        {
+          "category": "workflow",
+          "kind": "class",
+          "module": "oodocs.evidence.model",
+          "name": "EvidenceReport",
+          "qualname": "oodocs.evidence.model.EvidenceReport"
         }
       ]
     },
@@ -972,6 +1021,38 @@
           "module": "oodocs.importers.notebook",
           "name": "parse_notebook",
           "qualname": "oodocs.importers.notebook.parse_notebook"
+        }
+      ]
+    },
+    "oodocs.metadata": {
+      "exports": [
+        {
+          "category": "workflow",
+          "kind": "class",
+          "module": "oodocs.metadata",
+          "name": "ManifestSummary",
+          "qualname": "oodocs.metadata.ManifestSummary"
+        },
+        {
+          "category": "workflow",
+          "kind": "class",
+          "module": "oodocs.metadata",
+          "name": "ProjectInfo",
+          "qualname": "oodocs.metadata.ProjectInfo"
+        },
+        {
+          "category": "workflow",
+          "kind": "class",
+          "module": "oodocs.metadata",
+          "name": "WorkflowJob",
+          "qualname": "oodocs.metadata.WorkflowJob"
+        },
+        {
+          "category": "workflow",
+          "kind": "class",
+          "module": "oodocs.metadata",
+          "name": "WorkflowSummary",
+          "qualname": "oodocs.metadata.WorkflowSummary"
         }
       ]
     },
@@ -1140,6 +1221,62 @@
           "qualname": "oodocs.styles.counter.CounterStyle"
         },
         {
+          "category": "style",
+          "kind": "class",
+          "module": "oodocs.styles.numbering",
+          "name": "CounterPolicy",
+          "qualname": "oodocs.styles.numbering.CounterPolicy"
+        },
+        {
+          "category": "style",
+          "kind": "type-alias",
+          "module": "typing",
+          "name": "CounterScope",
+          "qualname": "CounterScope"
+        },
+        {
+          "category": "style",
+          "kind": "constant",
+          "module": null,
+          "name": "COUNTER_SCOPES",
+          "qualname": "COUNTER_SCOPES"
+        },
+        {
+          "category": "style",
+          "kind": "type-alias",
+          "module": "typing",
+          "name": "CoverAlignment",
+          "qualname": "CoverAlignment"
+        },
+        {
+          "category": "style",
+          "kind": "class",
+          "module": "oodocs.styles.cover",
+          "name": "CoverPageStyle",
+          "qualname": "oodocs.styles.cover.CoverPageStyle"
+        },
+        {
+          "category": "style",
+          "kind": "type-alias",
+          "module": "typing",
+          "name": "CoverVerticalAlignment",
+          "qualname": "CoverVerticalAlignment"
+        },
+        {
+          "category": "style",
+          "kind": "type-alias",
+          "module": "typing",
+          "name": "DescriptionListLayout",
+          "qualname": "DescriptionListLayout"
+        },
+        {
+          "category": "style",
+          "kind": "class",
+          "module": "oodocs.styles.descriptions",
+          "name": "DescriptionListStyle",
+          "qualname": "oodocs.styles.descriptions.DescriptionListStyle"
+        },
+        {
           "category": "theme",
           "kind": "class",
           "module": "oodocs.styles.theme",
@@ -1212,6 +1349,13 @@
         {
           "category": "theme",
           "kind": "class",
+          "module": "oodocs.styles.numbering",
+          "name": "NumberingDefaults",
+          "qualname": "oodocs.styles.numbering.NumberingDefaults"
+        },
+        {
+          "category": "theme",
+          "kind": "class",
           "module": "oodocs.styles.theme",
           "name": "PageNumberDefaults",
           "qualname": "oodocs.styles.theme.PageNumberDefaults"
@@ -1236,6 +1380,27 @@
           "module": "oodocs.styles.blocks",
           "name": "RunInTitleStyle",
           "qualname": "oodocs.styles.blocks.RunInTitleStyle"
+        },
+        {
+          "category": "theme",
+          "kind": "class",
+          "module": "oodocs.styles.references",
+          "name": "ReferenceDefaults",
+          "qualname": "oodocs.styles.references.ReferenceDefaults"
+        },
+        {
+          "category": "style",
+          "kind": "class",
+          "module": "oodocs.styles.references",
+          "name": "ReferenceTemplate",
+          "qualname": "oodocs.styles.references.ReferenceTemplate"
+        },
+        {
+          "category": "style",
+          "kind": "constant",
+          "module": null,
+          "name": "REFERENCE_KINDS",
+          "qualname": "REFERENCE_KINDS"
         },
         {
           "category": "style",
@@ -1313,6 +1478,13 @@
           "module": "oodocs.styles.blocks",
           "name": "box_style_with_overrides",
           "qualname": "oodocs.styles.blocks.box_style_with_overrides"
+        },
+        {
+          "category": "style",
+          "kind": "function",
+          "module": "oodocs.styles.descriptions",
+          "name": "description_list_style_with_overrides",
+          "qualname": "oodocs.styles.descriptions.description_list_style_with_overrides"
         },
         {
           "category": "style",

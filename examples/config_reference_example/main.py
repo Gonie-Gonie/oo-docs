@@ -1,8 +1,7 @@
 """Build a configuration reference from TOML and JSON schema inputs."""
 
 import argparse
-from dataclasses import dataclass
-import json
+from dataclasses import replace
 from pathlib import Path
 import tomllib
 from typing import Sequence
@@ -20,6 +19,8 @@ from oodocs import (
     TitleMatter,
     inline_code,
 )
+from oodocs.integrations.json_schema import collect_json_schema
+from oodocs.schema import FieldSpec, SchemaPresentation, SchemaSpec
 
 
 EXAMPLE_DIR = Path(__file__).resolve().parent
@@ -38,133 +39,36 @@ def repo_relative(path: Path) -> str:
         return path.as_posix()
 
 
-@dataclass(frozen=True, slots=True)
-class ConfigField:
-    """One documented configuration field."""
-
-    name: str
-    type: str
-    required: bool
-    default: object
-    description: str
-    env_var: str | None = None
-    current_value: object | None = None
-
-    def to_paragraph(self) -> Paragraph:
-        """Return this field as a compact paragraph."""
-
-        required = "required" if self.required else "optional"
-        return Paragraph(
-            inline_code(self.name),
-            f" is a {required} {self.type} field. ",
-            self.description,
-        )
-
-    def as_summary_row(self) -> list[str]:
-        """Return this field as a table row."""
-
-        return [
-            self.name,
-            self.type,
-            "yes" if self.required else "no",
-            _format_value(self.default),
-            _format_value(self.current_value),
-            self.env_var or "",
-            self.description,
-        ]
-
-
-@dataclass(frozen=True, slots=True)
-class ConfigReference:
-    """Loaded configuration reference fields."""
-
-    title: str
-    fields: tuple[ConfigField, ...]
-    config_path: Path
-    schema_path: Path
-
-    def to_summary_table(self, *, caption: str = "Configuration field reference.") -> Table:
-        """Return all fields as one summary table."""
-
-        return Table(
-            ["Field", "Type", "Required", "Default", "Current value", "Env var", "Description"],
-            [field.as_summary_row() for field in self.fields],
-            caption=caption,
-            split=True,
-        )
-
-    def to_section(self) -> Section:
-        """Return this configuration reference as an OODocs section."""
-
-        required_fields = [field for field in self.fields if field.required]
-        optional_fields = [field for field in self.fields if not field.required]
-        env_fields = [field for field in self.fields if field.env_var]
-        return Section(
-            "Configuration Reference",
-            Paragraph(
-                "Read from ",
-                inline_code(repo_relative(self.config_path)),
-                " and ",
-                inline_code(repo_relative(self.schema_path)),
-                ".",
-            ),
-            self.to_summary_table(),
-            Section(
-                "Required fields",
-                *[field.to_paragraph() for field in required_fields],
-                level=2,
-            ),
-            Section(
-                "Optional fields",
-                *[field.to_paragraph() for field in optional_fields],
-                level=2,
-            ),
-            Section(
-                "Environment variables",
-                Table(
-                    ["Environment variable", "Field", "Purpose"],
-                    [
-                        [field.env_var or "", field.name, field.description]
-                        for field in env_fields
-                    ],
-                    caption="Environment variable overrides documented by the schema.",
-                ),
-                level=2,
-            ),
-            toc=True,
-        )
-
-
 def load_config_reference(
     config_path: str | Path = SAMPLE_CONFIG_PATH,
     schema_path: str | Path = SAMPLE_SCHEMA_PATH,
-) -> ConfigReference:
-    """Load TOML config and JSON schema into reference fields."""
+) -> SchemaSpec:
+    """Collect the JSON Schema and add caller-owned current-value metadata."""
 
     config_file = Path(config_path)
     schema_file = Path(schema_path)
     config_data = tomllib.loads(config_file.read_text(encoding="utf-8"))
-    schema_data = json.loads(schema_file.read_text(encoding="utf-8"))
-    fields = []
-    for name, spec in schema_data["properties"].items():
-        if not isinstance(spec, dict):
-            continue
-        fields.append(
-            ConfigField(
-                name=name,
-                type=str(spec.get("type", "")),
-                required=bool(spec.get("required", False)),
-                default=spec.get("default"),
-                description=str(spec.get("description", "")),
-                env_var=str(spec["env"]) if "env" in spec else None,
-                current_value=_lookup_config_value(config_data, name),
-            )
+    catalog = collect_json_schema(schema_file, key="configuration")
+    schema = catalog.schemas[0]
+    fields = tuple(
+        replace(
+            field,
+            metadata={
+                **field.metadata,
+                "current_value": _lookup_config_value(config_data, field.name),
+            },
         )
-    return ConfigReference(
-        title=str(schema_data.get("title", "Configuration reference")),
-        fields=tuple(fields),
-        config_path=config_file,
-        schema_path=schema_file,
+        for field in schema.fields
+    )
+    return replace(
+        schema,
+        fields=fields,
+        metadata={
+            **schema.metadata,
+            "config_path": config_file,
+            "schema_path": schema_file,
+            "diagnostics": catalog.diagnostics,
+        },
     )
 
 
@@ -177,15 +81,71 @@ def _lookup_config_value(config: dict[str, object], dotted_name: str) -> object:
     return current
 
 
-def _format_value(value: object) -> str:
-    if value is None:
-        return ""
-    if isinstance(value, list):
-        return ", ".join(str(item) for item in value)
-    return str(value)
+def _field_paragraph(field: FieldSpec) -> Paragraph:
+    requirement = (field.requirement or "unspecified").replace("-", " ")
+    return Paragraph(
+        inline_code(field.name),
+        f" is {requirement}. ",
+        field.description,
+    )
 
 
-def build_document(reference: ConfigReference | None = None) -> Document:
+def _reference_section(reference: SchemaSpec) -> Section:
+    required_fields = [
+        field
+        for field in reference.fields
+        if field.requirement in {"required", "conditional-required"}
+    ]
+    optional_fields = [field for field in reference.fields if field not in required_fields]
+    env_fields = [field for field in reference.fields if field.metadata.get("env")]
+    config_path = Path(reference.metadata["config_path"])
+    schema_path = Path(reference.metadata["schema_path"])
+    presentation = SchemaPresentation(
+        metadata_columns={
+            "current_value": "Current value",
+            "env": "Env var",
+        }
+    )
+    return Section(
+        "Configuration Reference",
+        Paragraph(
+            "Read from ",
+            inline_code(repo_relative(config_path)),
+            " and ",
+            inline_code(repo_relative(schema_path)),
+            ".",
+        ),
+        reference.to_table(
+            presentation=presentation,
+            caption="Configuration field reference.",
+        ),
+        Section(
+            "Required fields",
+            *[_field_paragraph(field) for field in required_fields],
+            level=2,
+        ),
+        Section(
+            "Optional fields",
+            *[_field_paragraph(field) for field in optional_fields],
+            level=2,
+        ),
+        Section(
+            "Environment variables",
+            Table(
+                ["Environment variable", "Field", "Purpose"],
+                [
+                    [field.metadata.get("env", ""), field.name, field.description]
+                    for field in env_fields
+                ],
+                caption="Environment variable overrides documented by the schema.",
+            ),
+            level=2,
+        ),
+        toc=True,
+    )
+
+
+def build_document(reference: SchemaSpec | None = None) -> Document:
     """Build the configuration reference example document."""
 
     reference = reference or load_config_reference()
@@ -204,9 +164,10 @@ def build_document(reference: ConfigReference | None = None) -> Document:
         Chapter(
             "Configuration Overview",
             Paragraph(
-                "This example turns a TOML config file and a JSON schema into a field reference document."
+                "This example turns a TOML config file and a JSON schema into "
+                "a field reference document."
             ),
-            reference.to_section(),
+            _reference_section(reference),
         ),
         Chapter(
             "Defaults and Examples",
@@ -214,7 +175,7 @@ def build_document(reference: ConfigReference | None = None) -> Document:
         ),
         settings=DocumentSettings(
             metadata=DocumentMetadata(
-                author="OODocs Contributors",
+                author="Example Documentation Team",
                 description="Configuration reference generated from example config files",
             ),
             title_matter=TitleMatter(

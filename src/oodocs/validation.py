@@ -21,6 +21,7 @@ from oodocs.compatibility import (
 )
 from oodocs.components.base import Block, Component
 from oodocs.components.blocks import (
+    AlignedEquation,
     Appendix,
     Box,
     BulletList,
@@ -56,10 +57,13 @@ from oodocs.components.inline import (
     Hyperlink,
     InlineChip,
     MarginNote,
+    ObjectLink,
     ReferenceGroup,
     Text,
 )
-from oodocs.components.equations import unsupported_latex_commands
+from oodocs.components.descriptions import DescriptionList
+from oodocs.components.matter import DocumentMatter
+from oodocs.components.equations import EquationLine, unsupported_latex_commands
 from oodocs.components.media import Figure, ImageData, PdfPages, SubFigure, SubFigureGroup, SubTable, SubTableGroup, Table
 from oodocs.components.positioning import ImageBox, Shape, TextBox
 from oodocs.components.references import CitationSource
@@ -990,12 +994,15 @@ class _ValidationContext:
         self.document = document
         self.issues: list[ValidationIssue] = []
         self.block_paths: dict[int, str] = {}
+        self.explicit_anchor_paths: dict[str, str] = {}
         self.referenceable_paths: dict[int, str] = {}
         self.references: list[tuple[BlockReference, str]] = []
+        self.object_links: list[tuple[ObjectLink, str]] = []
         self.reference_groups: list[tuple[ReferenceGroup, str]] = []
         self.citations: list[tuple[Citation, str]] = []
         self.hyperlinks: list[tuple[Hyperlink, str]] = []
         self.generated_content: list[tuple[object, str]] = []
+        self.equation_line_numbered: dict[int, bool] = {}
 
     def validate(self) -> list[ValidationIssue]:
         """Collect validation issues for the configured document."""
@@ -1008,12 +1015,25 @@ class _ValidationContext:
                 "document.title",
             )
 
+        self._validate_cover()
+        self._validate_matter_structure()
+        self._validate_counter_scopes()
         self._collect_blocks(self.document.body.children, "document.body", parent_level=None)
         for index, item in enumerate(self.document.settings.overlays):
             self._collect_positioned_item(
                 item,
                 f"document.settings.overlays[{index}]",
             )
+            if (
+                item.scope.kind == "cover"
+                and self.document.settings.title_matter.cover is None
+            ):
+                self._add(
+                    "error",
+                    "cover-overlay-without-cover",
+                    "A cover-scoped overlay requires TitleMatter.cover.",
+                    f"document.settings.overlays[{index}].scope",
+                )
             if item.scope.kind != "all":
                 self._add_compatibility_warning(
                     "page-item-scope-static-output",
@@ -1024,12 +1044,327 @@ class _ValidationContext:
         # Build the render index only after structural checks pass; downstream
         # reference and generated-page validation depends on stable numbering.
         render_index = self._build_render_index_if_possible()
+        self._validate_object_links(render_index)
         self._validate_references(render_index)
         self._validate_hyperlinks(render_index)
         if render_index is not None:
             self._validate_footnote_compatibility(render_index)
             self._validate_generated_content(render_index)
         return self.issues
+
+    def _validate_cover(self) -> None:
+        cover = self.document.settings.title_matter.cover
+        if cover is None:
+            return
+        style = cover.resolved_style()
+        for name in (
+            "top_spacing",
+            "section_spacing",
+            "logo_max_width",
+            "logo_max_height",
+            "accent_width",
+        ):
+            if getattr(style, name) < 0:
+                self._add(
+                    "error",
+                    "cover-style-negative-size",
+                    f"CoverPageStyle.{name} must be non-negative.",
+                    f"document.settings.title_matter.cover.style.{name}",
+                )
+        logo_width = length_to_inches(style.logo_max_width, style.unit)
+        logo_height = length_to_inches(style.logo_max_height, style.unit)
+        if (
+            logo_width > self.document.settings.text_width_in_inches()
+            or logo_height > self.document.settings.text_height_in_inches()
+        ):
+            self._add(
+                "error",
+                "cover-logo-oversize",
+                "Cover logo maximum bounds exceed the available page content area.",
+                "document.settings.title_matter.cover.style",
+            )
+        self._collect_blocks(
+            cover.extra_top,
+            "document.settings.title_matter.cover.extra_top",
+            parent_level=None,
+        )
+        self._collect_blocks(
+            cover.note,
+            "document.settings.title_matter.cover.note",
+            parent_level=None,
+        )
+        self._collect_blocks(
+            cover.extra_bottom,
+            "document.settings.title_matter.cover.extra_bottom",
+            parent_level=None,
+        )
+        if cover.logo is not None:
+            try:
+                logo = cover.logo_figure()
+            except (TypeError, ValueError, OSError) as exc:
+                self._add(
+                    "error",
+                    "cover-asset-missing",
+                    f"Cover logo could not be loaded: {exc}",
+                    "document.settings.title_matter.cover.logo",
+                )
+            else:
+                before = len(self.issues)
+                self._validate_image_source(
+                    logo.image_source,
+                    "document.settings.title_matter.cover.logo",
+                )
+                for issue in self.issues[before:]:
+                    if issue.code in {
+                        "missing-image-file",
+                        "invalid-image-file",
+                        "unsupported-image-source",
+                        "empty-image-data",
+                    }:
+                        issue_index = self.issues.index(issue)
+                        self.issues[issue_index] = ValidationIssue(
+                            severity=issue.severity,
+                            code="cover-asset-missing",
+                            message=issue.message,
+                            path=issue.path,
+                            formats=issue.formats,
+                            source=issue.source,
+                            line_number=issue.line_number,
+                        )
+
+    def _validate_matter_structure(self) -> None:
+        """Validate direct-child, uniqueness, and ordering matter rules."""
+
+        order = {"front": 0, "main": 1, "back": 2}
+        seen: dict[str, int] = {}
+        last_order = -1
+        for index, block in enumerate(self.document.body.children):
+            if not isinstance(block, DocumentMatter):
+                continue
+            path = f"document.body.children[{index}]"
+            if block.kind in seen:
+                self._add(
+                    "error",
+                    "duplicate-matter",
+                    f"{type(block).__name__} appears more than once; merge its children.",
+                    path,
+                )
+            else:
+                seen[block.kind] = index
+            current_order = order[block.kind]
+            if current_order < last_order:
+                self._add(
+                    "error",
+                    "matter-order",
+                    "Document matter must appear in front, main, back order.",
+                    path,
+                )
+            last_order = max(last_order, current_order)
+
+        def visit(block: Block, path: str, depth: int) -> None:
+            if isinstance(block, DocumentMatter):
+                if depth > 0:
+                    self._add(
+                        "error",
+                        "nested-matter",
+                        "Document matter containers must be direct document children.",
+                        path,
+                    )
+                for child_index, child in enumerate(block.children):
+                    visit(child, f"{path}.children[{child_index}]", depth + 1)
+                return
+            if isinstance(block, Component):
+                for child_index, child in enumerate(block.composed_blocks()):
+                    visit(child, f"{path}.composed_blocks[{child_index}]", depth + 1)
+                return
+            children = getattr(block, "children", ())
+            if isinstance(children, Sequence) and not isinstance(children, (str, bytes)):
+                for child_index, child in enumerate(children):
+                    if isinstance(child, Block):
+                        visit(child, f"{path}.children[{child_index}]", depth + 1)
+            if isinstance(block, DescriptionList):
+                for item_index, item in enumerate(block.items):
+                    for child_index, child in enumerate(item.children):
+                        visit(
+                            child,
+                            f"{path}.items[{item_index}].children[{child_index}]",
+                            depth + 1,
+                        )
+
+        for index, block in enumerate(self.document.body.children):
+            visit(block, f"document.body.children[{index}]", 0)
+
+    def _validate_counter_scopes(self) -> None:
+        """Require scoped counters to have a numbered ancestor heading."""
+
+        numbering = self.document.settings.theme.numbering
+        heading_numbering_enabled = (
+            self.document.settings.theme.blocks.heading_numbering.enabled
+        )
+
+        def check(
+            family: str,
+            path: str,
+            *,
+            part: Part | None,
+            chapter: Section | None,
+            section: Section | None,
+        ) -> None:
+            policy = numbering.policy_for(family)
+            if policy.scope == "document":
+                if policy.include_parent:
+                    self._add(
+                        "error",
+                        "counter-scope-parent-missing",
+                        f"{family.title()} numbering requests a parent label at document scope, "
+                        "but document scope has no parent heading.",
+                        path,
+                    )
+                return
+            parent: Part | Section | None
+            if policy.scope == "part":
+                parent = part
+            elif policy.scope == "chapter":
+                parent = chapter
+            else:
+                parent = section
+            if (
+                parent is not None
+                and bool(getattr(parent, "numbered", False))
+                and heading_numbering_enabled
+            ):
+                return
+            self._add(
+                "error",
+                "counter-scope-parent-missing",
+                f"{family.title()} numbering with scope={policy.scope!r} requires "
+                "a containing numbered heading.",
+                path,
+            )
+
+        def visit(
+            block: Block,
+            path: str,
+            *,
+            part: Part | None,
+            chapter: Section | None,
+            section: Section | None,
+        ) -> None:
+            if isinstance(block, Component):
+                for index, child in enumerate(block.composed_blocks()):
+                    visit(
+                        child,
+                        f"{path}.composed_blocks[{index}]",
+                        part=part,
+                        chapter=chapter,
+                        section=section,
+                    )
+                return
+            if isinstance(block, DocumentMatter):
+                for index, child in enumerate(block.children):
+                    visit(
+                        child,
+                        f"{path}.children[{index}]",
+                        part=part,
+                        chapter=chapter,
+                        section=section,
+                    )
+                return
+            if isinstance(block, Appendix):
+                for index, child in enumerate(block.children):
+                    visit(
+                        child,
+                        f"{path}.children[{index}]",
+                        part=block,
+                        chapter=None,
+                        section=None,
+                    )
+                return
+            if isinstance(block, Part):
+                for index, child in enumerate(block.children):
+                    visit(
+                        child,
+                        f"{path}.children[{index}]",
+                        part=block,
+                        chapter=None,
+                        section=None,
+                    )
+                return
+            if isinstance(block, Section):
+                next_chapter = block if block.level == 1 else chapter
+                for index, child in enumerate(block.children):
+                    visit(
+                        child,
+                        f"{path}.children[{index}]",
+                        part=part,
+                        chapter=next_chapter,
+                        section=block,
+                    )
+                return
+
+            if isinstance(block, Table) and block.caption is not None:
+                check("table", path, part=part, chapter=chapter, section=section)
+            elif isinstance(block, SubTableGroup) and block.caption is not None:
+                check("table", path, part=part, chapter=chapter, section=section)
+            elif isinstance(block, Figure) and block.caption is not None:
+                check("figure", path, part=part, chapter=chapter, section=section)
+            elif isinstance(block, SubFigureGroup) and block.caption is not None:
+                check("figure", path, part=part, chapter=chapter, section=section)
+            elif isinstance(block, CodeBlock):
+                check("listing", path, part=part, chapter=chapter, section=section)
+            elif isinstance(block, AlignedEquation):
+                if block.numbering == "group" or any(
+                    line.numbered for line in block.lines
+                    if block.numbering == "each"
+                ):
+                    check("equation", path, part=part, chapter=chapter, section=section)
+            elif isinstance(block, Equation) and block.numbered:
+                check("equation", path, part=part, chapter=chapter, section=section)
+            elif isinstance(block, CountableBlock) and block.numbered:
+                check("countable", path, part=part, chapter=chapter, section=section)
+
+            if isinstance(block, DescriptionList):
+                for item_index, item in enumerate(block.items):
+                    for child_index, child in enumerate(item.children):
+                        visit(
+                            child,
+                            f"{path}.items[{item_index}].children[{child_index}]",
+                            part=part,
+                            chapter=chapter,
+                            section=section,
+                        )
+                return
+            if isinstance(block, (BulletList, NumberedList)):
+                for item_index, child_lists in enumerate(block.item_children):
+                    for child_index, child in enumerate(child_lists):
+                        visit(
+                            child,
+                            f"{path}.items[{item_index}].children[{child_index}]",
+                            part=part,
+                            chapter=chapter,
+                            section=section,
+                        )
+                return
+            children = getattr(block, "children", ())
+            if isinstance(children, Sequence) and not isinstance(children, (str, bytes)):
+                for index, child in enumerate(children):
+                    if isinstance(child, Block):
+                        visit(
+                            child,
+                            f"{path}.children[{index}]",
+                            part=part,
+                            chapter=chapter,
+                            section=section,
+                        )
+
+        for index, block in enumerate(self.document.body.children):
+            visit(
+                block,
+                f"document.body.children[{index}]",
+                part=None,
+                chapter=None,
+                section=None,
+            )
 
     def _add(
         self,
@@ -1093,10 +1428,34 @@ class _ValidationContext:
             )
             return
 
+        if isinstance(block, DocumentMatter):
+            self._collect_blocks(
+                block.children,
+                path,
+                parent_level=parent_level,
+            )
+            return
+
         if isinstance(block, Paragraph):
             self._register_referenceable(block, path)
             self._validate_style_reference("paragraph", block.style, f"{path}.style")
             self._scan_inlines(block.content, f"{path}.content")
+            return
+
+        if isinstance(block, DescriptionList):
+            self._validate_style_reference(
+                "description_list",
+                block.style,
+                f"{path}.style",
+            )
+            for item_index, item in enumerate(block.items):
+                item_path = f"{path}.items[{item_index}]"
+                self._scan_inlines(item.term, f"{item_path}.term")
+                self._collect_blocks(
+                    item.children,
+                    item_path,
+                    parent_level=parent_level,
+                )
             return
 
         if isinstance(block, (BulletList, NumberedList)):
@@ -1134,6 +1493,14 @@ class _ValidationContext:
                 self._validate_style_reference("paragraph", block.style, f"{path}.style")
             if isinstance(block, Equation):
                 self._validate_equation(block, path)
+                if isinstance(block, AlignedEquation):
+                    for line_index, line in enumerate(block.lines):
+                        line_path = f"{path}.lines[{line_index}]"
+                        self._register_block(line, line_path)
+                        self._register_referenceable(line, line_path)
+                        self.equation_line_numbered[id(line)] = (
+                            block.numbering == "each" and line.numbered
+                        )
             if isinstance(block, Box):
                 if block.title is not None:
                     self._scan_inlines(block.title, f"{path}.title")
@@ -1303,7 +1670,7 @@ class _ValidationContext:
             path,
         )
 
-    def _register_block(self, block: Block, path: str) -> None:
+    def _register_block(self, block: object, path: str) -> None:
         block_id = id(block)
         existing_path = self.block_paths.get(block_id)
         if existing_path is not None:
@@ -1316,6 +1683,20 @@ class _ValidationContext:
             )
             return
         self.block_paths[block_id] = path
+        explicit_anchor = getattr(block, "anchor", None)
+        if explicit_anchor is not None and str(explicit_anchor).strip():
+            anchor = str(explicit_anchor).strip()
+            existing_anchor_path = self.explicit_anchor_paths.get(anchor)
+            if existing_anchor_path is not None and existing_anchor_path != path:
+                self._add(
+                    "error",
+                    "duplicate-anchor",
+                    f"Explicit anchor {anchor!r} is used at both "
+                    f"{existing_anchor_path} and {path}.",
+                    path,
+                )
+            else:
+                self.explicit_anchor_paths[anchor] = path
 
     def _register_referenceable(self, target: object, path: str) -> None:
         target_id = id(target)
@@ -1336,6 +1717,10 @@ class _ValidationContext:
             fragment_path = f"{path}[{index}]"
             if isinstance(fragment, InlineChip):
                 self._validate_style_reference("chip", fragment.chip_style, f"{fragment_path}.chip_style")
+                continue
+            if isinstance(fragment, ObjectLink):
+                self.object_links.append((fragment, fragment_path))
+                self._scan_inlines(fragment.label or (), f"{fragment_path}.label")
                 continue
             if isinstance(fragment, BlockReference):
                 self.references.append((fragment, fragment_path))
@@ -1825,6 +2210,25 @@ class _ValidationContext:
                     render_index,
                 )
 
+    def _validate_object_links(self, render_index: RenderIndex | None) -> None:
+        for object_link, path in self.object_links:
+            target = object_link.target
+            if id(target) not in self.referenceable_paths:
+                self._add(
+                    "error",
+                    "missing-object-link-target",
+                    f"Linked {type(target).__name__} is not included in this document body.",
+                    path,
+                )
+                continue
+            if render_index is not None and render_index.anchor_for(target) is None:
+                self._add(
+                    "error",
+                    "unsupported-object-link-target",
+                    f"{type(target).__name__} does not expose a renderer anchor.",
+                    path,
+                )
+
     def _add_page_reference_warning(self, path: str) -> None:
         self._add(
             "warning",
@@ -1989,6 +2393,18 @@ class _ValidationContext:
                     "error",
                     "unnumbered-equation-reference",
                     "Unnumbered Equation references require a custom label.",
+                    path,
+                )
+            return
+
+        if isinstance(target, EquationLine):
+            if self.equation_line_numbered.get(id(target), False):
+                return
+            if not has_custom_label:
+                self._add(
+                    "error",
+                    "equation-line-reference-missing",
+                    "Unnumbered EquationLine references require a custom label.",
                     path,
                 )
             return

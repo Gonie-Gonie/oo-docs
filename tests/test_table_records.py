@@ -5,7 +5,7 @@ from io import BytesIO
 
 import pytest
 
-from oodocs import Figure, ImageData, Table, TableStyle
+from oodocs import Figure, ImageData, Table, TableCell, TableStyle
 from oodocs.media import ColumnSpec
 
 _TINY_PNG = (
@@ -64,6 +64,87 @@ def test_table_from_records_supports_sequence_records() -> None:
 
     with pytest.raises(ValueError, match="missing column"):
         Table.from_records([{"a": 1}], columns=["a", "b"], fail_on_missing=True)
+
+
+def test_table_from_dataframe_preserves_multiindex_spans_and_formatters() -> None:
+    pandas = pytest.importorskip("pandas")
+    dataframe = pandas.DataFrame(
+        [
+            [1.234, 4.567, 10.0],
+            [2.345, 5.678, 20.0],
+            [3.456, 6.789, 30.0],
+        ],
+        columns=pandas.MultiIndex.from_tuples(
+            [
+                ("Metrics", "Mean"),
+                ("Metrics", "Peak"),
+                ("Limits", ""),
+            ],
+            names=("Group", "Measure"),
+        ),
+        index=pandas.MultiIndex.from_tuples(
+            [("North", "A"), ("North", "B"), ("South", "A")],
+            names=("Region", "Case"),
+        ),
+    )
+
+    table = Table.from_dataframe(
+        dataframe,
+        include_index=True,
+        formatters={
+            "Metrics": ".1f",
+            "Peak": ".2f",
+            "Limits": lambda value: f"{value:.0f} ms",
+        },
+    )
+    shortcut = Table(dataframe, include_index=True)
+
+    assert [cell.content.plain_text() for cell in table.header_rows[0]] == [
+        "Region",
+        "Case",
+        "Metrics",
+        "Limits",
+    ]
+    assert table.header_rows[0][0].rowspan == 2
+    assert table.header_rows[0][1].rowspan == 2
+    assert table.header_rows[0][2].colspan == 2
+    assert table.header_rows[0][3].rowspan == 2
+    assert [cell.content.plain_text() for cell in table.rows[0]] == [
+        "North",
+        "A",
+        "1.2",
+        "4.57",
+        "10 ms",
+    ]
+    assert [cell.content.plain_text() for cell in table.rows[1]] == [
+        "B",
+        "2.3",
+        "5.68",
+        "20 ms",
+    ]
+    assert table.rows[0][0].rowspan == 2
+    assert table._layout().column_count == 5
+    assert shortcut.header_rows[0][2].colspan == 2
+    assert shortcut.rows[0][2].content.plain_text() == "1.234"
+
+
+def test_table_rejects_mismatched_expanded_group_headers() -> None:
+    with pytest.raises(ValueError, match="grouped header colspans"):
+        Table(
+            headers=[
+                [TableCell("Only one group")],
+                [TableCell("A"), TableCell("B")],
+            ],
+            rows=[["a", "b"]],
+        )
+
+    with pytest.raises(ValueError, match="column_widths"):
+        Table.grouped_headers(
+            groups=[("Group", 2)],
+            columns=["A", "B"],
+            rows=[["a", "b"]],
+            column_widths=[2.0],
+        )
 
 
 def test_table_from_records_accepts_column_specs_and_sidecar_helpers(

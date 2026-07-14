@@ -31,7 +31,7 @@ AUTHORS = [
         "Hyeong-Gon Jo",
         affiliations=[
             Affiliation(
-                department="Building Simulation LAB",
+                department="Example Laboratory",
                 organization="Seoul National University",
                 city="Seoul",
                 country="Republic of Korea",
@@ -41,7 +41,7 @@ AUTHORS = [
         corresponding=True,
     ),
     Author(
-        "OODocs Contributors",
+        "Example Research Group",
         affiliations=["Open-source document tooling"],
     ),
 ]
@@ -143,9 +143,9 @@ TEMPLATE_CATALOG_TABLE = Table(
         ],
         [
             "CoverPagePreset",
-            "settings(subtitle, authors, metadata)",
+            "accented(...) or centered_logo(...)",
             "cover-page settings",
-            "EPlusSimple-style cover pages with cover-scoped decorations.",
+            "Generic caller-owned cover content and layout.",
         ],
         [
             "SoftwareManualTemplate",

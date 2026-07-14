@@ -172,7 +172,7 @@ def build_document(records: Sequence[dict[str, str]] | None = None) -> Document:
         ),
         settings=DocumentSettings(
             metadata=DocumentMetadata(
-                author="OODocs Contributors",
+                author="Example Documentation Team",
                 description="Conformance matrix report with wide evidence sidecar",
             ),
             title_matter=TitleMatter(subtitle="PDF excerpt plus full matrix sidecar"),

@@ -20,7 +20,9 @@ from oodocs import (
     TitleMatter,
     inline_code,
 )
-from oodocs.adapters import GithubWorkflowSummary, ProjectMetadata
+from oodocs.integrations.github_actions import collect_github_actions_workflow
+from oodocs.integrations.pyproject import collect_pyproject_info
+from oodocs.metadata import ProjectInfo, WorkflowSummary
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -74,25 +76,26 @@ def repo_relative(path: Path) -> str:
 def load_project_inputs(
     pyproject: str | Path = REPO_ROOT / "pyproject.toml",
     workflow: str | Path = REPO_ROOT / ".github" / "workflows" / "release.yml",
-) -> tuple[ProjectMetadata, GithubWorkflowSummary]:
+) -> tuple[ProjectInfo, WorkflowSummary]:
     """Load project metadata and release workflow summaries."""
 
     return (
-        ProjectMetadata.from_pyproject(pyproject),
+        collect_pyproject_info(pyproject),
         load_workflow_summary(workflow),
     )
 
 
-def load_workflow_summary(workflow: str | Path) -> GithubWorkflowSummary:
+def load_workflow_summary(workflow: str | Path) -> WorkflowSummary:
     """Load a workflow summary, using a small fallback when PyYAML is absent."""
 
     workflow_path = Path(workflow)
     try:
-        return GithubWorkflowSummary.from_file(workflow_path)
+        return collect_github_actions_workflow(workflow_path)
     except ImportError:
-        return GithubWorkflowSummary(
+        return WorkflowSummary(
             source_path=workflow_path,
             jobs=tuple(_fallback_workflow_jobs(workflow_path)),
+            name="Release workflow",
         )
 
 
@@ -128,8 +131,8 @@ def _fallback_workflow_jobs(path: Path) -> list[dict[str, object]]:
 
 def write_metadata_sidecar(
     output_dir: str | Path,
-    metadata: ProjectMetadata,
-    workflow: GithubWorkflowSummary,
+    metadata: ProjectInfo,
+    workflow: WorkflowSummary,
 ) -> Path:
     """Write project metadata and workflow job summaries as JSON."""
 
@@ -137,11 +140,11 @@ def write_metadata_sidecar(
     output_path.mkdir(parents=True, exist_ok=True)
     sidecar_path = output_path / METADATA_JSON
     payload = {
-        "pyproject": repo_relative(metadata.source_path),
-        "workflow": repo_relative(workflow.source_path),
+        "pyproject": repo_relative(metadata.source_path or Path("pyproject.toml")),
+        "workflow": repo_relative(workflow.source_path or Path("workflow.yml")),
         "project": dict(metadata.project),
         "build_system": dict(metadata.build_system),
-        "workflow_jobs": [dict(row) for row in workflow.jobs],
+        "workflow_jobs": [job.as_record() for job in workflow.jobs],
     }
     sidecar_path.write_text(
         json.dumps(payload, indent=2, sort_keys=True, default=str) + "\n",
@@ -160,8 +163,8 @@ def build_document(
     source_table = Table(
         ["Source", "Purpose"],
         [
-            [repo_relative(metadata.source_path), "Package metadata, Python requirement, dependencies, and build backend."],
-            [repo_relative(workflow_summary.source_path), "Release jobs, runners, dependencies, and step counts."],
+            [repo_relative(metadata.source_path or Path("pyproject.toml")), "Package metadata, Python requirement, dependencies, and build backend."],
+            [repo_relative(workflow_summary.source_path or Path("workflow.yml")), "Release jobs, runners, dependencies, and step counts."],
         ],
         caption="Repository configuration files used by this report.",
     )
@@ -183,9 +186,9 @@ def build_document(
             Paragraph(
                 "This example turns repository configuration artifacts into normal OODocs sections. "
                 "It uses ",
-                inline_code("ProjectMetadata.from_pyproject(...)"),
+                inline_code("collect_pyproject_info(...)"),
                 " and ",
-                inline_code("GithubWorkflowSummary.from_file(...)"),
+                inline_code("collect_github_actions_workflow(...)"),
                 ".",
             ),
             source_table,
@@ -207,7 +210,7 @@ def build_document(
         ),
         settings=DocumentSettings(
             metadata=DocumentMetadata(
-                author="OODocs Contributors",
+                author="Example Documentation Team",
                 description="Project metadata report generated from repository configuration files",
             ),
             title_matter=TitleMatter(
@@ -228,7 +231,10 @@ def build(
     output_path = Path(output_dir)
     metadata, workflow = load_project_inputs()
     metadata_json = write_metadata_sidecar(output_path, metadata, workflow)
-    document = build_document(metadata.source_path, workflow.source_path)
+    document = build_document(
+        metadata.source_path or REPO_ROOT / "pyproject.toml",
+        workflow.source_path or REPO_ROOT / ".github" / "workflows" / "release.yml",
+    )
     document.validate(raise_on_error=True)
     rendered = document.save_all(
         output_path,

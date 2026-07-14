@@ -399,7 +399,7 @@ def build_benchmark_document(
         ),
         settings=DocumentSettings(
             metadata=DocumentMetadata(
-                author="OODocs Contributors",
+                author="Example Documentation Team",
                 description="Example report generated from native Python benchmark data",
             ),
             title_matter=TitleMatter(

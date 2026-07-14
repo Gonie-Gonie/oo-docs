@@ -35,11 +35,11 @@ If you need the optional dependencies used by the bundled examples:
 pip install "oodocs[examples]"
 ```
 
-If you need YAML-backed repository adapters such as GitHub Actions workflow
-summaries:
+If you need YAML-backed integrations such as GitHub Actions workflow
+collection:
 
 ```powershell
-pip install "oodocs[adapters]"
+pip install "oodocs[integrations]"
 ```
 
 If you want to collect Python API objects from modules, packages, source-layout
@@ -130,7 +130,7 @@ oodocs validate report.py
 
 For CI and release evidence, `oodocs validate --report-format json` emits a machine-readable validation summary. Add `--warning-policy policy.json` to make selected warning codes block a validation gate while still writing policy details into the JSON report. `oodocs build ... --fail-on-warning` treats all validation warnings as failures, while `--show-warnings` prints warning tables without changing the default success path. Add `--traceback` to any command when debugging needs the full Python stack trace.
 
-For imported Markdown or notebooks, `oodocs build ... --show-import-warnings` prints diagnostics for lossy source features, and `--fail-on-import-warning` fails on those diagnostics. Release evidence bundles can be generated with `python -m oodocs.evidence build --out artifacts/evidence`.
+For imported Markdown or notebooks, `oodocs build ... --show-import-warnings` prints diagnostics for lossy source features, and `--fail-on-import-warning` fails on those diagnostics. Generic evidence bundles use either a TOML configuration or explicit items, for example `python -m oodocs.evidence --item results.csv --title "Verification" --output-dir artifacts/evidence --stem verification --format html`.
 
 ## Why Not Just LaTeX?
 
@@ -173,7 +173,7 @@ Common translations:
 - LaTeX `eso-pic` / `background` / `wallpaper` page overlays -> `Shape.rect(...)`, `TextBox(...)`, `ImageBox(...)`, and `PageItemScope` in `DocumentSettings(overlays=[...])`
 - LaTeX `footmisc` / `manyfoot` notes -> `footnote(...)`, `Footnote.annotated(...)`, `FootnoteDefaults(...)`, `FootnoteStyle.symbol(...)`, stream names, and `ListOfFootnotes(...)` from `oodocs.generated`
 - LaTeX `marginnote` / `todonotes` review annotations -> `todo(...)`, `Todo(...)`, `margin_note(...)`, and `MarginNote(...)` from `oodocs.review`, with HTML side-note output and DOCX/PDF comment fallbacks
-- LaTeX `article` / `report` / `book` / KOMA-Script classes -> `JournalArticleTemplate`, `TechnicalReportTemplate`, `SoftwareManualTemplate`, `BookTemplate`, `CoverPagePreset.eplus_simple(...)`, and ordinary `Section(...)`, `Chapter(...)`, `Part(...)`, and `Appendix(...)` blocks
+- LaTeX `article` / `report` / `book` / KOMA-Script classes -> `JournalArticleTemplate`, `TechnicalReportTemplate`, `SoftwareManualTemplate`, `BookTemplate`, `CoverPagePreset.accented(...)` or `CoverPagePreset.centered_logo(...)`, and ordinary `Section(...)`, `Chapter(...)`, `Part(...)`, and `Appendix(...)` blocks
 
 The main payoff is fewer manual handoffs: a benchmark CSV can become a table, a matplotlib object can become a figure, and the same authored structure can render to DOCX for review, PDF for release, and HTML for lightweight sharing.
 
@@ -216,16 +216,18 @@ The default behavior is intentionally conventional:
 - Import `Appendix(...)` from `oodocs.structure` for appendix material; child chapters are numbered `A`, `B`, `C`, nested headings become `A.1`, `A.2`, and the appendix separator can appear in the table of contents. Place appendices after the main chapters and parts so validation can keep the document outline conventional.
 - Use `Chapter(...)`, `Section(...)`, `Subsection(...)`, and `SubSubsection(...)` for the visible outline. Their nesting in Python should match how you expect the final document to read.
 - Import `JournalArticleTemplate`, `TechnicalReportTemplate`, `SoftwareManualTemplate`, `BookTemplate`, and `CoverPagePreset` from `oodocs.presets.templates` when LaTeX-class-like defaults should own title matter, generated pages, front matter, appendices, and repeated document shape; see [docs/reference/template-preset-support.md](docs/reference/template-preset-support.md).
+- Use `CoverPage` directly, or start with `CoverPagePreset.accented(...)` / `CoverPagePreset.centered_logo(...)`, when a standalone cover should consume caller-owned title matter; see [docs/reference/cover-page.md](docs/reference/cover-page.md).
 - Use `Theme(blocks=BlockDefaults(heading_styles={level: HeadingStyle(...)}))` for document-wide heading styling, or `Section(..., heading_style=HeadingStyle(...))` when one heading needs a local override.
 - Use `TableOfContents(scope="chapter")`, `ListOfTables(scope="section")`, `ListOfFigures(scope="part")`, `ListOfAlgorithms(scope="chapter")`, or `ListOfListings(scope="chapter")` for mini contents and local generated lists. Import `ListOfAlgorithms` and `ListOfListings` from `oodocs.generated`; the default `scope="document"` preserves whole-document lists.
 - Use `Document.add(...)`, `Section.add(...)`, `Box.add(...)`, and `MultiColumn.add(...)` when a longer report is easier to assemble step by step. Matching `extend(...)` methods accept iterables and use the same coercion rules as constructors.
 - Use `ref(obj)` or `obj.ref()` for cross-references to captioned media, headings, equations, paragraphs, code blocks, and boxes. Use top-level `refs([a, b])` for plural object references and `ref_range(a, b)` for ranges. Import `ReferenceFormat`, `bracket_ref`, `paren_ref`, and `page_ref` from `oodocs.references` when custom formatting, bracketed references, parenthesized references, or page-aware reference requests are needed; see [docs/reference/reference-support.md](docs/reference/reference-support.md). Passing the raw object inside `Paragraph(...)` is rejected so insertion and citation are not confused.
 - Import theorem-like blocks such as `Definition(...)`, `Lemma(...)`, `Theorem(...)`, `Proof(...)`, and `create_countable_block_type(...)` from `oodocs.structure`; they share a document-wide counter unless configured otherwise.
-- Use `Table(...)` for small authored tables, `Table.from_records(...)` or `Table.from_mapping(...)` for ordinary Python data, `Table.from_csv(...)` or `Table.from_tsv(...)` for delimited files, and `Table.from_dataframe(...)` when the data already lives in pandas.
+- Use `Table(...)` for small authored tables, `Table.from_records(...)` or `Table.from_mapping(...)` for ordinary Python data, `Table.from_csv(...)` or `Table.from_tsv(...)` for delimited files, and canonical `Table.from_dataframe(...)` when the data already lives in pandas. `Table(dataframe)` remains an auxiliary shortcut; see [docs/reference/table-media-support.md](docs/reference/table-media-support.md).
 - Use named table styles such as `Table(..., style="plain")`, `Table(..., style="compact")`, `Table(..., style="evidence")`, or `Table(..., style="booktabs")` when several tables should share a preset without repeating style kwargs. The booktabs preset maps publication-style top, header, and bottom rules to `top_rule`, `header_rule`, and `bottom_rule`. Use `StyleSheet.register_table(...)`, `register_box(...)`, `register_chip(...)`, and `register_paragraph(...)` for custom stylesheet entries; the category-string `register(...)` method remains available for dynamic or advanced tooling.
 - Import `ColumnSpec(...)` from `oodocs.media` for fixed columns, `tabularx`-style flex columns, column alignment, and column cell styling in `Table(...)`, `Table.from_dataframe(...)`, `Table.from_csv(...)`, and `Table.from_tsv(...)`. In `Table.from_records(...)`, `ColumnSpec(key=..., header=..., visible=False)` can also choose, rename, or hide record fields; see [docs/reference/table-media-support.md](docs/reference/table-media-support.md).
 - Use `TableCell(text_alignment=..., vertical_alignment=...)` for one-off cell alignment, `ColumnSpec(style=..., text_alignment=...)` for column formatting, and table-wide `Table(..., cell_text_alignment=..., cell_vertical_alignment=...)` when the whole table body shares Word-like alignment. Use dictionaries in `row_styles` or `header_row_styles` when rows need background color, text color, bold, or italic formatting.
 - Use `TableOverflowPolicy(action="allow")` from `oodocs.media` only when a wide table is intentionally allowed to overflow the fixed-page text area. Otherwise validation keeps the `wide-table` warning and points to `ColumnSpec(flex=...)`, `Table.excerpt(...)`, or `Table.save_csv(...)`.
+- Keep application-specific codes, workbook structure, branding, and result-table conventions in the application repository; use Python variables and existing OODocs blocks as described in [docs/reference/application-boundary.md](docs/reference/application-boundary.md).
 - Use `TableCell(colspan=...)` and `TableCell(rowspan=...)` for one-off merged cells. Use `Table.grouped_headers(groups=[("Geometry", 2), ...], columns=[...], rows=[...])` when a table needs a common grouped header row without manually building every spanning cell.
 - Use `Table(split=True, continuation_label="continued")` when a table should render in source order and may break across pages. Leave `split=False` when the table should stay together when possible; very long tables are automatically rendered as split repeated-header tables.
 - Use `Figure(...)` for image files or `savefig()`-compatible Python figure objects. Use `Figure.from_bytes(...)` or `Figure.from_buffer(...)` when image bytes are already in memory. Add `crop=CropBox(...)` from `oodocs.media`, `rotation=...`, and `alt_text=...` for LaTeX `graphicx`-style image transforms and accessible output text.
@@ -265,7 +267,7 @@ as a full domain catalog: `examples/engineering_report_example/` for
 - Use `Document.from_markdown(..., numbered=False, toc=True)` when imported headings should keep their source titles without generated numbers but still appear in a generated table of contents.
 - Use `heading_level_shift=1` or `heading_level_shift=-1` with `Document.from_markdown(...)` or `parse_markdown(...)` when imported Markdown should be demoted or promoted before it is inserted into a larger outline. Import `shift_heading_levels(...)` from `oodocs.components.blocks` when already-created `Chapter(...)`/`Section(...)` objects need the same adjustment; paragraphs and other non-heading blocks stay unchanged, and shifts beyond the supported heading range fail.
 - Use `Document.from_notebook(...)` when a notebook should become a full document. Import `parse_notebook(...)` and `NotebookImportOptions(...)` from `oodocs.importers` when notebook cells should be merged into a larger report; markdown cells become normal document structure, code cells become `CodeBlock(...)`, and textual outputs can be included or filtered.
-- Use `oodocs.adapters` when repository files should become document objects: `ProjectMetadata.from_pyproject(...).to_section()`, `GithubWorkflowSummary.from_file(...).to_section()`, `ReleaseManifestSummary.from_file(...).to_section()`, and `ReleaseEvidence.from_directory(...).to_document()` are designed for release and audit reports.
+- Use `oodocs.integrations.pyproject.collect_pyproject_info(...)` and `oodocs.integrations.github_actions.collect_github_actions_workflow(...)` when external repository files should populate the generic `ProjectInfo` and `WorkflowSummary` models. Use `EvidenceReport` from `oodocs.evidence` for caller-selected audit inputs.
 - Use `oodocs.apidoc` when Python modules should become API documentation material. `collect_api(...)` returns an `ApiPackage`, not a pre-rendered string, so user code can query and compose the parsed API objects:
 
 ```python
@@ -330,7 +332,7 @@ doc = Document(
 - glossary and acronym registries through `oodocs.glossary`, plus the existing `Nomenclature` preset
 - optional title matter such as subtitle, structured `Author(...)` metadata, `AuthorLayout(...)`, affiliations, and a cover page
 - inline hyperlinks, breakable URL labels, theme-controlled link styling, heading/caption anchors, plural/range object-reference helpers, and validation for broken internal links
-- release evidence adapters for pyproject metadata, GitHub Actions workflows, validation JSON sidecars, JSON manifests, CSV/TSV evidence tables, checksums, and generated evidence reports
+- explicit integrations for project/workflow metadata plus generic evidence reports for caller-selected CSV, JSON, text, and checksum inputs
 - API object collection, docstring coverage checks, API snapshots, API diffs, and composable API-reference sections through `oodocs.apidoc`
 
 ## Example Scripts
@@ -498,7 +500,7 @@ The package is organized by responsibility:
 - `src/oodocs/settings.py` for `DocumentSettings` plus grouped configuration exports
 - `src/oodocs/components/` for the concrete authoring model (`base.py`, `blocks.py`, `equations.py`, `generated.py`, `inline.py`, `markup.py`, `media.py`, `people.py`, `positioning.py`, and `references.py`)
 - `src/oodocs/importers/` for adapters that convert external formats such as Markdown into OODocs objects
-- `src/oodocs/adapters/` and `src/oodocs/evidence.py` for repository artefact adapters and release evidence bundles
+- `src/oodocs/integrations/` for external parsers and collectors, `src/oodocs/metadata.py` for generic metadata models, and `src/oodocs/evidence/` for caller-configured evidence bundles
 - `src/oodocs/styles/` for reusable visual styles, grouped theme defaults, and stylesheets
 - `src/oodocs/layout/` for low-level render indexing support
 - `src/oodocs/renderers/docx.py`, `src/oodocs/renderers/pdf.py`, and `src/oodocs/renderers/html.py` for format-specific layout

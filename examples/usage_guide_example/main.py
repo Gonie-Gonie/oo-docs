@@ -922,7 +922,9 @@ report = TechnicalReportTemplate().build(
     sections=[("Findings", [Paragraph("The evidence package is complete.")])],
 )
 
-cover_settings = CoverPagePreset.eplus_simple().settings(subtitle="Release evidence")
+cover_settings = CoverPagePreset.accented(
+    organization="Example Lab",
+).settings(subtitle="Release evidence")
 cover_document = Document("Validation Report", Paragraph("Body."), settings=cover_settings)
 document.save_all("artifacts/manuscript", stem="article-draft")
 """
@@ -994,7 +996,7 @@ def build_usage_guide_document() -> Document:
         rows=[
             [
                 "Author",
-                "OODocs Contributors",
+                "Example Documentation Team",
                 "Maintainers and release editors for the public documentation workflow.",
             ],
             [
@@ -1004,7 +1006,7 @@ def build_usage_guide_document() -> Document:
             ],
             [
                 "Affiliation",
-                "Building Simulation LAB, Seoul National University",
+                "Example Laboratory",
                 "Structured affiliation metadata used by repository stewardship examples.",
             ],
         ],
@@ -1187,7 +1189,7 @@ def build_usage_guide_document() -> Document:
         headers=["Template", "Accepted structure", "Best first use"],
         rows=[
             ["JournalArticleTemplate", "title, authors, abstract, keywords, body sections, optional declarations, citations.", "A content-first manuscript builder where the caller fills article fields and the preset owns routine article assembly."],
-            ["CoverPagePreset", "eplus_simple().settings(subtitle, authors, metadata).", "A cover-page preset that creates DocumentSettings with cover-scoped decorations."],
+            ["CoverPagePreset", "accented(...).settings(...) or centered_logo(...).settings(...).", "Generic cover presets whose organization, logo, footer, subtitle, and authors remain caller-owned."],
             ["TechnicalReportTemplate", "executive_summary, front_matter, sections, appendices, back_matter.", "A report builder for validation reports, engineering memos, and audit evidence."],
             ["SoftwareManualTemplate", "overview, front_matter, sections, appendices, back_matter.", "A manual builder for user-facing procedures and command-oriented guides."],
             ["BookTemplate", "front_matter, parts, chapters, appendices, back_matter.", "A book-like builder for long-form documents with chapters, parts, and appendices."],
@@ -2238,7 +2240,7 @@ def build_usage_guide_document() -> Document:
                         inline_code("CoverPagePreset"),
                         " returns reusable ",
                         inline_code("DocumentSettings"),
-                        " for EPlusSimple-style title pages with cover-scoped decorations."
+                        " for accented title pages with cover-scoped decorations."
                     ),
                     template_presets_table,
                     CodeBlock(TEMPLATE_PRESETS_SNIPPET, language="python"),
@@ -2249,7 +2251,7 @@ def build_usage_guide_document() -> Document:
         ListOfReferences(),
         settings=DocumentSettings(
             metadata=DocumentMetadata(
-                author="OODocs Contributors",
+                author="Example Documentation Team",
                 subject="Detailed usage guide and API walkthrough",
                 keywords=["OODocs", "documentation", "examples"],
                 description="Detailed usage guide and API walkthrough",
@@ -2257,7 +2259,7 @@ def build_usage_guide_document() -> Document:
             title_matter=TitleMatter(
                 subtitle="Reference-style guide for structured Python document authoring",
                 authors=[
-                    Author("OODocs Contributors"),
+                    Author("Example Documentation Team"),
                     Author("Hyeong-Gon Jo"),
                 ],
                 author_layout=AuthorLayout(

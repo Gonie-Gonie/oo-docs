@@ -9,6 +9,7 @@ from mimetypes import guess_type
 from pathlib import Path
 
 from oodocs.components.blocks import (
+    AlignedEquation,
     Box,
     BulletList,
     CodeBlock,
@@ -49,6 +50,7 @@ from oodocs.components.inline import (
     Text,
     Todo,
 )
+from oodocs.components.descriptions import DescriptionList
 from oodocs.components.media import (
     Figure,
     PdfPages,
@@ -84,7 +86,7 @@ from oodocs.layout.indexing import (
     resolve_block_reference,
 )
 from oodocs.settings import PageLayout
-from oodocs.styles import BoxStyle, HeadingStyle, ListStyle, ParagraphStyle, TableStyle, TextStyle, Theme
+from oodocs.styles import BoxStyle, DescriptionListStyle, HeadingStyle, ListStyle, ParagraphStyle, TableStyle, TextStyle, Theme
 from oodocs.renderers.context import HtmlRenderContext, _settings_with_page_layout
 from oodocs.renderers.syntax import _syntax_line_html, syntax_html
 
@@ -128,12 +130,15 @@ class HtmlRenderer:
             settings=settings,
             unit=settings.unit,
         )
-        front_children, main_children = document.split_top_level_children()
+        matter = document.matter_layout()
+        front_children = matter.front.children
+        main_children = matter.main.children
+        back_children = matter.back.children
         title_matter = settings.title_matter
-        has_front_matter = title_matter.cover_page or bool(front_children)
+        has_front_matter = title_matter.cover is not None or bool(front_children)
         page_item_phase = (
             "cover"
-            if title_matter.cover_page
+            if title_matter.cover is not None
             else "front" if has_front_matter else "main"
         )
 
@@ -150,27 +155,35 @@ class HtmlRenderer:
             self._render_title_matter(
                 document,
                 context,
-                page_break_after=title_matter.cover_page and (bool(front_children) or bool(main_children)),
+                page_break_after=title_matter.cover is not None
+                and (bool(front_children) or bool(main_children) or bool(back_children)),
             ),
         ]
 
-        if has_front_matter:
-            if front_children:
-                body_parts.append(
-                    '<section class="oodocs-front-matter">'
-                    + self._render_children(front_children, context)
-                    + "</section>"
-                )
-            if main_children:
-                body_parts.append(
-                    '<section class="oodocs-main-matter oodocs-page-break-before">'
-                    + self._render_children(main_children, context)
-                    + "</section>"
-                )
-        else:
+        if front_children:
             body_parts.append(
-                '<section class="oodocs-main-matter">'
+                '<section class="oodocs-front-matter'
+                + (" oodocs-page-break-before" if matter.front.page_break_before else "")
+                + '">'
+                + self._render_children(front_children, context)
+                + "</section>"
+            )
+        if main_children:
+            main_break = matter.main.page_break_before or has_front_matter
+            body_parts.append(
+                '<section class="oodocs-main-matter'
+                + (" oodocs-page-break-before" if main_break else "")
+                + '">'
                 + self._render_children(main_children, context)
+                + "</section>"
+            )
+        if back_children:
+            back_break = matter.back.page_break_before
+            body_parts.append(
+                '<section class="oodocs-back-matter'
+                + (" oodocs-page-break-before" if back_break else "")
+                + '">'
+                + self._render_children(back_children, context)
                 + "</section>"
             )
 
@@ -318,6 +331,99 @@ class HtmlRenderer:
         """
 
         return self._render_list(block, context, depth=0)
+
+    def render_description_list(
+        self,
+        block: DescriptionList,
+        context: HtmlRenderContext,
+    ) -> str:
+        """Render a semantic description list using ``dl``, ``dt``, and ``dd``."""
+
+        style = context.stylesheet.resolve(
+            "description_list",
+            block.style,
+            DescriptionListStyle(),
+        )
+        term_width = style.term_width_in_inches(context.unit)
+        term_gap = style.term_gap_in_inches(context.unit)
+        if style.layout == "stacked":
+            list_css = "display: grid; grid-template-columns: minmax(0, 1fr);"
+            term_css = "grid-column: 1;"
+            definition_indent = term_gap
+            definition_css = f"grid-column: 1; margin-left: {definition_indent:.3f}in;"
+        else:
+            term_column = (
+                f"{term_width:.3f}in"
+                if style.layout == "hanging" and term_width is not None
+                else "max-content"
+            )
+            list_css = (
+                "display: grid; "
+                f"grid-template-columns: minmax(0, {term_column}) minmax(0, 1fr); "
+                f"column-gap: {term_gap:.3f}in;"
+            )
+            term_css = "grid-column: 1;"
+            definition_css = "grid-column: 2;"
+
+        items: list[str] = []
+        definition_paragraph_css = self._paragraph_style_css(
+            style.definition_style,
+            context.theme,
+            default_unit=context.unit,
+        )
+        for item in block.items:
+            term_html = self._inline_html(
+                item.term,
+                context.theme,
+                context.render_index,
+                default_style=style.term_text_style,
+            )
+            definition_html = (
+                self._render_description_children(
+                    item.children,
+                    style.definition_style,
+                    context,
+                )
+                or "&nbsp;"
+            )
+            items.append(
+                '<dt class="oodocs-description-term" '
+                f'style="{term_css} align-self: start; overflow-wrap: anywhere;">'
+                f"{term_html}</dt>"
+                '<dd class="oodocs-description-definition" '
+                f'style="{definition_css} min-width: 0; {definition_paragraph_css} '
+                f'margin-top: 0; margin-right: 0; '
+                f'margin-bottom: {style.item_spacing:.1f}pt;">{definition_html}</dd>'
+            )
+        return (
+            f'<dl class="oodocs-description-list oodocs-description-{style.layout}" '
+            f'style="{list_css} margin: 0; padding: 0;">'
+            + "".join(items)
+            + "</dl>"
+        )
+
+    def _render_description_children(
+        self,
+        children: list[object],
+        definition_style: ParagraphStyle,
+        context: HtmlRenderContext,
+    ) -> str:
+        rendered: list[str] = []
+        for child in children:
+            original_style = None
+            if (
+                isinstance(child, Paragraph)
+                and isinstance(child.style, ParagraphStyle)
+                and child.style == ParagraphStyle()
+            ):
+                original_style = child.style
+                child.style = definition_style
+            try:
+                rendered.append(child._render_to_html(self, context))
+            finally:
+                if original_style is not None:
+                    child.style = original_style
+        return "".join(rendered)
 
     def _render_list(
         self,
@@ -473,6 +579,9 @@ class HtmlRenderer:
         Returns:
             HTML fragment for the equation.
         """
+
+        if isinstance(block, AlignedEquation):
+            return self._aligned_equation_html(block, context)
 
         equation_style = context.stylesheet.resolve("paragraph", block.style, ParagraphStyle())
         line_height = equation_style.leading or max(context.theme.typography.body_font_size + 1, 12) * 1.3
@@ -901,8 +1010,14 @@ class HtmlRenderer:
         )
         table_class_attr = self._html_class_attr("oodocs-table", table_style.css_class)
         continuation_attrs = self._table_continuation_attrs(block)
+        wrapper_anchor = (
+            context.render_index.table_anchor(block)
+            if block.caption is None
+            else None
+        )
+        wrapper_id = f' id="{escape(wrapper_anchor, quote=True)}"' if wrapper_anchor else ""
         table_html = (
-            '<div class="oodocs-table-wrapper '
+            f'<div{wrapper_id} class="oodocs-table-wrapper '
             f'oodocs-placement-{placement} '
             f'{"oodocs-table-split" if split_table else "oodocs-table-keep"}" '
             f'style="{self._table_wrapper_css(context.theme, in_box=context.in_box)} {self._media_placement_css(placement, in_box=context.in_box)}">'
@@ -1011,8 +1126,14 @@ class HtmlRenderer:
         content_parts.append(image_html)
         if block.caption is not None and context.theme.captions.figure_caption_position == "below":
             content_parts.append(caption_html)
+        figure_anchor = (
+            context.render_index.figure_anchor(block)
+            if block.caption is None
+            else None
+        )
+        figure_id = f' id="{escape(figure_anchor, quote=True)}"' if figure_anchor else ""
         return (
-            f'<figure class="oodocs-figure oodocs-placement-{placement}" '
+            f'<figure{figure_id} class="oodocs-figure oodocs-placement-{placement}" '
             f'style="{self._figure_css(context.theme, in_box=context.in_box)} {self._media_placement_css(placement, in_box=context.in_box)}">'
             + "".join(content_parts)
             + "</figure>"
@@ -1056,8 +1177,14 @@ class HtmlRenderer:
         content_parts.append(f'<div class="oodocs-subfigure-grid" style="{grid_style}">{subfigures}</div>')
         if block.caption is not None and context.theme.captions.figure_caption_position == "below":
             content_parts.append(caption_html)
+        figure_anchor = (
+            context.render_index.figure_anchor(block)
+            if block.caption is None
+            else None
+        )
+        figure_id = f' id="{escape(figure_anchor, quote=True)}"' if figure_anchor else ""
         return (
-            f'<figure class="oodocs-figure oodocs-subfigure-group oodocs-placement-{placement}" '
+            f'<figure{figure_id} class="oodocs-figure oodocs-subfigure-group oodocs-placement-{placement}" '
             f'style="{self._figure_css(context.theme, in_box=context.in_box)} {self._media_placement_css(placement, in_box=context.in_box)}">'
             + "".join(content_parts)
             + "</figure>"
@@ -1156,6 +1283,75 @@ class HtmlRenderer:
             f'{self._media_placement_css(placement, in_box=context.in_box)}">'
             + "".join(content_parts)
             + "</div>"
+        )
+
+    def _aligned_equation_html(
+        self,
+        block: AlignedEquation,
+        context: HtmlRenderContext,
+    ) -> str:
+        """Render aligned rows with shared alignment columns and row anchors."""
+
+        equation_style = context.stylesheet.resolve(
+            "paragraph",
+            block.style,
+            ParagraphStyle(),
+        )
+        line_height = (
+            equation_style.leading
+            or max(context.theme.typography.body_font_size + 1, 12) * 1.3
+        )
+        group_anchor = context.render_index.anchor_for(block)
+        anchor_attr = f' id="{escape(group_anchor)}"' if group_anchor else ""
+        maximum_columns = max(len(line.alignment_parts()) for line in block.lines)
+        group_number = context.render_index.equation_number(block)
+        rows: list[str] = []
+        for row_index, line in enumerate(block.lines):
+            line_anchor = context.render_index.anchor_for(line)
+            line_anchor_attr = f' id="{escape(line_anchor)}"' if line_anchor else ""
+            cells = [
+                '<td class="oodocs-equation-alignment-cell" '
+                'style="padding: 0 0.18em; white-space: nowrap;">'
+                + self._math_html(
+                    Math(part),
+                    context.theme,
+                    base_size=max(context.theme.typography.body_font_size + 1, 12),
+                )
+                + "</td>"
+                for part in line.alignment_parts()
+            ]
+            cells.extend(
+                '<td class="oodocs-equation-alignment-cell" aria-hidden="true"></td>'
+                for _ in range(maximum_columns - len(cells))
+            )
+            number = context.render_index.equation_number(line)
+            if number is None and row_index == len(block.lines) - 1:
+                number = group_number
+            number_html = (
+                f'<span class="oodocs-equation-number">({escape(str(number))})</span>'
+                if number is not None
+                else ""
+            )
+            cells.append(
+                '<td class="oodocs-equation-number-cell" '
+                'style="padding-left: 0.75em; text-align: right; white-space: nowrap;">'
+                + number_html
+                + "</td>"
+            )
+            rows.append(
+                f'<tr{line_anchor_attr} class="oodocs-equation-row">'
+                + "".join(cells)
+                + "</tr>"
+            )
+        return (
+            f'<div{anchor_attr} class="oodocs-equation oodocs-aligned-equation" '
+            f'data-numbering="{block.numbering}" '
+            f'style="text-align: {context.theme.resolve_paragraph_text_alignment(equation_style)}; '
+            f'margin: 0 0 {(equation_style.space_after or 0):.1f}pt; '
+            f'line-height: {line_height:.1f}pt;">'
+            '<table role="presentation" style="border-collapse: collapse; margin: 0 auto;">'
+            + "".join(rows)
+            + "</table></div>"
         )
 
     def _subtable_html(
@@ -1517,28 +1713,71 @@ class HtmlRenderer:
     ) -> str:
         settings = document.settings
         title_matter = settings.title_matter
+        cover = title_matter.cover
         classes = ["oodocs-title-matter"]
-        if title_matter.cover_page:
+        if cover is not None:
             classes.append("oodocs-cover-page")
         if page_break_after:
             classes.append("oodocs-page-break-after")
 
-        lines = [
+        lines: list[str] = []
+        cover_style = cover.resolved_style() if cover is not None else None
+        title_alignment = (
+            cover_style.text_alignment
+            if cover_style is not None
+            else context.theme.title_matter.title_text_alignment
+        )
+        if cover is not None:
+            lines.append(self._render_children(list(cover.extra_top), context))
+            if cover.eyebrow is not None:
+                lines.append(
+                    self._title_line_html(
+                        cover.eyebrow,
+                        font_size=cover_style.eyebrow_style.font_size or 10,
+                        alignment=title_alignment,
+                        class_name="oodocs-cover-eyebrow",
+                        theme=context.theme,
+                        default_style=cover_style.eyebrow_style,
+                        space_after=cover_style.section_spacing * 72,
+                    )
+                )
+            if cover.organization is not None:
+                lines.append(
+                    self._title_line_html(
+                        cover.organization,
+                        font_size=cover_style.organization_style.font_size or 11,
+                        alignment=title_alignment,
+                        class_name="oodocs-cover-organization",
+                        theme=context.theme,
+                        default_style=cover_style.organization_style,
+                        space_after=cover_style.section_spacing * 72,
+                    )
+                )
+            logo = cover.logo_figure()
+            if logo is not None:
+                lines.append(
+                    '<div class="oodocs-cover-logo">'
+                    + logo._render_to_html(self, context)
+                    + "</div>"
+                )
+        lines.append(
             self._title_line_html(
                 [Text(document.title)],
                 font_size=context.theme.typography.title_font_size,
-                alignment=context.theme.title_matter.title_text_alignment,
+                alignment=title_alignment,
                 bold=True,
                 class_name="oodocs-title",
                 theme=context.theme,
             )
-        ]
+        )
         if title_matter.subtitle is not None:
             lines.append(
                 self._title_line_html(
                     title_matter.subtitle,
                     font_size=max(context.theme.typography.body_font_size + 1, 12),
-                    alignment=context.theme.title_matter.subtitle_text_alignment,
+                    alignment=title_alignment
+                    if cover is not None
+                    else context.theme.title_matter.subtitle_text_alignment,
                     italic=True,
                     class_name="oodocs-subtitle",
                     theme=context.theme,
@@ -1551,14 +1790,53 @@ class HtmlRenderer:
                 self._title_line_html(
                     list(line.fragments),
                     font_size=self._title_line_font_size(line, context.theme),
-                    alignment=self._title_line_alignment(line, context.theme),
+                    alignment=title_alignment
+                    if cover is not None
+                    else self._title_line_alignment(line, context.theme),
                     italic=line.kind == "affiliation",
                     class_name=self._title_line_class(line),
                     theme=context.theme,
                     space_after=self._author_title_line_space_after(author_lines, index, last_space=10),
                 )
             )
-        return f'<header class="{" ".join(classes)}">{"".join(lines)}</header>'
+        if cover is not None:
+            if cover.date is not None:
+                lines.append(
+                    self._title_line_html(
+                        cover.date,
+                        font_size=cover_style.date_style.font_size or 10,
+                        alignment=title_alignment,
+                        class_name="oodocs-cover-date",
+                        theme=context.theme,
+                        default_style=cover_style.date_style,
+                        space_after=cover_style.section_spacing * 72,
+                    )
+                )
+            lines.append(self._render_children(list(cover.note), context))
+            lines.append(self._render_children(list(cover.extra_bottom), context))
+            if cover.footer is not None:
+                lines.append(
+                    self._title_line_html(
+                        cover.footer,
+                        font_size=cover_style.footer_style.font_size or 9,
+                        alignment=title_alignment,
+                        class_name="oodocs-cover-footer",
+                        theme=context.theme,
+                        default_style=cover_style.footer_style,
+                    )
+                )
+        tag = "section" if cover is not None else "header"
+        style_parts: list[str] = []
+        if cover_style is not None:
+            style_parts.append(f"padding-top: {cover_style.top_spacing:.3f}{cover_style.unit}")
+            if cover_style.vertical_alignment == "center":
+                style_parts.extend(("min-height: 80vh", "justify-content: center"))
+            if cover_style.accent_color:
+                style_parts.append(
+                    f"border-left: {cover_style.accent_width:.3f}{cover_style.unit} solid #{cover_style.accent_color}"
+                )
+        style_attr = f' style="{"; ".join(style_parts)}"' if style_parts else ""
+        return f'<{tag} class="{" ".join(classes)}"{style_attr}>{"".join(lines)}</{tag}>'
 
     def _title_line_html(
         self,
@@ -1571,6 +1849,7 @@ class HtmlRenderer:
         bold: bool = False,
         italic: bool = False,
         space_after: float = 0,
+        default_style: TextStyle | None = None,
     ) -> str:
         tag = "h1" if class_name == "oodocs-title" else "p"
         return (
@@ -1582,6 +1861,7 @@ class HtmlRenderer:
                 base_bold=bold,
                 base_italic=italic,
                 base_size=font_size,
+                default_style=default_style,
             )
             + f"</{tag}>"
         )
@@ -2280,6 +2560,22 @@ class HtmlRenderer:
                 base_italic=base_italic,
                 base_size=base_size,
             )
+        screen_reader_text = getattr(fragment, "screen_reader_text", None)
+        if callable(screen_reader_text):
+            visible = self._styled_text_html(
+                self._resolve_fragment_text(fragment, theme, render_index),
+                fragment,
+                theme,
+                base_bold=base_bold,
+                base_italic=base_italic,
+                base_size=base_size,
+                default_style=default_style,
+            )
+            accessibility_label = escape(str(screen_reader_text()), quote=True)
+            return (
+                f'<span class="oodocs-quantity" aria-label="{accessibility_label}">'
+                f"{visible}</span>"
+            )
         return self._styled_text_html(
             self._resolve_fragment_text(fragment, theme, render_index),
             fragment,
@@ -2493,7 +2789,7 @@ class HtmlRenderer:
             return fragment.value
         if isinstance(fragment, Math):
             return fragment.plain_text()
-        return fragment.value
+        return fragment.plain_text()
 
     def _resolve_block_reference(
         self,
@@ -2542,13 +2838,7 @@ class HtmlRenderer:
         target: object,
         render_index: RenderIndex,
     ) -> str | None:
-        if isinstance(target, (Table, SubTable, SubTableGroup)):
-            return render_index.table_anchor(target)
-        if isinstance(target, (Figure, SubFigure, SubFigureGroup)):
-            return render_index.figure_anchor(target)
-        if isinstance(target, (Part, Section)):
-            return render_index.heading_anchor(target)
-        return render_index.block_anchor(target)
+        return render_index.anchor_for(target)
 
     def _figure_src(self, figure: Figure | SubFigure, default_unit: str = "in") -> str:
         source = figure.image_source
@@ -2998,12 +3288,14 @@ body {{
 .oodocs-title-matter,
 .oodocs-front-matter,
 .oodocs-main-matter,
+.oodocs-back-matter,
 .oodocs-generated-page {{
   max-width: {text_width:.2f}in;
 }}
 .oodocs-title-matter,
 .oodocs-front-matter,
 .oodocs-main-matter,
+.oodocs-back-matter,
 .oodocs-part-page,
 .oodocs-generated-page,
 .oodocs-box,
@@ -3016,6 +3308,7 @@ body {{
 .oodocs-title-matter,
 .oodocs-front-matter,
 .oodocs-main-matter,
+.oodocs-back-matter,
 .oodocs-part-page,
 .oodocs-generated-page {{
   padding: 24px 26px;
@@ -3298,6 +3591,7 @@ a {{
   .oodocs-title-matter,
   .oodocs-front-matter,
   .oodocs-main-matter,
+  .oodocs-back-matter,
   .oodocs-part-page,
   .oodocs-generated-page,
   .oodocs-table-wrapper,

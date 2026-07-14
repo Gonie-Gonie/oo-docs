@@ -3,6 +3,9 @@
 from importlib.metadata import PackageNotFoundError, version as package_version
 
 from oodocs.core import OODocsError
+from oodocs.components.cover import CoverPage
+from oodocs.components.descriptions import DescriptionItem, DescriptionList
+from oodocs.components.matter import BackMatter, FrontMatter, MainMatter
 from oodocs.components.blocks import (
     Box,
     BulletList,
@@ -143,6 +146,7 @@ __all__ = [
     "Affiliation",
     "Author",
     "AuthorLayout",
+    "BackMatter",
     "Box",
     "BoxStyle",
     "BulletList",
@@ -152,6 +156,9 @@ __all__ = [
     "Comment",
     "CodeBlock",
     "ColumnSpan",
+    "CoverPage",
+    "DescriptionItem",
+    "DescriptionList",
     "Document",
     "DocumentMetadata",
     "DocumentSettings",
@@ -161,6 +168,7 @@ __all__ = [
     "Figure",
     "ListOfFigures",
     "Footnote",
+    "FrontMatter",
     "ImageData",
     "ImportIssue",
     "ImportPolicyError",
@@ -168,6 +176,7 @@ __all__ = [
     "InlineChip",
     "LineBreak",
     "Math",
+    "MainMatter",
     "MultiColumn",
     "NumberedList",
     "Padding",

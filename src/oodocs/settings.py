@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Iterable, Literal, Sequence
 
+from oodocs.components.cover import CoverPage
 from oodocs.components.inline import InlineInput, Text, coerce_inlines
 from oodocs.components.positioning import PositionedItem, coerce_positioned_items
 from oodocs.core import inches_to_length, length_to_inches, normalize_length_unit
@@ -574,8 +575,8 @@ class TitleMatter:
         authors: Optional author data rendered as journal or stacked title
             matter lines.
         author_layout: Layout rules for author title matter.
-        cover_page: Whether renderers should place title matter on a separate
-            cover page when supported.
+        cover: Optional standalone cover page that consumes the visible title,
+            subtitle, and author lines.
 
     Examples:
         ```python
@@ -585,7 +586,7 @@ class TitleMatter:
             title_matter=TitleMatter(
                 subtitle="Study results",
                 authors=[Author("Jane Doe", email="jane@example.edu")],
-                cover_page=True,
+                cover=CoverPage(organization="Example Laboratory"),
             )
         )
         document = Document("Study Report", Paragraph("Findings."), settings=settings)
@@ -595,7 +596,7 @@ class TitleMatter:
     subtitle: list[Text] | None
     authors: tuple[Author, ...]
     author_layout: AuthorLayout
-    cover_page: bool
+    cover: CoverPage | None
 
     def __init__(
         self,
@@ -603,12 +604,14 @@ class TitleMatter:
         subtitle: InlineInput | None = None,
         authors: Sequence[AuthorInput] | None = None,
         author_layout: AuthorLayout | None = None,
-        cover_page: bool = False,
+        cover: CoverPage | None = None,
     ) -> None:
         self.subtitle = coerce_inlines((subtitle,)) if subtitle is not None else None
         self.authors = coerce_authors(authors)
         self.author_layout = coerce_author_layout(author_layout)
-        self.cover_page = cover_page
+        if cover is not None and not isinstance(cover, CoverPage):
+            raise TypeError("TitleMatter.cover must be a CoverPage or None")
+        self.cover = cover
 
     def resolved_author(self) -> str | None:
         """Return structured authors as a metadata author string.
@@ -752,12 +755,12 @@ class DocumentSettings:
         Configure page metadata and geometry:
 
         ```python
-        from oodocs import Author, Document, DocumentSettings, PageLayout, PageMargins, PageSize, Paragraph, TitleMatter
+        from oodocs import Author, CoverPage, Document, DocumentSettings, PageLayout, PageMargins, PageSize, Paragraph, TitleMatter
 
         settings = DocumentSettings(
             title_matter=TitleMatter(
                 authors=[Author("Jane Doe", email="jane@example.edu")],
-                cover_page=True,
+                cover=CoverPage(organization="Example Laboratory"),
             ),
             page_layout=PageLayout(
                 PageSize.letter(),

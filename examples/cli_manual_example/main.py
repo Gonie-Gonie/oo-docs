@@ -9,18 +9,17 @@ from typing import Sequence
 
 from oodocs import (
     Chapter,
-    CodeBlock,
     Document,
     DocumentMetadata,
     DocumentSettings,
     OutputBundle,
     Paragraph,
-    Section,
     Table,
     TableOfContents,
     TitleMatter,
-    inline_code,
 )
+from oodocs.clidoc import CliApplication
+from oodocs.integrations.argparse import collect_argparse_cli
 
 
 EXAMPLE_DIR = Path(__file__).resolve().parent
@@ -30,7 +29,11 @@ SAMPLE_CLI_PATH = EXAMPLE_DIR / "sample_cli.py"
 
 
 def load_sample_parser() -> argparse.ArgumentParser:
-    """Load the sample parser from ``sample_cli.py``."""
+    """Load the side-effect-free parser builder from ``sample_cli.py``.
+
+    Importing a module executes its top-level code. The sample module therefore
+    keeps argument parsing and command execution behind its ``__main__`` guard.
+    """
 
     spec = importlib.util.spec_from_file_location("cli_manual_sample_cli", SAMPLE_CLI_PATH)
     if spec is None or spec.loader is None:
@@ -40,95 +43,11 @@ def load_sample_parser() -> argparse.ArgumentParser:
     return module.build_parser()
 
 
-def argparse_parser_to_section(
-    parser: argparse.ArgumentParser,
-    *,
-    title: str = "Command Reference",
-) -> Section:
-    """Convert an ``argparse`` parser into an OODocs section."""
-
-    commands = _subcommands(parser)
-    return Section(
-        title,
-        Paragraph(
-            "The manual is generated from the parser object, so option names, defaults, and command summaries stay downstream of the runnable CLI."
-        ),
-        CodeBlock(parser.format_usage().strip(), language="text"),
-        _actions_table(parser, caption="Top-level command options."),
-        _commands_table(commands),
-        *[
-            Section(
-                f"{name} command",
-                CodeBlock(command.format_usage().strip(), language="text"),
-                _actions_table(command, caption=f"Options for docctl {name}."),
-                level=2,
-            )
-            for name, command in commands
-        ],
-        toc=True,
-    )
-
-
-def _subcommands(
-    parser: argparse.ArgumentParser,
-) -> tuple[tuple[str, argparse.ArgumentParser], ...]:
-    for action in parser._actions:
-        choices = getattr(action, "choices", None)
-        if isinstance(choices, dict) and choices:
-            return tuple(
-                (name, command)
-                for name, command in choices.items()
-                if isinstance(command, argparse.ArgumentParser)
-            )
-    return ()
-
-
-def _actions_table(parser: argparse.ArgumentParser, *, caption: str) -> Table:
-    rows = []
-    for action in parser._actions:
-        if isinstance(action, argparse._HelpAction):
-            continue
-        if getattr(action, "choices", None) and _subcommands(parser):
-            continue
-        name = ", ".join(action.option_strings) if action.option_strings else action.dest
-        default = "" if action.default in (None, argparse.SUPPRESS, False) else str(action.default)
-        choices = ", ".join(str(choice) for choice in action.choices or ())
-        rows.append(
-            [
-                name,
-                action.metavar or "",
-                default,
-                choices,
-                action.help or "",
-            ]
-        )
-    if not rows:
-        rows = [["(none)", "", "", "", "No options."]]
-    return Table(
-        ["Option", "Value", "Default", "Choices", "Description"],
-        rows,
-        caption=caption,
-        split=True,
-    )
-
-
-def _commands_table(commands: Sequence[tuple[str, argparse.ArgumentParser]]) -> Table:
-    rows = [
-        [name, command.description or command.format_usage().strip(), command.format_usage().strip()]
-        for name, command in commands
-    ]
-    return Table(
-        ["Command", "Purpose", "Usage"],
-        rows or [["(none)", "No subcommands.", ""]],
-        caption="Subcommands discovered from argparse subparsers.",
-        split=True,
-    )
-
-
 def build_document(parser: argparse.ArgumentParser | None = None) -> Document:
     """Build the CLI manual example document."""
 
     parser = parser or load_sample_parser()
+    application: CliApplication = collect_argparse_cli(parser)
     exit_code_table = Table(
         ["Exit code", "Meaning", "Policy"],
         [
@@ -138,12 +57,30 @@ def build_document(parser: argparse.ArgumentParser | None = None) -> Document:
         ],
         caption="Exit code policy for the documented CLI.",
     )
+    environment_table = Table(
+        ["Variable", "Required", "Behavior"],
+        [
+            [
+                "(none)",
+                "No",
+                "This sample CLI does not read configuration from environment variables.",
+            ]
+        ],
+        caption="Environment-variable policy supplied by the manual author.",
+    )
+    executable = application.root_command.name
     examples_table = Table(
         ["Task", "Command"],
         [
-            ["Render HTML", "docctl render report.py --format html"],
-            ["Render PDF and DOCX", "docctl render report.py --format pdf --format docx"],
-            ["Validate with JSON diagnostics", "docctl validate report.py --json artifacts/validation.json"],
+            ["Render HTML", f"{executable} render report.py --format html"],
+            [
+                "Render PDF and DOCX",
+                f"{executable} render report.py --format pdf --format docx",
+            ],
+            [
+                "Validate with JSON diagnostics",
+                f"{executable} validate report.py --json artifacts/validation.json",
+            ],
         ],
         caption="Copyable command examples generated for the manual.",
     )
@@ -153,13 +90,15 @@ def build_document(parser: argparse.ArgumentParser | None = None) -> Document:
         Chapter(
             "Command Overview",
             Paragraph(
-                "This example documents a Python argparse parser as an OODocs manual. It is intentionally local to the example so the pattern can mature before becoming core API."
+                "This manual is generated from a neutral CLI model collected "
+                "from a Python argparse parser."
             ),
-            argparse_parser_to_section(parser),
+            application.to_section(title="Command Reference"),
         ),
         Chapter(
             "Exit Codes",
             exit_code_table,
+            environment_table,
         ),
         Chapter(
             "Examples",
@@ -167,7 +106,7 @@ def build_document(parser: argparse.ArgumentParser | None = None) -> Document:
         ),
         settings=DocumentSettings(
             metadata=DocumentMetadata(
-                author="OODocs Contributors",
+                author="Example Documentation Team",
                 description="CLI manual generated from a sample argparse parser",
             ),
             title_matter=TitleMatter(

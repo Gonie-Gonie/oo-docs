@@ -377,16 +377,27 @@ def api_category_to_chapter(
     blocks.append(_category_index_table(category, objects))
     if constants := _constants_table(objects):
         blocks.extend([Paragraph(bold("Constants")), constants])
-    blocks.extend(
-        _api_object_to_help_section(
-            obj,
-            level=2,
-            presentation=presentation,
-            max_heading_level=max_heading_level,
-        )
-        for obj in objects
-        if max_heading_level is None or max_heading_level >= 2
-    )
+    if max_heading_level is None or max_heading_level >= 2:
+        used_anchors: set[str] = set()
+        for obj in objects:
+            section = _api_object_to_help_section(
+                obj,
+                level=2,
+                presentation=presentation,
+                max_heading_level=max_heading_level,
+            )
+            anchor = section.anchor
+            if anchor in used_anchors:
+                base = f"{anchor}-{obj.kind}"
+                anchor = base
+                suffix = 2
+                while anchor in used_anchors:
+                    anchor = f"{base}-{suffix}"
+                    suffix += 1
+                section.anchor = anchor
+            if section.anchor is not None:
+                used_anchors.add(section.anchor)
+            blocks.append(section)
     return Chapter(category.title, *blocks)
 
 
@@ -436,13 +447,13 @@ def _api_package_to_help_book(
     Examples:
         ```python
         from pathlib import Path
-        from oodocs import DocumentSettings, TitleMatter
+        from oodocs import CoverPage, DocumentSettings, TitleMatter
         from oodocs.apidoc import collect_api
 
         api = collect_api("oodocs", public_policy="__all__")
         reference = api.to_help_book(
             title="OODocs API Reference",
-            settings=DocumentSettings(title_matter=TitleMatter(cover_page=True)),
+            settings=DocumentSettings(title_matter=TitleMatter(cover=CoverPage())),
         )
         reference.save(Path("build/oodocs-api-reference.html"))
         ```

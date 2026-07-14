@@ -7,6 +7,7 @@ Attributes:
     DOMAIN_TOP_LEVEL_EXPORTS: Domain-specific symbols allowed at the top level.
     INTERNAL_TOP_LEVEL_EXPORTS: Internal symbols intentionally exposed at the top level.
     FORBIDDEN_TOP_LEVEL_NAME_PATTERNS: Name fragments blocked from top-level export.
+    PUBLIC_API_NAMING_CONVENTIONS: Semantic contract for public method names.
     TOP_LEVEL_SYMBOL_TIERS: Mapping from top-level public symbol name to tier.
 """
 
@@ -17,13 +18,14 @@ from typing import Literal
 
 PublicApiTier = Literal["core", "domain", "internal"]
 
-TOP_LEVEL_EXPORT_LIMIT = 90
+TOP_LEVEL_EXPORT_LIMIT = 96
 
 CORE_TOP_LEVEL_EXPORTS = frozenset(
     {
         "Affiliation",
         "Author",
         "AuthorLayout",
+        "BackMatter",
         "Box",
         "BoxStyle",
         "BulletList",
@@ -33,6 +35,9 @@ CORE_TOP_LEVEL_EXPORTS = frozenset(
         "CodeBlock",
         "ColumnSpan",
         "Comment",
+        "CoverPage",
+        "DescriptionItem",
+        "DescriptionList",
         "Document",
         "DocumentMetadata",
         "DocumentSettings",
@@ -41,6 +46,7 @@ CORE_TOP_LEVEL_EXPORTS = frozenset(
         "Equation",
         "Figure",
         "Footnote",
+        "FrontMatter",
         "ImageData",
         "ImportIssue",
         "ImportPolicyError",
@@ -50,6 +56,7 @@ CORE_TOP_LEVEL_EXPORTS = frozenset(
         "ListOfFigures",
         "ListOfTables",
         "Math",
+        "MainMatter",
         "MultiColumn",
         "NumberedList",
         "OODocsError",
@@ -125,6 +132,20 @@ FORBIDDEN_TOP_LEVEL_NAME_PATTERNS = (
     "resolve_positioned_boxes",
 )
 
+PUBLIC_API_NAMING_CONVENTIONS = {
+    "to_": "return an OODocs document object",
+    "as_": "return a raw Python value or record",
+    "from_": "construct an object from external input",
+    "collect_": "collect metadata from an external parser, program, or runtime",
+    "load_": "restore an already-defined model from a file",
+    "save_": "write a file or output bundle",
+    "validate_": "return structured validation data",
+    "style": "describe visual properties",
+    "profile": "select presented content",
+    "presentation": "select presented content",
+    "integration": "parse or collect an external tool format",
+}
+
 TOP_LEVEL_SYMBOL_TIERS: dict[str, PublicApiTier] = {
     **{name: "core" for name in CORE_TOP_LEVEL_EXPORTS},
     **{name: "domain" for name in DOMAIN_TOP_LEVEL_EXPORTS},
@@ -137,6 +158,7 @@ __all__ = [
     "FORBIDDEN_TOP_LEVEL_NAME_PATTERNS",
     "INTERNAL_TOP_LEVEL_EXPORTS",
     "PublicApiTier",
+    "PUBLIC_API_NAMING_CONVENTIONS",
     "TOP_LEVEL_EXPORT_LIMIT",
     "TOP_LEVEL_SYMBOL_TIERS",
 ]

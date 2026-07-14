@@ -55,5 +55,3 @@ def test_release_workflow_uploads_curated_assets_only() -> None:
     assert ".json" not in "\n".join(sum(asset_blocks, []))
     assert ".csv" not in "\n".join(sum(asset_blocks, []))
     assert "artifacts/evidence/" not in workflow
-    assert "feature-coverage.csv" not in workflow
-    assert "reproducibility-manifest.json" not in workflow

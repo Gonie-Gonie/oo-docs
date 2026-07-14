@@ -13,6 +13,9 @@ _EXPORTS = {
     "HeadingEntry": "oodocs.layout.indexing",
     "RenderIndex": "oodocs.layout.indexing",
     "build_render_index": "oodocs.layout.indexing",
+    "MatterLayout": "oodocs.layout.matter",
+    "MatterRegion": "oodocs.layout.matter",
+    "partition_document_matter": "oodocs.layout.matter",
 }
 
 __all__ = list(_EXPORTS)

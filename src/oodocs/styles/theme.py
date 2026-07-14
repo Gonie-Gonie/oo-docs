@@ -22,7 +22,9 @@ from oodocs.core import (
 )
 from oodocs.styles.blocks import BoxStyle, ParagraphStyle, RunInTitleStyle
 from oodocs.styles.counter import CounterStyle, HeadingNumbering, ListStyle
+from oodocs.styles.numbering import NumberingDefaults
 from oodocs.styles.sheet import StyleSheet
+from oodocs.styles.references import ReferenceDefaults, ReferenceTemplate
 from oodocs.styles.tables import TableStyle
 from oodocs.styles.text import TextStyle
 
@@ -523,6 +525,7 @@ class LocaleDefaults:
     date_format: str = "{month_name} {day}, {year}"
     captions: CaptionDefaults = field(default_factory=CaptionDefaults)
     generated_content: GeneratedContentDefaults = field(default_factory=GeneratedContentDefaults)
+    references: ReferenceDefaults = field(default_factory=ReferenceDefaults)
     glossary_headers: tuple[str, str] = ("Term", "Definition")
     typography: TypographyDefaults | None = None
     pdf_font_fallbacks: tuple[str, ...] = ()
@@ -537,6 +540,8 @@ class LocaleDefaults:
             raise TypeError(
                 "LocaleDefaults.generated_content must be a GeneratedContentDefaults"
             )
+        if not isinstance(self.references, ReferenceDefaults):
+            raise TypeError("LocaleDefaults.references must be a ReferenceDefaults")
         if len(self.glossary_headers) != 2:
             raise ValueError("LocaleDefaults.glossary_headers must contain two labels")
         self.glossary_headers = (
@@ -588,6 +593,7 @@ class LocaleDefaults:
                     list_of_glossary_terms_title="용어집",
                     table_of_contents_title="목차",
                 ),
+                references=ReferenceDefaults.korean(),
                 glossary_headers=("용어", "정의"),
                 typography=TypographyDefaults(
                     body_font_name="Malgun Gothic",
@@ -654,6 +660,10 @@ class PageNumberDefaults:
         page_number_template: Footer text template containing ``{page}``.
         front_matter_counter: Front-matter page counter style.
         main_matter_counter: Main-matter page counter style.
+        back_matter_counter: Optional back-matter counter style. ``None``
+            continues the main-matter style and sequence.
+        restart_main_matter: Whether main-matter numbering restarts at one.
+        restart_back_matter: Whether back-matter numbering restarts at one.
         page_number_font_size: Footer page-number font size in points.
 
     Examples:
@@ -665,13 +675,16 @@ class PageNumberDefaults:
         ```
     """
 
-    show_page_numbers: bool = False
+    show_page_numbers: bool = True
     page_number_alignment: str = "center"
     page_number_template: str = "{page}"
     front_matter_counter: CounterStyle = field(
         default_factory=lambda: CounterStyle(counter_format="lower-roman")
     )
     main_matter_counter: CounterStyle = field(default_factory=CounterStyle)
+    back_matter_counter: CounterStyle | None = None
+    restart_main_matter: bool = True
+    restart_back_matter: bool = False
     page_number_font_size: float = 9.0
 
     def __post_init__(self) -> None:
@@ -683,6 +696,11 @@ class PageNumberDefaults:
             raise TypeError("front_matter_counter must be a CounterStyle")
         if not isinstance(self.main_matter_counter, CounterStyle):
             raise TypeError("main_matter_counter must be a CounterStyle")
+        if self.back_matter_counter is not None and not isinstance(
+            self.back_matter_counter,
+            CounterStyle,
+        ):
+            raise TypeError("back_matter_counter must be a CounterStyle or None")
         if "{page}" not in self.page_number_template:
             raise ValueError("page_number_template must contain a '{page}' placeholder")
 
@@ -993,6 +1011,7 @@ class Theme:
         links: Optional hyperlink defaults group.
         footnotes: Optional footnote defaults group.
         generated_content: Optional generated-content defaults group.
+        numbering: Optional scoped block-numbering defaults group.
         locale: Optional document language and localization defaults group.
         page_numbers: Optional page-number defaults group.
         header_footer: Optional page header/footer template defaults group.
@@ -1007,6 +1026,7 @@ class Theme:
         links: Resolved hyperlink defaults group.
         footnotes: Resolved footnote defaults group.
         generated_content: Resolved generated-content defaults group.
+        numbering: Resolved scoped block-numbering defaults group.
         locale: Resolved document language and localization defaults group.
         page_numbers: Resolved page-number defaults group.
         header_footer: Resolved page header/footer template defaults group.
@@ -1064,12 +1084,15 @@ class Theme:
     links: LinkDefaults
     footnotes: FootnoteDefaults
     generated_content: GeneratedContentDefaults
+    numbering: NumberingDefaults
+    references: ReferenceDefaults
     locale: LocaleDefaults
     page_numbers: PageNumberDefaults
     header_footer: HeaderFooterDefaults
     title_matter: TitleMatterDefaults
     blocks: BlockDefaults
     stylesheet: StyleSheet
+    _reference_override_keys: frozenset[str]
 
     def __init__(
         self,
@@ -1080,6 +1103,8 @@ class Theme:
         links: LinkDefaults | None = None,
         footnotes: FootnoteDefaults | None = None,
         generated_content: GeneratedContentDefaults | None = None,
+        numbering: NumberingDefaults | None = None,
+        references: ReferenceDefaults | None = None,
         locale: LocaleDefaults | str | None = None,
         page_numbers: PageNumberDefaults | None = None,
         header_footer: HeaderFooterDefaults | None = None,
@@ -1103,6 +1128,8 @@ class Theme:
             "links": (links, LinkDefaults),
             "footnotes": (footnotes, FootnoteDefaults),
             "generated_content": (generated_content, GeneratedContentDefaults),
+            "numbering": (numbering, NumberingDefaults),
+            "references": (references, ReferenceDefaults),
             "page_numbers": (page_numbers, PageNumberDefaults),
             "header_footer": (header_footer, HeaderFooterDefaults),
             "title_matter": (title_matter, TitleMatterDefaults),
@@ -1122,6 +1149,11 @@ class Theme:
         self.links = links or LinkDefaults()
         self.footnotes = footnotes or FootnoteDefaults()
         self.generated_content = generated_content or self.locale.generated_content
+        self.numbering = numbering or NumberingDefaults()
+        self.references = references or self.locale.references
+        self._reference_override_keys = (
+            frozenset(references.templates) if references is not None else frozenset()
+        )
         self.page_numbers = page_numbers or PageNumberDefaults()
         self.header_footer = header_footer or HeaderFooterDefaults()
         self.title_matter = title_matter or TitleMatterDefaults()
@@ -1395,6 +1427,25 @@ class Theme:
             return self.captions.figure_caption_label or self.captions.figure_label
         return self.captions.figure_reference_label or self.captions.figure_label
 
+    def resolve_reference_template(
+        self,
+        kind: str,
+        fallback_label: str | None = None,
+    ) -> ReferenceTemplate:
+        """Return the effective label and placement policy for a target kind.
+
+        Explicit ``Theme.references`` entries take precedence. Otherwise an
+        object/caption label is applied to the locale's placement template,
+        and the locale label is used as the final fallback.
+        """
+
+        if kind in self._reference_override_keys:
+            return self.references.template_for(kind)
+        template = self.locale.references.template_for(kind)
+        if fallback_label is not None:
+            return template.with_label(fallback_label)
+        return template
+
     def resolve_generated_page_title(
         self,
         kind: Literal[
@@ -1563,6 +1614,7 @@ class Theme:
         *,
         page_number: int,
         front_matter: bool = False,
+        matter: Literal["front", "main", "back"] | None = None,
         title: str = "",
         chapter: str = "",
         section: str = "",
@@ -1583,7 +1635,11 @@ class Theme:
 
         if not template:
             return ""
-        page_label = self.format_page_number(page_number, front_matter=front_matter)
+        page_label = self.format_page_number(
+            page_number,
+            front_matter=front_matter,
+            matter=matter,
+        )
         values = _HeaderFooterTokenMap(
             page=page_label,
             title=title,
@@ -1615,12 +1671,15 @@ class Theme:
         page_number: int,
         *,
         front_matter: bool = False,
+        matter: Literal["front", "main", "back"] | None = None,
     ) -> str:
         """Render the footer page number string for a page.
 
         Args:
             page_number: One-based logical page number.
-            front_matter: Whether to use front-matter numbering format.
+            front_matter: Compatibility flag selecting front-matter numbering.
+            matter: Explicit matter region. Takes precedence over
+                ``front_matter`` when supplied.
 
         Returns:
             Formatted page number text.
@@ -1632,11 +1691,16 @@ class Theme:
             ```
         """
 
-        counter = (
-            self.page_numbers.front_matter_counter
-            if front_matter
-            else self.page_numbers.main_matter_counter
-        )
+        resolved_matter = matter or ("front" if front_matter else "main")
+        if resolved_matter == "front":
+            counter = self.page_numbers.front_matter_counter
+        elif resolved_matter == "back":
+            counter = (
+                self.page_numbers.back_matter_counter
+                or self.page_numbers.main_matter_counter
+            )
+        else:
+            counter = self.page_numbers.main_matter_counter
         page_label = counter.format_value(page_number)
         return self.page_numbers.page_number_template.format(page=page_label)
 
@@ -1770,8 +1834,11 @@ __all__ = [
     "LinkDefaults",
     "ListStyle",
     "LocaleDefaults",
+    "NumberingDefaults",
     "PageNumberDefaults",
     "ParagraphStyle",
+    "ReferenceDefaults",
+    "ReferenceTemplate",
     "RunInTitleStyle",
     "TableStyle",
     "TextStyle",

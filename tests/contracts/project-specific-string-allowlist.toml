@@ -1,0 +1,10 @@
+# Deliberately empty. If a third-party product or standard must be discussed,
+# add an entry with all three fields. API names, presets, titles, footers, and
+# defaults are never eligible for an exception.
+entries = []
+
+# Example shape (do not add without a real documentation need):
+# [[entry]]
+# path = "docs/reference/example.md"
+# term = "third-party-name"
+# reason = "Explains interoperability with an external standard."

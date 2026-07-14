@@ -54,7 +54,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip build
-          python -m pip install -e ".[dev,adapters]"
+          python -m pip install -e ".[dev,integrations]"
 
       - name: Run tests
         run: python -m pytest

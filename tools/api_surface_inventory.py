@@ -17,7 +17,8 @@ INVENTORY_MODULES = (
     "oodocs.chemistry",
     "oodocs.equations",
     "oodocs.apidoc",
-    "oodocs.adapters",
+    "oodocs.evidence",
+    "oodocs.metadata",
     "oodocs.importers.markdown",
     "oodocs.importers.notebook",
     "oodocs.pdf",
@@ -224,8 +225,8 @@ def category_for(
         return EXACT_CATEGORIES[export_name]
     if inventory_module == "oodocs.apidoc":
         return APIDOC_MODULE_CATEGORIES.get(object_module or "")
-    if inventory_module == "oodocs.adapters":
-        return "adapter"
+    if inventory_module in {"oodocs.evidence", "oodocs.metadata"}:
+        return "workflow"
     if inventory_module == "oodocs.chemistry":
         if export_name == "ReactionEquation":
             return "block"
@@ -257,6 +258,10 @@ def category_for(
     if module.startswith("oodocs.importers."):
         return "importer"
     if module == "oodocs.components.blocks":
+        return "block"
+    if module == "oodocs.components.cover":
+        return "document-core"
+    if module in {"oodocs.components.descriptions", "oodocs.components.matter"}:
         return "block"
     if module == "oodocs.components.generated":
         return "generated-page"

@@ -101,7 +101,7 @@ def test_release_notes_digest_example_builds_outputs(tmp_path: Path) -> None:
     html_text = html_path.read_text(encoding="utf-8")
 
     assert "OODocs Release Notes" in paragraph_texts
-    assert "OODocs Contributors" in paragraph_texts
+    assert "Example Documentation Team" in paragraph_texts
     assert "Contents" in paragraph_texts
     assert any("Release Note Index" in text for text in paragraph_texts)
     assert any("Release-note digest workflow" in text for text in paragraph_texts)

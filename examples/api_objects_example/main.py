@@ -53,10 +53,10 @@ def _official_example_settings(subtitle: str) -> DocumentSettings:
     """Return compact title matter shared by official documentation examples."""
 
     return DocumentSettings(
-        metadata=DocumentMetadata(author="OODocs Contributors"),
+        metadata=DocumentMetadata(author="Example Contributors"),
         title_matter=TitleMatter(
             subtitle=subtitle,
-            authors=[Author("OODocs Contributors")],
+            authors=[Author("Example Contributors")],
             author_layout=AuthorLayout(
                 mode="stacked",
                 show_affiliations=False,
@@ -277,12 +277,19 @@ def build_composition_demo_document(
         ),
     ]
     if focused_module is not None:
+        focused_chapter = focused_module.to_chapter(
+            title=f"Focused Module: {focused_module.name}",
+            presentation="manual",
+            max_heading_level=3,
+        )
+        selected_anchors = {obj.anchor_name() for obj in classes}
+        focused_chapter.children[:] = [
+            child
+            for child in focused_chapter.children
+            if getattr(child, "anchor", None) not in selected_anchors
+        ]
         chapters.append(
-            focused_module.to_chapter(
-                title=f"Focused Module: {focused_module.name}",
-                presentation="manual",
-                max_heading_level=3,
-            )
+            focused_chapter
         )
     chapters.extend(
         [
