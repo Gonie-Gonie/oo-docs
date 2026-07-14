@@ -15,11 +15,13 @@ from typing import Sequence
 from oodocs import (
     Author,
     AuthorLayout,
+    BackMatter,
     BlockDefaults,
     BorderStyle,
     Box,
     BulletList,
     CaptionDefaults,
+    CoverPage,
     Chapter,
     CitationLibrary,
     CitationSource,
@@ -33,9 +35,11 @@ from oodocs import (
     Figure,
     ListOfFigures,
     Footnote,
+    FrontMatter,
     GeneratedContentDefaults,
     HeaderFooterDefaults,
     LocaleDefaults,
+    MainMatter,
     NumberedList,
     OutputBundle,
     PageNumberDefaults,
@@ -933,7 +937,6 @@ document.save_all("artifacts/manuscript", stem="article-draft")
 def build_usage_guide_document() -> Document:
     """Build a detailed reference-style usage guide."""
 
-    logo_figure = Figure(LOGO_PATH, width=1.8, placement="here")
     pipeline_figure = Figure(
         PIPELINE_DIAGRAM_PATH,
         caption=Paragraph(
@@ -1377,9 +1380,7 @@ def build_usage_guide_document() -> Document:
         block_alignment="center",
     )
 
-    return Document(
-        "OODocs User Guide",
-        logo_figure,
+    front_matter = FrontMatter(
         Section(
             "Guide Cover",
             document_credits_table,
@@ -1405,6 +1406,8 @@ def build_usage_guide_document() -> Document:
         ListOfFigures(),
         ListOfAlgorithms(),
         ListOfListings(),
+    )
+    main_matter = MainMatter(
         Part(
             "Getting Oriented",
             Chapter(
@@ -1422,7 +1425,7 @@ def build_usage_guide_document() -> Document:
                 pipeline_figure,
                 Paragraph(
                     "The pipeline shown in ",
-                    pipeline_figure.ref(),
+                    pipeline_figure.link("pipeline diagram"),
                     " is the real payoff of the package. Data files, static assets, title metadata, generated pages, and renderer output all remain downstream of one explicit document tree."
                 ),
                 navigation_table,
@@ -2247,8 +2250,17 @@ def build_usage_guide_document() -> Document:
                 ),
             ),
         ),
+    )
+    back_matter = BackMatter(
         ListOfComments(),
         ListOfReferences(),
+    )
+
+    return Document(
+        "OODocs User Guide",
+        front_matter,
+        main_matter,
+        back_matter,
         settings=DocumentSettings(
             metadata=DocumentMetadata(
                 author="Example Documentation Team",
@@ -2258,6 +2270,13 @@ def build_usage_guide_document() -> Document:
             ),
             title_matter=TitleMatter(
                 subtitle="Reference-style guide for structured Python document authoring",
+                cover=CoverPage(
+                    eyebrow="Python-first document authoring",
+                    organization="Example Documentation Team",
+                    logo=LOGO_PATH,
+                    footer="MIT | github.com/Gonie-Gonie/oo-docs",
+                    style="accented",
+                ),
                 authors=[
                     Author("Example Documentation Team"),
                     Author("Hyeong-Gon Jo"),

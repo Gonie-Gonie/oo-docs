@@ -11,6 +11,7 @@ import pytest
 from oodocs import Document, Figure, ImageData, Paragraph, Section, Table, link
 from oodocs.components import DescriptionList, Hyperlink, ObjectLink
 from oodocs.layout.indexing import build_render_index
+from oodocs.positioning import Shape
 
 
 def _sample_png() -> ImageData:
@@ -157,3 +158,12 @@ def test_duplicate_explicit_anchors_use_the_validation_contract_code() -> None:
     errors = Document("Duplicate anchors", first, second).validate().errors
 
     assert "duplicate-anchor" in {issue.code for issue in errors}
+
+
+def test_positioning_coordinate_anchors_are_not_document_link_anchors() -> None:
+    first = Shape.rect(width=1.0, height=0.5, placement="inline")
+    second = Shape.rect(width=1.0, height=0.5, placement="inline")
+
+    errors = Document("Drawing anchors", first, second).validate().errors
+
+    assert "duplicate-anchor" not in {issue.code for issue in errors}

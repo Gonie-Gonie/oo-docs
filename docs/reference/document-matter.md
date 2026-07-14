@@ -6,15 +6,17 @@ accepts the same block inputs as the document body.
 
 ```python
 from oodocs import (
+    BackMatter,
     Chapter,
     Document,
+    FrontMatter,
     ListOfFigures,
     ListOfReferences,
     ListOfTables,
+    MainMatter,
     Paragraph,
     TableOfContents,
 )
-from oodocs.components import BackMatter, FrontMatter, MainMatter
 
 document = Document(
     "Operations Manual",

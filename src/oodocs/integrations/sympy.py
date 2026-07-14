@@ -1,4 +1,4 @@
-"""Optional SymPy-to-OODocs equation adapter."""
+"""Optional SymPy-to-OODocs equation integration."""
 
 from __future__ import annotations
 

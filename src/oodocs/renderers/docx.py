@@ -1109,7 +1109,7 @@ class DocxRenderer:
             context.theme,
             context.render_index,
             context.theme.resolve_generated_page_title("list_of_listings"),
-            "Code block",
+            context.theme.resolve_reference_template("code_block").singular_label,
             show_page_numbers=block.show_page_numbers,
             leader=block.leader,
             text_width=context.settings.text_width_in_inches(),
@@ -2578,7 +2578,11 @@ class DocxRenderer:
             self._keep_lines_together(caption)
             self._append_runs(
                 caption,
-                self._caption_fragments("Code block", render_index.code_block_number(code_block), code_block.caption),
+                self._caption_fragments(
+                    theme.resolve_reference_template("code_block").singular_label,
+                    render_index.code_block_number(code_block),
+                    code_block.caption,
+                ),
                 default_size=theme.caption_size(),
                 theme=theme,
                 render_index=render_index,

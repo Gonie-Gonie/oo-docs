@@ -1683,6 +1683,10 @@ class _ValidationContext:
             )
             return
         self.block_paths[block_id] = path
+        # Positioned drawing objects use ``anchor`` for a coordinate frame
+        # (for example ``"page"``), not for a document hyperlink target.
+        if isinstance(block, (TextBox, Shape, ImageBox)):
+            return
         explicit_anchor = getattr(block, "anchor", None)
         if explicit_anchor is not None and str(explicit_anchor).strip():
             anchor = str(explicit_anchor).strip()
@@ -2170,6 +2174,20 @@ class _ValidationContext:
         )
 
     def _validate_citations(self) -> None:
+        for key, source in self.document.citations.entries.items():
+            for diagnostic_index, diagnostic in enumerate(source.diagnostics):
+                if diagnostic.code != "bibtex-field-loss":
+                    continue
+                self._add(
+                    "error",
+                    diagnostic.code,
+                    diagnostic.message,
+                    (
+                        f"document.citations.entries[{key!r}]"
+                        f".diagnostics[{diagnostic_index}]"
+                    ),
+                )
+
         for citation, path in self.citations:
             target = citation.target
             if isinstance(target, CitationSource):

@@ -49,10 +49,6 @@ class AmbiguousAssetError(ValueError):
         super().__init__(f"Asset {self.path!s} is ambiguous; found: {rendered}")
 
 
-# The longer spelling is kept as an intuitive import alias.
-AssetAmbiguityError = AmbiguousAssetError
-
-
 @dataclass(frozen=True, slots=True)
 class AssetResolver:
     """Resolve assets against a suite root and then registered search roots.
@@ -477,7 +473,7 @@ def _resolve_document_assets(
             issues.append(
                 ValidationIssue(
                     "error",
-                    "ambiguous-suite-asset",
+                    "asset-ambiguous",
                     str(exc),
                     path=path,
                     formats=formats or normalize_output_formats(),
@@ -701,7 +697,6 @@ def _manifest_path(path: Path, *, base: Path) -> str:
 
 __all__ = [
     "AmbiguousAssetError",
-    "AssetAmbiguityError",
     "AssetResolver",
     "DocumentSuite",
     "DocumentSuiteBundle",

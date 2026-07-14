@@ -75,62 +75,74 @@ class BuiltinBibtexParser:
     """
 
     def parse(self, source: str) -> Sequence[CitationSource]:
-        if not isinstance(source, str):
-            raise TypeError("BibTeX source must be a string")
+        return tuple(
+            _citation_from_raw_entry(source, entry)
+            for entry in _parse_raw_entries(source)
+        )
 
-        raw_entries: list[_RawEntry] = []
-        macros: dict[str, str] = {}
-        cursor = 0
-        while match := re.search(
-            r"(?m)^[ \t]*@(?P<kind>[A-Za-z][\w:-]*)\s*(?P<open>[{(])",
-            source[cursor:],
-        ):
-            entry_start = cursor + match.start() + match.group(0).find("@")
-            body_start = cursor + match.end()
-            entry_type = match.group("kind").lower()
-            opening = match.group("open")
-            closing = "}" if opening == "{" else ")"
-            body_end = _find_entry_end(
-                source,
-                body_start,
-                opening=opening,
-                closing=closing,
-            )
-            if body_end is None:
-                key_hint = _entry_key_hint(source[body_start:])
-                line, column = _source_position(source, entry_start)
-                raise BibtexParseError(
-                    "Unterminated BibTeX entry",
-                    entry_key=key_hint,
-                    line=line,
-                    column=column,
-                )
 
-            body = source[body_start:body_end]
-            cursor = body_end + 1
-            if entry_type in {"comment", "preamble"}:
-                continue
-            if entry_type == "string":
-                token = _parse_string_definition(source, body, body_start)
-                macros[token.name.casefold()] = _resolve_value(token.value, macros)
-                continue
+def _parse_raw_entries(source: str) -> tuple[_RawEntry, ...]:
+    """Parse dependency-free raw entries for models and backend audits."""
 
-            key, fields_source, fields_offset = _split_entry_body(
-                source,
-                body,
-                body_start,
-            )
-            tokens = _parse_fields(source, fields_source, fields_offset, entry_key=key)
-            raw_entries.append(
-                _RawEntry(
-                    entry_type=entry_type,
-                    key=key,
-                    fields={token.name: _resolve_value(token.value, macros) for token in tokens},
-                    field_offsets={token.name: token.offset for token in tokens},
-                )
+    if not isinstance(source, str):
+        raise TypeError("BibTeX source must be a string")
+
+    raw_entries: list[_RawEntry] = []
+    macros: dict[str, str] = {}
+    cursor = 0
+    while match := re.search(
+        r"(?m)^[ \t]*@(?P<kind>[A-Za-z][\w:-]*)\s*(?P<open>[{(])",
+        source[cursor:],
+    ):
+        entry_start = cursor + match.start() + match.group(0).find("@")
+        body_start = cursor + match.end()
+        entry_type = match.group("kind").lower()
+        opening = match.group("open")
+        closing = "}" if opening == "{" else ")"
+        body_end = _find_entry_end(
+            source,
+            body_start,
+            opening=opening,
+            closing=closing,
+        )
+        if body_end is None:
+            key_hint = _entry_key_hint(source[body_start:])
+            line, column = _source_position(source, entry_start)
+            raise BibtexParseError(
+                "Unterminated BibTeX entry",
+                entry_key=key_hint,
+                line=line,
+                column=column,
             )
 
-        return tuple(_citation_from_raw_entry(source, entry) for entry in raw_entries)
+        body = source[body_start:body_end]
+        cursor = body_end + 1
+        if entry_type in {"comment", "preamble"}:
+            continue
+        if entry_type == "string":
+            token = _parse_string_definition(source, body, body_start)
+            macros[token.name.casefold()] = _resolve_value(token.value, macros)
+            continue
+
+        key, fields_source, fields_offset = _split_entry_body(
+            source,
+            body,
+            body_start,
+        )
+        tokens = _parse_fields(source, fields_source, fields_offset, entry_key=key)
+        raw_entries.append(
+            _RawEntry(
+                entry_type=entry_type,
+                key=key,
+                fields={
+                    token.name: _resolve_value(token.value, macros)
+                    for token in tokens
+                },
+                field_offsets={token.name: token.offset for token in tokens},
+            )
+        )
+
+    return tuple(raw_entries)
 
 
 class BibtexparserParser:
@@ -155,6 +167,17 @@ class BibtexparserParser:
         except Exception as exc:
             raise BibtexParseError(f"bibtexparser could not parse the source: {exc}") from exc
 
+        try:
+            raw_inventory = {
+                entry.key: entry
+                for entry in _parse_raw_entries(source)
+            }
+        except BibtexParseError:
+            # A third-party backend may intentionally support syntax outside
+            # the dependency-free parser.  Parsing should still succeed; only
+            # the loss audit is unavailable for that input.
+            raw_inventory = {}
+
         entries: list[CitationSource] = []
         for record in getattr(database, "entries", ()):
             normalized = {
@@ -164,13 +187,51 @@ class BibtexparserParser:
             }
             entry_type = str(record.get("ENTRYTYPE", "misc")).lower()
             key = str(record.get("ID", "")).strip()
+            expected = raw_inventory.get(key)
+            dropped_fields = (
+                tuple(sorted(expected.fields.keys() - normalized.keys()))
+                if expected is not None
+                else ()
+            )
+            # Preserve the dependency-free parser's raw values even when an
+            # optional backend omits an unknown field. The diagnostic records
+            # that the selected backend was lossy without losing user data.
+            if expected is not None:
+                for field_name in dropped_fields:
+                    normalized[field_name] = expected.fields[field_name]
             raw = _RawEntry(
                 entry_type=entry_type,
                 key=key,
                 fields=normalized,
                 field_offsets={},
             )
-            entries.append(_citation_from_raw_entry(source, raw))
+            citation = _citation_from_raw_entry(source, raw)
+            if expected is not None:
+                loss_diagnostics: list[CitationDiagnostic] = []
+                for field_name in dropped_fields:
+                    line, column = _source_position(
+                        source,
+                        expected.field_offsets.get(field_name),
+                    )
+                    loss_diagnostics.append(
+                        CitationDiagnostic(
+                            code="bibtex-field-loss",
+                            message=(
+                                f"BibTeX backend dropped field {field_name!r} "
+                                f"from entry {key!r}."
+                            ),
+                            entry_key=key,
+                            field=field_name,
+                            raw_value=expected.fields[field_name],
+                            line=line,
+                            column=column,
+                        )
+                    )
+                citation.diagnostics = (
+                    *citation.diagnostics,
+                    *loss_diagnostics,
+                )
+            entries.append(citation)
         return tuple(entries)
 
 

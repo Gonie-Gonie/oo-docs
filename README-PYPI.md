@@ -20,12 +20,15 @@ Optional extras are available for focused workflows:
 ```bash
 pip install "oodocs[examples]"
 pip install "oodocs[integrations]"
+pip install "oodocs[bibtex]"
 pip install "oodocs[apidoc]"
 ```
 
 - `examples` installs dependencies used by the bundled example scripts, such as
   matplotlib and pandas.
 - `integrations` installs YAML support for optional workflow collectors.
+- `bibtex` installs the optional `bibtexparser` backend; the built-in parser
+  remains available without it.
 - `apidoc` installs API collection and docstring parsing dependencies.
 
 ## Quick Start
@@ -85,6 +88,10 @@ are imported through the same parser APIs available from Python.
 - authored prose, headings, lists, equations, code blocks, boxes, tables, and
   figures
 - captioned tables and figures with automatic numbering and cross-references
+- explicit cover/front/main/back matter plus plain object links for unnumbered
+  targets
+- description lists, schema and CLI reference models, per-line equation
+  references, quantities, and multi-document suites
 - report panels and reusable visual styles that stay editable in Word
 - document comments, footnotes, hyperlinks, citations, and generated references
 - Markdown and Jupyter notebook imports that become editable OODocs blocks

@@ -2,13 +2,16 @@ from __future__ import annotations
 
 import subprocess
 import sys
+from types import SimpleNamespace
 
 import pytest
 
+from oodocs import Document
 from oodocs.components.inline import Hyperlink
 from oodocs.components.references import CitationLibrary, CitationSource
 from oodocs.integrations.bibtex import (
     BibtexParseError,
+    BibtexparserParser,
     BuiltinBibtexParser,
 )
 
@@ -143,6 +146,51 @@ def test_custom_parser_backend_can_supply_citation_sources() -> None:
 
     library = CitationLibrary.from_bibtex("custom", parser=Parser())
     assert library.resolve("backend").title == "Backend Result"
+
+
+def test_optional_backend_reports_raw_field_loss_to_document_validation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    source = """@misc{sample,
+  title = {Preserved title},
+  custom-field = {must survive},
+  year = {2026}
+}"""
+    fake_database = SimpleNamespace(
+        entries=[
+            {
+                "ENTRYTYPE": "misc",
+                "ID": "sample",
+                "title": "Preserved title",
+                "year": "2026",
+            }
+        ]
+    )
+    monkeypatch.setitem(
+        sys.modules,
+        "bibtexparser",
+        SimpleNamespace(loads=lambda value: fake_database),
+    )
+
+    citation = BibtexparserParser().parse(source)[0]
+    losses = [
+        diagnostic
+        for diagnostic in citation.diagnostics
+        if diagnostic.code == "bibtex-field-loss"
+    ]
+
+    assert len(losses) == 1
+    assert losses[0].entry_key == "sample"
+    assert losses[0].field == "custom-field"
+    assert losses[0].raw_value == "must survive"
+    assert losses[0].line == 3
+    assert citation.fields["custom-field"] == "must survive"
+
+    errors = Document("Field loss", citations=[citation]).validate().errors
+    matching = [issue for issue in errors if issue.code == "bibtex-field-loss"]
+    assert len(matching) == 1
+    assert matching[0].severity == "error"
+    assert matching[0].path.endswith(".diagnostics[0]")
 
 
 def test_doi_and_url_are_separate_hyperlink_fragments() -> None:

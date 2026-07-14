@@ -9,21 +9,25 @@ for structure and lightweight LaTeX-like source for expressions.
 | Need | Use | Notes |
 |---|---|---|
 | Inline expression in prose | `inline_math(...)` or `Math(...)` | Best for short symbols and formulas inside a paragraph. |
-| Display equation | `Equation(...)` | Numbered by default and referenceable. |
+| Display equation | `Equation(...)` | A structured display block; numbering is documented separately. |
 | Aligned derivation | `Equation.aligned(...)` | Accepts `&` alignment markers and omits them from rendered text. |
 | Piecewise cases | `Equation.cases(...)` | Use OODocs case rows instead of a raw TeX `cases` environment. |
-| Symbolic expression | `Equation.from_sympy(...)` | Uses `sympy.latex(...)` when SymPy is installed. |
+| Symbolic expression | `equation_from_sympy(...)` from `oodocs.integrations.sympy` | Uses `sympy.latex(...)` when SymPy is installed. |
 
-`Equation(numbered=True)` is the default and consumes the document equation
-counter. `Equation(numbered=False)` does not consume a number; references to an
-unnumbered equation require an explicit label such as
-`equation.ref("the loss definition")`.
+Use `Equation.aligned(...)` and `Equation.cases(...)` as the canonical
+top-level authoring entry points for structured display math. See
+[Equation numbering and aligned equations](equation-numbering.md) for numbered
+and unnumbered displays, per-line references, concrete aligned/cases classes,
+and scoped counter policies.
 
-`Equation.aligned(...)` and `Equation.cases(...)` are the canonical authoring
-entry points for structured display math. The concrete `AlignedEquation(...)`
-and `CasesEquation(...)` classes remain available from `oodocs.equations` for
-advanced code that needs explicit types, but they are not part of the top-level
-`oodocs` import surface.
+SymPy support stays outside the core equation model. Install the `sympy`
+optional dependency and import the integration explicitly:
+
+```python
+from oodocs.integrations.sympy import equation_from_sympy
+
+equation = equation_from_sympy(sympy_expression, numbered=False)
+```
 
 ## Lightweight Parser Matrix
 

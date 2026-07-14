@@ -525,7 +525,11 @@ class HtmlRenderer:
                 f'style="text-align: {context.theme.captions.caption_text_alignment}; '
                 f'font-size: {context.theme.caption_size():.1f}pt;">'
                 + self._inline_html(
-                    self._caption_fragments("Code block", context.render_index.code_block_number(block), block.caption),
+                    self._caption_fragments(
+                        context.theme.resolve_reference_template("code_block").singular_label,
+                        context.render_index.code_block_number(block),
+                        block.caption,
+                    ),
                     context.theme,
                     context.render_index,
                     base_size=context.theme.caption_size(),
@@ -1478,7 +1482,7 @@ class HtmlRenderer:
             title=block.title,
             entries=context.render_index.scoped_listings(block),
             default_title=context.theme.resolve_generated_page_title("list_of_listings"),
-            label="Code block",
+            label=context.theme.resolve_reference_template("code_block").singular_label,
             context=context,
             section_class="oodocs-generated-page oodocs-listing-list",
         )

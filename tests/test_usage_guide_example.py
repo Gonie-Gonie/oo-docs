@@ -14,6 +14,10 @@ import zipfile
 from docx import Document as WordDocument
 from pypdf import PdfReader
 
+from oodocs.components.cover import CoverPage
+from oodocs.components.inline import ObjectLink
+from oodocs.components.matter import BackMatter, FrontMatter, MainMatter
+
 from example_regression import (
     assert_docx_structure,
     assert_html_internal_links_resolve,
@@ -61,6 +65,34 @@ def _normalized_html_text(html_path: Path) -> str:
     html_text = re.sub(r"<style.*?>.*?</style>", " ", html_text, flags=re.DOTALL)
     text = re.sub(r"<[^>]+>", " ", html_text)
     return " ".join(unescape(text).split())
+
+
+def test_usage_guide_uses_generic_cover_explicit_matter_and_object_link() -> None:
+    usage_guide = _load_example_module("usage_guide_example")
+    document = usage_guide.build_usage_guide_document()
+
+    front, main, back = document.body.children
+    assert isinstance(front, FrontMatter)
+    assert isinstance(main, MainMatter)
+    assert isinstance(back, BackMatter)
+    assert isinstance(document.settings.title_matter.cover, CoverPage)
+    assert document.settings.title_matter.cover.logo == usage_guide.LOGO_PATH
+
+    stack = list(document.body.children)
+    blocks = []
+    while stack:
+        block = stack.pop()
+        blocks.append(block)
+        stack.extend(reversed(getattr(block, "children", ())))
+    object_links = [
+        fragment
+        for block in blocks
+        for fragment in getattr(block, "content", ())
+        if isinstance(fragment, ObjectLink)
+    ]
+    assert [object_link.plain_text() for object_link in object_links] == [
+        "pipeline diagram"
+    ]
 
 
 def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:

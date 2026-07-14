@@ -1,5 +1,16 @@
 # Equation numbering and aligned equations
 
+`Equation(numbered=True)` is the default and consumes the document equation
+counter. `Equation(numbered=False)` does not consume a number. An unnumbered
+equation can still be linked with explicit visible text, for example
+`equation.link("the loss definition")`.
+
+`Equation.aligned(...)` and `Equation.cases(...)` are the canonical authoring
+entry points for structured display math. The concrete `AlignedEquation(...)`
+and `CasesEquation(...)` classes remain available from `oodocs.equations` for
+code that needs explicit types; they are not part of the top-level `oodocs`
+import surface.
+
 Use `EquationLine` when a row in an aligned derivation needs its own number,
 reference, or internal link. A line remains a child of `AlignedEquation`; it is
 not an independent document block.

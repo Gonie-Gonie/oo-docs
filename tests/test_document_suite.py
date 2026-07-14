@@ -177,6 +177,37 @@ def test_validate_all_reports_figure_and_cover_assets_without_using_cwd(
         suite.validate_all(raise_on_error=True)
 
 
+def test_validate_all_reports_ambiguous_assets_with_contract_code(
+    tmp_path: Path,
+) -> None:
+    root = tmp_path / "suite"
+    first = _write_png(root / "first assets" / "shared.png")
+    second = _write_png(root / "second assets" / "shared.png")
+    context = DocumentSuiteContext(
+        root,
+        "dist",
+        assets=AssetResolver((Path("first assets"), Path("second assets"))),
+    )
+    suite = DocumentSuite("ambiguous assets", context).add(
+        "manual",
+        lambda _: Document(
+            "Ambiguous asset",
+            Figure("shared.png", caption="Shared", alt_text="Shared fixture"),
+        ),
+        formats=("html",),
+    )
+
+    result = suite.validate_all()["manual"]
+    issues = [issue for issue in result.errors if issue.code == "asset-ambiguous"]
+
+    assert len(issues) == 1
+    assert issues[0].path == "document.body.children[0].image_source"
+    assert str(first.resolve()) in issues[0].message
+    assert str(second.resolve()) in issues[0].message
+    with pytest.raises(AmbiguousAssetError):
+        suite.build("manual")
+
+
 def test_suite_preserves_factory_owned_citation_libraries(tmp_path: Path) -> None:
     shared = CitationLibrary()
     private = CitationLibrary()

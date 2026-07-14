@@ -1947,7 +1947,7 @@ class PdfRenderer:
             context.styles,
             context.render_index,
             context.theme.resolve_generated_page_title("list_of_listings"),
-            "Code block",
+            context.theme.resolve_reference_template("code_block").singular_label,
             notify_kind="ListingListEntry",
         )
 
@@ -3308,7 +3308,7 @@ class PdfRenderer:
                 spaceAfter=0,
             )
             caption_fragments = self._caption_fragments(
-                "Code block",
+                theme.resolve_reference_template("code_block").singular_label,
                 render_index.code_block_number(block),
                 block.caption,
             )

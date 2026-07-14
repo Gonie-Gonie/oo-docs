@@ -246,7 +246,7 @@ def test_help_book_places_common_symbols_in_category_chapters() -> None:
     assert "box_style" in text
     assert "Equation.aligned" in text
     assert "Equation.cases" in text
-    assert "Equation.from_sympy" in text
+    assert "equation_from_sympy" in text
     assert "numbered" in text
     assert "ChemicalFormula" in text
     assert "ReactionEquation" in text
