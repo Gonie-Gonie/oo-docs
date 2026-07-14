@@ -114,7 +114,9 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
         for cell in row.cells
     )
     pdf_reader = PdfReader(BytesIO(pdf_path.read_bytes()))
-    pdf_text = "\n".join(page.extract_text() or "" for page in pdf_reader.pages)
+    pdf_text = " ".join(
+        "\n".join(page.extract_text() or "" for page in pdf_reader.pages).split()
+    )
     html_text = html_path.read_text(encoding="utf-8")
     normalized_html_text = _normalized_html_text(html_path)
 
