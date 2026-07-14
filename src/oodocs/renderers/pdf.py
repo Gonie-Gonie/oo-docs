@@ -13,6 +13,8 @@ Attributes:
         flags.
     FONT_FAMILY_ALIASES: Normalized font family aliases used by PDF font
         resolution.
+    BUILTIN_CID_FONT_FALLBACKS: ReportLab Unicode CID fonts used when common
+        system fonts are unavailable.
     SYSTEM_FONT_VARIANTS: Optional Windows system font files used when
         registering PDF fonts.
 """
@@ -31,6 +33,7 @@ from reportlab.lib.styles import ParagraphStyle as RLParagraphStyle
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import inch
 from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.cidfonts import UnicodeCIDFont
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.utils import ImageReader
 from reportlab.platypus import Image as RLImage
@@ -202,6 +205,13 @@ FONT_FAMILY_ALIASES = {
     "cambria math": "Times-Roman",
     "helvetica": "Helvetica",
     "arial": "Helvetica",
+}
+
+BUILTIN_CID_FONT_FALLBACKS = {
+    "times new roman": "HYSMyeongJo-Medium",
+    "malgun gothic": "HYGothic-Medium",
+    "nanumgothic": "HYGothic-Medium",
+    "noto sans cjk kr": "HYGothic-Medium",
 }
 
 SYSTEM_FONT_VARIANTS = {
@@ -804,14 +814,14 @@ class PdfRenderer:
     context.
 
     Attributes:
-        _registered_system_fonts: Cache of registered system font variants.
+        _registered_fonts: Cache of registered system and CID font variants.
         _pending_float_flowables: Float flowables deferred until a safe flush
             point in the story.
         _pdf_page_replacements: External PDF pages keyed by invisible marker.
     """
 
     def __init__(self) -> None:
-        self._registered_system_fonts: dict[tuple[str, bool, bool], str] = {}
+        self._registered_fonts: dict[tuple[str, bool, bool], str] = {}
         self._pending_float_flowables: list[object] = []
         self._pdf_page_replacements: dict[str, tuple[Path, int]] = {}
         self._pdf_page_layout_template_ids: dict[
@@ -4171,6 +4181,9 @@ class PdfRenderer:
         system_font = self._register_system_font(font_name, bold, italic)
         if system_font is not None:
             return system_font
+        cid_font = self._register_builtin_cid_font(font_name, bold, italic)
+        if cid_font is not None:
+            return cid_font
         aliased_font_name = FONT_FAMILY_ALIASES.get(font_name.lower(), font_name)
         font_name = aliased_font_name
         if font_name in PDF_FONT_VARIANTS:
@@ -4182,8 +4195,8 @@ class PdfRenderer:
 
     def _register_system_font(self, font_name: str, bold: bool, italic: bool) -> str | None:
         key = (font_name, bold, italic)
-        if key in self._registered_system_fonts:
-            return self._registered_system_fonts[key]
+        if key in self._registered_fonts:
+            return self._registered_fonts[key]
 
         for candidate_name, variants in SYSTEM_FONT_VARIANTS.items():
             if candidate_name.lower() != font_name.lower():
@@ -4194,9 +4207,26 @@ class PdfRenderer:
                 registered_name = f"{candidate_name}-{int(bold)}-{int(italic)}"
                 if registered_name not in pdfmetrics.getRegisteredFontNames():
                     pdfmetrics.registerFont(TTFont(registered_name, font_path))
-                self._registered_system_fonts[key] = registered_name
+                self._registered_fonts[key] = registered_name
                 return registered_name
         return None
+
+    def _register_builtin_cid_font(
+        self,
+        font_name: str,
+        bold: bool,
+        italic: bool,
+    ) -> str | None:
+        key = (font_name, bold, italic)
+        if key in self._registered_fonts:
+            return self._registered_fonts[key]
+        registered_name = BUILTIN_CID_FONT_FALLBACKS.get(font_name.casefold())
+        if registered_name is None:
+            return None
+        if registered_name not in pdfmetrics.getRegisteredFontNames():
+            pdfmetrics.registerFont(UnicodeCIDFont(registered_name))
+        self._registered_fonts[key] = registered_name
+        return registered_name
 
     def _resolve_fragment_text(self, fragment: Text, theme: Theme, render_index: RenderIndex) -> str:
         if isinstance(fragment, _BlockReference):

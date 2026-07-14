@@ -18,11 +18,23 @@ from docx import Document as WordDocument
 from pypdf import PdfReader
 import pytest
 
-from oodocs import Chapter, Part, Section, SubFigure, SubFigureGroup, Table
+from oodocs import (
+    Chapter,
+    Document,
+    DocumentSettings,
+    Paragraph,
+    Part,
+    Section,
+    SubFigure,
+    SubFigureGroup,
+    Table,
+    Theme,
+)
 from oodocs.components.blocks import AlignedEquation, Appendix
 from oodocs.components.descriptions import DescriptionList
 from oodocs.components.matter import BackMatter, FrontMatter, MainMatter
 from oodocs.layout.indexing import build_render_index
+from oodocs.renderers import pdf as pdf_renderer_module
 from tests.fixtures.manual_suite import (
     ASSET_NAMES,
     LONG_TABLE_ROW_COUNT,
@@ -345,3 +357,30 @@ def test_pdf_preserves_destinations_visible_text_links_and_long_table_header(
     assert re.search(r"(?:^|\n)ii(?:\n|$)", preface_page)
     assert re.search(r"(?:^|\n)1(?:\n|$)", main_page)
     assert re.search(r"(?:^|\n)10(?:\n|$)", back_page)
+
+
+@pytest.mark.render
+def test_pdf_builtin_cid_fallback_preserves_unicode_without_system_fonts(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(pdf_renderer_module, "SYSTEM_FONT_VARIANTS", {})
+    default_document = Document("Unicode", Paragraph("400 CO₂"))
+    korean_document = Document(
+        "한국어",
+        Paragraph("공용 기술 설명서. See 1장 and 1.1절."),
+        settings=DocumentSettings(theme=Theme.from_locale("ko-KR")),
+    )
+
+    default_path = default_document.save_pdf(tmp_path / "default-unicode.pdf")
+    korean_path = korean_document.save_pdf(tmp_path / "korean-unicode.pdf")
+    default_text = "\n".join(
+        page.extract_text() or "" for page in PdfReader(default_path).pages
+    )
+    korean_text = "\n".join(
+        page.extract_text() or "" for page in PdfReader(korean_path).pages
+    )
+
+    assert "400 CO₂" in default_text
+    assert "공용 기술 설명서" in korean_text
+    assert "See 1장 and 1.1절." in korean_text
