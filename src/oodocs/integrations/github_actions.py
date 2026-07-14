@@ -13,6 +13,11 @@ def collect_github_actions_workflow(path: str | Path) -> WorkflowSummary:
 
     source_path = Path(path)
     payload = _load_yaml(source_path)
+    workflow_name = "Workflow"
+    if isinstance(payload, Mapping):
+        raw_name = payload.get("name")
+        if raw_name is not None and str(raw_name).strip():
+            workflow_name = str(raw_name).strip()
     raw_jobs = payload.get("jobs", {}) if isinstance(payload, Mapping) else {}
     jobs: list[WorkflowJob] = []
     if isinstance(raw_jobs, Mapping):
@@ -37,7 +42,7 @@ def collect_github_actions_workflow(path: str | Path) -> WorkflowSummary:
             )
     return WorkflowSummary(
         jobs=tuple(jobs),
-        name="Workflow",
+        name=workflow_name,
         source_path=source_path,
     )
 

@@ -95,8 +95,17 @@ def load_workflow_summary(workflow: str | Path) -> WorkflowSummary:
         return WorkflowSummary(
             source_path=workflow_path,
             jobs=tuple(_fallback_workflow_jobs(workflow_path)),
-            name="Release workflow",
+            name=_fallback_workflow_name(workflow_path),
         )
+
+
+def _fallback_workflow_name(path: Path) -> str:
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if line.startswith("name:"):
+            name = line.partition(":")[2].strip().strip("'\"")
+            if name:
+                return name
+    return "Workflow"
 
 
 def _fallback_workflow_jobs(path: Path) -> list[dict[str, object]]:

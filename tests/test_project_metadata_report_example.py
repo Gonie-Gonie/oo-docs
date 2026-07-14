@@ -77,7 +77,7 @@ def test_project_metadata_report_example_builds_outputs(tmp_path: Path) -> None:
     assert "pyproject.toml" in table_text
     assert "release.yml" in table_text
     assert any("Project metadata." in text for text in paragraph_texts)
-    assert any("Jobs in Release workflow." in text for text in paragraph_texts)
+    assert any("Jobs in Release." in text for text in paragraph_texts)
     assert_docx_structure(
         outputs["docx"],
         required_paragraphs=(

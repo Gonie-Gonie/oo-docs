@@ -4,11 +4,13 @@ import subprocess
 import sys
 import tomllib
 from pathlib import Path
+from types import ModuleType
 
 import pytest
 
 import oodocs
 import oodocs.integrations as integrations
+from oodocs.integrations.github_actions import collect_github_actions_workflow
 
 
 pytestmark = pytest.mark.contracts
@@ -46,3 +48,19 @@ def test_optional_dependency_extras_match_integration_boundaries() -> None:
     assert extras["engineering"] == []
     assert any(requirement.lower().startswith("pint") for requirement in extras["pint"])
     assert any(requirement.lower().startswith("sympy") for requirement in extras["sympy"])
+
+
+def test_github_actions_collector_preserves_workflow_name(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workflow_path = tmp_path / "workflow.yml"
+    workflow_path.write_text("name: Release\njobs: {}\n", encoding="utf-8")
+    yaml_module = ModuleType("yaml")
+    yaml_module.safe_load = lambda _source: {"name": "Release", "jobs": {}}  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "yaml", yaml_module)
+
+    workflow = collect_github_actions_workflow(workflow_path)
+
+    assert workflow.name == "Release"
+    assert workflow.to_table().caption.plain_text() == "Jobs in Release."
