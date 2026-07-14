@@ -16,11 +16,8 @@ from oodocs import (
     Author,
     AuthorLayout,
     BackMatter,
-    BlockDefaults,
-    BorderStyle,
     Box,
     BulletList,
-    CaptionDefaults,
     CoverPage,
     Chapter,
     CitationLibrary,
@@ -36,13 +33,9 @@ from oodocs import (
     ListOfFigures,
     Footnote,
     FrontMatter,
-    GeneratedContentDefaults,
-    HeaderFooterDefaults,
-    LocaleDefaults,
     MainMatter,
     NumberedList,
     OutputBundle,
-    PageNumberDefaults,
     PageLayout,
     PageMargins,
     PageSize,
@@ -51,7 +44,6 @@ from oodocs import (
     Part,
     ListOfReferences,
     Section,
-    StrokeStyle,
     SubFigure,
     SubFigureGroup,
     Subsection,
@@ -62,8 +54,6 @@ from oodocs import (
     Text,
     Theme,
     TitleMatter,
-    TitleMatterDefaults,
-    TypographyDefaults,
     VerticalSpace,
     badge,
     bold,
@@ -90,6 +80,18 @@ from oodocs.generated import ListOfComments, ListOfAlgorithms, ListOfListings
 from oodocs.media import ColumnSpec, CropBox, SubTable, SubTableGroup
 from oodocs.pdf import PdfPages
 from oodocs.positioning import ImageBox, PageItemScope, Shape, TextBox
+from oodocs.styles import (
+    BlockDefaults,
+    BorderStyle,
+    CaptionDefaults,
+    GeneratedContentDefaults,
+    HeaderFooterDefaults,
+    LocaleDefaults,
+    PageNumberDefaults,
+    StrokeStyle,
+    TitleMatterDefaults,
+    TypographyDefaults,
+)
 from oodocs.styles.generated import TableOfContentsLevelStyle
 from oodocs.structure import (
     Appendix,
@@ -160,7 +162,10 @@ RELATED_WORK = CitationLibrary(
     ]
 )
 
-QUICK_START_SNIPPET = """from oodocs import Chapter, Document, DocumentMetadata, DocumentSettings, Paragraph, Section, bold
+QUICK_START_SNIPPET = """from oodocs import (
+    Chapter, Document, DocumentMetadata, DocumentSettings,
+    Paragraph, Section, bold,
+)
 
 report = Document(
     "Hello oodocs",
@@ -168,10 +173,16 @@ report = Document(
         "Getting Started",
         Section(
             "Overview",
-            Paragraph("This document was defined with ", bold("Python objects"), "."),
+            Paragraph(
+                "This document was defined with ",
+                bold("Python objects"),
+                ".",
+            ),
         ),
     ),
-    settings=DocumentSettings(metadata=DocumentMetadata(author="OODocs")),
+    settings=DocumentSettings(
+        metadata=DocumentMetadata(author="OODocs"),
+    ),
 )
 
 report.save("artifacts/hello.docx")
@@ -188,29 +199,41 @@ handbook = Document(
     "Implementation Handbook",
     Part(
         "Foundations",
-        Chapter("Getting Started", Section("Overview", Paragraph("Chapter 1."))),
+        Chapter(
+            "Getting Started",
+            Section("Overview", Paragraph("Chapter 1.")),
+        ),
     ),
     Part(
         "Reference",
-        Chapter("Configuration", Section("Options", Paragraph("Chapter 2, not 1."))),
+        Chapter(
+            "Configuration",
+            Section("Options", Paragraph("Chapter 2, not 1.")),
+        ),
     ),
 )
 """
 
-AUTHOR_LAYOUT_SNIPPET = """from oodocs import Affiliation, Author, AuthorLayout, DocumentSettings, TitleMatter
+AUTHOR_LAYOUT_SNIPPET = """from oodocs import (
+    Affiliation, Author, AuthorLayout, DocumentSettings, TitleMatter,
+)
 
 settings = DocumentSettings(
     title_matter=TitleMatter(
         authors=[
             Author(
                 "Research Lead",
-                affiliations=[Affiliation(organization="Example Lab")],
+                affiliations=[
+                    Affiliation(organization="Example Lab")
+                ],
                 corresponding=True,
                 email="lead@example.org",
             ),
             Author(
                 "Implementation Partner",
-                affiliations=[Affiliation(organization="Open Source Team")],
+                affiliations=[
+                    Affiliation(organization="Open Source Team")
+                ],
                 note="GitHub: @example",
             ),
         ],
@@ -219,17 +242,68 @@ settings = DocumentSettings(
 )
 """
 
-LAYOUT_CONTROL_SNIPPET = """from oodocs import BlockDefaults, CaptionDefaults, DocumentSettings, GeneratedContentDefaults, PageLayout, PageMargins, PageSize, Theme
+DOCUMENT_MATTER_SNIPPET = """from oodocs import (
+    BackMatter, Chapter, CoverPage, Document, DocumentSettings,
+    FrontMatter, ListOfReferences, MainMatter, Paragraph, Section,
+    TitleMatter,
+)
+
+contacts = Section(
+    "Release contacts",
+    Paragraph("Documentation Team <docs@example.org>"),
+    numbered=False,
+    toc=False,
+    anchor="release-contacts",
+)
+
+document = Document(
+    "Operations Guide",
+    FrontMatter(Paragraph("Reader and revision information.")),
+    MainMatter(
+        Chapter(
+            "Operations",
+            Paragraph(
+                "Questions go to ",
+                contacts.link("release contacts"),
+                ".",
+            ),
+        )
+    ),
+    BackMatter(contacts, ListOfReferences()),
+    settings=DocumentSettings(
+        title_matter=TitleMatter(
+            subtitle="Controlled procedures",
+            cover=CoverPage(
+                organization="Example Laboratory",
+                footer="Internal use",
+            ),
+        )
+    ),
+)
+"""
+
+LAYOUT_CONTROL_SNIPPET = """from oodocs import (
+    DocumentSettings, PageLayout, PageMargins, PageSize, Theme,
+)
+from oodocs.styles import (
+    BlockDefaults, CaptionDefaults, GeneratedContentDefaults,
+)
 
 settings = DocumentSettings(
     unit="cm",
     page_layout=PageLayout(
         page_size=PageSize.a4(),
-        page_margins=PageMargins.symmetric(vertical=2.0, horizontal=2.4, unit="cm"),
+        page_margins=PageMargins.symmetric(
+            vertical=2.0,
+            horizontal=2.4,
+            unit="cm",
+        ),
     ),
     theme=Theme(
         blocks=BlockDefaults(footnote_placement="document"),
-        generated_content=GeneratedContentDefaults(generated_content_page_breaks=True),
+        generated_content=GeneratedContentDefaults(
+            generated_content_page_breaks=True,
+        ),
         captions=CaptionDefaults(
             table_caption_position="above",
             figure_caption_position="below",
@@ -240,7 +314,8 @@ settings = DocumentSettings(
 )
 """
 
-FOOTNOTE_STREAM_SNIPPET = """from oodocs import CounterStyle, FootnoteDefaults, FootnoteStyle, Paragraph, Theme, footnote
+FOOTNOTE_STREAM_SNIPPET = """from oodocs import Paragraph, Theme, footnote
+from oodocs.styles import CounterStyle, FootnoteDefaults, FootnoteStyle
 
 theme = Theme(
     footnotes=FootnoteDefaults(
@@ -265,7 +340,10 @@ from oodocs.review import MarginNote, Todo, margin_note, todo
 
 paragraph = Paragraph(
     "Assumption ",
-    MarginNote("Check this assumption beside the source paragraph.", side="right"),
+    MarginNote(
+        "Check this assumption beside the source paragraph.",
+        side="right",
+    ),
     " needs review ",
     Todo("Verify units before release.", owner="QA"),
     ".",
@@ -297,14 +375,17 @@ report = Document(
     ),
 )
 
-# The appendix chapters render as A, B; nested headings render as A.1, A.2, ...
+# Appendix chapters render as A, B.
+# Nested headings render as A.1, A.2, and so on.
 """
 
 FIGURE_SIZING_SNIPPET = """from oodocs import DocumentSettings, Figure, PageLayout, PageMargins
 
 settings = DocumentSettings(
     unit="cm",
-    page_layout=PageLayout(page_margins=PageMargins.all(2.0, unit="cm")),
+    page_layout=PageLayout(
+        page_margins=PageMargins.all(2.0, unit="cm"),
+    ),
 )
 
 figure = Figure(
@@ -328,8 +409,18 @@ figure = Figure(
 
 SUBFIGURE_SNIPPET = """from oodocs import Paragraph, SubFigure, SubFigureGroup
 
-before = SubFigure("assets/before.png", caption="Before calibration.", width=6.0, unit="cm")
-after = SubFigure("assets/after.png", caption="After calibration.", width=6.0, unit="cm")
+before = SubFigure(
+    "assets/before.png",
+    caption="Before calibration.",
+    width=6.0,
+    unit="cm",
+)
+after = SubFigure(
+    "assets/after.png",
+    caption="After calibration.",
+    width=6.0,
+    unit="cm",
+)
 
 comparison = SubFigureGroup(
     before,
@@ -369,13 +460,19 @@ from oodocs.pdf import PdfPages
 document = Document(
     "Appendix bundle",
     Paragraph("The signed appendix follows in the PDF output."),
-    PdfPages("appendices/signed-approval.pdf", pages=[1], title="Signed approval"),
+    PdfPages(
+        "appendices/signed-approval.pdf",
+        pages=[1],
+        title="Signed approval",
+    ),
 )
 """
 
-POSITIONED_DRAWING_SNIPPET = """from oodocs import Document, DocumentSettings, Paragraph, StrokeStyle
+POSITIONED_DRAWING_SNIPPET = """from oodocs import Document, DocumentSettings, Paragraph
 from oodocs.positioning import ImageBox, PageItemScope, Shape, TextBox
+from oodocs.styles import StrokeStyle
 
+cover_scope = PageItemScope.cover()
 frame = Shape.rect(
     name="approval-frame",
     anchor="margin",
@@ -384,30 +481,38 @@ frame = Shape.rect(
     width=6.0,
     height=1.0,
     stroke=StrokeStyle.solid("#476172", width=1.0),
+    scope=cover_scope,
+)
+label = TextBox(
+    "Approval area",
+    anchor="approval-frame",
+    x=0.25,
+    y=0.25,
+    width=2.0,
+    height=0.3,
+    scope=cover_scope,
+)
+logo = ImageBox(
+    "assets/oodocs-logo.png",
+    width=0.28,
+    height=0.28,
+    placement="inline",
 )
 
 document = Document(
     "Drawing placement",
-    Paragraph(
-        "Inline logo ",
-        ImageBox("assets/oodocs-logo.png", width=0.28, height=0.28, placement="inline"),
-        " stays in the sentence flow.",
-    ),
-    settings=DocumentSettings(
-        overlays=[
-            frame,
-            TextBox("Approval area", anchor="approval-frame", x=0.25, y=0.25, width=2.0, height=0.3),
-            TextBox("Cover draft", x=0.5, y=0.5, width=2.0, height=0.4, scope="cover"),
-            TextBox("Page 2 note", x=0.5, y=1.0, width=2.0, height=0.4, scope=PageItemScope.pages(2)),
-        ],
-    ),
+    Paragraph("Inline logo ", logo, " stays in the sentence flow."),
+    settings=DocumentSettings(overlays=[frame, label]),
 )
 """
 
-REPORT_PANEL_SNIPPET = """from oodocs import BorderStyle, Box, Padding, Paragraph, Table
+REPORT_PANEL_SNIPPET = """from oodocs import Box, Padding, Paragraph, Table
+from oodocs.styles import BorderStyle
 
 panel = Box(
-    Paragraph("Editable report content can stay grouped with its evidence."),
+    Paragraph(
+        "Editable report content can stay grouped with its evidence."
+    ),
     Table(
         headers=["Surface", "Word behavior", "Portable behavior"],
         rows=[
@@ -438,44 +543,57 @@ contents = TableOfContents(
     leader=".",
     max_level=3,
     level_styles={
-        1: TableOfContentsLevelStyle(bold=True, space_before=12, space_after=7),
-        2: TableOfContentsLevelStyle(bold=False, space_before=3, space_after=3),
+        1: TableOfContentsLevelStyle(
+            bold=True,
+            space_before=12,
+            space_after=7,
+        ),
+        2: TableOfContentsLevelStyle(
+            bold=False,
+            space_before=3,
+            space_after=3,
+        ),
         3: TableOfContentsLevelStyle(indent=0.48, font_size_delta=-0.2),
     },
 )
 """
 
 CONFIGURATION_OPTIONS_SNIPPET = """from oodocs import (
-    BorderStyle,
-    BlockDefaults, CaptionDefaults, DocumentSettings, PageNumberDefaults,
-    HeadingStyle, Padding, Paragraph, Table, TextStyle, Theme, TypographyDefaults,
+    DocumentSettings, Padding, Paragraph, Table, TextStyle, Theme,
+)
+from oodocs.styles import (
+    BlockDefaults, BorderStyle, CaptionDefaults, HeadingStyle,
+    PageNumberDefaults, TypographyDefaults,
 )
 
 settings = DocumentSettings(
     unit="cm",
     theme=Theme(
-        typography=TypographyDefaults(body_font_name="Arial", body_font_size=10.5),
+        typography=TypographyDefaults(body_font_name="Arial"),
         captions=CaptionDefaults(figure_label="Fig."),
-        page_numbers=PageNumberDefaults(show_page_numbers=True, page_number_template="p. {page}"),
+        page_numbers=PageNumberDefaults(show_page_numbers=True),
         blocks=BlockDefaults(
             paragraph_text_alignment="left",
             heading_styles={
-                1: HeadingStyle(text_style=TextStyle(font_size=18), space_after=8),
+                1: HeadingStyle(
+                    text_style=TextStyle(font_size=18)
+                )
             },
         ),
     ),
 )
 
-paragraph = Paragraph("Right-aligned note.", text_alignment="right", space_after=6)
-kept_paragraph = Paragraph(
-    "Keep this paragraph with the following evidence table.",
-    space_before=6,
+paragraph = Paragraph(
+    "Right-aligned note.",
+    text_alignment="right",
+)
+evidence_intro = Paragraph(
+    "Keep this paragraph with the evidence table.",
     keep_with_next=True,
 )
 table = Table(
     headers=["Metric", "Value"],
     rows=[["Latency", "14 ms"]],
-    header_background_color="#E8EDF5",
     cell_text_alignment="center",
     border=BorderStyle.solid("#CBD5E1", width=0.4),
     cell_padding=Padding.symmetric(vertical=3, horizontal=5),
@@ -483,18 +601,49 @@ table = Table(
 )
 """
 
+REFERENCE_TEMPLATE_SNIPPET = """from oodocs import DocumentSettings, Theme
+from oodocs.styles import ReferenceDefaults, ReferenceTemplate
+
+korean_settings = DocumentSettings(theme=Theme.from_locale("ko-KR"))
+# Korean reference labels and placement come from the locale bundle.
+
+custom_theme = Theme(
+    references=ReferenceDefaults(
+        {
+            "figure": ReferenceTemplate(
+                "Diagram",
+                plural_label="Diagrams",
+                template="{label} {value}",
+                plural_template="{label} ({value})",
+            )
+        }
+    )
+)
+"""
+
 COUNTABLE_BLOCK_SNIPPET = """from oodocs import Paragraph
-from oodocs.structure import Definition, Lemma, Proof, Theorem, create_countable_block_type
+from oodocs.structure import (
+    Definition, Lemma, Proof, Theorem, create_countable_block_type,
+)
 
 Exercise = create_countable_block_type("Exercise", counter="exercise")
 
-bounded = Definition("A block with an explicit label and document-wide number.")
+bounded = Definition(
+    "A block with an explicit label and document-wide number."
+)
 setup = Lemma("Shared theorem-like blocks advance the same counter.")
-main = Theorem("The numbered statement can be referenced later.", title="Main result")
-exercise = Exercise("Custom countable kinds can keep a separate sequence.")
+main = Theorem(
+    "The numbered statement can be referenced later.",
+    title="Main result",
+)
+exercise = Exercise(
+    "Custom countable kinds can keep a separate sequence."
+)
 
-paragraph = Paragraph("Use ", main.ref(), " before the proof.")
-proof = Proof("Proofs are unnumbered by default, so reference them with a custom label.")
+proof = Proof("Proofs are unnumbered by default.")
+paragraph = Paragraph(
+    "Use ", main.ref(), " and follow ", proof.link("the proof"), "."
+)
 """
 
 ALGORITHM_SNIPPET = """from oodocs import Paragraph
@@ -529,14 +678,16 @@ PROJECT_LAYOUT_SNIPPET = """my-report/
     report.html
 """
 
-CLI_WORKFLOW_SNIPPET = """# Build a Python-authored document that exposes build_document(), document, doc, or report.
+CLI_WORKFLOW_SNIPPET = """# A Python source exposes build_document(), document,
+# doc, or report.
 oodocs build report.py --out artifacts --outputs docx,pdf,html
 
 # Build imported sources through the same import APIs used in Python.
 oodocs build README.md --outputs docx,pdf,html --out artifacts
 oodocs build notebook.ipynb --outputs pdf --out artifacts
 
-# Validate without writing outputs; use --fail-on-warning when warnings should fail CI.
+# Validate without writing outputs. Add --fail-on-warning
+# when warnings should fail CI.
 oodocs validate report.py
 oodocs validate report.py --outputs pdf --fail-on-warning
 """
@@ -548,7 +699,10 @@ def build_document() -> Document:
         "Operational Report",
         Chapter(
             "Status",
-            Section("Summary", Paragraph("Everything needed for the report is here.")),
+            Section(
+                "Summary",
+                Paragraph("Everything needed for the report is here."),
+            ),
         ),
     )
 """
@@ -567,7 +721,12 @@ MARKDOWN_RELEASE_NOTES_SNIPPET = """from oodocs import Document, Section, Table
 from oodocs.importers import parse_markdown
 
 release_notes = {
-    "v0.8.0": "# v0.8.0\\n\\n## Added\\n- [x] Markdown import\\n- [x] Release digest",
+    "v0.8.0": (
+        "# v0.8.0\\n\\n"
+        "## Added\\n"
+        "- [x] Markdown import\\n"
+        "- [x] Release digest"
+    ),
     "v0.7.0": "# v0.7.0\\n\\n## Changed\\n- ~~Old notes~~ are archived",
 }
 
@@ -593,7 +752,9 @@ digest = Document(
     ],
 )
 
-ad_hoc_blocks = parse_markdown("## Follow-up\\n\\n- Publish DOCX\\n- Publish PDF").blocks
+ad_hoc_blocks = parse_markdown(
+    "## Follow-up\\n\\n- Publish DOCX\\n- Publish PDF"
+).blocks
 digest.body.children.extend(ad_hoc_blocks)
 """
 
@@ -619,10 +780,16 @@ report = Document(
 report.save_all("artifacts/notebook-report", stem="analysis")
 """
 
-LATEX_COMPARISON_SNIPPET = """from oodocs import Box, Divider, Figure, Paragraph, Table, VerticalSpace, bold, inline_code
+LATEX_COMPARISON_SNIPPET = """from oodocs import (
+    Box, Divider, Figure, Paragraph, Table, VerticalSpace,
+    bold, inline_code,
+)
 
 summary = Box(
-    Paragraph(bold("Takeaway. "), "The result table and figure are normal document blocks."),
+    Paragraph(
+        bold("Takeaway. "),
+        "The result table and figure are normal document blocks.",
+    ),
     Table(
         headers=["Method", "Score"],
         rows=[["Baseline", "0.81"], ["OODocs workflow", "0.88"]],
@@ -630,7 +797,12 @@ summary = Box(
     ),
     VerticalSpace(6),
     Divider(space_before=2, space_after=6),
-    Figure("assets/system-diagram.png", caption="Pipeline diagram.", width=12, unit="cm"),
+    Figure(
+        "assets/system-diagram.png",
+        caption="Pipeline diagram.",
+        width=12,
+        unit="cm",
+    ),
     title="Report-ready evidence",
     width=16,
     unit="cm",
@@ -640,7 +812,10 @@ summary = Box(
 Paragraph("See ", summary.ref(), " for the editable evidence package.")
 """
 
-INLINE_WORD_FEATURES_SNIPPET = """from oodocs import Paragraph, Text, highlight, line_break, prescript, strikethrough, subscript, superscript
+INLINE_WORD_FEATURES_SNIPPET = """from oodocs import (
+    Paragraph, Text, highlight, line_break, prescript,
+    strikethrough, subscript, superscript,
+)
 
 Paragraph(
     "Keep ",
@@ -680,7 +855,13 @@ piecewise = Equation.cases(
 )
 
 local_definition = Equation(r"\\operatorname{loss}(x)", numbered=False)
-paragraph = Paragraph("See ", derivation.ref(), " and ", local_definition.ref("the loss definition"), ".")
+paragraph = Paragraph(
+    "See ",
+    derivation.ref(),
+    " and ",
+    local_definition.link("the loss definition"),
+    ".",
+)
 """
 
 CHEMISTRY_SNIPPET = """from oodocs import Paragraph
@@ -690,7 +871,15 @@ water = chemical_formula("H2O")
 sulfate = chemical_formula("SO4^2-")
 reaction = ReactionEquation("2H2 + O2 -> 2H2O")
 
-paragraph = Paragraph("Water is ", water, ", sulfate is ", sulfate, ", and the reaction is ", reaction.ref(), ".")
+paragraph = Paragraph(
+    "Water is ",
+    water,
+    ", sulfate is ",
+    sulfate,
+    ", and the reaction is ",
+    reaction.ref(),
+    ".",
+)
 """
 
 INLINE_CHIPS_SNIPPET = """from oodocs import Paragraph, badge, keyboard, status, tag
@@ -742,7 +931,8 @@ listing = CodeBlock.from_file(
 )
 """
 
-PARAGRAPH_INDENT_SNIPPET = """from oodocs import BlockDefaults, DocumentSettings, Paragraph, Theme
+PARAGRAPH_INDENT_SNIPPET = """from oodocs import DocumentSettings, Paragraph, Theme
+from oodocs.styles import BlockDefaults
 
 settings = DocumentSettings(
     theme=Theme(blocks=BlockDefaults(paragraph_text_alignment="left"))
@@ -765,7 +955,8 @@ Paragraph(
 )
 
 Paragraph(
-    "Hanging indents are useful for references, definitions, and glossary-like entries.",
+    "Hanging indents are useful for references, definitions, "
+    "and glossary-like entries.",
     left_indent=1.2,
     first_line_indent=-0.6,
     unit="cm",
@@ -796,7 +987,12 @@ Table(
         ColumnSpec(style={"text_color": "#1F4E79", "bold": True}),
         ColumnSpec(),
     ],
-    header_row_styles={0: {"background_color": "#1F4E79", "text_color": "#FFFFFF"}},
+    header_row_styles={
+        0: {
+            "background_color": "#1F4E79",
+            "text_color": "#FFFFFF",
+        }
+    },
     header_text_alignment="center",
     cell_vertical_alignment="middle",
 )
@@ -832,7 +1028,13 @@ from oodocs.media import ColumnSpec
 full_matrix = Table.from_records(
     records,
     columns=[
-        ColumnSpec(key="case", header="Case", width=0.9, unit="in", wrap=False),
+        ColumnSpec(
+            key="case",
+            header="Case",
+            width=0.9,
+            unit="in",
+            wrap=False,
+        ),
         ColumnSpec(key="status", header="Status", width=0.8, unit="in"),
         ColumnSpec(
             key="notes",
@@ -856,7 +1058,7 @@ audit_log = Table(
     headers=["Step", "Result"],
     rows=[[f"Step {index}", "ok"] for index in range(40)],
     caption="Long audit log.",
-    split=False,      # Prefer one block, but auto-split when it is too long.
+    split=False,  # Prefer one block; auto-split only when necessary.
     placement="tbp",  # Advanced float-like placement preference.
 )
 
@@ -876,7 +1078,9 @@ diagram = Figure(
 """
 
 COMPONENT_PRESETS_SNIPPET = """from oodocs import Paragraph
-from oodocs.presets.components import CalloutBox, KeyValueTable, Nomenclature
+from oodocs.presets.components import (
+    CalloutBox, KeyValueTable, Nomenclature,
+)
 
 review_note = CalloutBox(
     Paragraph("Check terminology before external review."),
@@ -905,16 +1109,31 @@ nomenclature = Nomenclature(
 """
 
 TEMPLATE_PRESETS_SNIPPET = """from oodocs import Author, Document, Paragraph
-from oodocs.presets.templates import CoverPagePreset, JournalArticleTemplate, ManuscriptSection, TechnicalReportTemplate
+from oodocs.presets.templates import (
+    CoverPagePreset, JournalArticleTemplate, ManuscriptSection,
+    TechnicalReportTemplate,
+)
 
 document = JournalArticleTemplate().build(
     "Readable manuscript generation",
-    authors=[Author("Research Lead", affiliations=["Example Lab"], corresponding=True)],
+    authors=[
+        Author(
+            "Research Lead",
+            affiliations=["Example Lab"],
+            corresponding=True,
+        )
+    ],
     abstract="A concise abstract paragraph.",
     keywords=["document generation", "python"],
     sections=[
-        ManuscriptSection("Introduction", [Paragraph("Problem and contribution.")]),
-        ManuscriptSection("Methods", [Paragraph("Data, model, and validation.")]),
+        ManuscriptSection(
+            "Introduction",
+            [Paragraph("Problem and contribution.")],
+        ),
+        ManuscriptSection(
+            "Methods",
+            [Paragraph("Data, model, and validation.")],
+        ),
     ],
     acknowledgements="The authors thank the internal review group.",
     data_availability=None,
@@ -923,13 +1142,19 @@ document = JournalArticleTemplate().build(
 report = TechnicalReportTemplate().build(
     "Validation Report",
     executive_summary="All release checks passed.",
-    sections=[("Findings", [Paragraph("The evidence package is complete.")])],
+    sections=[
+        ("Findings", [Paragraph("The evidence package is complete.")])
+    ],
 )
 
 cover_settings = CoverPagePreset.accented(
     organization="Example Lab",
 ).settings(subtitle="Release evidence")
-cover_document = Document("Validation Report", Paragraph("Body."), settings=cover_settings)
+cover_document = Document(
+    "Validation Report",
+    Paragraph("Body."),
+    settings=cover_settings,
+)
 document.save_all("artifacts/manuscript", stem="article-draft")
 """
 
@@ -947,7 +1172,7 @@ def build_usage_guide_document() -> Document:
     author_layout_figure = Figure(
         AUTHOR_LAYOUT_DIAGRAM_PATH,
         caption=Paragraph(
-            "Three practical author-display strategies: journal-style default, stacked guide profiles, and fully manual front matter."
+            "Three practical author-display strategies: journal-style default, stacked guide profiles, and direct CoverPage composition."
         ),
         width=6.5,
     )
@@ -990,6 +1215,11 @@ def build_usage_guide_document() -> Document:
             ["Document Python API objects", "api_objects_example", "Collect docstrings into API objects, help-book pages, composable reference sections, and sidecars."],
             ["Create reusable named styles", "style_cleanup_smoke", "Exercise document-wide StyleSheet entries for paragraphs, tables, boxes, and chips."],
             ["Start from a template", "template_presets", "Build a complete document from content-oriented preset inputs."],
+            ["Publish configuration references", "config_reference_example", "Turn JSON Schema, TOML, and Python models into focused configuration documentation."],
+            ["Publish command references", "cli_manual_example", "Generate a manual from an argparse application without duplicating option text."],
+            ["Write engineering reports", "engineering_report_example", "Keep quantities, units, equations, and engineering result tables in one report."],
+            ["Build coordinated documents", "document_suite_example", "Render several related documents with shared variables and suite-level validation."],
+            ["Report repository metadata", "project_metadata_report", "Collect package and repository metadata through explicit integration helpers."],
         ],
         caption="Purpose-based entry points for the bundled examples.",
         column_widths=[2.0, 1.8, 3.2],
@@ -1023,11 +1253,11 @@ def build_usage_guide_document() -> Document:
             ["\\appendix", "Appendix(Chapter(...), ...)", "Appendix child chapters use A, B, C numbering, and references to those chapters use the same generated labels. Table and figure captions keep document-wide numbering."],
             ["\\section, \\subsection", "Chapter, Section, Subsection", "The Python object tree is also the document outline, so headings, contents, and anchors stay synchronized."],
             ["\\textbf, \\emph, \\texttt", "bold(...), italic(...), inline_code(...)", "Inline styling stays attached to the words being styled and works in DOCX, PDF, and HTML."],
-            ["\\includegraphics", "Figure(path_or_matplotlib_figure, caption=...)", "Static images and Python-generated figures use the same captioning and referencing model."],
+            ["\\includegraphics", "Figure(source, caption=...)", "Static images and Python-generated figures use the same captioning and referencing model."],
             ["\\vspace{...}, \\hrule", "VerticalSpace(...), Divider()", "Vertical spacing and separators remain explicit document blocks, including a Notion-like divider for lightweight visual breaks."],
             ["tabular or booktabs", "Table(...), Table.from_dataframe(...), style=\"booktabs\"", "Tables can be created directly from Python data instead of being copied into markup."],
             ["multirow or multicolumn", "TableCell(rowspan=...), Table.grouped_headers(...)", "Merged cells remain explicit table data, and grouped headers can be generated without hand-building every span."],
-            ["\\label, \\ref, and \\cref", "Call ref(obj), refs([...]), ref_range(a, b), paren_ref(obj), or obj.ref() inside Paragraph(...)", "References follow the indexed document order without hand-maintained labels."],
+            ["\\label, \\ref, and \\cref", "Use obj.ref() for numbered labels or obj.link('label') for plain links; refs(...) and ref_range(...) handle groups.", "References and links follow indexed targets without hand-maintained labels."],
             ["\\url or \\href", "url(long_target) or link(target, label)", "Visible URLs get soft break points while external link targets stay unchanged in DOCX, PDF, and HTML."],
             ["enumitem", "NumberedList(start=...), NumberedList(resume_from=...), or ListStyle(...)", "List spacing, marker formatting, and resumed numbering are explicit Python options instead of package-level state."],
             ["glossaries, acronym, or nomencl", "Glossary() and ListOfGlossaryTerms(glossary) from oodocs.glossary, or Nomenclature(...)", "Terms and acronyms live in a Python registry; symbol tables can still use the boxed Nomenclature preset."],
@@ -1043,7 +1273,7 @@ def build_usage_guide_document() -> Document:
             ["Structured journal default", "Manuscripts and technical reports with compact title matter.", "DocumentSettings(title_matter=TitleMatter(authors=[...]))"],
             ["Structured stacked profiles", "Guides, internal reports, and project documentation.", "DocumentSettings(title_matter=TitleMatter(authors=[...], author_layout=AuthorLayout(mode='stacked')))"],
             ["Structured file metadata", "Short exports where file properties matter more than visible title blocks.", "DocumentSettings(metadata=DocumentMetadata(author='Team Name'))"],
-            ["Manual front matter section", "Branded covers or institution-specific title pages.", "Keep metadata simple and author the visible cover with unnumbered sections."],
+            ["Direct CoverPage composition", "Branded covers or institution-specific title pages.", "DocumentSettings(title_matter=TitleMatter(cover=CoverPage(...)))"],
         ],
         caption="Author-display options from most automated to most manual.",
         column_widths=[1.8, 2.5, 2.3],
@@ -1065,7 +1295,8 @@ def build_usage_guide_document() -> Document:
         rows=[
             ["Insert a benchmark table from code", "Table.from_dataframe(...)", "The rendered table stays attached to the data-processing step that created it."],
             ["Insert an architecture figure from disk", "Figure('assets/diagram.png')", "Static diagrams can stay under version control without manual copy-paste."],
-            ["Refer to a caption from prose", "Paragraph('See ', figure_obj.ref(), '.')", "Block references update automatically when figure order changes."],
+            ["Use a numbered semantic reference", "Paragraph('See ', figure_obj.ref(), '.')", "Typed labels update automatically when figure order changes."],
+            ["Use a plain internal link", "figure_obj.link('architecture diagram')", "The target remains clickable without inventing a semantic number."],
             ["Refer to several objects", "refs([fig1, fig2]) or ref_range(fig1, fig3)", "Reference helpers collapse shared labels into plural labels or ranges."],
             ["Keep a note near evidence", Footnote.annotated("page-footnote default", "DOCX uses page footnotes by default. PDF and HTML keep a generated notes page because their layout engines do not share Word's native footnote model."), "Footnotes stay authored inline instead of being managed in a separate editor pane."],
         ],
@@ -1088,12 +1319,14 @@ def build_usage_guide_document() -> Document:
         rows=[
             ["Heading numbering", "Document structure drives numbering in all outputs.", "Part entries use independent Roman labels; appendix child chapters switch to A, B, C labels."],
             ["Captions", "Tables and figures receive automatic document-wide numbers and can be referenced inline.", "Appendix heading labels switch to A/B/C, but caption counters intentionally stay in the document-wide table and figure sequences."],
-            ["Object references", "ref(obj), refs([...]), ref_range(a, b), paren_ref(obj), and page_ref(obj) share one numbering index.", "Page-aware references currently degrade with an explicit validation warning."],
+            ["Object references", "ref(obj), refs([...]), ref_range(a, b), paren_ref(obj), and page_ref(obj) share one numbering index.", "Use obj.link('label') for a plain internal link; page-aware references degrade with an explicit warning."],
             ["Footnotes", "Footnotes are authored with the same inline API everywhere.", "DOCX uses native page footnotes; PDF and HTML fall back to generated note pages."],
             ["Hyperlinks", "External links, breakable URL labels, and block anchors remain visible in all outputs.", "HTML makes them directly clickable while DOCX and PDF preserve original link targets in exported files."],
         ],
         caption="Behavior that stays stable across renderers and the places where format details still matter.",
         column_widths=[1.5, 2.7, 2.4],
+        split=True,
+        placement="here",
     )
     page_layout_table = Table(
         headers=["Need", "API", "Effect"],
@@ -1128,9 +1361,8 @@ def build_usage_guide_document() -> Document:
     settings_options_table = Table(
         headers=["Object", "Options", "Scope"],
         rows=[
-            ["DocumentSettings", "metadata, subtitle, authors, author_layout, cover_page", "Document metadata and title matter."],
-            ["DocumentSettings", "unit, page_layout, overlays", "Page geometry and page-positioned overlays."],
-            ["DocumentSettings", "theme", "Document-wide renderer defaults shared by DOCX, PDF, and HTML."],
+            ["DocumentSettings", "metadata, title_matter, unit, page_layout, overlays, theme", "Metadata, title matter, geometry, overlays, and renderer defaults."],
+            ["TitleMatter", "subtitle, authors, author_layout, cover", "Visible title-page content, including direct CoverPage composition."],
             ["DocumentMetadata", "title, author, subject, keywords, description", "DOCX/PDF file properties and HTML head tags."],
             ["Section", "page_layout", "Scoped page geometry for one section, with HTML print fallback warning."],
             ["PageLayout", "page_size, page_margins, orientation; portrait(...); landscape(...)", "Grouped page geometry comparable to LaTeX geometry options."],
@@ -1140,6 +1372,8 @@ def build_usage_guide_document() -> Document:
         ],
         caption="Document-level configuration options.",
         column_widths=[1.6, 3.2, 2.3],
+        split=True,
+        placement="here",
     )
     theme_options_table = Table(
         headers=["Theme group", "Options", "Use it for"],
@@ -1147,6 +1381,7 @@ def build_usage_guide_document() -> Document:
             ["TypographyDefaults", "body_font_name, monospace_font_name, title_font_size, body_font_size, heading_sizes, caption_font_size", "Fonts and type scale."],
             ["CaptionDefaults", "caption_text_alignment, table_caption_position, figure_caption_position, table_label, figure_label, caption/reference labels", "Caption placement and localized labels."],
             ["CitationDefaults", "citation_style, reference_style, reference_sort", "Inline citation labels, generated reference entry style, and bibliography ordering."],
+            ["ReferenceDefaults", "templates keyed by target kind; each value is a ReferenceTemplate", "Localized or house-specific labels and label/number placement."],
             ["LinkDefaults", "text_style", "Default text color, underline, and inline style for hyperlinks."],
             ["GeneratedContentDefaults", "contents/list/comments/footnotes/references titles, generated_heading_level, generated_content_page_breaks", "Generated content titles and heading level."],
             ["LocaleDefaults", "language_tag, date_format, glossary_headers, pdf_font_fallbacks", "Bundled document language, localized labels, date formatting, and HTML lang."],
@@ -1156,7 +1391,9 @@ def build_usage_guide_document() -> Document:
             ["BlockDefaults", "page_background_color, paragraph_text_alignment, table/figure/box block alignment, footnote_placement, list styles, heading_styles, heading_numbering", "Document-wide defaults that individual blocks can override."],
         ],
         caption="Grouped Theme defaults are passed as keyword groups to Theme(...).",
-        column_widths=[1.7, 3.7, 1.8],
+        column_widths=[1.9, 3.5, 1.8],
+        split=True,
+        placement="here",
     )
     block_options_table = Table(
         headers=["Block", "Direct kwargs", "Style object when needed"],
@@ -1176,6 +1413,8 @@ def build_usage_guide_document() -> Document:
         ],
         caption="Block-level option scope from quick kwargs to reusable style objects.",
         column_widths=[1.8, 3.6, 2.0],
+        split=True,
+        placement="here",
     )
     component_presets_table = Table(
         headers=["Preset", "What it builds", "Common customizations"],
@@ -1186,7 +1425,7 @@ def build_usage_guide_document() -> Document:
             ["CompactTable", "A table preset using the compact named table style.", "Any normal Table kwarg, including grouped_headers(...) for spanning preset tables."],
         ],
         caption="Component presets wrap ordinary blocks and still accept the same block/style options.",
-        column_widths=[1.5, 3.0, 2.6],
+        column_widths=[1.8, 2.8, 2.5],
     )
     template_presets_table = Table(
         headers=["Template", "Accepted structure", "Best first use"],
@@ -1200,7 +1439,7 @@ def build_usage_guide_document() -> Document:
             ["Advanced overrides", "theme, page_layout, author_layout, contents/references flags.", "Use these only when a lab or target journal has explicit layout requirements."],
         ],
         caption="Template presets build full Document objects from manuscript-shaped inputs.",
-        column_widths=[1.7, 3.4, 2.3],
+        column_widths=[2.1, 3.1, 2.2],
     )
     figure_sizing_table = Table(
         headers=["Figure intent", "Pattern", "Renderer behavior"],
@@ -1235,6 +1474,22 @@ def build_usage_guide_document() -> Document:
         caption="How the source layout can grow without losing readability.",
         column_widths=[1.4, 2.3, 2.9],
     )
+    focused_workflow_table = Table(
+        headers=["Documentation need", "Focused API", "Starting point"],
+        rows=[
+            ["Term/value explanations", "DescriptionList", "docs/reference/description-list.md and usage_guide_example"],
+            ["Schema and configuration catalogs", "oodocs.schema.SchemaCatalog", "config_reference_example"],
+            ["Command-line manuals", "oodocs.clidoc.CliApplication", "cli_manual_example"],
+            ["Engineering calculations", "oodocs.engineering.Quantity and NumberFormat", "engineering_report_example"],
+            ["Coordinated output sets", "oodocs.suite.DocumentSuite", "document_suite_example"],
+            ["Selected audit evidence", "oodocs.evidence.EvidenceReport", "docs/reference/evidence-report.md"],
+            ["Repository and package metadata", "oodocs.integrations plus oodocs.metadata", "project_metadata_report"],
+        ],
+        caption="Focused workflow surfaces and concrete places to start.",
+        column_widths=[2.0, 2.6, 2.4],
+        split=True,
+        placement="here",
+    )
     cli_command_table = Table(
         headers=["Command", "Input expectation", "Use it when"],
         rows=[
@@ -1250,8 +1505,8 @@ def build_usage_guide_document() -> Document:
         headers=["Validation issue", "Why it matters", "Typical fix"],
         rows=[
             ["Missing image file", "DOCX, PDF, and HTML cannot render media that is not present.", "Keep assets under version control or pass an existing Path."],
-            ["Uncaptioned table or figure reference", "Automatic references need a numbered target.", "Add a caption or provide an explicit custom reference label."],
-            ["Unnumbered heading or countable reference", "The default label cannot be resolved without a number.", "Set numbered=True, set toc=True for heading anchors, or write ref(obj, 'custom label')."],
+            ["Uncaptioned table or figure reference", "Automatic references need a numbered target.", "Add a caption when a semantic number is needed, or use obj.link('label') for a plain link."],
+            ["Unnumbered heading or countable reference", "A typed label cannot be resolved without a number.", "Use obj.link('label'); set numbered=True only when the target needs a semantic number."],
             ["Top-level heading below chapter", "A report can look like it skipped its first chapter.", "Wrap imported blocks in Chapter(...) or import with heading_level_shift."],
             ["HTML generated-list page numbers", "Browsers do not have stable rendered page numbers.", "Accept the warning for HTML or set show_page_numbers=False on TableOfContents, ListOfTables, ListOfFigures, or ListOfAlgorithms."],
         ],
@@ -1491,13 +1746,15 @@ def build_usage_guide_document() -> Document:
             Section(
                 "When to customize the author display",
                 Paragraph(
-                    "The practical decision is simple: use the journal default when the visible priority is compact authorship, use stacked profiles when the document benefits from role context, and fall back to a simple metadata author string when visible title matter is mostly manual."
+                    "The practical decision is simple: use the journal default when the visible priority is compact authorship, use stacked profiles when the document benefits from role context, and compose a direct CoverPage through TitleMatter when a branded title page needs additional structure."
                 ),
                 CodeBlock(AUTHOR_LAYOUT_SNIPPET, language="python"),
                 Paragraph(
-                    "If even the stacked layout is still too opinionated, keep ",
+                    "Keep ",
                     inline_code("DocumentSettings(metadata=DocumentMetadata(author='Team Name'))"),
-                    " for metadata and author the visible cover with ordinary unnumbered sections instead. That preserves a clean file property string while leaving the page design fully under document control."
+                    " for file metadata and pass ",
+                    inline_code("TitleMatter(cover=CoverPage(...))"),
+                    " for the visible cover. Authoring a cover as an ordinary unnumbered section remains an exceptional escape hatch for layouts that CoverPage composition cannot express."
                 ),
             ),
         ),
@@ -1536,6 +1793,30 @@ def build_usage_guide_document() -> Document:
                 generated_content_table,
             ),
             Section(
+                "Cover, matter, and unnumbered links",
+                Paragraph(
+                    "A document cover belongs in ",
+                    inline_code("TitleMatter(cover=CoverPage(...))"),
+                    ". This keeps the title page distinct from authored front matter and lets cover-scoped overlays stay attached to the actual cover."
+                ),
+                Paragraph(
+                    inline_code("FrontMatter"),
+                    ", ",
+                    inline_code("MainMatter"),
+                    ", and ",
+                    inline_code("BackMatter"),
+                    " make page-number transitions and generated end matter explicit without pretending that reader notes or references are main chapters."
+                ),
+                Paragraph(
+                    "Use ",
+                    inline_code("target.ref()"),
+                    " when a numbered semantic label is meaningful. Use ",
+                    inline_code("target.link('label')"),
+                    " for an unnumbered section or any plain internal hyperlink. Raw block insertion inside Paragraph(...) is rejected because it is neither prose nor an explicit navigation request."
+                ),
+                CodeBlock(DOCUMENT_MATTER_SNIPPET, language="python"),
+            ),
+            Section(
                 "Numbered statements, proofs, and custom counters",
                 Paragraph(
                     "Research notes, specifications, and technical manuals often need blocks such as definitions, lemmas, theorems, examples, remarks, and assumptions. These are not headings because they should usually stay inside the current section, but they still need document-wide numbering and cross-references."
@@ -1549,7 +1830,9 @@ def build_usage_guide_document() -> Document:
                     inline_code("theorem"),
                     " counter, while ",
                     inline_code("Proof(...)"),
-                    " is unnumbered by default. If an unnumbered block needs a reference, give the reference an explicit label."
+                    " is unnumbered by default. Link to such a block with ",
+                    inline_code("proof.link('the proof')"),
+                    "; enable numbering only when the document needs a semantic proof number."
                 ),
                 counted_definition,
                 Lemma("A theorem-like block can appear between ordinary paragraphs without becoming a section heading."),
@@ -1635,7 +1918,7 @@ def build_usage_guide_document() -> Document:
                     " when a local display should not consume an equation number. For example, see ",
                     math_derivation.ref(),
                     " and ",
-                    math_local_definition.ref("the local loss definition"),
+                    math_local_definition.link("the local loss definition"),
                     ".",
                 ),
                 math_derivation,
@@ -1763,7 +2046,7 @@ def build_usage_guide_document() -> Document:
             Section(
                 "Media objects should stay attached to evidence",
                 Paragraph(
-                    "Tables and figures become much easier to trust when they are declared as document objects instead of exported manually. A captioned block can also be referenced from prose by inserting the block object itself inside a paragraph."
+                    "Tables and figures become much easier to trust when they are declared as document objects instead of exported manually. Use the block's .ref() method for a numbered semantic reference and .link('label') for a plain internal hyperlink; raw block insertion inside Paragraph(...) is rejected."
                 ),
                 media_workflow_table,
                 Paragraph(
@@ -1776,8 +2059,13 @@ def build_usage_guide_document() -> Document:
                     inline_code("Fig."),
                     ", or use localized labels such as ",
                     inline_code("그림"),
-                    "."
+                    " and suffix placement such as ",
+                    inline_code("1장"),
+                    ". Built-in locales come from ",
+                    inline_code("Theme.from_locale(...)"),
+                    ", while ReferenceDefaults and ReferenceTemplate define project-specific wording."
                 ),
+                CodeBlock(REFERENCE_TEMPLATE_SNIPPET, language="python"),
                 Paragraph(
                     "When several related images should share one figure number, use ",
                     inline_code("SubFigure"),
@@ -1937,11 +2225,9 @@ def build_usage_guide_document() -> Document:
                 Paragraph(
                     "Most author-facing options are available as ordinary keyword arguments. Style objects remain available for reusable patterns, and grouped ",
                     inline_code("Theme"),
-                    " defaults objects keep document-wide settings readable when many values change together. Pass those defaults objects positionally to ",
-                    inline_code("Theme"),
-                    ", and use direct ",
-                    inline_code("Theme(...)"),
-                    " keyword arguments for one-off overrides."
+                    " defaults objects keep document-wide settings readable when many values change together. Pass them as named keyword groups such as ",
+                    inline_code("Theme(typography=..., captions=..., references=...)"),
+                    "; use direct block kwargs for one-off local overrides."
                 ),
                 settings_options_table,
                 theme_options_table,
@@ -2082,6 +2368,13 @@ def build_usage_guide_document() -> Document:
                     "Start with one file and only split when real repetition appears. The object tree is the most valuable teaching tool in a new project, so it should remain visible until helper functions provide a clear readability gain."
                 ),
                 scaling_table,
+            ),
+            Section(
+                "Choose a focused workflow surface",
+                Paragraph(
+                    "The core document tree stays useful across domains, but specialized namespaces prevent schema, CLI, engineering, suite, evidence, and integration APIs from crowding the first import surface. DescriptionList remains the lightweight core choice for term/value explanations; use a focused model when the source data has richer semantics."
+                ),
+                focused_workflow_table,
             ),
             Section(
                 "Repository layout that stays review-friendly",

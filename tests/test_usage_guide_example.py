@@ -91,8 +91,22 @@ def test_usage_guide_uses_generic_cover_explicit_matter_and_object_link() -> Non
         if isinstance(fragment, ObjectLink)
     ]
     assert [object_link.plain_text() for object_link in object_links] == [
-        "pipeline diagram"
+        "pipeline diagram",
+        "the local loss definition",
     ]
+
+
+def test_usage_guide_snippets_fit_the_pdf_code_width() -> None:
+    usage_guide = _load_example_module("usage_guide_example")
+    overlong_lines = [
+        f"{name}:{line_number}:{len(line)}"
+        for name, value in vars(usage_guide).items()
+        if name.endswith("_SNIPPET") and isinstance(value, str)
+        for line_number, line in enumerate(value.splitlines(), start=1)
+        if len(line) > 72
+    ]
+
+    assert overlong_lines == []
 
 
 def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
@@ -263,9 +277,20 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "Document Python API objects" in table_text
     assert "api_objects_example" in table_text
     assert "style_cleanup_smoke" in table_text
+    assert "config_reference_example" in table_text
+    assert "cli_manual_example" in table_text
+    assert "engineering_report_example" in table_text
+    assert "document_suite_example" in table_text
+    assert "project_metadata_report" in table_text
+    assert "DescriptionList" in table_text
+    assert "SchemaCatalog" in table_text
+    assert "CliApplication" in table_text
+    assert "Quantity and NumberFormat" in table_text
+    assert "DocumentSuite" in table_text
+    assert "EvidenceReport" in table_text
     assert "OODocs Contributor Certificate" in table_text
     assert "Footnotes" not in [text for text in paragraph_texts if text == "Footnotes"]
-    assert len(word_document.tables) == 28
+    assert len(word_document.tables) == 29
     assert len(word_document.inline_shapes) == 11
     assert len(word_document.comments) == 2
     assert_docx_structure(
@@ -278,7 +303,7 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
             "Comments",
             "References",
         ),
-        table_count=28,
+        table_count=29,
         inline_shape_count=11,
         comment_count=2,
     )
@@ -409,7 +434,44 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "Notebook-backed report" in pdf_text
     assert "Release note digest" in pdf_text
     assert "Footnotes" in pdf_text
+    for term in (
+        "CoverPage",
+        "FrontMatter",
+        "MainMatter",
+        "BackMatter",
+        "target.link('label')",
+        "DescriptionList",
+        "SchemaCatalog",
+        "CliApplication",
+        "Quantity",
+        "NumberFormat",
+        "DocumentSuite",
+        "EvidenceReport",
+        "config_reference_example",
+        "cli_manual_example",
+        "engineering_report_example",
+        "document_suite_example",
+        "project_metadata_report",
+        "Theme.from_locale",
+        "ReferenceDefaults",
+        "ReferenceTemplate",
+        "그림",
+        "1장",
+    ):
+        assert term in pdf_text
     assert len(pdf_reader.pages) >= 14
+    page_texts = [
+        " ".join((page.extract_text() or "").split())
+        for page in pdf_reader.pages
+    ]
+    assert all(page_texts)
+    assert not any(
+        re.fullmatch(r"(?:\d+|[ivxlcdm]+)", text, flags=re.IGNORECASE)
+        for text in page_texts
+    )
+    assert "\x00" not in pdf_text
+    table_positions = [pdf_text.index(f"Table {number}.") for number in range(9, 13)]
+    assert table_positions == sorted(table_positions)
     assert _pdf_image_draw_count(pdf_path) == 7
     assert_pdf_text_and_pages(
         pdf_path,
@@ -540,6 +602,31 @@ def test_usage_guide_example_builds_outputs(tmp_path: Path) -> None:
     assert "Notebook-backed report" in normalized_html_text
     assert "Release note digest" in normalized_html_text
     assert "Footnotes" in normalized_html_text
+    for term in (
+        "CoverPage",
+        "FrontMatter",
+        "MainMatter",
+        "BackMatter",
+        "target.link('label')",
+        "DescriptionList",
+        "SchemaCatalog",
+        "CliApplication",
+        "Quantity",
+        "NumberFormat",
+        "DocumentSuite",
+        "EvidenceReport",
+        "config_reference_example",
+        "cli_manual_example",
+        "engineering_report_example",
+        "document_suite_example",
+        "project_metadata_report",
+        "Theme.from_locale",
+        "ReferenceDefaults",
+        "ReferenceTemplate",
+        "그림",
+        "1장",
+    ):
+        assert term in normalized_html_text
     assert html_text.count("data:image/png;base64,") == 7
     assert 'href="#table_1"' in html_text
     assert 'href="#figure_1"' in html_text
