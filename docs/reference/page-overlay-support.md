@@ -22,6 +22,9 @@ PDF applies page scopes to physical pages. DOCX and HTML use section or static
 frame fallbacks for scoped overlays and validation emits
 `page-item-scope-static-output` when a scope cannot be represented exactly.
 
-Cover page presets can return settings with cover-only overlays. This keeps
+Cover page presets create cover content and style, but do not invent overlay
+items. For cover-only overlays, pass caller-owned items to
+`CoverPagePreset.settings(overlays=...)` and set
+`scope=PageItemScope.cover()` on each one. This keeps
 title-page decoration separate from body content and avoids the older
 `page_items` naming in public user APIs.

@@ -68,7 +68,7 @@ front matter plus combined main/back content.
 The default policy is equivalent to:
 
 ```python
-from oodocs import CounterStyle, PageNumberDefaults
+from oodocs.styles import CounterStyle, PageNumberDefaults
 
 page_numbers = PageNumberDefaults(
     show_page_numbers=True,

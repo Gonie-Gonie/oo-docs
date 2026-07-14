@@ -19,7 +19,6 @@ from oodocs import (
     DocumentSettings,
     NumberedList,
     OutputBundle,
-    PageNumberDefaults,
     Paragraph,
     Section,
     Table,
@@ -30,6 +29,7 @@ from oodocs import (
     bold,
     inline_code,
 )
+from oodocs.styles import PageNumberDefaults
 
 
 OUTPUT_DIR = Path("artifacts") / "native-benchmark-report"

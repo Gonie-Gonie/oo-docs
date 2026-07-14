@@ -16,7 +16,6 @@ from oodocs import (
     Affiliation,
     Author,
     BulletList,
-    CitationDefaults,
     ColumnSpan,
     CitationLibrary,
     CitationSource,
@@ -26,7 +25,6 @@ from oodocs import (
     Figure,
     MultiColumn,
     OutputBundle,
-    PageNumberDefaults,
     Paragraph,
     ListOfReferences,
     Section,
@@ -38,6 +36,7 @@ from oodocs import (
     inline_code,
     italic,
 )
+from oodocs.styles import CitationDefaults, PageNumberDefaults
 
 
 OUTPUT_DIR = Path("artifacts") / "journal-paper"

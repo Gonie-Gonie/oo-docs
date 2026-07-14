@@ -7,8 +7,8 @@ repository filenames.
 ```python
 from pathlib import Path
 
+from oodocs import DocumentMetadata, TitleMatter
 from oodocs.evidence import EvidenceItem, EvidenceReport
-from oodocs.settings import DocumentMetadata, TitleMatter
 
 report = EvidenceReport(
     "Verification packet",

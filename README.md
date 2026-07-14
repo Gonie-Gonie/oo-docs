@@ -11,13 +11,21 @@ without maintaining separate format-specific sources.
 pip install oodocs
 ```
 
+OODocs requires Python 3.11 or later.
+
 Optional extras keep integrations out of the core install:
 
 ```powershell
-pip install "oodocs[integrations]"  # YAML-backed collectors
+pip install "oodocs[integrations]"  # YAML- and Pydantic-backed collectors
 pip install "oodocs[bibtex]"       # third-party BibTeX parser backend
+pip install "oodocs[pint]"         # Pint bridge
+pip install "oodocs[sympy]"        # SymPy bridge
 pip install "oodocs[apidoc]"       # Python API collection
 ```
+
+`NumberFormat`, `Quantity`, and the other built-in engineering presentation
+objects do not require an extra. Install `pint` or `sympy` only when using the
+corresponding bridge under `oodocs.integrations`.
 
 ## Quick Start
 
@@ -55,7 +63,7 @@ from their domain namespace.
 | `oodocs.engineering` | `NumberFormat`, `Quantity`, and other engineering presentation objects |
 | `oodocs.evidence` | `EvidenceItem`, `EvidenceReport`, and `EvidenceBundle` |
 | `oodocs.suite` | `AssetResolver`, `DocumentSuiteContext`, `DocumentSuiteItem`, `DocumentSuite`, and `DocumentSuiteBundle` |
-| `oodocs.integrations.*` | Optional external parsers and collectors, including argparse, BibTeX, Pint, SymPy, pyproject, and GitHub Actions adapters |
+| `oodocs.integrations.*` | Optional external parsers and collectors, including argparse, BibTeX, Pint, SymPy, pyproject, and GitHub Actions collectors |
 | `oodocs.apidoc` | Python API collection and API-reference composition |
 
 Integration APIs are deliberately not re-exported from top-level `oodocs`.
@@ -88,13 +96,21 @@ oodocs validate report.py
 
 `build` accepts Python, Markdown, and Jupyter notebook sources. Run
 `oodocs --help` and `oodocs <command> --help` for the complete command surface.
+Python sources are imported to discover the document object, so build only
+trusted Python files and keep command execution behind a `__main__` guard.
 
 ## Examples
 
 Runnable examples live under [`examples/`](examples/). Start with
 [`usage_guide_example`](examples/usage_guide_example/) for direct composition,
-then use the focused schema, CLI, engineering, evidence, API-documentation, and
-document-suite examples for their respective namespaces. The
+then use the focused
+[`config_reference_example`](examples/config_reference_example/),
+[`cli_manual_example`](examples/cli_manual_example/),
+[`engineering_report_example`](examples/engineering_report_example/),
+[`api_objects_example`](examples/api_objects_example/), and
+[`document_suite_example`](examples/document_suite_example/) for their
+respective namespaces. Evidence bundles are covered by the
+[evidence report reference](docs/reference/evidence-report.md). The
 [`release_notes_digest`](examples/release_notes_digest/) directory is an
 application composition example, not a core release-note API.
 
@@ -103,6 +119,14 @@ From a repository checkout, run an example directly:
 ```powershell
 .\.venv\Scripts\python.exe .\examples\usage_guide_example\main.py --output-dir artifacts/usage-guide
 ```
+
+## Upgrading from 1.x
+
+Version 2.0 removes `oodocs.adapters`, moves external collectors under
+`oodocs.integrations.*`, and replaces `Equation.from_sympy(...)` with
+`oodocs.integrations.sympy.equation_from_sympy(...)`. Import schema, CLI,
+engineering, evidence, and suite models from their focused namespaces. See the
+[v2 migration guide](docs/migration-v2.md) for the complete mapping.
 
 ## Development
 

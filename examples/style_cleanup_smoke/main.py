@@ -6,22 +6,24 @@ from pathlib import Path
 from typing import Sequence
 
 from oodocs import (
-    BlockDefaults,
     Box,
-    BoxStyle,
-    CaptionDefaults,
     Chapter,
     CodeBlock,
     Document,
     DocumentSettings,
     InlineChip,
-    InlineChipStyle,
     OutputBundle,
-    Padding,
     Paragraph,
+    Table,
+)
+from oodocs.styles import (
+    BlockDefaults,
+    BoxStyle,
+    CaptionDefaults,
+    InlineChipStyle,
+    Padding,
     ParagraphStyle,
     StyleSheet,
-    Table,
     TableStyle,
     Theme,
     TypographyDefaults,

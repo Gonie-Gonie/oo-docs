@@ -53,7 +53,8 @@ class TypographyDefaults:
 
     Examples:
         ```python
-        from oodocs import Document, DocumentSettings, Paragraph, Theme, TypographyDefaults
+        from oodocs import Document, DocumentSettings, Paragraph, Theme
+        from oodocs.styles import TypographyDefaults
 
         theme = Theme(typography=TypographyDefaults(body_font_name="Arial", body_font_size=10.5))
         document = Document("Report", Paragraph("Body"), settings=DocumentSettings(theme=theme))
@@ -82,7 +83,8 @@ class HeadingStyle:
 
     Examples:
         ```python
-        from oodocs import HeadingStyle, TextStyle
+        from oodocs import TextStyle
+        from oodocs.styles import HeadingStyle
 
         heading = HeadingStyle(
             text_style=TextStyle(bold=True, font_size=16),
@@ -168,7 +170,7 @@ class FootnoteStyle:
 
     Examples:
         ```python
-        from oodocs import FootnoteStyle
+        from oodocs.styles import FootnoteStyle
 
         symbol_notes = FootnoteStyle.symbol()
         assert symbol_notes.format_value(1) == "*"
@@ -244,7 +246,8 @@ class FootnoteDefaults:
 
     Examples:
         ```python
-        from oodocs import CounterStyle, FootnoteDefaults, FootnoteStyle, Theme
+        from oodocs import Theme
+        from oodocs.styles import CounterStyle, FootnoteDefaults, FootnoteStyle
 
         theme = Theme(
             footnotes=FootnoteDefaults(
@@ -339,7 +342,8 @@ class CaptionDefaults:
 
     Examples:
         ```python
-        from oodocs import CaptionDefaults, Document, DocumentSettings, Table, Theme
+        from oodocs import Document, DocumentSettings, Table, Theme
+        from oodocs.styles import CaptionDefaults
 
         theme = Theme(captions=CaptionDefaults(table_caption_position="below"))
         document = Document(
@@ -379,7 +383,8 @@ class CitationDefaults:
 
     Examples:
         ```python
-        from oodocs import CitationDefaults, CitationSource, Document, DocumentSettings, Paragraph, Theme, cite
+        from oodocs import CitationSource, Document, DocumentSettings, Paragraph, Theme, cite
+        from oodocs.styles import CitationDefaults
 
         theme = Theme(citations=CitationDefaults(citation_style="author-year"))
         source = CitationSource("Reliable APIs", key="api2024", authors=("Jane Doe",))
@@ -412,7 +417,8 @@ class LinkDefaults:
 
     Examples:
         ```python
-        from oodocs import Document, DocumentSettings, LinkDefaults, Paragraph, TextStyle, Theme, link
+        from oodocs import Document, DocumentSettings, Paragraph, TextStyle, Theme, link
+        from oodocs.styles import LinkDefaults
 
         theme = Theme(links=LinkDefaults(TextStyle(text_color="C00000", underline=False)))
         document = Document(
@@ -452,7 +458,8 @@ class GeneratedContentDefaults:
 
     Examples:
         ```python
-        from oodocs import Document, DocumentSettings, GeneratedContentDefaults, ListOfReferences, Theme
+        from oodocs import Document, DocumentSettings, ListOfReferences, Theme
+        from oodocs.styles import GeneratedContentDefaults
 
         theme = Theme(generated_content=GeneratedContentDefaults(list_of_references_title="Bibliography"))
         document = Document("Paper", ListOfReferences(), settings=DocumentSettings(theme=theme))
@@ -668,7 +675,8 @@ class PageNumberDefaults:
 
     Examples:
         ```python
-        from oodocs import Document, DocumentSettings, PageNumberDefaults, Paragraph, Theme
+        from oodocs import Document, DocumentSettings, Paragraph, Theme
+        from oodocs.styles import PageNumberDefaults
 
         theme = Theme(page_numbers=PageNumberDefaults(show_page_numbers=True))
         document = Document("Report", Paragraph("Body"), settings=DocumentSettings(theme=theme))
@@ -766,7 +774,8 @@ class HeaderFooterDefaults:
 
     Examples:
         ```python
-        from oodocs import HeaderFooterDefaults, Theme
+        from oodocs import Theme
+        from oodocs.styles import HeaderFooterDefaults
 
         theme = Theme(
             header_footer=HeaderFooterDefaults(
@@ -886,7 +895,8 @@ class TitleMatterDefaults:
 
     Examples:
         ```python
-        from oodocs import Document, DocumentSettings, Paragraph, Theme, TitleMatterDefaults
+        from oodocs import Document, DocumentSettings, Paragraph, Theme
+        from oodocs.styles import TitleMatterDefaults
 
         theme = Theme(title_matter=TitleMatterDefaults(title_text_alignment="left"))
         document = Document("Report", Paragraph("Body"), settings=DocumentSettings(theme=theme))
@@ -932,7 +942,8 @@ class BlockDefaults:
 
     Examples:
         ```python
-        from oodocs import BlockDefaults, Document, DocumentSettings, HeadingNumbering, HeadingStyle, Paragraph, Section, TextStyle, Theme
+        from oodocs import Document, DocumentSettings, Paragraph, Section, TextStyle, Theme
+        from oodocs.styles import BlockDefaults, HeadingNumbering, HeadingStyle
 
         theme = Theme(
             blocks=BlockDefaults(
@@ -1043,7 +1054,8 @@ class Theme:
         Configure typography and paragraph defaults:
 
         ```python
-        from oodocs import BlockDefaults, Document, DocumentSettings, Paragraph, Theme, TypographyDefaults
+        from oodocs import Document, DocumentSettings, Paragraph, Theme
+        from oodocs.styles import BlockDefaults, TypographyDefaults
 
         theme = Theme(
             typography=TypographyDefaults(body_font_name="Arial"),
@@ -1055,7 +1067,8 @@ class Theme:
         Customize generated content titles and page numbers together:
 
         ```python
-        from oodocs import Document, DocumentSettings, GeneratedContentDefaults, PageNumberDefaults, ListOfReferences, Theme
+        from oodocs import Document, DocumentSettings, ListOfReferences, Theme
+        from oodocs.styles import GeneratedContentDefaults, PageNumberDefaults
 
         theme = Theme(
             generated_content=GeneratedContentDefaults(list_of_references_title="Bibliography"),
@@ -1190,7 +1203,8 @@ class Theme:
 
         Examples:
             ```python
-            from oodocs import Theme, TypographyDefaults
+            from oodocs import Theme
+            from oodocs.styles import TypographyDefaults
 
             theme = Theme(typography=TypographyDefaults(body_font_name="Arial"))
             assert theme.resolve_body_font() == "Arial"
@@ -1216,7 +1230,8 @@ class Theme:
 
         Examples:
             ```python
-            from oodocs import Theme, TypographyDefaults
+            from oodocs import Theme
+            from oodocs.styles import TypographyDefaults
 
             theme = Theme(typography=TypographyDefaults(monospace_font_name="Consolas"))
             assert theme.resolve_monospace_font() == "Consolas"
@@ -1242,7 +1257,8 @@ class Theme:
 
         Examples:
             ```python
-            from oodocs import BlockDefaults, HeadingStyle, TextStyle, Theme
+            from oodocs import TextStyle, Theme
+            from oodocs.styles import BlockDefaults, HeadingStyle
 
             theme = Theme(
                 blocks=BlockDefaults(
@@ -1369,7 +1385,8 @@ class Theme:
 
         Examples:
             ```python
-            from oodocs import RunInTitleStyle, TextStyle, Theme
+            from oodocs import TextStyle, Theme
+            from oodocs.styles import RunInTitleStyle
 
             style = Theme().resolve_run_in_title_style(
                 RunInTitleStyle(TextStyle(bold=True, italic=True))
@@ -1478,7 +1495,8 @@ class Theme:
 
         Examples:
             ```python
-            from oodocs import GeneratedContentDefaults, Theme
+            from oodocs import Theme
+            from oodocs.styles import GeneratedContentDefaults
 
             theme = Theme(
                 generated_content=GeneratedContentDefaults(list_of_references_title="Bibliography")

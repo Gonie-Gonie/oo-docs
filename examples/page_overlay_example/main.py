@@ -8,11 +8,11 @@ from typing import Sequence
 
 from oodocs import (
     Chapter,
+    CoverPage,
     Document,
     DocumentMetadata,
     DocumentSettings,
     OutputBundle,
-    PageNumberDefaults,
     PageLayout,
     PageSize,
     Paragraph,
@@ -23,9 +23,8 @@ from oodocs import (
     TitleMatter,
     inline_code,
 )
-from oodocs.components.cover import CoverPage
 from oodocs.positioning import ImageBox, PageItemScope, Shape, TextBox
-from oodocs.styles import StrokeStyle
+from oodocs.styles import PageNumberDefaults, StrokeStyle
 
 
 OUTPUT_DIR = Path("artifacts") / "page-overlay-example"

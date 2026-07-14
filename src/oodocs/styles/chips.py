@@ -45,7 +45,8 @@ class InlineChipStyle:
 
     Examples:
         ```python
-        from oodocs import Document, InlineChipStyle, Paragraph, tag
+        from oodocs import Document, Paragraph, tag
+        from oodocs.styles import InlineChipStyle
 
         fragment = tag("beta", chip_style=InlineChipStyle(background_color="EEF2FF"))
         document = Document("Roadmap", Paragraph("Release channel: ", fragment))

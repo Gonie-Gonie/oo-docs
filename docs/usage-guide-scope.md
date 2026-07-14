@@ -7,7 +7,12 @@ User Guide responsibilities:
 - OODocs philosophy and authoring model explanation.
 - Quick start examples.
 - Mapping LaTeX concepts to OODocs objects.
-- Document structure, title matter, tables, figures, references, notes, and layout explanation.
+- Cover pages and explicit front/main/back matter composition.
+- Document structure, title matter, tables, figures, object links, references,
+  notes, and layout explanation.
+- Workflow-level guidance for choosing `DescriptionList`, schema, CLI,
+  engineering, evidence, integration, and document-suite models without
+  duplicating their complete API reference.
 - CLI workflow explanation.
 - Markdown and notebook import usage flow.
 - Component preset and template preset usage flow.

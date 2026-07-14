@@ -39,7 +39,7 @@ The API documentation gate is separate from pytest and should also pass before
 release:
 
 ```powershell
-.\.venv\Scripts\oodocs.exe apidoc check .
+.\.venv\Scripts\oodocs.exe apidoc check . --config pyproject.toml --fail-under 0.90
 ```
 
 ## Marker Policy

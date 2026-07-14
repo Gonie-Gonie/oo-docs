@@ -7,9 +7,7 @@ callables; the suite does not provide a macro or string-template language.
 ```python
 from pathlib import Path
 
-from oodocs.components.blocks import Paragraph
-from oodocs.components.references import CitationLibrary
-from oodocs.document import Document
+from oodocs import CitationLibrary, Document, Paragraph
 from oodocs.suite import AssetResolver, DocumentSuite, DocumentSuiteContext
 
 root = Path(__file__).resolve().parent

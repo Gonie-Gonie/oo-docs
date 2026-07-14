@@ -1376,7 +1376,8 @@ class Table(Block):
         Build a table from explicit headers and rows:
 
         ```python
-        from oodocs import BorderStyle, Document, Padding, Table
+        from oodocs import Document, Padding, Table
+        from oodocs.styles import BorderStyle
 
         table = Table(
             ["Metric", "Value"],

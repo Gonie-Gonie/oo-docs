@@ -86,7 +86,7 @@ def load_project_inputs(
 
 
 def load_workflow_summary(workflow: str | Path) -> WorkflowSummary:
-    """Load a workflow summary, using a small fallback when PyYAML is absent."""
+    """Attempt the workflow collector, with a regex fallback if PyYAML is absent."""
 
     workflow_path = Path(workflow)
     try:
@@ -196,9 +196,9 @@ def build_document(
                 "This example turns repository configuration artifacts into normal OODocs sections. "
                 "It uses ",
                 inline_code("collect_pyproject_info(...)"),
-                " and ",
+                " and first attempts ",
                 inline_code("collect_github_actions_workflow(...)"),
-                ".",
+                ", using a small regex fallback only when PyYAML is unavailable.",
             ),
             source_table,
         ),

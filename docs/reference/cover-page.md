@@ -54,7 +54,7 @@ Use `CoverPagePreset.accented(...)` for a left-accented cover or
 `CoverPagePreset.centered_logo(...)` for a centered, logo-led cover.
 
 ```python
-from oodocs.presets import CoverPagePreset
+from oodocs.presets.templates import CoverPagePreset
 
 accented = CoverPagePreset.accented(
     organization="Example Lab",

@@ -21,6 +21,24 @@ collector imports PyYAML only when it is called; install
 `oodocs[integrations]` when that collector is needed. Importing `oodocs` never
 loads YAML, pandas, Pint, or BibTeX backends.
 
+## Dependency extras
+
+Integration namespaces and installation extras are deliberately separate. An
+extra installs only the dependencies listed here; `integrations` does not also
+install the BibTeX, Pint, or SymPy bridges.
+
+| Extra | Installs support for |
+|---|---|
+| `oodocs[integrations]` | PyYAML-backed workflow collection and Pydantic schema collection |
+| `oodocs[bibtex]` | The optional `bibtexparser` backend |
+| `oodocs[pint]` | `quantity_from_pint(...)` |
+| `oodocs[sympy]` | `equation_from_sympy(...)` |
+| `oodocs[apidoc]` | Griffe and docstring parsing for API collection |
+
+`NumberFormat`, `Quantity`, and the built-in engineering models are
+dependency-free. The compatibility `engineering` extra therefore installs no
+Pint or SymPy package; choose the focused bridge extra explicitly.
+
 Core models live outside this namespace:
 
 - `ProjectInfo`, `WorkflowJob`, `WorkflowSummary`, and `ManifestSummary` are in

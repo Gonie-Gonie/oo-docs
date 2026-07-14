@@ -23,6 +23,10 @@ and scoped counter policies.
 SymPy support stays outside the core equation model. Install the `sympy`
 optional dependency and import the integration explicitly:
 
+```powershell
+pip install "oodocs[sympy]"
+```
+
 ```python
 from oodocs.integrations.sympy import equation_from_sympy
 

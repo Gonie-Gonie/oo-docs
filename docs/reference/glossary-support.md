@@ -16,8 +16,9 @@ with explicit registries and generated glossary blocks.
 
 ## Policies
 
-Glossary keys are normalized for lookup. Duplicate keys in a generated glossary
-emit a `duplicate-glossary-key` validation error, and an empty generated glossary
+Glossary keys have surrounding whitespace removed, but lookup remains
+case-sensitive. Duplicate keys in a generated glossary emit a
+`duplicate-glossary-key` validation error, and an empty generated glossary
 emits an `empty-glossary-list` warning.
 
 Use `ListOfGlossaryTerms(...)` when terms should be collected from a registry.

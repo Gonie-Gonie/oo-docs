@@ -74,12 +74,12 @@ selected objects to `to_summary_table(...)`.
 ```python
 from oodocs import Chapter, Document, Paragraph
 
-functions = api.select_objects(kind="function", module_prefix="mypkg.adapters")
+functions = api.select_objects(kind="function", module_prefix="mypkg.integrations")
 
 doc = Document(
-    "Adapter Release Notes",
+    "Integration Release Notes",
     Chapter(
-        "Public Adapter Functions",
+        "Public Integration Functions",
         Paragraph("This table is generated from the current checkout."),
         api.to_summary_table(functions, caption="Selected public functions."),
     ),

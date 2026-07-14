@@ -8,6 +8,12 @@ Use it when your source evidence already lives in Python data files and figures,
 and the final artifact needs to read like a manuscript rather than a reference
 manual.
 
+Install the optional example dependencies first:
+
+```powershell
+pip install "oodocs[examples]"
+```
+
 Run the full bundle:
 
 ```powershell

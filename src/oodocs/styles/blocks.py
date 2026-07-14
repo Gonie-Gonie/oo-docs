@@ -242,7 +242,8 @@ class RunInTitleStyle:
 
     Examples:
         ```python
-        from oodocs import Document, Paragraph, RunInTitleStyle, TextStyle
+        from oodocs import Document, Paragraph, TextStyle
+        from oodocs.styles import RunInTitleStyle
 
         paragraph = Paragraph(
             "The rollout completed successfully.",
@@ -282,7 +283,8 @@ class BoxStyle:
         Style a callout box with grouped border and padding objects:
 
         ```python
-        from oodocs import BorderStyle, Box, BoxStyle, Document, Padding, Paragraph
+        from oodocs import Box, Document, Padding, Paragraph
+        from oodocs.styles import BorderStyle, BoxStyle
 
         style = BoxStyle(
             border=BorderStyle.solid("CBD5E1", width=0.75),

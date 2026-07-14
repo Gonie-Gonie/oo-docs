@@ -68,7 +68,7 @@ tables, figures, equations, listings, or theorem-like countable blocks.
 `NumberingDefaults` keeps document-wide integer numbering unless overridden.
 
 ```python
-from oodocs.styles.numbering import CounterPolicy, NumberingDefaults
+from oodocs.styles import CounterPolicy, NumberingDefaults
 
 numbering = NumberingDefaults(
     equation=CounterPolicy(
@@ -95,7 +95,9 @@ list.
 from oodocs import DescriptionItem, DescriptionList
 
 variables = DescriptionList(
-    DescriptionItem("A", "Reference area"),
-    DescriptionItem("E_f", "Energy factor for flow f"),
+    (
+        DescriptionItem("A", "Reference area"),
+        DescriptionItem("E_f", "Energy factor for flow f"),
+    )
 )
 ```

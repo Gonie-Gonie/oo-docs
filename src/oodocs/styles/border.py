@@ -23,7 +23,8 @@ class BorderStyle:
         Use a border style inside a box style:
 
         ```python
-        from oodocs import BorderStyle, Box, BoxStyle, Document, Paragraph
+        from oodocs import Box, Document, Paragraph
+        from oodocs.styles import BorderStyle, BoxStyle
 
         style = BoxStyle(border=BorderStyle.solid("CBD5E1", width=0.75))
         document = Document("Notes", Box(Paragraph("Review scope."), style=style))
@@ -32,7 +33,8 @@ class BorderStyle:
         Give an inline chip a point-sized border and em-sized corner radius:
 
         ```python
-        from oodocs import BorderStyle, InlineChipStyle, Paragraph, tag
+        from oodocs import Paragraph, tag
+        from oodocs.styles import BorderStyle, InlineChipStyle
 
         chip_style = InlineChipStyle(
             border=BorderStyle.solid("BAE6FD", width=0.5, radius=0.45, radius_unit="em"),
@@ -71,7 +73,7 @@ class BorderStyle:
 
         Examples:
             ```python
-            from oodocs import BorderStyle, TableStyle
+            from oodocs.styles import BorderStyle, TableStyle
 
             table_style = TableStyle(border=BorderStyle.none())
             ```
@@ -103,7 +105,8 @@ class BorderStyle:
 
         Examples:
             ```python
-            from oodocs import BorderStyle, Padding, TableStyle
+            from oodocs import Padding
+            from oodocs.styles import BorderStyle, TableStyle
 
             style = TableStyle(
                 border=BorderStyle.solid("CBD5E1", width=0.5),
@@ -211,8 +214,9 @@ class StrokeStyle:
         Apply a stroke to a positioned shape:
 
         ```python
-        from oodocs import Document, DocumentSettings, StrokeStyle
+        from oodocs import Document, DocumentSettings
         from oodocs.positioning import Shape
+        from oodocs.styles import StrokeStyle
 
         frame = Shape.rect(
             width=2.0,
@@ -244,8 +248,8 @@ class StrokeStyle:
 
         Examples:
             ```python
-            from oodocs import StrokeStyle
             from oodocs.positioning import Shape
+            from oodocs.styles import StrokeStyle
 
             shape = Shape.rect(width=2, height=1, stroke=StrokeStyle.none())
             ```
@@ -273,8 +277,8 @@ class StrokeStyle:
 
         Examples:
             ```python
-            from oodocs import StrokeStyle
             from oodocs.positioning import Shape
+            from oodocs.styles import StrokeStyle
 
             shape = Shape.line(width=3, height=0, stroke=StrokeStyle.solid("334155", width=0.75))
             ```

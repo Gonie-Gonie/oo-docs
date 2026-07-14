@@ -97,7 +97,7 @@ class ManuscriptSection:
     Examples:
         ```python
         from oodocs import Paragraph
-        from oodocs.presets import JournalArticleTemplate, ManuscriptSection
+        from oodocs.presets.templates import JournalArticleTemplate, ManuscriptSection
 
         section = ManuscriptSection("Methods", [Paragraph("Cohort details.")])
         document = JournalArticleTemplate().build("Clinical Study", sections=[section])
@@ -154,7 +154,7 @@ class JournalArticleTemplate:
         Build a compact article from content-oriented inputs:
 
         ```python
-        from oodocs.presets import JournalArticleTemplate
+        from oodocs.presets.templates import JournalArticleTemplate
 
         document = JournalArticleTemplate().build(
             "Clinical Benchmark",
@@ -168,7 +168,7 @@ class JournalArticleTemplate:
 
         ```python
         from oodocs import Author
-        from oodocs.presets import JournalArticleTemplate
+        from oodocs.presets.templates import JournalArticleTemplate
 
         template = JournalArticleTemplate(include_contents=True, cover_page=True)
         document = template.build(
@@ -604,7 +604,7 @@ class CoverPagePreset:
             metadata: Optional file/browser metadata.
             subtitle: Optional visible subtitle.
             authors: Optional structured authors.
-            overlays: Additional overlays appended after preset items.
+            overlays: Caller-provided positioned overlays for the returned settings.
             theme: Optional theme override for the returned settings.
 
         Returns:
@@ -640,7 +640,7 @@ class TechnicalReportTemplate:
 
     Examples:
         ```python
-        from oodocs.presets import TechnicalReportTemplate
+        from oodocs.presets.templates import TechnicalReportTemplate
 
         document = TechnicalReportTemplate().build(
             "Validation Report",
@@ -751,7 +751,7 @@ class SoftwareManualTemplate:
 
     Examples:
         ```python
-        from oodocs.presets import SoftwareManualTemplate
+        from oodocs.presets.templates import SoftwareManualTemplate
 
         document = SoftwareManualTemplate().build(
             "Command Manual",
@@ -854,7 +854,7 @@ class BookTemplate:
 
     Examples:
         ```python
-        from oodocs.presets import BookTemplate
+        from oodocs.presets.templates import BookTemplate
 
         document = BookTemplate().build(
             "Engineering Handbook",

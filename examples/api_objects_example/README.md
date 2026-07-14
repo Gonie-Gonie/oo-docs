@@ -17,6 +17,12 @@ The help-book reference keeps coverage evidence out of the reader-facing
 chapters by default. Coverage remains available in the composition document and
 in the JSON/CSV sidecars.
 
+Install the API-documentation dependencies first:
+
+```powershell
+pip install "oodocs[apidoc]"
+```
+
 Run it against the current repository:
 
 ```powershell

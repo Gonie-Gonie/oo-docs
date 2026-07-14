@@ -25,7 +25,7 @@ class CounterStyle:
         Format an ordered-list marker:
 
         ```python
-        from oodocs import CounterStyle
+        from oodocs.styles import CounterStyle
 
         marker = CounterStyle(counter_format="upper-roman", prefix="(", suffix=")")
         assert marker.format_value(3) == "(III)"
@@ -90,7 +90,8 @@ class HeadingNumbering:
 
     Examples:
         ```python
-        from oodocs import BlockDefaults, CounterStyle, Document, DocumentSettings, HeadingNumbering, Section, Theme
+        from oodocs import Document, DocumentSettings, Section, Theme
+        from oodocs.styles import BlockDefaults, CounterStyle, HeadingNumbering
 
         numbering = HeadingNumbering(
             level_styles=(
@@ -155,7 +156,8 @@ class ListStyle:
 
     Examples:
         ```python
-        from oodocs import CounterStyle, Document, NumberedList
+        from oodocs import Document, NumberedList
+        from oodocs.styles import CounterStyle
 
         list_block = NumberedList(
             "Install",

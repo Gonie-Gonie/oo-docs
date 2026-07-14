@@ -15,21 +15,30 @@ typed object tree.
 pip install oodocs
 ```
 
+OODocs requires Python 3.11 or later.
+
 Optional extras are available for focused workflows:
 
 ```bash
 pip install "oodocs[examples]"
 pip install "oodocs[integrations]"
 pip install "oodocs[bibtex]"
+pip install "oodocs[pint]"
+pip install "oodocs[sympy]"
 pip install "oodocs[apidoc]"
 ```
 
 - `examples` installs dependencies used by the bundled example scripts, such as
   matplotlib and pandas.
-- `integrations` installs YAML support for optional workflow collectors.
+- `integrations` installs PyYAML and Pydantic support for their optional
+  collectors.
 - `bibtex` installs the optional `bibtexparser` backend; the built-in parser
   remains available without it.
+- `pint` and `sympy` install only their respective integration bridges.
 - `apidoc` installs API collection and docstring parsing dependencies.
+
+Core engineering presentation objects such as `NumberFormat` and `Quantity`
+need no optional dependency.
 
 ## Quick Start
 
@@ -79,6 +88,8 @@ oodocs validate report.py
 Python sources can expose a `Document` as `document`, `doc`, or `report`, or a
 zero-argument factory such as `build_document()`. Markdown and notebook sources
 are imported through the same parser APIs available from Python.
+Because a Python source is imported during discovery, build only trusted Python
+files and keep command execution behind an `if __name__ == "__main__"` guard.
 
 ## What You Can Build
 
@@ -126,6 +137,14 @@ doc.save_all("artifacts/api-notes")
 
 Repository-level API reference builds can also be configured in `pyproject.toml`
 and rendered with `ApiHelpBookConfig.from_pyproject(".").save_all(".")`.
+
+## Upgrading from 1.x
+
+Version 2.0 removes `oodocs.adapters`; import external collectors from
+`oodocs.integrations.*`. Replace `Equation.from_sympy(...)` with
+`oodocs.integrations.sympy.equation_from_sympy(...)`, and import schema, CLI,
+engineering, evidence, and suite models from their focused namespaces. See the
+[v2 migration guide](https://github.com/Gonie-Gonie/oo-docs/blob/main/docs/migration-v2.md).
 
 ## Links
 

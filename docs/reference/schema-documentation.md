@@ -104,6 +104,10 @@ is retained raw and reported as a diagnostic.
 
 Pydantic support is lazy and optional:
 
+```powershell
+pip install "oodocs[integrations]"
+```
+
 ```python
 from oodocs.integrations.pydantic import collect_pydantic_schema
 

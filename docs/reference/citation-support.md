@@ -34,7 +34,12 @@ processor.
 
 The parser raises `BibtexParseError` with the entry key and line/column whenever
 malformed syntax can be tied to a record. To opt into the third-party backend,
-pass it explicitly; importing OODocs does not import `bibtexparser`:
+install and pass it explicitly; importing OODocs does not import
+`bibtexparser`:
+
+```powershell
+pip install "oodocs[bibtex]"
+```
 
 ```python
 from oodocs import CitationLibrary

@@ -39,7 +39,7 @@ class CalloutBox(Box):
     Examples:
         ```python
         from oodocs import Document, DocumentSettings, StyleSheet, Theme
-        from oodocs.presets import CalloutBox
+        from oodocs.presets.components import CalloutBox
 
         styles = StyleSheet.default()
         doc = Document(
@@ -82,7 +82,7 @@ class CompactTable(Table):
     Examples:
         ```python
         from oodocs import Document
-        from oodocs.presets import CompactTable
+        from oodocs.presets.components import CompactTable
 
         table = CompactTable(["Metric", "Value"], [["Latency", "42 ms"]])
         document = Document("Metrics", table)
@@ -124,7 +124,7 @@ class KeyValueTable(CompactTable):
     Examples:
         ```python
         from oodocs import Document
-        from oodocs.presets import KeyValueTable
+        from oodocs.presets.components import KeyValueTable
 
         table = KeyValueTable({"Environment": "prod", "Version": "1.2.0"})
         document = Document("Deployment", table)
@@ -171,7 +171,7 @@ class Nomenclature(Box):
     Examples:
         ```python
         from oodocs import Document
-        from oodocs.presets import Nomenclature
+        from oodocs.presets.components import Nomenclature
 
         symbols = Nomenclature([("R", "Recall"), ("P", "Precision")], title="Symbols")
         document = Document("Model Report", symbols)
@@ -273,7 +273,7 @@ def option_table(
 
     Examples:
         ```python
-        from oodocs.presets import option_table
+        from oodocs.presets.components import option_table
 
         table = option_table({"timeout": "30 seconds", "retries": 3})
         ```
@@ -301,7 +301,7 @@ def note_box(
 
     Examples:
         ```python
-        from oodocs.presets import note_box
+        from oodocs.presets.components import note_box
 
         box = note_box("Rendered documents include generated references.")
         ```
@@ -329,7 +329,7 @@ def info_box(
 
     Examples:
         ```python
-        from oodocs.presets import info_box
+        from oodocs.presets.components import info_box
 
         box = info_box("Rendered documents include generated references.")
         ```
@@ -357,7 +357,7 @@ def warning_box(
 
     Examples:
         ```python
-        from oodocs.presets import warning_box
+        from oodocs.presets.components import warning_box
 
         box = warning_box("Review this before publishing.")
         ```
@@ -385,7 +385,7 @@ def success_box(
 
     Examples:
         ```python
-        from oodocs.presets import success_box
+        from oodocs.presets.components import success_box
 
         box = success_box("Validation passed.")
         ```

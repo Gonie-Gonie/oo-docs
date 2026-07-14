@@ -3,9 +3,7 @@
 from pathlib import Path
 from typing import Sequence
 
-from oodocs.components.blocks import Paragraph
-from oodocs.components.references import CitationLibrary
-from oodocs.document import Document
+from oodocs import CitationLibrary, Document, Paragraph
 from oodocs.suite import (
     AssetResolver,
     DocumentSuite,

@@ -114,7 +114,8 @@ class PageItemScope:
         """Return a scope for a separate cover page.
 
         Returns:
-            Scope matching only the cover page when ``cover_page=True``.
+            Scope matching only the ``CoverPage`` supplied through
+            ``TitleMatter.cover``.
         """
 
         return cls("cover")
@@ -431,8 +432,9 @@ class Shape(Block):
 
     Examples:
         ```python
-        from oodocs import Document, DocumentSettings, Paragraph, StrokeStyle
+        from oodocs import Document, DocumentSettings, Paragraph
         from oodocs.positioning import Shape
+        from oodocs.styles import StrokeStyle
 
         anchor = Shape.rect(
             width=2,

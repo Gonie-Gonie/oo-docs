@@ -371,7 +371,7 @@ class DocumentSuite:
 
         Returns:
             The rendered suite bundle, including per-document outputs and
-            validation results.
+            shared context variables.
         """
 
         destination = (

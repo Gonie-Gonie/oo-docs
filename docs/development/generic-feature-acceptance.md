@@ -5,33 +5,21 @@ manual suite was reviewed only as acceptance input; no application-specific
 class, function, preset, filename, title, footer, or build recipe belongs in
 the library API.
 
-## Direct review scope
+## v2.0.0 cleanup record
 
-The following files are the direct review surface for the cleanup:
+The original review covered the renderer, component, settings, indexing,
+workflow, preset, adapter, and evidence surfaces. In v2.0.0 the legacy
+`src/oodocs/adapters/` package and monolithic `src/oodocs/evidence.py` module
+were replaced and removed.
 
-- `src/oodocs/presets/templates.py`
-- `src/oodocs/adapters/__init__.py`
-- `src/oodocs/adapters/evidence.py`
-- `src/oodocs/adapters/github_actions.py`
-- `src/oodocs/adapters/manifest.py`
-- `src/oodocs/adapters/pyproject.py`
-- `src/oodocs/evidence.py`
-- `src/oodocs/document.py`
-- `src/oodocs/settings.py`
-- `src/oodocs/components/base.py`
-- `src/oodocs/components/blocks.py`
-- `src/oodocs/components/inline.py`
-- `src/oodocs/components/media.py`
-- `src/oodocs/components/references.py`
-- `src/oodocs/layout/indexing.py`
-- `src/oodocs/styles/theme.py`
-- `src/oodocs/renderers/docx.py`
-- `src/oodocs/renderers/pdf.py`
-- `src/oodocs/renderers/html.py`
-- `src/oodocs/workflows.py`
+The current implementation is split by responsibility:
 
-The legacy adapter paths are listed because they must be replaced by generic
-models and explicit integrations, then removed.
+- `src/oodocs/integrations/` contains external parsers and collectors.
+- `src/oodocs/evidence/` contains the neutral evidence model, renderer, and CLI.
+- `src/oodocs/metadata.py` contains neutral project and workflow summaries.
+- `src/oodocs/suite.py` contains multi-document composition and asset policy.
+- `src/oodocs/components/`, `layout/`, `styles/`, and `renderers/` contain the
+  shared document semantics used by every output format.
 
 ## Generic acceptance requirements
 

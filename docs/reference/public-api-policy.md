@@ -9,7 +9,7 @@ The source of truth is `src/oodocs/public_api.py`, and compatibility tests keep
 | Tier | Meaning | Canonical import path |
 |---|---|---|
 | Tier 1 core | General document authoring objects and helpers that most users can learn first. | `from oodocs import ...` |
-| Tier 2 domain | Focused or advanced workflows that should not crowd the first import surface. | Domain namespaces such as `oodocs.engineering`, `oodocs.review`, `oodocs.positioning`, `oodocs.generated`, `oodocs.apidoc`, `oodocs.media`, `oodocs.references`, `oodocs.presets.components`, and `oodocs.presets.templates` |
+| Tier 2 domain | Focused or advanced workflows that should not crowd the first import surface. | Domain namespaces such as `oodocs.schema`, `oodocs.clidoc`, `oodocs.engineering`, `oodocs.evidence`, `oodocs.suite`, `oodocs.metadata`, `oodocs.equations`, `oodocs.integrations.*`, `oodocs.review`, `oodocs.positioning`, `oodocs.generated`, `oodocs.apidoc`, `oodocs.media`, `oodocs.references`, `oodocs.presets.components`, and `oodocs.presets.templates` |
 | Tier 3 internal | Renderer hooks, coercion helpers, normalization helpers, and compatibility details. | Not exported from public `__all__` lists and excluded from user-facing API docs |
 
 ## Top-Level Rules

@@ -107,7 +107,8 @@ class Paragraph(Block):
 
     Examples:
         ```python
-        from oodocs import Document, Paragraph, RunInTitleStyle, TextStyle, bold, link
+        from oodocs import Document, Paragraph, TextStyle, bold, link
+        from oodocs.styles import RunInTitleStyle
 
         paragraph = Paragraph(
             "Read the ",
@@ -2193,7 +2194,8 @@ class Box(Block):
         Place a styled note box inside a document:
 
         ```python
-        from oodocs import BorderStyle, Box, Document, Padding, Paragraph
+        from oodocs import Box, Document, Padding, Paragraph
+        from oodocs.styles import BorderStyle
 
         note = Box(
             Paragraph("Review this before release."),
@@ -2812,7 +2814,8 @@ class Section(Block):
 
     Examples:
         ```python
-        from oodocs import Document, HeadingStyle, Paragraph, RunInTitleStyle, Section, TextStyle
+        from oodocs import Document, Paragraph, Section, TextStyle
+        from oodocs.styles import HeadingStyle, RunInTitleStyle
 
         section = Section(
             "Results",

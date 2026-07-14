@@ -18,6 +18,15 @@ as separate authoring choices. Together they cover common `cleveref`,
 | Visible URL | `url(target, breakable=True)` | The URL as visible text with safe soft-break opportunities. |
 | Advanced explicit anchor | `Hyperlink.internal_anchor(...)` | A link to a known generated or authored anchor. |
 
+Core helpers such as `ref`, `refs`, and `ref_range` are available from
+`oodocs`. Import the advanced wrappers and explicit hyperlink type from their
+focused namespaces:
+
+```python
+from oodocs.components import Hyperlink
+from oodocs.references import ReferenceFormat, bracket_ref, page_ref, paren_ref
+```
+
 `ReferenceFormat(...)` controls `label`, `plural_label`, capitalization,
 separators, `range_separator`, prefix, suffix, and an optional template. Page-aware
 references are intentionally treated as a degrade path because DOCX, PDF, and

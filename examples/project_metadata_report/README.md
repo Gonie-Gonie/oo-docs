@@ -2,9 +2,10 @@
 
 This example turns repository configuration files into a rendered report and a
 machine-readable sidecar. It reads `pyproject.toml` through
-`collect_pyproject_info(...)` and the release workflow through
-`collect_github_actions_workflow(...)`. Both integrations return generic
-models that can also be constructed directly from mappings and sequences.
+`collect_pyproject_info(...)`. For the release workflow, it first attempts
+`collect_github_actions_workflow(...)` and uses a small regex fallback only
+when PyYAML is unavailable. Both paths return generic models that can also be
+constructed directly from mappings and sequences.
 
 Use it when package metadata, build backend settings, and GitHub Actions jobs
 should be reviewed as a document instead of inspected across separate files.

@@ -14,15 +14,15 @@ the standard APIs.
 | Software manual | `SoftwareManualTemplate(...)` | Builds overview, manual sections, appendices, and optional generated pages for documentation workflows. |
 | Book-like document | `BookTemplate(...)` | Accepts `front_matter=...`, `parts=...`, `chapters=...`, `appendices=...`, and `back_matter=...`. |
 | Reusable cover page | `CoverPagePreset.accented(...)` or `CoverPagePreset.centered_logo(...)` | Produces `DocumentSettings(...)` around a generic, caller-owned `CoverPage`. |
-| Direct assembly | `Section(...)`, `Chapter(...)`, `Part(...)`, and `Appendix(...)` | Use when the document shape is unique and a preset would hide more than it helps. |
+| Direct assembly | `Section(...)`, `Chapter(...)`, `Part(...)`, and `oodocs.structure.Appendix(...)` | Use when the document shape is unique and a preset would hide more than it helps. |
 
 ## Matter And Structure Policy
 
 OODocs treats document classes as content presets, not as raw TeX class
 emulation. Use `Section(..., numbered=False)` for article-style front matter
 such as abstracts, acknowledgements, and declarations. Use `Chapter(...)` and
-`Part(...)` for report or book bodies, and `Appendix(...)` for appendix material
-that should switch child chapter labels to `A`, `B`, `C`.
+`Part(...)` for report or book bodies, and `oodocs.structure.Appendix(...)` for
+appendix material that should switch child chapter labels to `A`, `B`, `C`.
 
 Report, manual, and book presets expose `front_matter=...` and
 `back_matter=...` inputs. `BookTemplate(...)` also exposes `parts=...` and
@@ -53,7 +53,7 @@ and theme settings.
 
 ```python
 from oodocs import Author
-from oodocs.presets import CoverPagePreset
+from oodocs.presets.templates import CoverPagePreset
 
 preset = CoverPagePreset.accented(
     organization="Example Lab",

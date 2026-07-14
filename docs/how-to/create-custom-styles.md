@@ -5,21 +5,23 @@ few project-specific names.
 
 ```python
 from oodocs import (
-    BlockDefaults,
-    BorderStyle,
     Box,
-    BoxStyle,
     Document,
     DocumentSettings,
     InlineChip,
+    Paragraph,
+    Table,
+    Theme,
+)
+from oodocs.styles import (
+    BlockDefaults,
+    BorderStyle,
+    BoxStyle,
     InlineChipStyle,
     Padding,
-    Paragraph,
     ParagraphStyle,
     StyleSheet,
-    Table,
     TableStyle,
-    Theme,
 )
 
 styles = StyleSheet.default()

@@ -19,7 +19,6 @@ from oodocs import (
     Figure,
     NumberedList,
     OutputBundle,
-    PageNumberDefaults,
     Paragraph,
     Section,
     Table,
@@ -29,6 +28,7 @@ from oodocs import (
     inline_code,
 )
 from oodocs.importers.markdown import parse_markdown
+from oodocs.styles import PageNumberDefaults
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]

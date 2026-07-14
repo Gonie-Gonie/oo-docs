@@ -38,7 +38,14 @@ in paragraphs, table cells, captions, and description-item content.
 
 ## Optional integrations
 
-Pint and SymPy are not core dependencies. Import their adapters explicitly:
+Pint and SymPy are not core dependencies. `NumberFormat` and `Quantity` work
+without either package. Install only the bridges used by the application:
+
+```powershell
+pip install "oodocs[pint,sympy]"
+```
+
+Import the integrations explicitly:
 
 ```python
 from oodocs.integrations.pint import quantity_from_pint

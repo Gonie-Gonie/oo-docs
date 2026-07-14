@@ -4,6 +4,13 @@
 can be queried, serialized, checked for docstring coverage, or inserted into
 OODocs documents.
 
+Install the API collection dependencies before using the Griffe collector or
+docstring parsers:
+
+```powershell
+pip install "oodocs[apidoc]"
+```
+
 ## Collectors
 
 - `collector="griffe"` reads source without importing the target package.
